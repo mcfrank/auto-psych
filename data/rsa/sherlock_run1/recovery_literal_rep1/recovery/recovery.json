@@ -1,0 +1,19 @@
+{
+ "best_model": "softmax_belief_salience_listener",
+ "ground_truth": "/scratch/users/mcfrank/auto-psych/rsa_run1c/harness_repo/src/pipelines/outer_loop/projects/rsa_reference/seed_models/literal_listener.py",
+ "best_pool_rmse_to_gt": 0.00553044777381916,
+ "live_pool_rmse_to_gt": {
+  "color_salience_softmax_listener": 0.0071412427615093034,
+  "limited_attention_listener": 0.00421733594581469,
+  "literal_pragmatic_mixture_listener": 0.0047183713083612236,
+  "referability_prior_listener": 0.004713182155056922,
+  "salience_lapse_attention_listener": 0.0058023189542417255,
+  "salience_lapse_fewest_features": 0.008203092251940233,
+  "softmax_belief_salience_listener": 0.00553044777381916,
+  "valence_belief_salience_listener": 0.005621879729029491
+ },
+ "heldout_lpd_best_minus_gt": -0.9944861353324086,
+ "heldout_se": 0.9252103236295223,
+ "recovered": true,
+ "rmse_threshold": 0.01
+}

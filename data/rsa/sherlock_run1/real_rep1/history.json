@@ -1,0 +1,2521 @@
+[
+ {
+  "step": 0,
+  "round": -1,
+  "best_model": "rsa_l1_shared_prior",
+  "standing": {
+   "rsa_l1_shared_prior": {
+    "rank": 0,
+    "elpd_loo": -17552.48298740387,
+    "se": 135.2568749406573,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 3.88758087525639,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 1,
+    "elpd_loo": -17555.013271331787,
+    "se": 134.8987824521609,
+    "elpd_diff": 2.5302839279174805,
+    "dse": 8.817370716457855,
+    "p_loo": 2.0284820151100575,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_salience": {
+    "rank": 2,
+    "elpd_loo": -17559.05241584778,
+    "se": 135.03638478750818,
+    "elpd_diff": 6.569428443908691,
+    "dse": 1.492922444770895,
+    "p_loo": 3.9516667148200213,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 3,
+    "elpd_loo": -17599.29961681366,
+    "se": 134.34470890604672,
+    "elpd_diff": 46.81662940979004,
+    "dse": 9.389415488916018,
+    "p_loo": 2.04647665360244,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 4,
+    "elpd_loo": -18828.09070968628,
+    "se": 128.77455062228668,
+    "elpd_diff": 1275.6077222824097,
+    "dse": 47.085823948386796,
+    "p_loo": 0.9709597879264038,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "outcome": "seeded",
+    "name": "literal_listener"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l2"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1_salience"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1_shared_prior"
+   }
+  ],
+  "live": [
+   {
+    "name": "literal_listener",
+    "hypothesis": "Listeners pick uniformly among the objects the word is literally true of.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_salience",
+    "hypothesis": "Depth-1 RSA whose listener has a salience prior over objects (feature count, familiarization base rate) that the simulated literal listener lacks.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_shared_prior",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.",
+    "source": "seed"
+   }
+  ],
+  "ledger_entries": 0
+ },
+ {
+  "step": 1,
+  "round": 0,
+  "best_model": "valence_salience_l2_listener",
+  "standing": {
+   "valence_salience_l2_listener": {
+    "rank": 0,
+    "elpd_loo": -17488.98097038269,
+    "se": 135.34851771723413,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 5.158773961724364,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_speaker_shared_prior": {
+    "rank": 1,
+    "elpd_loo": -17503.053488731384,
+    "se": 135.64187223904298,
+    "elpd_diff": 14.072518348693848,
+    "dse": 12.730793703380247,
+    "p_loo": 4.912801545964612,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "valence_salience_listener": {
+    "rank": 2,
+    "elpd_loo": -17521.153170585632,
+    "se": 135.22131024771662,
+    "elpd_diff": 32.172200202941895,
+    "dse": 2.8827694798080357,
+    "p_loo": 5.1889910603022145,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2_shared_prior": {
+    "rank": 3,
+    "elpd_loo": -17523.287276268005,
+    "se": 135.39859102236875,
+    "elpd_diff": 34.30630588531494,
+    "dse": 9.22306674601559,
+    "p_loo": 3.8592908306382014,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 4,
+    "elpd_loo": -17552.48298740387,
+    "se": 135.2568749406573,
+    "elpd_diff": 63.5020170211792,
+    "dse": 9.361939668359106,
+    "p_loo": 3.88758087525639,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 5,
+    "elpd_loo": -17555.013271331787,
+    "se": 134.8987824521609,
+    "elpd_diff": 66.03230094909668,
+    "dse": 12.162384194951356,
+    "p_loo": 2.0284820151100575,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_salience": {
+    "rank": 6,
+    "elpd_loo": -17559.05241584778,
+    "se": 135.03638478750818,
+    "elpd_diff": 70.07144546508789,
+    "dse": 9.492362629468035,
+    "p_loo": 3.9516667148200213,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_feature_speaker": {
+    "rank": 7,
+    "elpd_loo": -17580.724298477173,
+    "se": 134.2306065765221,
+    "elpd_diff": 91.74332809448242,
+    "dse": 15.555480566396438,
+    "p_loo": 4.364546602620976,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "naive_speaker_listener": {
+    "rank": 8,
+    "elpd_loo": -17585.55086517334,
+    "se": 135.11527210060106,
+    "elpd_diff": 96.56989479064941,
+    "dse": 18.963236545212617,
+    "p_loo": 4.003652845360193,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 9,
+    "elpd_loo": -17599.29961681366,
+    "se": 134.34470890604672,
+    "elpd_diff": 110.31864643096924,
+    "dse": 12.959997832016366,
+    "p_loo": 2.04647665360244,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 10,
+    "elpd_loo": -18828.09070968628,
+    "se": 128.77455062228668,
+    "elpd_diff": 1339.1097393035889,
+    "dse": 48.109096768901544,
+    "p_loo": 0.9709597879264038,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "valence_salience_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret evaluative descriptions (such as a speaker referring to their favorite or least favorite object) by modulating their referent prior with the valence of the framing. Positive valence increases the prior expectation of feature-rich referents, whereas negative valence inverts this preference to favor minimal or feature-sparse referents. This evaluative prior is shared as common ground across the simulated literal listener and the pragmatic listener."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "naive_speaker_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "People interpret referential descriptions by inverting a naive generative speaker who mentions any true feature of the intended object with equal probability, rather than simulating a speaker who mentalizes a listener. When hearing an ambiguous word, listeners favor objects with fewer total features because a naive speaker is less likely to have chosen that word for an object with many competing features. On displays where a multi-featured object has only uninformative alternative features, this model predicts listeners will disfavor it relative to an object with fewer features, whereas standard RSA predicts listeners will favor it because a strategic speaker avoids uninformative alternatives."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "costly_feature_speaker",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Speakers trade off communicative informativeness with utterance costs that favor accessible, shared descriptors over narrow, highly specific words. Pragmatic listeners invert this speaker, recognizing that a speaker who uses a shared word may still refer to an object with unique features because specific words carry higher production costs."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "rsa_l2_shared_prior",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners reason at depth 2 by inverting a speaker who anticipates the depth-1 pragmatic listener, maintaining the common-knowledge salience prior (feature count and familiarization base rate) across all levels of recursion. Reasoning two levels deep allows the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, resolving ambiguous references in complex displays where depth-1 reasoning under-discriminates.\n\nDifferences from rsa_l1_shared_prior:\n- Recursion depth: choice_probs calls L2 instead of L1.\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with common-knowledge prior over objects.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, lapse with identical priors)."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "rsa_l2_shared_prior_2",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0000 of rsa_l2_shared_prior's (threshold 0.002) over the loop's novelty pool of 1258 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Listeners reason at depth 2 with a common-knowledge salience prior, inverting an informative speaker who simulates how a depth-1 pragmatic listener interprets the utterance. This refines the incumbent model (rsa_l1_shared_prior) by increasing recursion depth from depth 1 to depth 2 so that choice_probs calls L2 instead of L1, introducing the depth-2 pragmatic listener L2 while keeping the parameter set unchanged. This should fit better by resolving second-order implicatures in complex reference games while preserving the shared prior over object features and familiarization base rates."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "rsa_l2_shared_prior_3",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0000 of rsa_l2_shared_prior's (threshold 0.002) over the loop's novelty pool of 1258 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Listeners reason at depth 2 (inverting a speaker who simulates a depth-1 pragmatic listener), refining the rsa_l2 model by adopting a shared salience prior over objects across all simulated speaker and listener levels. This prior, formed from object feature counts and familiarization base rates, shapes both production and comprehension choices as common knowledge and directly governs choices when no informative word is spoken.\n\nRefined model: rsa_l2\nDifferences from source:\n- Recursion depth: depth 2 (calls L2 in choice_probs, unchanged).\n- Parameters added: w_features (Normal(0.0, 1.0)) and w_familiar (Normal(0.0, 2.0)); no parameters removed.\n- Terms changed: L0, L1, and L2 take prior as an argument; L0 weights objects by vec(prior, r) * at(lex, u, r); S1 and S2 sample objects with wpp=vec(prior, r); on prior trials, choice_probs returns prior instead of a uniform distribution."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "costly_speaker_shared_prior",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "People interpret referential descriptions by inverting a speaker who balances communicative informativeness against utterance production costs, while maintaining a shared common-ground salience prior over referents. When a speaker uses an ambiguous or shared descriptor, listeners recognize that this preference reflects lower production costs for broad, accessible terms rather than an uninformative speaker. This refines rsa_l1_shared_prior by integrating utterance extension costs from costly_feature_speaker into the speaker's utility, improving predictions on displays where referents have both unique and shared features.\n\nDifferences from rsa_l1_shared_prior:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from source).\n- Parameters added: w_extension (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, lapse with identical priors).\n- Speaker utility: In memo L1, speaker chooses utterances with utility augmented by vec(weights, u), where weights are w_extension * (1.0 - ctx.is_sink) * (jnp.sum(ctx.lex, axis=1) - 1.0).",
+    "repair": true
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "valence_salience_l2_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret evaluative descriptions by reasoning at depth 2 (inverting a speaker who anticipates a depth-1 pragmatic listener), refining the valence_salience_listener model by extending its recursive depth from depth 1 to depth 2 while preserving the common-knowledge evaluative salience prior across all levels of recursion. In complex reference games with evaluative framing (such as favorite vs. least favorite), depth-2 reasoning enables the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, resolving ambiguous references that depth-1 reasoning under-discriminates.\n\nRefined model: valence_salience_listener\nDifferences from source:\n- Recursion depth: depth 2 (choice_probs calls L2 instead of L1).\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with the shared evaluative prior.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: choice_probs calls L2 instead of L1.",
+    "repair": true
+   }
+  ],
+  "live": [
+   {
+    "name": "literal_listener",
+    "hypothesis": "Listeners pick uniformly among the objects the word is literally true of.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_salience",
+    "hypothesis": "Depth-1 RSA whose listener has a salience prior over objects (feature count, familiarization base rate) that the simulated literal listener lacks.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_shared_prior",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "valence_salience_listener",
+    "hypothesis": "Listeners interpret evaluative descriptions (such as a speaker referring to their favorite or least favorite object) by modulating their referent prior with the valence of the framing. Positive valence increases the prior expectation of feature-rich referents, whereas negative valence inverts this preference to favor minimal or feature-sparse referents. This evaluative prior is shared as common ground across the simulated literal listener and the pragmatic listener.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "naive_speaker_listener",
+    "hypothesis": "People interpret referential descriptions by inverting a naive generative speaker who mentions any true feature of the intended object with equal probability, rather than simulating a speaker who mentalizes a listener. When hearing an ambiguous word, listeners favor objects with fewer total features because a naive speaker is less likely to have chosen that word for an object with many competing features. On displays where a multi-featured object has only uninformative alternative features, this model predicts listeners will disfavor it relative to an object with fewer features, whereas standard RSA predicts listeners will favor it because a strategic speaker avoids uninformative alternatives.\n",
+    "source": "round 1 candidate 2 explore"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "hypothesis": "Speakers trade off communicative informativeness with utterance costs that favor accessible, shared descriptors over narrow, highly specific words. Pragmatic listeners invert this speaker, recognizing that a speaker who uses a shared word may still refer to an object with unique features because specific words carry higher production costs.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "rsa_l2_shared_prior",
+    "hypothesis": "Listeners reason at depth 2 by inverting a speaker who anticipates the depth-1 pragmatic listener, maintaining the common-knowledge salience prior (feature count and familiarization base rate) across all levels of recursion. Reasoning two levels deep allows the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, resolving ambiguous references in complex displays where depth-1 reasoning under-discriminates.\n\nDifferences from rsa_l1_shared_prior:\n- Recursion depth: choice_probs calls L2 instead of L1.\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with common-knowledge prior over objects.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, lapse with identical priors).\n",
+    "source": "round 1 candidate 4 refine incumbent rsa_l1_shared_prior"
+   },
+   {
+    "name": "costly_speaker_shared_prior",
+    "hypothesis": "People interpret referential descriptions by inverting a speaker who balances communicative informativeness against utterance production costs, while maintaining a shared common-ground salience prior over referents. When a speaker uses an ambiguous or shared descriptor, listeners recognize that this preference reflects lower production costs for broad, accessible terms rather than an uninformative speaker. This refines rsa_l1_shared_prior by integrating utterance extension costs from costly_feature_speaker into the speaker's utility, improving predictions on displays where referents have both unique and shared features.\n\nDifferences from rsa_l1_shared_prior:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from source).\n- Parameters added: w_extension (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, lapse with identical priors).\n- Speaker utility: In memo L1, speaker chooses utterances with utility augmented by vec(weights, u), where weights are w_extension * (1.0 - ctx.is_sink) * (jnp.sum(ctx.lex, axis=1) - 1.0).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l1_shared_prior repair 1"
+   },
+   {
+    "name": "valence_salience_l2_listener",
+    "hypothesis": "Listeners interpret evaluative descriptions by reasoning at depth 2 (inverting a speaker who anticipates a depth-1 pragmatic listener), refining the valence_salience_listener model by extending its recursive depth from depth 1 to depth 2 while preserving the common-knowledge evaluative salience prior across all levels of recursion. In complex reference games with evaluative framing (such as favorite vs. least favorite), depth-2 reasoning enables the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, resolving ambiguous references that depth-1 reasoning under-discriminates.\n\nRefined model: valence_salience_listener\nDifferences from source:\n- Recursion depth: depth 2 (choice_probs calls L2 instead of L1).\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with the shared evaluative prior.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: choice_probs calls L2 instead of L1.\n",
+    "source": "round 1 candidate 6 refine chosen repair 1"
+   }
+  ],
+  "ledger_entries": 8
+ },
+ {
+  "step": 2,
+  "round": 1,
+  "best_model": "costly_valence_l2_listener",
+  "standing": {
+   "costly_valence_l2_listener": {
+    "rank": 0,
+    "elpd_loo": -17438.41915512085,
+    "se": 135.59076187895045,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 7.304744106681028,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_speaker_l2_shared_prior": {
+    "rank": 1,
+    "elpd_loo": -17464.09207057953,
+    "se": 135.57618003354028,
+    "elpd_diff": 25.6729154586792,
+    "dse": 9.188768375116865,
+    "p_loo": 4.729248000036023,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "softmax_valence_l2_listener": {
+    "rank": 2,
+    "elpd_loo": -17466.770970344543,
+    "se": 135.75869582018345,
+    "elpd_diff": 28.351815223693848,
+    "dse": 8.710950643291765,
+    "p_loo": 6.785160051353159,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "graded_semantics_listener": {
+    "rank": 3,
+    "elpd_loo": -17470.135369300842,
+    "se": 135.79108281578712,
+    "elpd_diff": 31.716214179992676,
+    "dse": 14.39877559566321,
+    "p_loo": 4.0059911596472375,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "valence_salience_l2_listener": {
+    "rank": 4,
+    "elpd_loo": -17488.98097038269,
+    "se": 135.34851771723413,
+    "elpd_diff": 50.56181526184082,
+    "dse": 9.692047835469735,
+    "p_loo": 5.158773961724364,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_speaker_shared_prior": {
+    "rank": 5,
+    "elpd_loo": -17503.053488731384,
+    "se": 135.64187223904298,
+    "elpd_diff": 64.63433361053467,
+    "dse": 9.53150185226687,
+    "p_loo": 4.912801545964612,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "valence_salience_listener": {
+    "rank": 6,
+    "elpd_loo": -17521.153170585632,
+    "se": 135.22131024771662,
+    "elpd_diff": 82.73401546478271,
+    "dse": 11.19218789814333,
+    "p_loo": 5.1889910603022145,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2_shared_prior": {
+    "rank": 7,
+    "elpd_loo": -17523.287276268005,
+    "se": 135.39859102236875,
+    "elpd_diff": 84.86812114715576,
+    "dse": 12.791028411923428,
+    "p_loo": 3.8592908306382014,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "capacity_limited_listener": {
+    "rank": 8,
+    "elpd_loo": -17550.040508270264,
+    "se": 135.26346141704593,
+    "elpd_diff": 111.62135314941406,
+    "dse": 13.410134130073967,
+    "p_loo": 3.8544845217475086,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 9,
+    "elpd_loo": -17552.48298740387,
+    "se": 135.2568749406573,
+    "elpd_diff": 114.06383228302002,
+    "dse": 13.732928219798799,
+    "p_loo": 3.88758087525639,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 10,
+    "elpd_loo": -17555.013271331787,
+    "se": 134.8987824521609,
+    "elpd_diff": 116.5941162109375,
+    "dse": 15.07078785357355,
+    "p_loo": 2.0284820151100575,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_salience": {
+    "rank": 11,
+    "elpd_loo": -17559.05241584778,
+    "se": 135.03638478750818,
+    "elpd_diff": 120.63326072692871,
+    "dse": 14.116497617236773,
+    "p_loo": 3.9516667148200213,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "distinctiveness_salience_listener": {
+    "rank": 12,
+    "elpd_loo": -17576.55562019348,
+    "se": 134.30716078882224,
+    "elpd_diff": 138.13646507263184,
+    "dse": 16.047405434061236,
+    "p_loo": 3.726082102552027,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_feature_speaker": {
+    "rank": 13,
+    "elpd_loo": -17580.724298477173,
+    "se": 134.2306065765221,
+    "elpd_diff": 142.30514335632324,
+    "dse": 15.527152118226182,
+    "p_loo": 4.364546602620976,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "naive_speaker_listener": {
+    "rank": 14,
+    "elpd_loo": -17585.55086517334,
+    "se": 135.11527210060106,
+    "elpd_diff": 147.13171005249023,
+    "dse": 18.204916994515994,
+    "p_loo": 4.003652845360193,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 15,
+    "elpd_loo": -17599.29961681366,
+    "se": 134.34470890604672,
+    "elpd_diff": 160.88046169281006,
+    "dse": 16.75008486428421,
+    "p_loo": 2.04647665360244,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 16,
+    "elpd_loo": -18828.09070968628,
+    "se": 128.77455062228668,
+    "elpd_diff": 1389.6715545654297,
+    "dse": 49.93065125138068,
+    "p_loo": 0.9709597879264038,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "distinctiveness_salience_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential descriptions by maintaining a prior expectation that speakers refer to distinctive objects whose features contrast with the visual context rather than objects with broadly shared features. Before hearing an informative utterance, listeners assign higher prior probability to objects possessing unique or narrowly shared features, grounded in visual contrast and referential distinctiveness. This distinctiveness-based salience prior operates as common ground shared between the speaker and the listener across all levels of pragmatic reasoning."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "capacity_limited_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "People are resource-limited listeners whose attentional precision over the display decays with visual set size. In accordance with continuous-resource models of visual attention, referential reasoning precision follows a power-law decline as the number of objects on the screen increases. Consequently, listeners compute sharp pragmatic inferences on minimal two-object displays but make increasingly diffuse, bounded choices as visual display clutter grows."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "graded_semantics_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "People interpret referential descriptions using graded truth values rather than binary logic, treating words as more faithful descriptions of objects with fewer extraneous features. A listener hearing a single-feature word perceives it as a prototypical match for an object defined solely by that feature, but as a diluted, less complete match for an object with competing features. Pragmatic listeners invert a speaker who communicates with these graded semantic representations, sharpening preference for minimal, prototypical exemplars."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "costly_valence_l2_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by reasoning at depth 2 while inverting a speaker who balances communicative informativeness against utterance production costs, refining the valence_salience_l2_listener model by incorporating utterance extension costs into the speaker's utility. When a speaker uses a broader or shared descriptor, listeners recognize that this choice reflects lower production costs for accessible terms rather than an uninformative speaker, resolving competition between specific and shared features across displays while maintaining the evaluative salience prior across recursive depths.\n\nRefined model: valence_salience_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_extension (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: In memo L1 and L2, speakers choose utterances with utility augmented by vec(weights, u), where weights are w_extension * (1.0 - ctx.is_sink) * (jnp.sum(ctx.lex, axis=1) - 1.0)."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "softmax_valence_l2_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret evaluative descriptions by combining depth-2 recursive pragmatic reasoning with a softmax choice rule over inferred referents, refining the valence_salience_l2_listener model by allowing listeners to maximize choices rather than strictly probability-match. While standard depth-2 listeners invert a pragmatic speaker to compute posterior probabilities over objects, human participants exhibit decision precision that sharpens their selections toward the most probable referent. Incorporating a decision rationality parameter for the listener into the depth-2 evaluative architecture better captures the high determinism of participant choices on clear communicative displays.\n\nRefined model: valence_salience_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r]."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "costly_speaker_l2_shared_prior",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential descriptions by reasoning at depth 2 (inverting a speaker who anticipates a depth-1 pragmatic listener), refining costly_speaker_shared_prior by extending its recursive depth from depth 1 to depth 2 while preserving utterance production costs and the shared common-ground salience prior across all levels of recursion. In complex displays with both shared and distinctive features, depth-2 reasoning enables the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, while continuing to balance communicative informativeness against the production cost of overly specific terms.\n\nRefined model: costly_speaker_shared_prior\nDifferences from source:\n- Recursion depth: depth 2 (choice_probs calls L2 instead of L1).\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ..., weights: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with the shared salience prior and utterance extension costs.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, w_extension, lapse with identical priors).\n- Terms changed: choice_probs calls L2 instead of L1."
+   }
+  ],
+  "live": [
+   {
+    "name": "literal_listener",
+    "hypothesis": "Listeners pick uniformly among the objects the word is literally true of.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_salience",
+    "hypothesis": "Depth-1 RSA whose listener has a salience prior over objects (feature count, familiarization base rate) that the simulated literal listener lacks.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_shared_prior",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "valence_salience_listener",
+    "hypothesis": "Listeners interpret evaluative descriptions (such as a speaker referring to their favorite or least favorite object) by modulating their referent prior with the valence of the framing. Positive valence increases the prior expectation of feature-rich referents, whereas negative valence inverts this preference to favor minimal or feature-sparse referents. This evaluative prior is shared as common ground across the simulated literal listener and the pragmatic listener.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "naive_speaker_listener",
+    "hypothesis": "People interpret referential descriptions by inverting a naive generative speaker who mentions any true feature of the intended object with equal probability, rather than simulating a speaker who mentalizes a listener. When hearing an ambiguous word, listeners favor objects with fewer total features because a naive speaker is less likely to have chosen that word for an object with many competing features. On displays where a multi-featured object has only uninformative alternative features, this model predicts listeners will disfavor it relative to an object with fewer features, whereas standard RSA predicts listeners will favor it because a strategic speaker avoids uninformative alternatives.\n",
+    "source": "round 1 candidate 2 explore"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "hypothesis": "Speakers trade off communicative informativeness with utterance costs that favor accessible, shared descriptors over narrow, highly specific words. Pragmatic listeners invert this speaker, recognizing that a speaker who uses a shared word may still refer to an object with unique features because specific words carry higher production costs.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "rsa_l2_shared_prior",
+    "hypothesis": "Listeners reason at depth 2 by inverting a speaker who anticipates the depth-1 pragmatic listener, maintaining the common-knowledge salience prior (feature count and familiarization base rate) across all levels of recursion. Reasoning two levels deep allows the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, resolving ambiguous references in complex displays where depth-1 reasoning under-discriminates.\n\nDifferences from rsa_l1_shared_prior:\n- Recursion depth: choice_probs calls L2 instead of L1.\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with common-knowledge prior over objects.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, lapse with identical priors).\n",
+    "source": "round 1 candidate 4 refine incumbent rsa_l1_shared_prior"
+   },
+   {
+    "name": "costly_speaker_shared_prior",
+    "hypothesis": "People interpret referential descriptions by inverting a speaker who balances communicative informativeness against utterance production costs, while maintaining a shared common-ground salience prior over referents. When a speaker uses an ambiguous or shared descriptor, listeners recognize that this preference reflects lower production costs for broad, accessible terms rather than an uninformative speaker. This refines rsa_l1_shared_prior by integrating utterance extension costs from costly_feature_speaker into the speaker's utility, improving predictions on displays where referents have both unique and shared features.\n\nDifferences from rsa_l1_shared_prior:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from source).\n- Parameters added: w_extension (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, lapse with identical priors).\n- Speaker utility: In memo L1, speaker chooses utterances with utility augmented by vec(weights, u), where weights are w_extension * (1.0 - ctx.is_sink) * (jnp.sum(ctx.lex, axis=1) - 1.0).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l1_shared_prior repair 1"
+   },
+   {
+    "name": "valence_salience_l2_listener",
+    "hypothesis": "Listeners interpret evaluative descriptions by reasoning at depth 2 (inverting a speaker who anticipates a depth-1 pragmatic listener), refining the valence_salience_listener model by extending its recursive depth from depth 1 to depth 2 while preserving the common-knowledge evaluative salience prior across all levels of recursion. In complex reference games with evaluative framing (such as favorite vs. least favorite), depth-2 reasoning enables the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, resolving ambiguous references that depth-1 reasoning under-discriminates.\n\nRefined model: valence_salience_listener\nDifferences from source:\n- Recursion depth: depth 2 (choice_probs calls L2 instead of L1).\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with the shared evaluative prior.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: choice_probs calls L2 instead of L1.\n",
+    "source": "round 1 candidate 6 refine chosen repair 1"
+   },
+   {
+    "name": "distinctiveness_salience_listener",
+    "hypothesis": "Listeners interpret referential descriptions by maintaining a prior expectation that speakers refer to distinctive objects whose features contrast with the visual context rather than objects with broadly shared features. Before hearing an informative utterance, listeners assign higher prior probability to objects possessing unique or narrowly shared features, grounded in visual contrast and referential distinctiveness. This distinctiveness-based salience prior operates as common ground shared between the speaker and the listener across all levels of pragmatic reasoning.\n",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "capacity_limited_listener",
+    "hypothesis": "People are resource-limited listeners whose attentional precision over the display decays with visual set size. In accordance with continuous-resource models of visual attention, referential reasoning precision follows a power-law decline as the number of objects on the screen increases. Consequently, listeners compute sharp pragmatic inferences on minimal two-object displays but make increasingly diffuse, bounded choices as visual display clutter grows.\n",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "graded_semantics_listener",
+    "hypothesis": "People interpret referential descriptions using graded truth values rather than binary logic, treating words as more faithful descriptions of objects with fewer extraneous features. A listener hearing a single-feature word perceives it as a prototypical match for an object defined solely by that feature, but as a diluted, less complete match for an object with competing features. Pragmatic listeners invert a speaker who communicates with these graded semantic representations, sharpening preference for minimal, prototypical exemplars.\n",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "costly_valence_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by reasoning at depth 2 while inverting a speaker who balances communicative informativeness against utterance production costs, refining the valence_salience_l2_listener model by incorporating utterance extension costs into the speaker's utility. When a speaker uses a broader or shared descriptor, listeners recognize that this choice reflects lower production costs for accessible terms rather than an uninformative speaker, resolving competition between specific and shared features across displays while maintaining the evaluative salience prior across recursive depths.\n\nRefined model: valence_salience_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_extension (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: In memo L1 and L2, speakers choose utterances with utility augmented by vec(weights, u), where weights are w_extension * (1.0 - ctx.is_sink) * (jnp.sum(ctx.lex, axis=1) - 1.0).\n",
+    "source": "round 2 candidate 4 refine incumbent valence_salience_l2_listener"
+   },
+   {
+    "name": "softmax_valence_l2_listener",
+    "hypothesis": "Listeners interpret evaluative descriptions by combining depth-2 recursive pragmatic reasoning with a softmax choice rule over inferred referents, refining the valence_salience_l2_listener model by allowing listeners to maximize choices rather than strictly probability-match. While standard depth-2 listeners invert a pragmatic speaker to compute posterior probabilities over objects, human participants exhibit decision precision that sharpens their selections toward the most probable referent. Incorporating a decision rationality parameter for the listener into the depth-2 evaluative architecture better captures the high determinism of participant choices on clear communicative displays.\n\nRefined model: valence_salience_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r].\n",
+    "source": "round 2 candidate 5 refine incumbent valence_salience_l2_listener"
+   },
+   {
+    "name": "costly_speaker_l2_shared_prior",
+    "hypothesis": "Listeners interpret referential descriptions by reasoning at depth 2 (inverting a speaker who anticipates a depth-1 pragmatic listener), refining costly_speaker_shared_prior by extending its recursive depth from depth 1 to depth 2 while preserving utterance production costs and the shared common-ground salience prior across all levels of recursion. In complex displays with both shared and distinctive features, depth-2 reasoning enables the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, while continuing to balance communicative informativeness against the production cost of overly specific terms.\n\nRefined model: costly_speaker_shared_prior\nDifferences from source:\n- Recursion depth: depth 2 (choice_probs calls L2 instead of L1).\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ..., weights: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with the shared salience prior and utterance extension costs.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, w_extension, lapse with identical priors).\n- Terms changed: choice_probs calls L2 instead of L1.\n",
+    "source": "round 2 candidate 6 refine chosen"
+   }
+  ],
+  "ledger_entries": 14
+ },
+ {
+  "step": 3,
+  "round": 2,
+  "best_model": "multimodal_graded_costly_l2_listener",
+  "standing": {
+   "multimodal_graded_costly_l2_listener": {
+    "rank": 0,
+    "elpd_loo": -17389.5059299469,
+    "se": 135.87852890474784,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 8.58130527006142,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "graded_costly_valence_l2_listener": {
+    "rank": 1,
+    "elpd_loo": -17392.924242019653,
+    "se": 135.8579227733195,
+    "elpd_diff": 3.4183120727539062,
+    "dse": 2.89983125549637,
+    "p_loo": 7.502005953312619,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "softmax_costly_valence_l2_listener": {
+    "rank": 2,
+    "elpd_loo": -17437.137311935425,
+    "se": 135.72504999544458,
+    "elpd_diff": 47.63138198852539,
+    "dse": 10.112724182103207,
+    "p_loo": 8.464876707992516,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_valence_l2_listener": {
+    "rank": 3,
+    "elpd_loo": -17438.41915512085,
+    "se": 135.59076187895045,
+    "elpd_diff": 48.913225173950195,
+    "dse": 9.971287864168996,
+    "p_loo": 7.304744106681028,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_speaker_l2_shared_prior": {
+    "rank": 4,
+    "elpd_loo": -17464.09207057953,
+    "se": 135.57618003354028,
+    "elpd_diff": 74.5861406326294,
+    "dse": 14.212117699524914,
+    "p_loo": 4.729248000036023,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "softmax_valence_l2_listener": {
+    "rank": 5,
+    "elpd_loo": -17466.770970344543,
+    "se": 135.75869582018345,
+    "elpd_diff": 77.26504039764404,
+    "dse": 12.743319465649247,
+    "p_loo": 6.785160051353159,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "graded_semantics_listener": {
+    "rank": 6,
+    "elpd_loo": -17470.135369300842,
+    "se": 135.79108281578712,
+    "elpd_diff": 80.62943935394287,
+    "dse": 15.060774668298125,
+    "p_loo": 4.0059911596472375,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "multimodal_salience_listener": {
+    "rank": 7,
+    "elpd_loo": -17486.99435710907,
+    "se": 135.3924110344046,
+    "elpd_diff": 97.48842716217041,
+    "dse": 13.56277393706667,
+    "p_loo": 6.3304234976712905,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "valence_salience_l2_listener": {
+    "rank": 8,
+    "elpd_loo": -17488.98097038269,
+    "se": 135.34851771723413,
+    "elpd_diff": 99.47504043579102,
+    "dse": 13.782040642988271,
+    "p_loo": 5.158773961724364,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_speaker_shared_prior": {
+    "rank": 9,
+    "elpd_loo": -17503.053488731384,
+    "se": 135.64187223904298,
+    "elpd_diff": 113.54755878448486,
+    "dse": 16.588125378941093,
+    "p_loo": 4.912801545964612,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "valence_salience_listener": {
+    "rank": 10,
+    "elpd_loo": -17521.153170585632,
+    "se": 135.22131024771662,
+    "elpd_diff": 131.6472406387329,
+    "dse": 16.182797940312774,
+    "p_loo": 5.1889910603022145,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2_shared_prior": {
+    "rank": 11,
+    "elpd_loo": -17523.287276268005,
+    "se": 135.39859102236875,
+    "elpd_diff": 133.78134632110596,
+    "dse": 16.913947738381456,
+    "p_loo": 3.8592908306382014,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "softmax_belief_listener": {
+    "rank": 12,
+    "elpd_loo": -17527.17280960083,
+    "se": 135.705298429471,
+    "elpd_diff": 137.66687965393066,
+    "dse": 18.749424944111166,
+    "p_loo": 5.076596368060564,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "capacity_limited_listener": {
+    "rank": 13,
+    "elpd_loo": -17550.040508270264,
+    "se": 135.26346141704593,
+    "elpd_diff": 160.53457832336426,
+    "dse": 18.558498377736463,
+    "p_loo": 3.8544845217475086,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 14,
+    "elpd_loo": -17552.48298740387,
+    "se": 135.2568749406573,
+    "elpd_diff": 162.97705745697021,
+    "dse": 18.681119926735075,
+    "p_loo": 3.88758087525639,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 15,
+    "elpd_loo": -17555.013271331787,
+    "se": 134.8987824521609,
+    "elpd_diff": 165.5073413848877,
+    "dse": 18.005923439707868,
+    "p_loo": 2.0284820151100575,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_salience": {
+    "rank": 16,
+    "elpd_loo": -17559.05241584778,
+    "se": 135.03638478750818,
+    "elpd_diff": 169.5464859008789,
+    "dse": 19.04458010263727,
+    "p_loo": 3.9516667148200213,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "distinctiveness_salience_listener": {
+    "rank": 17,
+    "elpd_loo": -17576.55562019348,
+    "se": 134.30716078882224,
+    "elpd_diff": 187.04969024658203,
+    "dse": 19.715844553239965,
+    "p_loo": 3.726082102552027,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_feature_speaker": {
+    "rank": 18,
+    "elpd_loo": -17580.724298477173,
+    "se": 134.2306065765221,
+    "elpd_diff": 191.21836853027344,
+    "dse": 20.385152159524665,
+    "p_loo": 4.364546602620976,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "naive_speaker_listener": {
+    "rank": 19,
+    "elpd_loo": -17585.55086517334,
+    "se": 135.11527210060106,
+    "elpd_diff": 196.04493522644043,
+    "dse": 22.41889497189157,
+    "p_loo": 4.003652845360193,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 20,
+    "elpd_loo": -17599.29961681366,
+    "se": 134.34470890604672,
+    "elpd_diff": 209.79368686676025,
+    "dse": 20.277466827292834,
+    "p_loo": 2.04647665360244,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "feature_parsimony_listener": {
+    "rank": 21,
+    "elpd_loo": -17640.943208694458,
+    "se": 135.36422063456922,
+    "elpd_diff": 251.4372787475586,
+    "dse": 24.94863954723069,
+    "p_loo": 2.0949771454834263,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 22,
+    "elpd_loo": -18828.09070968628,
+    "se": 128.77455062228668,
+    "elpd_diff": 1438.5847797393799,
+    "dse": 51.479807026200575,
+    "p_loo": 0.9709597879264038,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "multimodal_salience_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential descriptions by maintaining a multimodal salience prior that unifies perceptual pop-out and evaluative framing. Before hearing an informative utterance, listeners assign higher prior prominence to objects that contrast perceptually with the display (an object in chromatic color amidst grayscale competitors) and objects that align with the speaker's evaluative framing (feature-rich objects under positive framing and feature-sparse objects under negative framing), defaulting to baseline feature complexity in neutral contexts. Pragmatic listeners invert a communicative speaker who shares this common-ground prominence distribution across recursive reasoning depths."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "feature_parsimony_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "People interpret referential descriptions using a non-Bayesian feature parsimony heuristic: among objects matching the heard word, they prefer the object with the fewest total features, penalizing extraneous unmentioned properties. Rather than mentalizing an informative speaker or evaluating alternative utterances, listeners directly discount candidate referents as an exponential function of their unmentioned complexity. When no informative word is spoken, listeners choose uniformly at random."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "softmax_belief_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential descriptions by computing communicative beliefs through simple recursive inference, but select referents using a softmax decision rule rather than strict probability matching. Rather than choosing an object in exact proportion to its posterior probability, listeners sharpen their selections toward the most probable referent according to a decision precision parameter. This separates communicative reasoning from choice determinism, capturing the high determinism of human clicks while preserving probabilistic inference on subtle displays."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "graded_costly_valence_l2_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning with graded semantic truth values, refining costly_valence_l2_listener by incorporating lexical dilution from graded_semantics_listener into the lexicon shared across reasoning levels. Rather than treating descriptive terms as binary, listeners perceive a word as a prototypical match for an object with only that feature, but as a diluted, less complete description of an object cluttered with extraneous features, sharpening the preference for minimal exemplars while continuing to invert a speaker who balances informativeness against utterance extension costs under evaluative framing.\n\nRefined model: costly_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta_graded (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, lapse with identical priors).\n- Terms changed: The lexicon passed to L2 is graded_lex instead of ctx.lex, where graded_lex scales non-sink entries of ctx.lex by dilution = exp(-beta_graded * max(feature_count - 1.0, 0.0))."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "softmax_costly_valence_l2_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning with utterance extension costs and a softmax choice rule over inferred referents, refining costly_valence_l2_listener by allowing listeners to maximize choices rather than strictly probability-match. While listeners invert a cost-sensitive pragmatic speaker to infer the posterior probability of each referent, human participants exhibit decision precision that sharpens their final selections toward the most likely target object. Integrating a listener decision rationality parameter into the depth-2 cost-sensitive architecture better captures the heightened determinism of participant choices across unambiguous communicative displays.\n\nRefined model: costly_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, lapse with identical priors).\n- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r]."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "costly_softmax_valence_l2_listener",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0000 of softmax_costly_valence_l2_listener's (threshold 0.002) over the loop's novelty pool of 1258 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning with utterance production costs in the speaker and softmax decision precision in the listener, refining softmax_valence_l2_listener by incorporating utterance extension costs into the speaker's utility. When a speaker chooses between accessible, shared terms and narrow descriptors, listeners recognize that broader terms reflect lower production costs rather than an uninformative speaker, resolving competition between specific and shared features across displays while sharpening their final referential choices toward the most probable referent. This unifies cost-sensitive speaker production with decision-rational listener comprehension across all recursive depths of the evaluative reference game.\n\nRefined model: softmax_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_extension (Normal(0.0, 1.0)); no parameters removed (retains alpha, beta, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: In memo L1 and L2, speakers choose utterances with utility augmented by vec(weights, u), where weights are w_extension * (1.0 - ctx.is_sink) * (jnp.sum(ctx.lex, axis=1) - 1.0)."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "multimodal_graded_costly_l2_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, and graded semantic truth values with perceptual salience, refining graded_costly_valence_l2_listener by incorporating visual pop-out from multimodal_salience_listener into the common-knowledge salience prior. Before hearing an informative utterance, listeners assign higher prior prominence to chromatic objects contrasting with grayscale competitors alongside evaluative and feature-based priors, which communicative speakers share across reasoning depths while balancing informativeness against production costs over graded descriptions.\n\nRefined model: graded_costly_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_color (Normal(0.0, 2.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, the prior over objects incorporates perceptual color salience + params[\"w_color\"] * (1.0 - ctx.grayscale).",
+    "repair": true
+   }
+  ],
+  "live": [
+   {
+    "name": "literal_listener",
+    "hypothesis": "Listeners pick uniformly among the objects the word is literally true of.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_salience",
+    "hypothesis": "Depth-1 RSA whose listener has a salience prior over objects (feature count, familiarization base rate) that the simulated literal listener lacks.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_shared_prior",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "valence_salience_listener",
+    "hypothesis": "Listeners interpret evaluative descriptions (such as a speaker referring to their favorite or least favorite object) by modulating their referent prior with the valence of the framing. Positive valence increases the prior expectation of feature-rich referents, whereas negative valence inverts this preference to favor minimal or feature-sparse referents. This evaluative prior is shared as common ground across the simulated literal listener and the pragmatic listener.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "naive_speaker_listener",
+    "hypothesis": "People interpret referential descriptions by inverting a naive generative speaker who mentions any true feature of the intended object with equal probability, rather than simulating a speaker who mentalizes a listener. When hearing an ambiguous word, listeners favor objects with fewer total features because a naive speaker is less likely to have chosen that word for an object with many competing features. On displays where a multi-featured object has only uninformative alternative features, this model predicts listeners will disfavor it relative to an object with fewer features, whereas standard RSA predicts listeners will favor it because a strategic speaker avoids uninformative alternatives.\n",
+    "source": "round 1 candidate 2 explore"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "hypothesis": "Speakers trade off communicative informativeness with utterance costs that favor accessible, shared descriptors over narrow, highly specific words. Pragmatic listeners invert this speaker, recognizing that a speaker who uses a shared word may still refer to an object with unique features because specific words carry higher production costs.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "rsa_l2_shared_prior",
+    "hypothesis": "Listeners reason at depth 2 by inverting a speaker who anticipates the depth-1 pragmatic listener, maintaining the common-knowledge salience prior (feature count and familiarization base rate) across all levels of recursion. Reasoning two levels deep allows the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, resolving ambiguous references in complex displays where depth-1 reasoning under-discriminates.\n\nDifferences from rsa_l1_shared_prior:\n- Recursion depth: choice_probs calls L2 instead of L1.\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with common-knowledge prior over objects.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, lapse with identical priors).\n",
+    "source": "round 1 candidate 4 refine incumbent rsa_l1_shared_prior"
+   },
+   {
+    "name": "costly_speaker_shared_prior",
+    "hypothesis": "People interpret referential descriptions by inverting a speaker who balances communicative informativeness against utterance production costs, while maintaining a shared common-ground salience prior over referents. When a speaker uses an ambiguous or shared descriptor, listeners recognize that this preference reflects lower production costs for broad, accessible terms rather than an uninformative speaker. This refines rsa_l1_shared_prior by integrating utterance extension costs from costly_feature_speaker into the speaker's utility, improving predictions on displays where referents have both unique and shared features.\n\nDifferences from rsa_l1_shared_prior:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from source).\n- Parameters added: w_extension (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, lapse with identical priors).\n- Speaker utility: In memo L1, speaker chooses utterances with utility augmented by vec(weights, u), where weights are w_extension * (1.0 - ctx.is_sink) * (jnp.sum(ctx.lex, axis=1) - 1.0).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l1_shared_prior repair 1"
+   },
+   {
+    "name": "valence_salience_l2_listener",
+    "hypothesis": "Listeners interpret evaluative descriptions by reasoning at depth 2 (inverting a speaker who anticipates a depth-1 pragmatic listener), refining the valence_salience_listener model by extending its recursive depth from depth 1 to depth 2 while preserving the common-knowledge evaluative salience prior across all levels of recursion. In complex reference games with evaluative framing (such as favorite vs. least favorite), depth-2 reasoning enables the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, resolving ambiguous references that depth-1 reasoning under-discriminates.\n\nRefined model: valence_salience_listener\nDifferences from source:\n- Recursion depth: depth 2 (choice_probs calls L2 instead of L1).\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with the shared evaluative prior.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: choice_probs calls L2 instead of L1.\n",
+    "source": "round 1 candidate 6 refine chosen repair 1"
+   },
+   {
+    "name": "distinctiveness_salience_listener",
+    "hypothesis": "Listeners interpret referential descriptions by maintaining a prior expectation that speakers refer to distinctive objects whose features contrast with the visual context rather than objects with broadly shared features. Before hearing an informative utterance, listeners assign higher prior probability to objects possessing unique or narrowly shared features, grounded in visual contrast and referential distinctiveness. This distinctiveness-based salience prior operates as common ground shared between the speaker and the listener across all levels of pragmatic reasoning.\n",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "capacity_limited_listener",
+    "hypothesis": "People are resource-limited listeners whose attentional precision over the display decays with visual set size. In accordance with continuous-resource models of visual attention, referential reasoning precision follows a power-law decline as the number of objects on the screen increases. Consequently, listeners compute sharp pragmatic inferences on minimal two-object displays but make increasingly diffuse, bounded choices as visual display clutter grows.\n",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "graded_semantics_listener",
+    "hypothesis": "People interpret referential descriptions using graded truth values rather than binary logic, treating words as more faithful descriptions of objects with fewer extraneous features. A listener hearing a single-feature word perceives it as a prototypical match for an object defined solely by that feature, but as a diluted, less complete match for an object with competing features. Pragmatic listeners invert a speaker who communicates with these graded semantic representations, sharpening preference for minimal, prototypical exemplars.\n",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "costly_valence_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by reasoning at depth 2 while inverting a speaker who balances communicative informativeness against utterance production costs, refining the valence_salience_l2_listener model by incorporating utterance extension costs into the speaker's utility. When a speaker uses a broader or shared descriptor, listeners recognize that this choice reflects lower production costs for accessible terms rather than an uninformative speaker, resolving competition between specific and shared features across displays while maintaining the evaluative salience prior across recursive depths.\n\nRefined model: valence_salience_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_extension (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: In memo L1 and L2, speakers choose utterances with utility augmented by vec(weights, u), where weights are w_extension * (1.0 - ctx.is_sink) * (jnp.sum(ctx.lex, axis=1) - 1.0).\n",
+    "source": "round 2 candidate 4 refine incumbent valence_salience_l2_listener"
+   },
+   {
+    "name": "softmax_valence_l2_listener",
+    "hypothesis": "Listeners interpret evaluative descriptions by combining depth-2 recursive pragmatic reasoning with a softmax choice rule over inferred referents, refining the valence_salience_l2_listener model by allowing listeners to maximize choices rather than strictly probability-match. While standard depth-2 listeners invert a pragmatic speaker to compute posterior probabilities over objects, human participants exhibit decision precision that sharpens their selections toward the most probable referent. Incorporating a decision rationality parameter for the listener into the depth-2 evaluative architecture better captures the high determinism of participant choices on clear communicative displays.\n\nRefined model: valence_salience_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r].\n",
+    "source": "round 2 candidate 5 refine incumbent valence_salience_l2_listener"
+   },
+   {
+    "name": "costly_speaker_l2_shared_prior",
+    "hypothesis": "Listeners interpret referential descriptions by reasoning at depth 2 (inverting a speaker who anticipates a depth-1 pragmatic listener), refining costly_speaker_shared_prior by extending its recursive depth from depth 1 to depth 2 while preserving utterance production costs and the shared common-ground salience prior across all levels of recursion. In complex displays with both shared and distinctive features, depth-2 reasoning enables the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, while continuing to balance communicative informativeness against the production cost of overly specific terms.\n\nRefined model: costly_speaker_shared_prior\nDifferences from source:\n- Recursion depth: depth 2 (choice_probs calls L2 instead of L1).\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ..., weights: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with the shared salience prior and utterance extension costs.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, w_extension, lapse with identical priors).\n- Terms changed: choice_probs calls L2 instead of L1.\n",
+    "source": "round 2 candidate 6 refine chosen"
+   },
+   {
+    "name": "multimodal_salience_listener",
+    "hypothesis": "Listeners interpret referential descriptions by maintaining a multimodal salience prior that unifies perceptual pop-out and evaluative framing. Before hearing an informative utterance, listeners assign higher prior prominence to objects that contrast perceptually with the display (an object in chromatic color amidst grayscale competitors) and objects that align with the speaker's evaluative framing (feature-rich objects under positive framing and feature-sparse objects under negative framing), defaulting to baseline feature complexity in neutral contexts. Pragmatic listeners invert a communicative speaker who shares this common-ground prominence distribution across recursive reasoning depths.\n",
+    "source": "round 3 candidate 1 explore"
+   },
+   {
+    "name": "feature_parsimony_listener",
+    "hypothesis": "People interpret referential descriptions using a non-Bayesian feature parsimony heuristic: among objects matching the heard word, they prefer the object with the fewest total features, penalizing extraneous unmentioned properties. Rather than mentalizing an informative speaker or evaluating alternative utterances, listeners directly discount candidate referents as an exponential function of their unmentioned complexity. When no informative word is spoken, listeners choose uniformly at random.\n",
+    "source": "round 3 candidate 2 explore"
+   },
+   {
+    "name": "softmax_belief_listener",
+    "hypothesis": "Listeners interpret referential descriptions by computing communicative beliefs through simple recursive inference, but select referents using a softmax decision rule rather than strict probability matching. Rather than choosing an object in exact proportion to its posterior probability, listeners sharpen their selections toward the most probable referent according to a decision precision parameter. This separates communicative reasoning from choice determinism, capturing the high determinism of human clicks while preserving probabilistic inference on subtle displays.\n",
+    "source": "round 3 candidate 3 explore"
+   },
+   {
+    "name": "graded_costly_valence_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning with graded semantic truth values, refining costly_valence_l2_listener by incorporating lexical dilution from graded_semantics_listener into the lexicon shared across reasoning levels. Rather than treating descriptive terms as binary, listeners perceive a word as a prototypical match for an object with only that feature, but as a diluted, less complete description of an object cluttered with extraneous features, sharpening the preference for minimal exemplars while continuing to invert a speaker who balances informativeness against utterance extension costs under evaluative framing.\n\nRefined model: costly_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta_graded (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, lapse with identical priors).\n- Terms changed: The lexicon passed to L2 is graded_lex instead of ctx.lex, where graded_lex scales non-sink entries of ctx.lex by dilution = exp(-beta_graded * max(feature_count - 1.0, 0.0)).\n",
+    "source": "round 3 candidate 4 refine incumbent costly_valence_l2_listener"
+   },
+   {
+    "name": "softmax_costly_valence_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning with utterance extension costs and a softmax choice rule over inferred referents, refining costly_valence_l2_listener by allowing listeners to maximize choices rather than strictly probability-match. While listeners invert a cost-sensitive pragmatic speaker to infer the posterior probability of each referent, human participants exhibit decision precision that sharpens their final selections toward the most likely target object. Integrating a listener decision rationality parameter into the depth-2 cost-sensitive architecture better captures the heightened determinism of participant choices across unambiguous communicative displays.\n\nRefined model: costly_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, lapse with identical priors).\n- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r].\n",
+    "source": "round 3 candidate 5 refine incumbent costly_valence_l2_listener"
+   },
+   {
+    "name": "multimodal_graded_costly_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, and graded semantic truth values with perceptual salience, refining graded_costly_valence_l2_listener by incorporating visual pop-out from multimodal_salience_listener into the common-knowledge salience prior. Before hearing an informative utterance, listeners assign higher prior prominence to chromatic objects contrasting with grayscale competitors alongside evaluative and feature-based priors, which communicative speakers share across reasoning depths while balancing informativeness against production costs over graded descriptions.\n\nRefined model: graded_costly_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_color (Normal(0.0, 2.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, the prior over objects incorporates perceptual color salience + params[\"w_color\"] * (1.0 - ctx.grayscale).\n",
+    "source": "round 3 candidate 6 refine chosen repair 1"
+   }
+  ],
+  "ledger_entries": 21
+ },
+ {
+  "step": 4,
+  "round": 3,
+  "best_model": "distinctive_multimodal_l2_listener",
+  "standing": {
+   "distinctive_multimodal_l2_listener": {
+    "rank": 0,
+    "elpd_loo": -17234.065155029297,
+    "se": 136.57725165007952,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 11.344350119332375,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "multimodal_graded_costly_l2_listener": {
+    "rank": 1,
+    "elpd_loo": -17389.5059299469,
+    "se": 135.87852890474784,
+    "elpd_diff": 155.44077491760254,
+    "dse": 18.33477234989681,
+    "p_loo": 8.58130527006142,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "softmax_multimodal_graded_costly_l2": {
+    "rank": 2,
+    "elpd_loo": -17392.539898872375,
+    "se": 135.8195633447741,
+    "elpd_diff": 158.4747438430786,
+    "dse": 18.003068091667703,
+    "p_loo": 12.209419717444689,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "graded_costly_valence_l2_listener": {
+    "rank": 3,
+    "elpd_loo": -17392.924242019653,
+    "se": 135.8579227733195,
+    "elpd_diff": 158.85908699035645,
+    "dse": 18.55858209171109,
+    "p_loo": 7.502005953312619,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "softmax_graded_costly_l2_listener": {
+    "rank": 4,
+    "elpd_loo": -17395.09730052948,
+    "se": 135.80487291043514,
+    "elpd_diff": 161.0321455001831,
+    "dse": 18.25095742062242,
+    "p_loo": 10.182623873457487,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_pragmatic_mixture_listener": {
+    "rank": 5,
+    "elpd_loo": -17430.648643493652,
+    "se": 135.87289096217904,
+    "elpd_diff": 196.58348846435547,
+    "dse": 24.10499348049783,
+    "p_loo": 6.258538096539269,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "softmax_costly_valence_l2_listener": {
+    "rank": 6,
+    "elpd_loo": -17437.137311935425,
+    "se": 135.72504999544458,
+    "elpd_diff": 203.07215690612793,
+    "dse": 21.540710897043507,
+    "p_loo": 8.464876707992516,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_valence_l2_listener": {
+    "rank": 7,
+    "elpd_loo": -17438.41915512085,
+    "se": 135.59076187895045,
+    "elpd_diff": 204.35400009155273,
+    "dse": 22.520700047792673,
+    "p_loo": 7.304744106681028,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_speaker_l2_shared_prior": {
+    "rank": 8,
+    "elpd_loo": -17464.09207057953,
+    "se": 135.57618003354028,
+    "elpd_diff": 230.02691555023193,
+    "dse": 25.89688759013266,
+    "p_loo": 4.729248000036023,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "softmax_valence_l2_listener": {
+    "rank": 9,
+    "elpd_loo": -17466.770970344543,
+    "se": 135.75869582018345,
+    "elpd_diff": 232.70581531524658,
+    "dse": 21.39385286759515,
+    "p_loo": 6.785160051353159,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "graded_semantics_listener": {
+    "rank": 10,
+    "elpd_loo": -17470.135369300842,
+    "se": 135.79108281578712,
+    "elpd_diff": 236.0702142715454,
+    "dse": 25.152859225573035,
+    "p_loo": 4.0059911596472375,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "aspect_goal_listener": {
+    "rank": 11,
+    "elpd_loo": -17476.447023391724,
+    "se": 135.3641305400597,
+    "elpd_diff": 242.38186836242676,
+    "dse": 27.721092382712403,
+    "p_loo": 2.886885328694916,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "multimodal_salience_listener": {
+    "rank": 12,
+    "elpd_loo": -17486.99435710907,
+    "se": 135.3924110344046,
+    "elpd_diff": 252.92920207977295,
+    "dse": 25.09630398261057,
+    "p_loo": 6.3304234976712905,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "valence_salience_l2_listener": {
+    "rank": 13,
+    "elpd_loo": -17488.98097038269,
+    "se": 135.34851771723413,
+    "elpd_diff": 254.91581535339355,
+    "dse": 25.116810201675307,
+    "p_loo": 5.158773961724364,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_speaker_shared_prior": {
+    "rank": 14,
+    "elpd_loo": -17503.053488731384,
+    "se": 135.64187223904298,
+    "elpd_diff": 268.9883337020874,
+    "dse": 28.26751348468117,
+    "p_loo": 4.912801545964612,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "contrastive_margin_speaker": {
+    "rank": 15,
+    "elpd_loo": -17514.48951435089,
+    "se": 135.33902566118732,
+    "elpd_diff": 280.42435932159424,
+    "dse": 28.59929616555201,
+    "p_loo": 3.9416527829744155,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "valence_salience_listener": {
+    "rank": 16,
+    "elpd_loo": -17521.153170585632,
+    "se": 135.22131024771662,
+    "elpd_diff": 287.08801555633545,
+    "dse": 26.852490483241027,
+    "p_loo": 5.1889910603022145,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2_shared_prior": {
+    "rank": 17,
+    "elpd_loo": -17523.287276268005,
+    "se": 135.39859102236875,
+    "elpd_diff": 289.2221212387085,
+    "dse": 27.98776971673736,
+    "p_loo": 3.8592908306382014,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "softmax_belief_listener": {
+    "rank": 18,
+    "elpd_loo": -17527.17280960083,
+    "se": 135.705298429471,
+    "elpd_diff": 293.1076545715332,
+    "dse": 26.711228947771257,
+    "p_loo": 5.076596368060564,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "capacity_limited_listener": {
+    "rank": 19,
+    "elpd_loo": -17550.040508270264,
+    "se": 135.26346141704593,
+    "elpd_diff": 315.9753532409668,
+    "dse": 29.389213316361314,
+    "p_loo": 3.8544845217475086,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 20,
+    "elpd_loo": -17552.48298740387,
+    "se": 135.2568749406573,
+    "elpd_diff": 318.41783237457275,
+    "dse": 29.34005565842256,
+    "p_loo": 3.88758087525639,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 21,
+    "elpd_loo": -17555.013271331787,
+    "se": 134.8987824521609,
+    "elpd_diff": 320.94811630249023,
+    "dse": 28.7693526263291,
+    "p_loo": 2.0284820151100575,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_salience": {
+    "rank": 22,
+    "elpd_loo": -17559.05241584778,
+    "se": 135.03638478750818,
+    "elpd_diff": 324.98726081848145,
+    "dse": 29.70239322337782,
+    "p_loo": 3.9516667148200213,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "distinctiveness_salience_listener": {
+    "rank": 23,
+    "elpd_loo": -17576.55562019348,
+    "se": 134.30716078882224,
+    "elpd_diff": 342.49046516418457,
+    "dse": 30.238730215197673,
+    "p_loo": 3.726082102552027,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_feature_speaker": {
+    "rank": 24,
+    "elpd_loo": -17580.724298477173,
+    "se": 134.2306065765221,
+    "elpd_diff": 346.659143447876,
+    "dse": 31.343717210012002,
+    "p_loo": 4.364546602620976,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "naive_speaker_listener": {
+    "rank": 25,
+    "elpd_loo": -17585.55086517334,
+    "se": 135.11527210060106,
+    "elpd_diff": 351.48571014404297,
+    "dse": 27.176995980474576,
+    "p_loo": 4.003652845360193,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 26,
+    "elpd_loo": -17599.29961681366,
+    "se": 134.34470890604672,
+    "elpd_diff": 365.2344617843628,
+    "dse": 30.65286757654696,
+    "p_loo": 2.04647665360244,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "feature_parsimony_listener": {
+    "rank": 27,
+    "elpd_loo": -17640.943208694458,
+    "se": 135.36422063456922,
+    "elpd_diff": 406.87805366516113,
+    "dse": 30.172702302599497,
+    "p_loo": 2.0949771454834263,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 28,
+    "elpd_loo": -18828.09070968628,
+    "se": 128.77455062228668,
+    "elpd_diff": 1594.0255546569824,
+    "dse": 56.96858376537369,
+    "p_loo": 0.9709597879264038,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "aspect_goal_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential descriptions by modeling a speaker whose communicative goal is to convey an aspect or feature of the target object rather than its full identity. Hearing a descriptive term, listeners jointly infer the speaker's intended referent and communicative goal, recognizing that an ambiguous descriptor is more likely when an object offers fewer alternative features to talk about. Marginalizing over this communicative goal guides listener choices toward objects for which the heard feature constitutes the primary or solitary descriptive aspect."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "literal_pragmatic_mixture_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "The human population in reference games is composed of a mixture of distinct listener types rather than a homogeneous cognitive process. Literal listeners select among candidate objects based purely on semantic truth and baseline salience without mentalizing the speaker, whereas pragmatic listeners simulate an informative speaker to make decisive referential choices. Observed population choices reflect the mixture of these two listener strategies, with the proportion of pragmatic reasoners governing how frequently ambiguous descriptions are resolved."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "contrastive_margin_speaker",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "People interpret referential descriptions by inverting a speaker who maximizes the discriminative contrast margin between the intended referent and competing alternatives, rather than raw target probability. When selecting an utterance, communicative speakers favor descriptors that create the sharpest separation above the nearest competitor in the listener's comprehension. Pragmatic listeners invert this competitive speaker, favoring referents that enjoy the highest contrastive margin under the heard word."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "softmax_multimodal_graded_costly_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, perceptual color pop-out, and graded semantic truth values with a softmax choice rule over inferred referents, refining multimodal_graded_costly_l2_listener by allowing listeners to maximize choices rather than strictly probability-match. While listeners invert a cost-sensitive pragmatic speaker over graded descriptions to infer the posterior probability of each candidate referent, human participants exhibit decision precision that sharpens their final selections toward the most likely target object. Integrating a listener decision rationality parameter into the multimodal depth-2 cost-sensitive architecture better captures the heightened determinism of participant choices across unambiguous communicative displays.\n\nRefined model: multimodal_graded_costly_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_color, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r]."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "distinctive_multimodal_l2_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, graded semantics, and perceptual salience with visual distinctiveness, refining multimodal_graded_costly_l2_listener by incorporating feature distinctiveness from distinctiveness_salience_listener into the common-knowledge salience prior. Before hearing an informative utterance, listeners assign higher prior prominence to distinctive objects possessing unique or narrowly shared features that contrast with the visual context, resolving competition between singleton referents and identical competitors while maintaining evaluative, color, and complexity priors across reasoning depths.\n\nRefined model: multimodal_graded_costly_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_distinct (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_color, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, the prior over objects incorporates feature distinctiveness + params[\"w_distinct\"] * distinctiveness, where distinctiveness is the sum across non-sink features true of each object weighted by specificity (inverse feature frequency)."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "softmax_graded_costly_l2_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, and graded semantic truth values with a softmax listener choice rule, refining graded_costly_valence_l2_listener by incorporating decision precision from softmax_costly_valence_l2_listener into the depth-2 pragmatic listener. While listeners infer the posterior probability of each referent by inverting a cost-sensitive speaker over graded descriptions, human participants select referents using a softmax decision rule that sharpens their choices toward the most probable referent rather than strictly probability-matching. This separates pragmatic belief updating from decision determinism, capturing the heightened determinism of participant choices across unambiguous communicative displays.\n\nRefined model: graded_costly_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r]."
+   }
+  ],
+  "live": [
+   {
+    "name": "literal_listener",
+    "hypothesis": "Listeners pick uniformly among the objects the word is literally true of.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_salience",
+    "hypothesis": "Depth-1 RSA whose listener has a salience prior over objects (feature count, familiarization base rate) that the simulated literal listener lacks.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_shared_prior",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "valence_salience_listener",
+    "hypothesis": "Listeners interpret evaluative descriptions (such as a speaker referring to their favorite or least favorite object) by modulating their referent prior with the valence of the framing. Positive valence increases the prior expectation of feature-rich referents, whereas negative valence inverts this preference to favor minimal or feature-sparse referents. This evaluative prior is shared as common ground across the simulated literal listener and the pragmatic listener.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "naive_speaker_listener",
+    "hypothesis": "People interpret referential descriptions by inverting a naive generative speaker who mentions any true feature of the intended object with equal probability, rather than simulating a speaker who mentalizes a listener. When hearing an ambiguous word, listeners favor objects with fewer total features because a naive speaker is less likely to have chosen that word for an object with many competing features. On displays where a multi-featured object has only uninformative alternative features, this model predicts listeners will disfavor it relative to an object with fewer features, whereas standard RSA predicts listeners will favor it because a strategic speaker avoids uninformative alternatives.\n",
+    "source": "round 1 candidate 2 explore"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "hypothesis": "Speakers trade off communicative informativeness with utterance costs that favor accessible, shared descriptors over narrow, highly specific words. Pragmatic listeners invert this speaker, recognizing that a speaker who uses a shared word may still refer to an object with unique features because specific words carry higher production costs.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "rsa_l2_shared_prior",
+    "hypothesis": "Listeners reason at depth 2 by inverting a speaker who anticipates the depth-1 pragmatic listener, maintaining the common-knowledge salience prior (feature count and familiarization base rate) across all levels of recursion. Reasoning two levels deep allows the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, resolving ambiguous references in complex displays where depth-1 reasoning under-discriminates.\n\nDifferences from rsa_l1_shared_prior:\n- Recursion depth: choice_probs calls L2 instead of L1.\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with common-knowledge prior over objects.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, lapse with identical priors).\n",
+    "source": "round 1 candidate 4 refine incumbent rsa_l1_shared_prior"
+   },
+   {
+    "name": "costly_speaker_shared_prior",
+    "hypothesis": "People interpret referential descriptions by inverting a speaker who balances communicative informativeness against utterance production costs, while maintaining a shared common-ground salience prior over referents. When a speaker uses an ambiguous or shared descriptor, listeners recognize that this preference reflects lower production costs for broad, accessible terms rather than an uninformative speaker. This refines rsa_l1_shared_prior by integrating utterance extension costs from costly_feature_speaker into the speaker's utility, improving predictions on displays where referents have both unique and shared features.\n\nDifferences from rsa_l1_shared_prior:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from source).\n- Parameters added: w_extension (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, lapse with identical priors).\n- Speaker utility: In memo L1, speaker chooses utterances with utility augmented by vec(weights, u), where weights are w_extension * (1.0 - ctx.is_sink) * (jnp.sum(ctx.lex, axis=1) - 1.0).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l1_shared_prior repair 1"
+   },
+   {
+    "name": "valence_salience_l2_listener",
+    "hypothesis": "Listeners interpret evaluative descriptions by reasoning at depth 2 (inverting a speaker who anticipates a depth-1 pragmatic listener), refining the valence_salience_listener model by extending its recursive depth from depth 1 to depth 2 while preserving the common-knowledge evaluative salience prior across all levels of recursion. In complex reference games with evaluative framing (such as favorite vs. least favorite), depth-2 reasoning enables the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, resolving ambiguous references that depth-1 reasoning under-discriminates.\n\nRefined model: valence_salience_listener\nDifferences from source:\n- Recursion depth: depth 2 (choice_probs calls L2 instead of L1).\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with the shared evaluative prior.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: choice_probs calls L2 instead of L1.\n",
+    "source": "round 1 candidate 6 refine chosen repair 1"
+   },
+   {
+    "name": "distinctiveness_salience_listener",
+    "hypothesis": "Listeners interpret referential descriptions by maintaining a prior expectation that speakers refer to distinctive objects whose features contrast with the visual context rather than objects with broadly shared features. Before hearing an informative utterance, listeners assign higher prior probability to objects possessing unique or narrowly shared features, grounded in visual contrast and referential distinctiveness. This distinctiveness-based salience prior operates as common ground shared between the speaker and the listener across all levels of pragmatic reasoning.\n",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "capacity_limited_listener",
+    "hypothesis": "People are resource-limited listeners whose attentional precision over the display decays with visual set size. In accordance with continuous-resource models of visual attention, referential reasoning precision follows a power-law decline as the number of objects on the screen increases. Consequently, listeners compute sharp pragmatic inferences on minimal two-object displays but make increasingly diffuse, bounded choices as visual display clutter grows.\n",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "graded_semantics_listener",
+    "hypothesis": "People interpret referential descriptions using graded truth values rather than binary logic, treating words as more faithful descriptions of objects with fewer extraneous features. A listener hearing a single-feature word perceives it as a prototypical match for an object defined solely by that feature, but as a diluted, less complete match for an object with competing features. Pragmatic listeners invert a speaker who communicates with these graded semantic representations, sharpening preference for minimal, prototypical exemplars.\n",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "costly_valence_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by reasoning at depth 2 while inverting a speaker who balances communicative informativeness against utterance production costs, refining the valence_salience_l2_listener model by incorporating utterance extension costs into the speaker's utility. When a speaker uses a broader or shared descriptor, listeners recognize that this choice reflects lower production costs for accessible terms rather than an uninformative speaker, resolving competition between specific and shared features across displays while maintaining the evaluative salience prior across recursive depths.\n\nRefined model: valence_salience_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_extension (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: In memo L1 and L2, speakers choose utterances with utility augmented by vec(weights, u), where weights are w_extension * (1.0 - ctx.is_sink) * (jnp.sum(ctx.lex, axis=1) - 1.0).\n",
+    "source": "round 2 candidate 4 refine incumbent valence_salience_l2_listener"
+   },
+   {
+    "name": "softmax_valence_l2_listener",
+    "hypothesis": "Listeners interpret evaluative descriptions by combining depth-2 recursive pragmatic reasoning with a softmax choice rule over inferred referents, refining the valence_salience_l2_listener model by allowing listeners to maximize choices rather than strictly probability-match. While standard depth-2 listeners invert a pragmatic speaker to compute posterior probabilities over objects, human participants exhibit decision precision that sharpens their selections toward the most probable referent. Incorporating a decision rationality parameter for the listener into the depth-2 evaluative architecture better captures the high determinism of participant choices on clear communicative displays.\n\nRefined model: valence_salience_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r].\n",
+    "source": "round 2 candidate 5 refine incumbent valence_salience_l2_listener"
+   },
+   {
+    "name": "costly_speaker_l2_shared_prior",
+    "hypothesis": "Listeners interpret referential descriptions by reasoning at depth 2 (inverting a speaker who anticipates a depth-1 pragmatic listener), refining costly_speaker_shared_prior by extending its recursive depth from depth 1 to depth 2 while preserving utterance production costs and the shared common-ground salience prior across all levels of recursion. In complex displays with both shared and distinctive features, depth-2 reasoning enables the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, while continuing to balance communicative informativeness against the production cost of overly specific terms.\n\nRefined model: costly_speaker_shared_prior\nDifferences from source:\n- Recursion depth: depth 2 (choice_probs calls L2 instead of L1).\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ..., weights: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with the shared salience prior and utterance extension costs.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, w_extension, lapse with identical priors).\n- Terms changed: choice_probs calls L2 instead of L1.\n",
+    "source": "round 2 candidate 6 refine chosen"
+   },
+   {
+    "name": "multimodal_salience_listener",
+    "hypothesis": "Listeners interpret referential descriptions by maintaining a multimodal salience prior that unifies perceptual pop-out and evaluative framing. Before hearing an informative utterance, listeners assign higher prior prominence to objects that contrast perceptually with the display (an object in chromatic color amidst grayscale competitors) and objects that align with the speaker's evaluative framing (feature-rich objects under positive framing and feature-sparse objects under negative framing), defaulting to baseline feature complexity in neutral contexts. Pragmatic listeners invert a communicative speaker who shares this common-ground prominence distribution across recursive reasoning depths.\n",
+    "source": "round 3 candidate 1 explore"
+   },
+   {
+    "name": "feature_parsimony_listener",
+    "hypothesis": "People interpret referential descriptions using a non-Bayesian feature parsimony heuristic: among objects matching the heard word, they prefer the object with the fewest total features, penalizing extraneous unmentioned properties. Rather than mentalizing an informative speaker or evaluating alternative utterances, listeners directly discount candidate referents as an exponential function of their unmentioned complexity. When no informative word is spoken, listeners choose uniformly at random.\n",
+    "source": "round 3 candidate 2 explore"
+   },
+   {
+    "name": "softmax_belief_listener",
+    "hypothesis": "Listeners interpret referential descriptions by computing communicative beliefs through simple recursive inference, but select referents using a softmax decision rule rather than strict probability matching. Rather than choosing an object in exact proportion to its posterior probability, listeners sharpen their selections toward the most probable referent according to a decision precision parameter. This separates communicative reasoning from choice determinism, capturing the high determinism of human clicks while preserving probabilistic inference on subtle displays.\n",
+    "source": "round 3 candidate 3 explore"
+   },
+   {
+    "name": "graded_costly_valence_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning with graded semantic truth values, refining costly_valence_l2_listener by incorporating lexical dilution from graded_semantics_listener into the lexicon shared across reasoning levels. Rather than treating descriptive terms as binary, listeners perceive a word as a prototypical match for an object with only that feature, but as a diluted, less complete description of an object cluttered with extraneous features, sharpening the preference for minimal exemplars while continuing to invert a speaker who balances informativeness against utterance extension costs under evaluative framing.\n\nRefined model: costly_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta_graded (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, lapse with identical priors).\n- Terms changed: The lexicon passed to L2 is graded_lex instead of ctx.lex, where graded_lex scales non-sink entries of ctx.lex by dilution = exp(-beta_graded * max(feature_count - 1.0, 0.0)).\n",
+    "source": "round 3 candidate 4 refine incumbent costly_valence_l2_listener"
+   },
+   {
+    "name": "softmax_costly_valence_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning with utterance extension costs and a softmax choice rule over inferred referents, refining costly_valence_l2_listener by allowing listeners to maximize choices rather than strictly probability-match. While listeners invert a cost-sensitive pragmatic speaker to infer the posterior probability of each referent, human participants exhibit decision precision that sharpens their final selections toward the most likely target object. Integrating a listener decision rationality parameter into the depth-2 cost-sensitive architecture better captures the heightened determinism of participant choices across unambiguous communicative displays.\n\nRefined model: costly_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, lapse with identical priors).\n- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r].\n",
+    "source": "round 3 candidate 5 refine incumbent costly_valence_l2_listener"
+   },
+   {
+    "name": "multimodal_graded_costly_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, and graded semantic truth values with perceptual salience, refining graded_costly_valence_l2_listener by incorporating visual pop-out from multimodal_salience_listener into the common-knowledge salience prior. Before hearing an informative utterance, listeners assign higher prior prominence to chromatic objects contrasting with grayscale competitors alongside evaluative and feature-based priors, which communicative speakers share across reasoning depths while balancing informativeness against production costs over graded descriptions.\n\nRefined model: graded_costly_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_color (Normal(0.0, 2.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, the prior over objects incorporates perceptual color salience + params[\"w_color\"] * (1.0 - ctx.grayscale).\n",
+    "source": "round 3 candidate 6 refine chosen repair 1"
+   },
+   {
+    "name": "aspect_goal_listener",
+    "hypothesis": "Listeners interpret referential descriptions by modeling a speaker whose communicative goal is to convey an aspect or feature of the target object rather than its full identity. Hearing a descriptive term, listeners jointly infer the speaker's intended referent and communicative goal, recognizing that an ambiguous descriptor is more likely when an object offers fewer alternative features to talk about. Marginalizing over this communicative goal guides listener choices toward objects for which the heard feature constitutes the primary or solitary descriptive aspect.\n",
+    "source": "round 4 candidate 1 explore"
+   },
+   {
+    "name": "literal_pragmatic_mixture_listener",
+    "hypothesis": "The human population in reference games is composed of a mixture of distinct listener types rather than a homogeneous cognitive process. Literal listeners select among candidate objects based purely on semantic truth and baseline salience without mentalizing the speaker, whereas pragmatic listeners simulate an informative speaker to make decisive referential choices. Observed population choices reflect the mixture of these two listener strategies, with the proportion of pragmatic reasoners governing how frequently ambiguous descriptions are resolved.\n",
+    "source": "round 4 candidate 2 explore"
+   },
+   {
+    "name": "contrastive_margin_speaker",
+    "hypothesis": "People interpret referential descriptions by inverting a speaker who maximizes the discriminative contrast margin between the intended referent and competing alternatives, rather than raw target probability. When selecting an utterance, communicative speakers favor descriptors that create the sharpest separation above the nearest competitor in the listener's comprehension. Pragmatic listeners invert this competitive speaker, favoring referents that enjoy the highest contrastive margin under the heard word.\n",
+    "source": "round 4 candidate 3 explore"
+   },
+   {
+    "name": "softmax_multimodal_graded_costly_l2",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, perceptual color pop-out, and graded semantic truth values with a softmax choice rule over inferred referents, refining multimodal_graded_costly_l2_listener by allowing listeners to maximize choices rather than strictly probability-match. While listeners invert a cost-sensitive pragmatic speaker over graded descriptions to infer the posterior probability of each candidate referent, human participants exhibit decision precision that sharpens their final selections toward the most likely target object. Integrating a listener decision rationality parameter into the multimodal depth-2 cost-sensitive architecture better captures the heightened determinism of participant choices across unambiguous communicative displays.\n\nRefined model: multimodal_graded_costly_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_color, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r].\n",
+    "source": "round 4 candidate 4 refine incumbent multimodal_graded_costly_l2_listener"
+   },
+   {
+    "name": "distinctive_multimodal_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, graded semantics, and perceptual salience with visual distinctiveness, refining multimodal_graded_costly_l2_listener by incorporating feature distinctiveness from distinctiveness_salience_listener into the common-knowledge salience prior. Before hearing an informative utterance, listeners assign higher prior prominence to distinctive objects possessing unique or narrowly shared features that contrast with the visual context, resolving competition between singleton referents and identical competitors while maintaining evaluative, color, and complexity priors across reasoning depths.\n\nRefined model: multimodal_graded_costly_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_distinct (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_color, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, the prior over objects incorporates feature distinctiveness + params[\"w_distinct\"] * distinctiveness, where distinctiveness is the sum across non-sink features true of each object weighted by specificity (inverse feature frequency).\n",
+    "source": "round 4 candidate 5 refine incumbent multimodal_graded_costly_l2_listener"
+   },
+   {
+    "name": "softmax_graded_costly_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, and graded semantic truth values with a softmax listener choice rule, refining graded_costly_valence_l2_listener by incorporating decision precision from softmax_costly_valence_l2_listener into the depth-2 pragmatic listener. While listeners infer the posterior probability of each referent by inverting a cost-sensitive speaker over graded descriptions, human participants select referents using a softmax decision rule that sharpens their choices toward the most probable referent rather than strictly probability-matching. This separates pragmatic belief updating from decision determinism, capturing the heightened determinism of participant choices across unambiguous communicative displays.\n\nRefined model: graded_costly_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r].\n",
+    "source": "round 4 candidate 6 refine chosen"
+   }
+  ],
+  "ledger_entries": 27
+ },
+ {
+  "step": 5,
+  "round": 4,
+  "best_model": "surprisal_multimodal_l2_listener_2",
+  "standing": {
+   "surprisal_multimodal_l2_listener_2": {
+    "rank": 0,
+    "elpd_loo": -17212.68789577484,
+    "se": 136.63006897207399,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 10.71598417750647,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "capacity_limited_distinctive_l2": {
+    "rank": 1,
+    "elpd_loo": -17213.28273677826,
+    "se": 136.6496292989499,
+    "elpd_diff": 0.5948410034179688,
+    "dse": 3.2889767963929177,
+    "p_loo": 11.86493343039183,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "contrastive_multimodal_l2_listener": {
+    "rank": 2,
+    "elpd_loo": -17218.159107208252,
+    "se": 136.61717135679075,
+    "elpd_diff": 5.4712114334106445,
+    "dse": 7.686824431544559,
+    "p_loo": 10.933317020921095,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "distinctive_multimodal_l2_listener": {
+    "rank": 3,
+    "elpd_loo": -17234.065155029297,
+    "se": 136.57725165007952,
+    "elpd_diff": 21.377259254455566,
+    "dse": 8.952751883917925,
+    "p_loo": 11.344350119332375,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "multimodal_graded_costly_l2_listener": {
+    "rank": 4,
+    "elpd_loo": -17389.5059299469,
+    "se": 135.87852890474784,
+    "elpd_diff": 176.8180341720581,
+    "dse": 20.525738955046112,
+    "p_loo": 8.58130527006142,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "softmax_multimodal_graded_costly_l2": {
+    "rank": 5,
+    "elpd_loo": -17392.539898872375,
+    "se": 135.8195633447741,
+    "elpd_diff": 179.85200309753418,
+    "dse": 20.17802263621475,
+    "p_loo": 12.209419717444689,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "graded_costly_valence_l2_listener": {
+    "rank": 6,
+    "elpd_loo": -17392.924242019653,
+    "se": 135.8579227733195,
+    "elpd_diff": 180.236346244812,
+    "dse": 20.750398024224985,
+    "p_loo": 7.502005953312619,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "softmax_graded_costly_l2_listener": {
+    "rank": 7,
+    "elpd_loo": -17395.09730052948,
+    "se": 135.80487291043514,
+    "elpd_diff": 182.40940475463867,
+    "dse": 20.40905052238958,
+    "p_loo": 10.182623873457487,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_pragmatic_mixture_listener": {
+    "rank": 8,
+    "elpd_loo": -17430.648643493652,
+    "se": 135.87289096217904,
+    "elpd_diff": 217.96074771881104,
+    "dse": 25.280191479376974,
+    "p_loo": 6.258538096539269,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "softmax_costly_valence_l2_listener": {
+    "rank": 9,
+    "elpd_loo": -17437.137311935425,
+    "se": 135.72504999544458,
+    "elpd_diff": 224.4494161605835,
+    "dse": 23.224050322029036,
+    "p_loo": 8.464876707992516,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_valence_l2_listener": {
+    "rank": 10,
+    "elpd_loo": -17438.41915512085,
+    "se": 135.59076187895045,
+    "elpd_diff": 225.7312593460083,
+    "dse": 24.155273955304644,
+    "p_loo": 7.304744106681028,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "contextual_contrast_listener": {
+    "rank": 11,
+    "elpd_loo": -17451.663553237915,
+    "se": 135.85253829788863,
+    "elpd_diff": 238.97565746307373,
+    "dse": 26.87693130449365,
+    "p_loo": 4.1026185616792645,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_speaker_l2_shared_prior": {
+    "rank": 12,
+    "elpd_loo": -17464.09207057953,
+    "se": 135.57618003354028,
+    "elpd_diff": 251.4041748046875,
+    "dse": 27.266392947987576,
+    "p_loo": 4.729248000036023,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "softmax_valence_l2_listener": {
+    "rank": 13,
+    "elpd_loo": -17466.770970344543,
+    "se": 135.75869582018345,
+    "elpd_diff": 254.08307456970215,
+    "dse": 23.664009066118364,
+    "p_loo": 6.785160051353159,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "graded_semantics_listener": {
+    "rank": 14,
+    "elpd_loo": -17470.135369300842,
+    "se": 135.79108281578712,
+    "elpd_diff": 257.447473526001,
+    "dse": 27.20222718659898,
+    "p_loo": 4.0059911596472375,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "aspect_goal_listener": {
+    "rank": 15,
+    "elpd_loo": -17476.447023391724,
+    "se": 135.3641305400597,
+    "elpd_diff": 263.7591276168823,
+    "dse": 29.47580163686208,
+    "p_loo": 2.886885328694916,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "multimodal_salience_listener": {
+    "rank": 16,
+    "elpd_loo": -17486.99435710907,
+    "se": 135.3924110344046,
+    "elpd_diff": 274.3064613342285,
+    "dse": 27.25957531478846,
+    "p_loo": 6.3304234976712905,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "valence_salience_l2_listener": {
+    "rank": 17,
+    "elpd_loo": -17488.98097038269,
+    "se": 135.34851771723413,
+    "elpd_diff": 276.2930746078491,
+    "dse": 27.294577509111342,
+    "p_loo": 5.158773961724364,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_speaker_shared_prior": {
+    "rank": 18,
+    "elpd_loo": -17503.053488731384,
+    "se": 135.64187223904298,
+    "elpd_diff": 290.36559295654297,
+    "dse": 29.39003550191232,
+    "p_loo": 4.912801545964612,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "contrastive_margin_speaker": {
+    "rank": 19,
+    "elpd_loo": -17514.48951435089,
+    "se": 135.33902566118732,
+    "elpd_diff": 301.8016185760498,
+    "dse": 30.270773142213958,
+    "p_loo": 3.9416527829744155,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "valence_salience_listener": {
+    "rank": 20,
+    "elpd_loo": -17521.153170585632,
+    "se": 135.22131024771662,
+    "elpd_diff": 308.465274810791,
+    "dse": 28.866961930099606,
+    "p_loo": 5.1889910603022145,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2_shared_prior": {
+    "rank": 21,
+    "elpd_loo": -17523.287276268005,
+    "se": 135.39859102236875,
+    "elpd_diff": 310.59938049316406,
+    "dse": 29.935599910906113,
+    "p_loo": 3.8592908306382014,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "satisficing_alternatives_speaker": {
+    "rank": 22,
+    "elpd_loo": -17525.920274734497,
+    "se": 135.3991330897578,
+    "elpd_diff": 313.23237895965576,
+    "dse": 30.777194641055722,
+    "p_loo": 3.835968665091059,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "softmax_belief_listener": {
+    "rank": 23,
+    "elpd_loo": -17527.17280960083,
+    "se": 135.705298429471,
+    "elpd_diff": 314.48491382598877,
+    "dse": 28.470805167433397,
+    "p_loo": 5.076596368060564,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "lexical_preemption_speaker": {
+    "rank": 24,
+    "elpd_loo": -17549.616850852966,
+    "se": 135.15574582435073,
+    "elpd_diff": 336.928955078125,
+    "dse": 31.232658745426832,
+    "p_loo": 4.429682360561856,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "capacity_limited_listener": {
+    "rank": 25,
+    "elpd_loo": -17550.040508270264,
+    "se": 135.26346141704593,
+    "elpd_diff": 337.35261249542236,
+    "dse": 31.02277373109391,
+    "p_loo": 3.8544845217475086,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 26,
+    "elpd_loo": -17552.48298740387,
+    "se": 135.2568749406573,
+    "elpd_diff": 339.7950916290283,
+    "dse": 31.17600593457467,
+    "p_loo": 3.88758087525639,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 27,
+    "elpd_loo": -17555.013271331787,
+    "se": 134.8987824521609,
+    "elpd_diff": 342.3253755569458,
+    "dse": 30.681102615244722,
+    "p_loo": 2.0284820151100575,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_salience": {
+    "rank": 28,
+    "elpd_loo": -17559.05241584778,
+    "se": 135.03638478750818,
+    "elpd_diff": 346.364520072937,
+    "dse": 31.493834243422004,
+    "p_loo": 3.9516667148200213,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "distinctiveness_salience_listener": {
+    "rank": 29,
+    "elpd_loo": -17576.55562019348,
+    "se": 134.30716078882224,
+    "elpd_diff": 363.86772441864014,
+    "dse": 31.963368721870623,
+    "p_loo": 3.726082102552027,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_feature_speaker": {
+    "rank": 30,
+    "elpd_loo": -17580.724298477173,
+    "se": 134.2306065765221,
+    "elpd_diff": 368.03640270233154,
+    "dse": 32.40012457383716,
+    "p_loo": 4.364546602620976,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "naive_speaker_listener": {
+    "rank": 31,
+    "elpd_loo": -17585.55086517334,
+    "se": 135.11527210060106,
+    "elpd_diff": 372.86296939849854,
+    "dse": 28.813060997737562,
+    "p_loo": 4.003652845360193,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 32,
+    "elpd_loo": -17599.29961681366,
+    "se": 134.34470890604672,
+    "elpd_diff": 386.61172103881836,
+    "dse": 32.3991420810323,
+    "p_loo": 2.04647665360244,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "feature_parsimony_listener": {
+    "rank": 33,
+    "elpd_loo": -17640.943208694458,
+    "se": 135.36422063456922,
+    "elpd_diff": 428.2553129196167,
+    "dse": 31.676471094855074,
+    "p_loo": 2.0949771454834263,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 34,
+    "elpd_loo": -18828.09070968628,
+    "se": 128.77455062228668,
+    "elpd_diff": 1615.402813911438,
+    "dse": 57.909038073056934,
+    "p_loo": 0.9709597879264038,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "lexical_preemption_speaker",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "People interpret referential descriptions by inverting a speaker constrained by lexical preemption: when an intended referent possesses a dedicated unique descriptor, the speaker is strongly penalized for choosing an ambiguous shared word instead. Pragmatic listeners invert this preemption constraint, ruling out candidate referents that have dedicated unique identifiers when hearing an ambiguous descriptor. On displays where a shared word matches both an object with a unique alternative feature and an object with only shared features, this model predicts listeners will sharply reject the object with the unique feature, directly opposing the best model whose distinctiveness prior boosts that same object."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "satisficing_alternatives_speaker",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "People interpret referential descriptions by inverting a satisficing speaker who prunes alternative words whose informativeness falls short of the best available descriptor for the intended referent. Rather than exhaustively weighing every true description, speakers penalize inferior descriptors in proportion to their relative deficit compared to the optimal label available for that object. Pragmatic listeners invert this bounded speaker, recognizing that a speaker will only consider an ambiguous, shared descriptor if the intended referent lacked a clearly superior alternative."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "contextual_contrast_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential descriptions by maintaining a prior expectation that speakers refer to perceptually isolated objects that contrast with the visual context, grounded in the von Restorff isolation effect. Before hearing an informative utterance, listeners evaluate each candidate referent by its contextual contrast\u2014the average feature distance (dissimilarity) to all other objects in the display\u2014prioritizing objects that stand apart in feature space whether by possessing unique features, lacking common features, or contrasting with duplicate competitors. Pragmatic listeners invert an informative speaker who shares this contextual contrast prior across recursive reasoning depths."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "contrastive_multimodal_l2_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, graded semantics, and perceptual salience with contrastive visual distinctiveness, refining distinctive_multimodal_l2_listener by replacing inverse frequency with contextual contrast in the common-knowledge salience prior. Before hearing an informative utterance, listeners assign prior prominence to objects in direct proportion to how sharply their features contrast with the visual scene\u2014measured by the fraction of competing display objects that lack those features\u2014conferring maximal prominence to unique singleton features while naturally assigning zero distinctiveness to universal features shared by the entire display. Communicative speakers and pragmatic listeners share this contrastive salience distribution across recursive reasoning depths while balancing informativeness against production costs over graded descriptions.\n\nRefined model: distinctive_multimodal_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: None.\n- Parameters removed: None (retains alpha, w_features, w_familiar, w_valence, w_color, w_distinct, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, feature specificity in distinctiveness is changed from linear inverse frequency 1.0 / feature_freq to contrastive isolation (n_obj - feature_freq) / jnp.maximum(n_obj - 1.0, 1.0), weighting each non-sink feature by the proportion of competing objects in the visual context that lack it."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "capacity_limited_distinctive_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential descriptions with bounded cognitive resources whose reasoning precision decays as visual display clutter increases, refining distinctive_multimodal_l2_listener by incorporating capacity limitation from capacity_limited_listener into the depth-2 pragmatic reasoning architecture. While listeners maintain visual distinctiveness, evaluative framing, color pop-out, and graded semantics, their pragmatic rationality follows a power law decay with display set size, enabling sharp, decisive pragmatic inferences on compact two-object displays but producing more diffuse, bounded choices in larger, cluttered visual scenes.\n\nRefined model: distinctive_multimodal_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: alpha_base (LogNormal(0.0, 1.0)), gamma (Beta(1.0, 1.0)).\n- Parameters removed: alpha. (Retains w_features, w_familiar, w_valence, w_color, w_distinct, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, the rationality parameter alpha passed to L2 is modulated by display set size via alpha = params[\"alpha_base\"] * (2.0 / ctx.lex.shape[1]) ** params[\"gamma\"] instead of a constant scalar alpha."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "surprisal_multimodal_l2_listener",
+    "outcome": "rejected",
+    "reason": "ELPD-LOO is not finite (nan)",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, graded semantics, and perceptual salience with information-theoretic feature surprisal, refining multimodal_graded_costly_l2_listener by incorporating feature distinctiveness weighted by self-information into the common-knowledge salience prior. Before hearing an informative utterance, listeners assign higher prior prominence to distinctive objects possessing rare or unexpected features that contrast with the visual scene, where the prominence of each feature scales with its surprisal (rarity relative to the display size) rather than linear inverse frequency, naturally discounting universal features shared by all objects. Communicative speakers and pragmatic listeners share this surprisal-grounded salience distribution across recursive depths while balancing informativeness against utterance production costs over graded descriptions.\n\nRefined model: multimodal_graded_costly_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_distinct (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_color, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, the prior over objects incorporates feature distinctiveness + params[\"w_distinct\"] * distinctiveness, where distinctiveness is the sum across non-sink features true of each object weighted by surprisal specificity = log(N_OBJ / feature_freq)."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "surprisal_multimodal_l2_listener_2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, graded semantics, and perceptual salience with information-theoretic feature surprisal, refining multimodal_graded_costly_l2_listener by incorporating feature distinctiveness weighted by self-information into the common-knowledge salience prior. Before hearing an informative utterance, listeners assign higher prior prominence to distinctive objects possessing rare or unexpected features that contrast with the visual scene, where the prominence of each feature scales with its surprisal (rarity relative to the display size) rather than linear inverse frequency, naturally discounting universal features shared by all objects. Communicative speakers and pragmatic listeners share this surprisal-grounded salience distribution across recursive depths while balancing informativeness against utterance production costs over graded descriptions.\n\nRefined model: multimodal_graded_costly_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_distinct (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_color, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, the prior over objects incorporates feature distinctiveness + params[\"w_distinct\"] * distinctiveness, where distinctiveness is the sum across non-sink features true of each object weighted by surprisal specificity = log(N_OBJ / feature_freq).",
+    "repair": true
+   }
+  ],
+  "live": [
+   {
+    "name": "literal_listener",
+    "hypothesis": "Listeners pick uniformly among the objects the word is literally true of.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_salience",
+    "hypothesis": "Depth-1 RSA whose listener has a salience prior over objects (feature count, familiarization base rate) that the simulated literal listener lacks.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_shared_prior",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "valence_salience_listener",
+    "hypothesis": "Listeners interpret evaluative descriptions (such as a speaker referring to their favorite or least favorite object) by modulating their referent prior with the valence of the framing. Positive valence increases the prior expectation of feature-rich referents, whereas negative valence inverts this preference to favor minimal or feature-sparse referents. This evaluative prior is shared as common ground across the simulated literal listener and the pragmatic listener.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "naive_speaker_listener",
+    "hypothesis": "People interpret referential descriptions by inverting a naive generative speaker who mentions any true feature of the intended object with equal probability, rather than simulating a speaker who mentalizes a listener. When hearing an ambiguous word, listeners favor objects with fewer total features because a naive speaker is less likely to have chosen that word for an object with many competing features. On displays where a multi-featured object has only uninformative alternative features, this model predicts listeners will disfavor it relative to an object with fewer features, whereas standard RSA predicts listeners will favor it because a strategic speaker avoids uninformative alternatives.\n",
+    "source": "round 1 candidate 2 explore"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "hypothesis": "Speakers trade off communicative informativeness with utterance costs that favor accessible, shared descriptors over narrow, highly specific words. Pragmatic listeners invert this speaker, recognizing that a speaker who uses a shared word may still refer to an object with unique features because specific words carry higher production costs.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "rsa_l2_shared_prior",
+    "hypothesis": "Listeners reason at depth 2 by inverting a speaker who anticipates the depth-1 pragmatic listener, maintaining the common-knowledge salience prior (feature count and familiarization base rate) across all levels of recursion. Reasoning two levels deep allows the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, resolving ambiguous references in complex displays where depth-1 reasoning under-discriminates.\n\nDifferences from rsa_l1_shared_prior:\n- Recursion depth: choice_probs calls L2 instead of L1.\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with common-knowledge prior over objects.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, lapse with identical priors).\n",
+    "source": "round 1 candidate 4 refine incumbent rsa_l1_shared_prior"
+   },
+   {
+    "name": "costly_speaker_shared_prior",
+    "hypothesis": "People interpret referential descriptions by inverting a speaker who balances communicative informativeness against utterance production costs, while maintaining a shared common-ground salience prior over referents. When a speaker uses an ambiguous or shared descriptor, listeners recognize that this preference reflects lower production costs for broad, accessible terms rather than an uninformative speaker. This refines rsa_l1_shared_prior by integrating utterance extension costs from costly_feature_speaker into the speaker's utility, improving predictions on displays where referents have both unique and shared features.\n\nDifferences from rsa_l1_shared_prior:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from source).\n- Parameters added: w_extension (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, lapse with identical priors).\n- Speaker utility: In memo L1, speaker chooses utterances with utility augmented by vec(weights, u), where weights are w_extension * (1.0 - ctx.is_sink) * (jnp.sum(ctx.lex, axis=1) - 1.0).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l1_shared_prior repair 1"
+   },
+   {
+    "name": "valence_salience_l2_listener",
+    "hypothesis": "Listeners interpret evaluative descriptions by reasoning at depth 2 (inverting a speaker who anticipates a depth-1 pragmatic listener), refining the valence_salience_listener model by extending its recursive depth from depth 1 to depth 2 while preserving the common-knowledge evaluative salience prior across all levels of recursion. In complex reference games with evaluative framing (such as favorite vs. least favorite), depth-2 reasoning enables the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, resolving ambiguous references that depth-1 reasoning under-discriminates.\n\nRefined model: valence_salience_listener\nDifferences from source:\n- Recursion depth: depth 2 (choice_probs calls L2 instead of L1).\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with the shared evaluative prior.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: choice_probs calls L2 instead of L1.\n",
+    "source": "round 1 candidate 6 refine chosen repair 1"
+   },
+   {
+    "name": "distinctiveness_salience_listener",
+    "hypothesis": "Listeners interpret referential descriptions by maintaining a prior expectation that speakers refer to distinctive objects whose features contrast with the visual context rather than objects with broadly shared features. Before hearing an informative utterance, listeners assign higher prior probability to objects possessing unique or narrowly shared features, grounded in visual contrast and referential distinctiveness. This distinctiveness-based salience prior operates as common ground shared between the speaker and the listener across all levels of pragmatic reasoning.\n",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "capacity_limited_listener",
+    "hypothesis": "People are resource-limited listeners whose attentional precision over the display decays with visual set size. In accordance with continuous-resource models of visual attention, referential reasoning precision follows a power-law decline as the number of objects on the screen increases. Consequently, listeners compute sharp pragmatic inferences on minimal two-object displays but make increasingly diffuse, bounded choices as visual display clutter grows.\n",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "graded_semantics_listener",
+    "hypothesis": "People interpret referential descriptions using graded truth values rather than binary logic, treating words as more faithful descriptions of objects with fewer extraneous features. A listener hearing a single-feature word perceives it as a prototypical match for an object defined solely by that feature, but as a diluted, less complete match for an object with competing features. Pragmatic listeners invert a speaker who communicates with these graded semantic representations, sharpening preference for minimal, prototypical exemplars.\n",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "costly_valence_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by reasoning at depth 2 while inverting a speaker who balances communicative informativeness against utterance production costs, refining the valence_salience_l2_listener model by incorporating utterance extension costs into the speaker's utility. When a speaker uses a broader or shared descriptor, listeners recognize that this choice reflects lower production costs for accessible terms rather than an uninformative speaker, resolving competition between specific and shared features across displays while maintaining the evaluative salience prior across recursive depths.\n\nRefined model: valence_salience_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_extension (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: In memo L1 and L2, speakers choose utterances with utility augmented by vec(weights, u), where weights are w_extension * (1.0 - ctx.is_sink) * (jnp.sum(ctx.lex, axis=1) - 1.0).\n",
+    "source": "round 2 candidate 4 refine incumbent valence_salience_l2_listener"
+   },
+   {
+    "name": "softmax_valence_l2_listener",
+    "hypothesis": "Listeners interpret evaluative descriptions by combining depth-2 recursive pragmatic reasoning with a softmax choice rule over inferred referents, refining the valence_salience_l2_listener model by allowing listeners to maximize choices rather than strictly probability-match. While standard depth-2 listeners invert a pragmatic speaker to compute posterior probabilities over objects, human participants exhibit decision precision that sharpens their selections toward the most probable referent. Incorporating a decision rationality parameter for the listener into the depth-2 evaluative architecture better captures the high determinism of participant choices on clear communicative displays.\n\nRefined model: valence_salience_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, lapse with identical priors).\n- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r].\n",
+    "source": "round 2 candidate 5 refine incumbent valence_salience_l2_listener"
+   },
+   {
+    "name": "costly_speaker_l2_shared_prior",
+    "hypothesis": "Listeners interpret referential descriptions by reasoning at depth 2 (inverting a speaker who anticipates a depth-1 pragmatic listener), refining costly_speaker_shared_prior by extending its recursive depth from depth 1 to depth 2 while preserving utterance production costs and the shared common-ground salience prior across all levels of recursion. In complex displays with both shared and distinctive features, depth-2 reasoning enables the speaker to select utterances based on pragmatic implicatures rather than just literal comprehension, while continuing to balance communicative informativeness against the production cost of overly specific terms.\n\nRefined model: costly_speaker_shared_prior\nDifferences from source:\n- Recursion depth: depth 2 (choice_probs calls L2 instead of L1).\n- Added memo L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ..., weights: ...), where the listener inverts speaker S2 who chooses utterances according to L1's pragmatic recovery of the referent with the shared salience prior and utterance extension costs.\n- Parameters added or removed: None (retains alpha, w_features, w_familiar, w_extension, lapse with identical priors).\n- Terms changed: choice_probs calls L2 instead of L1.\n",
+    "source": "round 2 candidate 6 refine chosen"
+   },
+   {
+    "name": "multimodal_salience_listener",
+    "hypothesis": "Listeners interpret referential descriptions by maintaining a multimodal salience prior that unifies perceptual pop-out and evaluative framing. Before hearing an informative utterance, listeners assign higher prior prominence to objects that contrast perceptually with the display (an object in chromatic color amidst grayscale competitors) and objects that align with the speaker's evaluative framing (feature-rich objects under positive framing and feature-sparse objects under negative framing), defaulting to baseline feature complexity in neutral contexts. Pragmatic listeners invert a communicative speaker who shares this common-ground prominence distribution across recursive reasoning depths.\n",
+    "source": "round 3 candidate 1 explore"
+   },
+   {
+    "name": "feature_parsimony_listener",
+    "hypothesis": "People interpret referential descriptions using a non-Bayesian feature parsimony heuristic: among objects matching the heard word, they prefer the object with the fewest total features, penalizing extraneous unmentioned properties. Rather than mentalizing an informative speaker or evaluating alternative utterances, listeners directly discount candidate referents as an exponential function of their unmentioned complexity. When no informative word is spoken, listeners choose uniformly at random.\n",
+    "source": "round 3 candidate 2 explore"
+   },
+   {
+    "name": "softmax_belief_listener",
+    "hypothesis": "Listeners interpret referential descriptions by computing communicative beliefs through simple recursive inference, but select referents using a softmax decision rule rather than strict probability matching. Rather than choosing an object in exact proportion to its posterior probability, listeners sharpen their selections toward the most probable referent according to a decision precision parameter. This separates communicative reasoning from choice determinism, capturing the high determinism of human clicks while preserving probabilistic inference on subtle displays.\n",
+    "source": "round 3 candidate 3 explore"
+   },
+   {
+    "name": "graded_costly_valence_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning with graded semantic truth values, refining costly_valence_l2_listener by incorporating lexical dilution from graded_semantics_listener into the lexicon shared across reasoning levels. Rather than treating descriptive terms as binary, listeners perceive a word as a prototypical match for an object with only that feature, but as a diluted, less complete description of an object cluttered with extraneous features, sharpening the preference for minimal exemplars while continuing to invert a speaker who balances informativeness against utterance extension costs under evaluative framing.\n\nRefined model: costly_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta_graded (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, lapse with identical priors).\n- Terms changed: The lexicon passed to L2 is graded_lex instead of ctx.lex, where graded_lex scales non-sink entries of ctx.lex by dilution = exp(-beta_graded * max(feature_count - 1.0, 0.0)).\n",
+    "source": "round 3 candidate 4 refine incumbent costly_valence_l2_listener"
+   },
+   {
+    "name": "softmax_costly_valence_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning with utterance extension costs and a softmax choice rule over inferred referents, refining costly_valence_l2_listener by allowing listeners to maximize choices rather than strictly probability-match. While listeners invert a cost-sensitive pragmatic speaker to infer the posterior probability of each referent, human participants exhibit decision precision that sharpens their final selections toward the most likely target object. Integrating a listener decision rationality parameter into the depth-2 cost-sensitive architecture better captures the heightened determinism of participant choices across unambiguous communicative displays.\n\nRefined model: costly_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, lapse with identical priors).\n- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r].\n",
+    "source": "round 3 candidate 5 refine incumbent costly_valence_l2_listener"
+   },
+   {
+    "name": "multimodal_graded_costly_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, and graded semantic truth values with perceptual salience, refining graded_costly_valence_l2_listener by incorporating visual pop-out from multimodal_salience_listener into the common-knowledge salience prior. Before hearing an informative utterance, listeners assign higher prior prominence to chromatic objects contrasting with grayscale competitors alongside evaluative and feature-based priors, which communicative speakers share across reasoning depths while balancing informativeness against production costs over graded descriptions.\n\nRefined model: graded_costly_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_color (Normal(0.0, 2.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, the prior over objects incorporates perceptual color salience + params[\"w_color\"] * (1.0 - ctx.grayscale).\n",
+    "source": "round 3 candidate 6 refine chosen repair 1"
+   },
+   {
+    "name": "aspect_goal_listener",
+    "hypothesis": "Listeners interpret referential descriptions by modeling a speaker whose communicative goal is to convey an aspect or feature of the target object rather than its full identity. Hearing a descriptive term, listeners jointly infer the speaker's intended referent and communicative goal, recognizing that an ambiguous descriptor is more likely when an object offers fewer alternative features to talk about. Marginalizing over this communicative goal guides listener choices toward objects for which the heard feature constitutes the primary or solitary descriptive aspect.\n",
+    "source": "round 4 candidate 1 explore"
+   },
+   {
+    "name": "literal_pragmatic_mixture_listener",
+    "hypothesis": "The human population in reference games is composed of a mixture of distinct listener types rather than a homogeneous cognitive process. Literal listeners select among candidate objects based purely on semantic truth and baseline salience without mentalizing the speaker, whereas pragmatic listeners simulate an informative speaker to make decisive referential choices. Observed population choices reflect the mixture of these two listener strategies, with the proportion of pragmatic reasoners governing how frequently ambiguous descriptions are resolved.\n",
+    "source": "round 4 candidate 2 explore"
+   },
+   {
+    "name": "contrastive_margin_speaker",
+    "hypothesis": "People interpret referential descriptions by inverting a speaker who maximizes the discriminative contrast margin between the intended referent and competing alternatives, rather than raw target probability. When selecting an utterance, communicative speakers favor descriptors that create the sharpest separation above the nearest competitor in the listener's comprehension. Pragmatic listeners invert this competitive speaker, favoring referents that enjoy the highest contrastive margin under the heard word.\n",
+    "source": "round 4 candidate 3 explore"
+   },
+   {
+    "name": "softmax_multimodal_graded_costly_l2",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, perceptual color pop-out, and graded semantic truth values with a softmax choice rule over inferred referents, refining multimodal_graded_costly_l2_listener by allowing listeners to maximize choices rather than strictly probability-match. While listeners invert a cost-sensitive pragmatic speaker over graded descriptions to infer the posterior probability of each candidate referent, human participants exhibit decision precision that sharpens their final selections toward the most likely target object. Integrating a listener decision rationality parameter into the multimodal depth-2 cost-sensitive architecture better captures the heightened determinism of participant choices across unambiguous communicative displays.\n\nRefined model: multimodal_graded_costly_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_color, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r].\n",
+    "source": "round 4 candidate 4 refine incumbent multimodal_graded_costly_l2_listener"
+   },
+   {
+    "name": "distinctive_multimodal_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, graded semantics, and perceptual salience with visual distinctiveness, refining multimodal_graded_costly_l2_listener by incorporating feature distinctiveness from distinctiveness_salience_listener into the common-knowledge salience prior. Before hearing an informative utterance, listeners assign higher prior prominence to distinctive objects possessing unique or narrowly shared features that contrast with the visual context, resolving competition between singleton referents and identical competitors while maintaining evaluative, color, and complexity priors across reasoning depths.\n\nRefined model: multimodal_graded_costly_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_distinct (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_color, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, the prior over objects incorporates feature distinctiveness + params[\"w_distinct\"] * distinctiveness, where distinctiveness is the sum across non-sink features true of each object weighted by specificity (inverse feature frequency).\n",
+    "source": "round 4 candidate 5 refine incumbent multimodal_graded_costly_l2_listener"
+   },
+   {
+    "name": "softmax_graded_costly_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, and graded semantic truth values with a softmax listener choice rule, refining graded_costly_valence_l2_listener by incorporating decision precision from softmax_costly_valence_l2_listener into the depth-2 pragmatic listener. While listeners infer the posterior probability of each referent by inverting a cost-sensitive speaker over graded descriptions, human participants select referents using a softmax decision rule that sharpens their choices toward the most probable referent rather than strictly probability-matching. This separates pragmatic belief updating from decision determinism, capturing the heightened determinism of participant choices across unambiguous communicative displays.\n\nRefined model: graded_costly_valence_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r].\n",
+    "source": "round 4 candidate 6 refine chosen"
+   },
+   {
+    "name": "lexical_preemption_speaker",
+    "hypothesis": "People interpret referential descriptions by inverting a speaker constrained by lexical preemption: when an intended referent possesses a dedicated unique descriptor, the speaker is strongly penalized for choosing an ambiguous shared word instead. Pragmatic listeners invert this preemption constraint, ruling out candidate referents that have dedicated unique identifiers when hearing an ambiguous descriptor. On displays where a shared word matches both an object with a unique alternative feature and an object with only shared features, this model predicts listeners will sharply reject the object with the unique feature, directly opposing the best model whose distinctiveness prior boosts that same object.\n",
+    "source": "round 5 candidate 1 explore"
+   },
+   {
+    "name": "satisficing_alternatives_speaker",
+    "hypothesis": "People interpret referential descriptions by inverting a satisficing speaker who prunes alternative words whose informativeness falls short of the best available descriptor for the intended referent. Rather than exhaustively weighing every true description, speakers penalize inferior descriptors in proportion to their relative deficit compared to the optimal label available for that object. Pragmatic listeners invert this bounded speaker, recognizing that a speaker will only consider an ambiguous, shared descriptor if the intended referent lacked a clearly superior alternative.\n",
+    "source": "round 5 candidate 2 explore"
+   },
+   {
+    "name": "contextual_contrast_listener",
+    "hypothesis": "Listeners interpret referential descriptions by maintaining a prior expectation that speakers refer to perceptually isolated objects that contrast with the visual context, grounded in the von Restorff isolation effect. Before hearing an informative utterance, listeners evaluate each candidate referent by its contextual contrast\u2014the average feature distance (dissimilarity) to all other objects in the display\u2014prioritizing objects that stand apart in feature space whether by possessing unique features, lacking common features, or contrasting with duplicate competitors. Pragmatic listeners invert an informative speaker who shares this contextual contrast prior across recursive reasoning depths.\n",
+    "source": "round 5 candidate 3 explore"
+   },
+   {
+    "name": "contrastive_multimodal_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, graded semantics, and perceptual salience with contrastive visual distinctiveness, refining distinctive_multimodal_l2_listener by replacing inverse frequency with contextual contrast in the common-knowledge salience prior. Before hearing an informative utterance, listeners assign prior prominence to objects in direct proportion to how sharply their features contrast with the visual scene\u2014measured by the fraction of competing display objects that lack those features\u2014conferring maximal prominence to unique singleton features while naturally assigning zero distinctiveness to universal features shared by the entire display. Communicative speakers and pragmatic listeners share this contrastive salience distribution across recursive reasoning depths while balancing informativeness against production costs over graded descriptions.\n\nRefined model: distinctive_multimodal_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: None.\n- Parameters removed: None (retains alpha, w_features, w_familiar, w_valence, w_color, w_distinct, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, feature specificity in distinctiveness is changed from linear inverse frequency 1.0 / feature_freq to contrastive isolation (n_obj - feature_freq) / jnp.maximum(n_obj - 1.0, 1.0), weighting each non-sink feature by the proportion of competing objects in the visual context that lack it.\n",
+    "source": "round 5 candidate 4 refine incumbent distinctive_multimodal_l2_listener retry 1"
+   },
+   {
+    "name": "capacity_limited_distinctive_l2",
+    "hypothesis": "Listeners interpret referential descriptions with bounded cognitive resources whose reasoning precision decays as visual display clutter increases, refining distinctive_multimodal_l2_listener by incorporating capacity limitation from capacity_limited_listener into the depth-2 pragmatic reasoning architecture. While listeners maintain visual distinctiveness, evaluative framing, color pop-out, and graded semantics, their pragmatic rationality follows a power law decay with display set size, enabling sharp, decisive pragmatic inferences on compact two-object displays but producing more diffuse, bounded choices in larger, cluttered visual scenes.\n\nRefined model: distinctive_multimodal_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: alpha_base (LogNormal(0.0, 1.0)), gamma (Beta(1.0, 1.0)).\n- Parameters removed: alpha. (Retains w_features, w_familiar, w_valence, w_color, w_distinct, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, the rationality parameter alpha passed to L2 is modulated by display set size via alpha = params[\"alpha_base\"] * (2.0 / ctx.lex.shape[1]) ** params[\"gamma\"] instead of a constant scalar alpha.\n",
+    "source": "round 5 candidate 5 refine incumbent distinctive_multimodal_l2_listener"
+   },
+   {
+    "name": "surprisal_multimodal_l2_listener_2",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, graded semantics, and perceptual salience with information-theoretic feature surprisal, refining multimodal_graded_costly_l2_listener by incorporating feature distinctiveness weighted by self-information into the common-knowledge salience prior. Before hearing an informative utterance, listeners assign higher prior prominence to distinctive objects possessing rare or unexpected features that contrast with the visual scene, where the prominence of each feature scales with its surprisal (rarity relative to the display size) rather than linear inverse frequency, naturally discounting universal features shared by all objects. Communicative speakers and pragmatic listeners share this surprisal-grounded salience distribution across recursive depths while balancing informativeness against utterance production costs over graded descriptions.\n\nRefined model: multimodal_graded_costly_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_distinct (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_color, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, the prior over objects incorporates feature distinctiveness + params[\"w_distinct\"] * distinctiveness, where distinctiveness is the sum across non-sink features true of each object weighted by surprisal specificity = log(N_OBJ / feature_freq).\n",
+    "source": "round 5 candidate 6 refine chosen repair 1"
+   }
+  ],
+  "ledger_entries": 34
+ },
+ {
+  "step": 6,
+  "round": 5,
+  "best_model": "surprisal_multimodal_l2_listener_2",
+  "standing": {
+   "surprisal_multimodal_l2_listener_2": {
+    "rank": 0,
+    "elpd_loo": -17212.68789577484,
+    "se": 136.63006897207399,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 10.71598417750647,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "capacity_limited_distinctive_l2": {
+    "rank": 1,
+    "elpd_loo": -17213.28273677826,
+    "se": 136.6496292989499,
+    "elpd_diff": 0.5948410034179688,
+    "dse": 3.2889767963929177,
+    "p_loo": 11.86493343039183,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "contrastive_multimodal_l2_listener": {
+    "rank": 2,
+    "elpd_loo": -17218.159107208252,
+    "se": 136.61717135679075,
+    "elpd_diff": 5.4712114334106445,
+    "dse": 7.686824431544559,
+    "p_loo": 10.933317020921095,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "distinctive_multimodal_l2_listener": {
+    "rank": 3,
+    "elpd_loo": -17234.065155029297,
+    "se": 136.57725165007952,
+    "elpd_diff": 21.377259254455566,
+    "dse": 8.952751883917925,
+    "p_loo": 11.344350119332375,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "name": "multimodal_graded_costly_l2_listener",
+    "outcome": "pruned",
+    "reason": "176.8 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 51.4)"
+   },
+   {
+    "name": "softmax_multimodal_graded_costly_l2",
+    "outcome": "pruned",
+    "reason": "179.9 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 50.6)"
+   },
+   {
+    "name": "graded_costly_valence_l2_listener",
+    "outcome": "pruned",
+    "reason": "180.2 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 51.4)"
+   },
+   {
+    "name": "softmax_graded_costly_l2_listener",
+    "outcome": "pruned",
+    "reason": "182.4 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 50.5)"
+   },
+   {
+    "name": "literal_pragmatic_mixture_listener",
+    "outcome": "pruned",
+    "reason": "218.0 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 69.6)"
+   },
+   {
+    "name": "softmax_costly_valence_l2_listener",
+    "outcome": "pruned",
+    "reason": "224.4 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 58.4)"
+   },
+   {
+    "name": "costly_valence_l2_listener",
+    "outcome": "pruned",
+    "reason": "225.7 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 59.4)"
+   },
+   {
+    "name": "contextual_contrast_listener",
+    "outcome": "pruned",
+    "reason": "239.0 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 73.5)"
+   },
+   {
+    "name": "costly_speaker_l2_shared_prior",
+    "outcome": "pruned",
+    "reason": "251.4 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 71.3)"
+   },
+   {
+    "name": "softmax_valence_l2_listener",
+    "outcome": "pruned",
+    "reason": "254.1 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 65.5)"
+   },
+   {
+    "name": "graded_semantics_listener",
+    "outcome": "pruned",
+    "reason": "257.4 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 79.3)"
+   },
+   {
+    "name": "aspect_goal_listener",
+    "outcome": "pruned",
+    "reason": "263.8 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 73.0)"
+   },
+   {
+    "name": "multimodal_salience_listener",
+    "outcome": "pruned",
+    "reason": "274.3 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 71.8)"
+   },
+   {
+    "name": "valence_salience_l2_listener",
+    "outcome": "pruned",
+    "reason": "276.3 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 71.7)"
+   },
+   {
+    "name": "costly_speaker_shared_prior",
+    "outcome": "pruned",
+    "reason": "290.4 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 73.1)"
+   },
+   {
+    "name": "contrastive_margin_speaker",
+    "outcome": "pruned",
+    "reason": "301.8 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 79.6)"
+   },
+   {
+    "name": "valence_salience_listener",
+    "outcome": "pruned",
+    "reason": "308.5 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 74.9)"
+   },
+   {
+    "name": "rsa_l2_shared_prior",
+    "outcome": "pruned",
+    "reason": "310.6 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 79.6)"
+   },
+   {
+    "name": "satisficing_alternatives_speaker",
+    "outcome": "pruned",
+    "reason": "313.2 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 78.5)"
+   },
+   {
+    "name": "softmax_belief_listener",
+    "outcome": "pruned",
+    "reason": "314.5 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 85.4)"
+   },
+   {
+    "name": "lexical_preemption_speaker",
+    "outcome": "pruned",
+    "reason": "336.9 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 81.7)"
+   },
+   {
+    "name": "capacity_limited_listener",
+    "outcome": "pruned",
+    "reason": "337.4 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 80.9)"
+   },
+   {
+    "name": "rsa_l1_shared_prior",
+    "outcome": "pruned",
+    "reason": "339.8 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 80.9)"
+   },
+   {
+    "name": "rsa_l2",
+    "outcome": "pruned",
+    "reason": "342.3 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 88.2)"
+   },
+   {
+    "name": "rsa_l1_salience",
+    "outcome": "pruned",
+    "reason": "346.4 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 82.6)"
+   },
+   {
+    "name": "distinctiveness_salience_listener",
+    "outcome": "pruned",
+    "reason": "363.9 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 91.1)"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "outcome": "pruned",
+    "reason": "368.0 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 89.5)"
+   },
+   {
+    "name": "naive_speaker_listener",
+    "outcome": "pruned",
+    "reason": "372.9 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 90.2)"
+   },
+   {
+    "name": "rsa_l1",
+    "outcome": "pruned",
+    "reason": "386.6 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 92.8)"
+   },
+   {
+    "name": "feature_parsimony_listener",
+    "outcome": "pruned",
+    "reason": "428.3 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 90.7)"
+   },
+   {
+    "name": "literal_listener",
+    "outcome": "pruned",
+    "reason": "1615.4 nats behind surprisal_multimodal_l2_listener_2 (clustered dse 243.1)"
+   }
+  ],
+  "live": [
+   {
+    "name": "distinctive_multimodal_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, graded semantics, and perceptual salience with visual distinctiveness, refining multimodal_graded_costly_l2_listener by incorporating feature distinctiveness from distinctiveness_salience_listener into the common-knowledge salience prior. Before hearing an informative utterance, listeners assign higher prior prominence to distinctive objects possessing unique or narrowly shared features that contrast with the visual context, resolving competition between singleton referents and identical competitors while maintaining evaluative, color, and complexity priors across reasoning depths.\n\nRefined model: multimodal_graded_costly_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_distinct (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_color, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, the prior over objects incorporates feature distinctiveness + params[\"w_distinct\"] * distinctiveness, where distinctiveness is the sum across non-sink features true of each object weighted by specificity (inverse feature frequency).\n",
+    "source": "round 4 candidate 5 refine incumbent multimodal_graded_costly_l2_listener"
+   },
+   {
+    "name": "contrastive_multimodal_l2_listener",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, graded semantics, and perceptual salience with contrastive visual distinctiveness, refining distinctive_multimodal_l2_listener by replacing inverse frequency with contextual contrast in the common-knowledge salience prior. Before hearing an informative utterance, listeners assign prior prominence to objects in direct proportion to how sharply their features contrast with the visual scene\u2014measured by the fraction of competing display objects that lack those features\u2014conferring maximal prominence to unique singleton features while naturally assigning zero distinctiveness to universal features shared by the entire display. Communicative speakers and pragmatic listeners share this contrastive salience distribution across recursive reasoning depths while balancing informativeness against production costs over graded descriptions.\n\nRefined model: distinctive_multimodal_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: None.\n- Parameters removed: None (retains alpha, w_features, w_familiar, w_valence, w_color, w_distinct, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, feature specificity in distinctiveness is changed from linear inverse frequency 1.0 / feature_freq to contrastive isolation (n_obj - feature_freq) / jnp.maximum(n_obj - 1.0, 1.0), weighting each non-sink feature by the proportion of competing objects in the visual context that lack it.\n",
+    "source": "round 5 candidate 4 refine incumbent distinctive_multimodal_l2_listener retry 1"
+   },
+   {
+    "name": "capacity_limited_distinctive_l2",
+    "hypothesis": "Listeners interpret referential descriptions with bounded cognitive resources whose reasoning precision decays as visual display clutter increases, refining distinctive_multimodal_l2_listener by incorporating capacity limitation from capacity_limited_listener into the depth-2 pragmatic reasoning architecture. While listeners maintain visual distinctiveness, evaluative framing, color pop-out, and graded semantics, their pragmatic rationality follows a power law decay with display set size, enabling sharp, decisive pragmatic inferences on compact two-object displays but producing more diffuse, bounded choices in larger, cluttered visual scenes.\n\nRefined model: distinctive_multimodal_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: alpha_base (LogNormal(0.0, 1.0)), gamma (Beta(1.0, 1.0)).\n- Parameters removed: alpha. (Retains w_features, w_familiar, w_valence, w_color, w_distinct, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, the rationality parameter alpha passed to L2 is modulated by display set size via alpha = params[\"alpha_base\"] * (2.0 / ctx.lex.shape[1]) ** params[\"gamma\"] instead of a constant scalar alpha.\n",
+    "source": "round 5 candidate 5 refine incumbent distinctive_multimodal_l2_listener"
+   },
+   {
+    "name": "surprisal_multimodal_l2_listener_2",
+    "hypothesis": "Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, graded semantics, and perceptual salience with information-theoretic feature surprisal, refining multimodal_graded_costly_l2_listener by incorporating feature distinctiveness weighted by self-information into the common-knowledge salience prior. Before hearing an informative utterance, listeners assign higher prior prominence to distinctive objects possessing rare or unexpected features that contrast with the visual scene, where the prominence of each feature scales with its surprisal (rarity relative to the display size) rather than linear inverse frequency, naturally discounting universal features shared by all objects. Communicative speakers and pragmatic listeners share this surprisal-grounded salience distribution across recursive depths while balancing informativeness against utterance production costs over graded descriptions.\n\nRefined model: multimodal_graded_costly_l2_listener\nDifferences from source:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).\n- Parameters added: w_distinct (Normal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_color, w_extension, beta_graded, lapse with identical priors).\n- Terms changed: In choice_probs, the prior over objects incorporates feature distinctiveness + params[\"w_distinct\"] * distinctiveness, where distinctiveness is the sum across non-sink features true of each object weighted by surprisal specificity = log(N_OBJ / feature_freq).\n",
+    "source": "round 5 candidate 6 refine chosen repair 1"
+   }
+  ],
+  "ledger_entries": 65
+ }
+]

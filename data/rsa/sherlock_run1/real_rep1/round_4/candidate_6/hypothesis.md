@@ -1,0 +1,7 @@
+Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, and graded semantic truth values with a softmax listener choice rule, refining graded_costly_valence_l2_listener by incorporating decision precision from softmax_costly_valence_l2_listener into the depth-2 pragmatic listener. While listeners infer the posterior probability of each referent by inverting a cost-sensitive speaker over graded descriptions, human participants select referents using a softmax decision rule that sharpens their choices toward the most probable referent rather than strictly probability-matching. This separates pragmatic belief updating from decision determinism, capturing the heightened determinism of participant choices across unambiguous communicative displays.
+
+Refined model: graded_costly_valence_l2_listener
+Differences from source:
+- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).
+- Parameters added: beta (LogNormal(0.0, 1.0)); no parameters removed (retains alpha, w_features, w_familiar, w_valence, w_extension, beta_graded, lapse with identical priors).
+- Terms changed: In memo L2, the pragmatic listener makes referential choices via a softmax decision rule with rationality parameter beta, choosing with weight wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of probability matching with wpp=Pr[speaker.r == r].

@@ -1,0 +1,144 @@
+models:
+- name: baserate_salience_listener
+  rationale: 'We refine feature_salience_listener by integrating empirical base rates
+    from familiarization exposure into the listener''s referent prior alongside visual
+    feature complexity. Rather than relying solely on visual simplicity to form baseline
+    expectations, listeners combine experiential frequency and visual feature salience
+    to establish prior probabilities over candidate referents. This allows the model
+    to capture how participants systematically favor familiar objects when base rates
+    are present while retaining the preference for simpler objects when base rates
+    are absent. Differences from feature_salience_listener: - Recursion depth: Depth
+    1 (choice_probs calls L1, unchanged from feature_salience_listener). - Parameters
+    added: baserate ~ LogNormal(0.0, 1.0), scaling the log-probability of empirical
+    familiarization base rates. - Parameters removed: None (alpha, salience, and lapse
+    retained unchanged). - Functional terms changed: In choice_probs, the referent
+    prior vector incorporates empirical familiarization frequencies via softmax_prior(params["salience"]
+    * ctx.feature_count + params["baserate"] * jnp.where(ctx.has_familiarization >
+    0, jnp.log(ctx.familiarization + EPS), 0.0)), replacing the feature-only prior.'
+- name: focal_baserate_salience_listener
+  rationale: 'We refine baserate_salience_listener by integrating focal visual attention
+    from focal_attention_listener: listeners restrict their communicative reasoning
+    primarily to candidate referents matching the heard utterance, downweighting irrelevant
+    distractor objects in the display. When evaluating the communicative informativeness
+    of alternative utterances in their mental model of the speaker, listeners evaluate
+    alternative descriptions against this attention-weighted display rather than treating
+    distractors as equally salient. Combined with experiential base rates and visual
+    feature simplicity priors, this focal attentional discounting dampens exaggerated
+    pragmatic inferences on complex visual scenes without altering baseline preferences
+    on uninformative trials. Differences from baserate_salience_listener: - Recursion
+    depth: Depth 1 (choice_probs calls L1, unchanged from baserate_salience_listener).
+    - Parameters added: distractor_weight ~ Beta(1.0, 1.0), representing the visual
+    attentional weight allocated to non-candidate display objects. - Parameters removed:
+    None (alpha, salience, baserate, and lapse retained unchanged). - Functional terms
+    changed: - In L0, added array parameter atten: ... and weighted literal listener
+    referent selection by at(lex, u, r) * (vec(atten, r) + {EPS}). - In L1, passed
+    atten: ... through to L0. - In choice_probs, computed object attention weights
+    as atten = jnp.where(is_cand > 0, 1.0, params["distractor_weight"]) where is_cand
+    = jnp.where(ctx.is_prior > 0, 1.0, ctx.lex[ctx.utterance]), and passed atten into
+    L1.'
+- name: prior_literal_baserate_listener
+  rationale: 'We refine baserate_salience_listener by integrating the referent prior
+    directly into the literal listener''s interpretation rule, as posited in classical
+    Bayesian Rational Speech Act theory (Frank & Goodman, 2012). Rather than simulating
+    a naive literal listener who evaluates candidate referents with uniform baseline
+    probabilities, the speaker anticipates a listener who already weights candidate
+    objects by their experiential base rates and visual feature complexity. This prior-informed
+    literal interpretation sharpens the speaker''s communicative incentives, driving
+    speakers to choose distinctive expressions for rare or complex objects while relying
+    on listeners'' prior expectations for frequent, simple referents. Differences
+    from baserate_salience_listener: - Recursion depth: Depth 1 (choice_probs calls
+    L1, unchanged from baserate_salience_listener). - Parameters added: None (alpha,
+    salience, baserate, and lapse retained unchanged). - Parameters removed: None.
+    - Functional terms changed: - In L0, the listener''s referent choice weight incorporates
+    the referent prior alongside literal truth conditions, wpp=at(lex, u, r) * (vec(prior,
+    r) + {EPS}), replacing the prior-agnostic choice rule. - In L1, the referent prior
+    vector prior: ... is passed into L0.'
+- name: prior_lapse_focal_listener
+  rationale: 'We refine focal_baserate_salience_listener by replacing stimulus-independent
+    uniform lapse with a prior-anchored lapse fallback: when participants experience
+    inattention or task disengagement, their choices fall back on their intuitive
+    baseline prior expectations (favoring visual simplicity and familiarization base
+    rates) rather than choosing uniformly at random across all display objects. On
+    uninformative trials, choices reflect prior expectations directly without artificial
+    flattening from uniform noise, while on communicative trials, lapse errors are
+    naturally biased toward simpler or familiar candidates rather than cluttered distractors.
+    Differences from focal_baserate_salience_listener: - Recursion depth: Depth 1
+    (choice_probs calls L1, unchanged from focal_baserate_salience_listener). - Parameters
+    added: None (alpha, salience, baserate, distractor_weight, and lapse retained
+    unchanged). - Parameters removed: None. - Functional terms changed: - In choice_probs,
+    replaced uniform lapse mixing with prior-anchored lapse fallback, computing choice
+    probabilities as (1.0 - params["lapse"]) * jnp.where(ctx.is_prior > 0, prior,
+    heard) + params["lapse"] * prior instead of mixing with uniform 1.0 / n.'
+- name: focal_prior_literal_baserate_listener
+  rationale: 'We refine prior_literal_baserate_listener by integrating focal visual
+    attention from focal_attention_listener: listeners restrict their communicative
+    reasoning primarily to candidate referents matching the heard utterance, downweighting
+    irrelevant distractor objects in the display. When evaluating the communicative
+    informativeness of alternative utterances in their mental model of the speaker,
+    the speaker anticipates a Bayesian literal listener who evaluates candidate referents
+    against this attention-weighted display while integrating experiential base rates
+    and visual feature simplicity priors. This combined mechanism dampens exaggerated
+    pragmatic inferences on complex visual displays while preserving prior-driven
+    expectations for frequent or simple referents. Differences from prior_literal_baserate_listener:
+    - Recursion depth: Depth 1 (choice_probs calls L1, unchanged from prior_literal_baserate_listener).
+    - Parameters added: distractor_weight ~ Beta(1.0, 1.0), representing the visual
+    attentional weight allocated to non-candidate display objects. - Parameters removed:
+    None (alpha, salience, baserate, and lapse retained unchanged). - Functional terms
+    changed: - In L0, added array parameter atten: ... and weighted literal listener
+    referent selection by at(lex, u, r) * (vec(prior, r) + {EPS}) * (vec(atten, r)
+    + {EPS}), replacing the uniform-attention Bayesian choice rule. - In L1, passed
+    atten: ... through to L0. - In choice_probs, computed object attention weights
+    as atten = jnp.where(is_cand > 0, 1.0, params["distractor_weight"]) where is_cand
+    = jnp.where(ctx.is_prior > 0, 1.0, ctx.lex[ctx.utterance]), and passed atten into
+    L1.'
+- name: base_literal_focal_lapse_listener
+  rationale: 'We refine prior_lapse_focal_listener by having the literal listener
+    directly integrate empirical familiarization base rates into literal referent
+    evaluation alongside focal attentional discounting. Rather than assuming the speaker
+    simulates a literal listener who treats candidate objects with uniform environmental
+    expectations, the speaker anticipates a Bayesian literal listener who already
+    favors environmentally frequent referents. This sharpens communicative incentives
+    by requiring speakers to use distinctive labels for rare referents while allowing
+    concise, shared descriptions for familiar ones, while preserving prior-anchored
+    lapse fallback and focal distractor discounting. Differences from prior_lapse_focal_listener:
+    - Recursion depth: Depth 1 (choice_probs calls L1, unchanged from prior_lapse_focal_listener).
+    - Parameters added: None (alpha, salience, baserate, distractor_weight, and lapse
+    retained unchanged). - Parameters removed: None. - Functional terms changed: -
+    In L0, added array parameter base_prior: ... and weighted literal listener referent
+    selection by at(lex, u, r) * (vec(base_prior, r) + {EPS}) * (vec(atten, r) + {EPS}),
+    incorporating familiarization base rates into literal interpretation. - In L1,
+    passed base_prior: ... through to L0. - In choice_probs, computed base_prior =
+    softmax_prior(params["baserate"] * fam_logits) and passed base_prior into L1.'
+- name: prior_lapse_focal_listener_2
+  rationale: 'We refine focal_baserate_salience_listener by replacing stimulus-independent
+    uniform lapse with a prior-anchored lapse fallback: when participants experience
+    inattention or task disengagement, their choices fall back on their intuitive
+    baseline prior expectations (favoring visual simplicity and familiarization base
+    rates) rather than choosing uniformly at random across all display objects. On
+    uninformative trials, choices reflect prior expectations directly without artificial
+    flattening from uniform noise, while on communicative trials, lapse errors are
+    naturally biased toward simpler or familiar candidates rather than cluttered distractors.
+    Differences from focal_baserate_salience_listener: - Recursion depth: Depth 1
+    (choice_probs calls L1, unchanged from focal_baserate_salience_listener). - Parameters
+    added: None (alpha, salience, baserate, distractor_weight, and lapse retained
+    unchanged). - Parameters removed: None. - Functional terms changed: - In choice_probs,
+    replaced uniform lapse mixing with prior-anchored lapse fallback, computing choice
+    probabilities as (1.0 - params["lapse"]) * jnp.where(ctx.is_prior > 0, prior,
+    heard) + params["lapse"] * prior instead of mixing with uniform 1.0 / n.'
+- name: prior_lapse_focal_bayesian_listener
+  rationale: 'We refine focal_prior_literal_baserate_listener by replacing stimulus-independent
+    uniform lapse with a prior-anchored lapse fallback: when participants experience
+    inattention or task disengagement, their choices fall back on their intuitive
+    baseline prior expectations (favoring visual simplicity and familiarization base
+    rates) rather than choosing uniformly at random across all display objects. On
+    uninformative trials, choices reflect prior expectations directly without artificial
+    flattening from uniform noise, while on communicative trials, lapse errors are
+    naturally biased toward simpler or familiar candidates rather than cluttered distractors.
+    Differences from focal_prior_literal_baserate_listener: - Recursion depth: Depth
+    1 (choice_probs calls L1, unchanged from focal_prior_literal_baserate_listener).
+    - Parameters added: None (alpha, salience, baserate, distractor_weight, and lapse
+    retained unchanged). - Parameters removed: None. - Functional terms changed: -
+    In choice_probs, replaced uniform lapse mixing with prior-anchored lapse fallback,
+    computing choice probabilities as (1.0 - params["lapse"]) * jnp.where(ctx.is_prior
+    > 0, prior, heard) + params["lapse"] * prior instead of with_lapse(jnp.where(ctx.is_prior
+    > 0, prior, heard), params["lapse"]).'

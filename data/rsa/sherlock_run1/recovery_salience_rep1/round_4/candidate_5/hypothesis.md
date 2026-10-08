@@ -1,0 +1,7 @@
+We refine focal_baserate_salience_listener by integrating chromatic pop-out from chromatic_salience_listener: in addition to visual feature complexity and experiential base rates, listeners maintain a perceptual salience prior sensitive to chromatic contrast. When an object is rendered in full color against grayscale distractors, chromatic contrast produces perceptual pop-out that captures bottom-up visual attention, boosting that object's prior probability both when interpreting a description and on uninformative prior trials. This allows the focal pragmatic listener to account for visual color salience manipulations alongside focal distractor discounting and familiarization history.
+
+Differences from focal_baserate_salience_listener:
+- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from focal_baserate_salience_listener).
+- Parameters added: chromatic_salience ~ Normal(0.0, 1.0), representing the perceptual salience weight of chromatic contrast.
+- Parameters removed: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).
+- Functional terms changed: In choice_probs, the referent prior vector incorporates chromatic contrast via softmax_prior(params["salience"] * ctx.feature_count + params["baserate"] * fam_logits + params["chromatic_salience"] * chromatic_contrast) where chromatic_contrast = jnp.mean(ctx.grayscale) - ctx.grayscale, adding chromatic contrast to the feature-complexity and base-rate prior.

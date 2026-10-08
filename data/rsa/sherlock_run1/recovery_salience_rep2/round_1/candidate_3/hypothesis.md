@@ -1,0 +1,1 @@
+Speakers incur an effort cost when choosing an ambiguous feature that is shared across multiple objects in the context, favoring uniquely distinguishing words. Pragmatic listeners invert a speaker who balances pragmatic informativeness against this ambiguity cost, inferring that a speaker who used a shared word lacked an unshared feature to identify their target.

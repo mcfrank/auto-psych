@@ -1,0 +1,1 @@
+{"best_model": "softmax_belief_salience_listener", "live": ["color_salience_softmax_listener", "limited_attention_listener", "literal_pragmatic_mixture_listener", "referability_prior_listener", "salience_lapse_attention_listener", "salience_lapse_fewest_features", "softmax_belief_salience_listener", "valence_belief_salience_listener"]}

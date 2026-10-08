@@ -1,0 +1,9 @@
+Listeners combine pragmatic reference resolution under an integrated Bayesian salience and base-rate prior with selective visual attention that suppresses distractor objects mismatching the spoken word, while inverting a speaker who actively avoids communicative ambiguity. When evaluating candidate descriptions, speakers balance communicative informativeness against an effort penalty for ambiguous features applying to multiple referents, and listeners discount mismatching distractors rather than inspecting them with full fidelity. On uninformative trials without speech, visual attention remains uniform across all objects and choices are guided directly by the integrated Bayesian prior.
+
+Refinement of distractor_bayesian_salience_listener:
+- Base model: distractor_bayesian_salience_listener (best).
+- Recursion depth: depth 1 (calls L1 in choice_probs, unchanged from distractor_bayesian_salience_listener).
+- Parameters added: cost (HalfNormal(1.0), ambiguity cost penalizing utterances that apply to multiple referents in the visual context, taken from costly_feature_speaker).
+- Parameters modified: none.
+- Parameters removed: none (retains alpha, salience_weight, base_rate_weight, distractor_attention, and lapse).
+- Mathematical / structural changes: In choice_probs and L1, each utterance incurs an ambiguity cost proportional to its context extension beyond a unique referent (costs = params["cost"] * jnp.maximum(0.0, extension - 1.0)); speaker S1 subtracts this cost from the communicative log-utility of each word (exp(alpha * (log(L0[u, r](lex, obj_attention) + {EPS}) - vec(costs, u)))), disincentivizing ambiguous referring expressions and sharpening the listener's pragmatic inference when hearing shared words while maintaining selective distractor suppression and the integrated Bayesian prior.

@@ -1,0 +1,19 @@
+{
+ "best_model": "distractor_bayesian_salience_listener",
+ "ground_truth": "/scratch/users/mcfrank/auto-psych/rsa_run1c/harness_repo/src/pipelines/outer_loop/projects/rsa_reference/seed_models/rsa_l1_salience.py",
+ "best_pool_rmse_to_gt": 0.004418212915767168,
+ "live_pool_rmse_to_gt": {
+  "bayesian_salience_base_rate_listener": 0.00102595893842724,
+  "costly_speaker_bayesian_listener": 0.0031765290262161547,
+  "decision_distractor_bayesian_listener": 0.005807808816228774,
+  "distractor_bayesian_salience_listener": 0.004418212915767168,
+  "distractor_salience_base_rate_listener": 0.008691699019720504,
+  "distractor_shared_prior_listener": 0.007910628048746222,
+  "prior_lapse_distractor_bayesian_listener": 0.005604440532410403,
+  "shared_prior_bayesian_listener": 0.005677991069311629
+ },
+ "heldout_lpd_best_minus_gt": -0.10507175559814641,
+ "heldout_se": 0.5077606958369156,
+ "recovered": true,
+ "rmse_threshold": 0.01
+}

@@ -1,0 +1,1 @@
+softmax_belief_contrast_prior

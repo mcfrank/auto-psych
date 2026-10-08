@@ -1,0 +1,9 @@
+Listeners combine pragmatic reference resolution with selective distractor suppression and normative Bayesian evidence integration of visual feature complexity and familiarization base rates. When hearing a referring expression, resource-limited visual attention discounts mismatching distractor objects when evaluating alternative descriptions the speaker could have produced, while prior expectations about candidate referents integrate visual simplicity and empirical exposure frequencies multiplicatively in log-probability space rather than via linear mixing. On trials without informative speech, attention across objects remains uniform and choices reflect this integrated Bayesian prior directly.
+
+Refinement of distractor_salience_base_rate_listener:
+- Base model: distractor_salience_base_rate_listener
+- Recursion depth: depth 1 (calls L1 in choice_probs, unchanged from distractor_salience_base_rate_listener).
+- Parameters added: none.
+- Parameters modified: base_rate_weight (prior changed from Beta(2.0, 2.0) to LogNormal(0.0, 1.0) to represent multiplicative log-odds sensitivity to empirical exposure base rates).
+- Parameters removed: none (retains alpha, salience_weight, distractor_attention, and lapse).
+- Mathematical / structural changes: In choice_probs, the referent prior is formed by normative Bayesian log-linear evidence combination (softmax_prior(salience_weight * feature_count + base_rate_weight * log(familiarization))) rather than linear probability mixing ((1.0 - base_rate_weight) * salience_prior + base_rate_weight * familiarization). When familiarization exposure is absent, the prior smoothly reduces to the intrinsic feature-salience baseline; when familiarization is present, empirical exposure updates the prior in log-odds space. Attenuated visual attention to mismatching distractor objects during alternative utterance evaluation is retained from distractor_salience_base_rate_listener.

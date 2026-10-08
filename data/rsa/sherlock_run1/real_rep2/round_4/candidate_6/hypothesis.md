@@ -1,0 +1,8 @@
+People choose referents by evaluating depth-2 pragmatic posterior beliefs through a softmax decision rule rather than linear probability matching, softly maximizing over subjective probabilities in communicative contexts characterized by diagnostic feature contrast, color distinctiveness, and speaker-side utterance ambiguity costs. In visual reference games, listeners reason recursively about informative speakers while treating candidate referents' posterior probabilities as communicative values, selecting an object with probability governed by a decision rationality parameter that sharpens choices toward the most probable referent. This fits better because human forced-choice decisions exhibit soft-maximization that sharpens pragmatic inferences beyond linear probability matching while preserving the rich visual and communicative constraints of recursive reasoning.
+
+Refinement of rsa_l2_costly_contrast_color:
+- Base model refined: rsa_l2_costly_contrast_color
+- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from rsa_l2_costly_contrast_color).
+- Parameters added: gamma (prior: LogNormal(0.0, 1.0)).
+- Parameters removed: None (retains alpha, w_contrast, w_familiar, w_color, cost_ambiguity, and lapse).
+- Other terms: In L2, the listener chooses candidate referents with probability proportional to exp(gamma * Pr[speaker.r == r]) rather than Pr[speaker.r == r], and in choice_probs, prior choices use softmax over the object prior (jax.nn.softmax(params["gamma"] * prior)) instead of prior (component taken from softmax_belief_listener); the simulated depth-1 and depth-2 speaker utilities, ambiguity cost, and diagnostic contrast salience prior are unchanged.

@@ -1,0 +1,57 @@
+"""RSA pragmatic listener at depth 2 with salience-weighted base-rate integration.
+
+Refines base_rate_l2 by replacing the uniform baseline prior with a perceptual
+feature-salience prior over referents (from feature_salience_l2). When prior exposure
+frequencies are present, listeners blend them with this feature-salience baseline;
+when familiarization is absent, listeners rely directly on the feature-salience prior.
+"""
+
+import jax.numpy as jnp
+import numpyro.distributions as dist
+from memo import memo
+
+from src.rsa.memo_kit import EPS, at, softmax_prior, vec, with_lapse
+
+PARAMS = {
+    "alpha": dist.LogNormal(0.0, 1.0),
+    "salience_weight": dist.Normal(0.0, 1.0),
+    "base_rate_weight": dist.Beta(2.0, 2.0),
+    "lapse": dist.Beta(1.0, 9.0),
+}
+
+
+@memo
+def L0[u: UTT, r: OBJ](lex: ...):
+    listener: knows(u)
+    listener: chooses(r in OBJ, wpp=at(lex, u, r))
+    return Pr[listener.r == r]
+
+
+@memo
+def L1[u: UTT, r: OBJ](alpha, lex: ...):
+    listener: thinks[
+        speaker: given(r in OBJ, wpp=1),
+        speaker: chooses(u in UTT, wpp=at(lex, u, r) * exp(alpha * log(L0[u, r](lex) + {EPS}))),
+    ]
+    listener: observes [speaker.u] is u
+    listener: chooses(r in OBJ, wpp=Pr[speaker.r == r])
+    return Pr[listener.r == r]
+
+
+@memo
+def L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ...):
+    listener: thinks[
+        speaker: given(r in OBJ, wpp=vec(prior, r) + {EPS}),
+        speaker: chooses(u in UTT, wpp=at(lex, u, r) * exp(alpha * log(L1[u, r](alpha, lex) + {EPS}))),
+    ]
+    listener: observes [speaker.u] is u
+    listener: chooses(r in OBJ, wpp=Pr[speaker.r == r])
+    return Pr[listener.r == r]
+
+
+def choice_probs(params, ctx):
+    base_prior = softmax_prior(params["salience_weight"] * ctx.feature_count)
+    fam_prior = (1.0 - params["base_rate_weight"]) * base_prior + params["base_rate_weight"] * ctx.familiarization
+    prior = jnp.where(ctx.has_familiarization > 0, fam_prior, base_prior)
+    heard = L2(params["alpha"], ctx.lex, prior)[ctx.utterance]
+    return with_lapse(jnp.where(ctx.is_prior > 0, prior, heard), params["lapse"])

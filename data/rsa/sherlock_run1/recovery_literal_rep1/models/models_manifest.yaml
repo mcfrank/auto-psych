@@ -1,0 +1,79 @@
+models:
+- name: limited_attention_listener
+  rationale: Listeners interpret referring expressions with limited visual attention
+    to the display, focusing cognitive resources on candidate objects that match the
+    heard utterance while discounting non-matching distractors. When evaluating a
+    speaker's communicative choices, the listener simulates listener comprehension
+    over this attentional representation of the scene, dampening inferences that rely
+    on distant non-matching foils. This attentional bottleneck prevents spurious scalar
+    implicatures in complex asymmetric displays while preserving classic pragmatic
+    reasoning between attended candidates.
+- name: softmax_belief_salience_listener
+  rationale: Listeners select referents using a softmax decision rule over candidate
+    objects rather than probability matching, with attentional lapses defaulting to
+    perceptual salience rather than uniform guessing. During deliberate choice, the
+    listener evaluates communicative evidence by inverting a descriptive speaker and
+    exponentiates candidate posterior probabilities, concentrating selections on the
+    most probable referent. When cognitive attention lapses, choices fall back on
+    the bottom-up visual salience of the objects shaped by feature complexity and
+    familiarity.
+- name: salience_lapse_attention_listener
+  rationale: We refine limited_attention_listener by hypothesizing that when attention
+    lapses during referent interpretation, choices default to the perceptual salience
+    of objects rather than uniform random guessing, incorporating the salience-lapse
+    mechanism from softmax_belief_salience_listener. Because unattended lapses fall
+    back on bottom-up visual expectations shaped by feature complexity and familiarization
+    rather than pure noise, this better captures human choice distributions across
+    varied displays. Relative to limited_attention_listener, recursion depth remains
+    unchanged at L1, no parameters are added or removed, and the response probability
+    mixture replaces uniform guessing with the object salience prior.
+- name: literal_pragmatic_mixture_listener
+  rationale: Listeners in a reference game population are cognitively heterogeneous,
+    comprising a mixture of literal and pragmatic reasoning types. A subset of listeners
+    act as literal interpreters who choose uniformly among referents that satisfy
+    the literal truth conditions of the utterance, while other listeners act as pragmatic
+    interpreters who mentally invert an informative communicative speaker. When cognitive
+    attention lapses, choices across all listeners default to bottom-up perceptual
+    salience shaped by feature complexity and familiarization base rates.
+- name: color_salience_softmax_listener
+  rationale: We refine softmax_belief_salience_listener by hypothesizing that listeners
+    incorporate visual color contrast into object salience, expecting speakers to
+    refer to full-color objects over grayscale ones and defaulting toward full-color
+    objects during attentional lapses, incorporating the color-salience mechanism
+    from color_salience_shared_prior. Because visual color contrast captures bottom-up
+    attention, full-color objects are perceptually more prominent than grayscale alternatives
+    both when evaluating communicative evidence and when cognitive attention lapses.
+    Relative to softmax_belief_salience_listener, recursion depth remains unchanged
+    at L1, one parameter w_color is added with prior Normal(0.0, 1.0), no parameters
+    are removed, and the color salience weight multiplies the color indicator (1 minus
+    grayscale) in the salience prior logits.
+- name: valence_belief_salience_listener
+  rationale: 'We refine softmax_belief_salience_listener by hypothesizing that a speaker''s
+    communicative valence modulates referent salience: listeners expect speakers describing
+    a favorite referent to prefer feature-rich objects, but this preference diminishes
+    or reverses when describing a least-favorite referent, incorporating the valence-salience
+    mechanism from valence_salience_listener. Because communicative valence shifts
+    prior expectations shared in descriptive speaker mentalization as well as bottom-up
+    visual attention during attentional lapses, this better accounts for affective
+    framing across reference displays. Relative to softmax_belief_salience_listener,
+    recursion depth remains unchanged at L1, one parameter w_valence is added with
+    prior Normal(0.0, 1.0), no parameters are removed, and the feature count term
+    in the salience prior is scaled by adding w_valence multiplied by display valence.'
+- name: salience_lapse_fewest_features
+  rationale: We refine fewest_features_listener by hypothesizing that when attention
+    lapses during referent interpretation, choices default to the perceptual salience
+    of objects rather than uniform random guessing, incorporating the salience-lapse
+    mechanism from softmax_belief_salience_listener. Because unattended lapses fall
+    back on bottom-up visual expectations shaped by feature complexity and familiarization
+    rather than pure noise, this better captures human choice distributions across
+    varied displays. Relative to fewest_features_listener, recursion depth remains
+    unchanged, no parameters are added or removed, and the response probability mixture
+    replaces uniform guessing with the object salience prior.
+- name: referability_prior_listener
+  rationale: "Listeners expect speakers to choose referents that can be successfully\
+    \ communicated under the constraints of the reference game. Before hearing a referring\
+    \ expression, a listener evaluates each candidate object's communicative referability\u2014\
+    the maximum discriminability among the available labels that literally describe\
+    \ it in the visual context\u2014rather than raw visual complexity. The listener\
+    \ inverts a descriptive speaker using this referability prior over intended referents,\
+    \ with attentional lapses defaulting to this baseline communicative expectation."

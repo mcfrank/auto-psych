@@ -1,0 +1,1 @@
+Listeners interpret referring expressions through the speaker's evaluative stance, modulating their prior expectations about object salience by the speaker's valence. When a speaker describes their favorite object, listeners expect them to favor feature-rich referents, whereas when describing a least favorite object, that preference shifts toward simpler, feature-poor objects.

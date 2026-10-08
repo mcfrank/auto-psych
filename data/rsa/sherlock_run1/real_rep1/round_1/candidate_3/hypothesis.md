@@ -1,0 +1,1 @@
+Speakers trade off communicative informativeness with utterance costs that favor accessible, shared descriptors over narrow, highly specific words. Pragmatic listeners invert this speaker, recognizing that a speaker who uses a shared word may still refer to an object with unique features because specific words carry higher production costs.

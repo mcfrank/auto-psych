@@ -1,0 +1,8 @@
+Listeners interpret referential and evaluative descriptions by combining depth-2 recursive pragmatic reasoning, utterance production costs, graded semantics, and perceptual salience with contrastive visual distinctiveness, refining distinctive_multimodal_l2_listener by replacing inverse frequency with contextual contrast in the common-knowledge salience prior. Before hearing an informative utterance, listeners assign prior prominence to objects in direct proportion to how sharply their features contrast with the visual scene—measured by the fraction of competing display objects that lack those features—conferring maximal prominence to unique singleton features while naturally assigning zero distinctiveness to universal features shared by the entire display. Communicative speakers and pragmatic listeners share this contrastive salience distribution across recursive reasoning depths while balancing informativeness against production costs over graded descriptions.
+
+Refined model: distinctive_multimodal_l2_listener
+Differences from source:
+- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from source).
+- Parameters added: None.
+- Parameters removed: None (retains alpha, w_features, w_familiar, w_valence, w_color, w_distinct, w_extension, beta_graded, lapse with identical priors).
+- Terms changed: In choice_probs, feature specificity in distinctiveness is changed from linear inverse frequency 1.0 / feature_freq to contrastive isolation (n_obj - feature_freq) / jnp.maximum(n_obj - 1.0, 1.0), weighting each non-sink feature by the proportion of competing objects in the visual context that lack it.

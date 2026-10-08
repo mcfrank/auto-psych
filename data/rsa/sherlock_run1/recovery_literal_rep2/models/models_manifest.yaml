@@ -1,0 +1,123 @@
+models:
+- name: fewest_features_listener
+  rationale: Listeners select referents using a non-Bayesian fewest-features heuristic
+    rather than recursive mental simulation of the speaker. Upon hearing a referring
+    expression, they consider all objects that literally possess the named feature
+    and penalize objects that possess additional extraneous features. The probability
+    of choosing a matching object decreases monotonically with its total feature count,
+    favoring the most minimally specified referent.
+- name: literal_pragmatic_mixture_listener
+  rationale: 'Listeners in reference games differ in their depth of communicative
+    reasoning: the population is a discrete mixture of literal listeners and pragmatic
+    listeners. Literal listeners select among truthful referents with a preference
+    for minimally specified objects, penalizing extraneous unmentioned features, while
+    pragmatic listeners recursively infer the speaker''s communicative intent by reasoning
+    about alternative utterances. Observed population choices reflect the mixture
+    proportion of these two distinct cognitive types.'
+- name: valence_feature_economy_listener
+  rationale: 'This model refines fewest_features_listener by incorporating the speaker''s
+    evaluative stance into the feature economy heuristic: listeners penalize candidate
+    referents that possess extraneous unmentioned features, but modulate this penalty
+    according to the speaker''s evaluative framing. Under neutral framing, listeners
+    apply the default penalty favoring minimally specified referents; when the speaker
+    describes a ''favorite'' object, extraneous features are penalized more heavily
+    or expected to align with prominence, whereas under negative framing (''least
+    favorite''), the evaluative polarity shifts, softening or inverting the penalty
+    on extraneous features. Differences from fewest_features_listener: - Refined model:
+    fewest_features_listener - Recursion depth: depth 0 (choice_probs calls L_heuristic,
+    unchanged). - Parameters added: w_valence ~ Normal(0.0, 1.0) governing the modulation
+    of feature economy by speaker valence framing. - Parameters removed: none. - Feature
+    economy penalty in choice_probs: the effective feature penalty is beta_eff = params["beta"]
+    + params["w_valence"] * ctx.valence. - Heuristic listener L_heuristic: takes beta_eff
+    instead of params["beta"]. - All other memo agents, distributions, and prior terms
+    are unchanged.'
+- name: bounded_capacity_uniform_prior
+  rationale: 'This model refines bounded_capacity_listener by replacing the empirical
+    visual salience prior with an uninformative uniform prior over candidate referents.
+    Listeners possess bounded cognitive resources for pragmatic reasoning, anchoring
+    on the literal interpretation of referring expressions and incorporating the speaker''s
+    communicative likelihood only to the extent permitted by their processing capacity.
+    In the absence of an informative utterance, choices are uniform across available
+    objects rather than biased by extraneous feature counts or familiarization base
+    rates. Differences from bounded_capacity_listener: - Refined model: bounded_capacity_listener
+    - Recursion depth: depth 1 (choice_probs calls L_bounded, unchanged). - Parameters
+    added: none. - Parameters removed: w_features, w_familiar. - Literal listener
+    L0: listener chooses r in OBJ with probability proportional to at(lex, u, r),
+    replacing the empirical visual salience prior with an uninformative uniform prior
+    over candidate referents. - Speaker choice in S1: speaker simulates this uniform-prior
+    literal listener L0, removing the prior array parameter. - Pragmatic listener
+    L_bounded: listener anchors on the uniform-prior literal baseline L0 and incorporates
+    speaker likelihood S1 to the extent permitted by processing capacity, removing
+    the prior array parameter. - Prior trials in choice_probs: on prior trials (ctx.is_prior
+    > 0), listener chooses uniformly across objects rather than according to feature-count
+    and familiarization weights. - All other memo agents, distributions, and prior
+    terms are unchanged.'
+- name: feature_economy_simplicity_prior
+  rationale: 'This model refines fewest_features_listener by extending the feature
+    economy heuristic to prior expectations over referents: listeners possess an intrinsic
+    cognitive preference for minimal, less complex objects that operates both when
+    interpreting utterances and when forming a priori expectations. Rather than reverting
+    to a uniform distribution when no informative description is given, listeners
+    expect speakers to favor simpler objects with fewer total features a priori according
+    to the same feature economy penalty. This improves model fit because human referent
+    selection consistently reflects a general simplicity bias across both communicative
+    and uninformative contexts. Differences from fewest_features_listener: - Refined
+    model: fewest_features_listener - Recursion depth: depth 0 (choice_probs calls
+    L_heuristic, unchanged). - Parameters added: none. - Parameters removed: none.
+    - Prior calculation in choice_probs: on prior trials (ctx.is_prior > 0), the listener
+    chooses according to a feature economy simplicity prior softmax_prior(-params["beta"]
+    * ctx.feature_count) rather than an uninformative uniform distribution. - Heuristic
+    listener L_heuristic: unchanged. - All other memo agents, distributions, and terms
+    are unchanged.'
+- name: diminishing_feature_economy_listener
+  rationale: 'This model refines valence_feature_economy_listener by incorporating
+    Weber-Fechner diminishing marginal sensitivity into the feature economy heuristic:
+    listeners penalize candidate referents possessing extraneous unmentioned features,
+    but the psychological cost of complexity scales logarithmically rather than linearly
+    with feature count. The first extraneous feature incurs the sharpest penalty for
+    departing from minimality, whereas each additional extraneous feature adds diminishing
+    marginal cost. Evaluative valence framing continues to modulate this diminishing
+    feature penalty, shifting or inverting the penalty under negative framing. Differences
+    from valence_feature_economy_listener: - Refined model: valence_feature_economy_listener
+    - Recursion depth: depth 0 (choice_probs calls L_diminishing, unchanged). - Parameters
+    added: none. - Parameters removed: none. - Functional form in L_diminishing: listeners
+    weight candidate referents proportional to at(lex, u, r) * exp(-beta_eff * log(1.0
+    + vec(extraneous, r))) rather than at(lex, u, r) * exp(-beta_eff * vec(feature_count,
+    r)), replacing linear feature penalization with a logarithmic Weber-Fechner functional
+    form. - Extraneous features in choice_probs: computed as jnp.maximum(0.0, ctx.feature_count
+    - 1.0) and passed into L_diminishing. - All other memo agents, distributions,
+    and prior terms are unchanged.'
+- name: color_valence_feature_economy_listener
+  rationale: 'This model refines valence_feature_economy_listener by incorporating
+    visual color salience from color_salience_listener into the feature economy heuristic:
+    when candidate referents literally match the uttered word, listeners penalize
+    objects possessing extraneous unmentioned features (modulated by the speaker''s
+    evaluative valence) and discount desaturated grayscale objects relative to full-color
+    alternatives. Full-color objects capture visual attention and enhance perceived
+    referential suitability, whereas desaturated grayscale objects are dispreferred.
+    Differences from valence_feature_economy_listener: - Refined model: valence_feature_economy_listener
+    - Recursion depth: depth 0 (choice_probs calls L_heuristic, unchanged). - Parameters
+    added: w_grayscale ~ Normal(0.0, 1.0) governing the visual color salience penalty
+    for desaturated grayscale referents. - Parameters removed: none. - Heuristic listener
+    L_heuristic: candidate referents are weighted by at(lex, u, r) * exp(-beta_eff
+    * vec(feature_count, r) + w_grayscale * vec(grayscale, r)), incorporating the
+    visual color salience component from color_salience_listener. - Arguments to L_heuristic:
+    takes w_grayscale from params["w_grayscale"] and grayscale: ... from ctx.grayscale.
+    - All other memo agents, distributions, and prior terms are unchanged.'
+- name: valence_pragmatic_mixture_listener
+  rationale: 'This model refines literal_pragmatic_mixture_listener by incorporating
+    the speaker''s evaluative stance into the literal listener''s feature economy
+    heuristic. Listeners in reference games comprise a discrete mixture of literal
+    and pragmatic reasoning types, where literal listeners penalize extraneous unmentioned
+    features with an economy penalty that is dynamically modulated by the speaker''s
+    evaluative framing (amplified under positive framing and softened or inverted
+    under negative framing), while pragmatic listeners infer communicative intent
+    through recursive mental simulation of the speaker. Differences from literal_pragmatic_mixture_listener:
+    - Refined model: literal_pragmatic_mixture_listener - Recursion depth: depth 1
+    (choice_probs calls L_literal and L_pragmatic, unchanged). - Parameters added:
+    w_valence ~ Normal(0.0, 1.0) governing the modulation of the literal listener''s
+    feature economy penalty by speaker valence framing. - Parameters removed: none.
+    - Feature economy penalty in choice_probs: the effective feature penalty for the
+    literal listener is beta_eff = params["beta"] + params["w_valence"] * ctx.valence.
+    - Literal listener L_literal: takes beta_eff instead of params["beta"]. - All
+    other memo agents, distributions, and prior terms are unchanged.'

@@ -1,0 +1,19 @@
+{
+ "best_model": "valence_pragmatic_mixture_listener",
+ "ground_truth": "/scratch/users/mcfrank/auto-psych/rsa_run1c/harness_repo/src/pipelines/outer_loop/projects/rsa_reference/seed_models/literal_listener.py",
+ "best_pool_rmse_to_gt": 0.009335685727977265,
+ "live_pool_rmse_to_gt": {
+  "bounded_capacity_uniform_prior": 5.653463449736637e-05,
+  "color_valence_feature_economy_listener": 0.020862109589904303,
+  "diminishing_feature_economy_listener": 0.010536086809860706,
+  "feature_economy_simplicity_prior": 0.007404183498439193,
+  "fewest_features_listener": 0.007033754590887605,
+  "literal_pragmatic_mixture_listener": 0.004612971392537731,
+  "valence_feature_economy_listener": 0.013645098229426392,
+  "valence_pragmatic_mixture_listener": 0.009335685727977265
+ },
+ "heldout_lpd_best_minus_gt": -2.211858514926007,
+ "heldout_se": 2.0364502828464484,
+ "recovered": true,
+ "rmse_threshold": 0.01
+}

@@ -1,0 +1,29 @@
+{
+  "n_calls": 36,
+  "n_calls_missing_usage": 0,
+  "input_tokens": 33387100,
+  "output_tokens": 728838,
+  "reasoning_tokens": 1811129,
+  "cache_read_tokens": 325138138,
+  "cache_write_tokens": 0,
+  "total_tokens": 361065205,
+  "cost_usd": 58.9505616,
+  "n_usage_limit_hits": 0,
+  "usage_limit_wait_sec": 0.0,
+  "by_source": {
+    "rsa:candidate": {
+      "n_calls": 36,
+      "n_calls_missing_usage": 0,
+      "input_tokens": 33387100,
+      "output_tokens": 728838,
+      "reasoning_tokens": 1811129,
+      "cache_read_tokens": 325138138,
+      "cache_write_tokens": 0,
+      "total_tokens": 361065205,
+      "cost_usd": 58.9505616,
+      "n_usage_limit_hits": 0,
+      "usage_limit_wait_sec": 0.0
+    }
+  },
+  "claude_auth": []
+}

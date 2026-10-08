@@ -1,0 +1,2337 @@
+[
+ {
+  "step": 0,
+  "round": -1,
+  "best_model": "rsa_l2",
+  "standing": {
+   "rsa_l2": {
+    "rank": 0,
+    "elpd_loo": -17426.50571537018,
+    "se": 133.43624159130505,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 2.044616184888582,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 1,
+    "elpd_loo": -17429.246683120728,
+    "se": 133.2139242347197,
+    "elpd_diff": 2.7409677505493164,
+    "dse": 2.9881920859695894,
+    "p_loo": 2.1000249205135333,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 2,
+    "elpd_loo": -18599.991074562073,
+    "se": 127.64098481062841,
+    "elpd_diff": 1173.4853591918945,
+    "dse": 44.87040204847248,
+    "p_loo": 1.047910745266563,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "outcome": "seeded",
+    "name": "literal_listener"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l2"
+   }
+  ],
+  "live": [
+   {
+    "name": "literal_listener",
+    "hypothesis": "Listeners pick uniformly among the objects the word is literally true of.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   }
+  ],
+  "ledger_entries": 0
+ },
+ {
+  "step": 1,
+  "round": 0,
+  "best_model": "feature_salience_listener",
+  "standing": {
+   "feature_salience_listener": {
+    "rank": 0,
+    "elpd_loo": -17413.410258293152,
+    "se": 133.86546227511005,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 2.929662493057549,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "feature_salience_l2": {
+    "rank": 1,
+    "elpd_loo": -17416.882053375244,
+    "se": 133.89522554558673,
+    "elpd_diff": 3.471795082092285,
+    "dse": 2.545469370564636,
+    "p_loo": 3.0176618583645904,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_rational_l2": {
+    "rank": 2,
+    "elpd_loo": -17418.94672012329,
+    "se": 133.9238037154963,
+    "elpd_diff": 5.53646183013916,
+    "dse": 4.496470588513633,
+    "p_loo": 3.086702385426179,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 3,
+    "elpd_loo": -17426.50571537018,
+    "se": 133.43624159130505,
+    "elpd_diff": 13.095457077026367,
+    "dse": 5.315228952666764,
+    "p_loo": 2.044616184888582,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_feature_speaker": {
+    "rank": 4,
+    "elpd_loo": -17428.519453048706,
+    "se": 133.25281762595617,
+    "elpd_diff": 15.1091947555542,
+    "dse": 5.703755937559478,
+    "p_loo": 2.49441856518024,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 5,
+    "elpd_loo": -17429.246683120728,
+    "se": 133.2139242347197,
+    "elpd_diff": 15.836424827575684,
+    "dse": 5.806694229855682,
+    "p_loo": 2.1000249205135333,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "exhaustive_listener": {
+    "rank": 6,
+    "elpd_loo": -17498.55503177643,
+    "se": 133.4370571884404,
+    "elpd_diff": 85.14477348327637,
+    "dse": 14.381587302725215,
+    "p_loo": 2.044947335147299,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "mutual_exclusivity_listener": {
+    "rank": 7,
+    "elpd_loo": -17772.713035583496,
+    "se": 132.46366996947108,
+    "elpd_diff": 359.30277729034424,
+    "dse": 25.596348160632875,
+    "p_loo": 2.001810122426832,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 8,
+    "elpd_loo": -18599.991074562073,
+    "se": 127.64098481062841,
+    "elpd_diff": 1186.580816268921,
+    "dse": 46.27758691241832,
+    "p_loo": 1.047910745266563,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "exhaustive_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential expressions through grammatical exhaustification rather than recursive social mentalizing. Hearing a feature word, the listener treats it as an exhaustive specification of the target referent, penalizing candidate objects that possess unmentioned alternative features in proportion to the number of extraneous features. In the absence of an informative description, the listener chooses uniformly among candidate objects."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "exhaustivity_listener",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0001 of exhaustive_listener's (threshold 0.002) over the loop's novelty pool of 1258 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Listeners interpret utterances via a grammatical exhaustivity heuristic rather than recursive speaker mentalizing: hearing a feature asserts that feature and penalizes candidate objects for each additional unmentioned feature they possess. On simple implicature displays, this prefers the minimal target over a multi-feature foil, matching classic pragmatic choices. On complex displays where candidates share the heard word and have equal numbers of unmentioned features (such as Mayn & Demberg's target complex display), exhaustivity predicts an even split between candidates, disagreeing sharply with rsa_l2 which predicts a large asymmetry driven by depth-2 speaker alternative vocabularies."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "costly_feature_speaker",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Speakers incur an utterance cost for producing ambiguous words that describe multiple referents, penalizing shared features in the display. Pragmatic listeners invert this cost-sensitive speaker, reasoning that an intended referent with unique distinguishing features is especially unlikely to be described with a shared word. This excess-ambiguity penalty drives listeners to favor referents that lack alternative unambiguous descriptions."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "decision_rational_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners reason at depth 2 about a pragmatic speaker, but rather than simply probability matching their posterior beliefs, they apply softmax decision rationality when selecting an object to click. This separates speaker communicative optimization from listener choice decisiveness, allowing the model to capture that listeners decisively select the referent with the highest posterior support even when speaker informativeness is moderate.\n\nModel refinement details:\n- Base model refined: rsa_l2\n- Recursion depth: Depth 2 (choice_probs calls L2)\n- Parameters added: beta (LogNormal(0.0, 1.0)), representing listener decision rationality\n- Parameters removed: None\n- Structural differences: In L2, the listener's choice weights are exponentiated by beta times the log posterior probability of each referent given the utterance, rather than matching posterior probability directly (beta = 1)."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "feature_salience_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners reason at depth 2 (inverting a speaker who simulates the depth-1 pragmatic listener), but rather than assuming all referents are equally likely a priori, agents maintain a feature-salience prior over objects that scales with each object's feature count. When no informative word is heard, listeners choose referents according to this feature-based prior, and when an utterance is heard, pragmatic reasoning updates this prior. This captures the cognitive tendency for simpler, less cluttered objects to serve as default prototypes or baselines in reference games.\n\nDifferences from rsa_l2:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from rsa_l2).\n- Parameters added: w_feature ~ Normal(0.0, 1.0) weighting object feature counts.\n- Parameters removed: None (alpha and lapse retained unchanged).\n- Functional terms changed:\n  - Computed prior vector in choice_probs as softmax_prior(params[\"w_feature\"] * ctx.feature_count) and passed it to L2.\n  - In L1 and L2, added array parameter prior: ... and changed speaker referent weight from wpp=1 to wpp=vec(prior, r).\n  - In choice_probs, replaced uniform guessing on prior trials with prior: jnp.where(ctx.is_prior > 0, prior, heard)."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "feature_salience_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine rsa_l1 by introducing a feature-count salience prior over referents, where listeners maintain a baseline prior that scales with an object's feature count rather than assuming all objects are equally likely a priori. Listeners penalize visually complex objects with more extraneous features, favoring simpler referents both when interpreting an utterance and on uninformative prior trials. Compared to rsa_l1, recursion depth is unchanged at depth 1 (calling L1), one parameter 'salience' is added with a normal prior, and the uniform object prior in the listener's mental model and on prior trials is replaced by a softmax distribution over feature counts."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "mutual_exclusivity_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential descriptions using a mutual exclusivity constraint rather than recursive theory-of-mind mentalizing: when hearing a shared feature, they penalize candidate referents in proportion to the number of unique, unambiguous distinguishing labels available for that object in the visual scene. On symmetric complex displays where candidate referents share the heard word and their alternative features are also shared with other objects rather than unique, mutual exclusivity predicts an equal choice split because neither candidate possesses an exclusive alternative name. This sharply contradicts the depth-2 rational speech act model, which predicts an asymmetric preference driven by recursive speaker vocabulary trade-offs.",
+    "repair": true
+   }
+  ],
+  "live": [
+   {
+    "name": "literal_listener",
+    "hypothesis": "Listeners pick uniformly among the objects the word is literally true of.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "exhaustive_listener",
+    "hypothesis": "Listeners interpret referential expressions through grammatical exhaustification rather than recursive social mentalizing. Hearing a feature word, the listener treats it as an exhaustive specification of the target referent, penalizing candidate objects that possess unmentioned alternative features in proportion to the number of extraneous features. In the absence of an informative description, the listener chooses uniformly among candidate objects.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "hypothesis": "Speakers incur an utterance cost for producing ambiguous words that describe multiple referents, penalizing shared features in the display. Pragmatic listeners invert this cost-sensitive speaker, reasoning that an intended referent with unique distinguishing features is especially unlikely to be described with a shared word. This excess-ambiguity penalty drives listeners to favor referents that lack alternative unambiguous descriptions.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "decision_rational_l2",
+    "hypothesis": "Listeners reason at depth 2 about a pragmatic speaker, but rather than simply probability matching their posterior beliefs, they apply softmax decision rationality when selecting an object to click. This separates speaker communicative optimization from listener choice decisiveness, allowing the model to capture that listeners decisively select the referent with the highest posterior support even when speaker informativeness is moderate.\n\nModel refinement details:\n- Base model refined: rsa_l2\n- Recursion depth: Depth 2 (choice_probs calls L2)\n- Parameters added: beta (LogNormal(0.0, 1.0)), representing listener decision rationality\n- Parameters removed: None\n- Structural differences: In L2, the listener's choice weights are exponentiated by beta times the log posterior probability of each referent given the utterance, rather than matching posterior probability directly (beta = 1).\n",
+    "source": "round 1 candidate 4 refine incumbent rsa_l2"
+   },
+   {
+    "name": "feature_salience_l2",
+    "hypothesis": "Listeners reason at depth 2 (inverting a speaker who simulates the depth-1 pragmatic listener), but rather than assuming all referents are equally likely a priori, agents maintain a feature-salience prior over objects that scales with each object's feature count. When no informative word is heard, listeners choose referents according to this feature-based prior, and when an utterance is heard, pragmatic reasoning updates this prior. This captures the cognitive tendency for simpler, less cluttered objects to serve as default prototypes or baselines in reference games.\n\nDifferences from rsa_l2:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from rsa_l2).\n- Parameters added: w_feature ~ Normal(0.0, 1.0) weighting object feature counts.\n- Parameters removed: None (alpha and lapse retained unchanged).\n- Functional terms changed:\n  - Computed prior vector in choice_probs as softmax_prior(params[\"w_feature\"] * ctx.feature_count) and passed it to L2.\n  - In L1 and L2, added array parameter prior: ... and changed speaker referent weight from wpp=1 to wpp=vec(prior, r).\n  - In choice_probs, replaced uniform guessing on prior trials with prior: jnp.where(ctx.is_prior > 0, prior, heard).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l2"
+   },
+   {
+    "name": "feature_salience_listener",
+    "hypothesis": "We refine rsa_l1 by introducing a feature-count salience prior over referents, where listeners maintain a baseline prior that scales with an object's feature count rather than assuming all objects are equally likely a priori. Listeners penalize visually complex objects with more extraneous features, favoring simpler referents both when interpreting an utterance and on uninformative prior trials. Compared to rsa_l1, recursion depth is unchanged at depth 1 (calling L1), one parameter 'salience' is added with a normal prior, and the uniform object prior in the listener's mental model and on prior trials is replaced by a softmax distribution over feature counts.\n",
+    "source": "round 1 candidate 6 refine chosen"
+   },
+   {
+    "name": "mutual_exclusivity_listener",
+    "hypothesis": "Listeners interpret referential descriptions using a mutual exclusivity constraint rather than recursive theory-of-mind mentalizing: when hearing a shared feature, they penalize candidate referents in proportion to the number of unique, unambiguous distinguishing labels available for that object in the visual scene. On symmetric complex displays where candidate referents share the heard word and their alternative features are also shared with other objects rather than unique, mutual exclusivity predicts an equal choice split because neither candidate possesses an exclusive alternative name. This sharply contradicts the depth-2 rational speech act model, which predicts an asymmetric preference driven by recursive speaker vocabulary trade-offs.\n",
+    "source": "round 1 candidate 2 explore repair 1"
+   }
+  ],
+  "ledger_entries": 7
+ },
+ {
+  "step": 2,
+  "round": 1,
+  "best_model": "baserate_salience_listener",
+  "standing": {
+   "baserate_salience_listener": {
+    "rank": 0,
+    "elpd_loo": -17389.34595298767,
+    "se": 134.02342146621942,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 3.8888504837268556,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_salience_listener": {
+    "rank": 1,
+    "elpd_loo": -17412.860593795776,
+    "se": 133.9696392834762,
+    "elpd_diff": 23.51464080810547,
+    "dse": 6.672279576860276,
+    "p_loo": 3.9738805027809576,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "feature_salience_listener": {
+    "rank": 2,
+    "elpd_loo": -17413.410258293152,
+    "se": 133.86546227511005,
+    "elpd_diff": 24.064305305480957,
+    "dse": 6.756116760979533,
+    "p_loo": 2.929662493057549,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "focal_attention_listener": {
+    "rank": 3,
+    "elpd_loo": -17413.547021865845,
+    "se": 134.0133124736014,
+    "elpd_diff": 24.201068878173828,
+    "dse": 7.396760755339174,
+    "p_loo": 3.0493104286433663,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "feature_salience_l2": {
+    "rank": 4,
+    "elpd_loo": -17416.882053375244,
+    "se": 133.89522554558673,
+    "elpd_diff": 27.536100387573242,
+    "dse": 7.0479393874697465,
+    "p_loo": 3.0176618583645904,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_salience_l2": {
+    "rank": 5,
+    "elpd_loo": -17417.240070343018,
+    "se": 133.93489283326858,
+    "elpd_diff": 27.89411735534668,
+    "dse": 7.06607316378375,
+    "p_loo": 3.8818059032382735,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "contextual_distinctiveness_listener": {
+    "rank": 6,
+    "elpd_loo": -17418.889101982117,
+    "se": 133.72017704630912,
+    "elpd_diff": 29.5431489944458,
+    "dse": 7.416791779305803,
+    "p_loo": 3.048521027500101,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_rational_l2": {
+    "rank": 7,
+    "elpd_loo": -17418.94672012329,
+    "se": 133.9238037154963,
+    "elpd_diff": 29.600767135620117,
+    "dse": 7.54631715657874,
+    "p_loo": 3.086702385426179,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "graded_truth_speaker": {
+    "rank": 8,
+    "elpd_loo": -17424.005262374878,
+    "se": 133.54310064640495,
+    "elpd_diff": 34.65930938720703,
+    "dse": 7.968605774263556,
+    "p_loo": 3.014357485684741,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 9,
+    "elpd_loo": -17426.50571537018,
+    "se": 133.43624159130505,
+    "elpd_diff": 37.159762382507324,
+    "dse": 8.393979764859532,
+    "p_loo": 2.044616184888582,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_feature_speaker": {
+    "rank": 10,
+    "elpd_loo": -17428.519453048706,
+    "se": 133.25281762595617,
+    "elpd_diff": 39.173500061035156,
+    "dse": 8.732716890678786,
+    "p_loo": 2.49441856518024,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 11,
+    "elpd_loo": -17429.246683120728,
+    "se": 133.2139242347197,
+    "elpd_diff": 39.90073013305664,
+    "dse": 8.83107816965373,
+    "p_loo": 2.1000249205135333,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "exhaustive_listener": {
+    "rank": 12,
+    "elpd_loo": -17498.55503177643,
+    "se": 133.4370571884404,
+    "elpd_diff": 109.20907878875732,
+    "dse": 15.126407909983225,
+    "p_loo": 2.044947335147299,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "mutual_exclusivity_listener": {
+    "rank": 13,
+    "elpd_loo": -17772.713035583496,
+    "se": 132.46366996947108,
+    "elpd_diff": 383.3670825958252,
+    "dse": 26.96077901284472,
+    "p_loo": 2.001810122426832,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 14,
+    "elpd_loo": -18599.991074562073,
+    "se": 127.64098481062841,
+    "elpd_diff": 1210.6451215744019,
+    "dse": 46.95412842745506,
+    "p_loo": 1.047910745266563,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "contextual_distinctiveness_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners evaluate referents through a contextual distinctiveness prior: rather than viewing features in isolation, an object's visual salience is determined by how rare its features are across the visual scene. Features shared by multiple objects form a redundant visual background, whereas rare or unshared features produce perceptual pop-out that captures attention. Pragmatic listeners use this scene-relative distinctiveness prior to guide referent selection both when interpreting an utterance and on uninformative prior trials."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "focal_attention_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Resource-limited listeners focus visual attention primarily on candidate referents matching the heard utterance, attenuating the attentional weight of non-candidate objects in the visual display. When simulating what a speaker would have said, the listener's mental model evaluates the communicative informativeness of alternative utterances against this attention-weighted display representation, discounting irrelevant distractors. Consequently, non-candidate objects exert diminished influence on the perceived ambiguity of alternative expressions, dampening the asymmetric preference between candidate referents on complex displays."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "graded_truth_speaker",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "People evaluate word meanings with graded truth values rather than all-or-nothing Boolean truth conditions. A feature label provides a complete, high-truth description for an object possessing solely that feature, but acts as a diluted, partial description for an object burdened with extraneous unmentioned features. The pragmatic listener inverts a communicative speaker who optimizes informativeness over these graded semantic truth values, selecting referents based on feature specificity without any baseline bias on uninformative trials."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "baserate_salience_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine feature_salience_listener by integrating empirical base rates from familiarization exposure into the listener's referent prior alongside visual feature complexity. Rather than relying solely on visual simplicity to form baseline expectations, listeners combine experiential frequency and visual feature salience to establish prior probabilities over candidate referents. This allows the model to capture how participants systematically favor familiar objects when base rates are present while retaining the preference for simpler objects when base rates are absent.\n\nDifferences from feature_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from feature_salience_listener).\n- Parameters added: baserate ~ LogNormal(0.0, 1.0), scaling the log-probability of empirical familiarization base rates.\n- Parameters removed: None (alpha, salience, and lapse retained unchanged).\n- Functional terms changed: In choice_probs, the referent prior vector incorporates empirical familiarization frequencies via softmax_prior(params[\"salience\"] * ctx.feature_count + params[\"baserate\"] * jnp.where(ctx.has_familiarization > 0, jnp.log(ctx.familiarization + EPS), 0.0)), replacing the feature-only prior."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "decision_salience_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine feature_salience_listener by adding softmax decision rationality to the listener's referent choice rule, separating the listener's choice decisiveness from the speaker's communicative rationality. While listeners retain a feature-complexity salience prior favoring simpler referents, they do not merely probability-match their posterior beliefs; instead, they choose the referent with highest posterior support with greater decisiveness in forced-choice selection.\n\nDifferences from feature_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from feature_salience_listener).\n- Parameters added: beta ~ LogNormal(0.0, 1.0), representing listener decision rationality.\n- Parameters removed: None (alpha, salience, and lapse retained unchanged).\n- Functional terms changed:\n  - In L1, listener choice weights are exponentiated by beta times the log posterior probability of each referent given the utterance, wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})), rather than matching posterior probabilities directly.\n  - In choice_probs, params[\"beta\"] is passed to L1. On prior trials, choices remain governed by the feature salience prior."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "decision_salience_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners reason at depth 2 with a feature-simplicity prior, but rather than simply probability matching their posterior beliefs when clicking an object, they apply softmax decision rationality. This allows listeners who infer communicative intentions through recursive mentalizing and complexity priors to decisively select the referent with the highest posterior support.\n\nModel refinement details:\n- Base model refined: feature_salience_l2\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from feature_salience_l2)\n- Parameters added: beta (LogNormal(0.0, 1.0)), representing listener decision rationality\n- Parameters removed: None (alpha, w_feature, and lapse retained unchanged)\n- Functional terms changed: In L2, listener choice weights are modified from probability matching the posterior to softmax decision rationality, exponentiating posterior probabilities by beta before normalization."
+   }
+  ],
+  "live": [
+   {
+    "name": "literal_listener",
+    "hypothesis": "Listeners pick uniformly among the objects the word is literally true of.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "exhaustive_listener",
+    "hypothesis": "Listeners interpret referential expressions through grammatical exhaustification rather than recursive social mentalizing. Hearing a feature word, the listener treats it as an exhaustive specification of the target referent, penalizing candidate objects that possess unmentioned alternative features in proportion to the number of extraneous features. In the absence of an informative description, the listener chooses uniformly among candidate objects.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "hypothesis": "Speakers incur an utterance cost for producing ambiguous words that describe multiple referents, penalizing shared features in the display. Pragmatic listeners invert this cost-sensitive speaker, reasoning that an intended referent with unique distinguishing features is especially unlikely to be described with a shared word. This excess-ambiguity penalty drives listeners to favor referents that lack alternative unambiguous descriptions.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "decision_rational_l2",
+    "hypothesis": "Listeners reason at depth 2 about a pragmatic speaker, but rather than simply probability matching their posterior beliefs, they apply softmax decision rationality when selecting an object to click. This separates speaker communicative optimization from listener choice decisiveness, allowing the model to capture that listeners decisively select the referent with the highest posterior support even when speaker informativeness is moderate.\n\nModel refinement details:\n- Base model refined: rsa_l2\n- Recursion depth: Depth 2 (choice_probs calls L2)\n- Parameters added: beta (LogNormal(0.0, 1.0)), representing listener decision rationality\n- Parameters removed: None\n- Structural differences: In L2, the listener's choice weights are exponentiated by beta times the log posterior probability of each referent given the utterance, rather than matching posterior probability directly (beta = 1).\n",
+    "source": "round 1 candidate 4 refine incumbent rsa_l2"
+   },
+   {
+    "name": "feature_salience_l2",
+    "hypothesis": "Listeners reason at depth 2 (inverting a speaker who simulates the depth-1 pragmatic listener), but rather than assuming all referents are equally likely a priori, agents maintain a feature-salience prior over objects that scales with each object's feature count. When no informative word is heard, listeners choose referents according to this feature-based prior, and when an utterance is heard, pragmatic reasoning updates this prior. This captures the cognitive tendency for simpler, less cluttered objects to serve as default prototypes or baselines in reference games.\n\nDifferences from rsa_l2:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from rsa_l2).\n- Parameters added: w_feature ~ Normal(0.0, 1.0) weighting object feature counts.\n- Parameters removed: None (alpha and lapse retained unchanged).\n- Functional terms changed:\n  - Computed prior vector in choice_probs as softmax_prior(params[\"w_feature\"] * ctx.feature_count) and passed it to L2.\n  - In L1 and L2, added array parameter prior: ... and changed speaker referent weight from wpp=1 to wpp=vec(prior, r).\n  - In choice_probs, replaced uniform guessing on prior trials with prior: jnp.where(ctx.is_prior > 0, prior, heard).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l2"
+   },
+   {
+    "name": "feature_salience_listener",
+    "hypothesis": "We refine rsa_l1 by introducing a feature-count salience prior over referents, where listeners maintain a baseline prior that scales with an object's feature count rather than assuming all objects are equally likely a priori. Listeners penalize visually complex objects with more extraneous features, favoring simpler referents both when interpreting an utterance and on uninformative prior trials. Compared to rsa_l1, recursion depth is unchanged at depth 1 (calling L1), one parameter 'salience' is added with a normal prior, and the uniform object prior in the listener's mental model and on prior trials is replaced by a softmax distribution over feature counts.\n",
+    "source": "round 1 candidate 6 refine chosen"
+   },
+   {
+    "name": "mutual_exclusivity_listener",
+    "hypothesis": "Listeners interpret referential descriptions using a mutual exclusivity constraint rather than recursive theory-of-mind mentalizing: when hearing a shared feature, they penalize candidate referents in proportion to the number of unique, unambiguous distinguishing labels available for that object in the visual scene. On symmetric complex displays where candidate referents share the heard word and their alternative features are also shared with other objects rather than unique, mutual exclusivity predicts an equal choice split because neither candidate possesses an exclusive alternative name. This sharply contradicts the depth-2 rational speech act model, which predicts an asymmetric preference driven by recursive speaker vocabulary trade-offs.\n",
+    "source": "round 1 candidate 2 explore repair 1"
+   },
+   {
+    "name": "contextual_distinctiveness_listener",
+    "hypothesis": "Listeners evaluate referents through a contextual distinctiveness prior: rather than viewing features in isolation, an object's visual salience is determined by how rare its features are across the visual scene. Features shared by multiple objects form a redundant visual background, whereas rare or unshared features produce perceptual pop-out that captures attention. Pragmatic listeners use this scene-relative distinctiveness prior to guide referent selection both when interpreting an utterance and on uninformative prior trials.\n",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "focal_attention_listener",
+    "hypothesis": "Resource-limited listeners focus visual attention primarily on candidate referents matching the heard utterance, attenuating the attentional weight of non-candidate objects in the visual display. When simulating what a speaker would have said, the listener's mental model evaluates the communicative informativeness of alternative utterances against this attention-weighted display representation, discounting irrelevant distractors. Consequently, non-candidate objects exert diminished influence on the perceived ambiguity of alternative expressions, dampening the asymmetric preference between candidate referents on complex displays.\n",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "graded_truth_speaker",
+    "hypothesis": "People evaluate word meanings with graded truth values rather than all-or-nothing Boolean truth conditions. A feature label provides a complete, high-truth description for an object possessing solely that feature, but acts as a diluted, partial description for an object burdened with extraneous unmentioned features. The pragmatic listener inverts a communicative speaker who optimizes informativeness over these graded semantic truth values, selecting referents based on feature specificity without any baseline bias on uninformative trials.\n",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "baserate_salience_listener",
+    "hypothesis": "We refine feature_salience_listener by integrating empirical base rates from familiarization exposure into the listener's referent prior alongside visual feature complexity. Rather than relying solely on visual simplicity to form baseline expectations, listeners combine experiential frequency and visual feature salience to establish prior probabilities over candidate referents. This allows the model to capture how participants systematically favor familiar objects when base rates are present while retaining the preference for simpler objects when base rates are absent.\n\nDifferences from feature_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from feature_salience_listener).\n- Parameters added: baserate ~ LogNormal(0.0, 1.0), scaling the log-probability of empirical familiarization base rates.\n- Parameters removed: None (alpha, salience, and lapse retained unchanged).\n- Functional terms changed: In choice_probs, the referent prior vector incorporates empirical familiarization frequencies via softmax_prior(params[\"salience\"] * ctx.feature_count + params[\"baserate\"] * jnp.where(ctx.has_familiarization > 0, jnp.log(ctx.familiarization + EPS), 0.0)), replacing the feature-only prior.\n",
+    "source": "round 2 candidate 4 refine incumbent feature_salience_listener"
+   },
+   {
+    "name": "decision_salience_listener",
+    "hypothesis": "We refine feature_salience_listener by adding softmax decision rationality to the listener's referent choice rule, separating the listener's choice decisiveness from the speaker's communicative rationality. While listeners retain a feature-complexity salience prior favoring simpler referents, they do not merely probability-match their posterior beliefs; instead, they choose the referent with highest posterior support with greater decisiveness in forced-choice selection.\n\nDifferences from feature_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from feature_salience_listener).\n- Parameters added: beta ~ LogNormal(0.0, 1.0), representing listener decision rationality.\n- Parameters removed: None (alpha, salience, and lapse retained unchanged).\n- Functional terms changed:\n  - In L1, listener choice weights are exponentiated by beta times the log posterior probability of each referent given the utterance, wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})), rather than matching posterior probabilities directly.\n  - In choice_probs, params[\"beta\"] is passed to L1. On prior trials, choices remain governed by the feature salience prior.\n",
+    "source": "round 2 candidate 5 refine incumbent feature_salience_listener"
+   },
+   {
+    "name": "decision_salience_l2",
+    "hypothesis": "Listeners reason at depth 2 with a feature-simplicity prior, but rather than simply probability matching their posterior beliefs when clicking an object, they apply softmax decision rationality. This allows listeners who infer communicative intentions through recursive mentalizing and complexity priors to decisively select the referent with the highest posterior support.\n\nModel refinement details:\n- Base model refined: feature_salience_l2\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from feature_salience_l2)\n- Parameters added: beta (LogNormal(0.0, 1.0)), representing listener decision rationality\n- Parameters removed: None (alpha, w_feature, and lapse retained unchanged)\n- Functional terms changed: In L2, listener choice weights are modified from probability matching the posterior to softmax decision rationality, exponentiating posterior probabilities by beta before normalization.\n",
+    "source": "round 2 candidate 6 refine chosen"
+   }
+  ],
+  "ledger_entries": 13
+ },
+ {
+  "step": 3,
+  "round": 2,
+  "best_model": "focal_baserate_salience_listener",
+  "standing": {
+   "focal_baserate_salience_listener": {
+    "rank": 0,
+    "elpd_loo": -17389.225407600403,
+    "se": 134.11424911077754,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 4.433490411400271,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "baserate_salience_listener": {
+    "rank": 1,
+    "elpd_loo": -17389.34595298767,
+    "se": 134.02342146621942,
+    "elpd_diff": 0.1205453872680664,
+    "dse": 1.185767969288309,
+    "p_loo": 3.8888504837268556,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "prior_literal_baserate_listener": {
+    "rank": 2,
+    "elpd_loo": -17389.94224834442,
+    "se": 133.99484806238712,
+    "elpd_diff": 0.7168407440185547,
+    "dse": 1.45402939756348,
+    "p_loo": 3.962235633898672,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_baserate_salience_listener": {
+    "rank": 3,
+    "elpd_loo": -17390.22045993805,
+    "se": 134.02435066945438,
+    "elpd_diff": 0.9950523376464844,
+    "dse": 0.87460299754091,
+    "p_loo": 4.856190805305232,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_salience_listener": {
+    "rank": 4,
+    "elpd_loo": -17412.860593795776,
+    "se": 133.9696392834762,
+    "elpd_diff": 23.635186195373535,
+    "dse": 6.57502407092613,
+    "p_loo": 3.9738805027809576,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "feature_salience_listener": {
+    "rank": 5,
+    "elpd_loo": -17413.410258293152,
+    "se": 133.86546227511005,
+    "elpd_diff": 24.184850692749023,
+    "dse": 6.9124069574881375,
+    "p_loo": 2.929662493057549,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "focal_attention_listener": {
+    "rank": 6,
+    "elpd_loo": -17413.547021865845,
+    "se": 134.0133124736014,
+    "elpd_diff": 24.321614265441895,
+    "dse": 6.9274115506648215,
+    "p_loo": 3.0493104286433663,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "chromatic_salience_listener": {
+    "rank": 7,
+    "elpd_loo": -17414.192622184753,
+    "se": 133.8855110777249,
+    "elpd_diff": 24.967214584350586,
+    "dse": 6.936743390051249,
+    "p_loo": 3.9165226707082184,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_rational_listener": {
+    "rank": 8,
+    "elpd_loo": -17414.57311439514,
+    "se": 133.96138697935555,
+    "elpd_diff": 25.34770679473877,
+    "dse": 6.864160724149833,
+    "p_loo": 3.003946291453758,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "feature_salience_l2": {
+    "rank": 9,
+    "elpd_loo": -17416.882053375244,
+    "se": 133.89522554558673,
+    "elpd_diff": 27.65664577484131,
+    "dse": 7.117632589338524,
+    "p_loo": 3.0176618583645904,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_salience_l2": {
+    "rank": 10,
+    "elpd_loo": -17417.240070343018,
+    "se": 133.93489283326858,
+    "elpd_diff": 28.014662742614746,
+    "dse": 7.001674537209475,
+    "p_loo": 3.8818059032382735,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "contextual_distinctiveness_listener": {
+    "rank": 11,
+    "elpd_loo": -17418.889101982117,
+    "se": 133.72017704630912,
+    "elpd_diff": 29.663694381713867,
+    "dse": 7.695539896206556,
+    "p_loo": 3.048521027500101,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_rational_l2": {
+    "rank": 12,
+    "elpd_loo": -17418.94672012329,
+    "se": 133.9238037154963,
+    "elpd_diff": 29.721312522888184,
+    "dse": 7.26558693580836,
+    "p_loo": 3.086702385426179,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "graded_truth_speaker": {
+    "rank": 13,
+    "elpd_loo": -17424.005262374878,
+    "se": 133.54310064640495,
+    "elpd_diff": 34.7798547744751,
+    "dse": 8.014168535302126,
+    "p_loo": 3.014357485684741,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 14,
+    "elpd_loo": -17426.50571537018,
+    "se": 133.43624159130505,
+    "elpd_diff": 37.28030776977539,
+    "dse": 8.463946256331853,
+    "p_loo": 2.044616184888582,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_feature_speaker": {
+    "rank": 15,
+    "elpd_loo": -17428.519453048706,
+    "se": 133.25281762595617,
+    "elpd_diff": 39.29404544830322,
+    "dse": 8.864475316389154,
+    "p_loo": 2.49441856518024,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 16,
+    "elpd_loo": -17429.246683120728,
+    "se": 133.2139242347197,
+    "elpd_diff": 40.02127552032471,
+    "dse": 8.97420937517119,
+    "p_loo": 2.1000249205135333,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "exhaustive_listener": {
+    "rank": 17,
+    "elpd_loo": -17498.55503177643,
+    "se": 133.4370571884404,
+    "elpd_diff": 109.32962417602539,
+    "dse": 14.694633239386976,
+    "p_loo": 2.044947335147299,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "distinctiveness_penalty_listener": {
+    "rank": 18,
+    "elpd_loo": -17616.642045021057,
+    "se": 133.72439027203032,
+    "elpd_diff": 227.4166374206543,
+    "dse": 22.094922564099765,
+    "p_loo": 2.066630744957365,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "mutual_exclusivity_listener": {
+    "rank": 19,
+    "elpd_loo": -17772.713035583496,
+    "se": 132.46366996947108,
+    "elpd_diff": 383.48762798309326,
+    "dse": 27.506622330280827,
+    "p_loo": 2.001810122426832,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 20,
+    "elpd_loo": -18599.991074562073,
+    "se": 127.64098481062841,
+    "elpd_diff": 1210.76566696167,
+    "dse": 47.24804266823355,
+    "p_loo": 1.047910745266563,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "chromatic_salience_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners evaluate referents through a perceptual salience prior governed by visual feature complexity and chromatic pop-out. In neutral displays where all objects share the same chromatic format, listeners favor simpler referents with fewer extraneous features as default prototypes. When an object is rendered in full color against grayscale distractors, chromatic contrast produces visual pop-out that captures attention, boosting that object's prior probability both when interpreting a description and on uninformative prior trials."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "distinctiveness_penalty_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners resolve referential ambiguity through a contextual distinctiveness penalty rather than recursive speaker mentalizing. When hearing a feature word, listeners choose among candidate objects possessing that feature, penalizing candidates in proportion to the contextual distinctiveness (inverse scene frequency) of their extraneous features. In the absence of an informative description, baseline choices similarly favor contextually simpler, less distinctive referents."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "decision_rational_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners infer communicative intentions by simulating a rational speaker at depth 1, but do not merely probability-match their posterior beliefs when making a forced choice. Instead, they apply softmax decision rationality to their posterior beliefs, separating the listener's choice decisiveness from the speaker's communicative optimization. This enables listeners to decisively select the referent with highest posterior support even when speaker informativeness is moderate."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "focal_baserate_salience_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine baserate_salience_listener by integrating focal visual attention from focal_attention_listener: listeners restrict their communicative reasoning primarily to candidate referents matching the heard utterance, downweighting irrelevant distractor objects in the display. When evaluating the communicative informativeness of alternative utterances in their mental model of the speaker, listeners evaluate alternative descriptions against this attention-weighted display rather than treating distractors as equally salient. Combined with experiential base rates and visual feature simplicity priors, this focal attentional discounting dampens exaggerated pragmatic inferences on complex visual scenes without altering baseline preferences on uninformative trials.\n\nDifferences from baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from baserate_salience_listener).\n- Parameters added: distractor_weight ~ Beta(1.0, 1.0), representing the visual attentional weight allocated to non-candidate display objects.\n- Parameters removed: None (alpha, salience, baserate, and lapse retained unchanged).\n- Functional terms changed:\n  - In L0, added array parameter atten: ... and weighted literal listener referent selection by at(lex, u, r) * (vec(atten, r) + {EPS}).\n  - In L1, passed atten: ... through to L0.\n  - In choice_probs, computed object attention weights as atten = jnp.where(is_cand > 0, 1.0, params[\"distractor_weight\"]) where is_cand = jnp.where(ctx.is_prior > 0, 1.0, ctx.lex[ctx.utterance]), and passed atten into L1."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "prior_literal_baserate_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine baserate_salience_listener by integrating the referent prior directly into the literal listener's interpretation rule, as posited in classical Bayesian Rational Speech Act theory (Frank & Goodman, 2012). Rather than simulating a naive literal listener who evaluates candidate referents with uniform baseline probabilities, the speaker anticipates a listener who already weights candidate objects by their experiential base rates and visual feature complexity. This prior-informed literal interpretation sharpens the speaker's communicative incentives, driving speakers to choose distinctive expressions for rare or complex objects while relying on listeners' prior expectations for frequent, simple referents.\n\nDifferences from baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from baserate_salience_listener).\n- Parameters added: None (alpha, salience, baserate, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In L0, the listener's referent choice weight incorporates the referent prior alongside literal truth conditions, wpp=at(lex, u, r) * (vec(prior, r) + {EPS}), replacing the prior-agnostic choice rule.\n  - In L1, the referent prior vector prior: ... is passed into L0."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "decision_baserate_salience_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine decision_salience_listener by integrating empirical base rates from familiarization exposure into the listener's referent prior alongside visual feature complexity. Rather than relying solely on visual simplicity to form baseline expectations, listeners combine experiential frequency and visual feature salience to establish prior probabilities over candidate referents. This allows the decision-rational listener to capture how participants systematically favor familiar objects when base rates are present while retaining decisive referent selection and simplicity preferences when base rates are absent.\n\nDifferences from decision_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from decision_salience_listener).\n- Parameters added: baserate ~ LogNormal(0.0, 1.0), scaling the log-probability of empirical familiarization base rates.\n- Parameters removed: None (alpha, beta, salience, and lapse retained unchanged).\n- Functional terms changed: In choice_probs, the referent prior vector incorporates empirical familiarization frequencies via softmax_prior(params[\"salience\"] * ctx.feature_count + params[\"baserate\"] * jnp.where(ctx.has_familiarization > 0, jnp.log(ctx.familiarization + EPS), 0.0)), replacing the feature-only prior."
+   }
+  ],
+  "live": [
+   {
+    "name": "literal_listener",
+    "hypothesis": "Listeners pick uniformly among the objects the word is literally true of.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "exhaustive_listener",
+    "hypothesis": "Listeners interpret referential expressions through grammatical exhaustification rather than recursive social mentalizing. Hearing a feature word, the listener treats it as an exhaustive specification of the target referent, penalizing candidate objects that possess unmentioned alternative features in proportion to the number of extraneous features. In the absence of an informative description, the listener chooses uniformly among candidate objects.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "hypothesis": "Speakers incur an utterance cost for producing ambiguous words that describe multiple referents, penalizing shared features in the display. Pragmatic listeners invert this cost-sensitive speaker, reasoning that an intended referent with unique distinguishing features is especially unlikely to be described with a shared word. This excess-ambiguity penalty drives listeners to favor referents that lack alternative unambiguous descriptions.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "decision_rational_l2",
+    "hypothesis": "Listeners reason at depth 2 about a pragmatic speaker, but rather than simply probability matching their posterior beliefs, they apply softmax decision rationality when selecting an object to click. This separates speaker communicative optimization from listener choice decisiveness, allowing the model to capture that listeners decisively select the referent with the highest posterior support even when speaker informativeness is moderate.\n\nModel refinement details:\n- Base model refined: rsa_l2\n- Recursion depth: Depth 2 (choice_probs calls L2)\n- Parameters added: beta (LogNormal(0.0, 1.0)), representing listener decision rationality\n- Parameters removed: None\n- Structural differences: In L2, the listener's choice weights are exponentiated by beta times the log posterior probability of each referent given the utterance, rather than matching posterior probability directly (beta = 1).\n",
+    "source": "round 1 candidate 4 refine incumbent rsa_l2"
+   },
+   {
+    "name": "feature_salience_l2",
+    "hypothesis": "Listeners reason at depth 2 (inverting a speaker who simulates the depth-1 pragmatic listener), but rather than assuming all referents are equally likely a priori, agents maintain a feature-salience prior over objects that scales with each object's feature count. When no informative word is heard, listeners choose referents according to this feature-based prior, and when an utterance is heard, pragmatic reasoning updates this prior. This captures the cognitive tendency for simpler, less cluttered objects to serve as default prototypes or baselines in reference games.\n\nDifferences from rsa_l2:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from rsa_l2).\n- Parameters added: w_feature ~ Normal(0.0, 1.0) weighting object feature counts.\n- Parameters removed: None (alpha and lapse retained unchanged).\n- Functional terms changed:\n  - Computed prior vector in choice_probs as softmax_prior(params[\"w_feature\"] * ctx.feature_count) and passed it to L2.\n  - In L1 and L2, added array parameter prior: ... and changed speaker referent weight from wpp=1 to wpp=vec(prior, r).\n  - In choice_probs, replaced uniform guessing on prior trials with prior: jnp.where(ctx.is_prior > 0, prior, heard).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l2"
+   },
+   {
+    "name": "feature_salience_listener",
+    "hypothesis": "We refine rsa_l1 by introducing a feature-count salience prior over referents, where listeners maintain a baseline prior that scales with an object's feature count rather than assuming all objects are equally likely a priori. Listeners penalize visually complex objects with more extraneous features, favoring simpler referents both when interpreting an utterance and on uninformative prior trials. Compared to rsa_l1, recursion depth is unchanged at depth 1 (calling L1), one parameter 'salience' is added with a normal prior, and the uniform object prior in the listener's mental model and on prior trials is replaced by a softmax distribution over feature counts.\n",
+    "source": "round 1 candidate 6 refine chosen"
+   },
+   {
+    "name": "mutual_exclusivity_listener",
+    "hypothesis": "Listeners interpret referential descriptions using a mutual exclusivity constraint rather than recursive theory-of-mind mentalizing: when hearing a shared feature, they penalize candidate referents in proportion to the number of unique, unambiguous distinguishing labels available for that object in the visual scene. On symmetric complex displays where candidate referents share the heard word and their alternative features are also shared with other objects rather than unique, mutual exclusivity predicts an equal choice split because neither candidate possesses an exclusive alternative name. This sharply contradicts the depth-2 rational speech act model, which predicts an asymmetric preference driven by recursive speaker vocabulary trade-offs.\n",
+    "source": "round 1 candidate 2 explore repair 1"
+   },
+   {
+    "name": "contextual_distinctiveness_listener",
+    "hypothesis": "Listeners evaluate referents through a contextual distinctiveness prior: rather than viewing features in isolation, an object's visual salience is determined by how rare its features are across the visual scene. Features shared by multiple objects form a redundant visual background, whereas rare or unshared features produce perceptual pop-out that captures attention. Pragmatic listeners use this scene-relative distinctiveness prior to guide referent selection both when interpreting an utterance and on uninformative prior trials.\n",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "focal_attention_listener",
+    "hypothesis": "Resource-limited listeners focus visual attention primarily on candidate referents matching the heard utterance, attenuating the attentional weight of non-candidate objects in the visual display. When simulating what a speaker would have said, the listener's mental model evaluates the communicative informativeness of alternative utterances against this attention-weighted display representation, discounting irrelevant distractors. Consequently, non-candidate objects exert diminished influence on the perceived ambiguity of alternative expressions, dampening the asymmetric preference between candidate referents on complex displays.\n",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "graded_truth_speaker",
+    "hypothesis": "People evaluate word meanings with graded truth values rather than all-or-nothing Boolean truth conditions. A feature label provides a complete, high-truth description for an object possessing solely that feature, but acts as a diluted, partial description for an object burdened with extraneous unmentioned features. The pragmatic listener inverts a communicative speaker who optimizes informativeness over these graded semantic truth values, selecting referents based on feature specificity without any baseline bias on uninformative trials.\n",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "baserate_salience_listener",
+    "hypothesis": "We refine feature_salience_listener by integrating empirical base rates from familiarization exposure into the listener's referent prior alongside visual feature complexity. Rather than relying solely on visual simplicity to form baseline expectations, listeners combine experiential frequency and visual feature salience to establish prior probabilities over candidate referents. This allows the model to capture how participants systematically favor familiar objects when base rates are present while retaining the preference for simpler objects when base rates are absent.\n\nDifferences from feature_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from feature_salience_listener).\n- Parameters added: baserate ~ LogNormal(0.0, 1.0), scaling the log-probability of empirical familiarization base rates.\n- Parameters removed: None (alpha, salience, and lapse retained unchanged).\n- Functional terms changed: In choice_probs, the referent prior vector incorporates empirical familiarization frequencies via softmax_prior(params[\"salience\"] * ctx.feature_count + params[\"baserate\"] * jnp.where(ctx.has_familiarization > 0, jnp.log(ctx.familiarization + EPS), 0.0)), replacing the feature-only prior.\n",
+    "source": "round 2 candidate 4 refine incumbent feature_salience_listener"
+   },
+   {
+    "name": "decision_salience_listener",
+    "hypothesis": "We refine feature_salience_listener by adding softmax decision rationality to the listener's referent choice rule, separating the listener's choice decisiveness from the speaker's communicative rationality. While listeners retain a feature-complexity salience prior favoring simpler referents, they do not merely probability-match their posterior beliefs; instead, they choose the referent with highest posterior support with greater decisiveness in forced-choice selection.\n\nDifferences from feature_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from feature_salience_listener).\n- Parameters added: beta ~ LogNormal(0.0, 1.0), representing listener decision rationality.\n- Parameters removed: None (alpha, salience, and lapse retained unchanged).\n- Functional terms changed:\n  - In L1, listener choice weights are exponentiated by beta times the log posterior probability of each referent given the utterance, wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})), rather than matching posterior probabilities directly.\n  - In choice_probs, params[\"beta\"] is passed to L1. On prior trials, choices remain governed by the feature salience prior.\n",
+    "source": "round 2 candidate 5 refine incumbent feature_salience_listener"
+   },
+   {
+    "name": "decision_salience_l2",
+    "hypothesis": "Listeners reason at depth 2 with a feature-simplicity prior, but rather than simply probability matching their posterior beliefs when clicking an object, they apply softmax decision rationality. This allows listeners who infer communicative intentions through recursive mentalizing and complexity priors to decisively select the referent with the highest posterior support.\n\nModel refinement details:\n- Base model refined: feature_salience_l2\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from feature_salience_l2)\n- Parameters added: beta (LogNormal(0.0, 1.0)), representing listener decision rationality\n- Parameters removed: None (alpha, w_feature, and lapse retained unchanged)\n- Functional terms changed: In L2, listener choice weights are modified from probability matching the posterior to softmax decision rationality, exponentiating posterior probabilities by beta before normalization.\n",
+    "source": "round 2 candidate 6 refine chosen"
+   },
+   {
+    "name": "chromatic_salience_listener",
+    "hypothesis": "Listeners evaluate referents through a perceptual salience prior governed by visual feature complexity and chromatic pop-out. In neutral displays where all objects share the same chromatic format, listeners favor simpler referents with fewer extraneous features as default prototypes. When an object is rendered in full color against grayscale distractors, chromatic contrast produces visual pop-out that captures attention, boosting that object's prior probability both when interpreting a description and on uninformative prior trials.\n",
+    "source": "round 3 candidate 1 explore"
+   },
+   {
+    "name": "distinctiveness_penalty_listener",
+    "hypothesis": "Listeners resolve referential ambiguity through a contextual distinctiveness penalty rather than recursive speaker mentalizing. When hearing a feature word, listeners choose among candidate objects possessing that feature, penalizing candidates in proportion to the contextual distinctiveness (inverse scene frequency) of their extraneous features. In the absence of an informative description, baseline choices similarly favor contextually simpler, less distinctive referents.\n",
+    "source": "round 3 candidate 2 explore"
+   },
+   {
+    "name": "decision_rational_listener",
+    "hypothesis": "Listeners infer communicative intentions by simulating a rational speaker at depth 1, but do not merely probability-match their posterior beliefs when making a forced choice. Instead, they apply softmax decision rationality to their posterior beliefs, separating the listener's choice decisiveness from the speaker's communicative optimization. This enables listeners to decisively select the referent with highest posterior support even when speaker informativeness is moderate.\n",
+    "source": "round 3 candidate 3 explore"
+   },
+   {
+    "name": "focal_baserate_salience_listener",
+    "hypothesis": "We refine baserate_salience_listener by integrating focal visual attention from focal_attention_listener: listeners restrict their communicative reasoning primarily to candidate referents matching the heard utterance, downweighting irrelevant distractor objects in the display. When evaluating the communicative informativeness of alternative utterances in their mental model of the speaker, listeners evaluate alternative descriptions against this attention-weighted display rather than treating distractors as equally salient. Combined with experiential base rates and visual feature simplicity priors, this focal attentional discounting dampens exaggerated pragmatic inferences on complex visual scenes without altering baseline preferences on uninformative trials.\n\nDifferences from baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from baserate_salience_listener).\n- Parameters added: distractor_weight ~ Beta(1.0, 1.0), representing the visual attentional weight allocated to non-candidate display objects.\n- Parameters removed: None (alpha, salience, baserate, and lapse retained unchanged).\n- Functional terms changed:\n  - In L0, added array parameter atten: ... and weighted literal listener referent selection by at(lex, u, r) * (vec(atten, r) + {EPS}).\n  - In L1, passed atten: ... through to L0.\n  - In choice_probs, computed object attention weights as atten = jnp.where(is_cand > 0, 1.0, params[\"distractor_weight\"]) where is_cand = jnp.where(ctx.is_prior > 0, 1.0, ctx.lex[ctx.utterance]), and passed atten into L1.\n",
+    "source": "round 3 candidate 4 refine incumbent baserate_salience_listener"
+   },
+   {
+    "name": "prior_literal_baserate_listener",
+    "hypothesis": "We refine baserate_salience_listener by integrating the referent prior directly into the literal listener's interpretation rule, as posited in classical Bayesian Rational Speech Act theory (Frank & Goodman, 2012). Rather than simulating a naive literal listener who evaluates candidate referents with uniform baseline probabilities, the speaker anticipates a listener who already weights candidate objects by their experiential base rates and visual feature complexity. This prior-informed literal interpretation sharpens the speaker's communicative incentives, driving speakers to choose distinctive expressions for rare or complex objects while relying on listeners' prior expectations for frequent, simple referents.\n\nDifferences from baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from baserate_salience_listener).\n- Parameters added: None (alpha, salience, baserate, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In L0, the listener's referent choice weight incorporates the referent prior alongside literal truth conditions, wpp=at(lex, u, r) * (vec(prior, r) + {EPS}), replacing the prior-agnostic choice rule.\n  - In L1, the referent prior vector prior: ... is passed into L0.\n",
+    "source": "round 3 candidate 5 refine incumbent baserate_salience_listener"
+   },
+   {
+    "name": "decision_baserate_salience_listener",
+    "hypothesis": "We refine decision_salience_listener by integrating empirical base rates from familiarization exposure into the listener's referent prior alongside visual feature complexity. Rather than relying solely on visual simplicity to form baseline expectations, listeners combine experiential frequency and visual feature salience to establish prior probabilities over candidate referents. This allows the decision-rational listener to capture how participants systematically favor familiar objects when base rates are present while retaining decisive referent selection and simplicity preferences when base rates are absent.\n\nDifferences from decision_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from decision_salience_listener).\n- Parameters added: baserate ~ LogNormal(0.0, 1.0), scaling the log-probability of empirical familiarization base rates.\n- Parameters removed: None (alpha, beta, salience, and lapse retained unchanged).\n- Functional terms changed: In choice_probs, the referent prior vector incorporates empirical familiarization frequencies via softmax_prior(params[\"salience\"] * ctx.feature_count + params[\"baserate\"] * jnp.where(ctx.has_familiarization > 0, jnp.log(ctx.familiarization + EPS), 0.0)), replacing the feature-only prior.\n",
+    "source": "round 3 candidate 6 refine chosen"
+   }
+  ],
+  "ledger_entries": 19
+ },
+ {
+  "step": 4,
+  "round": 3,
+  "best_model": "prior_lapse_focal_listener",
+  "standing": {
+   "prior_lapse_focal_listener": {
+    "rank": 0,
+    "elpd_loo": -17388.343591690063,
+    "se": 134.11602464154134,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 4.4156019415167975,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "focal_baserate_salience_listener": {
+    "rank": 1,
+    "elpd_loo": -17389.225407600403,
+    "se": 134.11424911077754,
+    "elpd_diff": 0.8818159103393555,
+    "dse": 2.2418597771378854,
+    "p_loo": 4.433490411400271,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "baserate_salience_listener": {
+    "rank": 2,
+    "elpd_loo": -17389.34595298767,
+    "se": 134.02342146621942,
+    "elpd_diff": 1.0023612976074219,
+    "dse": 2.521969816129877,
+    "p_loo": 3.8888504837268556,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "focal_prior_literal_baserate_listener": {
+    "rank": 3,
+    "elpd_loo": -17389.664969444275,
+    "se": 134.10337828013215,
+    "elpd_diff": 1.3213777542114258,
+    "dse": 2.392546228153707,
+    "p_loo": 4.435082237854658,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "prior_literal_baserate_listener": {
+    "rank": 4,
+    "elpd_loo": -17389.94224834442,
+    "se": 133.99484806238712,
+    "elpd_diff": 1.5986566543579102,
+    "dse": 2.6515319657442347,
+    "p_loo": 3.962235633898672,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "chromatic_focal_baserate_listener": {
+    "rank": 5,
+    "elpd_loo": -17390.083680152893,
+    "se": 134.1238763403694,
+    "elpd_diff": 1.7400884628295898,
+    "dse": 2.3148767233653866,
+    "p_loo": 5.477019279041997,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_baserate_salience_listener": {
+    "rank": 6,
+    "elpd_loo": -17390.22045993805,
+    "se": 134.02435066945438,
+    "elpd_diff": 1.8768682479858398,
+    "dse": 2.3936887227325476,
+    "p_loo": 4.856190805305232,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_salience_listener": {
+    "rank": 7,
+    "elpd_loo": -17412.860593795776,
+    "se": 133.9696392834762,
+    "elpd_diff": 24.51700210571289,
+    "dse": 6.7496609639138425,
+    "p_loo": 3.9738805027809576,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "feature_salience_listener": {
+    "rank": 8,
+    "elpd_loo": -17413.410258293152,
+    "se": 133.86546227511005,
+    "elpd_diff": 25.06666660308838,
+    "dse": 7.063980980934547,
+    "p_loo": 2.929662493057549,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "focal_attention_listener": {
+    "rank": 9,
+    "elpd_loo": -17413.547021865845,
+    "se": 134.0133124736014,
+    "elpd_diff": 25.20343017578125,
+    "dse": 7.105252590617768,
+    "p_loo": 3.0493104286433663,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "exhaustive_pragmatic_mixture": {
+    "rank": 10,
+    "elpd_loo": -17413.955693244934,
+    "se": 133.91953109593084,
+    "elpd_diff": 25.612101554870605,
+    "dse": 7.016882307682332,
+    "p_loo": 3.4117680263771035,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "chromatic_salience_listener": {
+    "rank": 11,
+    "elpd_loo": -17414.192622184753,
+    "se": 133.8855110777249,
+    "elpd_diff": 25.84903049468994,
+    "dse": 7.087691402025948,
+    "p_loo": 3.9165226707082184,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_rational_listener": {
+    "rank": 12,
+    "elpd_loo": -17414.57311439514,
+    "se": 133.96138697935555,
+    "elpd_diff": 26.229522705078125,
+    "dse": 7.045225076851674,
+    "p_loo": 3.003946291453758,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "feature_salience_l2": {
+    "rank": 13,
+    "elpd_loo": -17416.882053375244,
+    "se": 133.89522554558673,
+    "elpd_diff": 28.538461685180664,
+    "dse": 7.2688903412625985,
+    "p_loo": 3.0176618583645904,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_salience_l2": {
+    "rank": 14,
+    "elpd_loo": -17417.240070343018,
+    "se": 133.93489283326858,
+    "elpd_diff": 28.8964786529541,
+    "dse": 7.163537644386826,
+    "p_loo": 3.8818059032382735,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "contextual_distinctiveness_listener": {
+    "rank": 15,
+    "elpd_loo": -17418.889101982117,
+    "se": 133.72017704630912,
+    "elpd_diff": 30.545510292053223,
+    "dse": 7.826521960271248,
+    "p_loo": 3.048521027500101,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_rational_l2": {
+    "rank": 16,
+    "elpd_loo": -17418.94672012329,
+    "se": 133.9238037154963,
+    "elpd_diff": 30.60312843322754,
+    "dse": 7.434847026886877,
+    "p_loo": 3.086702385426179,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "graded_truth_speaker": {
+    "rank": 17,
+    "elpd_loo": -17424.005262374878,
+    "se": 133.54310064640495,
+    "elpd_diff": 35.66167068481445,
+    "dse": 8.14617706613644,
+    "p_loo": 3.014357485684741,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 18,
+    "elpd_loo": -17426.50571537018,
+    "se": 133.43624159130505,
+    "elpd_diff": 38.162123680114746,
+    "dse": 8.58912117079705,
+    "p_loo": 2.044616184888582,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_feature_speaker": {
+    "rank": 19,
+    "elpd_loo": -17428.519453048706,
+    "se": 133.25281762595617,
+    "elpd_diff": 40.17586135864258,
+    "dse": 8.974913892227468,
+    "p_loo": 2.49441856518024,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "contrastive_speaker": {
+    "rank": 20,
+    "elpd_loo": -17428.75903224945,
+    "se": 133.2673884643021,
+    "elpd_diff": 40.41544055938721,
+    "dse": 8.947425893578076,
+    "p_loo": 3.0540214993525296,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 21,
+    "elpd_loo": -17429.246683120728,
+    "se": 133.2139242347197,
+    "elpd_diff": 40.90309143066406,
+    "dse": 9.087559563150743,
+    "p_loo": 2.1000249205135333,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "aspect_goal_listener": {
+    "rank": 22,
+    "elpd_loo": -17432.89771938324,
+    "se": 133.0909961115649,
+    "elpd_diff": 44.55412769317627,
+    "dse": 9.351912989062098,
+    "p_loo": 2.006486419464636,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "exhaustive_listener": {
+    "rank": 23,
+    "elpd_loo": -17498.55503177643,
+    "se": 133.4370571884404,
+    "elpd_diff": 110.21144008636475,
+    "dse": 14.773966412315193,
+    "p_loo": 2.044947335147299,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "distinctiveness_penalty_listener": {
+    "rank": 24,
+    "elpd_loo": -17616.642045021057,
+    "se": 133.72439027203032,
+    "elpd_diff": 228.29845333099365,
+    "dse": 22.101830276249412,
+    "p_loo": 2.066630744957365,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "mutual_exclusivity_listener": {
+    "rank": 25,
+    "elpd_loo": -17772.713035583496,
+    "se": 132.46366996947108,
+    "elpd_diff": 384.3694438934326,
+    "dse": 27.51808438039408,
+    "p_loo": 2.001810122426832,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 26,
+    "elpd_loo": -18599.991074562073,
+    "se": 127.64098481062841,
+    "elpd_diff": 1211.6474828720093,
+    "dse": 47.247872347418856,
+    "p_loo": 1.047910745266563,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "aspect_goal_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential descriptions by reasoning about the speaker's communicative goal or question under discussion: rather than assuming the speaker aims to single out the object's complete identity, listeners model a speaker who chooses an utterance to informatively convey a specific feature or aspect of the intended referent. Because simpler objects with fewer extraneous features offer fewer competing communicative aspects to describe, hearing a shared feature provides stronger evidence that the speaker intended the focused, simpler referent, while tempering exaggerated pragmatic inferences on complex displays where candidate referents share multiple features."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "literal_pragmatic_mixture",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0005 of rsa_l1's (threshold 0.002) over the loop's novelty pool of 1258 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Listeners across the population are heterogeneous rather than cognitively uniform, consisting of a mixture of literal and pragmatic reasoning types. When hearing an informative description, literal listeners choose uniformly among all matching referents, while pragmatic listeners invert a model of a rational speaker to infer the most informative referent. The aggregate distribution of referent choices reflects the population mixture proportion of pragmatic versus literal responders."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "contrastive_speaker",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential expressions by modeling a contrastive speaker whose communicative choices are driven by the principle of contrast. When describing a target referent, speakers prioritize utterances that differentiate the target from competitors sharing its other features, gaining greater communicative value when eliminating similar contrast foils than irrelevant distractors. Pragmatic listeners invert this contrastive speaker, favoring candidate referents for which the heard utterance serves a diagnostic contrastive function."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "prior_lapse_focal_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine focal_baserate_salience_listener by replacing stimulus-independent uniform lapse with a prior-anchored lapse fallback: when participants experience inattention or task disengagement, their choices fall back on their intuitive baseline prior expectations (favoring visual simplicity and familiarization base rates) rather than choosing uniformly at random across all display objects. On uninformative trials, choices reflect prior expectations directly without artificial flattening from uniform noise, while on communicative trials, lapse errors are naturally biased toward simpler or familiar candidates rather than cluttered distractors.\n\nDifferences from focal_baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from focal_baserate_salience_listener).\n- Parameters added: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In choice_probs, replaced uniform lapse mixing with prior-anchored lapse fallback, computing choice probabilities as (1.0 - params[\"lapse\"]) * jnp.where(ctx.is_prior > 0, prior, heard) + params[\"lapse\"] * prior instead of mixing with uniform 1.0 / n."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "chromatic_focal_baserate_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine focal_baserate_salience_listener by integrating chromatic pop-out from chromatic_salience_listener: in addition to visual feature complexity and experiential base rates, listeners maintain a perceptual salience prior sensitive to chromatic contrast. When an object is rendered in full color against grayscale distractors, chromatic contrast produces perceptual pop-out that captures bottom-up visual attention, boosting that object's prior probability both when interpreting a description and on uninformative prior trials. This allows the focal pragmatic listener to account for visual color salience manipulations alongside focal distractor discounting and familiarization history.\n\nDifferences from focal_baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from focal_baserate_salience_listener).\n- Parameters added: chromatic_salience ~ Normal(0.0, 1.0), representing the perceptual salience weight of chromatic contrast.\n- Parameters removed: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Functional terms changed: In choice_probs, the referent prior vector incorporates chromatic contrast via softmax_prior(params[\"salience\"] * ctx.feature_count + params[\"baserate\"] * fam_logits + params[\"chromatic_salience\"] * chromatic_contrast) where chromatic_contrast = jnp.mean(ctx.grayscale) - ctx.grayscale, adding chromatic contrast to the feature-complexity and base-rate prior."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "focal_prior_literal_baserate_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine prior_literal_baserate_listener by integrating focal visual attention from focal_attention_listener: listeners restrict their communicative reasoning primarily to candidate referents matching the heard utterance, downweighting irrelevant distractor objects in the display. When evaluating the communicative informativeness of alternative utterances in their mental model of the speaker, the speaker anticipates a Bayesian literal listener who evaluates candidate referents against this attention-weighted display while integrating experiential base rates and visual feature simplicity priors. This combined mechanism dampens exaggerated pragmatic inferences on complex visual displays while preserving prior-driven expectations for frequent or simple referents.\n\nDifferences from prior_literal_baserate_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from prior_literal_baserate_listener).\n- Parameters added: distractor_weight ~ Beta(1.0, 1.0), representing the visual attentional weight allocated to non-candidate display objects.\n- Parameters removed: None (alpha, salience, baserate, and lapse retained unchanged).\n- Functional terms changed:\n  - In L0, added array parameter atten: ... and weighted literal listener referent selection by at(lex, u, r) * (vec(prior, r) + {EPS}) * (vec(atten, r) + {EPS}), replacing the uniform-attention Bayesian choice rule.\n  - In L1, passed atten: ... through to L0.\n  - In choice_probs, computed object attention weights as atten = jnp.where(is_cand > 0, 1.0, params[\"distractor_weight\"]) where is_cand = jnp.where(ctx.is_prior > 0, 1.0, ctx.lex[ctx.utterance]), and passed atten into L1."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "exhaustive_pragmatic_mixture",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners in reference games differ in their cognitive processing architecture, forming a population mixture of structural exhaustification and recursive pragmatic mentalizing types. When interpreting an ambiguous description, exhaustivity listeners apply grammatical exhaustification to penalize candidate objects that possess extraneous unmentioned features, whereas pragmatic listeners invert a model of a communicative speaker to reason about informative alternatives. The aggregate distribution of referent choices reflects the population mixture proportion of pragmatic mentalizers versus structural exhaustification responders.",
+    "repair": true
+   }
+  ],
+  "live": [
+   {
+    "name": "literal_listener",
+    "hypothesis": "Listeners pick uniformly among the objects the word is literally true of.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "exhaustive_listener",
+    "hypothesis": "Listeners interpret referential expressions through grammatical exhaustification rather than recursive social mentalizing. Hearing a feature word, the listener treats it as an exhaustive specification of the target referent, penalizing candidate objects that possess unmentioned alternative features in proportion to the number of extraneous features. In the absence of an informative description, the listener chooses uniformly among candidate objects.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "hypothesis": "Speakers incur an utterance cost for producing ambiguous words that describe multiple referents, penalizing shared features in the display. Pragmatic listeners invert this cost-sensitive speaker, reasoning that an intended referent with unique distinguishing features is especially unlikely to be described with a shared word. This excess-ambiguity penalty drives listeners to favor referents that lack alternative unambiguous descriptions.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "decision_rational_l2",
+    "hypothesis": "Listeners reason at depth 2 about a pragmatic speaker, but rather than simply probability matching their posterior beliefs, they apply softmax decision rationality when selecting an object to click. This separates speaker communicative optimization from listener choice decisiveness, allowing the model to capture that listeners decisively select the referent with the highest posterior support even when speaker informativeness is moderate.\n\nModel refinement details:\n- Base model refined: rsa_l2\n- Recursion depth: Depth 2 (choice_probs calls L2)\n- Parameters added: beta (LogNormal(0.0, 1.0)), representing listener decision rationality\n- Parameters removed: None\n- Structural differences: In L2, the listener's choice weights are exponentiated by beta times the log posterior probability of each referent given the utterance, rather than matching posterior probability directly (beta = 1).\n",
+    "source": "round 1 candidate 4 refine incumbent rsa_l2"
+   },
+   {
+    "name": "feature_salience_l2",
+    "hypothesis": "Listeners reason at depth 2 (inverting a speaker who simulates the depth-1 pragmatic listener), but rather than assuming all referents are equally likely a priori, agents maintain a feature-salience prior over objects that scales with each object's feature count. When no informative word is heard, listeners choose referents according to this feature-based prior, and when an utterance is heard, pragmatic reasoning updates this prior. This captures the cognitive tendency for simpler, less cluttered objects to serve as default prototypes or baselines in reference games.\n\nDifferences from rsa_l2:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from rsa_l2).\n- Parameters added: w_feature ~ Normal(0.0, 1.0) weighting object feature counts.\n- Parameters removed: None (alpha and lapse retained unchanged).\n- Functional terms changed:\n  - Computed prior vector in choice_probs as softmax_prior(params[\"w_feature\"] * ctx.feature_count) and passed it to L2.\n  - In L1 and L2, added array parameter prior: ... and changed speaker referent weight from wpp=1 to wpp=vec(prior, r).\n  - In choice_probs, replaced uniform guessing on prior trials with prior: jnp.where(ctx.is_prior > 0, prior, heard).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l2"
+   },
+   {
+    "name": "feature_salience_listener",
+    "hypothesis": "We refine rsa_l1 by introducing a feature-count salience prior over referents, where listeners maintain a baseline prior that scales with an object's feature count rather than assuming all objects are equally likely a priori. Listeners penalize visually complex objects with more extraneous features, favoring simpler referents both when interpreting an utterance and on uninformative prior trials. Compared to rsa_l1, recursion depth is unchanged at depth 1 (calling L1), one parameter 'salience' is added with a normal prior, and the uniform object prior in the listener's mental model and on prior trials is replaced by a softmax distribution over feature counts.\n",
+    "source": "round 1 candidate 6 refine chosen"
+   },
+   {
+    "name": "mutual_exclusivity_listener",
+    "hypothesis": "Listeners interpret referential descriptions using a mutual exclusivity constraint rather than recursive theory-of-mind mentalizing: when hearing a shared feature, they penalize candidate referents in proportion to the number of unique, unambiguous distinguishing labels available for that object in the visual scene. On symmetric complex displays where candidate referents share the heard word and their alternative features are also shared with other objects rather than unique, mutual exclusivity predicts an equal choice split because neither candidate possesses an exclusive alternative name. This sharply contradicts the depth-2 rational speech act model, which predicts an asymmetric preference driven by recursive speaker vocabulary trade-offs.\n",
+    "source": "round 1 candidate 2 explore repair 1"
+   },
+   {
+    "name": "contextual_distinctiveness_listener",
+    "hypothesis": "Listeners evaluate referents through a contextual distinctiveness prior: rather than viewing features in isolation, an object's visual salience is determined by how rare its features are across the visual scene. Features shared by multiple objects form a redundant visual background, whereas rare or unshared features produce perceptual pop-out that captures attention. Pragmatic listeners use this scene-relative distinctiveness prior to guide referent selection both when interpreting an utterance and on uninformative prior trials.\n",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "focal_attention_listener",
+    "hypothesis": "Resource-limited listeners focus visual attention primarily on candidate referents matching the heard utterance, attenuating the attentional weight of non-candidate objects in the visual display. When simulating what a speaker would have said, the listener's mental model evaluates the communicative informativeness of alternative utterances against this attention-weighted display representation, discounting irrelevant distractors. Consequently, non-candidate objects exert diminished influence on the perceived ambiguity of alternative expressions, dampening the asymmetric preference between candidate referents on complex displays.\n",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "graded_truth_speaker",
+    "hypothesis": "People evaluate word meanings with graded truth values rather than all-or-nothing Boolean truth conditions. A feature label provides a complete, high-truth description for an object possessing solely that feature, but acts as a diluted, partial description for an object burdened with extraneous unmentioned features. The pragmatic listener inverts a communicative speaker who optimizes informativeness over these graded semantic truth values, selecting referents based on feature specificity without any baseline bias on uninformative trials.\n",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "baserate_salience_listener",
+    "hypothesis": "We refine feature_salience_listener by integrating empirical base rates from familiarization exposure into the listener's referent prior alongside visual feature complexity. Rather than relying solely on visual simplicity to form baseline expectations, listeners combine experiential frequency and visual feature salience to establish prior probabilities over candidate referents. This allows the model to capture how participants systematically favor familiar objects when base rates are present while retaining the preference for simpler objects when base rates are absent.\n\nDifferences from feature_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from feature_salience_listener).\n- Parameters added: baserate ~ LogNormal(0.0, 1.0), scaling the log-probability of empirical familiarization base rates.\n- Parameters removed: None (alpha, salience, and lapse retained unchanged).\n- Functional terms changed: In choice_probs, the referent prior vector incorporates empirical familiarization frequencies via softmax_prior(params[\"salience\"] * ctx.feature_count + params[\"baserate\"] * jnp.where(ctx.has_familiarization > 0, jnp.log(ctx.familiarization + EPS), 0.0)), replacing the feature-only prior.\n",
+    "source": "round 2 candidate 4 refine incumbent feature_salience_listener"
+   },
+   {
+    "name": "decision_salience_listener",
+    "hypothesis": "We refine feature_salience_listener by adding softmax decision rationality to the listener's referent choice rule, separating the listener's choice decisiveness from the speaker's communicative rationality. While listeners retain a feature-complexity salience prior favoring simpler referents, they do not merely probability-match their posterior beliefs; instead, they choose the referent with highest posterior support with greater decisiveness in forced-choice selection.\n\nDifferences from feature_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from feature_salience_listener).\n- Parameters added: beta ~ LogNormal(0.0, 1.0), representing listener decision rationality.\n- Parameters removed: None (alpha, salience, and lapse retained unchanged).\n- Functional terms changed:\n  - In L1, listener choice weights are exponentiated by beta times the log posterior probability of each referent given the utterance, wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})), rather than matching posterior probabilities directly.\n  - In choice_probs, params[\"beta\"] is passed to L1. On prior trials, choices remain governed by the feature salience prior.\n",
+    "source": "round 2 candidate 5 refine incumbent feature_salience_listener"
+   },
+   {
+    "name": "decision_salience_l2",
+    "hypothesis": "Listeners reason at depth 2 with a feature-simplicity prior, but rather than simply probability matching their posterior beliefs when clicking an object, they apply softmax decision rationality. This allows listeners who infer communicative intentions through recursive mentalizing and complexity priors to decisively select the referent with the highest posterior support.\n\nModel refinement details:\n- Base model refined: feature_salience_l2\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from feature_salience_l2)\n- Parameters added: beta (LogNormal(0.0, 1.0)), representing listener decision rationality\n- Parameters removed: None (alpha, w_feature, and lapse retained unchanged)\n- Functional terms changed: In L2, listener choice weights are modified from probability matching the posterior to softmax decision rationality, exponentiating posterior probabilities by beta before normalization.\n",
+    "source": "round 2 candidate 6 refine chosen"
+   },
+   {
+    "name": "chromatic_salience_listener",
+    "hypothesis": "Listeners evaluate referents through a perceptual salience prior governed by visual feature complexity and chromatic pop-out. In neutral displays where all objects share the same chromatic format, listeners favor simpler referents with fewer extraneous features as default prototypes. When an object is rendered in full color against grayscale distractors, chromatic contrast produces visual pop-out that captures attention, boosting that object's prior probability both when interpreting a description and on uninformative prior trials.\n",
+    "source": "round 3 candidate 1 explore"
+   },
+   {
+    "name": "distinctiveness_penalty_listener",
+    "hypothesis": "Listeners resolve referential ambiguity through a contextual distinctiveness penalty rather than recursive speaker mentalizing. When hearing a feature word, listeners choose among candidate objects possessing that feature, penalizing candidates in proportion to the contextual distinctiveness (inverse scene frequency) of their extraneous features. In the absence of an informative description, baseline choices similarly favor contextually simpler, less distinctive referents.\n",
+    "source": "round 3 candidate 2 explore"
+   },
+   {
+    "name": "decision_rational_listener",
+    "hypothesis": "Listeners infer communicative intentions by simulating a rational speaker at depth 1, but do not merely probability-match their posterior beliefs when making a forced choice. Instead, they apply softmax decision rationality to their posterior beliefs, separating the listener's choice decisiveness from the speaker's communicative optimization. This enables listeners to decisively select the referent with highest posterior support even when speaker informativeness is moderate.\n",
+    "source": "round 3 candidate 3 explore"
+   },
+   {
+    "name": "focal_baserate_salience_listener",
+    "hypothesis": "We refine baserate_salience_listener by integrating focal visual attention from focal_attention_listener: listeners restrict their communicative reasoning primarily to candidate referents matching the heard utterance, downweighting irrelevant distractor objects in the display. When evaluating the communicative informativeness of alternative utterances in their mental model of the speaker, listeners evaluate alternative descriptions against this attention-weighted display rather than treating distractors as equally salient. Combined with experiential base rates and visual feature simplicity priors, this focal attentional discounting dampens exaggerated pragmatic inferences on complex visual scenes without altering baseline preferences on uninformative trials.\n\nDifferences from baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from baserate_salience_listener).\n- Parameters added: distractor_weight ~ Beta(1.0, 1.0), representing the visual attentional weight allocated to non-candidate display objects.\n- Parameters removed: None (alpha, salience, baserate, and lapse retained unchanged).\n- Functional terms changed:\n  - In L0, added array parameter atten: ... and weighted literal listener referent selection by at(lex, u, r) * (vec(atten, r) + {EPS}).\n  - In L1, passed atten: ... through to L0.\n  - In choice_probs, computed object attention weights as atten = jnp.where(is_cand > 0, 1.0, params[\"distractor_weight\"]) where is_cand = jnp.where(ctx.is_prior > 0, 1.0, ctx.lex[ctx.utterance]), and passed atten into L1.\n",
+    "source": "round 3 candidate 4 refine incumbent baserate_salience_listener"
+   },
+   {
+    "name": "prior_literal_baserate_listener",
+    "hypothesis": "We refine baserate_salience_listener by integrating the referent prior directly into the literal listener's interpretation rule, as posited in classical Bayesian Rational Speech Act theory (Frank & Goodman, 2012). Rather than simulating a naive literal listener who evaluates candidate referents with uniform baseline probabilities, the speaker anticipates a listener who already weights candidate objects by their experiential base rates and visual feature complexity. This prior-informed literal interpretation sharpens the speaker's communicative incentives, driving speakers to choose distinctive expressions for rare or complex objects while relying on listeners' prior expectations for frequent, simple referents.\n\nDifferences from baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from baserate_salience_listener).\n- Parameters added: None (alpha, salience, baserate, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In L0, the listener's referent choice weight incorporates the referent prior alongside literal truth conditions, wpp=at(lex, u, r) * (vec(prior, r) + {EPS}), replacing the prior-agnostic choice rule.\n  - In L1, the referent prior vector prior: ... is passed into L0.\n",
+    "source": "round 3 candidate 5 refine incumbent baserate_salience_listener"
+   },
+   {
+    "name": "decision_baserate_salience_listener",
+    "hypothesis": "We refine decision_salience_listener by integrating empirical base rates from familiarization exposure into the listener's referent prior alongside visual feature complexity. Rather than relying solely on visual simplicity to form baseline expectations, listeners combine experiential frequency and visual feature salience to establish prior probabilities over candidate referents. This allows the decision-rational listener to capture how participants systematically favor familiar objects when base rates are present while retaining decisive referent selection and simplicity preferences when base rates are absent.\n\nDifferences from decision_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from decision_salience_listener).\n- Parameters added: baserate ~ LogNormal(0.0, 1.0), scaling the log-probability of empirical familiarization base rates.\n- Parameters removed: None (alpha, beta, salience, and lapse retained unchanged).\n- Functional terms changed: In choice_probs, the referent prior vector incorporates empirical familiarization frequencies via softmax_prior(params[\"salience\"] * ctx.feature_count + params[\"baserate\"] * jnp.where(ctx.has_familiarization > 0, jnp.log(ctx.familiarization + EPS), 0.0)), replacing the feature-only prior.\n",
+    "source": "round 3 candidate 6 refine chosen"
+   },
+   {
+    "name": "aspect_goal_listener",
+    "hypothesis": "Listeners interpret referential descriptions by reasoning about the speaker's communicative goal or question under discussion: rather than assuming the speaker aims to single out the object's complete identity, listeners model a speaker who chooses an utterance to informatively convey a specific feature or aspect of the intended referent. Because simpler objects with fewer extraneous features offer fewer competing communicative aspects to describe, hearing a shared feature provides stronger evidence that the speaker intended the focused, simpler referent, while tempering exaggerated pragmatic inferences on complex displays where candidate referents share multiple features.\n",
+    "source": "round 4 candidate 1 explore"
+   },
+   {
+    "name": "contrastive_speaker",
+    "hypothesis": "Listeners interpret referential expressions by modeling a contrastive speaker whose communicative choices are driven by the principle of contrast. When describing a target referent, speakers prioritize utterances that differentiate the target from competitors sharing its other features, gaining greater communicative value when eliminating similar contrast foils than irrelevant distractors. Pragmatic listeners invert this contrastive speaker, favoring candidate referents for which the heard utterance serves a diagnostic contrastive function.\n",
+    "source": "round 4 candidate 3 explore"
+   },
+   {
+    "name": "prior_lapse_focal_listener",
+    "hypothesis": "We refine focal_baserate_salience_listener by replacing stimulus-independent uniform lapse with a prior-anchored lapse fallback: when participants experience inattention or task disengagement, their choices fall back on their intuitive baseline prior expectations (favoring visual simplicity and familiarization base rates) rather than choosing uniformly at random across all display objects. On uninformative trials, choices reflect prior expectations directly without artificial flattening from uniform noise, while on communicative trials, lapse errors are naturally biased toward simpler or familiar candidates rather than cluttered distractors.\n\nDifferences from focal_baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from focal_baserate_salience_listener).\n- Parameters added: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In choice_probs, replaced uniform lapse mixing with prior-anchored lapse fallback, computing choice probabilities as (1.0 - params[\"lapse\"]) * jnp.where(ctx.is_prior > 0, prior, heard) + params[\"lapse\"] * prior instead of mixing with uniform 1.0 / n.\n",
+    "source": "round 4 candidate 4 refine incumbent focal_baserate_salience_listener"
+   },
+   {
+    "name": "chromatic_focal_baserate_listener",
+    "hypothesis": "We refine focal_baserate_salience_listener by integrating chromatic pop-out from chromatic_salience_listener: in addition to visual feature complexity and experiential base rates, listeners maintain a perceptual salience prior sensitive to chromatic contrast. When an object is rendered in full color against grayscale distractors, chromatic contrast produces perceptual pop-out that captures bottom-up visual attention, boosting that object's prior probability both when interpreting a description and on uninformative prior trials. This allows the focal pragmatic listener to account for visual color salience manipulations alongside focal distractor discounting and familiarization history.\n\nDifferences from focal_baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from focal_baserate_salience_listener).\n- Parameters added: chromatic_salience ~ Normal(0.0, 1.0), representing the perceptual salience weight of chromatic contrast.\n- Parameters removed: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Functional terms changed: In choice_probs, the referent prior vector incorporates chromatic contrast via softmax_prior(params[\"salience\"] * ctx.feature_count + params[\"baserate\"] * fam_logits + params[\"chromatic_salience\"] * chromatic_contrast) where chromatic_contrast = jnp.mean(ctx.grayscale) - ctx.grayscale, adding chromatic contrast to the feature-complexity and base-rate prior.\n",
+    "source": "round 4 candidate 5 refine incumbent focal_baserate_salience_listener"
+   },
+   {
+    "name": "focal_prior_literal_baserate_listener",
+    "hypothesis": "We refine prior_literal_baserate_listener by integrating focal visual attention from focal_attention_listener: listeners restrict their communicative reasoning primarily to candidate referents matching the heard utterance, downweighting irrelevant distractor objects in the display. When evaluating the communicative informativeness of alternative utterances in their mental model of the speaker, the speaker anticipates a Bayesian literal listener who evaluates candidate referents against this attention-weighted display while integrating experiential base rates and visual feature simplicity priors. This combined mechanism dampens exaggerated pragmatic inferences on complex visual displays while preserving prior-driven expectations for frequent or simple referents.\n\nDifferences from prior_literal_baserate_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from prior_literal_baserate_listener).\n- Parameters added: distractor_weight ~ Beta(1.0, 1.0), representing the visual attentional weight allocated to non-candidate display objects.\n- Parameters removed: None (alpha, salience, baserate, and lapse retained unchanged).\n- Functional terms changed:\n  - In L0, added array parameter atten: ... and weighted literal listener referent selection by at(lex, u, r) * (vec(prior, r) + {EPS}) * (vec(atten, r) + {EPS}), replacing the uniform-attention Bayesian choice rule.\n  - In L1, passed atten: ... through to L0.\n  - In choice_probs, computed object attention weights as atten = jnp.where(is_cand > 0, 1.0, params[\"distractor_weight\"]) where is_cand = jnp.where(ctx.is_prior > 0, 1.0, ctx.lex[ctx.utterance]), and passed atten into L1.\n",
+    "source": "round 4 candidate 6 refine chosen"
+   },
+   {
+    "name": "exhaustive_pragmatic_mixture",
+    "hypothesis": "Listeners in reference games differ in their cognitive processing architecture, forming a population mixture of structural exhaustification and recursive pragmatic mentalizing types. When interpreting an ambiguous description, exhaustivity listeners apply grammatical exhaustification to penalize candidate objects that possess extraneous unmentioned features, whereas pragmatic listeners invert a model of a communicative speaker to reason about informative alternatives. The aggregate distribution of referent choices reflects the population mixture proportion of pragmatic mentalizers versus structural exhaustification responders.\n",
+    "source": "round 4 candidate 2 explore repair 1"
+   }
+  ],
+  "ledger_entries": 26
+ },
+ {
+  "step": 5,
+  "round": 4,
+  "best_model": "base_literal_focal_lapse_listener",
+  "standing": {
+   "base_literal_focal_lapse_listener": {
+    "rank": 0,
+    "elpd_loo": -17388.201124191284,
+    "se": 134.11755475170244,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 4.578415983571176,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "prior_lapse_focal_listener": {
+    "rank": 1,
+    "elpd_loo": -17388.343591690063,
+    "se": 134.11602464154134,
+    "elpd_diff": 0.14246749877929688,
+    "dse": 0.6873711159080813,
+    "p_loo": 4.4156019415167975,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "prior_lapse_focal_bayesian_listener": {
+    "rank": 2,
+    "elpd_loo": -17388.741686820984,
+    "se": 134.08583442235056,
+    "elpd_diff": 0.540562629699707,
+    "dse": 0.5476661218563016,
+    "p_loo": 4.538414940914663,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "focal_baserate_salience_listener": {
+    "rank": 3,
+    "elpd_loo": -17389.225407600403,
+    "se": 134.11424911077754,
+    "elpd_diff": 1.0242834091186523,
+    "dse": 2.2610181819348303,
+    "p_loo": 4.433490411400271,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "baserate_salience_listener": {
+    "rank": 4,
+    "elpd_loo": -17389.34595298767,
+    "se": 134.02342146621942,
+    "elpd_diff": 1.1448287963867188,
+    "dse": 2.519118902494635,
+    "p_loo": 3.8888504837268556,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "focal_prior_literal_baserate_listener": {
+    "rank": 5,
+    "elpd_loo": -17389.664969444275,
+    "se": 134.10337828013215,
+    "elpd_diff": 1.4638452529907227,
+    "dse": 2.217148426017002,
+    "p_loo": 4.435082237854658,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "prior_lapse_focal_listener_2": {
+    "rank": 6,
+    "elpd_loo": -17389.760577201843,
+    "se": 134.09673510603807,
+    "elpd_diff": 1.559453010559082,
+    "dse": 1.5954120663160232,
+    "p_loo": 4.902448565895611,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "prior_literal_baserate_listener": {
+    "rank": 7,
+    "elpd_loo": -17389.94224834442,
+    "se": 133.99484806238712,
+    "elpd_diff": 1.741124153137207,
+    "dse": 2.4984795422766615,
+    "p_loo": 3.962235633898672,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "chromatic_focal_baserate_listener": {
+    "rank": 8,
+    "elpd_loo": -17390.083680152893,
+    "se": 134.1238763403694,
+    "elpd_diff": 1.8825559616088867,
+    "dse": 2.3350028623997243,
+    "p_loo": 5.477019279041997,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_baserate_salience_listener": {
+    "rank": 9,
+    "elpd_loo": -17390.22045993805,
+    "se": 134.02435066945438,
+    "elpd_diff": 2.0193357467651367,
+    "dse": 2.380287881195877,
+    "p_loo": 4.856190805305232,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_salience_listener": {
+    "rank": 10,
+    "elpd_loo": -17412.860593795776,
+    "se": 133.9696392834762,
+    "elpd_diff": 24.659469604492188,
+    "dse": 6.801640931526073,
+    "p_loo": 3.9738805027809576,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "feature_salience_listener": {
+    "rank": 11,
+    "elpd_loo": -17413.410258293152,
+    "se": 133.86546227511005,
+    "elpd_diff": 25.209134101867676,
+    "dse": 7.098545434411592,
+    "p_loo": 2.929662493057549,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "focal_attention_listener": {
+    "rank": 12,
+    "elpd_loo": -17413.547021865845,
+    "se": 134.0133124736014,
+    "elpd_diff": 25.345897674560547,
+    "dse": 7.1610811198515965,
+    "p_loo": 3.0493104286433663,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "typicality_listener": {
+    "rank": 13,
+    "elpd_loo": -17413.85746860504,
+    "se": 133.8337096574084,
+    "elpd_diff": 25.656344413757324,
+    "dse": 7.106013676731258,
+    "p_loo": 3.1482147046954196,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "exhaustive_pragmatic_mixture": {
+    "rank": 14,
+    "elpd_loo": -17413.955693244934,
+    "se": 133.91953109593084,
+    "elpd_diff": 25.754569053649902,
+    "dse": 7.087828258535483,
+    "p_loo": 3.4117680263771035,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "chromatic_salience_listener": {
+    "rank": 15,
+    "elpd_loo": -17414.192622184753,
+    "se": 133.8855110777249,
+    "elpd_diff": 25.99149799346924,
+    "dse": 7.122668993746534,
+    "p_loo": 3.9165226707082184,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_rational_listener": {
+    "rank": 16,
+    "elpd_loo": -17414.57311439514,
+    "se": 133.96138697935555,
+    "elpd_diff": 26.371990203857422,
+    "dse": 7.11129760427475,
+    "p_loo": 3.003946291453758,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "feature_salience_l2": {
+    "rank": 17,
+    "elpd_loo": -17416.882053375244,
+    "se": 133.89522554558673,
+    "elpd_diff": 28.68092918395996,
+    "dse": 7.313309077679721,
+    "p_loo": 3.0176618583645904,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "ensemble_grouping_listener": {
+    "rank": 18,
+    "elpd_loo": -17417.11580467224,
+    "se": 133.71136298009958,
+    "elpd_diff": 28.91468048095703,
+    "dse": 7.542262882074066,
+    "p_loo": 3.115991372640565,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_salience_l2": {
+    "rank": 19,
+    "elpd_loo": -17417.240070343018,
+    "se": 133.93489283326858,
+    "elpd_diff": 29.0389461517334,
+    "dse": 7.216342369794488,
+    "p_loo": 3.8818059032382735,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "contextual_distinctiveness_listener": {
+    "rank": 20,
+    "elpd_loo": -17418.889101982117,
+    "se": 133.72017704630912,
+    "elpd_diff": 30.68797779083252,
+    "dse": 7.8528763179320755,
+    "p_loo": 3.048521027500101,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "decision_rational_l2": {
+    "rank": 21,
+    "elpd_loo": -17418.94672012329,
+    "se": 133.9238037154963,
+    "elpd_diff": 30.745595932006836,
+    "dse": 7.5004300980857215,
+    "p_loo": 3.086702385426179,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "graded_truth_speaker": {
+    "rank": 22,
+    "elpd_loo": -17424.005262374878,
+    "se": 133.54310064640495,
+    "elpd_diff": 35.80413818359375,
+    "dse": 8.198501685343329,
+    "p_loo": 3.014357485684741,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 23,
+    "elpd_loo": -17426.50571537018,
+    "se": 133.43624159130505,
+    "elpd_diff": 38.30459117889404,
+    "dse": 8.63200629670299,
+    "p_loo": 2.044616184888582,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "costly_feature_speaker": {
+    "rank": 24,
+    "elpd_loo": -17428.519453048706,
+    "se": 133.25281762595617,
+    "elpd_diff": 40.318328857421875,
+    "dse": 9.010153355784078,
+    "p_loo": 2.49441856518024,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "contrastive_speaker": {
+    "rank": 25,
+    "elpd_loo": -17428.75903224945,
+    "se": 133.2673884643021,
+    "elpd_diff": 40.557908058166504,
+    "dse": 8.984951260024049,
+    "p_loo": 3.0540214993525296,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 26,
+    "elpd_loo": -17429.246683120728,
+    "se": 133.2139242347197,
+    "elpd_diff": 41.04555892944336,
+    "dse": 9.12082099738589,
+    "p_loo": 2.1000249205135333,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "opportunity_cost_speaker": {
+    "rank": 27,
+    "elpd_loo": -17429.41118144989,
+    "se": 133.24097440177002,
+    "elpd_diff": 41.21005725860596,
+    "dse": 9.045078515717448,
+    "p_loo": 2.875761380961194,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "aspect_goal_listener": {
+    "rank": 28,
+    "elpd_loo": -17432.89771938324,
+    "se": 133.0909961115649,
+    "elpd_diff": 44.696595191955566,
+    "dse": 9.385602042131728,
+    "p_loo": 2.006486419464636,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "exhaustive_listener": {
+    "rank": 29,
+    "elpd_loo": -17498.55503177643,
+    "se": 133.4370571884404,
+    "elpd_diff": 110.35390758514404,
+    "dse": 14.826450351977513,
+    "p_loo": 2.044947335147299,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "distinctiveness_penalty_listener": {
+    "rank": 30,
+    "elpd_loo": -17616.642045021057,
+    "se": 133.72439027203032,
+    "elpd_diff": 228.44092082977295,
+    "dse": 22.068795663002682,
+    "p_loo": 2.066630744957365,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "mutual_exclusivity_listener": {
+    "rank": 31,
+    "elpd_loo": -17772.713035583496,
+    "se": 132.46366996947108,
+    "elpd_diff": 384.5119113922119,
+    "dse": 27.507941251148424,
+    "p_loo": 2.001810122426832,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 32,
+    "elpd_loo": -18599.991074562073,
+    "se": 127.64098481062841,
+    "elpd_diff": 1211.7899503707886,
+    "dse": 47.23890697267333,
+    "p_loo": 1.047910745266563,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "ensemble_grouping_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential expressions through an ensemble grouping prior grounded in Gestalt similarity: objects that share visual features with other items in the display are perceptually grouped into a collective background ensemble and discounted, whereas isolated objects that share fewer features stand out as prominent individuals. On uninformative displays where multiple objects possess extraneous features but only one shares its features with competitors, this mechanism favors the visually isolated object over the grouped competitor, directly reversing the predictions of prior_lapse_focal_listener which penalizes total feature count in isolation. Pragmatic listeners invert a communicative speaker while maintaining this perceptual grouping prior over referents."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "opportunity_cost_speaker",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Speakers evaluate communicative descriptions in light of the opportunity cost of foregone alternatives: producing an utterance incurs a cognitive penalty proportional to the communicative informativeness of the best available alternative description for that referent. A speaker who cannot name an object any other way uses a shared feature without penalty, whereas a speaker possessing an unambiguous alternative incurs an opportunity cost for choosing the shared word. Pragmatic listeners invert this opportunity-cost-sensitive speaker to infer the intended referent."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "typicality_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners evaluate referents through a typicality prior grounded in Eleanor Rosch's prototype theory: before hearing an informative description (and on uninformative prior trials), listeners expect the speaker to refer to the prototypical object in the visual scene, quantified by family resemblance (how extensively an object's features are shared across the visual display). Prototypical exemplars with greater feature overlap serve as cognitive anchors, biasing prior expectations toward central category members."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "base_literal_focal_lapse_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine prior_lapse_focal_listener by having the literal listener directly integrate empirical familiarization base rates into literal referent evaluation alongside focal attentional discounting. Rather than assuming the speaker simulates a literal listener who treats candidate objects with uniform environmental expectations, the speaker anticipates a Bayesian literal listener who already favors environmentally frequent referents. This sharpens communicative incentives by requiring speakers to use distinctive labels for rare referents while allowing concise, shared descriptions for familiar ones, while preserving prior-anchored lapse fallback and focal distractor discounting.\n\nDifferences from prior_lapse_focal_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from prior_lapse_focal_listener).\n- Parameters added: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In L0, added array parameter base_prior: ... and weighted literal listener referent selection by at(lex, u, r) * (vec(base_prior, r) + {EPS}) * (vec(atten, r) + {EPS}), incorporating familiarization base rates into literal interpretation.\n  - In L1, passed base_prior: ... through to L0.\n  - In choice_probs, computed base_prior = softmax_prior(params[\"baserate\"] * fam_logits) and passed base_prior into L1."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "prior_lapse_focal_listener_2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine focal_baserate_salience_listener by replacing stimulus-independent uniform lapse with a prior-anchored lapse fallback: when participants experience inattention or task disengagement, their choices fall back on their intuitive baseline prior expectations (favoring visual simplicity and familiarization base rates) rather than choosing uniformly at random across all display objects. On uninformative trials, choices reflect prior expectations directly without artificial flattening from uniform noise, while on communicative trials, lapse errors are naturally biased toward simpler or familiar candidates rather than cluttered distractors.\n\nDifferences from focal_baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from focal_baserate_salience_listener).\n- Parameters added: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In choice_probs, replaced uniform lapse mixing with prior-anchored lapse fallback, computing choice probabilities as (1.0 - params[\"lapse\"]) * jnp.where(ctx.is_prior > 0, prior, heard) + params[\"lapse\"] * prior instead of mixing with uniform 1.0 / n."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "prior_lapse_focal_bayesian_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine focal_prior_literal_baserate_listener by replacing stimulus-independent uniform lapse with a prior-anchored lapse fallback: when participants experience inattention or task disengagement, their choices fall back on their intuitive baseline prior expectations (favoring visual simplicity and familiarization base rates) rather than choosing uniformly at random across all display objects. On uninformative trials, choices reflect prior expectations directly without artificial flattening from uniform noise, while on communicative trials, lapse errors are naturally biased toward simpler or familiar candidates rather than cluttered distractors.\n\nDifferences from focal_prior_literal_baserate_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from focal_prior_literal_baserate_listener).\n- Parameters added: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In choice_probs, replaced uniform lapse mixing with prior-anchored lapse fallback, computing choice probabilities as (1.0 - params[\"lapse\"]) * jnp.where(ctx.is_prior > 0, prior, heard) + params[\"lapse\"] * prior instead of with_lapse(jnp.where(ctx.is_prior > 0, prior, heard), params[\"lapse\"])."
+   }
+  ],
+  "live": [
+   {
+    "name": "literal_listener",
+    "hypothesis": "Listeners pick uniformly among the objects the word is literally true of.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "exhaustive_listener",
+    "hypothesis": "Listeners interpret referential expressions through grammatical exhaustification rather than recursive social mentalizing. Hearing a feature word, the listener treats it as an exhaustive specification of the target referent, penalizing candidate objects that possess unmentioned alternative features in proportion to the number of extraneous features. In the absence of an informative description, the listener chooses uniformly among candidate objects.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "hypothesis": "Speakers incur an utterance cost for producing ambiguous words that describe multiple referents, penalizing shared features in the display. Pragmatic listeners invert this cost-sensitive speaker, reasoning that an intended referent with unique distinguishing features is especially unlikely to be described with a shared word. This excess-ambiguity penalty drives listeners to favor referents that lack alternative unambiguous descriptions.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "decision_rational_l2",
+    "hypothesis": "Listeners reason at depth 2 about a pragmatic speaker, but rather than simply probability matching their posterior beliefs, they apply softmax decision rationality when selecting an object to click. This separates speaker communicative optimization from listener choice decisiveness, allowing the model to capture that listeners decisively select the referent with the highest posterior support even when speaker informativeness is moderate.\n\nModel refinement details:\n- Base model refined: rsa_l2\n- Recursion depth: Depth 2 (choice_probs calls L2)\n- Parameters added: beta (LogNormal(0.0, 1.0)), representing listener decision rationality\n- Parameters removed: None\n- Structural differences: In L2, the listener's choice weights are exponentiated by beta times the log posterior probability of each referent given the utterance, rather than matching posterior probability directly (beta = 1).\n",
+    "source": "round 1 candidate 4 refine incumbent rsa_l2"
+   },
+   {
+    "name": "feature_salience_l2",
+    "hypothesis": "Listeners reason at depth 2 (inverting a speaker who simulates the depth-1 pragmatic listener), but rather than assuming all referents are equally likely a priori, agents maintain a feature-salience prior over objects that scales with each object's feature count. When no informative word is heard, listeners choose referents according to this feature-based prior, and when an utterance is heard, pragmatic reasoning updates this prior. This captures the cognitive tendency for simpler, less cluttered objects to serve as default prototypes or baselines in reference games.\n\nDifferences from rsa_l2:\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from rsa_l2).\n- Parameters added: w_feature ~ Normal(0.0, 1.0) weighting object feature counts.\n- Parameters removed: None (alpha and lapse retained unchanged).\n- Functional terms changed:\n  - Computed prior vector in choice_probs as softmax_prior(params[\"w_feature\"] * ctx.feature_count) and passed it to L2.\n  - In L1 and L2, added array parameter prior: ... and changed speaker referent weight from wpp=1 to wpp=vec(prior, r).\n  - In choice_probs, replaced uniform guessing on prior trials with prior: jnp.where(ctx.is_prior > 0, prior, heard).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l2"
+   },
+   {
+    "name": "feature_salience_listener",
+    "hypothesis": "We refine rsa_l1 by introducing a feature-count salience prior over referents, where listeners maintain a baseline prior that scales with an object's feature count rather than assuming all objects are equally likely a priori. Listeners penalize visually complex objects with more extraneous features, favoring simpler referents both when interpreting an utterance and on uninformative prior trials. Compared to rsa_l1, recursion depth is unchanged at depth 1 (calling L1), one parameter 'salience' is added with a normal prior, and the uniform object prior in the listener's mental model and on prior trials is replaced by a softmax distribution over feature counts.\n",
+    "source": "round 1 candidate 6 refine chosen"
+   },
+   {
+    "name": "mutual_exclusivity_listener",
+    "hypothesis": "Listeners interpret referential descriptions using a mutual exclusivity constraint rather than recursive theory-of-mind mentalizing: when hearing a shared feature, they penalize candidate referents in proportion to the number of unique, unambiguous distinguishing labels available for that object in the visual scene. On symmetric complex displays where candidate referents share the heard word and their alternative features are also shared with other objects rather than unique, mutual exclusivity predicts an equal choice split because neither candidate possesses an exclusive alternative name. This sharply contradicts the depth-2 rational speech act model, which predicts an asymmetric preference driven by recursive speaker vocabulary trade-offs.\n",
+    "source": "round 1 candidate 2 explore repair 1"
+   },
+   {
+    "name": "contextual_distinctiveness_listener",
+    "hypothesis": "Listeners evaluate referents through a contextual distinctiveness prior: rather than viewing features in isolation, an object's visual salience is determined by how rare its features are across the visual scene. Features shared by multiple objects form a redundant visual background, whereas rare or unshared features produce perceptual pop-out that captures attention. Pragmatic listeners use this scene-relative distinctiveness prior to guide referent selection both when interpreting an utterance and on uninformative prior trials.\n",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "focal_attention_listener",
+    "hypothesis": "Resource-limited listeners focus visual attention primarily on candidate referents matching the heard utterance, attenuating the attentional weight of non-candidate objects in the visual display. When simulating what a speaker would have said, the listener's mental model evaluates the communicative informativeness of alternative utterances against this attention-weighted display representation, discounting irrelevant distractors. Consequently, non-candidate objects exert diminished influence on the perceived ambiguity of alternative expressions, dampening the asymmetric preference between candidate referents on complex displays.\n",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "graded_truth_speaker",
+    "hypothesis": "People evaluate word meanings with graded truth values rather than all-or-nothing Boolean truth conditions. A feature label provides a complete, high-truth description for an object possessing solely that feature, but acts as a diluted, partial description for an object burdened with extraneous unmentioned features. The pragmatic listener inverts a communicative speaker who optimizes informativeness over these graded semantic truth values, selecting referents based on feature specificity without any baseline bias on uninformative trials.\n",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "baserate_salience_listener",
+    "hypothesis": "We refine feature_salience_listener by integrating empirical base rates from familiarization exposure into the listener's referent prior alongside visual feature complexity. Rather than relying solely on visual simplicity to form baseline expectations, listeners combine experiential frequency and visual feature salience to establish prior probabilities over candidate referents. This allows the model to capture how participants systematically favor familiar objects when base rates are present while retaining the preference for simpler objects when base rates are absent.\n\nDifferences from feature_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from feature_salience_listener).\n- Parameters added: baserate ~ LogNormal(0.0, 1.0), scaling the log-probability of empirical familiarization base rates.\n- Parameters removed: None (alpha, salience, and lapse retained unchanged).\n- Functional terms changed: In choice_probs, the referent prior vector incorporates empirical familiarization frequencies via softmax_prior(params[\"salience\"] * ctx.feature_count + params[\"baserate\"] * jnp.where(ctx.has_familiarization > 0, jnp.log(ctx.familiarization + EPS), 0.0)), replacing the feature-only prior.\n",
+    "source": "round 2 candidate 4 refine incumbent feature_salience_listener"
+   },
+   {
+    "name": "decision_salience_listener",
+    "hypothesis": "We refine feature_salience_listener by adding softmax decision rationality to the listener's referent choice rule, separating the listener's choice decisiveness from the speaker's communicative rationality. While listeners retain a feature-complexity salience prior favoring simpler referents, they do not merely probability-match their posterior beliefs; instead, they choose the referent with highest posterior support with greater decisiveness in forced-choice selection.\n\nDifferences from feature_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from feature_salience_listener).\n- Parameters added: beta ~ LogNormal(0.0, 1.0), representing listener decision rationality.\n- Parameters removed: None (alpha, salience, and lapse retained unchanged).\n- Functional terms changed:\n  - In L1, listener choice weights are exponentiated by beta times the log posterior probability of each referent given the utterance, wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})), rather than matching posterior probabilities directly.\n  - In choice_probs, params[\"beta\"] is passed to L1. On prior trials, choices remain governed by the feature salience prior.\n",
+    "source": "round 2 candidate 5 refine incumbent feature_salience_listener"
+   },
+   {
+    "name": "decision_salience_l2",
+    "hypothesis": "Listeners reason at depth 2 with a feature-simplicity prior, but rather than simply probability matching their posterior beliefs when clicking an object, they apply softmax decision rationality. This allows listeners who infer communicative intentions through recursive mentalizing and complexity priors to decisively select the referent with the highest posterior support.\n\nModel refinement details:\n- Base model refined: feature_salience_l2\n- Recursion depth: Depth 2 (choice_probs calls L2, unchanged from feature_salience_l2)\n- Parameters added: beta (LogNormal(0.0, 1.0)), representing listener decision rationality\n- Parameters removed: None (alpha, w_feature, and lapse retained unchanged)\n- Functional terms changed: In L2, listener choice weights are modified from probability matching the posterior to softmax decision rationality, exponentiating posterior probabilities by beta before normalization.\n",
+    "source": "round 2 candidate 6 refine chosen"
+   },
+   {
+    "name": "chromatic_salience_listener",
+    "hypothesis": "Listeners evaluate referents through a perceptual salience prior governed by visual feature complexity and chromatic pop-out. In neutral displays where all objects share the same chromatic format, listeners favor simpler referents with fewer extraneous features as default prototypes. When an object is rendered in full color against grayscale distractors, chromatic contrast produces visual pop-out that captures attention, boosting that object's prior probability both when interpreting a description and on uninformative prior trials.\n",
+    "source": "round 3 candidate 1 explore"
+   },
+   {
+    "name": "distinctiveness_penalty_listener",
+    "hypothesis": "Listeners resolve referential ambiguity through a contextual distinctiveness penalty rather than recursive speaker mentalizing. When hearing a feature word, listeners choose among candidate objects possessing that feature, penalizing candidates in proportion to the contextual distinctiveness (inverse scene frequency) of their extraneous features. In the absence of an informative description, baseline choices similarly favor contextually simpler, less distinctive referents.\n",
+    "source": "round 3 candidate 2 explore"
+   },
+   {
+    "name": "decision_rational_listener",
+    "hypothesis": "Listeners infer communicative intentions by simulating a rational speaker at depth 1, but do not merely probability-match their posterior beliefs when making a forced choice. Instead, they apply softmax decision rationality to their posterior beliefs, separating the listener's choice decisiveness from the speaker's communicative optimization. This enables listeners to decisively select the referent with highest posterior support even when speaker informativeness is moderate.\n",
+    "source": "round 3 candidate 3 explore"
+   },
+   {
+    "name": "focal_baserate_salience_listener",
+    "hypothesis": "We refine baserate_salience_listener by integrating focal visual attention from focal_attention_listener: listeners restrict their communicative reasoning primarily to candidate referents matching the heard utterance, downweighting irrelevant distractor objects in the display. When evaluating the communicative informativeness of alternative utterances in their mental model of the speaker, listeners evaluate alternative descriptions against this attention-weighted display rather than treating distractors as equally salient. Combined with experiential base rates and visual feature simplicity priors, this focal attentional discounting dampens exaggerated pragmatic inferences on complex visual scenes without altering baseline preferences on uninformative trials.\n\nDifferences from baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from baserate_salience_listener).\n- Parameters added: distractor_weight ~ Beta(1.0, 1.0), representing the visual attentional weight allocated to non-candidate display objects.\n- Parameters removed: None (alpha, salience, baserate, and lapse retained unchanged).\n- Functional terms changed:\n  - In L0, added array parameter atten: ... and weighted literal listener referent selection by at(lex, u, r) * (vec(atten, r) + {EPS}).\n  - In L1, passed atten: ... through to L0.\n  - In choice_probs, computed object attention weights as atten = jnp.where(is_cand > 0, 1.0, params[\"distractor_weight\"]) where is_cand = jnp.where(ctx.is_prior > 0, 1.0, ctx.lex[ctx.utterance]), and passed atten into L1.\n",
+    "source": "round 3 candidate 4 refine incumbent baserate_salience_listener"
+   },
+   {
+    "name": "prior_literal_baserate_listener",
+    "hypothesis": "We refine baserate_salience_listener by integrating the referent prior directly into the literal listener's interpretation rule, as posited in classical Bayesian Rational Speech Act theory (Frank & Goodman, 2012). Rather than simulating a naive literal listener who evaluates candidate referents with uniform baseline probabilities, the speaker anticipates a listener who already weights candidate objects by their experiential base rates and visual feature complexity. This prior-informed literal interpretation sharpens the speaker's communicative incentives, driving speakers to choose distinctive expressions for rare or complex objects while relying on listeners' prior expectations for frequent, simple referents.\n\nDifferences from baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from baserate_salience_listener).\n- Parameters added: None (alpha, salience, baserate, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In L0, the listener's referent choice weight incorporates the referent prior alongside literal truth conditions, wpp=at(lex, u, r) * (vec(prior, r) + {EPS}), replacing the prior-agnostic choice rule.\n  - In L1, the referent prior vector prior: ... is passed into L0.\n",
+    "source": "round 3 candidate 5 refine incumbent baserate_salience_listener"
+   },
+   {
+    "name": "decision_baserate_salience_listener",
+    "hypothesis": "We refine decision_salience_listener by integrating empirical base rates from familiarization exposure into the listener's referent prior alongside visual feature complexity. Rather than relying solely on visual simplicity to form baseline expectations, listeners combine experiential frequency and visual feature salience to establish prior probabilities over candidate referents. This allows the decision-rational listener to capture how participants systematically favor familiar objects when base rates are present while retaining decisive referent selection and simplicity preferences when base rates are absent.\n\nDifferences from decision_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from decision_salience_listener).\n- Parameters added: baserate ~ LogNormal(0.0, 1.0), scaling the log-probability of empirical familiarization base rates.\n- Parameters removed: None (alpha, beta, salience, and lapse retained unchanged).\n- Functional terms changed: In choice_probs, the referent prior vector incorporates empirical familiarization frequencies via softmax_prior(params[\"salience\"] * ctx.feature_count + params[\"baserate\"] * jnp.where(ctx.has_familiarization > 0, jnp.log(ctx.familiarization + EPS), 0.0)), replacing the feature-only prior.\n",
+    "source": "round 3 candidate 6 refine chosen"
+   },
+   {
+    "name": "aspect_goal_listener",
+    "hypothesis": "Listeners interpret referential descriptions by reasoning about the speaker's communicative goal or question under discussion: rather than assuming the speaker aims to single out the object's complete identity, listeners model a speaker who chooses an utterance to informatively convey a specific feature or aspect of the intended referent. Because simpler objects with fewer extraneous features offer fewer competing communicative aspects to describe, hearing a shared feature provides stronger evidence that the speaker intended the focused, simpler referent, while tempering exaggerated pragmatic inferences on complex displays where candidate referents share multiple features.\n",
+    "source": "round 4 candidate 1 explore"
+   },
+   {
+    "name": "contrastive_speaker",
+    "hypothesis": "Listeners interpret referential expressions by modeling a contrastive speaker whose communicative choices are driven by the principle of contrast. When describing a target referent, speakers prioritize utterances that differentiate the target from competitors sharing its other features, gaining greater communicative value when eliminating similar contrast foils than irrelevant distractors. Pragmatic listeners invert this contrastive speaker, favoring candidate referents for which the heard utterance serves a diagnostic contrastive function.\n",
+    "source": "round 4 candidate 3 explore"
+   },
+   {
+    "name": "prior_lapse_focal_listener",
+    "hypothesis": "We refine focal_baserate_salience_listener by replacing stimulus-independent uniform lapse with a prior-anchored lapse fallback: when participants experience inattention or task disengagement, their choices fall back on their intuitive baseline prior expectations (favoring visual simplicity and familiarization base rates) rather than choosing uniformly at random across all display objects. On uninformative trials, choices reflect prior expectations directly without artificial flattening from uniform noise, while on communicative trials, lapse errors are naturally biased toward simpler or familiar candidates rather than cluttered distractors.\n\nDifferences from focal_baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from focal_baserate_salience_listener).\n- Parameters added: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In choice_probs, replaced uniform lapse mixing with prior-anchored lapse fallback, computing choice probabilities as (1.0 - params[\"lapse\"]) * jnp.where(ctx.is_prior > 0, prior, heard) + params[\"lapse\"] * prior instead of mixing with uniform 1.0 / n.\n",
+    "source": "round 4 candidate 4 refine incumbent focal_baserate_salience_listener"
+   },
+   {
+    "name": "chromatic_focal_baserate_listener",
+    "hypothesis": "We refine focal_baserate_salience_listener by integrating chromatic pop-out from chromatic_salience_listener: in addition to visual feature complexity and experiential base rates, listeners maintain a perceptual salience prior sensitive to chromatic contrast. When an object is rendered in full color against grayscale distractors, chromatic contrast produces perceptual pop-out that captures bottom-up visual attention, boosting that object's prior probability both when interpreting a description and on uninformative prior trials. This allows the focal pragmatic listener to account for visual color salience manipulations alongside focal distractor discounting and familiarization history.\n\nDifferences from focal_baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from focal_baserate_salience_listener).\n- Parameters added: chromatic_salience ~ Normal(0.0, 1.0), representing the perceptual salience weight of chromatic contrast.\n- Parameters removed: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Functional terms changed: In choice_probs, the referent prior vector incorporates chromatic contrast via softmax_prior(params[\"salience\"] * ctx.feature_count + params[\"baserate\"] * fam_logits + params[\"chromatic_salience\"] * chromatic_contrast) where chromatic_contrast = jnp.mean(ctx.grayscale) - ctx.grayscale, adding chromatic contrast to the feature-complexity and base-rate prior.\n",
+    "source": "round 4 candidate 5 refine incumbent focal_baserate_salience_listener"
+   },
+   {
+    "name": "focal_prior_literal_baserate_listener",
+    "hypothesis": "We refine prior_literal_baserate_listener by integrating focal visual attention from focal_attention_listener: listeners restrict their communicative reasoning primarily to candidate referents matching the heard utterance, downweighting irrelevant distractor objects in the display. When evaluating the communicative informativeness of alternative utterances in their mental model of the speaker, the speaker anticipates a Bayesian literal listener who evaluates candidate referents against this attention-weighted display while integrating experiential base rates and visual feature simplicity priors. This combined mechanism dampens exaggerated pragmatic inferences on complex visual displays while preserving prior-driven expectations for frequent or simple referents.\n\nDifferences from prior_literal_baserate_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from prior_literal_baserate_listener).\n- Parameters added: distractor_weight ~ Beta(1.0, 1.0), representing the visual attentional weight allocated to non-candidate display objects.\n- Parameters removed: None (alpha, salience, baserate, and lapse retained unchanged).\n- Functional terms changed:\n  - In L0, added array parameter atten: ... and weighted literal listener referent selection by at(lex, u, r) * (vec(prior, r) + {EPS}) * (vec(atten, r) + {EPS}), replacing the uniform-attention Bayesian choice rule.\n  - In L1, passed atten: ... through to L0.\n  - In choice_probs, computed object attention weights as atten = jnp.where(is_cand > 0, 1.0, params[\"distractor_weight\"]) where is_cand = jnp.where(ctx.is_prior > 0, 1.0, ctx.lex[ctx.utterance]), and passed atten into L1.\n",
+    "source": "round 4 candidate 6 refine chosen"
+   },
+   {
+    "name": "exhaustive_pragmatic_mixture",
+    "hypothesis": "Listeners in reference games differ in their cognitive processing architecture, forming a population mixture of structural exhaustification and recursive pragmatic mentalizing types. When interpreting an ambiguous description, exhaustivity listeners apply grammatical exhaustification to penalize candidate objects that possess extraneous unmentioned features, whereas pragmatic listeners invert a model of a communicative speaker to reason about informative alternatives. The aggregate distribution of referent choices reflects the population mixture proportion of pragmatic mentalizers versus structural exhaustification responders.\n",
+    "source": "round 4 candidate 2 explore repair 1"
+   },
+   {
+    "name": "ensemble_grouping_listener",
+    "hypothesis": "Listeners interpret referential expressions through an ensemble grouping prior grounded in Gestalt similarity: objects that share visual features with other items in the display are perceptually grouped into a collective background ensemble and discounted, whereas isolated objects that share fewer features stand out as prominent individuals. On uninformative displays where multiple objects possess extraneous features but only one shares its features with competitors, this mechanism favors the visually isolated object over the grouped competitor, directly reversing the predictions of prior_lapse_focal_listener which penalizes total feature count in isolation. Pragmatic listeners invert a communicative speaker while maintaining this perceptual grouping prior over referents.\n",
+    "source": "round 5 candidate 1 explore"
+   },
+   {
+    "name": "opportunity_cost_speaker",
+    "hypothesis": "Speakers evaluate communicative descriptions in light of the opportunity cost of foregone alternatives: producing an utterance incurs a cognitive penalty proportional to the communicative informativeness of the best available alternative description for that referent. A speaker who cannot name an object any other way uses a shared feature without penalty, whereas a speaker possessing an unambiguous alternative incurs an opportunity cost for choosing the shared word. Pragmatic listeners invert this opportunity-cost-sensitive speaker to infer the intended referent.\n",
+    "source": "round 5 candidate 2 explore"
+   },
+   {
+    "name": "typicality_listener",
+    "hypothesis": "Listeners evaluate referents through a typicality prior grounded in Eleanor Rosch's prototype theory: before hearing an informative description (and on uninformative prior trials), listeners expect the speaker to refer to the prototypical object in the visual scene, quantified by family resemblance (how extensively an object's features are shared across the visual display). Prototypical exemplars with greater feature overlap serve as cognitive anchors, biasing prior expectations toward central category members.\n",
+    "source": "round 5 candidate 3 explore"
+   },
+   {
+    "name": "base_literal_focal_lapse_listener",
+    "hypothesis": "We refine prior_lapse_focal_listener by having the literal listener directly integrate empirical familiarization base rates into literal referent evaluation alongside focal attentional discounting. Rather than assuming the speaker simulates a literal listener who treats candidate objects with uniform environmental expectations, the speaker anticipates a Bayesian literal listener who already favors environmentally frequent referents. This sharpens communicative incentives by requiring speakers to use distinctive labels for rare referents while allowing concise, shared descriptions for familiar ones, while preserving prior-anchored lapse fallback and focal distractor discounting.\n\nDifferences from prior_lapse_focal_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from prior_lapse_focal_listener).\n- Parameters added: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In L0, added array parameter base_prior: ... and weighted literal listener referent selection by at(lex, u, r) * (vec(base_prior, r) + {EPS}) * (vec(atten, r) + {EPS}), incorporating familiarization base rates into literal interpretation.\n  - In L1, passed base_prior: ... through to L0.\n  - In choice_probs, computed base_prior = softmax_prior(params[\"baserate\"] * fam_logits) and passed base_prior into L1.\n",
+    "source": "round 5 candidate 4 refine incumbent prior_lapse_focal_listener"
+   },
+   {
+    "name": "prior_lapse_focal_listener_2",
+    "hypothesis": "We refine focal_baserate_salience_listener by replacing stimulus-independent uniform lapse with a prior-anchored lapse fallback: when participants experience inattention or task disengagement, their choices fall back on their intuitive baseline prior expectations (favoring visual simplicity and familiarization base rates) rather than choosing uniformly at random across all display objects. On uninformative trials, choices reflect prior expectations directly without artificial flattening from uniform noise, while on communicative trials, lapse errors are naturally biased toward simpler or familiar candidates rather than cluttered distractors.\n\nDifferences from focal_baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from focal_baserate_salience_listener).\n- Parameters added: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In choice_probs, replaced uniform lapse mixing with prior-anchored lapse fallback, computing choice probabilities as (1.0 - params[\"lapse\"]) * jnp.where(ctx.is_prior > 0, prior, heard) + params[\"lapse\"] * prior instead of mixing with uniform 1.0 / n.\n",
+    "source": "round 5 candidate 5 refine incumbent prior_lapse_focal_listener"
+   },
+   {
+    "name": "prior_lapse_focal_bayesian_listener",
+    "hypothesis": "We refine focal_prior_literal_baserate_listener by replacing stimulus-independent uniform lapse with a prior-anchored lapse fallback: when participants experience inattention or task disengagement, their choices fall back on their intuitive baseline prior expectations (favoring visual simplicity and familiarization base rates) rather than choosing uniformly at random across all display objects. On uninformative trials, choices reflect prior expectations directly without artificial flattening from uniform noise, while on communicative trials, lapse errors are naturally biased toward simpler or familiar candidates rather than cluttered distractors.\n\nDifferences from focal_prior_literal_baserate_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from focal_prior_literal_baserate_listener).\n- Parameters added: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In choice_probs, replaced uniform lapse mixing with prior-anchored lapse fallback, computing choice probabilities as (1.0 - params[\"lapse\"]) * jnp.where(ctx.is_prior > 0, prior, heard) + params[\"lapse\"] * prior instead of with_lapse(jnp.where(ctx.is_prior > 0, prior, heard), params[\"lapse\"]).\n",
+    "source": "round 5 candidate 6 refine chosen"
+   }
+  ],
+  "ledger_entries": 32
+ },
+ {
+  "step": 6,
+  "round": 5,
+  "best_model": "base_literal_focal_lapse_listener",
+  "standing": {
+   "base_literal_focal_lapse_listener": {
+    "rank": 0,
+    "elpd_loo": -17388.201124191284,
+    "se": 134.11755475170244,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 4.578415983571176,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "prior_lapse_focal_listener": {
+    "rank": 1,
+    "elpd_loo": -17388.343591690063,
+    "se": 134.11602464154134,
+    "elpd_diff": 0.14246749877929688,
+    "dse": 0.6873711159080813,
+    "p_loo": 4.4156019415167975,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "prior_lapse_focal_bayesian_listener": {
+    "rank": 2,
+    "elpd_loo": -17388.741686820984,
+    "se": 134.08583442235056,
+    "elpd_diff": 0.540562629699707,
+    "dse": 0.5476661218563016,
+    "p_loo": 4.538414940914663,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "focal_baserate_salience_listener": {
+    "rank": 3,
+    "elpd_loo": -17389.225407600403,
+    "se": 134.11424911077754,
+    "elpd_diff": 1.0242834091186523,
+    "dse": 2.2610181819348303,
+    "p_loo": 4.433490411400271,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "baserate_salience_listener": {
+    "rank": 4,
+    "elpd_loo": -17389.34595298767,
+    "se": 134.02342146621942,
+    "elpd_diff": 1.1448287963867188,
+    "dse": 2.519118902494635,
+    "p_loo": 3.8888504837268556,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "focal_prior_literal_baserate_listener": {
+    "rank": 5,
+    "elpd_loo": -17389.664969444275,
+    "se": 134.10337828013215,
+    "elpd_diff": 1.4638452529907227,
+    "dse": 2.217148426017002,
+    "p_loo": 4.435082237854658,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "prior_lapse_focal_listener_2": {
+    "rank": 6,
+    "elpd_loo": -17389.760577201843,
+    "se": 134.09673510603807,
+    "elpd_diff": 1.559453010559082,
+    "dse": 1.5954120663160232,
+    "p_loo": 4.902448565895611,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "prior_literal_baserate_listener": {
+    "rank": 7,
+    "elpd_loo": -17389.94224834442,
+    "se": 133.99484806238712,
+    "elpd_diff": 1.741124153137207,
+    "dse": 2.4984795422766615,
+    "p_loo": 3.962235633898672,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "name": "decision_salience_listener",
+    "outcome": "pruned",
+    "reason": "24.7 nats behind base_literal_focal_lapse_listener (clustered dse 10.3)"
+   },
+   {
+    "name": "feature_salience_listener",
+    "outcome": "pruned",
+    "reason": "25.2 nats behind base_literal_focal_lapse_listener (clustered dse 11.4)"
+   },
+   {
+    "name": "focal_attention_listener",
+    "outcome": "pruned",
+    "reason": "25.3 nats behind base_literal_focal_lapse_listener (clustered dse 10.0)"
+   },
+   {
+    "name": "typicality_listener",
+    "outcome": "pruned",
+    "reason": "25.7 nats behind base_literal_focal_lapse_listener (clustered dse 11.0)"
+   },
+   {
+    "name": "exhaustive_pragmatic_mixture",
+    "outcome": "pruned",
+    "reason": "25.8 nats behind base_literal_focal_lapse_listener (clustered dse 9.9)"
+   },
+   {
+    "name": "chromatic_salience_listener",
+    "outcome": "pruned",
+    "reason": "26.0 nats behind base_literal_focal_lapse_listener (clustered dse 11.4)"
+   },
+   {
+    "name": "decision_rational_listener",
+    "outcome": "pruned",
+    "reason": "26.4 nats behind base_literal_focal_lapse_listener (clustered dse 9.8)"
+   },
+   {
+    "name": "feature_salience_l2",
+    "outcome": "pruned",
+    "reason": "28.7 nats behind base_literal_focal_lapse_listener (clustered dse 11.0)"
+   },
+   {
+    "name": "ensemble_grouping_listener",
+    "outcome": "pruned",
+    "reason": "28.9 nats behind base_literal_focal_lapse_listener (clustered dse 11.1)"
+   },
+   {
+    "name": "decision_salience_l2",
+    "outcome": "pruned",
+    "reason": "29.0 nats behind base_literal_focal_lapse_listener (clustered dse 10.6)"
+   },
+   {
+    "name": "contextual_distinctiveness_listener",
+    "outcome": "pruned",
+    "reason": "30.7 nats behind base_literal_focal_lapse_listener (clustered dse 12.1)"
+   },
+   {
+    "name": "decision_rational_l2",
+    "outcome": "pruned",
+    "reason": "30.7 nats behind base_literal_focal_lapse_listener (clustered dse 10.1)"
+   },
+   {
+    "name": "graded_truth_speaker",
+    "outcome": "pruned",
+    "reason": "35.8 nats behind base_literal_focal_lapse_listener (clustered dse 11.3)"
+   },
+   {
+    "name": "rsa_l2",
+    "outcome": "pruned",
+    "reason": "38.3 nats behind base_literal_focal_lapse_listener (clustered dse 11.8)"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "outcome": "pruned",
+    "reason": "40.3 nats behind base_literal_focal_lapse_listener (clustered dse 12.5)"
+   },
+   {
+    "name": "contrastive_speaker",
+    "outcome": "pruned",
+    "reason": "40.6 nats behind base_literal_focal_lapse_listener (clustered dse 12.6)"
+   },
+   {
+    "name": "rsa_l1",
+    "outcome": "pruned",
+    "reason": "41.0 nats behind base_literal_focal_lapse_listener (clustered dse 12.6)"
+   },
+   {
+    "name": "opportunity_cost_speaker",
+    "outcome": "pruned",
+    "reason": "41.2 nats behind base_literal_focal_lapse_listener (clustered dse 12.5)"
+   },
+   {
+    "name": "aspect_goal_listener",
+    "outcome": "pruned",
+    "reason": "44.7 nats behind base_literal_focal_lapse_listener (clustered dse 12.8)"
+   },
+   {
+    "name": "exhaustive_listener",
+    "outcome": "pruned",
+    "reason": "110.4 nats behind base_literal_focal_lapse_listener (clustered dse 18.8)"
+   },
+   {
+    "name": "distinctiveness_penalty_listener",
+    "outcome": "pruned",
+    "reason": "228.4 nats behind base_literal_focal_lapse_listener (clustered dse 38.1)"
+   },
+   {
+    "name": "mutual_exclusivity_listener",
+    "outcome": "pruned",
+    "reason": "384.5 nats behind base_literal_focal_lapse_listener (clustered dse 55.2)"
+   },
+   {
+    "name": "literal_listener",
+    "outcome": "pruned",
+    "reason": "1211.8 nats behind base_literal_focal_lapse_listener (clustered dse 211.1)"
+   },
+   {
+    "name": "decision_baserate_salience_listener",
+    "outcome": "retired",
+    "reason": "live-set cap"
+   },
+   {
+    "name": "chromatic_focal_baserate_listener",
+    "outcome": "retired",
+    "reason": "live-set cap"
+   }
+  ],
+  "live": [
+   {
+    "name": "baserate_salience_listener",
+    "hypothesis": "We refine feature_salience_listener by integrating empirical base rates from familiarization exposure into the listener's referent prior alongside visual feature complexity. Rather than relying solely on visual simplicity to form baseline expectations, listeners combine experiential frequency and visual feature salience to establish prior probabilities over candidate referents. This allows the model to capture how participants systematically favor familiar objects when base rates are present while retaining the preference for simpler objects when base rates are absent.\n\nDifferences from feature_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from feature_salience_listener).\n- Parameters added: baserate ~ LogNormal(0.0, 1.0), scaling the log-probability of empirical familiarization base rates.\n- Parameters removed: None (alpha, salience, and lapse retained unchanged).\n- Functional terms changed: In choice_probs, the referent prior vector incorporates empirical familiarization frequencies via softmax_prior(params[\"salience\"] * ctx.feature_count + params[\"baserate\"] * jnp.where(ctx.has_familiarization > 0, jnp.log(ctx.familiarization + EPS), 0.0)), replacing the feature-only prior.\n",
+    "source": "round 2 candidate 4 refine incumbent feature_salience_listener"
+   },
+   {
+    "name": "focal_baserate_salience_listener",
+    "hypothesis": "We refine baserate_salience_listener by integrating focal visual attention from focal_attention_listener: listeners restrict their communicative reasoning primarily to candidate referents matching the heard utterance, downweighting irrelevant distractor objects in the display. When evaluating the communicative informativeness of alternative utterances in their mental model of the speaker, listeners evaluate alternative descriptions against this attention-weighted display rather than treating distractors as equally salient. Combined with experiential base rates and visual feature simplicity priors, this focal attentional discounting dampens exaggerated pragmatic inferences on complex visual scenes without altering baseline preferences on uninformative trials.\n\nDifferences from baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from baserate_salience_listener).\n- Parameters added: distractor_weight ~ Beta(1.0, 1.0), representing the visual attentional weight allocated to non-candidate display objects.\n- Parameters removed: None (alpha, salience, baserate, and lapse retained unchanged).\n- Functional terms changed:\n  - In L0, added array parameter atten: ... and weighted literal listener referent selection by at(lex, u, r) * (vec(atten, r) + {EPS}).\n  - In L1, passed atten: ... through to L0.\n  - In choice_probs, computed object attention weights as atten = jnp.where(is_cand > 0, 1.0, params[\"distractor_weight\"]) where is_cand = jnp.where(ctx.is_prior > 0, 1.0, ctx.lex[ctx.utterance]), and passed atten into L1.\n",
+    "source": "round 3 candidate 4 refine incumbent baserate_salience_listener"
+   },
+   {
+    "name": "prior_literal_baserate_listener",
+    "hypothesis": "We refine baserate_salience_listener by integrating the referent prior directly into the literal listener's interpretation rule, as posited in classical Bayesian Rational Speech Act theory (Frank & Goodman, 2012). Rather than simulating a naive literal listener who evaluates candidate referents with uniform baseline probabilities, the speaker anticipates a listener who already weights candidate objects by their experiential base rates and visual feature complexity. This prior-informed literal interpretation sharpens the speaker's communicative incentives, driving speakers to choose distinctive expressions for rare or complex objects while relying on listeners' prior expectations for frequent, simple referents.\n\nDifferences from baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from baserate_salience_listener).\n- Parameters added: None (alpha, salience, baserate, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In L0, the listener's referent choice weight incorporates the referent prior alongside literal truth conditions, wpp=at(lex, u, r) * (vec(prior, r) + {EPS}), replacing the prior-agnostic choice rule.\n  - In L1, the referent prior vector prior: ... is passed into L0.\n",
+    "source": "round 3 candidate 5 refine incumbent baserate_salience_listener"
+   },
+   {
+    "name": "prior_lapse_focal_listener",
+    "hypothesis": "We refine focal_baserate_salience_listener by replacing stimulus-independent uniform lapse with a prior-anchored lapse fallback: when participants experience inattention or task disengagement, their choices fall back on their intuitive baseline prior expectations (favoring visual simplicity and familiarization base rates) rather than choosing uniformly at random across all display objects. On uninformative trials, choices reflect prior expectations directly without artificial flattening from uniform noise, while on communicative trials, lapse errors are naturally biased toward simpler or familiar candidates rather than cluttered distractors.\n\nDifferences from focal_baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from focal_baserate_salience_listener).\n- Parameters added: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In choice_probs, replaced uniform lapse mixing with prior-anchored lapse fallback, computing choice probabilities as (1.0 - params[\"lapse\"]) * jnp.where(ctx.is_prior > 0, prior, heard) + params[\"lapse\"] * prior instead of mixing with uniform 1.0 / n.\n",
+    "source": "round 4 candidate 4 refine incumbent focal_baserate_salience_listener"
+   },
+   {
+    "name": "focal_prior_literal_baserate_listener",
+    "hypothesis": "We refine prior_literal_baserate_listener by integrating focal visual attention from focal_attention_listener: listeners restrict their communicative reasoning primarily to candidate referents matching the heard utterance, downweighting irrelevant distractor objects in the display. When evaluating the communicative informativeness of alternative utterances in their mental model of the speaker, the speaker anticipates a Bayesian literal listener who evaluates candidate referents against this attention-weighted display while integrating experiential base rates and visual feature simplicity priors. This combined mechanism dampens exaggerated pragmatic inferences on complex visual displays while preserving prior-driven expectations for frequent or simple referents.\n\nDifferences from prior_literal_baserate_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from prior_literal_baserate_listener).\n- Parameters added: distractor_weight ~ Beta(1.0, 1.0), representing the visual attentional weight allocated to non-candidate display objects.\n- Parameters removed: None (alpha, salience, baserate, and lapse retained unchanged).\n- Functional terms changed:\n  - In L0, added array parameter atten: ... and weighted literal listener referent selection by at(lex, u, r) * (vec(prior, r) + {EPS}) * (vec(atten, r) + {EPS}), replacing the uniform-attention Bayesian choice rule.\n  - In L1, passed atten: ... through to L0.\n  - In choice_probs, computed object attention weights as atten = jnp.where(is_cand > 0, 1.0, params[\"distractor_weight\"]) where is_cand = jnp.where(ctx.is_prior > 0, 1.0, ctx.lex[ctx.utterance]), and passed atten into L1.\n",
+    "source": "round 4 candidate 6 refine chosen"
+   },
+   {
+    "name": "base_literal_focal_lapse_listener",
+    "hypothesis": "We refine prior_lapse_focal_listener by having the literal listener directly integrate empirical familiarization base rates into literal referent evaluation alongside focal attentional discounting. Rather than assuming the speaker simulates a literal listener who treats candidate objects with uniform environmental expectations, the speaker anticipates a Bayesian literal listener who already favors environmentally frequent referents. This sharpens communicative incentives by requiring speakers to use distinctive labels for rare referents while allowing concise, shared descriptions for familiar ones, while preserving prior-anchored lapse fallback and focal distractor discounting.\n\nDifferences from prior_lapse_focal_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from prior_lapse_focal_listener).\n- Parameters added: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In L0, added array parameter base_prior: ... and weighted literal listener referent selection by at(lex, u, r) * (vec(base_prior, r) + {EPS}) * (vec(atten, r) + {EPS}), incorporating familiarization base rates into literal interpretation.\n  - In L1, passed base_prior: ... through to L0.\n  - In choice_probs, computed base_prior = softmax_prior(params[\"baserate\"] * fam_logits) and passed base_prior into L1.\n",
+    "source": "round 5 candidate 4 refine incumbent prior_lapse_focal_listener"
+   },
+   {
+    "name": "prior_lapse_focal_listener_2",
+    "hypothesis": "We refine focal_baserate_salience_listener by replacing stimulus-independent uniform lapse with a prior-anchored lapse fallback: when participants experience inattention or task disengagement, their choices fall back on their intuitive baseline prior expectations (favoring visual simplicity and familiarization base rates) rather than choosing uniformly at random across all display objects. On uninformative trials, choices reflect prior expectations directly without artificial flattening from uniform noise, while on communicative trials, lapse errors are naturally biased toward simpler or familiar candidates rather than cluttered distractors.\n\nDifferences from focal_baserate_salience_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from focal_baserate_salience_listener).\n- Parameters added: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In choice_probs, replaced uniform lapse mixing with prior-anchored lapse fallback, computing choice probabilities as (1.0 - params[\"lapse\"]) * jnp.where(ctx.is_prior > 0, prior, heard) + params[\"lapse\"] * prior instead of mixing with uniform 1.0 / n.\n",
+    "source": "round 5 candidate 5 refine incumbent prior_lapse_focal_listener"
+   },
+   {
+    "name": "prior_lapse_focal_bayesian_listener",
+    "hypothesis": "We refine focal_prior_literal_baserate_listener by replacing stimulus-independent uniform lapse with a prior-anchored lapse fallback: when participants experience inattention or task disengagement, their choices fall back on their intuitive baseline prior expectations (favoring visual simplicity and familiarization base rates) rather than choosing uniformly at random across all display objects. On uninformative trials, choices reflect prior expectations directly without artificial flattening from uniform noise, while on communicative trials, lapse errors are naturally biased toward simpler or familiar candidates rather than cluttered distractors.\n\nDifferences from focal_prior_literal_baserate_listener:\n- Recursion depth: Depth 1 (choice_probs calls L1, unchanged from focal_prior_literal_baserate_listener).\n- Parameters added: None (alpha, salience, baserate, distractor_weight, and lapse retained unchanged).\n- Parameters removed: None.\n- Functional terms changed:\n  - In choice_probs, replaced uniform lapse mixing with prior-anchored lapse fallback, computing choice probabilities as (1.0 - params[\"lapse\"]) * jnp.where(ctx.is_prior > 0, prior, heard) + params[\"lapse\"] * prior instead of with_lapse(jnp.where(ctx.is_prior > 0, prior, heard), params[\"lapse\"]).\n",
+    "source": "round 5 candidate 6 refine chosen"
+   }
+  ],
+  "ledger_entries": 57
+ }
+]

@@ -1,0 +1,19 @@
+{
+ "best_model": "base_literal_focal_lapse_listener",
+ "ground_truth": "/scratch/users/mcfrank/auto-psych/rsa_run1c/harness_repo/src/pipelines/outer_loop/projects/rsa_reference/seed_models/rsa_l1_salience.py",
+ "best_pool_rmse_to_gt": 0.007329864880189306,
+ "live_pool_rmse_to_gt": {
+  "base_literal_focal_lapse_listener": 0.007329864880189306,
+  "baserate_salience_listener": 0.0008035098933999718,
+  "focal_baserate_salience_listener": 0.0034515798281833767,
+  "focal_prior_literal_baserate_listener": 0.007612721101636606,
+  "prior_lapse_focal_bayesian_listener": 0.008037303721708546,
+  "prior_lapse_focal_listener": 0.004849238169200657,
+  "prior_lapse_focal_listener_2": 0.009484006390996889,
+  "prior_literal_baserate_listener": 0.005551521121581152
+ },
+ "heldout_lpd_best_minus_gt": -1.5148387628369164,
+ "heldout_se": 1.2676638632757713,
+ "recovered": true,
+ "rmse_threshold": 0.01
+}

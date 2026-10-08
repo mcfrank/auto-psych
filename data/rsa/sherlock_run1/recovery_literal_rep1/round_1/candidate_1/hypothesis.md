@@ -1,0 +1,1 @@
+Listeners reason about a speaker who balances communicative informativeness against an utterance production cost that penalizes more specific or discriminating features. This production cost makes the speaker less likely to name unique features, so listeners do not treat the mention of a shared feature as strong evidence against an object possessing an unmentioned unique feature.

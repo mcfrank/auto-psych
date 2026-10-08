@@ -1,0 +1,1 @@
+Listeners interpret referring expressions with limited visual attention to the display, focusing cognitive resources on candidate objects that match the heard utterance while discounting unmentioned alternative utterances.

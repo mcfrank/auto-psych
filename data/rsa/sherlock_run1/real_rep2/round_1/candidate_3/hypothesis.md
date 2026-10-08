@@ -1,0 +1,1 @@
+Speakers evaluate candidate utterances by balancing literal informativeness against production cost, incurring a cost that scales with the feature's extension across objects in the visual context. Pragmatic listeners invert this cost-sensitive speaker, allowing utterance-level production effort to shape referent choice alongside informativeness.

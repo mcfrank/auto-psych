@@ -1,0 +1,1 @@
+{"best_model": "distractor_bayesian_salience_listener", "live": ["bayesian_salience_base_rate_listener", "costly_speaker_bayesian_listener", "decision_distractor_bayesian_listener", "distractor_bayesian_salience_listener", "distractor_salience_base_rate_listener", "distractor_shared_prior_listener", "prior_lapse_distractor_bayesian_listener", "shared_prior_bayesian_listener"]}

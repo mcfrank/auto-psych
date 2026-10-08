@@ -1,0 +1,8 @@
+Listeners combine pragmatic reference resolution with an integrated object prior blending visual feature complexity and familiarization base rates, while selectively suppressing distractor objects that mismatch the heard word. When evaluating alternative descriptions the speaker could have produced, resource-limited visual attention discounts non-matching distractors rather than inspecting them with full fidelity, sharpening pragmatic reference resolution. On uninformative trials without speech, visual attention remains uniform and choices are guided directly by the integrated salience and base-rate prior.
+
+Refinement of salience_base_rate_listener:
+- Base model: salience_base_rate_listener (best).
+- Recursion depth: depth 1 (calls L1 in choice_probs, unchanged from salience_base_rate_listener).
+- Parameters added: distractor_attention (Beta(2.0, 2.0), attentional weight discounting mismatching distractor objects when evaluating speaker informativeness, taken from distractor_suppression_listener).
+- Parameters removed: none (retains alpha, salience_weight, base_rate_weight, and lapse).
+- Mathematical / structural changes: In choice_probs, when an informative utterance is heard, candidate objects that mismatch the spoken word receive attenuated visual attention (distractor_attention); this attention vector is passed to literal listener L0 (weighting choice probabilities by at(lex, u, r) * (vec(obj_attention, r) + EPS)) and through to pragmatic listener L1, discounting non-matching distractors when evaluating alternative descriptions the speaker could have produced. When speech is absent (prior trials), attention is uniform across all objects.

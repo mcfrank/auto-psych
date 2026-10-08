@@ -1,0 +1,22 @@
+{
+ "ground_truth": "/scratch/users/mcfrank/auto-psych/rsa_run1c/harness_repo/src/pipelines/outer_loop/projects/rsa_reference/seed_models/rsa_l1_salience.py",
+ "ground_truth_sha256": "5583422d97e89baeaa677c085653cb3179cefcc8501b6c61fdfe3cd3ac5b996e",
+ "fit_on": "/scratch/users/mcfrank/auto-psych/rsa_run1c/data/real/train.csv",
+ "displays": "/scratch/users/mcfrank/auto-psych/rsa_run1c/data/combined_trials.csv",
+ "out": "/scratch/users/mcfrank/auto-psych/rsa_run1c/data/recovery_salience/simulated.csv",
+ "seed": 0,
+ "settings": {
+  "num_warmup": 1000,
+  "num_samples": 1000,
+  "num_chains": 4,
+  "target_accept": 0.9,
+  "seed": 0
+ },
+ "n_simulated": 50587,
+ "posterior_means": {
+  "alpha": 0.7338675260543823,
+  "w_features": -0.1494349092245102,
+  "w_familiar": 1.824568748474121,
+  "lapse": 0.04240204766392708
+ }
+}

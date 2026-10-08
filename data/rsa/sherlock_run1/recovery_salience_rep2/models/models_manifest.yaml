@@ -1,0 +1,169 @@
+models:
+- name: bayesian_salience_base_rate_listener
+  rationale: 'Listeners combine pragmatic reference resolution with an integrated
+    object prior that combines visual feature complexity and empirical familiarization
+    base rates via normative Bayesian log-odds evidence integration rather than linear
+    probability mixing. In the absence of prior exposure, listeners rely on visual
+    feature complexity, expecting speakers to refer to simpler objects; when familiarization
+    occurs, exposure frequencies update this prior multiplicatively in log-probability
+    space, weighting communicative reference and uninformative guessing. Refinement
+    of salience_base_rate_listener: - Base model: salience_base_rate_listener - Recursion
+    depth: depth 1 (calls L1 in choice_probs, unchanged from salience_base_rate_listener).
+    - Parameters added: none. - Parameters modified: base_rate_weight (prior changed
+    from Beta(2.0, 2.0) to LogNormal(0.0, 1.0) to represent multiplicative log-odds
+    sensitivity to empirical exposure base rates). - Parameters removed: none (retains
+    alpha, salience_weight, and lapse). - Mathematical / structural changes: In choice_probs,
+    the referent prior is formed by Bayesian log-linear evidence combination (softmax_prior(salience_weight
+    * feature_count + base_rate_weight * log(familiarization))) rather than linear
+    probability mixing ((1.0 - base_rate_weight) * salience_prior + base_rate_weight
+    * familiarization). When familiarization is absent, the prior reduces directly
+    to the intrinsic feature-salience baseline; when familiarization is present, empirical
+    exposure updates the prior in log-odds space.'
+- name: distractor_salience_base_rate_listener
+  rationale: 'Listeners combine pragmatic reference resolution with an integrated
+    object prior blending visual feature complexity and familiarization base rates,
+    while selectively suppressing distractor objects that mismatch the heard word.
+    When evaluating alternative descriptions the speaker could have produced, resource-limited
+    visual attention discounts non-matching distractors rather than inspecting them
+    with full fidelity, sharpening pragmatic reference resolution. On uninformative
+    trials without speech, visual attention remains uniform and choices are guided
+    directly by the integrated salience and base-rate prior. Refinement of salience_base_rate_listener:
+    - Base model: salience_base_rate_listener (best). - Recursion depth: depth 1 (calls
+    L1 in choice_probs, unchanged from salience_base_rate_listener). - Parameters
+    added: distractor_attention (Beta(2.0, 2.0), attentional weight discounting mismatching
+    distractor objects when evaluating speaker informativeness, taken from distractor_suppression_listener).
+    - Parameters removed: none (retains alpha, salience_weight, base_rate_weight,
+    and lapse). - Mathematical / structural changes: In choice_probs, when an informative
+    utterance is heard, candidate objects that mismatch the spoken word receive attenuated
+    visual attention (distractor_attention); this attention vector is passed to literal
+    listener L0 (weighting choice probabilities by at(lex, u, r) * (vec(obj_attention,
+    r) + EPS)) and through to pragmatic listener L1, discounting non-matching distractors
+    when evaluating alternative descriptions the speaker could have produced. When
+    speech is absent (prior trials), attention is uniform across all objects.'
+- name: distractor_bayesian_salience_listener
+  rationale: 'Listeners combine pragmatic reference resolution under an integrated
+    Bayesian salience and base-rate prior with selective visual attention that suppresses
+    distractor objects mismatching the spoken word. When evaluating alternative descriptions
+    the speaker could have produced, resource-limited visual attention discounts non-matching
+    distractors rather than inspecting them with full fidelity, sharpening pragmatic
+    reference resolution. On uninformative trials without speech, visual attention
+    remains uniform across all objects and choices are guided directly by the integrated
+    Bayesian prior. Refinement of bayesian_salience_base_rate_listener: - Base model:
+    bayesian_salience_base_rate_listener (best). - Recursion depth: depth 1 (calls
+    L1 in choice_probs, unchanged from bayesian_salience_base_rate_listener). - Parameters
+    added: distractor_attention (Beta(2.0, 2.0), attentional weight discounting mismatching
+    distractor objects when evaluating speaker informativeness, taken from distractor_suppression_listener).
+    - Parameters modified: none. - Parameters removed: none (retains alpha, salience_weight,
+    base_rate_weight, and lapse). - Mathematical / structural changes: In choice_probs,
+    when an informative utterance is heard, candidate objects that mismatch the spoken
+    word receive attenuated visual attention (distractor_attention); this attention
+    vector is passed to literal listener L0 (weighting choice probabilities by at(lex,
+    u, r) * (vec(obj_attention, r) + EPS)) and through to pragmatic listener L1, discounting
+    non-matching distractors when evaluating alternative descriptions the speaker
+    could have produced. On uninformative trials without speech (is_prior > 0), attention
+    is uniform across all objects.'
+- name: shared_prior_bayesian_listener
+  rationale: 'Listeners engage in first-order pragmatic reference resolution under
+    a shared Bayesian prior that is common knowledge across communicative partners
+    down to literal semantic interpretation. Rather than assuming literal listeners
+    resolve ambiguous expressions equiprobably among all matching referents, speakers
+    anticipate that even literal interpretations are grounded in visual feature complexity
+    and familiarization base rates. This mutual prior grounding guides both literal
+    semantic plausibility and pragmatic informativeness throughout recursive communication,
+    aligning listener inferences with shared expectations when resolving ambiguous
+    utterances or guessing without speech. Refinement of bayesian_salience_base_rate_listener:
+    - Base model: bayesian_salience_base_rate_listener (best). - Recursion depth:
+    depth 1 (calls L1 in choice_probs, unchanged from bayesian_salience_base_rate_listener).
+    - Parameters added: none. - Parameters modified: none. - Parameters removed: none
+    (retains alpha, salience_weight, base_rate_weight, and lapse). - Mathematical
+    / structural changes: In literal listener L0, referent choices among matching
+    objects are grounded in the Bayesian referent prior (listener: chooses(r in OBJ,
+    wpp=at(lex, u, r) * (vec(prior, r) + {EPS}))) rather than assuming an unconditional
+    uniform distribution across matching referents (wpp=at(lex, u, r)), and L0 takes
+    the referent prior as an array parameter. In pragmatic listener L1, the simulated
+    speaker evaluates informativeness relative to this prior-grounded literal listener
+    (calling L0[u, r](lex, prior) + {EPS}), establishing a shared prior that shapes
+    reference resolution at every communicative level.'
+- name: distractor_shared_prior_listener
+  rationale: 'Listeners combine a shared Bayesian prior across communicative partners
+    with selective visual attention that suppresses distractor objects mismatching
+    the spoken word. When evaluating alternative descriptions the speaker could have
+    produced, resource-limited visual attention discounts non-matching distractors
+    rather than inspecting them with full fidelity, while communicative partners share
+    the expectation that even literal interpretations are grounded in visual complexity
+    and familiarization base rates. On uninformative trials without speech, visual
+    attention remains uniform across all objects and choices reflect this integrated
+    Bayesian prior directly. Refinement of shared_prior_bayesian_listener: - Base
+    model: shared_prior_bayesian_listener - Recursion depth: depth 1 (calls L1 in
+    choice_probs, unchanged from shared_prior_bayesian_listener). - Parameters added:
+    distractor_attention (Beta(2.0, 2.0), attentional weight discounting mismatching
+    distractor objects when evaluating speaker informativeness, taken from distractor_suppression_listener).
+    - Parameters modified: none. - Parameters removed: none (retains alpha, salience_weight,
+    base_rate_weight, and lapse). - Mathematical / structural changes: In choice_probs,
+    when an informative utterance is heard, candidate objects that mismatch the spoken
+    word receive attenuated visual attention (distractor_attention); this attention
+    vector is passed to literal listener L0 (weighting choice probabilities by at(lex,
+    u, r) * (vec(prior, r) + {EPS}) * (vec(obj_attention, r) + {EPS})) and through
+    to pragmatic listener L1, discounting non-matching distractors when evaluating
+    alternative descriptions the speaker could have produced. On uninformative trials
+    without speech (is_prior > 0), attention is uniform across all objects.'
+- name: prior_lapse_distractor_bayesian_listener
+  rationale: "Listeners combine pragmatic reference resolution under an integrated\
+    \ Bayesian salience and base-rate prior with selective distractor suppression\
+    \ and prior-guided lapses. When inattentive lapses occur during reference resolution,\
+    \ participants default to their baseline prior referent expectations\u2014grounded\
+    \ in visual simplicity and familiarization base rates\u2014rather than clicking\
+    \ uniformly at random across all display objects. On uninformative trials without\
+    \ speech, visual attention remains uniform across objects and choices reflect\
+    \ the integrated Bayesian prior directly. Refinement of distractor_bayesian_salience_listener:\
+    \ - Base model: distractor_bayesian_salience_listener (best). - Recursion depth:\
+    \ depth 1 (calls L1 in choice_probs, unchanged from distractor_bayesian_salience_listener).\
+    \ - Parameters added: none. - Parameters modified: none. - Parameters removed:\
+    \ none (retains alpha, salience_weight, base_rate_weight, distractor_attention,\
+    \ and lapse). - Mathematical / structural changes: In choice_probs, the lapse\
+    \ error process replaces uniform guessing across all display objects (with_lapse\
+    \ mixing with 1.0 / N_OBJ) with prior-guided guessing ((1.0 - lapse) * heard +\
+    \ lapse * prior), such that inattentive choices default to baseline Bayesian prior\
+    \ expectations."
+- name: costly_speaker_bayesian_listener
+  rationale: 'Listeners interpret referring expressions by inverting a speaker who
+    actively avoids ambiguity, penalizing candidate words that apply to multiple referents
+    in the visual context. When evaluating potential descriptions, speakers balance
+    communicative informativeness against an effort and ambiguity cost for shared
+    features, making listeners infer that an ambiguous word was used only when no
+    uniquely distinguishing feature was available. Prior expectations about candidate
+    referents continue to integrate visual feature simplicity and familiarization
+    base rates in log-odds space, guiding both pragmatic interpretation and uninformative
+    guessing. Refinement of bayesian_salience_base_rate_listener: - Base model: bayesian_salience_base_rate_listener
+    - Recursion depth: depth 1 (calls L1 in choice_probs, unchanged from bayesian_salience_base_rate_listener).
+    - Parameters added: cost (HalfNormal(1.0), ambiguity cost penalizing utterances
+    that apply to multiple referents, taken from costly_feature_speaker). - Parameters
+    modified: none. - Parameters removed: none (retains alpha, salience_weight, base_rate_weight,
+    and lapse). - Mathematical / structural changes: In choice_probs and L1, each
+    utterance incurs an ambiguity cost proportional to its context extension beyond
+    a unique referent (costs = params["cost"] * jnp.maximum(0.0, extension - 1.0));
+    speaker S1 subtracts this cost from the communicative log-utility of each word
+    (exp(alpha * (log(L0[u, r](lex) + {EPS}) - vec(costs, u)))), disincentivizing
+    ambiguous referring expressions and sharpening the listener''s pragmatic inference
+    when hearing shared words. On uninformative trials without speech (is_prior >
+    0), choices reflect the Bayesian referent prior directly.'
+- name: decision_distractor_bayesian_listener
+  rationale: 'Listeners combine pragmatic reference resolution under an integrated
+    Bayesian salience and base-rate prior and selective distractor suppression with
+    a soft-maximizing decision rule over posterior beliefs. Rather than matching choice
+    probabilities directly to posterior beliefs, an internal decision determinism
+    sharpens subjective beliefs into action, concentrating choices on the most probable
+    referent more decisively than normative probability matching predicts. On uninformative
+    trials without speech, this decision determinism similarly sharpens choices under
+    the integrated Bayesian prior. Refinement of distractor_bayesian_salience_listener:
+    - Base model: distractor_bayesian_salience_listener (best). - Recursion depth:
+    depth 1 (calls L1 in choice_probs, unchanged from distractor_bayesian_salience_listener).
+    - Parameters added: decision_determinism (LogNormal(0.0, 1.0), response determinism
+    / power parameter sharpening posterior beliefs into choice probabilities, taken
+    from belief_softmax_listener). - Parameters modified: none. - Parameters removed:
+    none (retains alpha, salience_weight, base_rate_weight, distractor_attention,
+    and lapse). - Mathematical / structural changes: In choice_probs, after forming
+    posterior beliefs over candidate referents (jnp.where(ctx.is_prior > 0, prior,
+    heard)), listeners apply a soft-maximizing response rule (jax.nn.softmax(params["decision_determinism"]
+    * jnp.log(belief + EPS))) before lapses, rather than matching choice probabilities
+    linearly to posterior beliefs.'
