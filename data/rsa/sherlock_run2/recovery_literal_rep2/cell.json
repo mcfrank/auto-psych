@@ -1,0 +1,20 @@
+{
+ "cell": "recovery_literal_rep2",
+ "condition": "recovery_literal",
+ "replicate": 2,
+ "task": 5,
+ "ground_truth": "literal_listener",
+ "excluded_seeds": [
+  "literal_listener"
+ ],
+ "loop_seed": 1,
+ "data_dir": "/scratch/users/mcfrank/auto-psych/rsa_run2/data/recovery_literal",
+ "code": "dec3790ebf8e0c1ce99db8536d1b21e5e1a2818c",
+ "max_iterations": 4,
+ "candidate_count": 6,
+ "num_warmup": 1000,
+ "num_samples": 1000,
+ "num_chains": 4,
+ "agent_model": "google/gemini-3.8-flash",
+ "agent_timeout_sec": 2400
+}

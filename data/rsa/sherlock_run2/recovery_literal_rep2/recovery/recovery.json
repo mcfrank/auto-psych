@@ -1,0 +1,35 @@
+{
+ "best_model": "distinctiveness_neutral_prior",
+ "ground_truth": "/scratch/users/mcfrank/auto-psych/rsa_run2/harness_repo/src/pipelines/outer_loop/projects/rsa_reference/seed_models/literal_listener.py",
+ "best_pool_rmse_to_gt": 0.0032251964510931715,
+ "live_pool_rmse_to_gt": {
+  "attended_display_rational_listener": 0.01156924072615873,
+  "distinctive_feature_contrast": 0.004728415475074471,
+  "distinctiveness_heuristic_listener": 0.0026682073884638623,
+  "distinctiveness_neutral_prior": 0.0032251964510931715,
+  "evaluative_prominence_listener": 0.014281480521713349,
+  "evaluative_proportional_contrast": 0.009145687671973006,
+  "feature_contrast_listener": 0.007599555821094858,
+  "feature_contrast_neutral_prior": 0.007561409803532585,
+  "proportional_feature_contrast": 0.004379759276892042,
+  "representativeness_listener": 0.0038128733667914245,
+  "rsa_l1_rational_referential_salience": 0.006934629318126375,
+  "valence_distinctiveness_listener": 0.009174553805233321
+ },
+ "closest_live_model": "distinctiveness_heuristic_listener",
+ "closest_live_rmse_to_gt": 0.0026682073884638623,
+ "seed_pool_rmse_to_gt": {
+  "rsa_l1": 0.06449667649167218,
+  "rsa_l2": 0.06452024210755922,
+  "rsa_l1_salience": 0.048221450477282476,
+  "rsa_l1_shared_prior": 0.048034639891362134
+ },
+ "best_seed": "rsa_l1_shared_prior",
+ "best_seed_rmse_to_gt": 0.048034639891362134,
+ "seeds_would_pass": false,
+ "heldout_lpd_best_minus_gt": -0.26186458939946533,
+ "heldout_se": 0.5470478421556138,
+ "recovered": true,
+ "rmse_threshold": 0.01,
+ "verdict_rule": "exported model's pool RMSE to the ground truth <= rmse_threshold"
+}

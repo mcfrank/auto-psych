@@ -1,0 +1,150 @@
+models:
+- name: feature_contrast_listener
+  rationale: Listeners interpret referring expressions through direct feature contrast
+    rather than recursive mental simulation of a speaker. When an utterance describes
+    an object, listeners select among matching referents by penalizing objects that
+    possess additional unmentioned features, preferring referents whose distinguishing
+    properties are most exhaustively captured by the description.
+- name: feature_contrast_neutral_prior
+  rationale: 'Listeners interpret referring expressions through direct feature contrast,
+    evaluating matching referents by penalizing unmentioned features against a neutral
+    object prior that tracks familiarity base rates without an intrinsic feature-count
+    bias. When no communicative utterance is given, people exhibit no baseline preference
+    for feature-rich objects, so communicative reference resolution operates against
+    an unskewed object distribution rather than competing with an opposing feature
+    salience prior. Differences from feature_contrast_listener: - Recursion depth:
+    Depth 0 (calls L_contrast, unchanged). - Parameters added: None. - Parameters
+    removed: w_features. - Other terms: In choice_probs, the object prior is computed
+    purely from familiarization base rates (softmax_prior(params["w_familiar"] * ctx.familiarization))
+    rather than including a feature-count term (w_features * ctx.feature_count).'
+- name: rsa_l1_rational_referential_salience
+  rationale: 'Listeners evaluate candidate referents using a power-law choice rule
+    governed by a decision rationality parameter rather than strict probability matching,
+    while maintaining uniform guessing when no communicative word is given. When interpreting
+    referring expressions under depth-1 pragmatic reasoning with a shared feature-salience
+    prior, listeners'' choice probabilities scale with the posterior referent probability
+    raised to this decision exponent. This captures sub-rational decision stochasticity
+    across forced-choice displays while preventing uninformative prior contexts from
+    distorting communicative reference resolution. Differences from rsa_l1_referential_salience:
+    - Refined model: rsa_l1_referential_salience - Recursion depth: Depth 1 (choice_probs
+    calls L1, unchanged). - Parameters added: beta (prior: dist.LogNormal(0.0, 1.0)).
+    - Parameters removed: None. - Other terms: In L1, listener chooses r with wpp=exp(beta
+    * log(Pr[speaker.r == r] + {EPS})) instead of wpp=Pr[speaker.r == r].'
+- name: evaluative_prominence_listener
+  rationale: Listeners resolve referring expressions through contextual prominence
+    alignment, where the communicative meaning of unmentioned features depends on
+    framing. Under neutral framing, listeners penalize candidate referents with unmentioned
+    features because speakers are expected to provide distinguishing descriptions;
+    under evaluative framing ('least favorite'), unmentioned features act as compounding
+    negative attributes that reverse this penalty to favor feature-rich referents.
+    Visual highlighting (color contrast) provides an orthogonal perceptual prominence
+    boost to matching referents across both prior and communicative contexts.
+- name: distinctiveness_heuristic_listener
+  rationale: Listeners interpret referring expressions using a non-Bayesian perceptual
+    distinctiveness heuristic rather than recursive speaker simulation. When an utterance
+    is heard, listeners restrict attention to matching referents and select the object
+    that is most contextually distinctive in the visual display, possessing features
+    that are rarest across the other objects. On prior trials without an informative
+    description, choice is guided by this same distinctiveness heuristic alongside
+    familiarity base rates.
+- name: proportional_feature_contrast
+  rationale: 'Listeners interpret referring expressions through proportional feature
+    contrast, evaluating candidate referents by penalizing unmentioned features relative
+    to each object''s total feature complexity rather than applying a fixed additive
+    penalty per omitted feature. In accordance with proportional perceptual comparison,
+    an unmentioned feature is penalized more heavily when it constitutes a larger
+    fraction of the object''s total features, reflecting greater descriptive incompleteness
+    for simple referents than for already complex ones. This proportional penalty
+    allows listeners to resolve scalar implicatures sensitively across visual scenes
+    of varying feature density without requiring recursive speaker simulation. Differences
+    from feature_contrast_neutral_prior: - Refined model: feature_contrast_neutral_prior
+    - Recursion depth: Depth 0 (calls L_contrast, unchanged). - Parameters added:
+    None. - Parameters removed: None. - Other terms: In choice_probs, the penalty
+    for unmentioned features is normalized by each object''s total feature count (unmentioned_count
+    / max(1, feature_count)) rather than scaling linearly with raw unmentioned feature
+    count.'
+- name: distinctive_feature_contrast
+  rationale: 'Listeners interpret referring expressions through feature contrast weighted
+    by contextual distinctiveness (taken from contextual_distinctiveness_listener).
+    Rather than penalizing all unmentioned features equally, listeners discount common
+    or ubiquitous features that are shared across objects in the display, penalizing
+    candidate referents primarily when they possess rare or unique distinguishing
+    features that the speaker conspicuously omitted. This sensitive contrast evaluation
+    captures how listeners attend to contextual communicative alternatives without
+    requiring recursive speaker simulation. Differences from feature_contrast_neutral_prior:
+    - Refined model: feature_contrast_neutral_prior - Recursion depth: Depth 0 (calls
+    L_contrast, unchanged). - Parameters added: None. - Parameters removed: None.
+    - Other terms: In choice_probs, unmentioned features are weighted by contextual
+    distinctiveness (inverse frequency across objects in the display, taken from contextual_distinctiveness_listener)
+    rather than receiving a uniform penalty of 1 per feature.'
+- name: attended_display_rational_listener
+  rationale: 'Listeners focus visual attention on candidate referents matching the
+    uttered description while attenuating non-matching distractor objects, but select
+    referents using a power-law decision rule governed by a decision rationality parameter
+    rather than strict probability matching (taken from rsa_l1_rational_referential_salience).
+    When simulating the speaker within the attended display, listeners moderate extreme
+    inferential probabilities across forced-choice displays through this decision
+    exponent, preventing shared features of distractor objects from distorting reference
+    resolution while accommodating sub-rational choice stochasticity. Differences
+    from attended_display_listener: - Refined model: attended_display_listener - Recursion
+    depth: Depth 1 (choice_probs calls L1, unchanged). - Parameters added: beta (prior:
+    dist.LogNormal(0.0, 1.0)). - Parameters removed: None. - Other terms: In L1, listener
+    chooses r with wpp=exp(beta * log(Pr[speaker.r == r] + {EPS})) instead of wpp=Pr[speaker.r
+    == r].'
+- name: representativeness_listener
+  rationale: Listeners interpret referring expressions by evaluating how representative
+    or diagnostic each candidate referent is for the spoken description, rather than
+    recursively simulating counterfactual speakers or applying additive feature penalties.
+    When an utterance is heard, listeners judge each matching referent by the likelihood
+    ratio comparing the probability that a speaker intending the target would produce
+    the description against the probability that a speaker intending an alternative
+    distractor in the display would produce it. On prior trials without an informative
+    description, choice is guided by this same representativeness mechanism alongside
+    familiarity base rates.
+- name: valence_distinctiveness_listener
+  rationale: 'Listeners interpret referring expressions using a perceptual distinctiveness
+    heuristic whose direction is modulated by the speaker''s communicative valence
+    framing (taken from evaluative_prominence_listener). Under neutral or positive
+    framing, listeners restrict attention to matching referents and select the object
+    with lower contextual distinctiveness, penalizing extraneous unmentioned features.
+    Under evaluative framing (''least favorite''), this heuristic inverts: listeners
+    expect the speaker''s least favorite object to possess conspicuous, distinguishing
+    quirks, favoring matching referents that exhibit higher contextual distinctiveness.
+    Differences from distinctiveness_heuristic_listener: - Refined model: distinctiveness_heuristic_listener
+    - Recursion depth: Depth 0 (calls L_heuristic, unchanged). - Parameters added:
+    w_valence (prior: dist.Normal(0.0, 1.0)). - Parameters removed: None. - Other
+    terms: In choice_probs, the coefficient passed to L_heuristic is modulated by
+    communicative framing (coeff = params["beta"] - params["w_valence"] * ctx.valence)
+    rather than using a constant beta.'
+- name: distinctiveness_neutral_prior
+  rationale: 'Listeners interpret referring expressions using a perceptual distinctiveness
+    heuristic over matching referents, while evaluating visual displays under an unskewed
+    neutral prior that reflects familiarity base rates without an intrinsic distinctiveness
+    bias (taken from feature_contrast_neutral_prior). In communicative contexts, hearing
+    an informative description directs attention to matching candidates and favors
+    objects whose distinguishing features stand out contextually; on unprompted prior
+    trials without an informative utterance, people exhibit no baseline preference
+    against distinctive or feature-rich objects. Decoupling communicative distinctiveness
+    evaluation from unprompted object preferences allows listeners to resolve reference
+    sensitively without distorting prior expectations. Differences from distinctiveness_heuristic_listener:
+    - Refined model: distinctiveness_heuristic_listener - Recursion depth: Depth 0
+    (calls L_heuristic, unchanged). - Parameters added: None. - Parameters removed:
+    None. - Other terms: In choice_probs, the object prior on prior trials is computed
+    purely from familiarization base rates (softmax_prior(params["w_familiar"] * ctx.familiarization))
+    rather than adding the distinctiveness heuristic term (params["beta"] * distinctiveness).'
+- name: evaluative_proportional_contrast
+  rationale: 'Listeners interpret referring expressions through proportional feature
+    contrast, evaluating candidate referents by penalizing unmentioned features relative
+    to each object''s total feature complexity, but modulate this contrast evaluation
+    according to communicative valence framing (taken from evaluative_prominence_listener).
+    Under neutral or positive framing, candidate referents are penalized for omitted
+    features because speakers are expected to provide distinguishing descriptions;
+    under evaluative framing (''least favorite''), unmentioned features act as compounding
+    negative attributes that reverse this penalty to favor more complex referents.
+    Differences from proportional_feature_contrast: - Refined model: proportional_feature_contrast
+    - Recursion depth: Depth 0 (calls L_contrast, unchanged). - Parameters added:
+    w_valence (prior: dist.Normal(0.0, 1.0)). - Parameters removed: None. - Other
+    terms: In choice_probs, the coefficient on proportional unmentioned features is
+    modulated by communicative framing (coeff = -params["theta"] - params["w_valence"]
+    * ctx.valence, taken from evaluative_prominence_listener) rather than using a
+    constant negative penalty -params["theta"].'

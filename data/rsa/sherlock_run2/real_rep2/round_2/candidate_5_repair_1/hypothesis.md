@@ -1,0 +1,7 @@
+Listeners interpret referring expressions through depth-2 pragmatic reasoning biased by both referent distinctiveness and graded semantic applicability. When resolving an ambiguous word, listeners invert a speaker who anticipates a pragmatic listener while expecting speakers to preferentially refer to visually distinctive objects that pop out from their context, but discount candidate referents whose features are diluted by competing visual attributes. This mechanism explains visual pop-out choices on singleton displays while penalizing cluttered, multi-feature objects on complex displays.
+
+This model refines `distinctive_object_l2` by incorporating graded semantic truth values from `graded_truth_listener` into recursive pragmatic reasoning. By penalizing semantic feature dilution, this change corrects for the over-selection of multi-featured referents on complex displays while preserving the contextual distinctiveness prior that explains visual pop-out effects.
+Differences from `distinctive_object_l2`:
+- Recursion depth: Remains 2 (`choice_probs` calls `L2`).
+- Parameters added: `gamma` with prior `dist.Normal(0.0, 1.0)`. Parameters removed: None (retains `alpha`, `w_distinct`, and `lapse`).
+- Other terms: Computes graded semantic truth values `graded_lex` where an utterance's applicability to an object diminishes exponentially with additional features (`precision = jnp.exp(-gamma * (fc - 1.0))`), passing `graded_lex` into `L0`, `L1`, and `L2` in place of binary `ctx.lex`.

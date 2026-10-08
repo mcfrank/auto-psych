@@ -1,0 +1,1 @@
+{"best_model": "conservative_base_rate_simplicity", "live": ["base_rate_simplicity_listener", "conservative_base_rate_simplicity", "costly_base_rate_simplicity", "costly_conservative_base_rate", "selective_base_rate_simplicity", "softmax_decision_base_rate_simplicity"]}

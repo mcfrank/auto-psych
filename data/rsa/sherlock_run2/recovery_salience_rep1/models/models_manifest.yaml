@@ -1,0 +1,97 @@
+models:
+- name: base_rate_simplicity_listener
+  rationale: 'We refine feature_simplicity_listener by extending it with the familiarization
+    base-rate tracking component from base_rate_tracking_listener, positing that communicators
+    integrate empirical exposure frequencies established during prior familiarization
+    with their inductive preference for simpler referents. When referents have been
+    observed with unequal frequencies during familiarization, the speaker''s prior
+    over referents combines the empirical base rate with the feature-simplicity prior,
+    resolving competition between familiarity and simplicity in referential choice.
+    On displays without familiarization, the base rate is uniform, preserving the
+    baseline feature-simplicity prior. Differences from feature_simplicity_listener:
+    - Recursion depth: unchanged (choice_probs calls L1, depth 1). - Parameters added:
+    none. - Parameters removed: none. - Other terms: choice_probs derives an exposure
+    base-rate vector from ctx.familiarization when present (defaulting to uniform
+    otherwise), multiplies it point-wise with the feature-simplicity prior to form
+    the referent prior passed to L1, and returns this integrated prior on uninformative
+    prior trials (ctx.is_prior > 0).'
+- name: selective_base_rate_simplicity
+  rationale: 'We refine base_rate_simplicity_listener by incorporating the selective
+    visual attention component from selective_attention_listener, positing that listeners
+    selectively focus visual attention on candidate referents compatible with the
+    heard utterance while discounting unattended distractors in the visual background.
+    When simulating the speaker''s communicative choices, the listener evaluates informativeness
+    primarily over the attended candidates, so non-matching distractors exert attenuated
+    influence on pragmatic inference across multi-referent scenes. In the absence
+    of an informative utterance, the listener chooses directly according to the integrated
+    familiarization base-rate and simplicity prior. Differences from base_rate_simplicity_listener:
+    - Recursion depth: unchanged (choice_probs calls L1, depth 1). - Parameters added:
+    distractor_attention (Beta(1.0, 1.0)). - Parameters removed: none. - Other terms:
+    choice_probs computes an attention mask assigning 1.0 to referents matching the
+    heard utterance (ctx.lex[ctx.utterance] > 0) and distractor_attention to non-matching
+    referents; passes this attention vector to L0 via L1; and in L0, the listener
+    weights referent choices by at(lex, u, r) * vec(att, r).'
+- name: costly_base_rate_simplicity
+  rationale: 'We refine base_rate_simplicity_listener by extending it with the speaker
+    ambiguity cost component from costly_feature_speaker, positing that communicators
+    combine empirical familiarization base rates and an inductive simplicity preference
+    with an explicit communicative penalty against producing descriptors that apply
+    to multiple referents. Listeners reason about an ambiguity-averse speaker, expecting
+    a speaker who used a shared descriptor to have lacked any less ambiguous alternative
+    for their intended referent, which improves referential disambiguation when competing
+    referents have equal feature counts and exposure frequency. On uninformative prior
+    trials, listeners choose directly according to the integrated base-rate and simplicity
+    prior. Differences from base_rate_simplicity_listener: - Recursion depth: unchanged
+    (choice_probs calls L1, depth 1). - Parameters added: cost (LogNormal(0.0, 1.0)).
+    - Parameters removed: none. - Other terms: choice_probs computes utterance ambiguity
+    costs via (1.0 - ctx.is_sink) * jnp.maximum(0.0, jnp.sum(ctx.lex, axis=1) - 1.0)
+    and passes them to L1, where the speaker subtracts cost * vec(costs, u) in their
+    utility.'
+- name: conservative_base_rate_simplicity
+  rationale: 'We refine base_rate_simplicity_listener by introducing conservative,
+    sublinear weighting of empirical familiarization base rates, positing that communicators
+    exhibit base-rate conservatism when resolving competition between exposure frequency
+    and referent simplicity. Rather than weighting empirical base rates linearly according
+    to normative Bayesian multiplication, communicators scale exposure frequencies
+    with a sublinear exponent parameter that regresses extreme familiarization disparities
+    toward uniformity while preserving relative frequency ordering. On displays without
+    familiarization, the base rate remains uniform, preserving the baseline feature-simplicity
+    prior. Differences from base_rate_simplicity_listener: - Recursion depth: unchanged
+    (choice_probs calls L1, depth 1). - Parameters added: base_rate_weight (LogNormal(0.0,
+    1.0)). - Parameters removed: none. - Other terms: choice_probs scales the familiarization
+    base-rate vector by raising it to the power of params["base_rate_weight"] and
+    renormalizing it (when ctx.has_familiarization > 0) before point-wise multiplication
+    with the feature-simplicity prior.'
+- name: softmax_decision_base_rate_simplicity
+  rationale: 'We refine base_rate_simplicity_listener by extending it with the softmax
+    decision rule component from softmax_decision_listener, positing that listeners
+    evaluate referential statements by integrating pragmatic speaker reasoning with
+    familiarization base rates and feature simplicity, but convert their resulting
+    posterior beliefs into behavioral choices via a softmax decision rule rather than
+    pure probability matching. Governed by a decision precision parameter, this response
+    rule allows listeners to overmatch their posterior beliefs by sharpening preference
+    toward the most probable referent under high confidence, or undermatch toward
+    indifference under uncertainty. On uninformative prior trials, choices are similarly
+    guided by this softmax decision rule applied to the integrated base-rate and simplicity
+    prior. Differences from base_rate_simplicity_listener: - Recursion depth: unchanged
+    (choice_probs calls L1, depth 1). - Parameters added: decision_precision (LogNormal(0.0,
+    1.0)). - Parameters removed: none. - Other terms: choice_probs converts posterior
+    beliefs into choice probabilities via jax.nn.softmax(params["decision_precision"]
+    * jnp.log(beliefs + EPS)) before applying the lapse rate, sharpening or flattening
+    choices relative to posterior beliefs.'
+- name: costly_conservative_base_rate
+  rationale: 'We refine costly_base_rate_simplicity by replacing linear base-rate
+    integration with sublinear base-rate conservatism, positing that communicators
+    regress empirical familiarization frequencies toward uniformity rather than matching
+    extreme exposure odds linearly. Governed by a base-rate sensitivity exponent,
+    listeners discount extreme familiarization disparities while preserving feature
+    simplicity preferences and speaker ambiguity avoidance, properly balancing pragmatic
+    informativeness against prior exposure. In the absence of an informative utterance,
+    listeners choose directly according to this conservatively weighted base-rate
+    and simplicity prior. Differences from costly_base_rate_simplicity: - Recursion
+    depth: unchanged (choice_probs calls L1, depth 1). - Parameters added: base_rate_weight
+    (LogNormal(0.0, 1.0)). - Parameters removed: none. - Other terms: choice_probs
+    raises empirical familiarization frequencies to the power base_rate_weight before
+    normalization when familiarization is present (raw_base_rate = (ctx.familiarization
+    + EPS) ** params["base_rate_weight"], normalized to sum to 1), replacing linear
+    base-rate weighting with sublinear conservatism.'

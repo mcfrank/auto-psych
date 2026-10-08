@@ -1,0 +1,3 @@
+Listeners expect communication to focus on perceptually distinctive objects, assigning prior salience to referents proportional to their contextual contrast (mean feature dissimilarity from other objects in the display).
+This mechanism disagrees most sharply with depth-2 RSA on displays featuring duplicate objects and a single unique singleton when an ambiguous shared feature is named.
+While depth-2 RSA infers that the speaker would have uttered the singleton's unique feature and therefore excludes the singleton to less than 2% probability, contextual distinctiveness predicts that listeners will favor the distinctive singleton with around 80% probability, matching human pop-out behavior.

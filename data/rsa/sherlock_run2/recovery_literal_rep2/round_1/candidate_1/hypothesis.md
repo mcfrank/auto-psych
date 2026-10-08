@@ -1,0 +1,1 @@
+Listeners interpret referring expressions through direct feature contrast rather than recursive mental simulation of a speaker. When an utterance describes an object, listeners select among matching referents by penalizing objects that possess additional unmentioned features, preferring referents whose distinguishing properties are most exhaustively captured by the description.

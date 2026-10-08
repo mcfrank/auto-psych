@@ -1,0 +1,1 @@
+Speakers incur an utterance cost proportional to a feature's contextual extension (the fraction of objects in the display sharing that feature), penalizing shared words and favoring distinctive features. Pragmatic listeners invert this cost-sensitive speaker, reasoning about which alternative features the speaker had available for each candidate referent.

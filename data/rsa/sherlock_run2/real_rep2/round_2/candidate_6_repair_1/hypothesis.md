@@ -1,0 +1,7 @@
+Listeners interpret referring expressions through depth-2 pragmatic reasoning that jointly weights contextual distinctiveness, prior familiarization experience, and utterance extension costs. When resolving an ambiguous word, listeners invert a speaker who anticipates a pragmatic listener while expecting speakers to favor referents that have higher visual pop-out contrast and higher prior familiarization history, and to avoid overextended descriptions shared across many objects. On prior trials without an informative word, listeners' expectations follow this integrated salience of perceptual pop-out and familiarization base rates.
+
+This model refines `distinctive_costly_l2` by incorporating familiarization base-rate sensitivity from `rsa_l1_shared_prior` into the shared referent prior.
+Differences from `distinctive_costly_l2`:
+- Recursion depth: Remains 2 (`choice_probs` calls `L2`).
+- Parameters added: `w_familiar` with prior `dist.Normal(0.0, 2.0)`. Parameters removed: None (retains `alpha`, `w_distinct`, `cost_weight`, and `lapse`).
+- Other terms: In `choice_probs`, the object prior integrates familiarization base rates alongside perceptual distinctiveness: `prior = softmax_prior(params["w_distinct"] * dist_vec + params["w_familiar"] * ctx.familiarization)`. All other components (`L0`, `L1`, `L2`, `object_distinctiveness`, utterance extension costs, and the lapse mixture) remain identical.

@@ -1,0 +1,271 @@
+models:
+- name: isolated_graded_l2
+  rationale: 'Listeners interpret referring expressions through depth-2 pragmatic
+    reasoning about speakers who evaluate graded semantic applicability while favoring
+    referents that exhibit perceptual isolation from display distractors. Under perceptual
+    isolation, visual pop-out is determined by an object''s minimum feature distance
+    to any other context object (nearest-neighbor contrast), so that singletons pop
+    out against identical or near-identical distractors while objects on balanced
+    multi-feature displays maintain equal prior salience. At the same time, graded
+    semantic applicability penalizes candidate referents whose features are diluted
+    by competing visual attributes, preventing the over-selection of cluttered items.
+    On uninformative prior trials, listeners'' expectations follow this perceptual
+    isolation prior. This model refines `distinctive_graded_l2` with a single change:
+    replacing mean pairwise Hamming distance with perceptual isolation (minimum Hamming
+    distance to another object in the display). While mean distance mistakenly penalizes
+    target referents on balanced multi-feature displays whose items differ across
+    multiple dimensions, nearest-neighbor isolation preserves singleton pop-out in
+    twin displays while allowing depth-2 pragmatic implicatures and graded semantic
+    applicability to operate cleanly on complex displays. Differences from `distinctive_graded_l2`:
+    - Recursion depth: Remains 2 (`choice_probs` calls `L2`). - Parameters added or
+    removed: None (retains `alpha`, `w_distinct`, `gamma`, and `lapse`). - Other terms:
+    Computes object distinctiveness as minimum Hamming distance to any other context
+    item (`jnp.min(pair_dist + eye, axis=1)`) rather than mean pairwise distance (`jnp.sum(pair_dist,
+    axis=1) / denom`), where `eye = jnp.eye(n_obj) * 1e5` masks self-distance.'
+- name: familiar_isolated_graded_l2
+  rationale: 'Listeners interpret referring expressions through depth-2 pragmatic
+    reasoning that jointly weights perceptual isolation, graded semantic applicability,
+    and prior familiarization experience. When resolving an ambiguous word, listeners
+    invert a speaker who evaluates graded semantic truth values while expecting speakers
+    to favor candidate referents that have higher nearest-neighbor perceptual contrast
+    and higher prior familiarization base rates. On uninformative prior trials, listeners''
+    expectations directly follow this integrated prior of perceptual isolation and
+    familiarization history. This model refines `isolated_graded_l2` by incorporating
+    familiarization base-rate sensitivity from `familiar_distinctive_costly_l2` into
+    the shared referent prior. While perceptual isolation captures visual pop-out
+    and graded semantics discounts cluttered objects, participants also rely on exposure
+    frequency when resolving ambiguous references and predicting referent choices
+    a priori. Differences from `isolated_graded_l2`: - Recursion depth: Remains 2
+    (`choice_probs` calls `L2`). - Parameters added: `w_familiar` with prior `dist.Normal(0.0,
+    2.0)`. Parameters removed: None (retains `alpha`, `w_distinct`, `gamma`, and `lapse`).
+    - Other terms: In `choice_probs`, the object prior integrates familiarization
+    base rates alongside perceptual isolation: `prior = softmax_prior(params["w_distinct"]
+    * dist_vec + params["w_familiar"] * ctx.familiarization)`. All other components
+    (`L0`, `L1`, `L2`, `object_isolation`, `compute_graded_lex`, and the lapse mixture)
+    remain identical.'
+- name: isolated_graded_costly_l2
+  rationale: 'Listeners interpret referring expressions through depth-2 pragmatic
+    reasoning that jointly accounts for perceptual isolation, graded semantic applicability,
+    and utterance extension costs. When resolving an ambiguous word, listeners invert
+    a speaker who anticipates a pragmatic listener while expecting speakers to favor
+    candidate referents that pop out via nearest-neighbor contrast, discount candidate
+    referents whose features are diluted by competing visual attributes, and evaluate
+    communicative trade-offs against the contextual extension of shared features.
+    On uninformative prior trials, listeners'' expectations directly follow the perceptual
+    isolation prior. This model refines `isolated_graded_l2` by incorporating contextual
+    feature extension costs from `isolated_costly_l2` into the recursive speaker utility
+    functions. While perceptual isolation captures visual pop-out on twin displays
+    and graded semantics penalizes attribute dilution on cluttered items, incorporating
+    utterance extension costs enables speakers to balance narrow versus widely shared
+    descriptions across visual contexts, correcting the over-penalization of shared
+    referring expressions on multi-object displays where `isolated_graded_l2` fell
+    behind. Differences from `isolated_graded_l2`: - Recursion depth: Remains 2 (`choice_probs`
+    calls `L2`). - Parameters added: `cost_weight` with prior `dist.Normal(0.0, 1.0)`.
+    Parameters removed: None (retains `alpha`, `w_distinct`, `gamma`, and `lapse`).
+    - Other terms: Computes contextual extension for each utterance (`ext = jnp.sum(ctx.lex,
+    axis=-1) / ctx.lex.shape[-1]`) and cost vector `cost = params["cost_weight"] *
+    ext`. In `L1` and `L2`, the speaker''s utility subtracts utterance cost `vec(cost,
+    u)` from communicative informativeness before scaling by rationality `alpha`:
+    `exp(alpha * (log(L... + {EPS}) - vec(cost, u)))`.'
+- name: isolated_graded_costly_l3
+  rationale: 'Listeners interpret referring expressions through depth-3 pragmatic
+    reasoning that jointly accounts for perceptual isolation, graded semantic applicability,
+    and utterance extension costs. When resolving an ambiguous referring expression,
+    listeners invert a speaker who anticipates a depth-2 pragmatic listener''s interpretation,
+    expecting speakers to refer preferentially to objects that exhibit nearest-neighbor
+    visual contrast while penalizing feature dilution and overextended descriptions.
+    On uninformative prior trials, listeners'' expectations directly follow the perceptual
+    isolation prior. This model refines `isolated_graded_costly_l2` with a single
+    change: increasing the recursion depth from depth 2 to depth 3. While depth-2
+    pragmatic reasoning successfully resolves basic scalar implicatures, complex multi-object
+    displays with competing visual features and restricted message spaces require
+    higher-order recursive coordination, allowing listeners to invert speakers who
+    anticipate how pragmatic listeners resolve embedded contextual alternatives. Differences
+    from `isolated_graded_costly_l2`: - Recursion depth: `choice_probs` calls `L3`
+    instead of `L2`. - Parameters added or removed: None (retains `alpha`, `w_distinct`,
+    `gamma`, `cost_weight`, and `lapse`). - Other terms: Adds the level-3 pragmatic
+    listener `L3[u, r]` inverting a level-3 speaker `S3` who evaluates communicative
+    utility against `L2[u, r]` with utterance extension costs and perceptual isolation,
+    while `L0`, `L1`, `L2`, `object_isolation`, `compute_graded_lex`, utterance extension
+    costs, and the lapse mixture remain identical.'
+- name: isolated_graded_costly_l2_2
+  rationale: Listeners interpret referring expressions through depth-2 pragmatic reasoning
+    that jointly accounts for perceptual isolation, graded semantic applicability,
+    and utterance extension costs.
+- name: surprisal_isolated_graded_l2
+  rationale: 'Listeners interpret referring expressions through depth-2 pragmatic
+    reasoning that jointly accounts for perceptual isolation, graded semantic applicability,
+    and contextual feature surprisal. When resolving an ambiguous word, listeners
+    invert a speaker who evaluates graded semantic truth values while expecting speakers
+    to favor candidate referents that pop out via nearest-neighbor contrast and possess
+    high cumulative information content from rare or unexpected visual features in
+    the display. On uninformative prior trials without an informative word, listeners''
+    expectations directly follow this integrated prior of perceptual isolation and
+    feature surprisal. This model refines `isolated_graded_l2` by incorporating contextual
+    feature surprisal from `feature_surprisal_l2` into the shared referent prior.
+    While perceptual isolation captures visual pop-out on twin displays and graded
+    semantics discounts cluttered objects with competing visual attributes, people
+    also expect communication to focus on entities with high contextual information
+    content characterized by rare visual features that distinguish them from display-wide
+    baselines. Differences from `isolated_graded_l2`: - Recursion depth: Remains 2
+    (`choice_probs` calls `L2`). - Parameters added: `w_surprisal` with prior `dist.Normal(0.0,
+    1.0)`. Parameters removed: None (retains `alpha`, `w_distinct`, `gamma`, and `lapse`).
+    - Other terms: Computes cumulative contextual feature surprisal for each object
+    (`surp = object_feature_surprisal(ctx.lex, ctx.is_sink)`). In `choice_probs`,
+    the object prior integrates feature surprisal alongside perceptual isolation:
+    `prior = softmax_prior(params["w_distinct"] * dist_vec + params["w_surprisal"]
+    * surp)`. All other components (`L0`, `L1`, `L2`, `object_isolation`, `compute_graded_lex`,
+    and the lapse mixture) remain identical.'
+- name: surprisal_isolated_graded_costly_l4
+  rationale: 'Listeners interpret referring expressions through depth-4 pragmatic
+    reasoning that jointly accounts for perceptual isolation, contextual feature surprisal,
+    graded semantic applicability, and utterance extension costs. When resolving an
+    ambiguous referring expression, listeners invert a speaker who anticipates a depth-3
+    pragmatic listener''s interpretation, expecting speakers to refer preferentially
+    to objects that exhibit nearest-neighbor visual contrast and rare distinctive
+    features while penalizing feature dilution and overextended descriptions. On uninformative
+    prior trials, listeners'' expectations directly follow the integrated prior of
+    perceptual isolation and feature surprisal. This model refines `isolated_graded_costly_l2_2`
+    with a single change: increasing the recursion depth from depth 2 to depth 4.
+    While lower-order pragmatic reasoning successfully resolves basic scalar implicatures,
+    complex multi-object displays with competing visual features, feature surprisal,
+    and overextended descriptions require higher-order recursive coordination, allowing
+    listeners to invert speakers who anticipate how sophisticated pragmatic listeners
+    resolve embedded contextual alternatives. Differences from `isolated_graded_costly_l2_2`:
+    - Recursion depth: `choice_probs` calls `L4` instead of `L2`. - Parameters added
+    or removed: None (retains `alpha`, `w_distinct`, `w_surprisal`, `gamma`, `cost_weight`,
+    and `lapse`). - Other terms: Adds the level-3 and level-4 pragmatic listeners
+    `L3[u, r]` and `L4[u, r]`, where the level-4 listener inverts a level-4 speaker
+    `S4` who evaluates communicative utility against `L3[u, r]` with utterance extension
+    costs and perceptual isolation, while `L0`, `L1`, `L2`, `object_isolation`, `object_feature_surprisal`,
+    `compute_graded_lex`, utterance extension costs, and the lapse mixture remain
+    identical.'
+- name: surprisal_isolated_graded_costly_l3
+  rationale: 'Listeners interpret referring expressions through depth-3 pragmatic
+    reasoning that jointly accounts for perceptual isolation, feature surprisal, graded
+    semantic applicability, and utterance extension costs. When resolving an ambiguous
+    referring expression, listeners invert a speaker who anticipates a depth-2 pragmatic
+    listener''s interpretation, expecting speakers to refer preferentially to objects
+    that exhibit nearest-neighbor visual contrast and rare distinctive features while
+    penalizing feature dilution and overextended descriptions. On uninformative prior
+    trials, listeners'' expectations directly follow the integrated prior of perceptual
+    isolation and feature surprisal. This model refines `isolated_graded_costly_l2_2`
+    with a single change: increasing the recursion depth from depth 2 to depth 3.
+    While depth-2 pragmatic reasoning successfully resolves basic scalar implicatures,
+    complex multi-object displays with competing visual features and restricted message
+    spaces require higher-order recursive coordination, allowing listeners to invert
+    speakers who anticipate how pragmatic listeners resolve embedded contextual alternatives
+    under feature surprisal. Differences from `isolated_graded_costly_l2_2`: - Recursion
+    depth: `choice_probs` calls `L3` instead of `L2`. - Parameters added or removed:
+    None (retains `alpha`, `w_distinct`, `w_surprisal`, `gamma`, `cost_weight`, and
+    `lapse`). - Other terms: Adds the level-3 pragmatic listener `L3[u, r]` inverting
+    a level-3 speaker `S3` who evaluates communicative utility against `L2[u, r]`
+    with utterance extension costs and perceptual isolation, while `L0`, `L1`, `L2`,
+    `object_isolation`, `object_feature_surprisal`, `compute_graded_lex`, utterance
+    extension costs, and the lapse mixture remain identical.'
+- name: familiar_surprisal_graded_costly_l4
+  rationale: 'Listeners interpret referring expressions through depth-4 pragmatic
+    reasoning that jointly accounts for perceptual isolation, contextual feature surprisal,
+    graded semantic applicability, utterance extension costs, and prior familiarization
+    experience. When resolving an ambiguous referring expression, listeners invert
+    a speaker who anticipates a depth-3 pragmatic listener''s interpretation, expecting
+    speakers to refer preferentially to objects that exhibit higher nearest-neighbor
+    visual contrast, contain rare distinctive features, and have higher prior familiarization
+    base rates, while penalizing feature dilution and overextended descriptions. On
+    uninformative prior trials, listeners'' expectations directly follow this integrated
+    prior of perceptual isolation, feature surprisal, and familiarization history.
+    This model refines `surprisal_isolated_graded_costly_l4` by incorporating familiarization
+    base-rate sensitivity from `familiar_isolated_graded_costly_l2` into the shared
+    referent prior. While depth-4 recursive reasoning, nearest-neighbor isolation,
+    feature surprisal, graded semantics, and utterance extension costs successfully
+    resolve complex pragmatic implicatures and visual pop-out, participants also rely
+    on exposure frequency when evaluating referents and predicting choices a priori.
+    Differences from `surprisal_isolated_graded_costly_l4`: - Recursion depth: Remains
+    4 (`choice_probs` calls `L4`). - Parameters added: `w_familiar` with prior `dist.Normal(0.0,
+    2.0)`. Parameters removed: None (retains `alpha`, `w_distinct`, `w_surprisal`,
+    `gamma`, `cost_weight`, and `lapse`). - Other terms: In `choice_probs`, the object
+    prior integrates familiarization base rates alongside perceptual isolation and
+    feature surprisal: `prior = softmax_prior(params["w_distinct"] * dist_vec + params["w_surprisal"]
+    * surp_vec + params["w_familiar"] * ctx.familiarization)`. All other components
+    (`L0`, `L1`, `L2`, `L3`, `L4`, `object_isolation`, `object_feature_surprisal`,
+    `compute_graded_lex`, utterance extension costs, and the lapse mixture) remain
+    identical.'
+- name: surprisal_isolated_graded_costly_l5
+  rationale: 'Listeners interpret referring expressions through depth-5 pragmatic
+    reasoning that jointly accounts for perceptual isolation, contextual feature surprisal,
+    graded semantic applicability, and utterance extension costs. When resolving an
+    ambiguous referring expression, listeners invert a speaker who anticipates a depth-4
+    pragmatic listener''s interpretation, expecting speakers to refer preferentially
+    to objects that exhibit nearest-neighbor visual contrast and rare distinctive
+    features while penalizing feature dilution and overextended descriptions. On uninformative
+    prior trials, listeners'' expectations directly follow the integrated prior of
+    perceptual isolation and feature surprisal. This model refines `surprisal_isolated_graded_costly_l4`
+    with a single change: increasing the recursion depth from depth 4 to depth 5.
+    While depth-4 pragmatic reasoning captures extensive counterfactual coordination,
+    complex multi-object displays with rich feature combinations and multiple competing
+    descriptors require even deeper recursive coordination, allowing listeners to
+    invert speakers who anticipate how depth-4 pragmatic listeners resolve embedded
+    contextual alternatives under contextual feature surprisal and utterance extension
+    costs. Differences from `surprisal_isolated_graded_costly_l4`: - Recursion depth:
+    `choice_probs` calls `L5` instead of `L4`. - Parameters added or removed: None
+    (retains `alpha`, `w_distinct`, `w_surprisal`, `gamma`, `cost_weight`, and `lapse`).
+    - Other terms: Adds the level-5 pragmatic listener `L5[u, r]` inverting a level-5
+    speaker `S5` who evaluates communicative utility against `L4[u, r]` with utterance
+    extension costs and perceptual isolation, while `L0`, `L1`, `L2`, `L3`, `L4`,
+    `object_isolation`, `object_feature_surprisal`, `compute_graded_lex`, utterance
+    extension costs, and the lapse mixture remain identical.'
+- name: softmax_surprisal_isolated_costly_l4
+  rationale: 'Listeners interpret referring expressions through depth-4 pragmatic
+    reasoning under perceptual isolation, contextual feature surprisal, graded semantics,
+    and utterance extension costs, converting posterior beliefs into choices via a
+    softmax decision rule rather than strict probability matching. By applying choice
+    determinism over posterior communicative beliefs, boundedly rational listeners
+    calibrate the sharpness of their referent selection independently of the speaker''s
+    communicative rationality, softening over-confident higher-order implicatures
+    while preserving recursive pragmatic coordination. On uninformative prior trials
+    without an informative word, listeners'' expectations directly follow the integrated
+    prior of perceptual isolation and feature surprisal. This model refines `surprisal_isolated_graded_costly_l4`
+    by incorporating the softmax decision rule over posterior beliefs from `softmax_belief_listener`.
+    While depth-4 recursive reasoning, nearest-neighbor isolation, feature surprisal,
+    graded semantics, and utterance extension costs successfully resolve complex pragmatic
+    implicatures and singleton pop-out, standard RSA assumes strict probability matching
+    where action probabilities equal communicative beliefs; decoupling choice determinism
+    from speaker rationality allows boundedly rational listeners to modulate response
+    determinism against high-order recursive beliefs, preventing over-penalization
+    of competing referents on multi-object displays. Differences from `surprisal_isolated_graded_costly_l4`:
+    - Recursion depth: Remains 4 (`choice_probs` calls `L4`). - Parameters added:
+    `beta` with prior `dist.LogNormal(0.0, 1.0)`. Parameters removed: None (retains
+    `alpha`, `w_distinct`, `w_surprisal`, `gamma`, `cost_weight`, and `lapse`). -
+    Other terms: In `choice_probs`, posterior beliefs `heard` from `L4` are transformed
+    by choice determinism `beta` via a normalized softmax transformation over non-zero
+    belief logits (`logits = params["beta"] * jnp.log(safe_heard)`), producing choice
+    probabilities `choice` before the uniform lapse mixture. All other components
+    (`L0`, `L1`, `L2`, `L3`, `L4`, `object_isolation`, `object_feature_surprisal`,
+    `compute_graded_lex`, utterance extension costs, and the prior over objects) remain
+    identical.'
+- name: familiar_surprisal_graded_costly_l3
+  rationale: 'Listeners interpret referring expressions through depth-3 pragmatic
+    reasoning that jointly accounts for perceptual isolation, contextual feature surprisal,
+    graded semantic applicability, utterance extension costs, and prior familiarization
+    experience. When resolving an ambiguous referring expression, listeners invert
+    a speaker who anticipates a depth-2 pragmatic listener''s interpretation, expecting
+    speakers to refer preferentially to objects that exhibit nearest-neighbor visual
+    contrast, contain rare distinctive features, and have higher prior familiarization
+    base rates, while penalizing feature dilution and overextended descriptions. On
+    uninformative prior trials, listeners'' expectations directly follow this integrated
+    prior of perceptual isolation, feature surprisal, and familiarization history.
+    This model refines `surprisal_isolated_graded_costly_l3` by incorporating familiarization
+    base-rate sensitivity from `familiar_isolated_graded_costly_l2` into the shared
+    referent prior. While depth-3 recursive reasoning, nearest-neighbor isolation,
+    feature surprisal, graded semantics, and utterance extension costs successfully
+    resolve complex pragmatic implicatures and visual pop-out, participants also rely
+    on exposure frequency when evaluating referents and predicting choices a priori.
+    Differences from `surprisal_isolated_graded_costly_l3`: - Recursion depth: Remains
+    3 (`choice_probs` calls `L3`). - Parameters added: `w_familiar` with prior `dist.Normal(0.0,
+    2.0)`. Parameters removed: None (retains `alpha`, `w_distinct`, `w_surprisal`,
+    `gamma`, `cost_weight`, and `lapse`). - Other terms: In `choice_probs`, the object
+    prior integrates familiarization base rates alongside perceptual isolation and
+    feature surprisal: `prior = softmax_prior(params["w_distinct"] * dist_vec + params["w_surprisal"]
+    * surp_vec + params["w_familiar"] * ctx.familiarization)`. All other components
+    (`L0`, `L1`, `L2`, `L3`, `object_isolation`, `object_feature_surprisal`, `compute_graded_lex`,
+    utterance extension costs, and the lapse mixture) remain identical.'

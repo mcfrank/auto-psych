@@ -1,0 +1,21 @@
+{
+ "cell": "recovery_salience_rep1",
+ "condition": "recovery_salience",
+ "replicate": 1,
+ "task": 4,
+ "ground_truth": "rsa_l1_salience",
+ "excluded_seeds": [
+  "rsa_l1_salience",
+  "rsa_l1_shared_prior"
+ ],
+ "loop_seed": 0,
+ "data_dir": "/scratch/users/mcfrank/auto-psych/rsa_run2/data/recovery_salience",
+ "code": "dec3790ebf8e0c1ce99db8536d1b21e5e1a2818c",
+ "max_iterations": 4,
+ "candidate_count": 6,
+ "num_warmup": 1000,
+ "num_samples": 1000,
+ "num_chains": 4,
+ "agent_model": "google/gemini-3.8-flash",
+ "agent_timeout_sec": 2400
+}

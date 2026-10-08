@@ -1,0 +1,8 @@
+Listeners interpret referring expressions through depth-2 pragmatic reasoning about speakers who evaluate graded semantic applicability while favoring candidate referents that possess high perceptual isolation under exponential distance decay. Rather than treating visual contrast as a discrete step function of the single nearest distractor, an object's visual pop-out reflects the aggregate perceptual interference of all display distractors, decaying exponentially with feature distance according to Shepard's universal law of generalization. On uninformative prior trials, listeners' expectations directly follow this Shepard perceptual isolation prior.
+
+This model refines `isolated_graded_l2` by replacing hard nearest-neighbor minimum Hamming distance with smooth Shepard distance perceptual isolation. While hard minimum distance collapses to a uniform value on complex displays where every item has at least one competitor at distance two, exponential distance decay simultaneously preserves singleton pop-out against identical distractors and differentiates peripheral candidates from central bridge objects across complex visual contexts.
+
+Differences from `isolated_graded_l2`:
+- Recursion depth: Remains 2 (`choice_probs` calls `L2`).
+- Parameters added or removed: None (retains `alpha`, `w_distinct`, `gamma`, and `lapse`).
+- Other terms: Computes object isolation as the negative logarithm of total exponential similarity to distractors (`dist_vec = -jnp.log(jnp.maximum(jnp.sum(jnp.exp(-pair_dist) * (1.0 - jnp.eye(n_obj)), axis=1), 1e-6))`) rather than hard minimum Hamming distance (`jnp.min(pair_dist + eye, axis=1)`).

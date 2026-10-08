@@ -1,0 +1,28 @@
+{
+ "best_model": "conservative_base_rate_simplicity",
+ "ground_truth": "/scratch/users/mcfrank/auto-psych/rsa_run2/harness_repo/src/pipelines/outer_loop/projects/rsa_reference/seed_models/rsa_l1_salience.py",
+ "best_pool_rmse_to_gt": 0.001239949269573229,
+ "live_pool_rmse_to_gt": {
+  "base_rate_simplicity_listener": 0.032476605333957444,
+  "conservative_base_rate_simplicity": 0.001239949269573229,
+  "costly_base_rate_simplicity": 0.03252460419720922,
+  "costly_conservative_base_rate": 0.004411192605752704,
+  "selective_base_rate_simplicity": 0.032366443301320616,
+  "softmax_decision_base_rate_simplicity": 0.020156895182643075
+ },
+ "closest_live_model": "conservative_base_rate_simplicity",
+ "closest_live_rmse_to_gt": 0.001239949269573229,
+ "seed_pool_rmse_to_gt": {
+  "literal_listener": 0.10579817438068562,
+  "rsa_l1": 0.049841282166800116,
+  "rsa_l2": 0.049290008866545804
+ },
+ "best_seed": "rsa_l2",
+ "best_seed_rmse_to_gt": 0.049290008866545804,
+ "seeds_would_pass": false,
+ "heldout_lpd_best_minus_gt": -0.029597315579849237,
+ "heldout_se": 0.0932641283840134,
+ "recovered": true,
+ "rmse_threshold": 0.01,
+ "verdict_rule": "exported model's pool RMSE to the ground truth <= rmse_threshold"
+}

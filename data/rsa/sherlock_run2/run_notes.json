@@ -1,0 +1,28 @@
+{
+ "source": "docs/auto_rsa/SHERLOCK_RUN2_RESULTS.md: numbers the run's local session measured that the per-cell files do not hold (wall time and MaxRSS from sacct; for resumed cells, first attempt + resume)",
+ "date": "2026-10-08",
+ "code": "dec3790ebf8e0c1ce99db8536d1b21e5e1a2818c",
+ "cells": {
+  "real_rep1": {"wall": "10:17", "max_rss_gb": 22.2},
+  "real_rep2": {"wall": "12:09", "max_rss_gb": 26.3},
+  "real_rep3": {"wall": "8:48", "max_rss_gb": 22.3},
+  "recovery_literal_rep2": {"wall": "1:27 + 5:08 (resumed)", "max_rss_gb": 15.4},
+  "recovery_salience_rep1": {"wall": "1:50 + 3:18 (resumed)", "max_rss_gb": 12.8},
+  "recovery_salience_rep2": {"wall": "4:26", "max_rss_gb": 16.1}
+ },
+ "title": "RSA run 2",
+ "summary": "Seven inner-loop cells on Sherlock, 7-8 October 2026: the combined reference-game data (5 sources, 40k training trials) three times for 8 rounds, and two recovery conditions twice each for 4 rounds, with a ground-truth model withheld from the seeds. 6 Gemini 3.8 Flash agents per round, with no network access; models ranked, pruned and exported on grouped 5-fold CV over training conditions; live-set cap 12.",
+ "findings": [
+  "Claim 1 holds in all three real cells: the exported model beats rsa_l2 on held-out conditions by +84.3 (SE 35.7), +56.2 (24.1) and +26.4 (13.1) lpd, about 2-2.4 clustered SE each, almost all of it on pragmods and Sikos 2021 (Mayn & Demberg within 2.2 lpd of rsa_l2).",
+  "CV selection exported models that generalise better than run 1's: held-out ranks 2/58, 8/57 and 11/58 (run 1: 26/40, 4/40), and the live sets stayed at 12 models, holding the top held-out models in two of three cells.",
+  "Real cells kept improving to round 7, each by refining one lineage of mechanisms (singleton/distinctiveness priors, isolation/surprisal, crowding/chromatic discrimination); none improved at round 8.",
+  "Recovery succeeded without internet access: the exported models are 0.0012-0.0032 RMSE from the ground truth against 0.048-0.049 for the best seed, and no seed would pass the verdict.",
+  "CV over training conditions does not always predict transfer: in real_rep3 grouped CV pruned feature_surprisal_listener 381.8 nats behind the winner, yet it is ~12 lpd ahead on held-out conditions; real_rep2's final CV is ~140 below the other replicates while its held-out gain is the second largest."
+ ],
+ "decisions": [
+  "Three recovery cells crashed just after midnight on an arviz daily-marker collision between concurrent fit children; resumed the same morning from their last scored step (no code change).",
+  "Partial results were committed before the sweep ended, at the PI's request (29fa52c, fb6a32d).",
+  "Sherlock's stale pre-rewrite main was not pushed to GitHub: its content is all on main, and pushing it would restore an unredacted Prolific-style ID."
+ ],
+ "links": []
+}

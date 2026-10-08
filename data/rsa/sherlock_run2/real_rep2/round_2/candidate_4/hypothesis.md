@@ -1,0 +1,7 @@
+Listeners interpret referring expressions through depth-2 pragmatic reasoning that jointly accounts for object distinctiveness and utterance extension costs. When resolving an ambiguous referring expression, listeners expect speakers to favor referents that visually pop out from the display while penalizing words that are shared across many context objects. This dual sensitivity allows listeners to resolve scalar implicatures across complex visual displays while correctly predicting choices for both singleton pop-out referents and narrow descriptions.
+
+This model refines `distinctive_object_l2` by incorporating contextual feature extension costs from `costly_feature_speaker` into the recursive speaker utility functions. By penalizing utterances shared across many referents, this change corrects for the over-extension of ambiguous words on multi-object displays while preserving the distinctiveness prior that explains visual pop-out effects.
+Differences from `distinctive_object_l2`:
+- Recursion depth: Remains 2 (`choice_probs` calls `L2`).
+- Parameters added: `cost_weight` with prior `dist.Normal(0.0, 1.0)`. Parameters removed: None (retains `alpha`, `w_distinct`, and `lapse`).
+- Other terms: Computes contextual extension for each utterance (`ext = jnp.sum(ctx.lex, axis=-1) / ctx.lex.shape[-1]`) and cost vector `cost = params["cost_weight"] * ext`. In `L1` and `L2`, the speaker's utility subtracts utterance cost `vec(cost, u)` from communicative informativeness before scaling by rationality `alpha`: `exp(alpha * (log(L... + {EPS}) - vec(cost, u)))`.

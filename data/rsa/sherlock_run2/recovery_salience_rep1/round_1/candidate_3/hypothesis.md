@@ -1,0 +1,1 @@
+Speakers incur an explicit communicative cost when producing ambiguous words that apply to multiple objects in the scene, preferring unique descriptors even beyond what literal informativeness dictates. Listeners reason about this ambiguity-averse speaker, inferring that a speaker who chose a shared word must have lacked any less ambiguous alternative for their intended referent.

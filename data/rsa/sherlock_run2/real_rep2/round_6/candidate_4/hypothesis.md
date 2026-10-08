@@ -1,0 +1,8 @@
+Listeners interpret referring expressions through depth-3 pragmatic reasoning that jointly accounts for perceptual isolation, graded semantic applicability, and utterance extension costs. When resolving an ambiguous referring expression, listeners invert a speaker who anticipates a depth-2 pragmatic listener's interpretation, expecting speakers to refer preferentially to objects that exhibit nearest-neighbor visual contrast while penalizing feature dilution and overextended descriptions. On uninformative prior trials, listeners' expectations directly follow the perceptual isolation prior.
+
+This model refines `isolated_graded_costly_l2` with a single change: increasing the recursion depth from depth 2 to depth 3. While depth-2 pragmatic reasoning successfully resolves basic scalar implicatures, complex multi-object displays with competing visual features and restricted message spaces require higher-order recursive coordination, allowing listeners to invert speakers who anticipate how pragmatic listeners resolve embedded contextual alternatives.
+
+Differences from `isolated_graded_costly_l2`:
+- Recursion depth: `choice_probs` calls `L3` instead of `L2`.
+- Parameters added or removed: None (retains `alpha`, `w_distinct`, `gamma`, `cost_weight`, and `lapse`).
+- Other terms: Adds the level-3 pragmatic listener `L3[u, r]` inverting a level-3 speaker `S3` who evaluates communicative utility against `L2[u, r]` with utterance extension costs and perceptual isolation, while `L0`, `L1`, `L2`, `object_isolation`, `compute_graded_lex`, utterance extension costs, and the lapse mixture remain identical.
