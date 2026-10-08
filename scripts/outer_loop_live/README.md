@@ -200,10 +200,11 @@ its commit):
 K=3 N_PARTICIPANTS=20 bash scripts/outer_loop_live/submit_parallel.sh
 ```
 
-Longer than ~2 days of wall-clock? Set `qos: long` in `pilot.yaml` (or add
-`--qos=long`, cap 7 days). It refuses a limit under 48 hours
-(`timelimit request too short for QOS long`), so leave it out of shorter
-jobs such as a single-stage resume. CPU only — no GPU.
+Longer than ~2 days of wall-clock? The job scripts default to the lab's
+`mcfrank` partition, which allows up to 7 days; just raise `walltime`. Leave
+`qos` empty: `--qos=long` is not available on this account ("Invalid qos
+specification", checked 2026-10-07), and the launchers refuse `qos: long`. The
+`normal` partition (`-p normal`) caps jobs at 48 hours. CPU only — no GPU.
 
 ## How parallel runs stay isolated
 

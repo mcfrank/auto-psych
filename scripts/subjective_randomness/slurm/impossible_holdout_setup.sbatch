@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=impossible_holdout_setup
-#SBATCH --partition=normal
+#SBATCH --partition=mcfrank
 #SBATCH --time=00:40:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=16GB

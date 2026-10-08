@@ -106,6 +106,7 @@ add INNER_LOOP_ITERATIONS "${INNER_LOOP_ITERATIONS:-}"
 add INNER_LOOP_CANDIDATES "${INNER_LOOP_CANDIDATES:-}"
 add CODING_AGENT_MODEL "${CODING_AGENT_MODEL:-}"
 
+[[ "${QOS:-}" == long ]] && fail "QOS=long is not on this account; the mcfrank partition allows up to 7 days"
 QOS_OPT=""; [[ -n "${QOS:-}" ]] && QOS_OPT="--qos=$QOS"
 
 jid=$(sbatch --parsable \

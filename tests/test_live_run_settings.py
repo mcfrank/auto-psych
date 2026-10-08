@@ -11,6 +11,7 @@ CPUs instead of 16. Draws and tuning stay higher on purpose (user decision).
 
 from __future__ import annotations
 
+import pytest
 import yaml
 
 import src.pipelines.outer_loop.run as outer_run
@@ -106,3 +107,27 @@ def test_the_model_stage_receives_the_agent_timeout(tmp_path, monkeypatch):
         "simulated_participants_nobrowser", 40, None, False, agent_timeout_sec=1800,
     )
     assert seen["agent_timeout_sec"] == 1800
+
+
+def test_the_launcher_refuses_qos_long(tmp_path, monkeypatch, capsys):
+    """--qos=long is not on this Sherlock account ("Invalid qos specification",
+    2026-10-07); a config asking for it stops before anything is submitted."""
+    import sys
+
+    sys.path.insert(0, str(LIVE))
+    import _pilot_config as pilot_config
+
+    config = tmp_path / "run.yaml"
+    config.write_text(
+        (LIVE / "full_run.yaml").read_text(encoding="utf-8")
+        .replace("prolific_mode: live", "prolific_mode: test")
+        .replace('qos: ""', "qos: long"),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(pilot_config, "project_assets_dir", lambda pid: tmp_path / pid)
+    monkeypatch.setattr(pilot_config, "get_me", lambda: ({"id": "test-researcher"}, None))
+    (tmp_path / "subjective_randomness").mkdir()
+    monkeypatch.setattr(sys, "argv", ["_pilot_config.py", str(config)])
+    with pytest.raises(SystemExit) as exit_info:
+        pilot_config.main()
+    assert "qos: long" in str(exit_info.value) and "mcfrank" in str(exit_info.value)

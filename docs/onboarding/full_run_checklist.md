@@ -58,7 +58,7 @@ sites. `$REPO` is the live checkout and `$WORK_ROOT` is
    prolific_mode: live
    confirm_live_recruitment: true
    walltime: "3-00:00:00"             # see below
-   qos: long                          # needed above 2 days; refuses under 48 h
+   qos: ""                            # leave empty: the mcfrank partition allows up to 7 days (qos long is not on this account)
    prolific:
      completion_code: AUTO_PSYCH_COMPLETE_<NAME>   # distinct per series
    ```
