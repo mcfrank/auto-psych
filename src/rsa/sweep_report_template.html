@@ -1,0 +1,383 @@
+<title>__PAGE_TITLE__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: the lab notebook of the per-cell reports (same tokens), one level up.
+   Findings and decisions first, then the cells, then the evidence: selection vs
+   held-out generalisation per cell, the held-out gain by source, recovery. */
+:root {
+  --page: #f5f6f4;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --pruned: #a9a89f;
+  --s1: #2a78d6; --s2: #eb6834;
+  --pos: #2a78d6; --neg: #c2502a;
+  --good: #0ca30c; --warn: #d03b3b;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0f100f; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, 0.10); --pruned: #75746d;
+    --s1: #3987e5; --s2: #d95926; --pos: #3987e5; --neg: #e0703f;
+    --good: #0ca30c; --warn: #e66767;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #0f100f; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, 0.10); --pruned: #75746d;
+  --s1: #3987e5; --s2: #d95926; --pos: #3987e5; --neg: #e0703f;
+  --good: #0ca30c; --warn: #e66767;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 600; }
+h1 { font-size: 26px; letter-spacing: -0.01em; }
+h2 { font-size: 18px; }
+h3 { font-size: 13px; font-weight: 600; }
+.eyebrow { font-family: var(--font-data); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { color: var(--ink-2); max-width: 75ch; margin: 6px 0 0; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-family: var(--font-data); font-size: 12px; color: var(--ink-2); }
+.meta b { color: var(--ink); font-weight: 500; }
+section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; }
+#source { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.section-head { display: grid; gap: 4px; }
+.section-head p { margin: 0; color: var(--ink-2); max-width: 78ch; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; min-width: 0; }
+.scroll-x { overflow-x: auto; }
+svg text { font-family: var(--font-data); }
+.num { font-variant-numeric: tabular-nums; font-family: var(--font-data); }
+a { color: var(--s1); }
+a:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+
+.notes { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .notes { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); } }
+.notes ol, .notes ul { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 8px; color: var(--ink-2); }
+.notes li::marker { color: var(--muted); font-family: var(--font-data); font-size: 12px; }
+
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th { text-align: left; font-weight: 500; color: var(--muted); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; padding: 6px 8px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+td { padding: 7px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+td.name { font-family: var(--font-data); font-size: 12px; overflow-wrap: anywhere; }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-data); font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--ink-2); white-space: nowrap; }
+.pill.ok { color: var(--good); border-color: currentColor; }
+.pill.bad { color: var(--warn); border-color: currentColor; }
+.sub { color: var(--muted); font-size: 12px; }
+
+.multiples { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+@media (max-width: 420px) { .multiples { grid-template-columns: minmax(0, 1fr); } }
+.chart { display: grid; gap: 6px; align-content: start; }
+.chart header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; align-items: baseline; }
+.chart header .cell { font-family: var(--font-data); font-weight: 500; font-size: 13px; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink-2); align-items: center; }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.hit { cursor: default; }
+.hit:focus { outline: none; }
+.hit:focus .ring, .hit:hover .ring { stroke: var(--ink); stroke-width: 1.5; }
+
+.bar-cell { display: grid; grid-template-columns: 1fr; gap: 2px; min-width: 92px; }
+.bar-cell .v { font-family: var(--font-data); font-variant-numeric: tabular-nums; font-size: 12px; text-align: right; }
+.bar-track { position: relative; height: 6px; background: var(--grid); border-radius: 3px; }
+.bar-track .mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--axis); }
+.bar-track .fill { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+
+.gen { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.gen ol { margin: 0; padding-left: 18px; display: grid; gap: 10px; }
+.gen li .who { font-family: var(--font-data); font-size: 12px; font-weight: 500; overflow-wrap: anywhere; }
+.gen li p { margin: 2px 0 0; color: var(--ink-2); font-size: 13px; }
+
+#tooltip { position: fixed; pointer-events: none; z-index: 20; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 6px 24px rgba(0,0,0,0.12); max-width: 320px; }
+#tooltip .title { font-family: var(--font-data); font-weight: 500; margin-bottom: 4px; overflow-wrap: anywhere; }
+#tooltip .row { display: flex; gap: 12px; justify-content: space-between; }
+#tooltip .row span { color: var(--ink-2); }
+#tooltip .row b { font-family: var(--font-data); font-weight: 500; font-variant-numeric: tabular-nums; }
+#tooltip p { margin: 6px 0 0; color: var(--ink-2); }
+details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">RSA inner loop · sweep overview</div>
+    <h1 id="title"></h1>
+    <p class="lede" id="summary"></p>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <section aria-labelledby="h-notes">
+    <div class="notes">
+      <div class="card"><h2 id="h-notes">What the run says</h2><ol id="findings"></ol></div>
+      <div class="card"><h2>Open decisions</h2><ol id="decisions"></ol></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-cells">
+    <div class="section-head">
+      <h2 id="h-cells">Cells</h2>
+      <p>Held-out is the exported model's held-out log predictive density minus the best starting model's, over the
+        held-out conditions, with the SE clustered by held-out unit. Rank is among every model the cell scored on
+        held-out data (live, pruned and starting models).</p>
+    </div>
+    <div class="card scroll-x"><table id="cells-table"></table></div>
+  </section>
+
+  <section aria-labelledby="h-select">
+    <div class="section-head">
+      <h2 id="h-select">Selection vs generalisation</h2>
+      <p>Each point is a model the cell had before its end-of-run prune. Across: ELPD-LOO on the training trials,
+        relative to the cell's best (what the loop selects and prunes on). Up: held-out lpd relative to the best
+        starting model (what we want). Models far to the left are drawn at the edge.</p>
+    </div>
+    <div class="legend" id="select-legend"></div>
+    <div class="multiples" id="select"></div>
+  </section>
+
+  <section aria-labelledby="h-source" id="source-section">
+    <div class="section-head">
+      <h2 id="h-source">Where the held-out gain comes from</h2>
+      <p>Real-data cells: held-out lpd by source, relative to the best starting model, for the exported model and
+        the three models that did best on held-out conditions.</p>
+    </div>
+    <div id="source"></div>
+  </section>
+
+  <section aria-labelledby="h-gen" id="gen-section">
+    <div class="section-head">
+      <h2 id="h-gen">What generalised</h2>
+      <p>The three best models on held-out conditions in each real-data cell, with the first sentence of their
+        hypothesis.</p>
+    </div>
+    <div class="gen" id="gen"></div>
+  </section>
+
+  <section aria-labelledby="h-rec" id="rec-section">
+    <div class="section-head">
+      <h2 id="h-rec">Recovery</h2>
+      <p>RMSE between each model's and the withheld ground truth's posterior-mean choice probabilities over the
+        novelty pool (log scale). The dashed line is the verdict's 0.01 threshold.</p>
+    </div>
+    <div class="legend" id="rec-legend"></div>
+    <div class="card scroll-x"><svg id="rec" role="img" aria-label="Distance to the ground truth per recovery cell"></svg></div>
+  </section>
+
+  <p class="sub" id="source-note"></p>
+</div>
+<div id="tooltip" hidden></div>
+<script id="bundle" type="application/json">__BUNDLE_JSON__</script>
+<script>
+(() => {
+  const B = JSON.parse(document.getElementById("bundle").textContent);
+  const NS = "http://www.w3.org/2000/svg";
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, attrs = {}, parent) => {
+    const n = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+  const h = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+  const fmt = (v, d = 1) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
+  const money = (v) => "$" + v.toFixed(2);
+  const short = (s) => s.replace("recovery_", "rec. ");
+
+  // tooltip
+  const tip = $("tooltip");
+  function showTip(evt, html) {
+    tip.innerHTML = html; tip.hidden = false;
+    const r = evt.currentTarget.getBoundingClientRect ? evt.currentTarget.getBoundingClientRect() : { left: evt.clientX, top: evt.clientY, width: 0 };
+    const x = Math.min(window.innerWidth - tip.offsetWidth - 8, Math.max(8, r.left + r.width / 2 - tip.offsetWidth / 2));
+    const y = r.top - tip.offsetHeight - 10;
+    tip.style.left = x + "px"; tip.style.top = (y < 8 ? r.bottom + 10 : y) + "px";
+  }
+  const hideTip = () => { tip.hidden = true; };
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  // header
+  $("title").textContent = B.title;
+  $("summary").textContent = B.summary;
+  const cost = B.cells.reduce((a, c) => a + c.cost, 0), runs = B.cells.reduce((a, c) => a + c.agent_runs, 0);
+  $("meta").innerHTML = [
+    ["date", B.date], ["cells", B.cells.length], ["agent runs", runs], ["spend", money(cost)], ["code", (B.code || "").slice(0, 7)],
+  ].map(([k, v]) => `<span>${k} <b>${esc(v)}</b></span>`).join("")
+    + (B.links || []).map((l) => `<a href="${esc(l.href)}">${esc(l.label)}</a>`).join("");
+  for (const [id, items] of [["findings", B.findings], ["decisions", B.decisions]]) {
+    for (const t of items) $(id).appendChild(h("li", null, t));
+  }
+
+  // cells table
+  const T = $("cells-table");
+  T.innerHTML = `<thead><tr><th>Cell</th><th>Exported model</th><th class="num">Held-out vs best seed</th><th class="num">Rank</th>
+    <th class="num">Adm / rej / pruned</th><th class="num">Live</th><th>Recovery</th><th class="num">Agents</th><th class="num">Spend</th><th class="num">Wall</th><th></th></tr></thead>`;
+  const tb = h("tbody"); T.appendChild(tb);
+  for (const c of B.cells) {
+    const tr = h("tr");
+    const e = c.exported_heldout;
+    const rec = c.recovery ? `<span class="pill ${c.recovery.recovered ? "ok" : "bad"}">${c.recovery.recovered ? "recovered" : "not recovered"}</span> <span class="sub">${esc(c.recovery.ground_truth)}</span>` : `<span class="sub">real data</span>`;
+    tr.innerHTML = `<td class="name">${esc(c.cell)}</td><td class="name">${esc(c.exported)}</td>
+      <td class="num">${fmt(e.diff)} <span class="sub">± ${e.se.toFixed(1)}</span><div class="sub">vs ${esc(c.best_seed)}</div></td>
+      <td class="num">${c.exported_rank}/${c.n_heldout_models}</td>
+      <td class="num">${c.counts.admitted} / ${c.counts.rejected} / ${c.counts.pruned}</td><td class="num">${c.n_live}</td>
+      <td>${rec}</td><td class="num">${c.agent_runs}</td><td class="num">${money(c.cost)}</td><td class="num">${c.wall || "–"}</td>
+      <td><a href="${esc(c.report)}">cell report</a></td>`;
+    tb.appendChild(tr);
+  }
+
+  // selection vs generalisation: small multiples
+  const STATUS = { exported: { label: "exported", color: "var(--s2)", r: 6 }, live: { label: "live at the end", color: "var(--s1)", r: 4.5 }, pruned: { label: "pruned", color: "var(--pruned)", r: 4 } };
+  $("select-legend").innerHTML = Object.values(STATUS).map((s) =>
+    `<span><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="${s.color}"></circle></svg>${s.label}</span>`).join("")
+    + `<span><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="var(--surface)" stroke="var(--ink-2)" stroke-width="1.5"></circle></svg>starting model (hollow)</span>`;
+  const W = 360, H = 250, M = { l: 44, r: 12, t: 10, b: 34 };
+  const ticks = (lo, hi, n) => { const step0 = (hi - lo) / n, mag = Math.pow(10, Math.floor(Math.log10(step0))); const step = [1, 2, 5, 10].map((m) => m * mag).find((s) => s >= step0); const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(6)); return out; };
+  for (const c of B.cells) {
+    const card = h("div", "card chart");
+    const head = h("header");
+    head.appendChild(h("span", "cell", c.cell));
+    head.appendChild(h("span", "sub", c.ground_truth ? `ground truth: ${c.ground_truth}` : "real data"));
+    card.appendChild(head);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `${c.cell}: in-sample ELPD-LOO against held-out lpd` });
+    card.appendChild(svg);
+    $("select").appendChild(card);
+    const ms = c.models;
+    const xs = ms.map((m) => m.insample), ys = ms.map((m) => m.heldout);
+    const sorted = [...xs].sort((a, b) => a - b);
+    // Clip the far-behind tail (e.g. the literal listener, ~1,600 nats back) to the 15th percentile so the cluster near the best stays legible.
+    let xlo = Math.min(-5, sorted[Math.floor(sorted.length * 0.15)] * 1.08);
+    const xhi = Math.max(...xs) + Math.max(2, -xlo * 0.04);
+    const ysIn = ys.filter((y, i) => xs[i] >= xlo);
+    let ylo = Math.min(0, ...ysIn), yhi = Math.max(0, ...ysIn);
+    const pad = (yhi - ylo) * 0.1 || 2; ylo -= pad; yhi += pad;
+    const X = (v) => M.l + (Math.max(v, xlo) - xlo) / (xhi - xlo) * (W - M.l - M.r);
+    const Y = (v) => H - M.b - (Math.min(Math.max(v, ylo), yhi) - ylo) / (yhi - ylo) * (H - M.t - M.b);
+    for (const t of ticks(ylo, yhi, 4)) {
+      el("line", { x1: M.l, x2: W - M.r, y1: Y(t), y2: Y(t), stroke: t === 0 ? "var(--axis)" : "var(--grid)", "stroke-width": 1 }, svg);
+      el("text", { x: M.l - 6, y: Y(t) + 3.5, "text-anchor": "end", "font-size": 10, fill: "var(--muted)" }, svg).textContent = fmt(t, 0);
+    }
+    for (const t of ticks(xlo, Math.min(0, xhi), 4)) {
+      el("line", { x1: X(t), x2: X(t), y1: M.t, y2: H - M.b, stroke: "var(--grid)", "stroke-width": 1 }, svg);
+      el("text", { x: X(t), y: H - M.b + 14, "text-anchor": "middle", "font-size": 10, fill: "var(--muted)" }, svg).textContent = fmt(t, 0);
+    }
+    el("text", { x: W - M.r, y: H - 4, "text-anchor": "end", "font-size": 10, fill: "var(--ink-2)" }, svg).textContent = "in-sample ELPD-LOO vs best →";
+    el("text", { x: W - M.r, y: Y(0) + 12, "text-anchor": "end", "font-size": 10, fill: "var(--ink-2)" }, svg).textContent = `0 = best seed (${c.best_seed})`;
+    const order = { pruned: 0, live: 1, exported: 2 };
+    for (const m of [...ms].sort((a, b) => order[a.status] - order[b.status])) {
+      const s = STATUS[m.status], clipped = m.insample < xlo;
+      const g = el("g", { class: "hit", tabindex: 0, "aria-label": `${m.name}: in-sample ${fmt(m.insample)}, held-out ${fmt(m.heldout)}` }, svg);
+      el("circle", { cx: X(m.insample), cy: Y(m.heldout), r: s.r + 6, fill: "transparent" }, g);
+      el("circle", { class: "ring", cx: X(m.insample), cy: Y(m.heldout), r: s.r, fill: m.seed ? "var(--surface)" : s.color,
+        stroke: m.seed ? s.color === "var(--pruned)" ? "var(--ink-2)" : s.color : "var(--surface)", "stroke-width": m.seed ? 2 : 1.5,
+        "fill-opacity": clipped ? 0.5 : 1 }, g);
+      const html = `<div class="title">${esc(m.name)}</div>
+        <div class="row"><span>status</span><b>${s.label}${m.seed ? ", starting model" : ""}</b></div>
+        <div class="row"><span>in-sample vs best</span><b>${fmt(m.insample)}${clipped ? " (off scale)" : ""}</b></div>
+        <div class="row"><span>held-out vs best seed</span><b>${fmt(m.heldout)} ± ${m.se.toFixed(1)}</b></div>
+        ${m.hypothesis ? `<p>${esc(m.hypothesis)}</p>` : ""}`;
+      g.addEventListener("mouseenter", (e) => showTip(e, html));
+      g.addEventListener("focus", (e) => showTip(e, html));
+      g.addEventListener("mouseleave", hideTip); g.addEventListener("blur", hideTip);
+    }
+    const r = (() => { const n = xs.length, mx = xs.reduce((a, b) => a + b) / n, my = ys.reduce((a, b) => a + b) / n; let sxy = 0, sxx = 0, syy = 0; xs.forEach((x, i) => { sxy += (x - mx) * (ys[i] - my); sxx += (x - mx) ** 2; syy += (ys[i] - my) ** 2; }); return sxy / Math.sqrt(sxx * syy); })();
+    const e = c.exported_heldout;
+    const bestHeld = [...ms].sort((a, b) => b.heldout - a.heldout)[0];
+    card.appendChild(h("div", "sub", `r = ${r.toFixed(2)} over ${ms.length} models · exported ${fmt(e.diff)} ± ${e.se.toFixed(1)} · best held-out ${bestHeld.name} ${fmt(bestHeld.heldout)} (${bestHeld.status})`));
+  }
+
+  // held-out by source (real cells)
+  const real = B.cells.filter((c) => !c.recovery);
+  if (!real.length) { $("source-section").hidden = true; $("gen-section").hidden = true; }
+  for (const c of real) {
+    const sources = Object.keys(c.best_seed_by_source);
+    const top = [...c.models].sort((a, b) => b.heldout - a.heldout).filter((m) => m.name !== c.exported).slice(0, 3);
+    const rows = [c.models.find((m) => m.name === c.exported), ...top].filter(Boolean);
+    const diffs = rows.map((m) => sources.map((s) => m.by_source[s] - c.best_seed_by_source[s]));
+    const maxAbs = Math.max(1, ...diffs.flat().map(Math.abs));
+    const card = h("div", "card");
+    card.appendChild(h("h3", null, c.cell));
+    const wrap = h("div", "scroll-x"); card.appendChild(wrap);
+    const t = h("table");
+    t.innerHTML = `<thead><tr><th>Model</th><th>Status</th>${sources.map((s) => `<th class="num">${esc(s)}</th>`).join("")}<th class="num">Total</th></tr></thead>`;
+    const body = h("tbody");
+    rows.forEach((m, i) => {
+      const tr = h("tr");
+      tr.innerHTML = `<td class="name">${esc(m.name)}</td><td><span class="pill">${m.status}</span></td>` +
+        diffs[i].map((d) => {
+          const w = Math.abs(d) / maxAbs * 50, left = d >= 0 ? 50 : 50 - w;
+          return `<td><div class="bar-cell"><span class="v">${fmt(d)}</span><div class="bar-track"><span class="mid"></span><span class="fill" style="left:${left}%;width:${w}%;background:${d >= 0 ? "var(--pos)" : "var(--neg)"}"></span></div></div></td>`;
+        }).join("") + `<td class="num">${fmt(m.heldout)} <span class="sub">± ${m.se.toFixed(1)}</span></td>`;
+      body.appendChild(tr);
+    });
+    t.appendChild(body); wrap.appendChild(t);
+    $("source").appendChild(card);
+    // what generalised
+    const g = h("div", "card");
+    g.appendChild(h("h3", null, c.cell));
+    const ol = h("ol");
+    for (const m of [...c.models].sort((a, b) => b.heldout - a.heldout).slice(0, 3)) {
+      const li = h("li");
+      li.innerHTML = `<span class="who">${esc(m.name)}</span> <span class="sub">${fmt(m.heldout)} ± ${m.se.toFixed(1)} · ${m.status}</span><p>${esc(m.hypothesis)}</p>`;
+      ol.appendChild(li);
+    }
+    g.appendChild(ol);
+    $("gen").appendChild(g);
+  }
+
+  // recovery strip
+  const rec = B.cells.filter((c) => c.recovery);
+  if (!rec.length) { $("rec-section").hidden = true; }
+  else {
+    const KINDS = [
+      { key: "live", label: "other live models", color: "var(--pruned)", r: 4 },
+      { key: "closest", label: "closest live model", color: "var(--s1)", r: 5 },
+      { key: "exported", label: "exported", color: "var(--s2)", r: 6 },
+      { key: "seed", label: "best starting model", color: "var(--ink-2)", r: 5, hollow: true },
+    ];
+    $("rec-legend").innerHTML = KINDS.map((k) => `<span><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="${k.hollow ? "var(--surface)" : k.color}" stroke="${k.hollow ? k.color : "none"}" stroke-width="1.5"></circle></svg>${k.label}</span>`).join("")
+      + `<span><svg width="18" height="10" aria-hidden="true"><line x1="0" x2="18" y1="5" y2="5" stroke="var(--ink-2)" stroke-dasharray="3 3"></line></svg>threshold 0.01</span>`;
+    const svg = $("rec"), RW = 1180, rowH = 44, RM = { l: 190, r: 20, t: 12, b: 34 };
+    const RH = RM.t + rec.length * rowH + RM.b;
+    svg.setAttribute("viewBox", `0 0 ${RW} ${RH}`); svg.style.minWidth = "640px"; svg.style.width = "100%";
+    const lo = -5, hi = -1;
+    const RX = (v) => RM.l + (Math.log10(Math.max(v, 1e-5)) - lo) / (hi - lo) * (RW - RM.l - RM.r);
+    for (let p = lo; p <= hi; p++) {
+      el("line", { x1: RX(10 ** p), x2: RX(10 ** p), y1: RM.t, y2: RH - RM.b, stroke: "var(--grid)" }, svg);
+      el("text", { x: RX(10 ** p), y: RH - RM.b + 16, "text-anchor": "middle", "font-size": 11, fill: "var(--muted)" }, svg).textContent = p === -5 ? "≤0.00001" : String(10 ** p);
+    }
+    el("text", { x: RW - RM.r, y: RH - 4, "text-anchor": "end", "font-size": 11, fill: "var(--ink-2)" }, svg).textContent = "RMSE to the ground truth (pool predictions) →";
+    const thr = rec[0].recovery.threshold;
+    el("line", { x1: RX(thr), x2: RX(thr), y1: RM.t - 4, y2: RH - RM.b, stroke: "var(--ink-2)", "stroke-dasharray": "3 3" }, svg);
+    rec.forEach((c, i) => {
+      const y = RM.t + i * rowH + rowH / 2, R = c.recovery;
+      el("text", { x: 0, y: y - 2, "font-size": 12, fill: "var(--ink)" }, svg).textContent = short(c.cell);
+      el("text", { x: 0, y: y + 13, "font-size": 10, fill: "var(--muted)" }, svg).textContent = `truth: ${R.ground_truth}`;
+      el("line", { x1: RM.l, x2: RW - RM.r, y1: y, y2: y, stroke: "var(--grid)" }, svg);
+      const live = Object.entries(R.live_rmse);
+      const closest = live.reduce((a, b) => (b[1] < a[1] ? b : a));
+      const pts = live.filter(([n]) => n !== R.exported && n !== closest[0]).map(([n, v]) => ({ n, v, k: KINDS[0] }));
+      if (closest[0] !== R.exported) pts.push({ n: closest[0], v: closest[1], k: KINDS[1] });
+      pts.push({ n: R.exported, v: R.exported_rmse, k: KINDS[2] });
+      if (R.best_seed_rmse != null) pts.push({ n: R.best_seed, v: R.best_seed_rmse, k: KINDS[3] });
+      for (const p of pts) {
+        const g = el("g", { class: "hit", tabindex: 0, "aria-label": `${p.n}: RMSE ${p.v.toPrecision(2)}` }, svg);
+        el("circle", { cx: RX(p.v), cy: y, r: p.k.r + 6, fill: "transparent" }, g);
+        el("circle", { class: "ring", cx: RX(p.v), cy: y, r: p.k.r, fill: p.k.hollow ? "var(--surface)" : p.k.color, stroke: p.k.hollow ? p.k.color : "var(--surface)", "stroke-width": p.k.hollow ? 2 : 1.5 }, g);
+        const html = `<div class="title">${esc(p.n)}</div><div class="row"><span>${p.k.label}</span><b>RMSE ${p.v.toPrecision(2)}</b></div>`
+          + (p.k.key === "exported" ? `<div class="row"><span>held-out vs truth</span><b>${fmt(R.gap)} ± ${R.gap_se.toFixed(1)}</b></div>` : "");
+        g.addEventListener("mouseenter", (e) => showTip(e, html)); g.addEventListener("focus", (e) => showTip(e, html));
+        g.addEventListener("mouseleave", hideTip); g.addEventListener("blur", hideTip);
+      }
+    });
+  }
+  $("source-note").textContent = `Built from the cells' committed outputs (data/rsa/${B.sweep}/) by src.rsa.sweep_report. Wall times and the starting models' distances to the ground truth: ${B.source || "run notes"}.`;
+})();
+</script>

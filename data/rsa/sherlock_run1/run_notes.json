@@ -1,0 +1,59 @@
+{
+ "source": "docs/auto_rsa/SHERLOCK_RUN1_RESULTS.md (section 3): numbers the run's local session measured that the per-cell files do not hold",
+ "date": "2026-10-07",
+ "code": "12d4b205c1365706f2c8945557f7500b29b39720",
+ "cells": {
+  "real_rep1": {
+   "wall": "4:54",
+   "max_rss_gb": 18.2
+  },
+  "real_rep2": {
+   "wall": "4:31",
+   "max_rss_gb": 15.9
+  },
+  "recovery_literal_rep1": {
+   "wall": "6:44",
+   "max_rss_gb": 14.9,
+   "best_seed": "rsa_l1_shared_prior",
+   "best_seed_rmse_to_gt": 0.048
+  },
+  "recovery_literal_rep2": {
+   "wall": "6:08",
+   "max_rss_gb": 14.4,
+   "best_seed": "rsa_l1_shared_prior",
+   "best_seed_rmse_to_gt": 0.048
+  },
+  "recovery_salience_rep1": {
+   "wall": "4:07",
+   "max_rss_gb": 14.6,
+   "best_seed": "rsa_l2",
+   "best_seed_rmse_to_gt": 0.049
+  },
+  "recovery_salience_rep2": {
+   "wall": "5:29",
+   "max_rss_gb": 18.2,
+   "best_seed": "rsa_l2",
+   "best_seed_rmse_to_gt": 0.049
+  }
+ },
+ "title": "RSA run 1",
+ "summary": "Six inner-loop cells on Sherlock, 7 October 2026: the combined reference-game data (5 sources, 40k training trials) twice, and two recovery conditions twice each, with a ground-truth model withheld from the seeds. 5 rounds \u00d7 6 Gemini 3.8 Flash agents per cell.",
+ "findings": [
+  "Recovery works on prediction distance: in all four recovery cells the exported model is 0.004\u20130.009 RMSE from the withheld ground truth, against 0.048\u20130.049 for the best starting model, and a live model sits even closer (0.0001\u20130.004).",
+  "On real data the loop finds models that generalise to held-out conditions: the best are +67 to +94 lpd over rsa_l2 (2\u20132.6 clustered SE), almost all of it on pragmods.",
+  "Selection does not track generalisation on real data. real_rep1 exported a model no better than rsa_l2 on held-out conditions (\u22127.5, SE 71) after its in-sample PSIS-LOO pruned the six models that generalise best; in recovery cells the two measures agree (r \u2248 1).",
+  "Literal/pragmatic mixtures and softmax-belief listeners are among the best held-out models in both real replicates."
+ ],
+ "decisions": [
+  "Select and prune on grouped cross-validation over training conditions (the unit the test set holds out), not trial-level PSIS-LOO.",
+  "Recovery verdict: drop the held-out \u201cor\u201d clause (it passes the seeds on the salience data) and report the seeds\u2019 and the closest live model\u2019s distances.",
+  "Agents\u2019 internet access: one cell read the lab\u2019s pragmods RSA code from GitHub. Allowlist (model API and library docs only), no network, or report only?",
+  "Cluster defaults: the mcfrank partition, venvs in $GROUP_HOME, no --qos=long."
+ ],
+ "links": [
+  {
+   "href": "seed-comparison.html",
+   "label": "seed comparison on the pragmods data (6 Oct)"
+  }
+ ]
+}
