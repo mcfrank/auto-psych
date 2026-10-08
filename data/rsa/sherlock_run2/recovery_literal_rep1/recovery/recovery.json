@@ -1,0 +1,35 @@
+{
+ "best_model": "parsimonious_literal_mixture",
+ "ground_truth": "/scratch/users/mcfrank/auto-psych/rsa_run2/harness_repo/src/pipelines/outer_loop/projects/rsa_reference/seed_models/literal_listener.py",
+ "best_pool_rmse_to_gt": 0.005260951915063906,
+ "live_pool_rmse_to_gt": {
+  "bounded_alternatives_listener": 0.004915802485987291,
+  "costly_bounded_alternatives_listener": 0.006510873674817937,
+  "fewest_features_listener": 0.007241832456334434,
+  "framed_alignment_listener": 0.016394670787656218,
+  "graded_specificity_listener": 0.0024115749494172775,
+  "literal_salience_listener": 0.004279469429192686,
+  "parsimonious_literal_mixture": 0.005260951915063906,
+  "parsimonious_structured_lapse_listener": 0.008199888859581655,
+  "perceptual_parsimony_listener": 0.017154412292689464,
+  "residual_surprisal_listener": 0.004590306742553585,
+  "salience_structured_lapse_listener": 0.003748187725286771,
+  "valence_parsimony_listener": 0.01493781859971112
+ },
+ "closest_live_model": "graded_specificity_listener",
+ "closest_live_rmse_to_gt": 0.0024115749494172775,
+ "seed_pool_rmse_to_gt": {
+  "rsa_l1": 0.06448249297390593,
+  "rsa_l2": 0.06451565368943095,
+  "rsa_l1_salience": 0.048486453830686026,
+  "rsa_l1_shared_prior": 0.04851051373590863
+ },
+ "best_seed": "rsa_l1_salience",
+ "best_seed_rmse_to_gt": 0.048486453830686026,
+ "seeds_would_pass": false,
+ "heldout_lpd_best_minus_gt": -0.3059915409135101,
+ "heldout_se": 0.6108900786073959,
+ "recovered": true,
+ "rmse_threshold": 0.01,
+ "verdict_rule": "exported model's pool RMSE to the ground truth <= rmse_threshold"
+}

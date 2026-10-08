@@ -60,15 +60,15 @@ with its held-out lpd minus rsa_l2's. Round 0 is the first scored step after the
 
 | round | recovery_literal_rep1 | recovery_literal_rep2 | recovery_salience_rep1 | recovery_salience_rep2 |
 |---|---|---|---|---|
-| seeds | (see note) | -18755.3 / 0 | -17426.3 / 0 | -17426.9 / 0 |
-| 0 | | -18659.9 / +23.7 | -17413.3 / +4.3 | -17411.4 / +7.8 |
-| 1 | | -18658.4 / +23.3 | -17405.8 / +11.2 | -17410.5 / +7.7 |
-| 2 | | -18656.3 / +23.3 | -17405.8 / +11.2 | -17395.2 / +13.1 |
-| 3 | | -18655.5 / +23.6 | -17390.9 / +13.5 | -17393.2 / +13.4 |
-| 4 (end) | | -18655.5 / +23.6 | -17390.9 / +13.5 | -17393.2 / +13.4 |
+| seeds | -18757.6 / 0 | -18755.3 / 0 | -17426.3 / 0 | -17426.9 / 0 |
+| 0 | -18657.5 / +23.3 | -18659.9 / +23.7 | -17413.3 / +4.3 | -17411.4 / +7.8 |
+| 1 | -18656.3 / +23.6 | -18658.4 / +23.3 | -17405.8 / +11.2 | -17410.5 / +7.7 |
+| 2 | -18654.8 / +23.3 | -18656.3 / +23.3 | -17405.8 / +11.2 | -17395.2 / +13.1 |
+| 3 | -18654.4 / +23.5 | -18655.5 / +23.6 | -17390.9 / +13.5 | -17393.2 / +13.4 |
+| 4 (end) | -18654.4 / +23.5 | -18655.5 / +23.6 | -17390.9 / +13.5 | -17393.2 / +13.4 |
 
 The recovery cells reach the ground truth's held-out level (+23.8 for literal, +13.5 for
-salience, vs the best seed) by round 0-3. recovery_literal_rep1: see §2.
+salience, vs the best seed) by round 0-3.
 
 ## Did CV selection export models that generalise?
 
@@ -94,12 +94,12 @@ salience, vs the best seed) by round 0-3. recovery_literal_rep1: see §2.
 
 | cell | exported (RMSE to GT) | closest live (RMSE) | best seed (RMSE) | `seeds_would_pass` | exported - GT held-out | verdict |
 |---|---|---|---|---|---|---|
-| recovery_literal_rep1 | *(§2)* | | | | | |
+| recovery_literal_rep1 | parsimonious_literal_mixture (0.0053) | graded_specificity_listener (0.0024) | rsa_l1_salience (0.0485) | false | -0.31 (SE 0.61) | recovered |
 | recovery_literal_rep2 | distinctiveness_neutral_prior (0.0032) | distinctiveness_heuristic_listener (0.0027) | rsa_l1_shared_prior (0.048) | false | -0.26 (SE 0.55) | recovered |
 | recovery_salience_rep1 | conservative_base_rate_simplicity (0.0012) | the same | rsa_l2 (0.049) | false | -0.03 (SE 0.09) | recovered |
 | recovery_salience_rep2 | salience_base_rate_ambiguity_l1 (0.0030) | the same | rsa_l2 (0.049) | false | -0.05 (SE 0.05) | recovered |
 
-- **Recovery is at least as close as in run 1** (exported 0.004-0.009 there).
+- **All four recovered; recovery is at least as close as in run 1** (exported 0.004-0.009 there).
 - **In both salience cells the exported model is also the closest live one.** Run 1's
   never was.
 - **No starting model would pass** the verdict in any cell.
@@ -112,7 +112,7 @@ salience, vs the best seed) by round 0-3. recovery_literal_rep1: see §2.
 |---|---|
 | Sweep root | `$SCRATCH/auto-psych/rsa_run2` |
 | Code | `dec3790ebf8e0c1ce99db8536d1b21e5e1a2818c` (staged; data `prepared_code` too) |
-| Jobs | prepare 46968137; setup 46968321; array 46968325 (tasks 0-6); resume of tasks 3-5: 46996637; held-out pages 47004423, 47014741, 47018866 (+ one for recovery_literal_rep1, §2) |
+| Jobs | prepare 46968137; setup 46968321; array 46968325 (tasks 0-6); resume of tasks 3-5: 46996637; held-out pages 47004423, 47014741, 47018866, 47020916 |
 | Partition | `-p mcfrank` throughout; 4 CPUs / 30G / 24 h per cell; six at once, the seventh started when the first recovery cell ended |
 | Settings | real x 3 x 8 rounds, recovery x 2 x 4 rounds, 6 slots; grouped 5-fold CV for selection and pruning; live cap 12; no agent network; per-source standings in briefs |
 
@@ -129,10 +129,11 @@ salience, vs the best seed) by round 0-3. recovery_literal_rep1: see §2.
 | real_rep1 | 10:17 | 22.2 GiB | 59 | $89.18 |
 | real_rep2 | 12:09 | **26.3 GiB** | 62 | $93.69 |
 | real_rep3 | 8:48 | 22.3 GiB | 54 | $72.95 |
-| recovery_literal_rep1 | *(§2)* | | | |
+| recovery_literal_rep1 | 2:02 + 5:30 (resumed) | 14.0 GiB | 40 | $66.19 |
 | recovery_literal_rep2 | 1:27 + 5:08 (resumed) | 15.4 GiB | 36 | $53.96 |
 | recovery_salience_rep1 | 1:50 + 3:18 (resumed) | 12.8 GiB | 36 | $41.93 |
 | recovery_salience_rep2 | 4:26 | 16.1 GiB | 30 | $34.01 |
+| **total** | 22:35 → 12:46 PDT | | **313** | **$451.89** |
 
 - Costs are summed from each cell's `token_usage.jsonl`. `token_usage_summary.json`
   undercounts the resumed cells (§5 item 4).
@@ -178,8 +179,9 @@ salience, vs the best seed) by round 0-3. recovery_literal_rep1: see §2.
    - this commit: the rest.
 
    Each holds data only; no code was committed.
-5. **recovery_literal_rep1** *(still running at the time of writing; filled in below
-   when it finished)*.
+5. **recovery_literal_rep1 was the last cell** (resumed 07:15, done 12:46). Its round 4 ran
+   longest: 11 rejections, the most repairs. It was pushed in a follow-up commit to
+   66cd001.
 
 ## 3. Checks (handoff §3, and over the whole run)
 
@@ -220,6 +222,7 @@ few non-converged fits.
 | real_rep1 | 48 / 10 / 41 |
 | real_rep2 | 47 / 11 / 40 |
 | real_rep3 | 48 / 6 / 41 |
+| recovery_literal_rep1 | 20 / 11 / 12 |
 | recovery_literal_rep2 | 21 / 6 / 13 |
 | recovery_salience_rep1 | 23 / 4 / 20 |
 | recovery_salience_rep2 | 22 / 8 / 20 |
@@ -275,4 +278,16 @@ few non-converged fits.
 
 ## 6. `rsa_status.sh` at the end
 
-*(below, once recovery_literal_rep1 finishes)*
+```
+sweep: /scratch/users/mcfrank/auto-psych/rsa_run2   code: dec3790ebf8e0c1ce99db8536d1b21e5e1a2818c
+task  cell                    state  stage   best model                              adm/rej/pruned  tokens  cost    agents  recovered  last exit
+0     real_rep1               done   scored  rsa_l2_singleton_feat_color_valence_l0  48/10/41        551.0M  $89.18  59      -
+1     real_rep2               done   scored  surprisal_isolated_graded_costly_l5     47/11/40        576.8M  $93.69  62      -
+2     real_rep3               done   scored  crowd_discrim_confusion_chromatic_l2    48/6/41         415.9M  $72.95  54      -
+3     recovery_literal_rep1   done   scored  parsimonious_literal_mixture            20/11/12        426.7M  $66.19  40      yes
+4     recovery_salience_rep1  done   scored  conservative_base_rate_simplicity       23/4/20         274.1M  $41.93  36      yes
+5     recovery_literal_rep2   done   scored  distinctiveness_neutral_prior           21/6/13         353.0M  $53.96  36      yes
+6     recovery_salience_rep2  done   scored  salience_base_rate_ambiguity_l1         22/8/20         210.0M  $34.01  30      yes
+```
+
+Costs here are from each cell's `token_usage.jsonl`, so the resumed cells are complete.

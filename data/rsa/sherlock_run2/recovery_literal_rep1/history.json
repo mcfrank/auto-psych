@@ -1,0 +1,4049 @@
+[
+ {
+  "step": 0,
+  "round": -1,
+  "best_model": "rsa_l1_shared_prior",
+  "standing": {
+   "rsa_l1_shared_prior": {
+    "rank": 0,
+    "elpd_loo": -18749.3999710083,
+    "se": 128.73163133614682,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 3.1862233343417756,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18757.62145134278,
+    "cv_diff": 0.0,
+    "cv_dse": 0.0,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2378.573871241859,
+     "mayn_demberg_2023": -4130.818186447504,
+     "mayn_demberg_2026": -5583.892657953603,
+     "pragmods": -4046.1586962562224,
+     "sikos_2021": -2618.178039443591
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 0.0,
+     "sikos_2021": 0.0
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 0.0,
+     "sikos_2021": 0.0
+    },
+    "sel_elpd": -18757.62145134278,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0
+   },
+   "rsa_l1_salience": {
+    "rank": 1,
+    "elpd_loo": -18749.69937324524,
+    "se": 128.7166907054278,
+    "elpd_diff": 0.29940223693847656,
+    "dse": 0.12426803524635739,
+    "p_loo": 3.174843037053506,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18758.25641181512,
+    "cv_diff": 0.6349604723400262,
+    "cv_dse": 0.23638905753535733,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2378.7862843947278,
+     "mayn_demberg_2023": -4130.8441954138325,
+     "mayn_demberg_2026": -5583.989278308338,
+     "pragmods": -4046.2997510361656,
+     "sikos_2021": -2618.33690266206
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 0.21241315286897589,
+     "mayn_demberg_2023": 0.026008966328845418,
+     "mayn_demberg_2026": 0.09662035473502328,
+     "pragmods": 0.14105477994326066,
+     "sikos_2021": 0.15886321846892315
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.07517831251874751,
+     "mayn_demberg_2023": 0.061877674451869355,
+     "mayn_demberg_2026": 0.05845490920597232,
+     "pragmods": 0.17698461307624658,
+     "sikos_2021": 0.1106665888848386
+    },
+    "sel_elpd": -18758.25641181512,
+    "sel_diff": 0.6349604723400262,
+    "sel_dse": 0.23638905753535733
+   },
+   "rsa_l1": {
+    "rank": 2,
+    "elpd_loo": -19061.83660507202,
+    "se": 131.62528639294771,
+    "elpd_diff": 312.4366340637207,
+    "dse": 26.067413034237067,
+    "p_loo": 1.0171159491728758,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -19062.609153081175,
+    "cv_diff": 304.9877017383951,
+    "cv_dse": 72.57157852882489,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2442.1730200969305,
+     "mayn_demberg_2023": -4215.1060630771535,
+     "mayn_demberg_2026": -5701.445186897972,
+     "pragmods": -4085.063984201886,
+     "sikos_2021": -2618.820898807232
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 63.59914885507169,
+     "mayn_demberg_2023": 84.28787662964987,
+     "mayn_demberg_2026": 117.55252894436944,
+     "pragmods": 38.90528794566353,
+     "sikos_2021": 0.6428593636410369
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 21.752034396694707,
+     "mayn_demberg_2023": 24.200081865671244,
+     "mayn_demberg_2026": 50.36403747784439,
+     "pragmods": 41.80846166661803,
+     "sikos_2021": 0.36774235966644714
+    },
+    "sel_elpd": -19062.609153081175,
+    "sel_diff": 304.9877017383951,
+    "sel_dse": 72.57157852882489
+   },
+   "rsa_l2": {
+    "rank": 3,
+    "elpd_loo": -19062.124331474304,
+    "se": 131.64048851646612,
+    "elpd_diff": 312.7243604660034,
+    "dse": 26.07616439502643,
+    "p_loo": 0.9674959560361458,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -19063.03305634412,
+    "cv_diff": 305.4116050013399,
+    "cv_dse": 72.63180148626674,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2442.207524636274,
+     "mayn_demberg_2023": -4215.1879617507075,
+     "mayn_demberg_2026": -5701.530043919978,
+     "pragmods": -4085.2312482344805,
+     "sikos_2021": -2618.876277802681
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 63.63365339441498,
+     "mayn_demberg_2023": 84.36977530320382,
+     "mayn_demberg_2026": 117.6373859663754,
+     "pragmods": 39.07255197825816,
+     "sikos_2021": 0.6982383590902828
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 21.768237743744454,
+     "mayn_demberg_2023": 24.223841460059894,
+     "mayn_demberg_2026": 50.40999614452923,
+     "pragmods": 41.83884694374084,
+     "sikos_2021": 0.40021316160502546
+    },
+    "sel_elpd": -19063.03305634412,
+    "sel_diff": 305.4116050013399,
+    "sel_dse": 72.63180148626674
+   }
+  },
+  "events": [
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l2"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1_salience"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1_shared_prior"
+   }
+  ],
+  "live": [
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_salience",
+    "hypothesis": "Depth-1 RSA whose listener has a salience prior over objects (feature count, familiarization base rate) that the simulated literal listener lacks.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_shared_prior",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.",
+    "source": "seed"
+   }
+  ],
+  "ledger_entries": 0
+ },
+ {
+  "step": 1,
+  "round": 0,
+  "best_model": "literal_salience_listener",
+  "standing": {
+   "literal_salience_listener": {
+    "rank": 0,
+    "elpd_loo": -18655.05804347992,
+    "se": 127.91014877822954,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 3.025718893739395,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18657.50557843609,
+    "cv_diff": 0.0,
+    "cv_dse": 0.0,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.3443576451073,
+     "mayn_demberg_2023": -4122.224333672577,
+     "mayn_demberg_2026": -5582.268746794389,
+     "pragmods": -3962.918912694066,
+     "sikos_2021": -2618.7492276299513
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 0.0,
+     "sikos_2021": 0.6610199948036097
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 0.0,
+     "sikos_2021": 0.39432955906703815
+    },
+    "sel_elpd": -18657.50557843609,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0
+   },
+   "listener_rationality_shared_prior": {
+    "rank": 1,
+    "elpd_loo": -18674.61758708954,
+    "se": 128.00224326178883,
+    "elpd_diff": 19.55954360961914,
+    "dse": 6.274980905994909,
+    "p_loo": 3.4495279481780017,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18677.843146774525,
+    "cv_diff": 20.33756833843654,
+    "cv_dse": 7.526828026794269,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2376.4648056110573,
+     "mayn_demberg_2023": -4126.324214950213,
+     "mayn_demberg_2026": -5583.264297098634,
+     "pragmods": -3973.701621479471,
+     "sikos_2021": -2618.0882076351477
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 5.120447965950007,
+     "mayn_demberg_2023": 4.0998812776360865,
+     "mayn_demberg_2026": 0.9955503042456257,
+     "pragmods": 10.782708785405248,
+     "sikos_2021": 0.0
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 2.268385836667441,
+     "mayn_demberg_2023": 2.514944661536931,
+     "mayn_demberg_2026": 2.5416387319643907,
+     "pragmods": 6.157743357373484,
+     "sikos_2021": 0.0
+    },
+    "sel_elpd": -18677.843146774525,
+    "sel_diff": 20.33756833843654,
+    "sel_dse": 7.526828026794269
+   },
+   "costly_feature_shared_prior": {
+    "rank": 2,
+    "elpd_loo": -18730.256805419922,
+    "se": 128.49997437913817,
+    "elpd_diff": 75.19876194000244,
+    "dse": 13.204725335670418,
+    "p_loo": 4.760041312358226,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18740.96697939893,
+    "cv_diff": 83.46140096284216,
+    "cv_dse": 18.42213951231649,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2380.4365179151864,
+     "mayn_demberg_2023": -4128.506658658244,
+     "mayn_demberg_2026": -5587.932445871994,
+     "pragmods": -4022.5348286190456,
+     "sikos_2021": -2621.5565283344636
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 9.092160270079148,
+     "mayn_demberg_2023": 6.282324985667401,
+     "mayn_demberg_2026": 5.663699077605088,
+     "pragmods": 59.61591592497962,
+     "sikos_2021": 3.468320699315882
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 3.6606812961455355,
+     "mayn_demberg_2023": 3.7232035562545533,
+     "mayn_demberg_2026": 4.542461444483451,
+     "pragmods": 16.030180444776363,
+     "sikos_2021": 1.8173597352752309
+    },
+    "sel_elpd": -18740.96697939893,
+    "sel_diff": 83.46140096284216,
+    "sel_dse": 18.42213951231649
+   },
+   "valence_salience_listener": {
+    "rank": 3,
+    "elpd_loo": -18744.53733444214,
+    "se": 128.6646714866001,
+    "elpd_diff": 89.47929096221924,
+    "dse": 14.082760810409267,
+    "p_loo": 4.134633456556912,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18792.968819852707,
+    "cv_diff": 135.46324141661898,
+    "cv_dse": 46.178862327065005,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2377.8545415391427,
+     "mayn_demberg_2023": -4129.5893515842745,
+     "mayn_demberg_2026": -5582.8457389627,
+     "pragmods": -4084.5599457294766,
+     "sikos_2021": -2618.1192420371135
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 6.5101838940354355,
+     "mayn_demberg_2023": 7.365017911697578,
+     "mayn_demberg_2026": 0.5769921683113353,
+     "pragmods": 121.6410330354106,
+     "sikos_2021": 0.031034401965825964
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 3.295400760808946,
+     "mayn_demberg_2023": 3.4480514466789955,
+     "mayn_demberg_2026": 2.68479800396106,
+     "pragmods": 44.0303237666915,
+     "sikos_2021": 0.2238699158515643
+    },
+    "sel_elpd": -18792.968819852707,
+    "sel_diff": 135.46324141661898,
+    "sel_dse": 46.178862327065005
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 4,
+    "elpd_loo": -18749.3999710083,
+    "se": 128.73163133614682,
+    "elpd_diff": 94.34192752838135,
+    "dse": 14.476367438548754,
+    "p_loo": 3.1862233343417756,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18757.62145134278,
+    "cv_diff": 100.11587290669195,
+    "cv_dse": 23.31544337938746,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2378.573871241859,
+     "mayn_demberg_2023": -4130.818186447504,
+     "mayn_demberg_2026": -5583.892657953603,
+     "pragmods": -4046.1586962562224,
+     "sikos_2021": -2618.178039443591
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 7.229513596751531,
+     "mayn_demberg_2023": 8.593852774926745,
+     "mayn_demberg_2026": 1.6239111592140034,
+     "pragmods": 83.23978356215639,
+     "sikos_2021": 0.08983180844325034
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 3.658607662532185,
+     "mayn_demberg_2023": 3.8742744896857633,
+     "mayn_demberg_2026": 2.9859237762314823,
+     "pragmods": 20.81809367660399,
+     "sikos_2021": 0.2144625486195503
+    },
+    "sel_elpd": -18757.62145134278,
+    "sel_diff": 100.11587290669195,
+    "sel_dse": 23.31544337938746
+   },
+   "rsa_l1_salience": {
+    "rank": 5,
+    "elpd_loo": -18749.69937324524,
+    "se": 128.7166907054278,
+    "elpd_diff": 94.64132976531982,
+    "dse": 14.483981308831058,
+    "p_loo": 3.174843037053506,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18758.25641181512,
+    "cv_diff": 100.75083337903197,
+    "cv_dse": 23.320523384929903,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2378.7862843947278,
+     "mayn_demberg_2023": -4130.8441954138325,
+     "mayn_demberg_2026": -5583.989278308338,
+     "pragmods": -4046.2997510361656,
+     "sikos_2021": -2618.33690266206
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 7.441926749620507,
+     "mayn_demberg_2023": 8.61986174125559,
+     "mayn_demberg_2026": 1.7205315139490267,
+     "pragmods": 83.38083834209965,
+     "sikos_2021": 0.2486950269121735
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 3.725555999457052,
+     "mayn_demberg_2023": 3.903184504277183,
+     "mayn_demberg_2026": 3.000473287589079,
+     "pragmods": 20.806709856647217,
+     "sikos_2021": 0.20901923101340264
+    },
+    "sel_elpd": -18758.25641181512,
+    "sel_diff": 100.75083337903197,
+    "sel_dse": 23.320523384929903
+   },
+   "costly_feature_speaker": {
+    "rank": 6,
+    "elpd_loo": -18848.6272315979,
+    "se": 129.58183065163496,
+    "elpd_diff": 193.56918811798096,
+    "dse": 20.55932614788173,
+    "p_loo": 2.306877891838667,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": false,
+    "elpd_cv": -18850.048475272986,
+    "cv_diff": 192.54289683689785,
+    "cv_dse": 29.51111451787144,
+    "cv_converged": false,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2409.2049305003166,
+     "mayn_demberg_2023": -4161.761831920574,
+     "mayn_demberg_2026": -5639.539726858879,
+     "pragmods": -3997.8608045000547,
+     "sikos_2021": -2641.6811814931634
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 37.860572855209284,
+     "mayn_demberg_2023": 39.537498247997064,
+     "mayn_demberg_2026": 57.27098006448978,
+     "pragmods": 34.94189180598869,
+     "sikos_2021": 23.59297385801574
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 10.26923294073145,
+     "mayn_demberg_2023": 10.52421653829746,
+     "mayn_demberg_2026": 18.965943624238257,
+     "pragmods": 13.263892313600874,
+     "sikos_2021": 13.260635300088346
+    },
+    "sel_elpd": -18850.048475272986,
+    "sel_diff": 192.54289683689785,
+    "sel_dse": 29.51111451787144
+   },
+   "rsa_l1": {
+    "rank": 7,
+    "elpd_loo": -19061.83660507202,
+    "se": 131.62528639294771,
+    "elpd_diff": 406.77856159210205,
+    "dse": 29.42269987127707,
+    "p_loo": 1.0171159491728758,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -19062.609153081175,
+    "cv_diff": 405.10357464508706,
+    "cv_dse": 73.0228251148791,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2442.1730200969305,
+     "mayn_demberg_2023": -4215.1060630771535,
+     "mayn_demberg_2026": -5701.445186897972,
+     "pragmods": -4085.063984201886,
+     "sikos_2021": -2618.820898807232
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 70.82866245182322,
+     "mayn_demberg_2023": 92.88172940457662,
+     "mayn_demberg_2026": 119.17644010358345,
+     "pragmods": 122.14507150781992,
+     "sikos_2021": 0.7326911720842872
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 24.692746403129664,
+     "mayn_demberg_2023": 27.51735816156093,
+     "mayn_demberg_2026": 51.132227880463525,
+     "pragmods": 37.78591459946693,
+     "sikos_2021": 0.41018119524830804
+    },
+    "sel_elpd": -19062.609153081175,
+    "sel_diff": 405.10357464508706,
+    "sel_dse": 73.0228251148791
+   },
+   "rsa_l2": {
+    "rank": 8,
+    "elpd_loo": -19062.124331474304,
+    "se": 131.64048851646612,
+    "elpd_diff": 407.06628799438477,
+    "dse": 29.433067630319982,
+    "p_loo": 0.9674959560361458,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -19063.03305634412,
+    "cv_diff": 405.52747790803187,
+    "cv_dse": 73.08513340420836,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2442.207524636274,
+     "mayn_demberg_2023": -4215.1879617507075,
+     "mayn_demberg_2026": -5701.530043919978,
+     "pragmods": -4085.2312482344805,
+     "sikos_2021": -2618.876277802681
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 70.86316699116651,
+     "mayn_demberg_2023": 92.96362807813057,
+     "mayn_demberg_2026": 119.26129712558941,
+     "pragmods": 122.31233554041455,
+     "sikos_2021": 0.7880701675335331
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 24.708762592807034,
+     "mayn_demberg_2023": 27.541012410115737,
+     "mayn_demberg_2026": 51.17789832760383,
+     "pragmods": 37.81874037602258,
+     "sikos_2021": 0.4336239563064813
+    },
+    "sel_elpd": -19063.03305634412,
+    "sel_diff": 405.52747790803187,
+    "sel_dse": 73.08513340420836
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "valence_salience_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential expressions through an affective framing mechanism that scales object salience by the speaker's emotional valence. Under positive or neutral framing, feature-rich objects are perceived as desirable and salient targets, whereas under negative framing ('least favorite'), this preference is inverted toward plainer objects. The listener coordinates with the speaker by adopting this valence-modulated salience prior across both prior expectations and communicative inference."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "literal_salience_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret utterances literally rather than pragmatically: they select among referents of which the heard word is true based strictly on prior contextual salience, without simulating alternative words a speaker could have chosen. On a display with a one-feature object and a two-feature object that both possess the named feature, this mechanism predicts that listeners will favor the two-feature object because its greater feature count makes it more salient a priori, directly reversing the pragmatic model's prediction that the one-feature object is favored because a speaker meaning the two-feature object would have named its alternative feature."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "costly_feature_speaker",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Speakers balance communicative informativeness against utterance production costs, incurring a penalty for producing shared, non-distinctive words that apply to multiple referents in the visual scene. Pragmatic listeners invert this cost-sensitive speaker, reasoning that an utterance describing a shared feature is less likely to have been chosen if a less costly distinctive alternative was available. On prior trials with no informative word, listeners choose uniformly among the available objects."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "listener_rationality_shared_prior",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "rsa_l1_valence_shared_prior",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0000 of valence_salience_listener's (threshold 0.002) over the loop's novelty pool of 1258 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Emotional valence linearly modulates the common-knowledge feature salience prior: while people expect speakers in neutral or positive settings to refer to feature-rich salient objects, a speaker describing their least favorite object is expected to refer to simpler, less feature-rich objects. In Depth-1 RSA, this valence-dampened salience prior is shared between the literal listener and the pragmatic listener, flattening or reversing the prior expectation over objects when valence is negative.\n\nDifferences from source (rsa_l1_shared_prior):\n- Recursion depth: Unchanged (choice_probs calls L1 at depth 1).\n- Parameters added: w_valence (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In choice_probs, the prior feature logit term params[\"w_features\"] * ctx.feature_count is replaced by (params[\"w_features\"] + params[\"w_valence\"] * ctx.valence) * ctx.feature_count."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "valence_salience_listener_2",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0008 of valence_salience_listener's (threshold 0.002) over the loop's novelty pool of 1258 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "We refine rsa_l1_salience by proposing that affective framing modulates object salience: listeners expect a speaker describing their favorite object to favor feature-rich items, whereas a speaker describing their least favorite object attenuates or reverses this feature-rich preference.\n\nDifferences from source rsa_l1_salience:\n- Model refined: rsa_l1_salience\n- Recursion depth: unchanged (choice_probs calls L1)\n- Parameters added: w_valence with prior dist.Normal(0.0, 1.0)\n- Parameters removed: none\n- Other terms: in choice_probs, the object prior logits include an affective framing term modulating feature salience by speaker valence, w_valence * ctx.valence * ctx.feature_count."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "costly_feature_shared_prior",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Pragmatic speakers balance communicative informativeness against utterance production costs, penalizing non-distinctive words that apply to multiple referents in the visual scene, while coordinating on a shared salience prior over objects with listeners. By incorporating this utterance cost into the speaker's utility, the pragmatic listener expects speakers to prefer distinctive terms over shared ones even when both are literally truthful, sharpening pragmatic referent selection beyond object salience alone.\n\nDifferences from source (rsa_l1_shared_prior):\n- Recursion depth: Unchanged (choice_probs calls L1 at depth 1).\n- Parameters added: cost (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L1, the speaker's choice weight incorporates an utterance production cost penalty `- cost * vec(utt_cost, u)`, where `utt_cost` measures the excess extension of non-sink utterances across referents (`jnp.maximum(0.0, jnp.sum(ctx.lex * (1.0 - ctx.is_sink)[:, None], axis=1) - 1.0)`).",
+    "repair": true
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "costly_feature_salience_listener",
+    "outcome": "rejected",
+    "reason": "the fit did not converge even at target_accept 0.95: 5 divergent transitions of 4000. Reparameterise (e.g. sample on an unconstrained scale, tighten priors) rather than relying on smaller steps.",
+    "hypothesis": "We refine rsa_l1_salience by proposing that speakers balance communicative informativeness against utterance production costs, penalizing shared non-distinctive descriptors that refer to multiple objects in the visual scene. Pragmatic listeners invert this cost-sensitive speaker to disambiguate referents, while coordinating their inferences with contextual object salience driven by feature richness and familiarization base rates.\n\nDifferences from source rsa_l1_salience:\n- Model refined: rsa_l1_salience\n- Recursion depth: unchanged (choice_probs calls L1 at depth 1)\n- Parameters added: cost with prior dist.Normal(0.0, 1.0)\n- Parameters removed: none\n- Other terms: In L1, the speaker's utility subtracts an utterance production cost for non-distinctive words, - cost * vec(utt_cost, u), where utt_cost is the extension size of non-sink words beyond a single referent.",
+    "repair": true
+   }
+  ],
+  "live": [
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_salience",
+    "hypothesis": "Depth-1 RSA whose listener has a salience prior over objects (feature count, familiarization base rate) that the simulated literal listener lacks.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_shared_prior",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "valence_salience_listener",
+    "hypothesis": "Listeners interpret referential expressions through an affective framing mechanism that scales object salience by the speaker's emotional valence. Under positive or neutral framing, feature-rich objects are perceived as desirable and salient targets, whereas under negative framing ('least favorite'), this preference is inverted toward plainer objects. The listener coordinates with the speaker by adopting this valence-modulated salience prior across both prior expectations and communicative inference.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "literal_salience_listener",
+    "hypothesis": "Listeners interpret utterances literally rather than pragmatically: they select among referents of which the heard word is true based strictly on prior contextual salience, without simulating alternative words a speaker could have chosen. On a display with a one-feature object and a two-feature object that both possess the named feature, this mechanism predicts that listeners will favor the two-feature object because its greater feature count makes it more salient a priori, directly reversing the pragmatic model's prediction that the one-feature object is favored because a speaker meaning the two-feature object would have named its alternative feature.\n",
+    "source": "round 1 candidate 2 explore"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "hypothesis": "Speakers balance communicative informativeness against utterance production costs, incurring a penalty for producing shared, non-distinctive words that apply to multiple referents in the visual scene. Pragmatic listeners invert this cost-sensitive speaker, reasoning that an utterance describing a shared feature is less likely to have been chosen if a less costly distinctive alternative was available. On prior trials with no informative word, listeners choose uniformly among the available objects.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "listener_rationality_shared_prior",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.\n",
+    "source": "round 1 candidate 4 refine incumbent rsa_l1_shared_prior"
+   },
+   {
+    "name": "costly_feature_shared_prior",
+    "hypothesis": "Pragmatic speakers balance communicative informativeness against utterance production costs, penalizing non-distinctive words that apply to multiple referents in the visual scene, while coordinating on a shared salience prior over objects with listeners. By incorporating this utterance cost into the speaker's utility, the pragmatic listener expects speakers to prefer distinctive terms over shared ones even when both are literally truthful, sharpening pragmatic referent selection beyond object salience alone.\n\nDifferences from source (rsa_l1_shared_prior):\n- Recursion depth: Unchanged (choice_probs calls L1 at depth 1).\n- Parameters added: cost (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L1, the speaker's choice weight incorporates an utterance production cost penalty `- cost * vec(utt_cost, u)`, where `utt_cost` measures the excess extension of non-sink utterances across referents (`jnp.maximum(0.0, jnp.sum(ctx.lex * (1.0 - ctx.is_sink)[:, None], axis=1) - 1.0)`).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l1_shared_prior repair 1"
+   }
+  ],
+  "ledger_entries": 8
+ },
+ {
+  "step": 2,
+  "round": 1,
+  "best_model": "graded_specificity_listener",
+  "standing": {
+   "graded_specificity_listener": {
+    "rank": 0,
+    "elpd_loo": -18654.830012321472,
+    "se": 127.91254115676763,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 2.6922340106466436,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18656.34897868063,
+    "cv_diff": 0.0,
+    "cv_dse": 0.0,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.184123795828,
+     "mayn_demberg_2023": -4122.544806011227,
+     "mayn_demberg_2026": -5582.078069863753,
+     "pragmods": -3962.13454226042,
+     "sikos_2021": -2618.407436749405
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 0.320472338649779,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 0.0,
+     "sikos_2021": 0.3192291142572685
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 0.19008241164678918,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 0.0,
+     "sikos_2021": 0.23272081284637464
+    },
+    "sel_elpd": -18656.34897868063,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0
+   },
+   "literal_salience_listener": {
+    "rank": 1,
+    "elpd_loo": -18655.05804347992,
+    "se": 127.91014877822954,
+    "elpd_diff": 0.22803115844726562,
+    "dse": 0.843617820614449,
+    "p_loo": 3.025718893739395,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18657.50557843609,
+    "cv_diff": 1.1565997554571368,
+    "cv_dse": 0.9710303418205553,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.3443576451073,
+     "mayn_demberg_2023": -4122.224333672577,
+     "mayn_demberg_2026": -5582.268746794389,
+     "pragmods": -3962.918912694066,
+     "sikos_2021": -2618.7492276299513
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 0.16023384927939333,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 0.19067693063607294,
+     "pragmods": 0.7843704336460178,
+     "sikos_2021": 0.6610199948036097
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.17858217370020596,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 0.41441726653700167,
+     "pragmods": 0.8081218641844294,
+     "sikos_2021": 0.39432955906703815
+    },
+    "sel_elpd": -18657.50557843609,
+    "sel_diff": 1.1565997554571368,
+    "sel_dse": 0.9710303418205553
+   },
+   "bounded_alternatives_listener": {
+    "rank": 2,
+    "elpd_loo": -18655.489822387695,
+    "se": 127.90278211396547,
+    "elpd_diff": 0.6598100662231445,
+    "dse": 0.5720371623759682,
+    "p_loo": 3.4931372995779384,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18658.110710338682,
+    "cv_diff": 1.7617316580508486,
+    "cv_dse": 0.7987944190244691,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.564374142289,
+     "mayn_demberg_2023": -4122.889375041186,
+     "mayn_demberg_2026": -5582.13762453094,
+     "pragmods": -3963.276908911554,
+     "sikos_2021": -2618.242427712716
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 0.3802503464612528,
+     "mayn_demberg_2023": 0.6650413686093088,
+     "mayn_demberg_2026": 0.05955466718751268,
+     "pragmods": 1.1423666511341253,
+     "sikos_2021": 0.15422007756842504
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.15671095866698578,
+     "mayn_demberg_2023": 0.30688996166167604,
+     "mayn_demberg_2026": 0.2478597102933198,
+     "pragmods": 0.7009146495458448,
+     "sikos_2021": 0.180567343398531
+    },
+    "sel_elpd": -18658.110710338682,
+    "sel_diff": 1.7617316580508486,
+    "sel_dse": 0.7987944190244691
+   },
+   "costly_feature_listener_rationality": {
+    "rank": 3,
+    "elpd_loo": -18665.270111083984,
+    "se": 127.91515009313748,
+    "elpd_diff": 10.440098762512207,
+    "dse": 4.721862959960863,
+    "p_loo": 4.387574426546053,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18667.316098975974,
+    "cv_diff": 10.967120295343193,
+    "cv_dse": 4.925314184900415,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2374.5974778410855,
+     "mayn_demberg_2023": -4122.692711176285,
+     "mayn_demberg_2026": -5582.334610245033,
+     "pragmods": -3966.859137916878,
+     "sikos_2021": -2620.832161796694
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 3.41335404525762,
+     "mayn_demberg_2023": 0.4683775037083251,
+     "mayn_demberg_2026": 0.2565403812805016,
+     "pragmods": 4.72459565645795,
+     "sikos_2021": 2.7439541615462986
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 1.6066954973888288,
+     "mayn_demberg_2023": 1.6947782210693245,
+     "mayn_demberg_2026": 2.1357864015473464,
+     "pragmods": 3.4647068455759102,
+     "sikos_2021": 1.629333167447983
+    },
+    "sel_elpd": -18667.316098975974,
+    "sel_diff": 10.967120295343193,
+    "sel_dse": 4.925314184900415
+   },
+   "naive_speaker_rational_listener": {
+    "rank": 4,
+    "elpd_loo": -18672.607139587402,
+    "se": 127.98476546611356,
+    "elpd_diff": 17.777127265930176,
+    "dse": 5.623850776684817,
+    "p_loo": 3.436472502115066,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18675.160201662176,
+    "cv_diff": 18.811222981545143,
+    "cv_dse": 6.658660618216618,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2375.9301905902394,
+     "mayn_demberg_2023": -4125.610670719726,
+     "mayn_demberg_2026": -5582.493156165492,
+     "pragmods": -3972.5983036394146,
+     "sikos_2021": -2618.5278805473035
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 4.74606679441149,
+     "mayn_demberg_2023": 3.386337047149027,
+     "mayn_demberg_2026": 0.4150863017393931,
+     "pragmods": 10.463761378994604,
+     "sikos_2021": 0.43967291215585647
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 2.1170206534656923,
+     "mayn_demberg_2023": 2.3334816970871093,
+     "mayn_demberg_2026": 2.165272266032617,
+     "pragmods": 5.410605266176925,
+     "sikos_2021": 0.2758858848837247
+    },
+    "sel_elpd": -18675.160201662176,
+    "sel_diff": 18.811222981545143,
+    "sel_dse": 6.658660618216618
+   },
+   "listener_rationality_shared_prior": {
+    "rank": 5,
+    "elpd_loo": -18674.61758708954,
+    "se": 128.00224326178883,
+    "elpd_diff": 19.787574768066406,
+    "dse": 5.917730689400961,
+    "p_loo": 3.4495279481780017,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18677.843146774525,
+    "cv_diff": 21.494168093893677,
+    "cv_dse": 7.07418021223146,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2376.4648056110573,
+     "mayn_demberg_2023": -4126.324214950213,
+     "mayn_demberg_2026": -5583.264297098634,
+     "pragmods": -3973.701621479471,
+     "sikos_2021": -2618.0882076351477
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 5.2806818152294,
+     "mayn_demberg_2023": 4.0998812776360865,
+     "mayn_demberg_2026": 1.1862272348816987,
+     "pragmods": 11.567079219051266,
+     "sikos_2021": 0.0
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 2.2374589201721604,
+     "mayn_demberg_2023": 2.514944661536931,
+     "mayn_demberg_2026": 2.301301043216439,
+     "pragmods": 5.74000713682848,
+     "sikos_2021": 0.0
+    },
+    "sel_elpd": -18677.843146774525,
+    "sel_diff": 21.494168093893677,
+    "sel_dse": 7.07418021223146
+   },
+   "costly_feature_shared_prior": {
+    "rank": 6,
+    "elpd_loo": -18730.256805419922,
+    "se": 128.49997437913817,
+    "elpd_diff": 75.4267930984497,
+    "dse": 12.724158991317573,
+    "p_loo": 4.760041312358226,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18740.96697939893,
+    "cv_diff": 84.6180007182993,
+    "cv_dse": 18.081139861726143,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2380.4365179151864,
+     "mayn_demberg_2023": -4128.506658658244,
+     "mayn_demberg_2026": -5587.932445871994,
+     "pragmods": -4022.5348286190456,
+     "sikos_2021": -2621.5565283344636
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 9.252394119358542,
+     "mayn_demberg_2023": 6.282324985667401,
+     "mayn_demberg_2026": 5.854376008241161,
+     "pragmods": 60.400286358625635,
+     "sikos_2021": 3.468320699315882
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 3.6984754041066235,
+     "mayn_demberg_2023": 3.7232035562545533,
+     "mayn_demberg_2026": 4.523779707961538,
+     "pragmods": 15.586770152678318,
+     "sikos_2021": 1.8173597352752309
+    },
+    "sel_elpd": -18740.96697939893,
+    "sel_diff": 84.6180007182993,
+    "sel_dse": 18.081139861726143
+   },
+   "valence_salience_listener": {
+    "rank": 7,
+    "elpd_loo": -18744.53733444214,
+    "se": 128.6646714866001,
+    "elpd_diff": 89.7073221206665,
+    "dse": 13.420711917828358,
+    "p_loo": 4.134633456556912,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18792.968819852707,
+    "cv_diff": 136.61984117207612,
+    "cv_dse": 45.905722107116006,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2377.8545415391427,
+     "mayn_demberg_2023": -4129.5893515842745,
+     "mayn_demberg_2026": -5582.8457389627,
+     "pragmods": -4084.5599457294766,
+     "sikos_2021": -2618.1192420371135
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 6.670417743314829,
+     "mayn_demberg_2023": 7.365017911697578,
+     "mayn_demberg_2026": 0.7676690989474082,
+     "pragmods": 122.42540346905662,
+     "sikos_2021": 0.031034401965825964
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 3.279389221459029,
+     "mayn_demberg_2023": 3.4480514466789955,
+     "mayn_demberg_2026": 2.5078277159349813,
+     "pragmods": 43.74067442845808,
+     "sikos_2021": 0.2238699158515643
+    },
+    "sel_elpd": -18792.968819852707,
+    "sel_diff": 136.61984117207612,
+    "sel_dse": 45.905722107116006
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 8,
+    "elpd_loo": -18749.3999710083,
+    "se": 128.73163133614682,
+    "elpd_diff": 94.56995868682861,
+    "dse": 13.800094765394388,
+    "p_loo": 3.1862233343417756,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18757.62145134278,
+    "cv_diff": 101.27247266214908,
+    "cv_dse": 22.981269174311876,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2378.573871241859,
+     "mayn_demberg_2023": -4130.818186447504,
+     "mayn_demberg_2026": -5583.892657953603,
+     "pragmods": -4046.1586962562224,
+     "sikos_2021": -2618.178039443591
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 7.389747446030924,
+     "mayn_demberg_2023": 8.593852774926745,
+     "mayn_demberg_2026": 1.8145880898500764,
+     "pragmods": 84.02415399580241,
+     "sikos_2021": 0.08983180844325034
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 3.6461665645835515,
+     "mayn_demberg_2023": 3.8742744896857633,
+     "mayn_demberg_2026": 2.8455868278999255,
+     "pragmods": 20.450092136635185,
+     "sikos_2021": 0.2144625486195503
+    },
+    "sel_elpd": -18757.62145134278,
+    "sel_diff": 101.27247266214908,
+    "sel_dse": 22.981269174311876
+   },
+   "rsa_l1_salience": {
+    "rank": 9,
+    "elpd_loo": -18749.69937324524,
+    "se": 128.7166907054278,
+    "elpd_diff": 94.86936092376709,
+    "dse": 13.809943092872922,
+    "p_loo": 3.174843037053506,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18758.25641181512,
+    "cv_diff": 101.90743313448911,
+    "cv_dse": 22.987748137285628,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2378.7862843947278,
+     "mayn_demberg_2023": -4130.8441954138325,
+     "mayn_demberg_2026": -5583.989278308338,
+     "pragmods": -4046.2997510361656,
+     "sikos_2021": -2618.33690266206
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 7.6021605988999,
+     "mayn_demberg_2023": 8.61986174125559,
+     "mayn_demberg_2026": 1.9112084445850996,
+     "pragmods": 84.16520877574567,
+     "sikos_2021": 0.2486950269121735
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 3.713555718300156,
+     "mayn_demberg_2023": 3.903184504277183,
+     "mayn_demberg_2026": 2.859431237198664,
+     "pragmods": 20.43904910874222,
+     "sikos_2021": 0.20901923101340264
+    },
+    "sel_elpd": -18758.25641181512,
+    "sel_diff": 101.90743313448911,
+    "sel_dse": 22.987748137285628
+   },
+   "communicative_affordance_listener": {
+    "rank": 10,
+    "elpd_loo": -18793.710774421692,
+    "se": 128.89208495632047,
+    "elpd_diff": 138.88076210021973,
+    "dse": 16.823735545147027,
+    "p_loo": 3.5452535701260786,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18803.700505587512,
+    "cv_diff": 147.3515269068812,
+    "cv_dse": 24.27102073038601,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2388.4312208877986,
+     "mayn_demberg_2023": -4137.199427455973,
+     "mayn_demberg_2026": -5598.867867738407,
+     "pragmods": -4034.5376610563126,
+     "sikos_2021": -2644.66432844902
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 17.247097091970772,
+     "mayn_demberg_2023": 14.975093783396005,
+     "mayn_demberg_2026": 16.78979787465414,
+     "pragmods": 72.40311879589262,
+     "sikos_2021": 26.57612081387242
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 5.807071734755521,
+     "mayn_demberg_2023": 5.997487508903494,
+     "mayn_demberg_2026": 7.165554798592965,
+     "pragmods": 18.045708192106943,
+     "sikos_2021": 11.267266900240012
+    },
+    "sel_elpd": -18803.700505587512,
+    "sel_diff": 147.3515269068812,
+    "sel_dse": 24.27102073038601
+   },
+   "costly_feature_speaker": {
+    "rank": 11,
+    "elpd_loo": -18848.6272315979,
+    "se": 129.58183065163496,
+    "elpd_diff": 193.79721927642822,
+    "dse": 20.746422018574215,
+    "p_loo": 2.306877891838667,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": false,
+    "elpd_cv": -18850.048475272986,
+    "cv_diff": 193.699496592355,
+    "cv_dse": 29.58850056135736,
+    "cv_converged": false,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2409.2049305003166,
+     "mayn_demberg_2023": -4161.761831920574,
+     "mayn_demberg_2026": -5639.539726858879,
+     "pragmods": -3997.8608045000547,
+     "sikos_2021": -2641.6811814931634
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 38.02080670448868,
+     "mayn_demberg_2023": 39.537498247997064,
+     "mayn_demberg_2026": 57.46165699512585,
+     "pragmods": 35.72626223963471,
+     "sikos_2021": 23.59297385801574
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 10.323308769140516,
+     "mayn_demberg_2023": 10.52421653829746,
+     "mayn_demberg_2026": 19.04656347002836,
+     "pragmods": 13.144731235957268,
+     "sikos_2021": 13.260635300088346
+    },
+    "sel_elpd": -18850.048475272986,
+    "sel_diff": 193.699496592355,
+    "sel_dse": 29.58850056135736
+   },
+   "rsa_l1": {
+    "rank": 12,
+    "elpd_loo": -19061.83660507202,
+    "se": 131.62528639294771,
+    "elpd_diff": 407.0065927505493,
+    "dse": 29.385106456531044,
+    "p_loo": 1.0171159491728758,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -19062.609153081175,
+    "cv_diff": 406.2601744005442,
+    "cv_dse": 73.13664883563264,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2442.1730200969305,
+     "mayn_demberg_2023": -4215.1060630771535,
+     "mayn_demberg_2026": -5701.445186897972,
+     "pragmods": -4085.063984201886,
+     "sikos_2021": -2618.820898807232
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 70.98889630110261,
+     "mayn_demberg_2023": 92.88172940457662,
+     "mayn_demberg_2026": 119.36711703421952,
+     "pragmods": 122.92944194146594,
+     "sikos_2021": 0.7326911720842872
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 24.728145310578604,
+     "mayn_demberg_2023": 27.51735816156093,
+     "mayn_demberg_2026": 51.32050205563578,
+     "pragmods": 37.74483843781975,
+     "sikos_2021": 0.41018119524830804
+    },
+    "sel_elpd": -19062.609153081175,
+    "sel_diff": 406.2601744005442,
+    "sel_dse": 73.13664883563264
+   },
+   "rsa_l2": {
+    "rank": 13,
+    "elpd_loo": -19062.124331474304,
+    "se": 131.64048851646612,
+    "elpd_diff": 407.29431915283203,
+    "dse": 29.39551516664577,
+    "p_loo": 0.9674959560361458,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -19063.03305634412,
+    "cv_diff": 406.684077663489,
+    "cv_dse": 73.19904619528641,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2442.207524636274,
+     "mayn_demberg_2023": -4215.1879617507075,
+     "mayn_demberg_2026": -5701.530043919978,
+     "pragmods": -4085.2312482344805,
+     "sikos_2021": -2618.876277802681
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 71.0234008404459,
+     "mayn_demberg_2023": 92.96362807813057,
+     "mayn_demberg_2026": 119.45197405622548,
+     "pragmods": 123.09670597406057,
+     "sikos_2021": 0.7880701675335331
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 24.74414621823887,
+     "mayn_demberg_2023": 27.541012410115737,
+     "mayn_demberg_2026": 51.36615016357536,
+     "pragmods": 37.77767591115061,
+     "sikos_2021": 0.4336239563064813
+    },
+    "sel_elpd": -19063.03305634412,
+    "sel_diff": 406.684077663489,
+    "sel_dse": 73.19904619528641
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "communicative_affordance_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners expect speakers to talk about objects that can be communicated effectively: before hearing an informative word, listeners assign higher prior probability to referents possessing greater communicative affordance, reasoning that a speaker constrained to a single word prefers to discuss topics that can be conveyed with high discriminative precision. In pragmatic reference games, listeners coordinate with the speaker on this topic prior, expecting the speaker's referential goal to favor objects with distinctive communicative descriptors over ambiguous ones."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "bounded_alternatives_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners have bounded attentional resources to generate and reason over unmentioned alternative utterances when interpreting a speaker. When simulating the speaker's utterance choice, a resource-limited listener discounts unmentioned alternative expressions relative to the focal heard word, reducing the speaker's perceived likelihood of having chosen an alternative descriptor. Under limited attention to alternatives, the listener relies predominantly on literal semantics and contextual salience, attenuating the pragmatic pressure of scalar implicature."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "graded_specificity_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential expressions through graded truth values rather than binary logic: a word's degree of truth decays with the referent's total feature complexity and is further discounted when the referent possesses unmentioned distinctive features that could have uniquely identified it. When interpreting an utterance, listeners choose among candidate referents in proportion to this graded semantic fit and prior familiarization expectations, without simulating a counterfactual speaker."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "literal_exhaustive_listener",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0017 of bounded_alternatives_listener's (threshold 0.002) over the loop's novelty pool of 1258 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Listeners interpret utterances literally according to contextual salience, but also apply an exhaustivity preference that penalizes referents possessing unmentioned excess features beyond the named word. When choosing among objects of which the heard utterance is literally true, listeners discount referents that have additional unmentioned features, resolving the tension between prior visual salience (which favors feature-rich objects when no word is heard) and communicative specificity (which favors objects exhaustively described by the speaker's word).\n\nDifferences from source (literal_salience_listener):\n- Recursion depth: Unchanged (choice_probs calls L0 at depth 0).\n- Parameters added: exhaustivity (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L0, the listener's choice weight incorporates an exhaustivity penalty `exp(-exhaustivity * vec(excess, r))`, where `excess` measures the number of unmentioned features possessed by object `r` beyond the named descriptor (`jnp.maximum(0.0, ctx.feature_count - 1.0)`)."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "descriptive_specificity_listener",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0015 of literal_salience_listener's (threshold 0.002) over the loop's novelty pool of 1258 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Listeners interpret utterances literally according to contextual salience, but weight candidate referents by their descriptive specificity: the proportion of an object's features captured by the uttered word (the reciprocal of the object's feature count). When a speaker uses a single feature word, referents possessing only that named feature are fully and specifically described, whereas referents possessing additional unmentioned features are only partially described and discounted accordingly. On prior trials with no informative word, choices are governed strictly by contextual salience without any specificity weighting.\n\nDifferences from source (literal_salience_listener):\n- Recursion depth: Unchanged (choice_probs calls L0 at depth 0).\n- Parameters added: w_specificity (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In choice_probs and L0, matching referents receive a descriptive specificity weight `exp(w_specificity * vec(spec, r))`, where `spec = 1.0 / jnp.maximum(1.0, ctx.feature_count)` represents the fraction of object r's features accounted for by a single uttered descriptor."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "costly_feature_listener_rationality",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine listener_rationality_shared_prior by proposing that speakers trade off communicative informativeness against utterance production costs, penalizing ambiguous words that refer to multiple objects in the visual display. Pragmatic listeners invert this cost-sensitive speaker, reasoning that an utterance describing a shared feature is less likely to have been chosen if a less costly distinctive alternative was available, while making boundedly rational softmax choices over candidate referents. When no informative word is heard, listeners choose according to contextual object salience.\n\nDifferences from source (listener_rationality_shared_prior):\n- Recursion depth: Unchanged (choice_probs calls L1 at depth 1).\n- Parameters added: cost (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L1, the speaker's choice weight incorporates an utterance production cost penalty `- cost * vec(utt_cost, u)`, where `utt_cost` measures the excess extension of non-sink utterances across referents (`jnp.maximum(0.0, jnp.sum(ctx.lex * (1.0 - ctx.is_sink)[:, None], axis=1) - 1.0)`)."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "literal_exhaustive_listener_2",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0017 of bounded_alternatives_listener's (threshold 0.002) over the loop's novelty pool of 1258 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Listeners interpret utterances literally according to contextual salience, but also apply an exhaustivity preference that penalizes referents possessing unmentioned excess features beyond the named word. When choosing among objects of which the heard utterance is literally true, listeners discount referents that have additional unmentioned features, resolving the tension between prior visual salience (which favors feature-rich objects when no word is heard) and communicative specificity (which favors objects exhaustively described by the speaker's word).\n\nDifferences from source (literal_salience_listener):\n- Recursion depth: Unchanged (choice_probs calls L0 at depth 0).\n- Parameters added: exhaustivity (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L0, the listener's choice weight incorporates an exhaustivity penalty `exp(-exhaustivity * vec(excess, r))`, where `excess` measures the number of unmentioned features possessed by object `r` beyond the named descriptor (`jnp.maximum(0.0, ctx.feature_count - 1.0)`).",
+    "repair": true
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "naive_speaker_rational_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine literal_salience_listener by elevating the listener from depth 0 to depth 1 to invert a naive, truthful speaker: rather than evaluating words in isolation, listeners model the speaker as randomly selecting one feature of the intended object, making boundedly rational softmax choices over candidate referents. Because an object with multiple features provides more descriptive options for the speaker, naming a shared feature provides weaker evidence for a complex referent than for a minimally described referent, naturally disfavoring over-specified objects without simulating counterfactual listeners. On prior trials with no informative word, choices are governed strictly by contextual object salience.\n\nDifferences from source (literal_salience_listener):\n- Recursion depth: Changed from depth 0 (choice_probs calls L0) to depth 1 (choice_probs calls L1).\n- Parameters added: beta (prior: LogNormal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: choice_probs calls L1 instead of L0. In L1, the listener simulates a naive speaker choosing truthfully among valid descriptors (`wpp = at(lex, u, r)`) given prior object distribution `vec(prior, r)`, and the listener chooses referents via softmax rationality `exp(beta * log(Pr[speaker.r == r] + {EPS}))`.",
+    "repair": true
+   }
+  ],
+  "live": [
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_salience",
+    "hypothesis": "Depth-1 RSA whose listener has a salience prior over objects (feature count, familiarization base rate) that the simulated literal listener lacks.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_shared_prior",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "valence_salience_listener",
+    "hypothesis": "Listeners interpret referential expressions through an affective framing mechanism that scales object salience by the speaker's emotional valence. Under positive or neutral framing, feature-rich objects are perceived as desirable and salient targets, whereas under negative framing ('least favorite'), this preference is inverted toward plainer objects. The listener coordinates with the speaker by adopting this valence-modulated salience prior across both prior expectations and communicative inference.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "literal_salience_listener",
+    "hypothesis": "Listeners interpret utterances literally rather than pragmatically: they select among referents of which the heard word is true based strictly on prior contextual salience, without simulating alternative words a speaker could have chosen. On a display with a one-feature object and a two-feature object that both possess the named feature, this mechanism predicts that listeners will favor the two-feature object because its greater feature count makes it more salient a priori, directly reversing the pragmatic model's prediction that the one-feature object is favored because a speaker meaning the two-feature object would have named its alternative feature.\n",
+    "source": "round 1 candidate 2 explore"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "hypothesis": "Speakers balance communicative informativeness against utterance production costs, incurring a penalty for producing shared, non-distinctive words that apply to multiple referents in the visual scene. Pragmatic listeners invert this cost-sensitive speaker, reasoning that an utterance describing a shared feature is less likely to have been chosen if a less costly distinctive alternative was available. On prior trials with no informative word, listeners choose uniformly among the available objects.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "listener_rationality_shared_prior",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.\n",
+    "source": "round 1 candidate 4 refine incumbent rsa_l1_shared_prior"
+   },
+   {
+    "name": "costly_feature_shared_prior",
+    "hypothesis": "Pragmatic speakers balance communicative informativeness against utterance production costs, penalizing non-distinctive words that apply to multiple referents in the visual scene, while coordinating on a shared salience prior over objects with listeners. By incorporating this utterance cost into the speaker's utility, the pragmatic listener expects speakers to prefer distinctive terms over shared ones even when both are literally truthful, sharpening pragmatic referent selection beyond object salience alone.\n\nDifferences from source (rsa_l1_shared_prior):\n- Recursion depth: Unchanged (choice_probs calls L1 at depth 1).\n- Parameters added: cost (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L1, the speaker's choice weight incorporates an utterance production cost penalty `- cost * vec(utt_cost, u)`, where `utt_cost` measures the excess extension of non-sink utterances across referents (`jnp.maximum(0.0, jnp.sum(ctx.lex * (1.0 - ctx.is_sink)[:, None], axis=1) - 1.0)`).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l1_shared_prior repair 1"
+   },
+   {
+    "name": "communicative_affordance_listener",
+    "hypothesis": "Listeners expect speakers to talk about objects that can be communicated effectively: before hearing an informative word, listeners assign higher prior probability to referents possessing greater communicative affordance, reasoning that a speaker constrained to a single word prefers to discuss topics that can be conveyed with high discriminative precision. In pragmatic reference games, listeners coordinate with the speaker on this topic prior, expecting the speaker's referential goal to favor objects with distinctive communicative descriptors over ambiguous ones.\n",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "bounded_alternatives_listener",
+    "hypothesis": "Listeners have bounded attentional resources to generate and reason over unmentioned alternative utterances when interpreting a speaker. When simulating the speaker's utterance choice, a resource-limited listener discounts unmentioned alternative expressions relative to the focal heard word, reducing the speaker's perceived likelihood of having chosen an alternative descriptor. Under limited attention to alternatives, the listener relies predominantly on literal semantics and contextual salience, attenuating the pragmatic pressure of scalar implicature.\n",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "graded_specificity_listener",
+    "hypothesis": "Listeners interpret referential expressions through graded truth values rather than binary logic: a word's degree of truth decays with the referent's total feature complexity and is further discounted when the referent possesses unmentioned distinctive features that could have uniquely identified it. When interpreting an utterance, listeners choose among candidate referents in proportion to this graded semantic fit and prior familiarization expectations, without simulating a counterfactual speaker.\n",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "costly_feature_listener_rationality",
+    "hypothesis": "We refine listener_rationality_shared_prior by proposing that speakers trade off communicative informativeness against utterance production costs, penalizing ambiguous words that refer to multiple objects in the visual display. Pragmatic listeners invert this cost-sensitive speaker, reasoning that an utterance describing a shared feature is less likely to have been chosen if a less costly distinctive alternative was available, while making boundedly rational softmax choices over candidate referents. When no informative word is heard, listeners choose according to contextual object salience.\n\nDifferences from source (listener_rationality_shared_prior):\n- Recursion depth: Unchanged (choice_probs calls L1 at depth 1).\n- Parameters added: cost (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L1, the speaker's choice weight incorporates an utterance production cost penalty `- cost * vec(utt_cost, u)`, where `utt_cost` measures the excess extension of non-sink utterances across referents (`jnp.maximum(0.0, jnp.sum(ctx.lex * (1.0 - ctx.is_sink)[:, None], axis=1) - 1.0)`).\n",
+    "source": "round 2 candidate 6 refine chosen"
+   },
+   {
+    "name": "naive_speaker_rational_listener",
+    "hypothesis": "We refine literal_salience_listener by elevating the listener from depth 0 to depth 1 to invert a naive, truthful speaker: rather than evaluating words in isolation, listeners model the speaker as randomly selecting one feature of the intended object, making boundedly rational softmax choices over candidate referents. Because an object with multiple features provides more descriptive options for the speaker, naming a shared feature provides weaker evidence for a complex referent than for a minimally described referent, naturally disfavoring over-specified objects without simulating counterfactual listeners. On prior trials with no informative word, choices are governed strictly by contextual object salience.\n\nDifferences from source (literal_salience_listener):\n- Recursion depth: Changed from depth 0 (choice_probs calls L0) to depth 1 (choice_probs calls L1).\n- Parameters added: beta (prior: LogNormal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: choice_probs calls L1 instead of L0. In L1, the listener simulates a naive speaker choosing truthfully among valid descriptors (`wpp = at(lex, u, r)`) given prior object distribution `vec(prior, r)`, and the listener chooses referents via softmax rationality `exp(beta * log(Pr[speaker.r == r] + {EPS}))`.\n",
+    "source": "round 2 candidate 5 refine incumbent literal_salience_listener repair 1"
+   }
+  ],
+  "ledger_entries": 16
+ },
+ {
+  "step": 3,
+  "round": 2,
+  "best_model": "fewest_features_listener",
+  "standing": {
+   "fewest_features_listener": {
+    "rank": 0,
+    "elpd_loo": -18654.740566253662,
+    "se": 127.91292333777345,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 2.5925408855910064,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18654.766406854393,
+    "cv_diff": 0.0,
+    "cv_dse": 0.0,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.8156217264595,
+     "mayn_demberg_2023": -4122.650191713723,
+     "mayn_demberg_2026": -5580.802224680836,
+     "pragmods": -3960.744563602428,
+     "sikos_2021": -2618.753805130942
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.4601824777364527,
+     "mayn_demberg_2023": 0.7192882070376072,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 0.0,
+     "sikos_2021": 0.6655974957943727
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 1.1305505676052778,
+     "mayn_demberg_2023": 1.1452339276945165,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 0.0,
+     "sikos_2021": 0.39566898705950343
+    },
+    "sel_elpd": -18654.766406854393,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0
+   },
+   "graded_specificity_listener": {
+    "rank": 1,
+    "elpd_loo": -18654.830012321472,
+    "se": 127.91254115676763,
+    "elpd_diff": 0.0894460678100586,
+    "dse": 1.3819441461659903,
+    "p_loo": 2.6922340106466436,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18656.34897868063,
+    "cv_diff": 1.5825718262385635,
+    "cv_dse": 2.638026612860934,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.184123795828,
+     "mayn_demberg_2023": -4122.544806011227,
+     "mayn_demberg_2026": -5582.078069863753,
+     "pragmods": -3962.13454226042,
+     "sikos_2021": -2618.407436749405
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 0.8286845471047855,
+     "mayn_demberg_2023": 0.6139025045413291,
+     "mayn_demberg_2026": 1.2758451829167825,
+     "pragmods": 1.3899786579918327,
+     "sikos_2021": 0.3192291142572685
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.6908688868446689,
+     "mayn_demberg_2023": 0.7420284757659558,
+     "mayn_demberg_2026": 0.7165426604350701,
+     "pragmods": 2.4274795370953193,
+     "sikos_2021": 0.23272081284637464
+    },
+    "sel_elpd": -18656.34897868063,
+    "sel_diff": 1.5825718262385635,
+    "sel_dse": 2.638026612860934
+   },
+   "literal_salience_listener": {
+    "rank": 2,
+    "elpd_loo": -18655.05804347992,
+    "se": 127.91014877822954,
+    "elpd_diff": 0.3174772262573242,
+    "dse": 1.4058432859808043,
+    "p_loo": 3.025718893739395,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18657.50557843609,
+    "cv_diff": 2.7391715816957003,
+    "cv_dse": 3.014736694654455,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.3443576451073,
+     "mayn_demberg_2023": -4122.224333672577,
+     "mayn_demberg_2026": -5582.268746794389,
+     "pragmods": -3962.918912694066,
+     "sikos_2021": -2618.7492276299513
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 0.9889183963841788,
+     "mayn_demberg_2023": 0.29343016589155013,
+     "mayn_demberg_2026": 1.4665221135528554,
+     "pragmods": 2.1743490916378505,
+     "sikos_2021": 0.6610199948036097
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.6863855527997492,
+     "mayn_demberg_2023": 0.6816016796386154,
+     "mayn_demberg_2026": 0.9781879832658753,
+     "pragmods": 2.737790861096204,
+     "sikos_2021": 0.39432955906703815
+    },
+    "sel_elpd": -18657.50557843609,
+    "sel_diff": 2.7391715816957003,
+    "sel_dse": 3.014736694654455
+   },
+   "bounded_alternatives_listener": {
+    "rank": 3,
+    "elpd_loo": -18655.489822387695,
+    "se": 127.90278211396547,
+    "elpd_diff": 0.7492561340332031,
+    "dse": 1.056505877696779,
+    "p_loo": 3.4931372995779384,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18658.110710338682,
+    "cv_diff": 3.344303484289412,
+    "cv_dse": 2.6257136971214776,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.564374142289,
+     "mayn_demberg_2023": -4122.889375041186,
+     "mayn_demberg_2026": -5582.13762453094,
+     "pragmods": -3963.276908911554,
+     "sikos_2021": -2618.242427712716
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.2089348935660382,
+     "mayn_demberg_2023": 0.958471534500859,
+     "mayn_demberg_2026": 1.3353998501042952,
+     "pragmods": 2.532345309125958,
+     "sikos_2021": 0.15422007756842504
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.8090565632223747,
+     "mayn_demberg_2023": 0.85597945911497,
+     "mayn_demberg_2026": 0.7683519937039562,
+     "pragmods": 2.3942062260714945,
+     "sikos_2021": 0.180567343398531
+    },
+    "sel_elpd": -18658.110710338682,
+    "sel_diff": 3.344303484289412,
+    "sel_dse": 2.6257136971214776
+   },
+   "costly_bounded_alternatives_listener": {
+    "rank": 4,
+    "elpd_loo": -18655.50413608551,
+    "se": 127.9020182174572,
+    "elpd_diff": 0.7635698318481445,
+    "dse": 1.0374240613378223,
+    "p_loo": 4.191804641741328,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18657.782151397783,
+    "cv_diff": 3.0157445433906105,
+    "cv_dse": 2.715682310460652,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.673602432828,
+     "mayn_demberg_2023": -4122.305407655818,
+     "mayn_demberg_2026": -5581.886632695621,
+     "pragmods": -3963.0081479925284,
+     "sikos_2021": -2618.9083606209892
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.318163184104833,
+     "mayn_demberg_2023": 0.3745041491329175,
+     "mayn_demberg_2026": 1.0844080147853674,
+     "pragmods": 2.2635843901002772,
+     "sikos_2021": 0.8201529858415597
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.8289632956908389,
+     "mayn_demberg_2023": 0.8642405422933265,
+     "mayn_demberg_2026": 0.751077866864678,
+     "pragmods": 2.5408948954161183,
+     "sikos_2021": 0.4786757373855368
+    },
+    "sel_elpd": -18657.782151397783,
+    "sel_diff": 3.0157445433906105,
+    "sel_dse": 2.715682310460652
+   },
+   "salience_structured_lapse_listener": {
+    "rank": 5,
+    "elpd_loo": -18655.539068222046,
+    "se": 127.88588583554127,
+    "elpd_diff": 0.7985019683837891,
+    "dse": 2.767540619593316,
+    "p_loo": 3.0029250831721583,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18655.39133502187,
+    "cv_diff": 0.6249281674790836,
+    "cv_dse": 3.2159392895876486,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2370.355439248723,
+     "mayn_demberg_2023": -4121.930903506685,
+     "mayn_demberg_2026": -5583.362032116483,
+     "pragmods": -3961.050120848846,
+     "sikos_2021": -2618.692839301135
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 2.5598074356466896,
+     "pragmods": 0.3055572464177203,
+     "sikos_2021": 0.6046316659871991
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 1.5654426789229594,
+     "pragmods": 2.2866106181688073,
+     "sikos_2021": 0.3805979530352792
+    },
+    "sel_elpd": -18655.39133502187,
+    "sel_diff": 0.6249281674790836,
+    "sel_dse": 3.2159392895876486
+   },
+   "costly_feature_listener_rationality": {
+    "rank": 6,
+    "elpd_loo": -18665.270111083984,
+    "se": 127.91515009313748,
+    "elpd_diff": 10.529544830322266,
+    "dse": 3.9657079535664748,
+    "p_loo": 4.387574426546053,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18667.316098975974,
+    "cv_diff": 12.549692121581757,
+    "cv_dse": 3.75748213891995,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2374.5974778410855,
+     "mayn_demberg_2023": -4122.692711176285,
+     "mayn_demberg_2026": -5582.334610245033,
+     "pragmods": -3966.859137916878,
+     "sikos_2021": -2620.832161796694
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 4.242038592362405,
+     "mayn_demberg_2023": 0.7618076695998752,
+     "mayn_demberg_2026": 1.5323855641972841,
+     "pragmods": 6.114574314449783,
+     "sikos_2021": 2.7439541615462986
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 2.073688862949886,
+     "mayn_demberg_2023": 2.1412693322890877,
+     "mayn_demberg_2026": 1.668125045802549,
+     "pragmods": 2.4910857331147533,
+     "sikos_2021": 1.629333167447983
+    },
+    "sel_elpd": -18667.316098975974,
+    "sel_diff": 12.549692121581757,
+    "sel_dse": 3.75748213891995
+   },
+   "framed_alignment_listener": {
+    "rank": 7,
+    "elpd_loo": -18667.603154182434,
+    "se": 127.94581674243965,
+    "elpd_diff": 12.862587928771973,
+    "dse": 4.00782388099885,
+    "p_loo": 6.277947370959737,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18703.90083132324,
+    "cv_diff": 49.13442446884801,
+    "cv_dse": 35.474321486039315,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2374.3748474787717,
+     "mayn_demberg_2023": -4122.608654778836,
+     "mayn_demberg_2026": -5582.235392064838,
+     "pragmods": -4003.495430280279,
+     "sikos_2021": -2621.1865067205154
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 4.019408230048612,
+     "mayn_demberg_2023": 0.6777512721509993,
+     "mayn_demberg_2026": 1.433167384002445,
+     "pragmods": 42.75086667785081,
+     "sikos_2021": 3.098299085367671
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 1.9866804265773699,
+     "mayn_demberg_2023": 2.060277102824357,
+     "mayn_demberg_2026": 1.5585756421359036,
+     "pragmods": 35.093075504049615,
+     "sikos_2021": 1.6770834184136092
+    },
+    "sel_elpd": -18703.90083132324,
+    "sel_diff": 49.13442446884801,
+    "sel_dse": 35.474321486039315
+   },
+   "naive_speaker_rational_listener": {
+    "rank": 8,
+    "elpd_loo": -18672.607139587402,
+    "se": 127.98476546611356,
+    "elpd_diff": 17.866573333740234,
+    "dse": 4.66513916719687,
+    "p_loo": 3.436472502115066,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18675.160201662176,
+    "cv_diff": 20.393794807783706,
+    "cv_dse": 5.1062675037205105,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2375.9301905902394,
+     "mayn_demberg_2023": -4125.610670719726,
+     "mayn_demberg_2026": -5582.493156165492,
+     "pragmods": -3972.5983036394146,
+     "sikos_2021": -2618.5278805473035
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 5.574751341516276,
+     "mayn_demberg_2023": 3.679767213040577,
+     "mayn_demberg_2026": 1.6909314846561756,
+     "pragmods": 11.853740036986437,
+     "sikos_2021": 0.43967291215585647
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 2.7387954510724004,
+     "mayn_demberg_2023": 2.852370641359719,
+     "mayn_demberg_2026": 1.6789583431856505,
+     "pragmods": 4.003877805748988,
+     "sikos_2021": 0.2758858848837247
+    },
+    "sel_elpd": -18675.160201662176,
+    "sel_diff": 20.393794807783706,
+    "sel_dse": 5.1062675037205105
+   },
+   "listener_rationality_shared_prior": {
+    "rank": 9,
+    "elpd_loo": -18674.61758708954,
+    "se": 128.00224326178883,
+    "elpd_diff": 19.877020835876465,
+    "dse": 4.982498824016927,
+    "p_loo": 3.4495279481780017,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18677.843146774525,
+    "cv_diff": 23.07673992013224,
+    "cv_dse": 5.587073473966223,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2376.4648056110573,
+     "mayn_demberg_2023": -4126.324214950213,
+     "mayn_demberg_2026": -5583.264297098634,
+     "pragmods": -3973.701621479471,
+     "sikos_2021": -2618.0882076351477
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 6.109366362334185,
+     "mayn_demberg_2023": 4.393311443527637,
+     "mayn_demberg_2026": 2.462072417798481,
+     "pragmods": 12.957057877043098,
+     "sikos_2021": 0.0
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 2.8606026875658306,
+     "mayn_demberg_2023": 3.0245193126139633,
+     "mayn_demberg_2026": 1.8760320070557075,
+     "pragmods": 4.362877111986703,
+     "sikos_2021": 0.0
+    },
+    "sel_elpd": -18677.843146774525,
+    "sel_diff": 23.07673992013224,
+    "sel_dse": 5.587073473966223
+   },
+   "costly_feature_shared_prior": {
+    "rank": 10,
+    "elpd_loo": -18730.256805419922,
+    "se": 128.49997437913817,
+    "elpd_diff": 75.51623916625977,
+    "dse": 12.359770596847522,
+    "p_loo": 4.760041312358226,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18740.96697939893,
+    "cv_diff": 86.20057254453786,
+    "cv_dse": 17.766725612976284,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2380.4365179151864,
+     "mayn_demberg_2023": -4128.506658658244,
+     "mayn_demberg_2026": -5587.932445871994,
+     "pragmods": -4022.5348286190456,
+     "sikos_2021": -2621.5565283344636
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 10.081078666463327,
+     "mayn_demberg_2023": 6.575755151558951,
+     "mayn_demberg_2026": 7.130221191157943,
+     "pragmods": 61.79026501661747,
+     "sikos_2021": 3.468320699315882
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 4.220039942661998,
+     "mayn_demberg_2023": 4.192067649268448,
+     "mayn_demberg_2026": 4.224590067072015,
+     "pragmods": 15.463856229046883,
+     "sikos_2021": 1.8173597352752309
+    },
+    "sel_elpd": -18740.96697939893,
+    "sel_diff": 86.20057254453786,
+    "sel_dse": 17.766725612976284
+   },
+   "valence_salience_listener": {
+    "rank": 11,
+    "elpd_loo": -18744.53733444214,
+    "se": 128.6646714866001,
+    "elpd_diff": 89.79676818847656,
+    "dse": 13.146314086482713,
+    "p_loo": 4.134633456556912,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18792.968819852707,
+    "cv_diff": 138.20241299831468,
+    "cv_dse": 45.74729280594752,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2377.8545415391427,
+     "mayn_demberg_2023": -4129.5893515842745,
+     "mayn_demberg_2026": -5582.8457389627,
+     "pragmods": -4084.5599457294766,
+     "sikos_2021": -2618.1192420371135
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 7.499102290419614,
+     "mayn_demberg_2023": 7.658448077589128,
+     "mayn_demberg_2026": 2.0435142818641907,
+     "pragmods": 123.81538212704845,
+     "sikos_2021": 0.031034401965825964
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 3.911369742087801,
+     "mayn_demberg_2023": 3.964046087253634,
+     "mayn_demberg_2026": 2.155779980718331,
+     "pragmods": 43.61062644714478,
+     "sikos_2021": 0.2238699158515643
+    },
+    "sel_elpd": -18792.968819852707,
+    "sel_diff": 138.20241299831468,
+    "sel_dse": 45.74729280594752
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 12,
+    "elpd_loo": -18749.3999710083,
+    "se": 128.73163133614682,
+    "elpd_diff": 94.65940475463867,
+    "dse": 13.494127018913403,
+    "p_loo": 3.1862233343417756,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18757.62145134278,
+    "cv_diff": 102.85504448838765,
+    "cv_dse": 22.69593142494799,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2378.573871241859,
+     "mayn_demberg_2023": -4130.818186447504,
+     "mayn_demberg_2026": -5583.892657953603,
+     "pragmods": -4046.1586962562224,
+     "sikos_2021": -2618.178039443591
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 8.21843199313571,
+     "mayn_demberg_2023": 8.887282940818295,
+     "mayn_demberg_2026": 3.090433272766859,
+     "pragmods": 85.41413265379424,
+     "sikos_2021": 0.08983180844325034
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 4.274552122121378,
+     "mayn_demberg_2023": 4.382419596239918,
+     "mayn_demberg_2026": 2.57388836878344,
+     "pragmods": 20.249586338734066,
+     "sikos_2021": 0.2144625486195503
+    },
+    "sel_elpd": -18757.62145134278,
+    "sel_diff": 102.85504448838765,
+    "sel_dse": 22.69593142494799
+   },
+   "rsa_l1_salience": {
+    "rank": 13,
+    "elpd_loo": -18749.69937324524,
+    "se": 128.7166907054278,
+    "elpd_diff": 94.95880699157715,
+    "dse": 13.497762374987989,
+    "p_loo": 3.174843037053506,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18758.25641181512,
+    "cv_diff": 103.49000496072767,
+    "cv_dse": 22.70034181105679,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2378.7862843947278,
+     "mayn_demberg_2023": -4130.8441954138325,
+     "mayn_demberg_2026": -5583.989278308338,
+     "pragmods": -4046.2997510361656,
+     "sikos_2021": -2618.33690266206
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 8.430845146004685,
+     "mayn_demberg_2023": 8.91329190714714,
+     "mayn_demberg_2026": 3.187053627501882,
+     "pragmods": 85.5551874337375,
+     "sikos_2021": 0.2486950269121735
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 4.341903678591227,
+     "mayn_demberg_2023": 4.410969075211762,
+     "mayn_demberg_2026": 2.594285885444871,
+     "pragmods": 20.238355425786757,
+     "sikos_2021": 0.20901923101340264
+    },
+    "sel_elpd": -18758.25641181512,
+    "sel_diff": 103.49000496072767,
+    "sel_dse": 22.70034181105679
+   },
+   "communicative_affordance_listener": {
+    "rank": 14,
+    "elpd_loo": -18793.710774421692,
+    "se": 128.89208495632047,
+    "elpd_diff": 138.97020816802979,
+    "dse": 16.073770312941775,
+    "p_loo": 3.5452535701260786,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18803.700505587512,
+    "cv_diff": 148.93409873311975,
+    "cv_dse": 23.50752473857245,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2388.4312208877986,
+     "mayn_demberg_2023": -4137.199427455973,
+     "mayn_demberg_2026": -5598.867867738407,
+     "pragmods": -4034.5376610563126,
+     "sikos_2021": -2644.66432844902
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 18.075781639075558,
+     "mayn_demberg_2023": 15.268523949287555,
+     "mayn_demberg_2026": 18.065643057570924,
+     "pragmods": 73.79309745388446,
+     "sikos_2021": 26.57612081387242
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 6.304515468967522,
+     "mayn_demberg_2023": 6.429709271276525,
+     "mayn_demberg_2026": 7.079536234054221,
+     "pragmods": 17.35928168034702,
+     "sikos_2021": 11.267266900240012
+    },
+    "sel_elpd": -18803.700505587512,
+    "sel_diff": 148.93409873311975,
+    "sel_dse": 23.50752473857245
+   },
+   "costly_feature_speaker": {
+    "rank": 15,
+    "elpd_loo": -18848.6272315979,
+    "se": 129.58183065163496,
+    "elpd_diff": 193.88666534423828,
+    "dse": 19.741480133227164,
+    "p_loo": 2.306877891838667,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": false,
+    "elpd_cv": -18850.048475272986,
+    "cv_diff": 195.28206841859355,
+    "cv_dse": 28.903522174854313,
+    "cv_converged": false,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2409.2049305003166,
+     "mayn_demberg_2023": -4161.761831920574,
+     "mayn_demberg_2026": -5639.539726858879,
+     "pragmods": -3997.8608045000547,
+     "sikos_2021": -2641.6811814931634
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 38.84949125159346,
+     "mayn_demberg_2023": 39.830928413888614,
+     "mayn_demberg_2026": 58.73750217804263,
+     "pragmods": 37.11624089762654,
+     "sikos_2021": 23.59297385801574
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 10.725809375356034,
+     "mayn_demberg_2023": 10.887504070644288,
+     "mayn_demberg_2026": 19.147617980469757,
+     "pragmods": 12.094831826702082,
+     "sikos_2021": 13.260635300088346
+    },
+    "sel_elpd": -18850.048475272986,
+    "sel_diff": 195.28206841859355,
+    "sel_dse": 28.903522174854313
+   },
+   "rsa_l1": {
+    "rank": 16,
+    "elpd_loo": -19061.83660507202,
+    "se": 131.62528639294771,
+    "elpd_diff": 407.0960388183594,
+    "dse": 28.208975494582024,
+    "p_loo": 1.0171159491728758,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -19062.609153081175,
+    "cv_diff": 407.84274622678277,
+    "cv_dse": 72.75097491564975,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2442.1730200969305,
+     "mayn_demberg_2023": -4215.1060630771535,
+     "mayn_demberg_2026": -5701.445186897972,
+     "pragmods": -4085.063984201886,
+     "sikos_2021": -2618.820898807232
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 71.8175808482074,
+     "mayn_demberg_2023": 93.17515957046817,
+     "mayn_demberg_2026": 120.6429622171363,
+     "pragmods": 124.31942059945777,
+     "sikos_2021": 0.7326911720842872
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 25.161968636414972,
+     "mayn_demberg_2023": 27.84793435985373,
+     "mayn_demberg_2026": 51.74304629256488,
+     "pragmods": 36.78180142459154,
+     "sikos_2021": 0.41018119524830804
+    },
+    "sel_elpd": -19062.609153081175,
+    "sel_diff": 407.84274622678277,
+    "sel_dse": 72.75097491564975
+   },
+   "rsa_l2": {
+    "rank": 17,
+    "elpd_loo": -19062.124331474304,
+    "se": 131.64048851646612,
+    "elpd_diff": 407.3837652206421,
+    "dse": 28.219373374084356,
+    "p_loo": 0.9674959560361458,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -19063.03305634412,
+    "cv_diff": 408.26664948972757,
+    "cv_dse": 72.8135257873652,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2442.207524636274,
+     "mayn_demberg_2023": -4215.1879617507075,
+     "mayn_demberg_2026": -5701.530043919978,
+     "pragmods": -4085.2312482344805,
+     "sikos_2021": -2618.876277802681
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 71.85208538755069,
+     "mayn_demberg_2023": 93.25705824402212,
+     "mayn_demberg_2026": 120.72781923914226,
+     "pragmods": 124.4866846320524,
+     "sikos_2021": 0.7880701675335331
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 25.177899534507443,
+     "mayn_demberg_2023": 27.871578214369094,
+     "mayn_demberg_2026": 51.78878970863738,
+     "pragmods": 36.814899564426135,
+     "sikos_2021": 0.4336239563064813
+    },
+    "sel_elpd": -19063.03305634412,
+    "sel_diff": 408.26664948972757,
+    "sel_dse": 72.8135257873652
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "framed_specificity_listener",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0014 of bounded_alternatives_listener's (threshold 0.002) over the loop's novelty pool of 1258 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Listeners interpret referential expressions by evaluating descriptive specificity under contextual framing: when an utterance is heard, listeners select among matching referents by balancing the exhaustivity of the description against the referent's perceptual and affective prominence. In neutral contexts, referents possessing unmentioned excess features are penalized because the speaker omitted distinguishing descriptors; under negative framing ('least favorite'), this penalty inverts because excess features constitute additional undesirable attributes. Visual prominence (rendering in color rather than grayscale) enhances referent appeal across all contexts, while prior trials with no informative word are governed by framed visual salience."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "fewest_features_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential expressions through a non-Bayesian parsimony heuristic: rather than simulating counterfactual speakers, they select among referents satisfying the heard word by preferring the object with the fewest total features. When no informative word is heard, listeners have no descriptive cues to evaluate and choose uniformly among candidate objects, modulated only by familiarization base rates."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "salience_structured_lapse_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret utterances through literal semantic comprehension, treating all candidate referents that satisfy the speaker's word as equally plausible targets. When goal-directed attention lapses or when no informative clue is provided, choice is governed by a structured lapse process that falls back to bottom-up visual and contextual salience, biasing clicks toward feature-rich and familiar objects rather than guessing uniformly at random."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": null,
+    "outcome": "no file",
+    "reason": ""
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "ambiguity_specificity_listener",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0004 of graded_specificity_listener's (threshold 0.002) over the loop's novelty pool of 1258 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "We refine graded_specificity_listener by proposing that specificity discounting is triggered by referential ambiguity: listeners only discount candidate referents possessing unmentioned features or excess complexity when the uttered word is ambiguous across multiple objects in the visual display. When a word unambiguously identifies a single referent, it incurs no graded truth penalty regardless of the referent's total feature complexity. When choosing among matching referents, listeners select in proportion to this ambiguity-gated semantic fit and familiarization expectations, without simulating a counterfactual speaker.\n\nDifferences from source (graded_specificity_listener):\n- Recursion depth: Unchanged (choice_probs calls L0 at depth 0).\n- Parameters added: None.\n- Parameters removed: None.\n- Other terms: In choice_probs, the graded truth discount is modulated by utterance ambiguity: `truth_scale = (1.0 - lam) + lam / (counts[None, :] + unmentioned_unique)` is replaced with `truth_scale = (1.0 - lam) + lam / (1.0 + effective_penalty)`, where `effective_penalty = jnp.maximum(0.0, ext_size[:, None] - 1.0) * (counts[None, :] - 1.0 + unmentioned_unique)`. This scales the specificity penalty by the excess extension of the heard word across referents, ensuring that unambiguous words uniquely identifying a referent incur no truth penalty while ambiguous words discount referents possessing unmentioned distinguishing features and complexity."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "costly_bounded_alternatives_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine bounded_alternatives_listener by proposing that speakers balance communicative informativeness against utterance production costs, penalizing ambiguous words that refer to multiple objects in the visual display. When a resource-limited listener simulates the speaker's referential choice, the speaker's utility discounts unmentioned alternative expressions due to bounded attention while simultaneously disfavoring ambiguous shared descriptors. On prior trials with no informative word, listener choices are guided solely by contextual object salience.\n\nDifferences from source (bounded_alternatives_listener):\n- Recursion depth: Unchanged (choice_probs calls L1 at depth 1).\n- Parameters added: cost (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L1, the speaker's choice weight incorporates an utterance production cost penalty `- cost * vec(utt_cost, u)`, where `utt_cost` measures the excess extension of non-sink utterances across referents (`jnp.maximum(0.0, jnp.sum(ctx.lex * (1.0 - ctx.is_sink)[:, None], axis=1) - 1.0)`)."
+   },
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "framed_alignment_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential expressions by inverting a framed, boundedly rational speaker whose referential goals reflect contextual framing and whose word choices balance semantic truthfulness with descriptive accessibility. Under affective framing, the speaker's prior target reflects emotional valence, amplifying the appeal of feature-rich objects when describing a favorite and discounting complexity when describing a least favorite, while visual prominence renders colored objects more salient across all contexts. Bounded listeners infer the speaker's intended referent from these framed communicative expectations, relying directly on framed visual salience when no informative word is heard.",
+    "repair": true
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "ambiguity_specificity_listener_2",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0004 of graded_specificity_listener's (threshold 0.002) over the loop's novelty pool of 1258 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "We refine graded_specificity_listener by proposing that specificity discounting is triggered by referential ambiguity: listeners only discount candidate referents possessing unmentioned features or excess complexity when the uttered word is ambiguous across multiple objects in the visual display. When a word unambiguously identifies a single referent, it incurs no graded truth penalty regardless of the referent's total feature complexity. When choosing among matching referents, listeners select in proportion to this ambiguity-gated semantic fit and familiarization expectations, without simulating a counterfactual speaker.\n\nDifferences from source (graded_specificity_listener):\n- Recursion depth: Unchanged (choice_probs calls L0 at depth 0).\n- Parameters added: None.\n- Parameters removed: None.\n- Other terms: In choice_probs, the graded truth discount is modulated by utterance ambiguity: `truth_scale = (1.0 - lam) + lam / (counts[None, :] + unmentioned_unique)` is replaced with `truth_scale = (1.0 - lam) + lam / (1.0 + effective_penalty)`, where `effective_penalty = jnp.maximum(0.0, ext_size[:, None] - 1.0) * (counts[None, :] - 1.0 + unmentioned_unique)`. This scales the specificity penalty by the excess extension of the heard word across referents, ensuring that unambiguous words uniquely identifying a referent incur no truth penalty while ambiguous words discount referents possessing unmentioned distinguishing features and complexity.",
+    "repair": true
+   }
+  ],
+  "live": [
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_salience",
+    "hypothesis": "Depth-1 RSA whose listener has a salience prior over objects (feature count, familiarization base rate) that the simulated literal listener lacks.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_shared_prior",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "valence_salience_listener",
+    "hypothesis": "Listeners interpret referential expressions through an affective framing mechanism that scales object salience by the speaker's emotional valence. Under positive or neutral framing, feature-rich objects are perceived as desirable and salient targets, whereas under negative framing ('least favorite'), this preference is inverted toward plainer objects. The listener coordinates with the speaker by adopting this valence-modulated salience prior across both prior expectations and communicative inference.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "literal_salience_listener",
+    "hypothesis": "Listeners interpret utterances literally rather than pragmatically: they select among referents of which the heard word is true based strictly on prior contextual salience, without simulating alternative words a speaker could have chosen. On a display with a one-feature object and a two-feature object that both possess the named feature, this mechanism predicts that listeners will favor the two-feature object because its greater feature count makes it more salient a priori, directly reversing the pragmatic model's prediction that the one-feature object is favored because a speaker meaning the two-feature object would have named its alternative feature.\n",
+    "source": "round 1 candidate 2 explore"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "hypothesis": "Speakers balance communicative informativeness against utterance production costs, incurring a penalty for producing shared, non-distinctive words that apply to multiple referents in the visual scene. Pragmatic listeners invert this cost-sensitive speaker, reasoning that an utterance describing a shared feature is less likely to have been chosen if a less costly distinctive alternative was available. On prior trials with no informative word, listeners choose uniformly among the available objects.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "listener_rationality_shared_prior",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.\n",
+    "source": "round 1 candidate 4 refine incumbent rsa_l1_shared_prior"
+   },
+   {
+    "name": "costly_feature_shared_prior",
+    "hypothesis": "Pragmatic speakers balance communicative informativeness against utterance production costs, penalizing non-distinctive words that apply to multiple referents in the visual scene, while coordinating on a shared salience prior over objects with listeners. By incorporating this utterance cost into the speaker's utility, the pragmatic listener expects speakers to prefer distinctive terms over shared ones even when both are literally truthful, sharpening pragmatic referent selection beyond object salience alone.\n\nDifferences from source (rsa_l1_shared_prior):\n- Recursion depth: Unchanged (choice_probs calls L1 at depth 1).\n- Parameters added: cost (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L1, the speaker's choice weight incorporates an utterance production cost penalty `- cost * vec(utt_cost, u)`, where `utt_cost` measures the excess extension of non-sink utterances across referents (`jnp.maximum(0.0, jnp.sum(ctx.lex * (1.0 - ctx.is_sink)[:, None], axis=1) - 1.0)`).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l1_shared_prior repair 1"
+   },
+   {
+    "name": "communicative_affordance_listener",
+    "hypothesis": "Listeners expect speakers to talk about objects that can be communicated effectively: before hearing an informative word, listeners assign higher prior probability to referents possessing greater communicative affordance, reasoning that a speaker constrained to a single word prefers to discuss topics that can be conveyed with high discriminative precision. In pragmatic reference games, listeners coordinate with the speaker on this topic prior, expecting the speaker's referential goal to favor objects with distinctive communicative descriptors over ambiguous ones.\n",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "bounded_alternatives_listener",
+    "hypothesis": "Listeners have bounded attentional resources to generate and reason over unmentioned alternative utterances when interpreting a speaker. When simulating the speaker's utterance choice, a resource-limited listener discounts unmentioned alternative expressions relative to the focal heard word, reducing the speaker's perceived likelihood of having chosen an alternative descriptor. Under limited attention to alternatives, the listener relies predominantly on literal semantics and contextual salience, attenuating the pragmatic pressure of scalar implicature.\n",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "graded_specificity_listener",
+    "hypothesis": "Listeners interpret referential expressions through graded truth values rather than binary logic: a word's degree of truth decays with the referent's total feature complexity and is further discounted when the referent possesses unmentioned distinctive features that could have uniquely identified it. When interpreting an utterance, listeners choose among candidate referents in proportion to this graded semantic fit and prior familiarization expectations, without simulating a counterfactual speaker.\n",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "costly_feature_listener_rationality",
+    "hypothesis": "We refine listener_rationality_shared_prior by proposing that speakers trade off communicative informativeness against utterance production costs, penalizing ambiguous words that refer to multiple objects in the visual display. Pragmatic listeners invert this cost-sensitive speaker, reasoning that an utterance describing a shared feature is less likely to have been chosen if a less costly distinctive alternative was available, while making boundedly rational softmax choices over candidate referents. When no informative word is heard, listeners choose according to contextual object salience.\n\nDifferences from source (listener_rationality_shared_prior):\n- Recursion depth: Unchanged (choice_probs calls L1 at depth 1).\n- Parameters added: cost (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L1, the speaker's choice weight incorporates an utterance production cost penalty `- cost * vec(utt_cost, u)`, where `utt_cost` measures the excess extension of non-sink utterances across referents (`jnp.maximum(0.0, jnp.sum(ctx.lex * (1.0 - ctx.is_sink)[:, None], axis=1) - 1.0)`).\n",
+    "source": "round 2 candidate 6 refine chosen"
+   },
+   {
+    "name": "naive_speaker_rational_listener",
+    "hypothesis": "We refine literal_salience_listener by elevating the listener from depth 0 to depth 1 to invert a naive, truthful speaker: rather than evaluating words in isolation, listeners model the speaker as randomly selecting one feature of the intended object, making boundedly rational softmax choices over candidate referents. Because an object with multiple features provides more descriptive options for the speaker, naming a shared feature provides weaker evidence for a complex referent than for a minimally described referent, naturally disfavoring over-specified objects without simulating counterfactual listeners. On prior trials with no informative word, choices are governed strictly by contextual object salience.\n\nDifferences from source (literal_salience_listener):\n- Recursion depth: Changed from depth 0 (choice_probs calls L0) to depth 1 (choice_probs calls L1).\n- Parameters added: beta (prior: LogNormal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: choice_probs calls L1 instead of L0. In L1, the listener simulates a naive speaker choosing truthfully among valid descriptors (`wpp = at(lex, u, r)`) given prior object distribution `vec(prior, r)`, and the listener chooses referents via softmax rationality `exp(beta * log(Pr[speaker.r == r] + {EPS}))`.\n",
+    "source": "round 2 candidate 5 refine incumbent literal_salience_listener repair 1"
+   },
+   {
+    "name": "fewest_features_listener",
+    "hypothesis": "Listeners interpret referential expressions through a non-Bayesian parsimony heuristic: rather than simulating counterfactual speakers, they select among referents satisfying the heard word by preferring the object with the fewest total features. When no informative word is heard, listeners have no descriptive cues to evaluate and choose uniformly among candidate objects, modulated only by familiarization base rates.\n",
+    "source": "round 3 candidate 2 explore"
+   },
+   {
+    "name": "salience_structured_lapse_listener",
+    "hypothesis": "Listeners interpret utterances through literal semantic comprehension, treating all candidate referents that satisfy the speaker's word as equally plausible targets. When goal-directed attention lapses or when no informative clue is provided, choice is governed by a structured lapse process that falls back to bottom-up visual and contextual salience, biasing clicks toward feature-rich and familiar objects rather than guessing uniformly at random.\n",
+    "source": "round 3 candidate 3 explore"
+   },
+   {
+    "name": "costly_bounded_alternatives_listener",
+    "hypothesis": "We refine bounded_alternatives_listener by proposing that speakers balance communicative informativeness against utterance production costs, penalizing ambiguous words that refer to multiple objects in the visual display. When a resource-limited listener simulates the speaker's referential choice, the speaker's utility discounts unmentioned alternative expressions due to bounded attention while simultaneously disfavoring ambiguous shared descriptors. On prior trials with no informative word, listener choices are guided solely by contextual object salience.\n\nDifferences from source (bounded_alternatives_listener):\n- Recursion depth: Unchanged (choice_probs calls L1 at depth 1).\n- Parameters added: cost (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L1, the speaker's choice weight incorporates an utterance production cost penalty `- cost * vec(utt_cost, u)`, where `utt_cost` measures the excess extension of non-sink utterances across referents (`jnp.maximum(0.0, jnp.sum(ctx.lex * (1.0 - ctx.is_sink)[:, None], axis=1) - 1.0)`).\n",
+    "source": "round 3 candidate 6 refine chosen"
+   },
+   {
+    "name": "framed_alignment_listener",
+    "hypothesis": "Listeners interpret referential expressions by inverting a framed, boundedly rational speaker whose referential goals reflect contextual framing and whose word choices balance semantic truthfulness with descriptive accessibility. Under affective framing, the speaker's prior target reflects emotional valence, amplifying the appeal of feature-rich objects when describing a favorite and discounting complexity when describing a least favorite, while visual prominence renders colored objects more salient across all contexts. Bounded listeners infer the speaker's intended referent from these framed communicative expectations, relying directly on framed visual salience when no informative word is heard.\n",
+    "source": "round 3 candidate 1 explore repair 1"
+   }
+  ],
+  "ledger_entries": 24
+ },
+ {
+  "step": 4,
+  "round": 3,
+  "best_model": "parsimonious_literal_mixture",
+  "standing": {
+   "valence_parsimony_listener": {
+    "rank": 0,
+    "elpd_loo": -18654.226103782654,
+    "se": 127.93654917691318,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 3.596570629219059,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18654.647678573747,
+    "cv_diff": 0.25826113772927783,
+    "cv_dse": 1.0983479460116485,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.853247133391,
+     "mayn_demberg_2023": -4122.704912166664,
+     "mayn_demberg_2026": -5580.723972325915,
+     "pragmods": -3960.599079890026,
+     "sikos_2021": -2618.766467057751
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.4978078846679637,
+     "mayn_demberg_2023": 0.7740086599787901,
+     "mayn_demberg_2026": 0.23113187952367298,
+     "pragmods": 0.306655469274574,
+     "sikos_2021": 1.0770741809592437
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 1.1373218321648826,
+     "mayn_demberg_2023": 1.2048186170521358,
+     "mayn_demberg_2026": 0.31984566951504556,
+     "pragmods": 0.7473748393961689,
+     "sikos_2021": 0.7093307656244023
+    },
+    "sel_elpd": -18654.647678573747,
+    "sel_diff": 0.25826113772927783,
+    "sel_dse": 1.0983479460116485
+   },
+   "perceptual_parsimony_listener": {
+    "rank": 1,
+    "elpd_loo": -18654.43385028839,
+    "se": 127.93796292302821,
+    "elpd_diff": 0.2077465057373047,
+    "dse": 2.2078117174982457,
+    "p_loo": 3.474049518503307,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18654.65572992783,
+    "cv_diff": 0.2663124918108224,
+    "cv_dse": 0.9613806144660793,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.81543753556,
+     "mayn_demberg_2023": -4122.569572242688,
+     "mayn_demberg_2026": -5580.850068372321,
+     "pragmods": -3960.663767729837,
+     "sikos_2021": -2618.7568840474237
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.4599982868367078,
+     "mayn_demberg_2023": 0.6386687360027281,
+     "mayn_demberg_2026": 0.357227925929692,
+     "pragmods": 0.3713433090856597,
+     "sikos_2021": 1.0674911706319108
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 1.0852232684680017,
+     "mayn_demberg_2023": 1.121682115425433,
+     "mayn_demberg_2026": 0.31969956116202874,
+     "pragmods": 0.6758110474713359,
+     "sikos_2021": 0.704857694773605
+    },
+    "sel_elpd": -18654.65572992783,
+    "sel_diff": 0.2663124918108224,
+    "sel_dse": 0.9613806144660793
+   },
+   "parsimonious_literal_mixture": {
+    "rank": 2,
+    "elpd_loo": -18654.497052192688,
+    "se": 127.90586465705746,
+    "elpd_diff": 0.2709484100341797,
+    "dse": 1.8804697370347063,
+    "p_loo": 2.7579279056517407,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18654.389417436018,
+    "cv_diff": 0.0,
+    "cv_dse": 0.0,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.424513641681,
+     "mayn_demberg_2023": -4122.32952666997,
+     "mayn_demberg_2026": -5581.5816871878915,
+     "pragmods": -3960.2924244207516,
+     "sikos_2021": -2618.761265515725
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.0690743929581004,
+     "mayn_demberg_2023": 0.39862316328435554,
+     "mayn_demberg_2026": 1.088846741499765,
+     "pragmods": 0.0,
+     "sikos_2021": 1.0718726389332005
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.8220595236730321,
+     "mayn_demberg_2023": 0.8477343348451416,
+     "mayn_demberg_2026": 0.6437175749148785,
+     "pragmods": 0.0,
+     "sikos_2021": 0.7058331903299684
+    },
+    "sel_elpd": -18654.389417436018,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0
+   },
+   "fewest_features_listener": {
+    "rank": 3,
+    "elpd_loo": -18654.740566253662,
+    "se": 127.91292333777345,
+    "elpd_diff": 0.5144624710083008,
+    "dse": 1.7151151567197032,
+    "p_loo": 2.5925408855910064,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18654.766406854393,
+    "cv_diff": 0.3769894183751603,
+    "cv_dse": 1.0008483685555614,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.8156217264595,
+     "mayn_demberg_2023": -4122.650191713723,
+     "mayn_demberg_2026": -5580.802224680836,
+     "pragmods": -3960.744563602428,
+     "sikos_2021": -2618.753805130942
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.4601824777364527,
+     "mayn_demberg_2023": 0.7192882070376072,
+     "mayn_demberg_2026": 0.3093842344442237,
+     "pragmods": 0.4521391816765572,
+     "sikos_2021": 1.0644122541502838
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 1.1305505676052778,
+     "mayn_demberg_2023": 1.1452339276945165,
+     "mayn_demberg_2026": 0.3167676474972607,
+     "pragmods": 0.685343270408459,
+     "sikos_2021": 0.7074751726726276
+    },
+    "sel_elpd": -18654.766406854393,
+    "sel_diff": 0.3769894183751603,
+    "sel_dse": 1.0008483685555614
+   },
+   "graded_specificity_listener": {
+    "rank": 4,
+    "elpd_loo": -18654.830012321472,
+    "se": 127.91254115676763,
+    "elpd_diff": 0.6039085388183594,
+    "dse": 2.167729210754825,
+    "p_loo": 2.6922340106466436,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18656.34897868063,
+    "cv_diff": 1.9595612446137238,
+    "cv_dse": 2.072545579848697,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.184123795828,
+     "mayn_demberg_2023": -4122.544806011227,
+     "mayn_demberg_2026": -5582.078069863753,
+     "pragmods": -3962.13454226042,
+     "sikos_2021": -2618.407436749405
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 0.8286845471047855,
+     "mayn_demberg_2023": 0.6139025045413291,
+     "mayn_demberg_2026": 1.5852294173610062,
+     "pragmods": 1.84211783966839,
+     "sikos_2021": 0.7180438726131797
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.6908688868446689,
+     "mayn_demberg_2023": 0.7420284757659558,
+     "mayn_demberg_2026": 0.780925054610757,
+     "pragmods": 2.0187064059320097,
+     "sikos_2021": 0.4979386173249515
+    },
+    "sel_elpd": -18656.34897868063,
+    "sel_diff": 1.9595612446137238,
+    "sel_dse": 2.072545579848697
+   },
+   "literal_salience_listener": {
+    "rank": 5,
+    "elpd_loo": -18655.05804347992,
+    "se": 127.91014877822954,
+    "elpd_diff": 0.831939697265625,
+    "dse": 2.171202386056682,
+    "p_loo": 3.025718893739395,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18657.50557843609,
+    "cv_diff": 3.1161610000708606,
+    "cv_dse": 2.4648921586416037,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.3443576451073,
+     "mayn_demberg_2023": -4122.224333672577,
+     "mayn_demberg_2026": -5582.268746794389,
+     "pragmods": -3962.918912694066,
+     "sikos_2021": -2618.7492276299513
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 0.9889183963841788,
+     "mayn_demberg_2023": 0.29343016589155013,
+     "mayn_demberg_2026": 1.7759063479970791,
+     "pragmods": 2.6264882733144077,
+     "sikos_2021": 1.059834753159521
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.6863855527997492,
+     "mayn_demberg_2023": 0.6816016796386154,
+     "mayn_demberg_2026": 1.0525714149515373,
+     "pragmods": 2.3879901321500476,
+     "sikos_2021": 0.7055523659879944
+    },
+    "sel_elpd": -18657.50557843609,
+    "sel_diff": 3.1161610000708606,
+    "sel_dse": 2.4648921586416037
+   },
+   "parsimonious_structured_lapse_listener": {
+    "rank": 6,
+    "elpd_loo": -18655.178213119507,
+    "se": 127.94122573275463,
+    "elpd_diff": 0.9521093368530273,
+    "dse": 1.9637501938490267,
+    "p_loo": 3.571734444856702,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18655.29686793148,
+    "cv_diff": 0.907450495462399,
+    "cv_dse": 1.5356724551706313,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.811257658538,
+     "mayn_demberg_2023": -4122.636217441559,
+     "mayn_demberg_2026": -5580.492840446392,
+     "pragmods": -3961.6525445024017,
+     "sikos_2021": -2618.704007882591
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.4558184098150377,
+     "mayn_demberg_2023": 0.7053139348736295,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 1.360120081650166,
+     "sikos_2021": 1.0146150057994419
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 1.1041484220083113,
+     "mayn_demberg_2023": 1.0408417804718961,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 1.2326516220317676,
+     "sikos_2021": 0.6992681588693549
+    },
+    "sel_elpd": -18655.29686793148,
+    "sel_diff": 0.907450495462399,
+    "sel_dse": 1.5356724551706313
+   },
+   "residual_surprisal_listener": {
+    "rank": 7,
+    "elpd_loo": -18655.44844341278,
+    "se": 127.91585385519319,
+    "elpd_diff": 1.2223396301269531,
+    "dse": 2.212915892547289,
+    "p_loo": 2.567013696887443,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18655.41901407845,
+    "cv_diff": 1.0295966424309881,
+    "cv_dse": 1.3893322509198989,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.5320301221927,
+     "mayn_demberg_2023": -4123.704254906571,
+     "mayn_demberg_2026": -5582.024594663015,
+     "pragmods": -3960.4687415098815,
+     "sikos_2021": -2617.6893928767918
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.1765908734696495,
+     "mayn_demberg_2023": 1.7733513998855415,
+     "mayn_demberg_2026": 1.531754216623085,
+     "pragmods": 0.17631708912995236,
+     "sikos_2021": 0.0
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.9954159553817334,
+     "mayn_demberg_2023": 1.1211415777399933,
+     "mayn_demberg_2026": 0.8050592472905092,
+     "pragmods": 0.47493219888453025,
+     "sikos_2021": 0.0
+    },
+    "sel_elpd": -18655.41901407845,
+    "sel_diff": 1.0295966424309881,
+    "sel_dse": 1.3893322509198989
+   },
+   "bounded_alternatives_listener": {
+    "rank": 8,
+    "elpd_loo": -18655.489822387695,
+    "se": 127.90278211396547,
+    "elpd_diff": 1.263718605041504,
+    "dse": 1.9801383783474131,
+    "p_loo": 3.4931372995779384,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18658.110710338682,
+    "cv_diff": 3.7212929026645725,
+    "cv_dse": 2.225201175646113,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.564374142289,
+     "mayn_demberg_2023": -4122.889375041186,
+     "mayn_demberg_2026": -5582.13762453094,
+     "pragmods": -3963.276908911554,
+     "sikos_2021": -2618.242427712716
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.2089348935660382,
+     "mayn_demberg_2023": 0.958471534500859,
+     "mayn_demberg_2026": 1.6447840845485189,
+     "pragmods": 2.984484490802515,
+     "sikos_2021": 0.5530348359243362
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.8090565632223747,
+     "mayn_demberg_2023": 0.85597945911497,
+     "mayn_demberg_2026": 0.8525880370120557,
+     "pragmods": 2.124546908308268,
+     "sikos_2021": 0.37832714430393793
+    },
+    "sel_elpd": -18658.110710338682,
+    "sel_diff": 3.7212929026645725,
+    "sel_dse": 2.225201175646113
+   },
+   "costly_bounded_alternatives_listener": {
+    "rank": 9,
+    "elpd_loo": -18655.50413608551,
+    "se": 127.9020182174572,
+    "elpd_diff": 1.2780323028564453,
+    "dse": 1.9771719761880728,
+    "p_loo": 4.191804641741328,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18657.782151397783,
+    "cv_diff": 3.392733961765771,
+    "cv_dse": 2.2558332934804413,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.673602432828,
+     "mayn_demberg_2023": -4122.305407655818,
+     "mayn_demberg_2026": -5581.886632695621,
+     "pragmods": -3963.0081479925284,
+     "sikos_2021": -2618.9083606209892
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.318163184104833,
+     "mayn_demberg_2023": 0.3745041491329175,
+     "mayn_demberg_2026": 1.393792249229591,
+     "pragmods": 2.7157235717768344,
+     "sikos_2021": 1.218967744197471
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.8289632956908389,
+     "mayn_demberg_2023": 0.8642405422933265,
+     "mayn_demberg_2026": 0.8535397822441578,
+     "pragmods": 2.205266690305588,
+     "sikos_2021": 0.795494579528124
+    },
+    "sel_elpd": -18657.782151397783,
+    "sel_diff": 3.392733961765771,
+    "sel_dse": 2.2558332934804413
+   },
+   "salience_structured_lapse_listener": {
+    "rank": 10,
+    "elpd_loo": -18655.539068222046,
+    "se": 127.88588583554127,
+    "elpd_diff": 1.3129644393920898,
+    "dse": 3.191146732180652,
+    "p_loo": 3.0029250831721583,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18655.39133502187,
+    "cv_diff": 1.001917585854244,
+    "cv_dse": 2.375415208337893,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2370.355439248723,
+     "mayn_demberg_2023": -4121.930903506685,
+     "mayn_demberg_2026": -5583.362032116483,
+     "pragmods": -3961.050120848846,
+     "sikos_2021": -2618.692839301135
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 2.8691916700909132,
+     "pragmods": 0.7576964280942775,
+     "sikos_2021": 1.0034464243431103
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 1.5211818907139152,
+     "pragmods": 1.741136146560483,
+     "sikos_2021": 0.7012716389813198
+    },
+    "sel_elpd": -18655.39133502187,
+    "sel_diff": 1.001917585854244,
+    "sel_dse": 2.375415208337893
+   },
+   "costly_feature_listener_rationality": {
+    "rank": 11,
+    "elpd_loo": -18665.270111083984,
+    "se": 127.91515009313748,
+    "elpd_diff": 11.044007301330566,
+    "dse": 4.364818025455863,
+    "p_loo": 4.387574426546053,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18667.316098975974,
+    "cv_diff": 12.926681539956917,
+    "cv_dse": 4.075525895923666,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2374.5974778410855,
+     "mayn_demberg_2023": -4122.692711176285,
+     "mayn_demberg_2026": -5582.334610245033,
+     "pragmods": -3966.859137916878,
+     "sikos_2021": -2620.832161796694
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 4.242038592362405,
+     "mayn_demberg_2023": 0.7618076695998752,
+     "mayn_demberg_2026": 1.8417697986415078,
+     "pragmods": 6.56671349612634,
+     "sikos_2021": 3.1427689199022097
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 2.073688862949886,
+     "mayn_demberg_2023": 2.1412693322890877,
+     "mayn_demberg_2026": 1.701382844353335,
+     "pragmods": 2.5528098523200935,
+     "sikos_2021": 1.936268869965544
+    },
+    "sel_elpd": -18667.316098975974,
+    "sel_diff": 12.926681539956917,
+    "sel_dse": 4.075525895923666
+   },
+   "aspect_goal_listener": {
+    "rank": 12,
+    "elpd_loo": -18666.9905500412,
+    "se": 127.92709516324403,
+    "elpd_diff": 12.764446258544922,
+    "dse": 4.261015409857013,
+    "p_loo": 4.277386531397497,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18668.924935068426,
+    "cv_diff": 14.5355176324083,
+    "cv_dse": 4.199819301051128,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2374.5558052369615,
+     "mayn_demberg_2023": -4122.777700441808,
+     "mayn_demberg_2026": -5582.089244531786,
+     "pragmods": -3968.358393749178,
+     "sikos_2021": -2621.143791108695
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 4.200365988238445,
+     "mayn_demberg_2023": 0.8467969351222564,
+     "mayn_demberg_2026": 1.5964040853941697,
+     "pragmods": 8.06596932842649,
+     "sikos_2021": 3.4543982319032693
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 2.0734314362107162,
+     "mayn_demberg_2023": 2.185449836955802,
+     "mayn_demberg_2026": 1.584164241221323,
+     "pragmods": 2.7809641955074835,
+     "sikos_2021": 1.9385965127429283
+    },
+    "sel_elpd": -18668.924935068426,
+    "sel_diff": 14.5355176324083,
+    "sel_dse": 4.199819301051128
+   },
+   "framed_alignment_listener": {
+    "rank": 13,
+    "elpd_loo": -18667.603154182434,
+    "se": 127.94581674243965,
+    "elpd_diff": 13.377050399780273,
+    "dse": 4.463963581073999,
+    "p_loo": 6.277947370959737,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18703.90083132324,
+    "cv_diff": 49.51141388722317,
+    "cv_dse": 35.51744411962269,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2374.3748474787717,
+     "mayn_demberg_2023": -4122.608654778836,
+     "mayn_demberg_2026": -5582.235392064838,
+     "pragmods": -4003.495430280279,
+     "sikos_2021": -2621.1865067205154
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 4.019408230048612,
+     "mayn_demberg_2023": 0.6777512721509993,
+     "mayn_demberg_2026": 1.7425516184466687,
+     "pragmods": 43.203005859527366,
+     "sikos_2021": 3.4971138437235822
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 1.9866804265773699,
+     "mayn_demberg_2023": 2.060277102824357,
+     "mayn_demberg_2026": 1.5944507715532987,
+     "pragmods": 35.10166402809012,
+     "sikos_2021": 1.998983731080306
+    },
+    "sel_elpd": -18703.90083132324,
+    "sel_diff": 49.51141388722317,
+    "sel_dse": 35.51744411962269
+   },
+   "naive_speaker_rational_listener": {
+    "rank": 14,
+    "elpd_loo": -18672.607139587402,
+    "se": 127.98476546611356,
+    "elpd_diff": 18.381035804748535,
+    "dse": 5.04374764565976,
+    "p_loo": 3.436472502115066,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18675.160201662176,
+    "cv_diff": 20.770784226158867,
+    "cv_dse": 5.770303866772446,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2375.9301905902394,
+     "mayn_demberg_2023": -4125.610670719726,
+     "mayn_demberg_2026": -5582.493156165492,
+     "pragmods": -3972.5983036394146,
+     "sikos_2021": -2618.5278805473035
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 5.574751341516276,
+     "mayn_demberg_2023": 3.679767213040577,
+     "mayn_demberg_2026": 2.0003157191003993,
+     "pragmods": 12.305879218662994,
+     "sikos_2021": 0.8384876705117676
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 2.7387954510724004,
+     "mayn_demberg_2023": 2.852370641359719,
+     "mayn_demberg_2026": 1.66106380599066,
+     "pragmods": 4.404503801851723,
+     "sikos_2021": 0.6604052442382309
+    },
+    "sel_elpd": -18675.160201662176,
+    "sel_diff": 20.770784226158867,
+    "sel_dse": 5.770303866772446
+   },
+   "listener_rationality_shared_prior": {
+    "rank": 15,
+    "elpd_loo": -18674.61758708954,
+    "se": 128.00224326178883,
+    "elpd_diff": 20.391483306884766,
+    "dse": 5.343229265194812,
+    "p_loo": 3.4495279481780017,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18677.843146774525,
+    "cv_diff": 23.4537293385074,
+    "cv_dse": 6.234669316070567,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2376.4648056110573,
+     "mayn_demberg_2023": -4126.324214950213,
+     "mayn_demberg_2026": -5583.264297098634,
+     "pragmods": -3973.701621479471,
+     "sikos_2021": -2618.0882076351477
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 6.109366362334185,
+     "mayn_demberg_2023": 4.393311443527637,
+     "mayn_demberg_2026": 2.771456652242705,
+     "pragmods": 13.409197058719656,
+     "sikos_2021": 0.3988147583559112
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 2.8606026875658306,
+     "mayn_demberg_2023": 3.0245193126139633,
+     "mayn_demberg_2026": 1.8506734112685332,
+     "pragmods": 4.762532753216072,
+     "sikos_2021": 0.4175225641090466
+    },
+    "sel_elpd": -18677.843146774525,
+    "sel_diff": 23.4537293385074,
+    "sel_dse": 6.234669316070567
+   },
+   "costly_feature_shared_prior": {
+    "rank": 16,
+    "elpd_loo": -18730.256805419922,
+    "se": 128.49997437913817,
+    "elpd_diff": 76.03070163726807,
+    "dse": 12.534565555084203,
+    "p_loo": 4.760041312358226,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18740.96697939893,
+    "cv_diff": 86.57756196291302,
+    "cv_dse": 17.893297283862537,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2380.4365179151864,
+     "mayn_demberg_2023": -4128.506658658244,
+     "mayn_demberg_2026": -5587.932445871994,
+     "pragmods": -4022.5348286190456,
+     "sikos_2021": -2621.5565283344636
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 10.081078666463327,
+     "mayn_demberg_2023": 6.575755151558951,
+     "mayn_demberg_2026": 7.439605425602167,
+     "pragmods": 62.242404198294025,
+     "sikos_2021": 3.867135457671793
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 4.220039942661998,
+     "mayn_demberg_2023": 4.192067649268448,
+     "mayn_demberg_2026": 4.255556933979854,
+     "pragmods": 15.427761768901554,
+     "sikos_2021": 2.116246387564272
+    },
+    "sel_elpd": -18740.96697939893,
+    "sel_diff": 86.57756196291302,
+    "sel_dse": 17.893297283862537
+   },
+   "valence_salience_listener": {
+    "rank": 17,
+    "elpd_loo": -18744.53733444214,
+    "se": 128.6646714866001,
+    "elpd_diff": 90.31123065948486,
+    "dse": 13.522702462221615,
+    "p_loo": 4.134633456556912,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18792.968819852707,
+    "cv_diff": 138.57940241668985,
+    "cv_dse": 45.841323857021116,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2377.8545415391427,
+     "mayn_demberg_2023": -4129.5893515842745,
+     "mayn_demberg_2026": -5582.8457389627,
+     "pragmods": -4084.5599457294766,
+     "sikos_2021": -2618.1192420371135
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 7.499102290419614,
+     "mayn_demberg_2023": 7.658448077589128,
+     "mayn_demberg_2026": 2.3528985163084144,
+     "pragmods": 124.26752130872501,
+     "sikos_2021": 0.42984916032173714
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 3.911369742087801,
+     "mayn_demberg_2023": 3.964046087253634,
+     "mayn_demberg_2026": 2.1341735314905548,
+     "pragmods": 43.63579044002459,
+     "sikos_2021": 0.26873474402983455
+    },
+    "sel_elpd": -18792.968819852707,
+    "sel_diff": 138.57940241668985,
+    "sel_dse": 45.841323857021116
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 18,
+    "elpd_loo": -18749.3999710083,
+    "se": 128.73163133614682,
+    "elpd_diff": 95.17386722564697,
+    "dse": 13.657664176457189,
+    "p_loo": 3.1862233343417756,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18757.62145134278,
+    "cv_diff": 103.23203390676281,
+    "cv_dse": 22.852803034222628,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2378.573871241859,
+     "mayn_demberg_2023": -4130.818186447504,
+     "mayn_demberg_2026": -5583.892657953603,
+     "pragmods": -4046.1586962562224,
+     "sikos_2021": -2618.178039443591
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 8.21843199313571,
+     "mayn_demberg_2023": 8.887282940818295,
+     "mayn_demberg_2026": 3.3998175072110826,
+     "pragmods": 85.8662718354708,
+     "sikos_2021": 0.4886465667991615
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 4.274552122121378,
+     "mayn_demberg_2023": 4.382419596239918,
+     "mayn_demberg_2026": 2.5474571893522753,
+     "pragmods": 20.270469129720386,
+     "sikos_2021": 0.2996198573485283
+    },
+    "sel_elpd": -18757.62145134278,
+    "sel_diff": 103.23203390676281,
+    "sel_dse": 22.852803034222628
+   },
+   "rsa_l1_salience": {
+    "rank": 19,
+    "elpd_loo": -18749.69937324524,
+    "se": 128.7166907054278,
+    "elpd_diff": 95.47326946258545,
+    "dse": 13.661456004551342,
+    "p_loo": 3.174843037053506,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18758.25641181512,
+    "cv_diff": 103.86699437910283,
+    "cv_dse": 22.860668778713638,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2378.7862843947278,
+     "mayn_demberg_2023": -4130.8441954138325,
+     "mayn_demberg_2026": -5583.989278308338,
+     "pragmods": -4046.2997510361656,
+     "sikos_2021": -2618.33690266206
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 8.430845146004685,
+     "mayn_demberg_2023": 8.91329190714714,
+     "mayn_demberg_2026": 3.496437861946106,
+     "pragmods": 86.00732661541406,
+     "sikos_2021": 0.6475097852680847
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 4.341903678591227,
+     "mayn_demberg_2023": 4.410969075211762,
+     "mayn_demberg_2026": 2.5671617528915043,
+     "pragmods": 20.262108049303396,
+     "sikos_2021": 0.4063411449742092
+    },
+    "sel_elpd": -18758.25641181512,
+    "sel_diff": 103.86699437910283,
+    "sel_dse": 22.860668778713638
+   },
+   "communicative_affordance_listener": {
+    "rank": 20,
+    "elpd_loo": -18793.710774421692,
+    "se": 128.89208495632047,
+    "elpd_diff": 139.4846706390381,
+    "dse": 16.219956980013894,
+    "p_loo": 3.5452535701260786,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18803.700505587512,
+    "cv_diff": 149.3110881514949,
+    "cv_dse": 23.814996833589827,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2388.4312208877986,
+     "mayn_demberg_2023": -4137.199427455973,
+     "mayn_demberg_2026": -5598.867867738407,
+     "pragmods": -4034.5376610563126,
+     "sikos_2021": -2644.66432844902
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 18.075781639075558,
+     "mayn_demberg_2023": 15.268523949287555,
+     "mayn_demberg_2026": 18.375027292015147,
+     "pragmods": 74.24523663556101,
+     "sikos_2021": 26.974935572228333
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 6.304515468967522,
+     "mayn_demberg_2023": 6.429709271276525,
+     "mayn_demberg_2026": 7.0950839826644945,
+     "pragmods": 17.589220090457395,
+     "sikos_2021": 11.448157115316466
+    },
+    "sel_elpd": -18803.700505587512,
+    "sel_diff": 149.3110881514949,
+    "sel_dse": 23.814996833589827
+   },
+   "costly_feature_speaker": {
+    "rank": 21,
+    "elpd_loo": -18848.6272315979,
+    "se": 129.58183065163496,
+    "elpd_diff": 194.40112781524658,
+    "dse": 19.881829608395822,
+    "p_loo": 2.306877891838667,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": false,
+    "elpd_cv": -18850.048475272986,
+    "cv_diff": 195.6590578369687,
+    "cv_dse": 29.152780141593578,
+    "cv_converged": false,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2409.2049305003166,
+     "mayn_demberg_2023": -4161.761831920574,
+     "mayn_demberg_2026": -5639.539726858879,
+     "pragmods": -3997.8608045000547,
+     "sikos_2021": -2641.6811814931634
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 38.84949125159346,
+     "mayn_demberg_2023": 39.830928413888614,
+     "mayn_demberg_2026": 59.046886412486856,
+     "pragmods": 37.5683800793031,
+     "sikos_2021": 23.99178861637165
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 10.725809375356034,
+     "mayn_demberg_2023": 10.887504070644288,
+     "mayn_demberg_2026": 19.16702977515767,
+     "pragmods": 12.496967481146704,
+     "sikos_2021": 13.416173477978065
+    },
+    "sel_elpd": -18850.048475272986,
+    "sel_diff": 195.6590578369687,
+    "sel_dse": 29.152780141593578
+   },
+   "rsa_l1": {
+    "rank": 22,
+    "elpd_loo": -19061.83660507202,
+    "se": 131.62528639294771,
+    "elpd_diff": 407.6105012893677,
+    "dse": 28.352843265650066,
+    "p_loo": 1.0171159491728758,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -19062.609153081175,
+    "cv_diff": 408.2197356451579,
+    "cv_dse": 72.92273545532845,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2442.1730200969305,
+     "mayn_demberg_2023": -4215.1060630771535,
+     "mayn_demberg_2026": -5701.445186897972,
+     "pragmods": -4085.063984201886,
+     "sikos_2021": -2618.820898807232
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 71.8175808482074,
+     "mayn_demberg_2023": 93.17515957046817,
+     "mayn_demberg_2026": 120.95234645158052,
+     "pragmods": 124.77155978113433,
+     "sikos_2021": 1.1315059304401984
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 25.161968636414972,
+     "mayn_demberg_2023": 27.84793435985373,
+     "mayn_demberg_2026": 51.71621179037659,
+     "pragmods": 37.2832994700155,
+     "sikos_2021": 0.6555244173281387
+    },
+    "sel_elpd": -19062.609153081175,
+    "sel_diff": 408.2197356451579,
+    "sel_dse": 72.92273545532845
+   },
+   "rsa_l2": {
+    "rank": 23,
+    "elpd_loo": -19062.124331474304,
+    "se": 131.64048851646612,
+    "elpd_diff": 407.8982276916504,
+    "dse": 28.36321066089787,
+    "p_loo": 0.9674959560361458,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -19063.03305634412,
+    "cv_diff": 408.64363890810273,
+    "cv_dse": 72.9851689758508,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2442.207524636274,
+     "mayn_demberg_2023": -4215.1879617507075,
+     "mayn_demberg_2026": -5701.530043919978,
+     "pragmods": -4085.2312482344805,
+     "sikos_2021": -2618.876277802681
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 71.85208538755069,
+     "mayn_demberg_2023": 93.25705824402212,
+     "mayn_demberg_2026": 121.03720347358649,
+     "pragmods": 124.93882381372896,
+     "sikos_2021": 1.1868849258894443
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 25.177899534507443,
+     "mayn_demberg_2023": 27.871578214369094,
+     "mayn_demberg_2026": 51.761940633901446,
+     "pragmods": 37.316285437488595,
+     "sikos_2021": 0.6893827279124077
+    },
+    "sel_elpd": -19063.03305634412,
+    "sel_diff": 408.64363890810273,
+    "sel_dse": 72.9851689758508
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "aspect_goal_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential expressions by inferring the speaker's communicative goal, modeling the speaker as aiming to inform them about an aspect of the object rather than its unique referential identity. When describing an object, speakers select among its true features by balancing lexical accessibility with contextual distinctiveness, and name the chosen aspect. A pragmatic listener inverts this goal-directed speaker, reasoning that hearing a shared feature provides stronger evidence for a minimally described object whose only communicative aspect was named than for an object with multiple features whose communicative focus was divided."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "listener_type_mixture",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0016 of graded_specificity_listener's (threshold 0.002) over the loop's novelty pool of 1258 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "The participant population is structured as a mixture of two distinct cognitive types: literal listeners who choose among truthful referents according to contextual and visual salience, and pragmatic listeners who invert a cost-sensitive communicative speaker to derive scalar implicatures. On trials with an informative utterance, observed choices reflect a population mixture over these two types parameterized by the proportion of pragmatic listeners. On prior trials with no informative word, all listeners fall back to contextual object salience driven by feature richness and familiarization base rates."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "residual_surprisal_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referential expressions by penalizing candidate referents according to the residual surprisal of their unmentioned features. When evaluating objects that satisfy the heard word, listeners discount referents that possess unmentioned features carrying high contextual information content (rarity across the display), reasoning that an informative speaker would not omit highly diagnostic attributes. When no informative word is heard, choices are guided uniformly across candidate referents, modulated by prior familiarization expectations."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "valence_parsimony_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine fewest_features_listener by proposing that the listener's parsimony heuristic is modulated by the speaker's affective framing: when interpreting an utterance, listeners penalize feature complexity under neutral or positive framing (\"favorite\"), but invert this preference when the speaker describes their \"least favorite\" object, favoring referents with more features. When no informative word is heard, listeners choose uniformly among candidate objects, modulated only by familiarization base rates.\n\nDifferences from source (fewest_features_listener):\n- Recursion depth: Unchanged (choice_probs calls L0 at depth 0).\n- Parameters added: w_valence (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In choice_probs, the feature parsimony exponent `-params[\"beta\"] * ctx.feature_count` is replaced by `-(params[\"beta\"] + params[\"w_valence\"] * ctx.valence) * ctx.feature_count`, modulating the parsimony penalty according to speaker valence."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "perceptual_parsimony_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine fewest_features_listener by proposing that listeners balance descriptive parsimony against visual perceptual prominence: when interpreting an utterance, listeners penalize feature complexity among matching referents while favoring visually prominent referents shown in full color over desaturated grayscale objects. When no informative word is heard, listeners have no descriptive cues to evaluate and choose uniformly among candidate objects, modulated only by familiarization base rates.\n\nDifferences from source (fewest_features_listener):\n- Recursion depth: Unchanged (choice_probs calls L0 at depth 0).\n- Parameters added: w_color (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In choice_probs, the referent choice weight incorporates a perceptual prominence boost for colored objects: `weight = jnp.exp(-params[\"beta\"] * ctx.feature_count + params[\"w_color\"] * (1.0 - ctx.grayscale))`."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "parsimonious_structured_lapse_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine salience_structured_lapse_listener by proposing that listeners interpret referential expressions through parsimonious semantic comprehension, preferring candidate referents with fewer total features rather than treating all matching referents equally. When goal-directed attention lapses or when no informative clue is provided, choice is governed by a structured fallback to bottom-up visual and contextual salience, biasing clicks toward feature-rich and familiar objects. This parsimony preference naturally favors simpler referents in ambiguous communicative contexts while preserving salience-driven visual attention during lapses and prior trials.\n\nDifferences from source (salience_structured_lapse_listener):\n- Recursion depth: Unchanged (choice_probs calls L0 at depth 0).\n- Parameters added: beta (prior: LogNormal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L0, the listener's choice weight incorporates a parsimony discount against feature complexity, `wpp = at(lex, u, r) * vec(weight, r)`, where `weight = jnp.exp(-params[\"beta\"] * ctx.feature_count)`, selecting among referents satisfying the heard word by preferring objects with fewer total features, while goal-directed lapses and prior trials continue to fall back to bottom-up contextual salience."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "parsimonious_literal_mixture",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "The participant population is structured as a discrete mixture of two distinct cognitive listener types: literal semantic listeners who treat all candidate referents satisfying the heard word as equally plausible, and parsimonious listeners who select among matching referents by penalizing feature complexity according to descriptive parsimony. Observed choices on communicative trials reflect a population mixture over these two types parameterized by the proportion of parsimonious listeners, explaining why aggregate implicature rates remain bounded near chance across diverse displays. On prior trials with no informative word, all listeners choose uniformly among candidate objects, modulated only by familiarization base rates.",
+    "repair": true
+   }
+  ],
+  "live": [
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_salience",
+    "hypothesis": "Depth-1 RSA whose listener has a salience prior over objects (feature count, familiarization base rate) that the simulated literal listener lacks.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1_shared_prior",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.",
+    "source": "seed"
+   },
+   {
+    "name": "valence_salience_listener",
+    "hypothesis": "Listeners interpret referential expressions through an affective framing mechanism that scales object salience by the speaker's emotional valence. Under positive or neutral framing, feature-rich objects are perceived as desirable and salient targets, whereas under negative framing ('least favorite'), this preference is inverted toward plainer objects. The listener coordinates with the speaker by adopting this valence-modulated salience prior across both prior expectations and communicative inference.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "literal_salience_listener",
+    "hypothesis": "Listeners interpret utterances literally rather than pragmatically: they select among referents of which the heard word is true based strictly on prior contextual salience, without simulating alternative words a speaker could have chosen. On a display with a one-feature object and a two-feature object that both possess the named feature, this mechanism predicts that listeners will favor the two-feature object because its greater feature count makes it more salient a priori, directly reversing the pragmatic model's prediction that the one-feature object is favored because a speaker meaning the two-feature object would have named its alternative feature.\n",
+    "source": "round 1 candidate 2 explore"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "hypothesis": "Speakers balance communicative informativeness against utterance production costs, incurring a penalty for producing shared, non-distinctive words that apply to multiple referents in the visual scene. Pragmatic listeners invert this cost-sensitive speaker, reasoning that an utterance describing a shared feature is less likely to have been chosen if a less costly distinctive alternative was available. On prior trials with no informative word, listeners choose uniformly among the available objects.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "listener_rationality_shared_prior",
+    "hypothesis": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.\n",
+    "source": "round 1 candidate 4 refine incumbent rsa_l1_shared_prior"
+   },
+   {
+    "name": "costly_feature_shared_prior",
+    "hypothesis": "Pragmatic speakers balance communicative informativeness against utterance production costs, penalizing non-distinctive words that apply to multiple referents in the visual scene, while coordinating on a shared salience prior over objects with listeners. By incorporating this utterance cost into the speaker's utility, the pragmatic listener expects speakers to prefer distinctive terms over shared ones even when both are literally truthful, sharpening pragmatic referent selection beyond object salience alone.\n\nDifferences from source (rsa_l1_shared_prior):\n- Recursion depth: Unchanged (choice_probs calls L1 at depth 1).\n- Parameters added: cost (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L1, the speaker's choice weight incorporates an utterance production cost penalty `- cost * vec(utt_cost, u)`, where `utt_cost` measures the excess extension of non-sink utterances across referents (`jnp.maximum(0.0, jnp.sum(ctx.lex * (1.0 - ctx.is_sink)[:, None], axis=1) - 1.0)`).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l1_shared_prior repair 1"
+   },
+   {
+    "name": "communicative_affordance_listener",
+    "hypothesis": "Listeners expect speakers to talk about objects that can be communicated effectively: before hearing an informative word, listeners assign higher prior probability to referents possessing greater communicative affordance, reasoning that a speaker constrained to a single word prefers to discuss topics that can be conveyed with high discriminative precision. In pragmatic reference games, listeners coordinate with the speaker on this topic prior, expecting the speaker's referential goal to favor objects with distinctive communicative descriptors over ambiguous ones.\n",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "bounded_alternatives_listener",
+    "hypothesis": "Listeners have bounded attentional resources to generate and reason over unmentioned alternative utterances when interpreting a speaker. When simulating the speaker's utterance choice, a resource-limited listener discounts unmentioned alternative expressions relative to the focal heard word, reducing the speaker's perceived likelihood of having chosen an alternative descriptor. Under limited attention to alternatives, the listener relies predominantly on literal semantics and contextual salience, attenuating the pragmatic pressure of scalar implicature.\n",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "graded_specificity_listener",
+    "hypothesis": "Listeners interpret referential expressions through graded truth values rather than binary logic: a word's degree of truth decays with the referent's total feature complexity and is further discounted when the referent possesses unmentioned distinctive features that could have uniquely identified it. When interpreting an utterance, listeners choose among candidate referents in proportion to this graded semantic fit and prior familiarization expectations, without simulating a counterfactual speaker.\n",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "costly_feature_listener_rationality",
+    "hypothesis": "We refine listener_rationality_shared_prior by proposing that speakers trade off communicative informativeness against utterance production costs, penalizing ambiguous words that refer to multiple objects in the visual display. Pragmatic listeners invert this cost-sensitive speaker, reasoning that an utterance describing a shared feature is less likely to have been chosen if a less costly distinctive alternative was available, while making boundedly rational softmax choices over candidate referents. When no informative word is heard, listeners choose according to contextual object salience.\n\nDifferences from source (listener_rationality_shared_prior):\n- Recursion depth: Unchanged (choice_probs calls L1 at depth 1).\n- Parameters added: cost (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L1, the speaker's choice weight incorporates an utterance production cost penalty `- cost * vec(utt_cost, u)`, where `utt_cost` measures the excess extension of non-sink utterances across referents (`jnp.maximum(0.0, jnp.sum(ctx.lex * (1.0 - ctx.is_sink)[:, None], axis=1) - 1.0)`).\n",
+    "source": "round 2 candidate 6 refine chosen"
+   },
+   {
+    "name": "naive_speaker_rational_listener",
+    "hypothesis": "We refine literal_salience_listener by elevating the listener from depth 0 to depth 1 to invert a naive, truthful speaker: rather than evaluating words in isolation, listeners model the speaker as randomly selecting one feature of the intended object, making boundedly rational softmax choices over candidate referents. Because an object with multiple features provides more descriptive options for the speaker, naming a shared feature provides weaker evidence for a complex referent than for a minimally described referent, naturally disfavoring over-specified objects without simulating counterfactual listeners. On prior trials with no informative word, choices are governed strictly by contextual object salience.\n\nDifferences from source (literal_salience_listener):\n- Recursion depth: Changed from depth 0 (choice_probs calls L0) to depth 1 (choice_probs calls L1).\n- Parameters added: beta (prior: LogNormal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: choice_probs calls L1 instead of L0. In L1, the listener simulates a naive speaker choosing truthfully among valid descriptors (`wpp = at(lex, u, r)`) given prior object distribution `vec(prior, r)`, and the listener chooses referents via softmax rationality `exp(beta * log(Pr[speaker.r == r] + {EPS}))`.\n",
+    "source": "round 2 candidate 5 refine incumbent literal_salience_listener repair 1"
+   },
+   {
+    "name": "fewest_features_listener",
+    "hypothesis": "Listeners interpret referential expressions through a non-Bayesian parsimony heuristic: rather than simulating counterfactual speakers, they select among referents satisfying the heard word by preferring the object with the fewest total features. When no informative word is heard, listeners have no descriptive cues to evaluate and choose uniformly among candidate objects, modulated only by familiarization base rates.\n",
+    "source": "round 3 candidate 2 explore"
+   },
+   {
+    "name": "salience_structured_lapse_listener",
+    "hypothesis": "Listeners interpret utterances through literal semantic comprehension, treating all candidate referents that satisfy the speaker's word as equally plausible targets. When goal-directed attention lapses or when no informative clue is provided, choice is governed by a structured lapse process that falls back to bottom-up visual and contextual salience, biasing clicks toward feature-rich and familiar objects rather than guessing uniformly at random.\n",
+    "source": "round 3 candidate 3 explore"
+   },
+   {
+    "name": "costly_bounded_alternatives_listener",
+    "hypothesis": "We refine bounded_alternatives_listener by proposing that speakers balance communicative informativeness against utterance production costs, penalizing ambiguous words that refer to multiple objects in the visual display. When a resource-limited listener simulates the speaker's referential choice, the speaker's utility discounts unmentioned alternative expressions due to bounded attention while simultaneously disfavoring ambiguous shared descriptors. On prior trials with no informative word, listener choices are guided solely by contextual object salience.\n\nDifferences from source (bounded_alternatives_listener):\n- Recursion depth: Unchanged (choice_probs calls L1 at depth 1).\n- Parameters added: cost (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L1, the speaker's choice weight incorporates an utterance production cost penalty `- cost * vec(utt_cost, u)`, where `utt_cost` measures the excess extension of non-sink utterances across referents (`jnp.maximum(0.0, jnp.sum(ctx.lex * (1.0 - ctx.is_sink)[:, None], axis=1) - 1.0)`).\n",
+    "source": "round 3 candidate 6 refine chosen"
+   },
+   {
+    "name": "framed_alignment_listener",
+    "hypothesis": "Listeners interpret referential expressions by inverting a framed, boundedly rational speaker whose referential goals reflect contextual framing and whose word choices balance semantic truthfulness with descriptive accessibility. Under affective framing, the speaker's prior target reflects emotional valence, amplifying the appeal of feature-rich objects when describing a favorite and discounting complexity when describing a least favorite, while visual prominence renders colored objects more salient across all contexts. Bounded listeners infer the speaker's intended referent from these framed communicative expectations, relying directly on framed visual salience when no informative word is heard.\n",
+    "source": "round 3 candidate 1 explore repair 1"
+   },
+   {
+    "name": "aspect_goal_listener",
+    "hypothesis": "Listeners interpret referential expressions by inferring the speaker's communicative goal, modeling the speaker as aiming to inform them about an aspect of the object rather than its unique referential identity. When describing an object, speakers select among its true features by balancing lexical accessibility with contextual distinctiveness, and name the chosen aspect. A pragmatic listener inverts this goal-directed speaker, reasoning that hearing a shared feature provides stronger evidence for a minimally described object whose only communicative aspect was named than for an object with multiple features whose communicative focus was divided.\n",
+    "source": "round 4 candidate 1 explore"
+   },
+   {
+    "name": "residual_surprisal_listener",
+    "hypothesis": "Listeners interpret referential expressions by penalizing candidate referents according to the residual surprisal of their unmentioned features. When evaluating objects that satisfy the heard word, listeners discount referents that possess unmentioned features carrying high contextual information content (rarity across the display), reasoning that an informative speaker would not omit highly diagnostic attributes. When no informative word is heard, choices are guided uniformly across candidate referents, modulated by prior familiarization expectations.\n",
+    "source": "round 4 candidate 3 explore"
+   },
+   {
+    "name": "valence_parsimony_listener",
+    "hypothesis": "We refine fewest_features_listener by proposing that the listener's parsimony heuristic is modulated by the speaker's affective framing: when interpreting an utterance, listeners penalize feature complexity under neutral or positive framing (\"favorite\"), but invert this preference when the speaker describes their \"least favorite\" object, favoring referents with more features. When no informative word is heard, listeners choose uniformly among candidate objects, modulated only by familiarization base rates.\n\nDifferences from source (fewest_features_listener):\n- Recursion depth: Unchanged (choice_probs calls L0 at depth 0).\n- Parameters added: w_valence (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In choice_probs, the feature parsimony exponent `-params[\"beta\"] * ctx.feature_count` is replaced by `-(params[\"beta\"] + params[\"w_valence\"] * ctx.valence) * ctx.feature_count`, modulating the parsimony penalty according to speaker valence.\n",
+    "source": "round 4 candidate 4 refine incumbent fewest_features_listener"
+   },
+   {
+    "name": "perceptual_parsimony_listener",
+    "hypothesis": "We refine fewest_features_listener by proposing that listeners balance descriptive parsimony against visual perceptual prominence: when interpreting an utterance, listeners penalize feature complexity among matching referents while favoring visually prominent referents shown in full color over desaturated grayscale objects. When no informative word is heard, listeners have no descriptive cues to evaluate and choose uniformly among candidate objects, modulated only by familiarization base rates.\n\nDifferences from source (fewest_features_listener):\n- Recursion depth: Unchanged (choice_probs calls L0 at depth 0).\n- Parameters added: w_color (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In choice_probs, the referent choice weight incorporates a perceptual prominence boost for colored objects: `weight = jnp.exp(-params[\"beta\"] * ctx.feature_count + params[\"w_color\"] * (1.0 - ctx.grayscale))`.\n",
+    "source": "round 4 candidate 5 refine incumbent fewest_features_listener retry 1"
+   },
+   {
+    "name": "parsimonious_structured_lapse_listener",
+    "hypothesis": "We refine salience_structured_lapse_listener by proposing that listeners interpret referential expressions through parsimonious semantic comprehension, preferring candidate referents with fewer total features rather than treating all matching referents equally. When goal-directed attention lapses or when no informative clue is provided, choice is governed by a structured fallback to bottom-up visual and contextual salience, biasing clicks toward feature-rich and familiar objects. This parsimony preference naturally favors simpler referents in ambiguous communicative contexts while preserving salience-driven visual attention during lapses and prior trials.\n\nDifferences from source (salience_structured_lapse_listener):\n- Recursion depth: Unchanged (choice_probs calls L0 at depth 0).\n- Parameters added: beta (prior: LogNormal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L0, the listener's choice weight incorporates a parsimony discount against feature complexity, `wpp = at(lex, u, r) * vec(weight, r)`, where `weight = jnp.exp(-params[\"beta\"] * ctx.feature_count)`, selecting among referents satisfying the heard word by preferring objects with fewer total features, while goal-directed lapses and prior trials continue to fall back to bottom-up contextual salience.\n",
+    "source": "round 4 candidate 6 refine chosen"
+   },
+   {
+    "name": "parsimonious_literal_mixture",
+    "hypothesis": "The participant population is structured as a discrete mixture of two distinct cognitive listener types: literal semantic listeners who treat all candidate referents satisfying the heard word as equally plausible, and parsimonious listeners who select among matching referents by penalizing feature complexity according to descriptive parsimony. Observed choices on communicative trials reflect a population mixture over these two types parameterized by the proportion of parsimonious listeners, explaining why aggregate implicature rates remain bounded near chance across diverse displays. On prior trials with no informative word, all listeners choose uniformly among candidate objects, modulated only by familiarization base rates.\n",
+    "source": "round 4 candidate 2 explore repair 1"
+   }
+  ],
+  "ledger_entries": 31
+ },
+ {
+  "step": 5,
+  "round": 4,
+  "best_model": "parsimonious_literal_mixture",
+  "standing": {
+   "valence_parsimony_listener": {
+    "rank": 0,
+    "elpd_loo": -18654.226103782654,
+    "se": 127.93654917691318,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 3.596570629219059,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18654.647678573747,
+    "cv_diff": 0.25826113772927783,
+    "cv_dse": 1.0983479460116485,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.853247133391,
+     "mayn_demberg_2023": -4122.704912166664,
+     "mayn_demberg_2026": -5580.723972325915,
+     "pragmods": -3960.599079890026,
+     "sikos_2021": -2618.766467057751
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.4978078846679637,
+     "mayn_demberg_2023": 0.7740086599787901,
+     "mayn_demberg_2026": 0.23113187952367298,
+     "pragmods": 0.306655469274574,
+     "sikos_2021": 1.0770741809592437
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 1.1373218321648826,
+     "mayn_demberg_2023": 1.2048186170521358,
+     "mayn_demberg_2026": 0.31984566951504556,
+     "pragmods": 0.7473748393961689,
+     "sikos_2021": 0.7093307656244023
+    },
+    "sel_elpd": -18654.647678573747,
+    "sel_diff": 0.25826113772927783,
+    "sel_dse": 1.0983479460116485
+   },
+   "perceptual_parsimony_listener": {
+    "rank": 1,
+    "elpd_loo": -18654.43385028839,
+    "se": 127.93796292302821,
+    "elpd_diff": 0.2077465057373047,
+    "dse": 2.2078117174982457,
+    "p_loo": 3.474049518503307,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18654.65572992783,
+    "cv_diff": 0.2663124918108224,
+    "cv_dse": 0.9613806144660793,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.81543753556,
+     "mayn_demberg_2023": -4122.569572242688,
+     "mayn_demberg_2026": -5580.850068372321,
+     "pragmods": -3960.663767729837,
+     "sikos_2021": -2618.7568840474237
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.4599982868367078,
+     "mayn_demberg_2023": 0.6386687360027281,
+     "mayn_demberg_2026": 0.357227925929692,
+     "pragmods": 0.3713433090856597,
+     "sikos_2021": 1.0674911706319108
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 1.0852232684680017,
+     "mayn_demberg_2023": 1.121682115425433,
+     "mayn_demberg_2026": 0.31969956116202874,
+     "pragmods": 0.6758110474713359,
+     "sikos_2021": 0.704857694773605
+    },
+    "sel_elpd": -18654.65572992783,
+    "sel_diff": 0.2663124918108224,
+    "sel_dse": 0.9613806144660793
+   },
+   "parsimonious_literal_mixture": {
+    "rank": 2,
+    "elpd_loo": -18654.497052192688,
+    "se": 127.90586465705746,
+    "elpd_diff": 0.2709484100341797,
+    "dse": 1.8804697370347063,
+    "p_loo": 2.7579279056517407,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18654.389417436018,
+    "cv_diff": 0.0,
+    "cv_dse": 0.0,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.424513641681,
+     "mayn_demberg_2023": -4122.32952666997,
+     "mayn_demberg_2026": -5581.5816871878915,
+     "pragmods": -3960.2924244207516,
+     "sikos_2021": -2618.761265515725
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.0690743929581004,
+     "mayn_demberg_2023": 0.39862316328435554,
+     "mayn_demberg_2026": 1.088846741499765,
+     "pragmods": 0.0,
+     "sikos_2021": 1.0718726389332005
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.8220595236730321,
+     "mayn_demberg_2023": 0.8477343348451416,
+     "mayn_demberg_2026": 0.6437175749148785,
+     "pragmods": 0.0,
+     "sikos_2021": 0.7058331903299684
+    },
+    "sel_elpd": -18654.389417436018,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0
+   },
+   "fewest_features_listener": {
+    "rank": 3,
+    "elpd_loo": -18654.740566253662,
+    "se": 127.91292333777345,
+    "elpd_diff": 0.5144624710083008,
+    "dse": 1.7151151567197032,
+    "p_loo": 2.5925408855910064,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18654.766406854393,
+    "cv_diff": 0.3769894183751603,
+    "cv_dse": 1.0008483685555614,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.8156217264595,
+     "mayn_demberg_2023": -4122.650191713723,
+     "mayn_demberg_2026": -5580.802224680836,
+     "pragmods": -3960.744563602428,
+     "sikos_2021": -2618.753805130942
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.4601824777364527,
+     "mayn_demberg_2023": 0.7192882070376072,
+     "mayn_demberg_2026": 0.3093842344442237,
+     "pragmods": 0.4521391816765572,
+     "sikos_2021": 1.0644122541502838
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 1.1305505676052778,
+     "mayn_demberg_2023": 1.1452339276945165,
+     "mayn_demberg_2026": 0.3167676474972607,
+     "pragmods": 0.685343270408459,
+     "sikos_2021": 0.7074751726726276
+    },
+    "sel_elpd": -18654.766406854393,
+    "sel_diff": 0.3769894183751603,
+    "sel_dse": 1.0008483685555614
+   },
+   "graded_specificity_listener": {
+    "rank": 4,
+    "elpd_loo": -18654.830012321472,
+    "se": 127.91254115676763,
+    "elpd_diff": 0.6039085388183594,
+    "dse": 2.167729210754825,
+    "p_loo": 2.6922340106466436,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18656.34897868063,
+    "cv_diff": 1.9595612446137238,
+    "cv_dse": 2.072545579848697,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.184123795828,
+     "mayn_demberg_2023": -4122.544806011227,
+     "mayn_demberg_2026": -5582.078069863753,
+     "pragmods": -3962.13454226042,
+     "sikos_2021": -2618.407436749405
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 0.8286845471047855,
+     "mayn_demberg_2023": 0.6139025045413291,
+     "mayn_demberg_2026": 1.5852294173610062,
+     "pragmods": 1.84211783966839,
+     "sikos_2021": 0.7180438726131797
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.6908688868446689,
+     "mayn_demberg_2023": 0.7420284757659558,
+     "mayn_demberg_2026": 0.780925054610757,
+     "pragmods": 2.0187064059320097,
+     "sikos_2021": 0.4979386173249515
+    },
+    "sel_elpd": -18656.34897868063,
+    "sel_diff": 1.9595612446137238,
+    "sel_dse": 2.072545579848697
+   },
+   "literal_salience_listener": {
+    "rank": 5,
+    "elpd_loo": -18655.05804347992,
+    "se": 127.91014877822954,
+    "elpd_diff": 0.831939697265625,
+    "dse": 2.171202386056682,
+    "p_loo": 3.025718893739395,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18657.50557843609,
+    "cv_diff": 3.1161610000708606,
+    "cv_dse": 2.4648921586416037,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.3443576451073,
+     "mayn_demberg_2023": -4122.224333672577,
+     "mayn_demberg_2026": -5582.268746794389,
+     "pragmods": -3962.918912694066,
+     "sikos_2021": -2618.7492276299513
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 0.9889183963841788,
+     "mayn_demberg_2023": 0.29343016589155013,
+     "mayn_demberg_2026": 1.7759063479970791,
+     "pragmods": 2.6264882733144077,
+     "sikos_2021": 1.059834753159521
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.6863855527997492,
+     "mayn_demberg_2023": 0.6816016796386154,
+     "mayn_demberg_2026": 1.0525714149515373,
+     "pragmods": 2.3879901321500476,
+     "sikos_2021": 0.7055523659879944
+    },
+    "sel_elpd": -18657.50557843609,
+    "sel_diff": 3.1161610000708606,
+    "sel_dse": 2.4648921586416037
+   },
+   "parsimonious_structured_lapse_listener": {
+    "rank": 6,
+    "elpd_loo": -18655.178213119507,
+    "se": 127.94122573275463,
+    "elpd_diff": 0.9521093368530273,
+    "dse": 1.9637501938490267,
+    "p_loo": 3.571734444856702,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18655.29686793148,
+    "cv_diff": 0.907450495462399,
+    "cv_dse": 1.5356724551706313,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.811257658538,
+     "mayn_demberg_2023": -4122.636217441559,
+     "mayn_demberg_2026": -5580.492840446392,
+     "pragmods": -3961.6525445024017,
+     "sikos_2021": -2618.704007882591
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.4558184098150377,
+     "mayn_demberg_2023": 0.7053139348736295,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 1.360120081650166,
+     "sikos_2021": 1.0146150057994419
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 1.1041484220083113,
+     "mayn_demberg_2023": 1.0408417804718961,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 1.2326516220317676,
+     "sikos_2021": 0.6992681588693549
+    },
+    "sel_elpd": -18655.29686793148,
+    "sel_diff": 0.907450495462399,
+    "sel_dse": 1.5356724551706313
+   },
+   "residual_surprisal_listener": {
+    "rank": 7,
+    "elpd_loo": -18655.44844341278,
+    "se": 127.91585385519319,
+    "elpd_diff": 1.2223396301269531,
+    "dse": 2.212915892547289,
+    "p_loo": 2.567013696887443,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18655.41901407845,
+    "cv_diff": 1.0295966424309881,
+    "cv_dse": 1.3893322509198989,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.5320301221927,
+     "mayn_demberg_2023": -4123.704254906571,
+     "mayn_demberg_2026": -5582.024594663015,
+     "pragmods": -3960.4687415098815,
+     "sikos_2021": -2617.6893928767918
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.1765908734696495,
+     "mayn_demberg_2023": 1.7733513998855415,
+     "mayn_demberg_2026": 1.531754216623085,
+     "pragmods": 0.17631708912995236,
+     "sikos_2021": 0.0
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.9954159553817334,
+     "mayn_demberg_2023": 1.1211415777399933,
+     "mayn_demberg_2026": 0.8050592472905092,
+     "pragmods": 0.47493219888453025,
+     "sikos_2021": 0.0
+    },
+    "sel_elpd": -18655.41901407845,
+    "sel_diff": 1.0295966424309881,
+    "sel_dse": 1.3893322509198989
+   },
+   "bounded_alternatives_listener": {
+    "rank": 8,
+    "elpd_loo": -18655.489822387695,
+    "se": 127.90278211396547,
+    "elpd_diff": 1.263718605041504,
+    "dse": 1.9801383783474131,
+    "p_loo": 3.4931372995779384,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18658.110710338682,
+    "cv_diff": 3.7212929026645725,
+    "cv_dse": 2.225201175646113,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.564374142289,
+     "mayn_demberg_2023": -4122.889375041186,
+     "mayn_demberg_2026": -5582.13762453094,
+     "pragmods": -3963.276908911554,
+     "sikos_2021": -2618.242427712716
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.2089348935660382,
+     "mayn_demberg_2023": 0.958471534500859,
+     "mayn_demberg_2026": 1.6447840845485189,
+     "pragmods": 2.984484490802515,
+     "sikos_2021": 0.5530348359243362
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.8090565632223747,
+     "mayn_demberg_2023": 0.85597945911497,
+     "mayn_demberg_2026": 0.8525880370120557,
+     "pragmods": 2.124546908308268,
+     "sikos_2021": 0.37832714430393793
+    },
+    "sel_elpd": -18658.110710338682,
+    "sel_diff": 3.7212929026645725,
+    "sel_dse": 2.225201175646113
+   },
+   "costly_bounded_alternatives_listener": {
+    "rank": 9,
+    "elpd_loo": -18655.50413608551,
+    "se": 127.9020182174572,
+    "elpd_diff": 1.2780323028564453,
+    "dse": 1.9771719761880728,
+    "p_loo": 4.191804641741328,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18657.782151397783,
+    "cv_diff": 3.392733961765771,
+    "cv_dse": 2.2558332934804413,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2371.673602432828,
+     "mayn_demberg_2023": -4122.305407655818,
+     "mayn_demberg_2026": -5581.886632695621,
+     "pragmods": -3963.0081479925284,
+     "sikos_2021": -2618.9083606209892
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 1.318163184104833,
+     "mayn_demberg_2023": 0.3745041491329175,
+     "mayn_demberg_2026": 1.393792249229591,
+     "pragmods": 2.7157235717768344,
+     "sikos_2021": 1.218967744197471
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.8289632956908389,
+     "mayn_demberg_2023": 0.8642405422933265,
+     "mayn_demberg_2026": 0.8535397822441578,
+     "pragmods": 2.205266690305588,
+     "sikos_2021": 0.795494579528124
+    },
+    "sel_elpd": -18657.782151397783,
+    "sel_diff": 3.392733961765771,
+    "sel_dse": 2.2558332934804413
+   },
+   "salience_structured_lapse_listener": {
+    "rank": 10,
+    "elpd_loo": -18655.539068222046,
+    "se": 127.88588583554127,
+    "elpd_diff": 1.3129644393920898,
+    "dse": 3.191146732180652,
+    "p_loo": 3.0029250831721583,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18655.39133502187,
+    "cv_diff": 1.001917585854244,
+    "cv_dse": 2.375415208337893,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2370.355439248723,
+     "mayn_demberg_2023": -4121.930903506685,
+     "mayn_demberg_2026": -5583.362032116483,
+     "pragmods": -3961.050120848846,
+     "sikos_2021": -2618.692839301135
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 2.8691916700909132,
+     "pragmods": 0.7576964280942775,
+     "sikos_2021": 1.0034464243431103
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 1.5211818907139152,
+     "pragmods": 1.741136146560483,
+     "sikos_2021": 0.7012716389813198
+    },
+    "sel_elpd": -18655.39133502187,
+    "sel_diff": 1.001917585854244,
+    "sel_dse": 2.375415208337893
+   },
+   "framed_alignment_listener": {
+    "rank": 11,
+    "elpd_loo": -18667.603154182434,
+    "se": 127.94581674243965,
+    "elpd_diff": 13.377050399780273,
+    "dse": 4.463963581073999,
+    "p_loo": 6.277947370959737,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -18703.90083132324,
+    "cv_diff": 49.51141388722317,
+    "cv_dse": 35.51744411962269,
+    "cv_converged": true,
+    "cv_by_source": {
+     "mayn_demberg_2022": -2374.3748474787717,
+     "mayn_demberg_2023": -4122.608654778836,
+     "mayn_demberg_2026": -5582.235392064838,
+     "pragmods": -4003.495430280279,
+     "sikos_2021": -2621.1865067205154
+    },
+    "cv_behind_by_source": {
+     "mayn_demberg_2022": 4.019408230048612,
+     "mayn_demberg_2023": 0.6777512721509993,
+     "mayn_demberg_2026": 1.7425516184466687,
+     "pragmods": 43.203005859527366,
+     "sikos_2021": 3.4971138437235822
+    },
+    "cv_dse_by_source": {
+     "mayn_demberg_2022": 1.9866804265773699,
+     "mayn_demberg_2023": 2.060277102824357,
+     "mayn_demberg_2026": 1.5944507715532987,
+     "pragmods": 35.10166402809012,
+     "sikos_2021": 1.998983731080306
+    },
+    "sel_elpd": -18703.90083132324,
+    "sel_diff": 49.51141388722317,
+    "sel_dse": 35.51744411962269
+   }
+  },
+  "events": [
+   {
+    "name": "costly_feature_listener_rationality",
+    "outcome": "pruned",
+    "reason": "12.9 nats behind parsimonious_literal_mixture on grouped CV (clustered dse 4.1)"
+   },
+   {
+    "name": "aspect_goal_listener",
+    "outcome": "pruned",
+    "reason": "14.5 nats behind parsimonious_literal_mixture on grouped CV (clustered dse 4.2)"
+   },
+   {
+    "name": "naive_speaker_rational_listener",
+    "outcome": "pruned",
+    "reason": "20.8 nats behind parsimonious_literal_mixture on grouped CV (clustered dse 5.8)"
+   },
+   {
+    "name": "listener_rationality_shared_prior",
+    "outcome": "pruned",
+    "reason": "23.5 nats behind parsimonious_literal_mixture on grouped CV (clustered dse 6.2)"
+   },
+   {
+    "name": "costly_feature_shared_prior",
+    "outcome": "pruned",
+    "reason": "86.6 nats behind parsimonious_literal_mixture on grouped CV (clustered dse 17.9)"
+   },
+   {
+    "name": "valence_salience_listener",
+    "outcome": "pruned",
+    "reason": "138.6 nats behind parsimonious_literal_mixture on grouped CV (clustered dse 45.8)"
+   },
+   {
+    "name": "rsa_l1_shared_prior",
+    "outcome": "pruned",
+    "reason": "103.2 nats behind parsimonious_literal_mixture on grouped CV (clustered dse 22.9)"
+   },
+   {
+    "name": "rsa_l1_salience",
+    "outcome": "pruned",
+    "reason": "103.9 nats behind parsimonious_literal_mixture on grouped CV (clustered dse 22.9)"
+   },
+   {
+    "name": "communicative_affordance_listener",
+    "outcome": "pruned",
+    "reason": "149.3 nats behind parsimonious_literal_mixture on grouped CV (clustered dse 23.8)"
+   },
+   {
+    "name": "rsa_l1",
+    "outcome": "pruned",
+    "reason": "408.2 nats behind parsimonious_literal_mixture on grouped CV (clustered dse 72.9)"
+   },
+   {
+    "name": "rsa_l2",
+    "outcome": "pruned",
+    "reason": "408.6 nats behind parsimonious_literal_mixture on grouped CV (clustered dse 73.0)"
+   },
+   {
+    "name": "costly_feature_speaker",
+    "outcome": "retired",
+    "reason": "live-set cap"
+   }
+  ],
+  "live": [
+   {
+    "name": "literal_salience_listener",
+    "hypothesis": "Listeners interpret utterances literally rather than pragmatically: they select among referents of which the heard word is true based strictly on prior contextual salience, without simulating alternative words a speaker could have chosen. On a display with a one-feature object and a two-feature object that both possess the named feature, this mechanism predicts that listeners will favor the two-feature object because its greater feature count makes it more salient a priori, directly reversing the pragmatic model's prediction that the one-feature object is favored because a speaker meaning the two-feature object would have named its alternative feature.\n",
+    "source": "round 1 candidate 2 explore"
+   },
+   {
+    "name": "bounded_alternatives_listener",
+    "hypothesis": "Listeners have bounded attentional resources to generate and reason over unmentioned alternative utterances when interpreting a speaker. When simulating the speaker's utterance choice, a resource-limited listener discounts unmentioned alternative expressions relative to the focal heard word, reducing the speaker's perceived likelihood of having chosen an alternative descriptor. Under limited attention to alternatives, the listener relies predominantly on literal semantics and contextual salience, attenuating the pragmatic pressure of scalar implicature.\n",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "graded_specificity_listener",
+    "hypothesis": "Listeners interpret referential expressions through graded truth values rather than binary logic: a word's degree of truth decays with the referent's total feature complexity and is further discounted when the referent possesses unmentioned distinctive features that could have uniquely identified it. When interpreting an utterance, listeners choose among candidate referents in proportion to this graded semantic fit and prior familiarization expectations, without simulating a counterfactual speaker.\n",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "fewest_features_listener",
+    "hypothesis": "Listeners interpret referential expressions through a non-Bayesian parsimony heuristic: rather than simulating counterfactual speakers, they select among referents satisfying the heard word by preferring the object with the fewest total features. When no informative word is heard, listeners have no descriptive cues to evaluate and choose uniformly among candidate objects, modulated only by familiarization base rates.\n",
+    "source": "round 3 candidate 2 explore"
+   },
+   {
+    "name": "salience_structured_lapse_listener",
+    "hypothesis": "Listeners interpret utterances through literal semantic comprehension, treating all candidate referents that satisfy the speaker's word as equally plausible targets. When goal-directed attention lapses or when no informative clue is provided, choice is governed by a structured lapse process that falls back to bottom-up visual and contextual salience, biasing clicks toward feature-rich and familiar objects rather than guessing uniformly at random.\n",
+    "source": "round 3 candidate 3 explore"
+   },
+   {
+    "name": "costly_bounded_alternatives_listener",
+    "hypothesis": "We refine bounded_alternatives_listener by proposing that speakers balance communicative informativeness against utterance production costs, penalizing ambiguous words that refer to multiple objects in the visual display. When a resource-limited listener simulates the speaker's referential choice, the speaker's utility discounts unmentioned alternative expressions due to bounded attention while simultaneously disfavoring ambiguous shared descriptors. On prior trials with no informative word, listener choices are guided solely by contextual object salience.\n\nDifferences from source (bounded_alternatives_listener):\n- Recursion depth: Unchanged (choice_probs calls L1 at depth 1).\n- Parameters added: cost (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L1, the speaker's choice weight incorporates an utterance production cost penalty `- cost * vec(utt_cost, u)`, where `utt_cost` measures the excess extension of non-sink utterances across referents (`jnp.maximum(0.0, jnp.sum(ctx.lex * (1.0 - ctx.is_sink)[:, None], axis=1) - 1.0)`).\n",
+    "source": "round 3 candidate 6 refine chosen"
+   },
+   {
+    "name": "framed_alignment_listener",
+    "hypothesis": "Listeners interpret referential expressions by inverting a framed, boundedly rational speaker whose referential goals reflect contextual framing and whose word choices balance semantic truthfulness with descriptive accessibility. Under affective framing, the speaker's prior target reflects emotional valence, amplifying the appeal of feature-rich objects when describing a favorite and discounting complexity when describing a least favorite, while visual prominence renders colored objects more salient across all contexts. Bounded listeners infer the speaker's intended referent from these framed communicative expectations, relying directly on framed visual salience when no informative word is heard.\n",
+    "source": "round 3 candidate 1 explore repair 1"
+   },
+   {
+    "name": "residual_surprisal_listener",
+    "hypothesis": "Listeners interpret referential expressions by penalizing candidate referents according to the residual surprisal of their unmentioned features. When evaluating objects that satisfy the heard word, listeners discount referents that possess unmentioned features carrying high contextual information content (rarity across the display), reasoning that an informative speaker would not omit highly diagnostic attributes. When no informative word is heard, choices are guided uniformly across candidate referents, modulated by prior familiarization expectations.\n",
+    "source": "round 4 candidate 3 explore"
+   },
+   {
+    "name": "valence_parsimony_listener",
+    "hypothesis": "We refine fewest_features_listener by proposing that the listener's parsimony heuristic is modulated by the speaker's affective framing: when interpreting an utterance, listeners penalize feature complexity under neutral or positive framing (\"favorite\"), but invert this preference when the speaker describes their \"least favorite\" object, favoring referents with more features. When no informative word is heard, listeners choose uniformly among candidate objects, modulated only by familiarization base rates.\n\nDifferences from source (fewest_features_listener):\n- Recursion depth: Unchanged (choice_probs calls L0 at depth 0).\n- Parameters added: w_valence (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In choice_probs, the feature parsimony exponent `-params[\"beta\"] * ctx.feature_count` is replaced by `-(params[\"beta\"] + params[\"w_valence\"] * ctx.valence) * ctx.feature_count`, modulating the parsimony penalty according to speaker valence.\n",
+    "source": "round 4 candidate 4 refine incumbent fewest_features_listener"
+   },
+   {
+    "name": "perceptual_parsimony_listener",
+    "hypothesis": "We refine fewest_features_listener by proposing that listeners balance descriptive parsimony against visual perceptual prominence: when interpreting an utterance, listeners penalize feature complexity among matching referents while favoring visually prominent referents shown in full color over desaturated grayscale objects. When no informative word is heard, listeners have no descriptive cues to evaluate and choose uniformly among candidate objects, modulated only by familiarization base rates.\n\nDifferences from source (fewest_features_listener):\n- Recursion depth: Unchanged (choice_probs calls L0 at depth 0).\n- Parameters added: w_color (prior: Normal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In choice_probs, the referent choice weight incorporates a perceptual prominence boost for colored objects: `weight = jnp.exp(-params[\"beta\"] * ctx.feature_count + params[\"w_color\"] * (1.0 - ctx.grayscale))`.\n",
+    "source": "round 4 candidate 5 refine incumbent fewest_features_listener retry 1"
+   },
+   {
+    "name": "parsimonious_structured_lapse_listener",
+    "hypothesis": "We refine salience_structured_lapse_listener by proposing that listeners interpret referential expressions through parsimonious semantic comprehension, preferring candidate referents with fewer total features rather than treating all matching referents equally. When goal-directed attention lapses or when no informative clue is provided, choice is governed by a structured fallback to bottom-up visual and contextual salience, biasing clicks toward feature-rich and familiar objects. This parsimony preference naturally favors simpler referents in ambiguous communicative contexts while preserving salience-driven visual attention during lapses and prior trials.\n\nDifferences from source (salience_structured_lapse_listener):\n- Recursion depth: Unchanged (choice_probs calls L0 at depth 0).\n- Parameters added: beta (prior: LogNormal(0.0, 1.0)).\n- Parameters removed: None.\n- Other terms: In L0, the listener's choice weight incorporates a parsimony discount against feature complexity, `wpp = at(lex, u, r) * vec(weight, r)`, where `weight = jnp.exp(-params[\"beta\"] * ctx.feature_count)`, selecting among referents satisfying the heard word by preferring objects with fewer total features, while goal-directed lapses and prior trials continue to fall back to bottom-up contextual salience.\n",
+    "source": "round 4 candidate 6 refine chosen"
+   },
+   {
+    "name": "parsimonious_literal_mixture",
+    "hypothesis": "The participant population is structured as a discrete mixture of two distinct cognitive listener types: literal semantic listeners who treat all candidate referents satisfying the heard word as equally plausible, and parsimonious listeners who select among matching referents by penalizing feature complexity according to descriptive parsimony. Observed choices on communicative trials reflect a population mixture over these two types parameterized by the proportion of parsimonious listeners, explaining why aggregate implicature rates remain bounded near chance across diverse displays. On prior trials with no informative word, all listeners choose uniformly among candidate objects, modulated only by familiarization base rates.\n",
+    "source": "round 4 candidate 2 explore repair 1"
+   }
+  ],
+  "ledger_entries": 43
+ }
+]

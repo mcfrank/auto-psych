@@ -1,0 +1,7 @@
+We refine graded_specificity_listener by proposing that specificity discounting is triggered by referential ambiguity: listeners only discount candidate referents possessing unmentioned features or excess complexity when the uttered word is ambiguous across multiple objects in the visual display. When a word unambiguously identifies a single referent, it incurs no graded truth penalty regardless of the referent's total feature complexity. When choosing among matching referents, listeners select in proportion to this ambiguity-gated semantic fit and familiarization expectations, without simulating a counterfactual speaker.
+
+Differences from source (graded_specificity_listener):
+- Recursion depth: Unchanged (choice_probs calls L0 at depth 0).
+- Parameters added: None.
+- Parameters removed: None.
+- Other terms: In choice_probs, the graded truth discount is modulated by utterance ambiguity: `truth_scale = (1.0 - lam) + lam / (counts[None, :] + unmentioned_unique)` is replaced with `truth_scale = (1.0 - lam) + lam / (1.0 + effective_penalty)`, where `effective_penalty = jnp.maximum(0.0, ext_size[:, None] - 1.0) * (counts[None, :] - 1.0 + unmentioned_unique)`. This scales the specificity penalty by the excess extension of the heard word across referents, ensuring that unambiguous words uniquely identifying a referent incur no truth penalty while ambiguous words discount referents possessing unmentioned distinguishing features and complexity.

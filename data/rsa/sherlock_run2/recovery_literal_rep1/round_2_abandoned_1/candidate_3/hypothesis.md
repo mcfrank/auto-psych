@@ -1,0 +1,1 @@
+Listeners interpret utterances under uncertainty about which visual feature a speaker's word picks out. Rather than assuming words map infallibly to features, the listener considers that the heard word may designate other contextual features present in the scene, selecting referents that balance literal applicability across candidate features with contextual salience.
