@@ -7,7 +7,7 @@
 #
 # Honors, if already exported:
 #   REPO            the auto-psych checkout on branch auto-rsa ($HOME/auto-psych)
-#   WORK_ROOT       the sweep root ($SCRATCH/auto-psych/rsa_run2)
+#   WORK_ROOT       the sweep root ($SCRATCH/auto-psych/$RSA_SWEEP_NAME, _cells.sh)
 #   UV_PROJECT_ENVIRONMENT  the venv ($GROUP_HOME/venvs/auto-psych_<sweep>; rsa_default_venv)
 #   SSL_CERT_FILE   CA bundle (el7's /etc/pki/tls/certs/ca-bundle.crt when it exists)
 #   OPENCODE_BIN_DIR  bin/ of an npm-installed opencode-ai (see below; default
@@ -16,8 +16,9 @@
 set -euo pipefail
 
 RSA_SLURM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export WORK_ROOT="${WORK_ROOT:-${SCRATCH:-${GROUP_SCRATCH:?set WORK_ROOT (or SCRATCH)}}/auto-psych/rsa_run2}"
 source "$RSA_SLURM_DIR/_cells.sh"
+export WORK_ROOT="${WORK_ROOT:-$(rsa_default_work_root)}"
+[[ -n "$WORK_ROOT" ]] || exit 1
 # Sherlock run 1 (2026-10-07) needed these exported by hand:
 # - the venv in $GROUP_HOME (Sherlock's rule), not $WORK_ROOT/venv on $SCRATCH;
 export UV_PROJECT_ENVIRONMENT="$(rsa_default_venv "$WORK_ROOT")"

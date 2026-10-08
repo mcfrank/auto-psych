@@ -463,3 +463,11 @@ def test_the_status_report_summarises_each_cell(tmp_path):
     assert "$1.25+" in done and done[-1] == "yes"
     assert lines["real_rep1"].split()[2] == "failed"
     assert lines["real_rep2"].split()[2] == "pending"
+
+
+def test_the_sweep_root_default_lives_in_one_place():
+    # After run 1, submit.sh, rsa_status.sh and rsa_loop_array.sbatch still said
+    # rsa_run1 while _env.sh said rsa_run2; run 2's first submit went to run 1's root.
+    named = [p.name for p in SCRIPTS if re.search(r"/auto-psych/rsa_run\d|rsa_run\d+\}", p.read_text())]
+    assert named == []
+    assert 'RSA_SWEEP_NAME="rsa_run' in (SLURM / "_cells.sh").read_text()

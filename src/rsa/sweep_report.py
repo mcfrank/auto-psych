@@ -27,6 +27,8 @@ from typing import Any, Dict, List
 
 import tyro
 
+from src.runtime.token_usage import read_usage_log, summarize as summarize_usage
+
 TEMPLATE = Path(__file__).with_name("sweep_report_template.html")
 
 
@@ -108,7 +110,10 @@ def cell_bundle(cell_dir: Path, notes: Dict[str, Any]) -> dict:
                                     status=next((m["status"] for m in models if m["name"] == best_name), "pruned"),
                                     seed=best_name in seeds))
     counts = {k: sum(1 for e in ledger if e["outcome"] == k) for k in ("admitted", "rejected", "pruned")}
-    usage = json.loads((cell_dir / "token_usage_summary.json").read_text())
+    # From the log: the summary file of a cell resumed before 2026-10-08 covers its last process only.
+    log = cell_dir / "token_usage.jsonl"
+    usage = summarize_usage(read_usage_log(log)) if log.exists() else json.loads(
+        (cell_dir / "token_usage_summary.json").read_text())
     rec_path = cell_dir / "recovery" / "recovery.json"
     recovery = None
     if rec_path.exists():

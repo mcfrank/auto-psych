@@ -44,7 +44,8 @@
 # attempts/ and keeps their fit cache. A finished loop whose scoring failed
 # is resumed at the scoring by simply resubmitting the task.
 set -euo pipefail
-export WORK_ROOT="${WORK_ROOT:-${SCRATCH:-${GROUP_SCRATCH:?set WORK_ROOT (or SCRATCH)}}/auto-psych/rsa_run1}"
+# submit.sh exports the sweep root (its default is _cells.sh's rsa_default_work_root).
+export WORK_ROOT="${WORK_ROOT:?submit with submit.sh, which exports WORK_ROOT}"
 CODE_COMMIT_FILE="$WORK_ROOT/code_commit"
 [[ -f "$CODE_COMMIT_FILE" && -d "$WORK_ROOT/harness_repo" && -d "$WORK_ROOT/agent_src" ]] \
   || { echo "ERROR: $WORK_ROOT has no staged code (code_commit, harness_repo, agent_src); did rsa_setup.sbatch run?" >&2; exit 1; }

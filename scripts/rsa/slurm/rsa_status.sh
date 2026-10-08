@@ -15,7 +15,8 @@
 set -uo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$here/_cells.sh"
-WORK_ROOT="${1:-${WORK_ROOT:-${SCRATCH:-${GROUP_SCRATCH:?set WORK_ROOT (or SCRATCH)}}/auto-psych/rsa_run1}}"
+WORK_ROOT="${1:-${WORK_ROOT:-$(rsa_default_work_root)}}"
+[[ -n "$WORK_ROOT" ]] || exit 1
 [[ -d "$WORK_ROOT" ]] || { echo "no sweep at $WORK_ROOT" >&2; exit 1; }
 PY="${VENV_PY:-$(rsa_default_venv "$WORK_ROOT")/bin/python}"
 [[ -x "$PY" ]] || PY="$(command -v python3)"

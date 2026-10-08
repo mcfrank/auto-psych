@@ -155,13 +155,21 @@ def summarize(records: List[UsageRecord]) -> Dict:
     return summary
 
 
-def write_usage_report(out_dir: Path, marker: int, *, heading: str) -> Dict:
-    """Summarize usage since ``marker``; persist and print it.
+def read_usage_log(path: Path) -> List[UsageRecord]:
+    """Every record in a usage JSONL file (:func:`start_usage_log`'s sink)."""
+    lines = Path(path).read_text(encoding="utf-8").splitlines()
+    return [UsageRecord(**json.loads(line)) for line in lines if line.strip()]
+
+
+def write_usage_report(
+    out_dir: Path, marker: int, *, heading: str, records: Optional[List[UsageRecord]] = None
+) -> Dict:
+    """Summarize usage since ``marker`` (or ``records``); persist and print it.
 
     Writes ``token_usage_summary.json`` into ``out_dir`` and prints the
     human-readable summary to the run log. Returns the summary dict.
     """
-    summary = summarize(records_since(marker))
+    summary = summarize(records_since(marker) if records is None else records)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "token_usage_summary.json").write_text(

@@ -28,3 +28,11 @@ def test_run1_overview_builds_from_the_committed_cells():
     html = render(b)
     assert "__BUNDLE_JSON__" not in html and "<title>RSA run 1</title>" in html
     json.loads(html.split('type="application/json">', 1)[1].split("</script>", 1)[0])
+
+
+def test_a_resumed_cells_cost_counts_every_process():
+    # recovery_salience_rep1 was resumed (Sherlock run 2): its summary file holds the
+    # last process only (22 calls, $24.84); its log holds all 36 calls ($41.93).
+    b = build(REPO_ROOT / "data" / "rsa" / "sherlock_run2")
+    cell = next(c for c in b["cells"] if c["cell"] == "recovery_salience_rep1")
+    assert cell["agent_runs"] == 36 and round(cell["cost"], 2) == 41.93

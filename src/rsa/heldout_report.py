@@ -84,14 +84,16 @@ class Args:
     """Also show this many of the best models on the held-out table."""
     models: List[str] = field(default_factory=list)
     """More models, as labelled in heldout.json (``seed:x``, ``pruned:x`` or a live name)."""
+    data_sha256: Optional[Path] = None
+    """The cell's data hashes (default <cell>/data.sha256; on Sherlock, the cell
+    record's, beside its outputs/)."""
     out_html: Optional[Path] = None
     """Default: <cell>/heldout/report.html."""
     min_cell_n: int = 10
 
 
-def _check_hash(cell: Path, path: Path) -> None:
+def _check_hash(record: Path, path: Path) -> None:
     sha = hashlib.sha256(Path(path).read_bytes()).hexdigest()
-    record = cell / "data.sha256"
     if not record.exists():
         raise FileNotFoundError(f"{record} is missing: cannot check that {path} is this cell's data")
     if sha not in record.read_text():
@@ -125,13 +127,14 @@ def main(args: Args) -> Path:
     cell, work = Path(args.cell), Path(args.work)
     if (args.train is None) == (args.loop_dir is None):
         raise ValueError("give exactly one of --train and --loop-dir")
-    _check_hash(cell, args.test)
+    hashes = Path(args.data_sha256 or cell / "data.sha256")
+    _check_hash(hashes, args.test)
     if args.loop_dir is not None:
         train, cache = Path(args.loop_dir) / "responses.csv", Path(args.loop_dir) / ".fit_cache"
         if not cache.is_dir():
             raise FileNotFoundError(f"{cache} is missing: is {args.loop_dir} the cell's loop directory?")
     else:
-        _check_hash(cell, args.train)
+        _check_hash(hashes, args.train)
         train, cache = Path(args.train), work / "cache"
     heldout = json.loads((cell / "heldout" / "heldout.json").read_text())
     recorded_seeds = Path(heldout["seed_models"])

@@ -11,7 +11,10 @@
 # PyPI and every data host). Submit from the checkout, with the sweep's
 # environment exported (WORK_ROOT etc.; --export=ALL is the default):
 #
-#   sbatch --chdir="$HOME/auto-psych" scripts/rsa/slurm/prepare.sbatch
+#   mkdir -p "$WORK_ROOT/logs"
+#   sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%j.out" scripts/rsa/slurm/prepare.sbatch
+#
+# (#SBATCH lines cannot name $WORK_ROOT: without -o the log lands in the checkout.)
 set -euo pipefail
 cd "${SLURM_SUBMIT_DIR:?submit from the checkout}"
 exec bash scripts/rsa/slurm/prepare_data.sh

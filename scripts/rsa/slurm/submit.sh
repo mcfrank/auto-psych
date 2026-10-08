@@ -12,7 +12,9 @@
 # Logs: $WORK_ROOT/logs/rsa_setup_<job>.out, rsa_loop_<array>_<task>.out.
 set -euo pipefail
 export REPO="${REPO:-$HOME/auto-psych}"
-export WORK_ROOT="${WORK_ROOT:-${SCRATCH:-${GROUP_SCRATCH:?set WORK_ROOT (or SCRATCH)}}/auto-psych/rsa_run1}"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_cells.sh"   # RSA_N_CELLS (per-condition replicates), the sweep root
+export WORK_ROOT="${WORK_ROOT:-$(rsa_default_work_root)}"
+[[ -n "$WORK_ROOT" ]] || exit 1
 
 # ============================================================================
 # Sizes from the 2026-10-07 dry runs on the combined data (40k training
@@ -30,7 +32,6 @@ SETUP_MEM="${SETUP_MEM:-8G}"
 SETUP_TIME="${SETUP_TIME:-01:00:00}"
 # ============================================================================
 PARTITION="${PARTITION:-mcfrank}"   # the lab's owner node (24 cores, 192 GB): never preempted, off fairshare, 7-day cap
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_cells.sh"   # RSA_N_CELLS (per-condition replicates)
 ARRAY="${ARRAY:-0-$(( RSA_N_CELLS - 1 ))}"
 MAX_PARALLEL="${MAX_PARALLEL:-6}"
 

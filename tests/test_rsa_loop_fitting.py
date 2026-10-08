@@ -1,5 +1,6 @@
 """Cached, time-limited fits for the RSA loop."""
 
+import os
 import shutil
 
 import pytest
@@ -67,3 +68,16 @@ def test_a_fit_over_the_time_limit_is_refused(tmp_path, responses):
     with pytest.raises(FitTimeLimitExceeded, match="did not finish"):
         fit_cached(SEEDS / "rsa_l2.py", "rsa_l2", responses, FitSettings(), tmp_path / "c",
                    time_limit_sec=1)
+
+
+def test_a_time_limited_fit_imports_arviz_with_a_cache_of_its_own(tmp_path, responses, monkeypatch):
+    # arviz writes a once-a-day marker into <XDG cache>/arviz through a fixed-name
+    # temporary file; fit children that imported it together after midnight
+    # collided there (three of Sherlock run 2's cells, 2026-10-08). A child must
+    # not touch the parent's cache: here a marker arviz cannot read breaks any that does.
+    shared = tmp_path / "shared_cache"
+    (shared / "arviz" / "daily_warning").mkdir(parents=True)
+    monkeypatch.setenv("XDG_CACHE_HOME", str(shared))
+    fitted = fit_cached(SEEDS / "rsa_l1.py", "rsa_l1", responses, QUICK, tmp_path / "c", time_limit_sec=600)
+    assert fitted.param_names
+    assert os.environ["XDG_CACHE_HOME"] == str(shared)  # the parent's own is left as it was

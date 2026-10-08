@@ -36,7 +36,7 @@ from src.rsa.loop.orchestrator import (
     coding_agent_spawner,
 )
 from src.runtime.config import PROJECT_ASSETS_DIR
-from src.runtime.token_usage import start_usage_log, write_usage_report
+from src.runtime.token_usage import read_usage_log, start_usage_log, write_usage_report
 
 
 DEFAULT_AGENT_MODEL = "google/gemini-3.8-flash"
@@ -130,11 +130,15 @@ def main(args: Args) -> int:
         network=args.agent_network, shell_dir=results / ".agent_shell",
     )
     # The agents' spend, written in a finally so an aborted loop still accounts for it.
-    usage_marker = start_usage_log(results / "token_usage.jsonl")
+    # The summary covers the whole log: a resumed loop appends to it, and the summary
+    # of its last process alone undercounted resumed cells (Sherlock run 2).
+    usage_log = results / "token_usage.jsonl"
+    usage_marker = start_usage_log(usage_log)
     try:
         final = RSALoop(cfg, spawn).run(resume=args.resume)
     finally:
-        write_usage_report(results, usage_marker, heading="RSA inner loop")
+        write_usage_report(results, usage_marker, heading="RSA inner loop",
+                           records=read_usage_log(usage_log) if usage_log.exists() else [])
     print(f"best model: {final['best_model']}; live: {sorted(final['standing'])}")
     print(f"report: {results / 'report.html'}")
     return 0

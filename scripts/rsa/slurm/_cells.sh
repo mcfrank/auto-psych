@@ -101,6 +101,15 @@ rsa_loop_cli_has_seed() {
 # The sweep's venv: $GROUP_HOME/venvs/auto-psych_<sweep> (Sherlock's rule:
 # Python environments live in $GROUP_HOME, not on $SCRATCH), else
 # $WORK_ROOT/venv. UV_PROJECT_ENVIRONMENT, if exported, wins.
+# The sweep root every script defaults to. One place: after run 1, three
+# scripts still defaulted to rsa_run1 and run 2's first submit went there.
+RSA_SWEEP_NAME="rsa_run2"
+rsa_default_work_root() {
+  local base="${SCRATCH:-${GROUP_SCRATCH:-}}"
+  [[ -n "$base" ]] || { echo "set WORK_ROOT (or SCRATCH)" >&2; return 1; }
+  echo "$base/auto-psych/$RSA_SWEEP_NAME"
+}
+
 rsa_default_venv() {
   local work_root="$1"
   if [[ -n "${UV_PROJECT_ENVIRONMENT:-}" ]]; then

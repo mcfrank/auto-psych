@@ -43,7 +43,7 @@ Run 1's environment fixes are now defaults, so most of its §2 exports are gone.
 ## 0. Before submitting
 
 - **Code:** `auto-rsa` at or after the commit that adds this file. Pull in
-  `~/auto-psych` (git 1.8: `git fetch origin auto-rsa && git checkout auto-rsa
+  `~/auto-psych` (git 1.8: `git fetch origin && git checkout auto-rsa
   && git merge --ff-only origin/auto-rsa`).
 - **Do not commit on Sherlock.** Code changes are made in the cloud session; a
   fix found on Sherlock goes back as a note (or, if it blocks the run, as a
@@ -161,29 +161,30 @@ held-out conditions within the same papers? Then:
 - **Did recovery still succeed without internet access?** Give the exported
   and closest-live RMSE, and `seeds_would_pass`.
 
-## 7. After bringing the cells back: held-out pages (added 2026-10-08)
+## 7. Held-out pages (added 2026-10-08; revised after run 2)
 
 The driver session reads each cell condition by condition on its held-out
 conditions. Build those pages on Sherlock, where every model's fits are
-already cached, rather than refitting in the cloud. Do it in a job, not on the login node:
+already cached, in a job, before bringing the cells back:
 
 ```bash
-cd ~/auto-psych && git fetch origin auto-rsa && git merge --ff-only origin/auto-rsa
-sbatch --chdir="$HOME/auto-psych" scripts/rsa/slurm/heldout_reports.sbatch
-# a subset: CELLS="real_rep1 real_rep2" sbatch --chdir=... (same script)
+cd ~/auto-psych && git fetch origin && git merge --ff-only origin/auto-rsa  # not `fetch origin auto-rsa`: on git 1.8 it leaves origin/auto-rsa stale
+sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%j.out" scripts/rsa/slurm/heldout_reports.sbatch
+# a subset: CELLS="real_rep1 real_rep2" sbatch ... (same script)
 ```
 
-For every finished cell already brought back to `data/rsa/sherlock_run2/<cell>/`,
-`src.rsa.heldout_report` reads the loop's `responses.csv`, `.fit_cache` and
-`.cv`, and writes three files into `<cell>/heldout/`:
+For every finished cell, `src.rsa.heldout_report` reads the loop's
+`responses.csv`, `.fit_cache` and `.cv` and writes into the cell's
+`$CELLS_ROOT/<cell>/outputs/heldout/`:
 
-- `report.html` and `report.bundle.json`: people vs the best seed, the exported model and the three best
-  held-out models, one panel per held-out display;
-- `unit_lpd.csv`: those models' lpd per unit, held out (`test`), in sample (`train`) and out of fold
-  (`cv`).
+- `report.html`, `report.bundle.json`: people vs the best seed, the exported model and the
+  three best held-out models, one panel per held-out display;
+- `unit_lpd.csv`: those models' lpd per unit, held out (`test`), in sample (`train`) and
+  out of fold (`cv`).
 
-Expect a few minutes per cell. A cache miss means a refit: the log line ends
-`fitted N (not in ...)`. Report any you see. Commit the three files per cell. They hold
-aggregates only (choice counts per display, lpd sums per unit), so they are fine to commit.
-Pulling the checkout is safe while cells run: the cells run the staged
-`harness_repo`, not `~/auto-psych`.
+The bring-back copies `outputs/`, so the pages come back with the cells. Run 2
+needed a scratch copy of the brought-back cells; the job no longer does. A
+few minutes per cell. A cache miss means a refit: the log line ends `fitted N
+(not in ...)`; report any. The files hold aggregates only (choice counts per
+display, lpd sums per unit). Pulling the checkout is safe while cells run: they
+run the staged `harness_repo`, not `~/auto-psych`.

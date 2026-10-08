@@ -21,6 +21,7 @@ import hashlib
 import json
 import multiprocessing as mp
 import os
+import tempfile
 import threading
 import traceback
 from dataclasses import asdict, dataclass, replace
@@ -211,7 +212,39 @@ def _fit_cached(
         target=_child,
         args=(str(model_path), name, str(responses_path), settings, str(nc_path), str(meta_path), queue),
     )
-    proc.start()
+    with tempfile.TemporaryDirectory(prefix="rsa-fit-cache-") as own_cache:
+        _start_with_cache(proc, own_cache)
+        return _finish_child(proc, queue, name, nc_path, meta_path, time_limit_sec)
+
+
+# The environment a spawned child starts with is the parent's at that moment.
+_SPAWN_LOCK = threading.Lock()
+
+
+def _start_with_cache(proc, cache_dir: str) -> None:
+    """Start a fit child with ``XDG_CACHE_HOME`` of its own.
+
+    On import, arviz writes a once-a-day marker, ``<XDG cache>/arviz/
+    daily_warning``, through a fixed-name ``daily_warning.tmp``. Fit children
+    that import it together after midnight collide on that file and die
+    (three of Sherlock run 2's cells, 2026-10-08; the SR harness's
+    ``_fit_process_caches`` fixed the same bug). A child imports arviz before
+    any code of ours runs in it (spawn re-imports the main module), so the
+    directory has to be in the environment it starts with.
+    """
+    with _SPAWN_LOCK:
+        before = os.environ.get("XDG_CACHE_HOME")
+        os.environ["XDG_CACHE_HOME"] = cache_dir
+        try:
+            proc.start()
+        finally:
+            if before is None:
+                del os.environ["XDG_CACHE_HOME"]
+            else:
+                os.environ["XDG_CACHE_HOME"] = before
+
+
+def _finish_child(proc, queue, name: str, nc_path: Path, meta_path: Path, time_limit_sec: float) -> RSAFit:
     proc.join(time_limit_sec)
     if proc.is_alive():
         proc.kill()
