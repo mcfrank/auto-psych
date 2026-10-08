@@ -141,3 +141,33 @@ def test_an_invalid_list_parameter_stops_the_page(browser, cdn, site):
     page.goto(index.as_uri() + "?list=99")
     assert "Invalid list parameter" in page.locator(".rsa-error").inner_text()
     context.close()
+
+
+def test_the_page_keeps_its_styles_when_a_host_puts_it_inside_body(browser, cdn, tmp_path):
+    """An artifact host wraps the page in its own skeleton, so the page's
+    <style> sits in <body>. jsPsych must not run on <body> (it clears it):
+    the first published preview lost every style that way, and each object's
+    feature overlays rendered beside it instead of on top."""
+    from src.rsa.experiment.build import build_single_file
+
+    doc = trial_lists(Design.load(EXPERIMENT_ASSETS_DIR / "demo_design.json"), seed=41, n_lists=1, n_catch=2)
+    single = build_single_file(doc, tmp_path / "preview.html", preview=True)
+    hosted = tmp_path / "hosted.html"
+    hosted.write_text("<!doctype html><html><head><meta charset='utf-8'></head><body>"
+                      + single.read_text(encoding="utf-8") + "</body></html>", encoding="utf-8")
+    context = browser.new_context(viewport={"width": 1280, "height": 800})
+    page = context.new_page()
+    install_routes(page, cdn, [])
+    page.goto(hosted.as_uri())
+    while not page.locator(".rsa-ref").count():
+        page.wait_for_selector(".rsa-next, .rsa-ref")
+        if page.locator(".rsa-ref").count():
+            break
+        page.locator(".rsa-next").first.click()
+    page.wait_for_selector(".rsa-ref")
+    # Every image of a referent is drawn in the same square: the overlays stack.
+    rects = page.locator(".rsa-ref").first.locator("img").evaluate_all(
+        "els => els.map(e => { const r = e.getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; })")
+    assert len(rects) >= 1 and all(r == rects[0] for r in rects), rects
+    assert page.locator(".rsa-ref").first.evaluate("e => getComputedStyle(e).borderRadius") != "0px"
+    context.close()

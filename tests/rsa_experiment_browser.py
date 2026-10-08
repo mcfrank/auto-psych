@@ -16,7 +16,6 @@ CHROMIUM = Path("/opt/pw-browsers/chromium-1194/chrome-linux/chrome")
 CDN_URLS = (
     "https://unpkg.com/jspsych@8.2.3",
     "https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0",
-    "https://unpkg.com/jspsych@8.2.3/css/jspsych.css",
 )
 
 

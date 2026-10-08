@@ -6,60 +6,117 @@
     <title>Which one does Bob mean?</title>
     <script src="https://unpkg.com/jspsych@8.2.3"></script>
     <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
-    <link href="https://unpkg.com/jspsych@8.2.3/css/jspsych.css" rel="stylesheet" type="text/css" />
     <style>
-      body { background: #ffffff; color: #1d1d1f; }
-      .jspsych-display-element { font-size: 18px; }
-      /* Top-align screens (jsPsych centres them vertically, which pushes a trial
-         below the fold on a phone). */
-      .jspsych-content { max-width: 100%; margin: 4vh auto auto; }
-      .auto-psych-prose { max-width: 38em; margin: 0 auto; padding: 0 16px; text-align: left; line-height: 1.5; }
-      .auto-psych-prose h1 { font-size: 1.5em; text-align: center; }
-      .rsa-placeholder { border: 2px dashed #b35c00; background: #fff7ec; padding: 8px 12px; border-radius: 6px; }
+      /* Layout: one centred column. Bob's word sits in a speech bubble above
+         the instruction; the referents are equal square cards in a centred row
+         that wraps on a phone. One light theme on purpose: every participant
+         sees the stimuli on the same ground, whatever their system setting.
+         The page carries the few jsPsych layout rules it needs itself (no
+         external jspsych.css) and uses the system font (no web font: a font
+         request would send every participant's address to a third party), so
+         it renders the same wherever it is hosted. */
+      :root {
+        --page: #f3f4f6;
+        --surface: #ffffff;
+        --ink: #1b1d22;
+        --muted: #5b6270;
+        --line: #d7dbe1;
+        --accent: #2b5fab;
+        --accent-dark: #224c8a;
+        --accent-soft: #e8eef8;
+        --focus: #f2a900;
+        --error: #b00020;
+        --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        color-scheme: light;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; background: var(--page); color: var(--ink); }
+      body { font-family: var(--font); font-size: 18px; line-height: 1.5; }
+      #rsa-app { min-height: 100vh; padding: 24px 16px 48px; }
+      #rsa-status:empty { display: none; }
 
-      /* Plain text buttons (Start / Next / I agree). */
-      .rsa-next { font: inherit; padding: 12px 28px; font-size: 18px; border-radius: 8px; border: none; cursor: pointer;
-                  background: #2f6db5; color: #ffffff; margin: 12px; }
-      .rsa-next:hover { background: #255a96; }
-      .rsa-next:focus-visible { outline: 3px solid #f0a500; outline-offset: 3px; }
+      /* jsPsych's own elements (what jspsych.css would do, trimmed). */
+      .jspsych-display-element { font-family: var(--font); font-size: 18px; outline: none; }
+      .jspsych-content-wrapper { display: flex; justify-content: center; width: 100%; }
+      .jspsych-content { width: 100%; max-width: 880px; margin: 0 auto; text-align: center; }
+      #jspsych-progressbar-container { max-width: 880px; margin: 0 auto 28px; padding: 0 4px;
+                                       display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+      #jspsych-progressbar-container > span { white-space: nowrap; }
+      #jspsych-progressbar-outer { flex: 1; height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; }
+      #jspsych-progressbar-inner { height: 100%; background: var(--accent); border-radius: 999px; transition: width 0.3s ease; }
 
-      /* The prompt: what Bob says. */
-      .rsa-prompt { max-width: 34em; margin: 8px auto 12px; padding: 0 16px; line-height: 1.4; }
-      .rsa-prompt p { margin: 6px 0; }
-      .rsa-word { font-size: 1.6em; font-weight: 700; letter-spacing: 0.02em; }
-      .rsa-mumble { font-style: italic; color: #555555; }
-      .rsa-note { font-size: 0.85em; color: #555555; }
-      .rsa-practice-tag { display: inline-block; font-size: 0.8em; font-weight: 600; color: #2f6db5;
-                          border: 1px solid #2f6db5; border-radius: 999px; padding: 1px 10px; }
+      /* Text screens: welcome, consent, instructions, end. */
+      .auto-psych-prose { max-width: 38em; margin: 0 auto; padding: 28px 32px; text-align: left; background: var(--surface);
+                          border: 1px solid var(--line); border-radius: 16px; }
+      .auto-psych-prose h1 { font-size: 1.6em; line-height: 1.2; margin: 0 0 0.6em; text-align: center; text-wrap: balance; }
+      .auto-psych-prose h2 { font-size: 1.2em; margin: 1.2em 0 0.4em; }
+      .auto-psych-prose p { margin: 0 0 0.8em; }
+      .auto-psych-prose p:last-child { margin-bottom: 0; }
+      .rsa-placeholder { border: 2px dashed #b35c00; background: #fff7ec; padding: 8px 12px; border-radius: 8px; }
 
-      /* Referents: each whole object is one button; buttons wrap on narrow screens. */
-      #jspsych-html-button-response-btngroup { display: flex; flex-wrap: wrap; justify-content: center;
-                                               gap: 12px; padding: 0 8px; }
-      .rsa-ref { --per-row: var(--n); box-sizing: border-box;
-                 width: min(200px, calc((100vw - 40px) / var(--per-row) - 12px));
-                 padding: 4px; margin: 0; border: 2px solid #c8ccd2; border-radius: 12px;
-                 background: #ffffff; cursor: pointer; }
-      .rsa-ref:hover { border-color: #2f6db5; }
-      .rsa-ref:focus-visible { outline: 3px solid #f0a500; outline-offset: 3px; border-color: #2f6db5; }
+      /* Buttons under text screens (Start / I agree / Next). jsPsych's button group centres them. */
+      #jspsych-html-button-response-btngroup { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px;
+                                               margin-top: 24px; padding: 0; }
+      .rsa-next { font: inherit; font-weight: 700; font-size: 18px; padding: 12px 36px; border-radius: 10px; border: none;
+                  cursor: pointer; background: var(--accent); color: #ffffff; min-width: 9em; }
+      .rsa-next:hover { background: var(--accent-dark); }
+      .rsa-next:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+      /* The prompt: what Bob says, then what to do. */
+      .rsa-prompt { max-width: 34em; margin: 0 auto 24px; display: grid; justify-items: center; gap: 10px; }
+      .rsa-prompt p { margin: 0; }
+      .rsa-says { color: var(--muted); font-size: 0.95em; }
+      .rsa-bubble { position: relative; display: inline-block; min-width: 6em; padding: 12px 28px; background: var(--surface);
+                    border: 2px solid var(--ink); border-radius: 18px; }
+      .rsa-bubble::after { content: ""; position: absolute; left: 50%; bottom: -10px; width: 16px; height: 16px;
+                           margin-left: -8px; background: var(--surface); border-right: 2px solid var(--ink);
+                           border-bottom: 2px solid var(--ink); transform: rotate(45deg); }
+      .rsa-word { font-size: 1.7em; font-weight: 700; letter-spacing: 0.01em; line-height: 1.2; }
+      .rsa-mumble { font-style: italic; font-weight: 400; color: var(--muted); }
+      .rsa-note { font-size: 0.85em; color: var(--muted); }
+      .rsa-instruction { margin-top: 8px !important; font-weight: 700; }
+      .rsa-practice-tag { display: inline-block; font-size: 0.75em; font-weight: 700; letter-spacing: 0.06em;
+                          text-transform: uppercase; color: var(--accent); background: var(--accent-soft);
+                          border-radius: 999px; padding: 2px 12px; }
+
+      /* Referents: each whole object is one button (base image with its feature
+         overlays stacked on top); equal cards, centred, wrapping on narrow screens. */
+      .rsa-trial #jspsych-html-button-response-btngroup { gap: 16px; margin-top: 8px; }
+      .rsa-ref { --per-row: var(--n); width: min(190px, calc((100vw - 32px - (var(--per-row) - 1) * 16px) / var(--per-row)));
+                 padding: 10px; margin: 0; border: 2px solid var(--line); border-radius: 16px; background: var(--surface);
+                 cursor: pointer; transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease; }
+      .rsa-ref:hover { border-color: var(--accent); box-shadow: 0 6px 18px rgba(27, 29, 34, 0.12); transform: translateY(-2px); }
+      .rsa-ref:active { transform: translateY(0); }
+      .rsa-ref:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-color: var(--accent); }
       .rsa-stack { position: relative; display: block; width: 100%; aspect-ratio: 1 / 1; }
-      .rsa-stack img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+      .rsa-stack img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; max-width: none; }
       @media (max-width: 600px) {
+        body { font-size: 17px; }
+        #rsa-app { padding: 16px 12px 32px; }
+        .auto-psych-prose { padding: 20px; }
+        .rsa-ref { padding: 6px; border-radius: 12px; }
         .rsa-ref[data-n="4"] { --per-row: 2; }
         .rsa-ref[data-n="5"], .rsa-ref[data-n="6"] { --per-row: 3; }
+        .rsa-trial #jspsych-html-button-response-btngroup { gap: 10px; }
       }
+      @media (prefers-reduced-motion: reduce) { .rsa-ref, #jspsych-progressbar-inner { transition: none; } }
 
       /* End screen / preview table. */
-      .rsa-table-wrap { max-width: 100%; overflow-x: auto; margin: 12px auto; }
+      .rsa-table-wrap { max-width: 100%; overflow-x: auto; margin: 16px auto; background: var(--surface); border-radius: 12px; }
       .rsa-table { border-collapse: collapse; font-size: 12px; line-height: 1.3; margin: 0 auto; text-align: left; }
-      .rsa-table th, .rsa-table td { border: 1px solid #d0d4da; padding: 3px 5px; vertical-align: top; white-space: nowrap; }
+      .rsa-table th, .rsa-table td { border: 1px solid var(--line); padding: 4px 6px; vertical-align: top; white-space: nowrap; }
       .rsa-table td.rsa-wrap { white-space: normal; min-width: 9em; max-width: 14em; }
-      .rsa-table th { background: #f0f2f5; }
-      .rsa-error { color: #b00020; font-weight: 600; }
-      pre.rsa-json { text-align: left; font-size: 11px; max-height: 320px; overflow: auto; background: #f6f8fa;
-                     padding: 8px; border-radius: 6px; }
+      .rsa-table th { background: var(--page); }
+      .rsa-error { color: var(--error); font-weight: 700; }
+      pre.rsa-json { text-align: left; font-size: 11px; max-height: 320px; overflow: auto; background: var(--page);
+                     padding: 8px; border-radius: 8px; }
     </style>
   </head>
   <body>
+  <!-- The page's own containers: jsPsych runs in #rsa-jspsych, and loading or
+       error messages go to #rsa-status. Nothing replaces <body>, so styles
+       placed in the body (as an artifact host does) survive. -->
+  <div id="rsa-app"><div id="rsa-status"></div><div id="rsa-jspsych"></div></div>
   <script>
     // ---- Injected by `python -m src.rsa.experiment.build` ----------------------
     // TRIAL_LISTS: {design_name, design_sha256, lists: [{list_index, seed, trials}]}
@@ -101,8 +158,13 @@
       });
     }
 
+    function setStatus(html) {
+      document.getElementById('rsa-status').innerHTML = html;
+    }
+
     function fail(message) {
-      document.body.innerHTML = '<div class="auto-psych-prose"><p class="rsa-error">' + escapeHtml(message) + '</p></div>';
+      document.getElementById('rsa-jspsych').innerHTML = '';
+      setStatus('<div class="auto-psych-prose"><p class="rsa-error">' + escapeHtml(message) + '</p></div>');
       throw new Error(message);
     }
 
@@ -135,14 +197,14 @@
       let html = '<div class="rsa-prompt">';
       if (trial.phase === 'practice') html += '<p><span class="rsa-practice-tag">Practice</span></p>';
       if (trial.query === 'utterance') {
-        html += '<p>Bob can only say one word to communicate with you and he says:</p>' +
-                '<p class="rsa-word">' + escapeHtml(trial.word) + '</p>';
+        html += '<p class="rsa-says">Bob can only say one word to communicate with you and he says:</p>' +
+                '<p class="rsa-bubble"><span class="rsa-word">' + escapeHtml(trial.word) + '</span></p>';
       } else {
-        html += '<p>Bob can only say one word to communicate with you, but he mumbles:</p>' +
-                '<p class="rsa-word rsa-mumble">mumblemumble</p>' +
+        html += '<p class="rsa-says">Bob can only say one word to communicate with you, but he mumbles:</p>' +
+                '<p class="rsa-bubble"><span class="rsa-word rsa-mumble">mumblemumble</span></p>' +
                 '<p class="rsa-note">(You couldn\'t hear what he said.)</p>';
       }
-      html += '<p>Click on the ' + escapeHtml(trial.item) + ' you think Bob is talking about.</p></div>';
+      html += '<p class="rsa-instruction">Click on the ' + escapeHtml(trial.item) + ' you think Bob is talking about.</p></div>';
       return html;
     }
 
@@ -192,6 +254,7 @@
         choices: trial.screen.map(function (_, i) { return String(i); }),
         button_html: referentButton(trial),
         button_layout: 'flex',
+        css_classes: ['rsa-trial'],
         data: record,
         post_trial_gap: 300,
         on_finish: function (data) {
@@ -241,6 +304,7 @@
     }
 
     const jsPsych = initJsPsych({
+      display_element: 'rsa-jspsych',
       show_progress_bar: true,
       on_finish: function () {
         const json = jsPsych.data.get().json();
@@ -318,7 +382,7 @@
     const files = Array.from(new Set([].concat.apply([], LIST.trials.map(function (t) {
       return [].concat.apply([], t.screen.map(function (c) { return c.images; }));
     }))));
-    document.body.innerHTML = '<div class="auto-psych-prose"><p>Loading...</p></div>';
+    setStatus('<div class="auto-psych-prose"><p>Loading...</p></div>');
     Promise.all(files.map(function (file) {
       return new Promise(function (resolve, reject) {
         const img = new Image();
@@ -327,7 +391,7 @@
         img.src = imageUrl(file);
       });
     })).then(function () {
-      document.body.innerHTML = '';
+      setStatus('');
       jsPsych.run(timeline);
     }).catch(function (e) { fail('The study could not load: ' + e.message); });
   </script>
