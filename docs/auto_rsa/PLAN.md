@@ -58,6 +58,17 @@ are not to be changed after seeing run 2.
 | Stopping rule | a loop ends early once 2 rounds in a row leave its best model unchanged (`LoopConfig.stop_after_stale_rounds`, `STOP_AFTER_STALE_ROUNDS`; 0 = never). Not 1: on run 2's history, 1 would have stopped real_rep1 after round 1 (rsa_l2 still best), real_rep2 after round 5 (+26.7 instead of +56.2) and real_rep3 after round 3; 2 changes nothing in runs 1 or 2. `max_iterations` stays the ceiling. |
 | Memory | 36G per cell (run 2's real cells peaked at 22-26 GB of 30); 5 cells at once fit the 192 GB node |
 
+## Decisions (2026-10-08, the live campaign: claim 2)
+
+Fixed before any live data. Report: `data/rsa/existing_data_report.html`.
+
+| Decision | Choice |
+|---|---|
+| Seeds | `src/rsa/promote.py` (`scripts/rsa/slurm/promote.sbatch`): every model the three run-2 real cells admitted (143: 36 live, 107 pruned; starting models excluded, identical sources once), refitted on all existing data (train + test), grouped by average-linkage clustering of their pool predictions (the novelty gate's RMSE) into **10**, the best of each group by grouped CV on all data, plus `rsa_l2` as the reference: **11 models**, one under the live cap. A pre-specified design step, not a theory choice: the EIG design can only aim at disagreements between the models it has. Promoted models are not protected. Sensitivity reported in the paper: the three exported models as the alternative seed set, fitted to the same live data. |
+| Structure | as main's October live series: **3 independent runs x 3 experiments**, an inner loop of **5 rounds x 6 slots** per experiment (main's `max_iterations: 5`, `candidate_count: 6`), with the 2-stale-round stop |
+| Participants | 64 trials each (about 7 min, $12/hr: about $1.40 plus Prolific's fee, about $1.90 a person); the number per experiment is set by the power simulation (below), aiming at 60-100. 3 x 3 x 100 = 900 people, about $1,700; budget ceiling $2-4k. Agent costs are covered by credits. A 20-person pilot first. |
+| Power | before fixing N: simulate experiments from each promoted model at N = 40, 60, 100, 150 on the EIG design and report how often the generating model has the highest posterior (no participants; `src/rsa/design/`). |
+
 ## Architecture
 
 - **Plug-in seams, not a fork.** The outer and inner loop machinery (artifact
@@ -121,7 +132,8 @@ probability 0 to objects the word is false of, and people do choose them).
 | 2 | Re-run the smoke test with the fixes (2 rounds; see `SMOKE_RESULTS.md` recommendations) | cloud | **done** (`SMOKE_RESULTS_2.md`): all five sources, Gemini 3.8 Flash, sandboxed agents; 6/6 admitted, +119 nats over the best seed; repair path works (forced round); prune fires. OOM-killed in round 2 (per-trial fitting of 50k trials that are 268 displays): aggregate to counts before Sherlock |
 | 2 | Production inner loop on Sherlock (sandboxed agents) | local session | after the smoke test |
 | 2 | Critique step for memo models (PPC test statistics) | cloud | later |
-| 3 | Outer loop, simulated: design from the context pool, K-way EIG (Monte Carlo over outcomes), multi-trial designs, recovery against held-out RSA variants | Sherlock | |
+| 3 | Seed promotion from run 2 (`src/rsa/promote.py`) | Sherlock | job written |
+| 3 | Outer loop, simulated: design from the context pool, K-way EIG (Monte Carlo over outcomes), multi-trial designs, power simulation, recovery against held-out RSA variants | cloud + Sherlock | in progress |
 | 4 | Live: jsPsych port of the pragmods display, Firestore schema, Prolific pilot | local session | |
 | - | More seed data (`DATASETS.md`): Franke & Degen 2016, Mayn & Demberg, Sikos et al. 2021 need OSF/PLoS access | PI / local | |
 
