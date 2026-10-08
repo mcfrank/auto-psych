@@ -41,14 +41,14 @@
  "findings": [
   "Recovery works on prediction distance: in all four recovery cells the exported model is 0.004\u20130.009 RMSE from the withheld ground truth, against 0.048\u20130.049 for the best starting model, and a live model sits even closer (0.0001\u20130.004).",
   "On real data the loop finds models that generalise to held-out conditions: the best are +67 to +94 lpd over rsa_l2 (2\u20132.6 clustered SE), almost all of it on pragmods.",
-  "Selection does not track generalisation on real data. real_rep1 exported a model no better than rsa_l2 on held-out conditions (\u22127.5, SE 71) after its in-sample PSIS-LOO pruned the six models that generalise best; in recovery cells the two measures agree (r \u2248 1).",
+  "Models specialise by source. Re-scored with grouped CV on the training conditions, the five sources have five different best models in each real cell, and real_rep1's exported model wins on Sikos 2021 (+263 over rsa_l2) while losing on pragmods (-38), where a literal/pragmatic mixture leads (+117). The held-out test, with few held-out conditions per source, weights pragmods heavily, so run 1's 'selection picked the wrong model' was overstated: the two measures agree source by source.",
   "Literal/pragmatic mixtures and softmax-belief listeners are among the best held-out models in both real replicates."
  ],
  "decisions": [
-  "Select and prune on grouped cross-validation over training conditions (the unit the test set holds out), not trial-level PSIS-LOO.",
-  "Recovery verdict: drop the held-out \u201cor\u201d clause (it passes the seeds on the salience data) and report the seeds\u2019 and the closest live model\u2019s distances.",
-  "Agents\u2019 internet access: one cell read the lab\u2019s pragmods RSA code from GitHub. Allowlist (model API and library docs only), no network, or report only?",
-  "Cluster defaults: the mcfrank partition, venvs in $GROUP_HOME, no --qos=long."
+  "Fixed before run 2 (PLAN.md, 2026-10-08): select and prune on grouped CV over training conditions; live-set cap 12 by total ELPD-CV; no source-specific rule; per-source results descriptive only.",
+  "Recovery verdict: RMSE to the ground truth <= 0.01 alone; the seeds' and the closest live model's distances reported.",
+  "Agents have no internet access (shell under a no-network filter; web tools denied).",
+  "Run 2: real data x 3 replicates x 8 rounds, recovery x 2 replicates x 4 rounds, on the mcfrank partition."
  ],
  "links": [
   {
