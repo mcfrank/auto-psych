@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=rsa_loop
 #SBATCH --partition=mcfrank
-#SBATCH --array=0-5
+#SBATCH --array=0-6
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=30GB
 #SBATCH --time=24:00:00
@@ -56,7 +56,6 @@ rsa_require_opencode
 rsa_require_gemini_key
 
 # --- production settings (PI decisions 2026-10-07) ------------------------------
-MAX_ITERATIONS="${MAX_ITERATIONS:-5}"
 CANDIDATE_COUNT="${CANDIDATE_COUNT:-6}"
 NUM_WARMUP="${NUM_WARMUP:-1000}"
 NUM_SAMPLES="${NUM_SAMPLES:-1000}"
@@ -71,6 +70,8 @@ unset UV_PROJECT_ENVIRONMENT UV_CACHE_DIR UV_PYTHON
 # --- task -> cell -----------------------------------------------------------------
 TASK="${SLURM_ARRAY_TASK_ID:?not an array task}"
 rsa_cell "$TASK"
+# Rounds per condition (_cells.sh); MAX_ITERATIONS, if exported, overrides every cell.
+MAX_ITERATIONS="${MAX_ITERATIONS:-$ROUNDS}"
 DATA_DIR="$(rsa_condition_data_dir "$DATA_ROOT" "$CONDITION")"
 CELL_DIR="$CELLS_ROOT/$CELL"
 mkdir -p "$CELL_DIR"

@@ -181,7 +181,7 @@ def test_every_script_parses(script):
 
 def test_the_array_runs_the_production_settings():
     text = (SLURM / "rsa_loop_array.sbatch").read_text()
-    for setting in ('MAX_ITERATIONS="${MAX_ITERATIONS:-5}"', 'CANDIDATE_COUNT="${CANDIDATE_COUNT:-6}"',
+    for setting in ('MAX_ITERATIONS="${MAX_ITERATIONS:-$ROUNDS}"', 'CANDIDATE_COUNT="${CANDIDATE_COUNT:-6}"',
                     'NUM_WARMUP="${NUM_WARMUP:-1000}"', 'NUM_SAMPLES="${NUM_SAMPLES:-1000}"',
                     'NUM_CHAINS="${NUM_CHAINS:-4}"', 'AGENT_MODEL="${AGENT_MODEL:-google/gemini-3.8-flash}"',
                     'AGENT_TIMEOUT_SEC="${AGENT_TIMEOUT_SEC:-2400}"', "--agent-root", "src.rsa.evaluate_heldout",
@@ -216,23 +216,34 @@ def test_a_long_limit_on_normal_stops_before_submitting(tmp_path):
 
 def _cells():
     script = f'source "{SLURM / "_cells.sh"}"; for t in $(seq 0 $((RSA_N_CELLS - 1))); do ' \
-             'rsa_cell $t; echo "$t|$CELL|$CONDITION|$REPLICATE|$GT|$EXCLUDED_SEEDS|$LOOP_SEED"; done'
+             'rsa_cell $t; echo "$t|$CELL|$CONDITION|$REPLICATE|$GT|$EXCLUDED_SEEDS|$LOOP_SEED|$ROUNDS"; done'
     out = _run(["bash", "-c", script], check=True).stdout.split("\n")
     return [line.split("|") for line in out if line]
 
 
-def test_six_cells_cover_three_conditions_by_two_replicates():
+def test_run2_cells_are_three_real_replicates_and_two_of_each_recovery():
+    """PI decision 2026-10-08: real x 3 x 8 rounds, recovery x 2 x 4 rounds;
+    the long real cells come first in the array."""
     cells = _cells()
-    assert len(cells) == 6
-    assert {(c[2], c[3]) for c in cells} == {(cond, rep) for cond in ("real", "recovery_literal", "recovery_salience")
-                                             for rep in ("1", "2")}
+    assert [c[1] for c in cells] == ["real_rep1", "real_rep2", "real_rep3",
+                                     "recovery_literal_rep1", "recovery_salience_rep1",
+                                     "recovery_literal_rep2", "recovery_salience_rep2"]
     by_condition = {c[2]: c for c in cells}
     assert by_condition["real"][4:6] == ["", ""]
     assert by_condition["recovery_literal"][4:6] == ["literal_listener", "literal_listener"]
     assert by_condition["recovery_salience"][4:6] == ["rsa_l1_salience", "rsa_l1_salience rsa_l1_shared_prior"]
+    assert {c[2]: c[7] for c in cells} == {"real": "8", "recovery_literal": "4", "recovery_salience": "4"}
     # Replicates differ in the loop seed, not in the data.
-    for cond in ("real", "recovery_literal", "recovery_salience"):
+    assert sorted(c[6] for c in cells if c[2] == "real") == ["0", "1", "2"]
+    for cond in ("recovery_literal", "recovery_salience"):
         assert sorted(c[6] for c in cells if c[2] == cond) == ["0", "1"]
+
+
+def test_replicates_and_rounds_can_be_overridden():
+    script = f'export REAL_REPLICATES=2 RECOVERY_REPLICATES=1 REAL_ROUNDS=5; source "{SLURM / "_cells.sh"}"; ' \
+             'echo $RSA_N_CELLS; rsa_cell 0; echo $ROUNDS'
+    out = _run(["bash", "-c", script], check=True).stdout.split()
+    assert out == ["4", "5"]
 
 
 def test_every_excluded_seed_is_a_seed_model():
@@ -446,7 +457,7 @@ def test_the_status_report_summarises_each_cell(tmp_path):
     result = _run(["bash", str(SLURM / "rsa_status.sh"), str(root)], env=env)
     assert result.returncode == 0, result.stderr
     lines = {line.split()[1]: line for line in result.stdout.splitlines() if line[:1].isdigit()}
-    assert len(lines) == 6
+    assert len(lines) == 7
     done = lines["recovery_salience_rep1"].split()
     assert done[2] == "done" and "m_new" in done and "2/1/1" in done and "1.5M" in done
     assert "$1.25+" in done and done[-1] == "yes"

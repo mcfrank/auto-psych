@@ -34,6 +34,23 @@ land. Handoffs to local sessions (Sherlock, live runs) should point here.
 | Experiment stimuli | the pragmods artwork; identical objects keep pragmods' different base tints (people see slightly different twins, models treat them as identical: an accepted, unnameable difference) |
 | IRB | the subjective-randomness protocol covers the RSA pilot; reuse the repo's consent text |
 
+## Decisions (2026-10-08, after Sherlock run 1; fixed before run 2)
+
+Run 1 (`SHERLOCK_RUN1_RESULTS.md`, overview `data/rsa/sherlock_run1/overview.html`)
+is the pilot that motivated these. They are fixed before run 2's data and
+are not to be changed after seeing run 2.
+
+| Decision | Choice |
+|---|---|
+| Selection | grouped 5-fold cross-validation over training conditions (whole held-out units, as the test set is held out; `src/rsa/loop/cv.py`) for ranking, the incumbent, the end-of-run prune (2 x unit-clustered SE) and the export. Admission keeps the PSIS-LOO gates. No source-specific rule. |
+| Live-set cap | 12, ranked by total ELPD-CV (was 8: the cap, not the prune, decided what survived) |
+| Run 2 structure | real data x 3 replicates x 8 rounds (run 1's real cells still improved at round 5; replicates differed by ~90 lpd); recovery x 2 replicates x 4 rounds each (flat after round 3); 6 slots per round |
+| Per-source results | descriptive only: in reports and in the agents' briefs (where a model leads and lags), never in a selection rule |
+| Recovery verdict | the exported model's pool RMSE to the ground truth <= 0.01; the held-out comparison, the closest live model and the seeds' distances are reported, not part of the verdict |
+| Agents' network | none: shell commands under a no-internet filter, web tools denied (`src/rsa/loop/no_network.py`) |
+| Held-out claim | "better than the starting models on held-out conditions within the same papers" (the split is unchanged: conditions within papers, not whole experiments) |
+| Claims the runs are for | (1) runs on existing data yield candidates better than the seeds on held-out conditions; (2) used as seeds for new data collection (outer loop), they make further progress |
+
 ## Architecture
 
 - **Plug-in seams, not a fork.** The outer and inner loop machinery (artifact

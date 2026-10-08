@@ -30,7 +30,8 @@ SETUP_MEM="${SETUP_MEM:-8G}"
 SETUP_TIME="${SETUP_TIME:-01:00:00}"
 # ============================================================================
 PARTITION="${PARTITION:-mcfrank}"   # the lab's owner node (24 cores, 192 GB): never preempted, off fairshare, 7-day cap
-ARRAY="${ARRAY:-0-5}"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_cells.sh"   # RSA_N_CELLS (per-condition replicates)
+ARRAY="${ARRAY:-0-$(( RSA_N_CELLS - 1 ))}"
 MAX_PARALLEL="${MAX_PARALLEL:-6}"
 
 # Whole hours in a Slurm time limit ([D-]HH[:MM[:SS]]), rounded up.

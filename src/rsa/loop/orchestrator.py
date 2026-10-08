@@ -74,7 +74,12 @@ from src.rsa.loop.novelty import (
 from src.rsa.model_file import RSAModel
 
 DEFAULT_PRUNE_DSE_MULTIPLIER = 2.0
-MAX_LIVE_MODELS = 8
+# The live set's cap after the end-of-run prune (PI decision 2026-10-08, fixed
+# before Sherlock run 2): up to 12 models not distinguishable from the best
+# under grouped CV, ranked by total ELPD-CV, with no source-specific rule. At 8
+# the cap, not the prune, decided what survived; at 12, run 1's real_rep1 would
+# have kept 4 of the 5 per-source best models.
+MAX_LIVE_MODELS = 12
 NAME_RE = re.compile(r"^[a-z][a-z0-9_]{2,39}$")
 DISPLAY_COLUMNS = ("objects", "query", "utterance", "familiarization", "grayscale", "framing")
 # The unit the end-of-run prune treats as one observation (clustered SE of an

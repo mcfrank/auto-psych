@@ -1,20 +1,50 @@
 #!/bin/bash
-# The RSA run-1 sweep's cells: 3 conditions x 2 replicates = 6 array tasks.
-# Sourced by rsa_loop_array.sbatch, rsa_setup.sbatch and rsa_status.sh (it
-# loads no modules and changes no directory, so the status script can use it
-# on a login node).
+# The RSA sweep's cells. Sourced by rsa_loop_array.sbatch, rsa_setup.sbatch,
+# rsa_status.sh and submit.sh (it loads no modules and changes no directory,
+# so the status script can use it on a login node).
 #
-# Task -> cell is replicate-major, so a throttled array (%3) runs one cell of
-# every condition first:
-#   0 real_rep1   1 recovery_literal_rep1   2 recovery_salience_rep1
-#   3 real_rep2   4 recovery_literal_rep2   5 recovery_salience_rep2
+# Run 2 (PI decision 2026-10-08, from run 1's round-by-round results): real
+# data x 3 replicates x 8 rounds (run 1's real cells were still improving at
+# round 5, and the two replicates differed by ~90 lpd), recovery x 2
+# replicates x 4 rounds (run 1's recovery cells were flat after round 3).
+# Override with REAL_REPLICATES, REAL_ROUNDS, RECOVERY_REPLICATES,
+# RECOVERY_ROUNDS (exported for prepare, submit and status alike).
+#
+# Task -> cell: the long real cells first, then recovery replicate-major, so a
+# throttled array (%6) starts every long cell at once and the cell that waits
+# for a slot is a short one:
+#   0 real_rep1  1 real_rep2  2 real_rep3
+#   3 recovery_literal_rep1  4 recovery_salience_rep1
+#   5 recovery_literal_rep2  6 recovery_salience_rep2
 #
 # A replicate is a different loop seed on the same data and split (PI decision
 # 2026-10-07). LOOP_SEED = BASE_LOOP_SEED + replicate - 1.
 
 RSA_CONDITIONS=(real recovery_literal recovery_salience)
-RSA_N_REPLICATES=2
-RSA_N_CELLS=$(( ${#RSA_CONDITIONS[@]} * RSA_N_REPLICATES ))
+
+rsa_condition_replicates() {
+  case "$1" in
+    real) echo "${REAL_REPLICATES:-3}" ;;
+    recovery_literal|recovery_salience) echo "${RECOVERY_REPLICATES:-2}" ;;
+    *) echo "unknown RSA condition: $1" >&2; return 1 ;;
+  esac
+}
+rsa_condition_rounds() {
+  case "$1" in
+    real) echo "${REAL_ROUNDS:-8}" ;;
+    recovery_literal|recovery_salience) echo "${RECOVERY_ROUNDS:-4}" ;;
+    *) echo "unknown RSA condition: $1" >&2; return 1 ;;
+  esac
+}
+
+RSA_CELL_LIST=()
+for (( _r = 1; _r <= $(rsa_condition_replicates real); _r++ )); do RSA_CELL_LIST+=("real:$_r"); done
+_max_rec=$(rsa_condition_replicates recovery_literal)
+for (( _r = 1; _r <= _max_rec; _r++ )); do
+  for _c in recovery_literal recovery_salience; do RSA_CELL_LIST+=("$_c:$_r"); done
+done
+unset _r _c _max_rec
+RSA_N_CELLS=${#RSA_CELL_LIST[@]}
 # The seed models' directory, relative to a repo (harness copy or agent tree).
 RSA_SEED_MODELS_REL="src/pipelines/outer_loop/projects/rsa_reference/seed_models"
 
@@ -37,18 +67,19 @@ rsa_condition_excluded_seeds() {
   esac
 }
 
-# rsa_cell <task>: sets CONDITION REPLICATE CELL GT EXCLUDED_SEEDS LOOP_SEED.
+# rsa_cell <task>: sets CONDITION REPLICATE CELL GT EXCLUDED_SEEDS LOOP_SEED ROUNDS.
 rsa_cell() {
   local task="$1"
   [[ "$task" =~ ^[0-9]+$ ]] && (( task < RSA_N_CELLS )) \
     || { echo "task $task is outside 0-$(( RSA_N_CELLS - 1 ))" >&2; return 1; }
-  local n_cond=${#RSA_CONDITIONS[@]}
-  CONDITION="${RSA_CONDITIONS[$(( task % n_cond ))]}"
-  REPLICATE=$(( task / n_cond + 1 ))
+  local entry="${RSA_CELL_LIST[$task]}"
+  CONDITION="${entry%%:*}"
+  REPLICATE="${entry##*:}"
   CELL="${CONDITION}_rep${REPLICATE}"
   GT="$(rsa_condition_gt "$CONDITION")"
   EXCLUDED_SEEDS="$(rsa_condition_excluded_seeds "$CONDITION")"
   LOOP_SEED=$(( ${BASE_LOOP_SEED:-0} + REPLICATE - 1 ))
+  ROUNDS="$(rsa_condition_rounds "$CONDITION")"
 }
 
 # The data a condition's loop trains and is tested on, under $DATA_ROOT.

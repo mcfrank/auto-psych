@@ -1,8 +1,14 @@
 # Handoff: RSA inner loop, Sherlock run 2
 
-For the local session that runs RSA jobs on Sherlock. Run 2 repeats run 1's six
-cells (real, recovery_literal, recovery_salience × 2 replicates; 5 rounds × 6
-slots) with three changes the PI decided on 2026-10-08 after run 1
+For the local session that runs RSA jobs on Sherlock. Run 2 has seven cells,
+each running 6 agent slots per round:
+
+- **real data:** 3 replicates × 8 rounds. Run 1's real cells were still
+  improving at round 5, and its two replicates differed by about 90 lpd.
+- **recovery_literal and recovery_salience:** 2 replicates × 4 rounds each.
+  Run 1's recovery cells were flat after round 3.
+
+It also makes six changes the PI decided on 2026-10-08 after run 1
 (`SHERLOCK_RUN1_RESULTS.md`; overview page `data/rsa/sherlock_run1/overview.html`):
 
 1. **Selection on grouped cross-validation.** The loop now ranks, prunes and
@@ -17,6 +23,19 @@ slots) with three changes the PI decided on 2026-10-08 after run 1
 3. **Recovery verdict on RMSE alone** (≤ 0.01 to the ground truth). The
    held-out clause passed the seeds on the salience data; it is now only
    reported, beside the seeds' and the closest live model's distances.
+4. **A live-set cap of 12** (was 8), ranked by total ELPD-CV.
+5. **Seven cells, not six** (above). The array is
+   `real_rep1-3, recovery_literal_rep1, recovery_salience_rep1,
+   recovery_literal_rep2, recovery_salience_rep2` (tasks 0-6). The long real
+   cells come first, so the cell that waits for a free slot on the 24-core node
+   is a short one.
+6. **Agents see per-source standings.** Their briefs say where each model in
+   the set leads and lags by source. This is description only; no rule uses
+   source labels.
+
+These rules were fixed on 2026-10-08, before run 2 (`PLAN.md`, "Decisions
+(2026-10-08)"). Run 2 tests them; do not change any of them mid-sweep. A
+blocking bug is the only exception, and you report it.
 
 Everything else follows `HANDOFF_sherlock_run1.md`; this file lists only what differs.
 Run 1's environment fixes are now defaults, so most of its §2 exports are gone.
@@ -44,6 +63,12 @@ Run 1's environment fixes are now defaults, so most of its §2 exports are gone.
 
   `--qos=long` is never added (not on this account); a limit over 48 h on
   `normal` stops `submit.sh` before anything is submitted.
+
+- **Unset run 1's `MAX_ITERATIONS`** if your shell still exports it: it
+  would override every cell's rounds. The per-condition settings are
+  `REAL_REPLICATES`, `REAL_ROUNDS`, `RECOVERY_REPLICATES` and
+  `RECOVERY_ROUNDS` (defaults 3, 8, 2, 4; `scripts/rsa/slurm/_cells.sh`).
+  Export them in the shell that prepares and submits, if the PI changes them.
 
 ## 1. Prepare (a job, not the login node)
 
@@ -74,17 +99,29 @@ cd ~/auto-psych && bash scripts/rsa/slurm/submit.sh
   that *tried*; their calls were denied. A completed one stops the loop with
   "the agent used the web".
 - **CV ran:** `results/.cv/folds.json` exists with 5 folds, and the standing in
-  `results/history.json` carries `elpd_cv`, `cv_diff` and `cv_dse` for every model.
+  `results/history.json` carries `elpd_cv`, `cv_diff`, `cv_dse` and
+  `cv_behind_by_source` for every model.
+- **Per-source standings reached the agents:** a round-2 `CONTEXT.md` or
+  `existing_hypotheses.md` lists models with "by source: ...".
 - **Agents still pass their self-checks** (PASS/FAIL lines in the logs). The
   check needs no network.
 
 ## 4. Time and cost
 
-- **CPU.** CV adds 5 fold fits per model, each about 1 min single-threaded:
-  about 30 fits (~8 min on 4 CPUs) per round. Expect run 1's 4-7 h per cell
-  plus about an hour.
-- **Agents.** Run 1 spent $313 on 220 agent runs ($1.42 each). Without web
-  access agents may spend fewer turns browsing.
+- **Wall time.**
+  - Run 1's real cells took 4.5-5 h for 5 rounds. At 8 rounds, plus grouped
+    CV (5 fold fits per model, about 8 min a round on 4 CPUs), expect about
+    9-10 h.
+  - Recovery cells at 4 rounds: about 4 h.
+  - Six cells run at once (24 cores, 4 each). The seventh starts when the
+    first recovery cell ends, so the sweep should end about 10-12 h after
+    submission. `TIME=24:00:00` per cell leaves room.
+- **Agents.** Run 1 averaged $1.42 per agent run, about $8-9 per round of six
+  with retries and repairs.
+  - Real: 3 × 8 rounds ≈ $210.
+  - Recovery: 4 × 4 rounds ≈ $140.
+  - Run 2 in all: **about $350-400** (run 1: $313).
+  - Without web access, agents may spend fewer turns browsing.
 
 ## 5. Failure handling (additions)
 
@@ -103,13 +140,22 @@ As in run 1's §6, with these changes:
 - Use `WORK_ROOT` and the `sherlock` SSH alias in the rsync commands, not a
   hard-coded `rsa_run1` and `login.sherlock.stanford.edu`.
 - Also bring back each cell's `results/.cv/folds.json`.
-- Into `data/rsa/sherlock_run2/`. Then write `run_notes.json` as in
+- Into `data/rsa/sherlock_run2/`, for all seven cells (`rsa_status.sh`
+  lists them). Then write `run_notes.json` as in
   `data/rsa/sherlock_run1/`: wall time and MaxRSS per cell, plus the findings
   and decisions. Build the overview page with
   `uv run python -m src.rsa.sweep_report --sweep data/rsa/sherlock_run2`.
 
-**Write `docs/auto_rsa/SHERLOCK_RUN2_RESULTS.md`** as for run 1. Lead with:
+The overview page's "By source" section reads per-source CV from each cell's
+`history.json`; run 2 needs no `cv_rescore` step.
 
+**Write `docs/auto_rsa/SHERLOCK_RUN2_RESULTS.md`** as for run 1. Lead with the
+paper's claim 1: are the exported models better than the starting models on
+held-out conditions within the same papers? Then:
+
+- **How do the models improve over rounds?** For each cell, give the best
+  model's ELPD-CV and its held-out lpd at every round. (The overview page draws
+  this. Run 1's real cells were still improving at round 5.)
 - **Did CV selection export models that generalise?** Give the exported model's
   held-out rank in each real cell, and compare with run 1: 26/40 and 4/40.
 - **Did recovery still succeed without internet access?** Give the exported

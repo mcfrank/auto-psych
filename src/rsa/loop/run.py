@@ -30,6 +30,7 @@ from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC
 from src.rsa.loop.novelty import DEFAULT_NOVELTY_RMSE_THRESHOLD
 from src.rsa.loop.orchestrator import (
     DEFAULT_PRUNE_DSE_MULTIPLIER,
+    MAX_LIVE_MODELS,
     LoopConfig,
     RSALoop,
     coding_agent_spawner,
@@ -65,6 +66,8 @@ class Args:
     """Select, prune and export on grouped cross-validation over training
     conditions (cv; PI decision 2026-10-08) or trial-level PSIS-LOO (loo)."""
     cv_folds: int = 5
+    max_live_models: int = MAX_LIVE_MODELS
+    """The live set's cap after the end-of-run prune (ranked by the selection criterion)."""
     fit_time_limit_sec: float = FIT_TIME_LIMIT_SEC
     coding_agent: Optional[Literal["claude", "opencode"]] = None
     """Agent backend; defaults to CODING_AGENT, then opencode (Gemini)."""
@@ -117,7 +120,7 @@ def main(args: Args) -> int:
         settings=FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains,
                              seed=args.seed),
         novelty_threshold=args.novelty_rmse_threshold, prune_dse_multiplier=args.prune_dse_multiplier,
-        selection=args.selection, cv_folds=args.cv_folds,
+        selection=args.selection, cv_folds=args.cv_folds, max_live_models=args.max_live_models,
         fit_time_limit_sec=args.fit_time_limit_sec, report_title=args.title, agent_network=args.agent_network,
     )
     spawn = coding_agent_spawner(
