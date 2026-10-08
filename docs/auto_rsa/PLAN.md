@@ -68,6 +68,9 @@ Fixed before any live data. Report: `data/rsa/existing_data_report.html`.
 | Structure | as main's October live series: **3 independent runs x 3 experiments**, an inner loop of **5 rounds x 6 slots** per experiment (main's `max_iterations: 5`, `candidate_count: 6`), with the 2-stale-round stop |
 | Participants | **12 test trials each** (PI 2026-10-08: the literature is mostly one-shot; 6 was fine in our experiments, 64 too far): 10 designed displays plus 2 catch trials, and the practice trial. A person sees a balanced subset of the design's D displays (`trial_lists(n_trials=10)`: a shuffled order walked in windows), so each display gets N x 10 / D responses. About 3 minutes at $12/hr: about $0.60 plus Prolific's fee, about $0.80 a person; 3 x 3 experiments x 250 people is about $1,800 (ceiling $2-4k). Agent costs are covered by credits. A 20-person pilot first. |
 | Power | before fixing N and D: designs of 10, 20 and 30 displays for 200 people, each scored at 100, 200 and 300 people on simulated experiments: how often the generating model ends with the highest posterior (no participants; `src/rsa/design/`, `design.sbatch`). |
+| Claim 2's measure | `experiment<N>/prospective.json`: each model going into experiment N, fitted only to the data before it, scored on experiment N's new data before anything is refitted, against `rsa_l2` fitted to the same data (lpd difference, SE clustered by designed display). Proposed, for the PI to confirm. |
+| Data the live loop fits | the existing data plus every live experiment so far (proposed: the models stay answerable to the literature; the alternative is live data only). Participants who miss any catch trial are excluded (`max_catch_errors: 0`, proposed). |
+| Manipulations | plain displays only: a heard word or a prior question; no valence, familiarisation or greyscale (PI 2026-10-08: accepted for the first campaign; the valence models cannot be told apart on these displays). |
 | Bookkeeping | randomised item, words, screen order and bases never reach a model: a converted row is the designed display (every model input equal), its choice the clicked canonical object, and `src.rsa.design.counts.display_counts` tallies the clicks per designed display and class (`tests/test_rsa_experiment_roundtrip.py`). |
 
 ## Architecture
@@ -135,7 +138,9 @@ probability 0 to objects the word is false of, and people do choose them).
 | 2 | Critique step for memo models (PPC test statistics) | cloud | later |
 | 3 | Seed promotion from run 2 (`src/rsa/promote.py`) | Sherlock | job written |
 | 3 | Design for experiment 1: joint EIG over the 794-display pool with multinomial outcomes (`src/rsa/design/eig.py`, main's estimator: scenarios, leave-one-out, noise-floor stop, single-response fill) and the power table (`src/rsa/design/run.py`, `scripts/rsa/slurm/design.sbatch`) | cloud + Sherlock | built; runs after promotion (`HANDOFF_sherlock_promote.md`) |
-| 3 | Outer loop for RSA: experiment N+1 designed from experiment N's live set, data pooled, the inner loop per experiment (5 x 6, stop rule) | cloud | next |
+| 3 | Outer loop for RSA (`src/rsa/outer/run.py`): per experiment, design from the live set fitted to all data so far, collect (simulated through the page's records and `convert`; live not wired), prospective score, inner loop (5 x 6, stop rule), carry the live set | cloud | **built**, end-to-end test with simulated people and a scripted agent |
+| 4 | Live collection in the outer loop: deploy the page (Firebase), Prolific study, collect and convert (main's `deployment/` code), server-side round-robin list assignment | cloud + local | next |
+| 4 | Simulated dress rehearsal on Sherlock: one run, 3 experiments, real agents (sandboxed, no network), a hidden ground truth | Sherlock | after the live wiring's dry run |
 | 4 | Live: jsPsych port of the pragmods display, Firestore schema, Prolific pilot | local session | |
 | - | More seed data (`DATASETS.md`): Franke & Degen 2016, Mayn & Demberg, Sikos et al. 2021 need OSF/PLoS access | PI / local | |
 
