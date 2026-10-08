@@ -72,16 +72,19 @@ def cell_bundle(cell_dir: Path, notes: Dict[str, Any]) -> dict:
             hypotheses[e["name"]] = e["hypothesis"]
     seeds = {e["name"] for e in history[0]["events"] if e.get("outcome") == "seeded"}
     pre = history[-2]["standing"] if len(history) > 1 else history[-1]["standing"]
-    top = max(s["elpd_loo"] for s in pre.values())
+    # What the loop selected on: grouped CV (from run 2) or PSIS-LOO (run 1).
+    on_cv = any(s.get("elpd_cv") is not None for s in pre.values())
+    key = "elpd_cv" if on_cv else "elpd_loo"
+    top = max(s[key] for s in pre.values() if s.get(key) is not None)
     models = []
     for name, s in pre.items():
         h = _held_for(name, held, live)
-        if h is None:
+        if h is None or s.get(key) is None:
             continue
         status = "exported" if name == best else "live" if name in live else "pruned"
         models.append(dict(
             name=name, status=status, seed=name in seeds,
-            insample=s["elpd_loo"] - top, heldout=h["diff"], se=h["se"], by_source=h["by_source"],
+            insample=s[key] - top, heldout=h["diff"], se=h["se"], by_source=h["by_source"],
             trusted=bool(s["loo_reliable"] and s["converged"]),
             hypothesis=_first_sentence(hypotheses.get(name, "")),
         ))
@@ -127,6 +130,15 @@ def cell_bundle(cell_dir: Path, notes: Dict[str, Any]) -> dict:
             best_seed_rmse=rec.get("best_seed_rmse_to_gt", notes.get("best_seed_rmse_to_gt")),
         )
     best_seed = max((k for k in held if k.startswith("seed:")), key=lambda k: held[k]["lpd"])
+    # Progress: each scored step's best model, its selection score over the
+    # seeds' best and its held-out lpd over the best seed (None if never scored there).
+    seed_top = max(s[key] for s in history[0]["standing"].values() if s.get(key) is not None)
+    rounds = []
+    for step in history:
+        b = step["best_model"]
+        h = _held_for(b, held, live)
+        rounds.append(dict(round=step["round"], best=b, selection=step["standing"][b][key] - seed_top,
+                           heldout=None if h is None else h["diff"]))
     return dict(
         cell=cell_dir.name, condition=cell["condition"], replicate=cell["replicate"],
         ground_truth=cell.get("ground_truth"), excluded=cell.get("excluded_seeds", []),
@@ -137,7 +149,9 @@ def cell_bundle(cell_dir: Path, notes: Dict[str, Any]) -> dict:
         models=models, recovery=recovery, cv_origin=cv_origin, specialists=specialists,
         cost=usage["cost_usd"], agent_runs=usage["n_calls"], tokens=usage["total_tokens"],
         wall=notes.get("wall"), max_rss_gb=notes.get("max_rss_gb"),
-        report=f"cells/{cell_dir.name}.html",
+        report=f"cells/{cell_dir.name}.html", criterion="ELPD-CV" if on_cv else "ELPD-LOO", rounds=rounds,
+        n_rounds=cell.get("max_iterations", max(r["round"] for r in rounds)),
+        heldout_page=f"heldout/{cell_dir.name}.html" if (cell_dir / "heldout" / "report.html").exists() else None,
     )
 
 

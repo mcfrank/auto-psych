@@ -39,12 +39,18 @@
   "CV selection exported models that generalise better than run 1's: held-out ranks 2/58, 8/57 and 11/58 (run 1: 26/40, 4/40), and the live sets stayed at 12 models, holding the top held-out models in two of three cells.",
   "Real cells kept improving to round 7, each by refining one lineage of mechanisms (singleton/distinctiveness priors, isolation/surprisal, crowding/chromatic discrimination); none improved at round 8.",
   "Recovery succeeded in all four cells without internet access: the exported models are 0.0012-0.0053 RMSE from the ground truth against 0.048-0.049 for the best seed, and no seed would pass the verdict.",
-  "CV over training conditions does not always predict transfer: in real_rep3 grouped CV pruned feature_surprisal_listener 381.8 nats behind the winner, yet it is ~12 lpd ahead on held-out conditions; real_rep2's final CV is ~140 below the other replicates while its held-out gain is the second largest."
+  "CV and the held-out test weight different conditions; neither is wrong. In all three real cells grouped CV's lead (+330 to +420 nats over rsa_l2 on Sikos 2021) sits in about ten Sikos training conditions (e1/e3 display types where every seed predicts at chance and a singleton/distinctiveness prior fixes them); the held-out Sikos conditions are mostly other display types (+15 to +22). Mayn & Demberg moves CV by \u00b120-50 and held-out by under 2.5.",
+  "The held-out gains differ across replicates mainly through one pragmods experiment: E6 (favorite vs least favorite, 2 held-out conditions, 276 trials) gives +42.9, +8.3 and -8.1. Without it the three exported models gain +41.4, +47.9 and +34.5: the replicates agree on the rest (Sikos +15-22, E9 twins +5-8, E7 color, size, E1)."
  ],
  "decisions": [
+  "Claim 2 seeds: which run-2 models start the live experiments? Proposed rule (general, no source labels): every model live at the end of the three real cells (36), refitted on all existing data (train + test), duplicates removed by the novelty gate, grouped into mechanisms by prediction distance on the design pool, and the best by grouped CV kept from each group, plus rsa_l2 as the reference seed.",
+  "Claim 1 reporting: keep the pre-registered split and report per source and per experiment, including the E6 sensitivity (+34 to +48 without it). Do not re-split to balance Sikos display types after seeing the results; note the imbalance as a limitation.",
+  "Next RSA inner-loop run (if any): memory needs 36-40 GB per real cell at 8 rounds (5 cells at once on the 192 GB node), and the stop rule could be 'no CV gain for one round' (no cell improved at round 8)."
+ ],
+ "links": [],
+ "ops_notes": [
   "Three recovery cells crashed just after midnight on an arviz daily-marker collision between concurrent fit children; resumed the same morning from their last scored step (no code change).",
   "Partial results were committed before the sweep ended, at the PI's request (29fa52c, fb6a32d).",
   "Sherlock's stale pre-rewrite main was not pushed to GitHub: its content is all on main, and pushing it would restore an unredacted Prolific-style ID."
- ],
- "links": []
+ ]
 }

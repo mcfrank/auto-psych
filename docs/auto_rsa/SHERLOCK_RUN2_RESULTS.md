@@ -291,3 +291,34 @@ task  cell                    state  stage   best model                         
 ```
 
 Costs here are from each cell's `token_usage.jsonl`, so the resumed cells are complete.
+
+## 7. The driver session's reading (2026-10-08)
+
+**§5 items 1-6 and 8 are fixed on `auto-rsa`** (commit "fixes from Sherlock run 2's notes"):
+
+- one default sweep root (`_cells.sh`);
+- the git 1.8 pull recipe;
+- a cache directory of its own for each fit child (arviz);
+- costs summed from `token_usage.jsonl`;
+- `-o "$WORK_ROOT/logs/..."` for the one-off jobs;
+- held-out pages written into each cell's `outputs/`;
+- web tool calls listed apart from URLs in log text.
+
+Items 7 and 10 need no code: item 7 sets the next run's memory; item 10 was the right call.
+
+**§5 item 9: what CV and the held-out test each weigh.** From `heldout/unit_lpd.csv`, the exported model minus rsa_l2, per source:
+
+| | real_rep1 CV / held-out | real_rep2 CV / held-out | real_rep3 CV / held-out |
+|---|---|---|---|
+| Sikos 2021 | +405.6 / +16.2 | +351.3 / +21.7 | +422.1 / +15.4 |
+| pragmods | +54.0 / +66.4 | -10.0 / +34.7 | +24.9 / +9.9 |
+| Mayn & Demberg (3) | -12.1 / +1.7 | -34.5 / -0.1 | -17.6 / +1.2 |
+
+- **CV is dominated by Sikos, not Mayn & Demberg.**
+  - The ~400 nats come from about ten Sikos e1/e3 training conditions, where every seed predicts at chance and a singleton/distinctiveness prior gains 35-60 nats each.
+  - The held-out Sikos conditions are mostly other display types.
+  - CV holds out whole conditions too, so this is not overfitting. The mechanism helps on display types the random split put in training.
+- **The held-out spread across replicates is mostly one experiment**, pragmods E6 (favorite vs least favorite; 2 held-out conditions, 276 trials): +42.9, +8.3 and -8.1.
+  - Without E6 the exported models gain +41.4, +47.9 and +34.5.
+  - real_rep3's pruned held-out leaders (`valence_salience_listener`, `evaluative_elaboration_listener`) gain ~49 on E6 alone.
+  - `feature_surprisal_listener` gains on E6 (+16.5), size and Sikos, and is +41 on CV's Sikos against the exported model's +422.

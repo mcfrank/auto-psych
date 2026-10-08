@@ -16,7 +16,7 @@
   --axis: #c3c2b7;
   --border: rgba(11, 11, 11, 0.10);
   --pruned: #a9a89f;
-  --s1: #2a78d6; --s2: #eb6834;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
   --pos: #2a78d6; --neg: #c2502a;
   --good: #0ca30c; --warn: #d03b3b;
   --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -26,7 +26,7 @@
   :root:not([data-theme="light"]) {
     --page: #0f100f; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
     --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, 0.10); --pruned: #75746d;
-    --s1: #3987e5; --s2: #d95926; --pos: #3987e5; --neg: #e0703f;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --pos: #3987e5; --neg: #e0703f;
     --good: #0ca30c; --warn: #e66767;
     color-scheme: dark;
   }
@@ -34,7 +34,7 @@
 :root[data-theme="dark"] {
   --page: #0f100f; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
   --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, 0.10); --pruned: #75746d;
-  --s1: #3987e5; --s2: #d95926; --pos: #3987e5; --neg: #e0703f;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --pos: #3987e5; --neg: #e0703f;
   --good: #0ca30c; --warn: #e66767;
   color-scheme: dark;
 }
@@ -132,11 +132,25 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
     <div class="card scroll-x"><table id="cells-table"></table></div>
   </section>
 
+  <section aria-labelledby="h-progress" id="progress-section">
+    <div class="section-head">
+      <h2 id="h-progress">Progress over rounds</h2>
+      <p>After each round, the cell's best model (what the loop would export then). Top: its held-out lpd minus the
+        best starting model's, on held-out conditions it never saw. Bottom: what the loop selects on, its
+        <span class="criterion"></span> on the training trials minus the best starting model's. One line per replicate.</p>
+    </div>
+    <div class="multiples" id="progress"></div>
+    <details>
+      <summary>Show the progress as a table</summary>
+      <div class="scroll-x"><table id="progress-table"></table></div>
+    </details>
+  </section>
+
   <section aria-labelledby="h-select">
     <div class="section-head">
       <h2 id="h-select">Selection vs generalisation</h2>
-      <p>Each point is a model the cell had before its end-of-run prune. Across: ELPD-LOO on the training trials,
-        relative to the cell's best (what the loop selects and prunes on). Up: held-out lpd relative to the best
+      <p>Each point is a model the cell had before its end-of-run prune. Across: <span class="criterion"></span> on the
+        training trials, relative to the cell's best (what the loop selects and prunes on). Up: held-out lpd relative to the best
         starting model (what we want). Models far to the left are drawn at the edge.</p>
     </div>
     <div class="legend" id="select-legend"></div>
@@ -231,9 +245,88 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
       <td class="num">${c.exported_rank}/${c.n_heldout_models}</td>
       <td class="num">${c.counts.admitted} / ${c.counts.rejected} / ${c.counts.pruned}</td><td class="num">${c.n_live}</td>
       <td>${rec}</td><td class="num">${c.agent_runs}</td><td class="num">${money(c.cost)}</td><td class="num">${c.wall || "–"}</td>
-      <td><a href="${esc(c.report)}">cell report</a></td>`;
+      <td><a href="${esc(c.report)}">cell report</a>${c.heldout_page ? `<br><a href="${esc(c.heldout_page)}">held-out conditions</a>` : ""}</td>`;
     tb.appendChild(tr);
   }
+
+  // progress over rounds: one panel per condition and measure, one line per replicate
+  (function progress() {
+    const cells = B.cells.filter((c) => c.rounds && c.rounds.length > 1);
+    if (!cells.length) { $("progress-section").hidden = true; return; }
+    for (const s of document.querySelectorAll(".criterion")) s.textContent = cells[0].criterion;
+    const REP = ["var(--s1)", "var(--s2)", "var(--s3)"];
+    // Each step: "seeds", then rounds 1..n; the end-of-run step (after the prune) only when its best model differs.
+    const steps = (c) => c.rounds
+      .map((r) => ({ ...r, label: r.round < 0 ? "seeds" : r.round < c.n_rounds ? String(r.round + 1) : "end" }))
+      .filter((r, i, all) => r.label !== "end" || r.best !== all[i - 1].best);
+    const conditions = [...new Set(cells.map((c) => c.condition))];
+    const W = 360, H = 210, M = { l: 44, r: 44, t: 12, b: 30 };
+    const ticks = (lo, hi, n) => { const step0 = (hi - lo) / n || 1, mag = Math.pow(10, Math.floor(Math.log10(step0))); const step = [1, 2, 5, 10].map((m) => m * mag).find((s) => s >= step0); const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(6)); return out; };
+    for (const [measure, label] of [["heldout", "held-out lpd vs best seed"], ["selection", `${cells[0].criterion} vs best seed`]]) {
+      for (const cond of conditions) {
+        const group = cells.filter((c) => c.condition === cond).map((c) => ({ c, pts: steps(c).filter((p) => p[measure] !== null) }));
+        const card = h("div", "card chart");
+        const head = h("header");
+        head.appendChild(h("span", "cell", cond === "real" ? "real data" : cond.replace("_", " ")));
+        head.appendChild(h("span", "sub", label));
+        card.appendChild(head);
+        const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `${cond}: ${label} by round` });
+        card.appendChild(svg);
+        $("progress").appendChild(card);
+        const all = group.flatMap((g) => g.pts.map((p) => p[measure]));
+        const nx = Math.max(...group.map((g) => g.pts.length));
+        let ylo = Math.min(0, ...all), yhi = Math.max(0, ...all); const pad = (yhi - ylo) * 0.08 || 1; ylo -= pad; yhi += pad;
+        const X = (i) => M.l + i / Math.max(1, nx - 1) * (W - M.l - M.r);
+        const Y = (v) => H - M.b - (v - ylo) / (yhi - ylo) * (H - M.t - M.b);
+        for (const t of ticks(ylo, yhi, 4)) {
+          el("line", { x1: M.l, x2: W - M.r, y1: Y(t), y2: Y(t), stroke: t === 0 ? "var(--axis)" : "var(--grid)", "stroke-width": 1 }, svg);
+          el("text", { x: M.l - 6, y: Y(t) + 3.5, "text-anchor": "end", "font-size": 10, fill: "var(--muted)" }, svg).textContent = fmt(t, 0);
+        }
+        const longest = group.reduce((a, g) => (g.pts.length > a.length ? g.pts : a), []);
+        longest.forEach((p, i) => el("text", { x: X(i), y: H - M.b + 14, "text-anchor": "middle", "font-size": 10, fill: "var(--muted)" }, svg).textContent = p.label);
+        el("text", { x: W - M.r, y: H - 2, "text-anchor": "end", "font-size": 10, fill: "var(--ink-2)" }, svg).textContent = "round →";
+        group.forEach(({ c, pts }) => {
+          const color = REP[(c.replicate - 1) % REP.length];
+          el("path", { d: pts.map((p, i) => `${i ? "L" : "M"}${X(i)},${Y(p[measure])}`).join(""), fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+          pts.forEach((p, i) => {
+            const g = el("g", { class: "hit", tabindex: 0, "aria-label": `${c.cell} ${p.label}: ${fmt(p[measure])}` }, svg);
+            el("circle", { cx: X(i), cy: Y(p[measure]), r: 10, fill: "transparent" }, g);
+            el("circle", { class: "ring", cx: X(i), cy: Y(p[measure]), r: 4, fill: color, stroke: "var(--surface)", "stroke-width": 2 }, g);
+            const html = `<div class="title">${esc(c.cell)} · ${p.label === "seeds" ? "starting models" : p.label === "end" ? "end of run" : "after round " + p.label}</div>
+              <div class="row"><span>best model</span><b>${esc(p.best)}</b></div>
+              <div class="row"><span>held-out vs best seed</span><b>${p.heldout === null ? "–" : fmt(p.heldout)}</b></div>
+              <div class="row"><span>${c.criterion} vs best seed</span><b>${fmt(p.selection)}</b></div>`;
+            g.addEventListener("mouseenter", (e) => showTip(e, html)); g.addEventListener("focus", (e) => showTip(e, html));
+            g.addEventListener("mouseleave", hideTip); g.addEventListener("blur", hideTip);
+          });
+          const last = pts[pts.length - 1];
+          // Direct label at the line's end, nudged apart when replicates end close together.
+          el("text", { x: X(pts.length - 1) + 8, y: Y(last[measure]) + 3.5, "font-size": 10, fill: "var(--ink-2)", "data-end": 1 }, svg).textContent = `rep ${c.replicate}`;
+        });
+        // Keep end labels from overlapping: push them apart by at least 11px.
+        const labels = [...svg.querySelectorAll("text[data-end]")].sort((a, b) => +a.getAttribute("y") - +b.getAttribute("y"));
+        for (let i = 1; i < labels.length; i++) {
+          const prev = +labels[i - 1].getAttribute("y"), cur = +labels[i].getAttribute("y");
+          if (cur - prev < 11) labels[i].setAttribute("y", prev + 11);
+        }
+      }
+    }
+    const t = $("progress-table");
+    const maxSteps = Math.max(...cells.map((c) => steps(c).length));
+    const head = h("tr"); head.appendChild(h("th", "", "step"));
+    for (const c of cells) head.appendChild(h("th", "num", c.cell));
+    t.appendChild(head);
+    for (let i = 0; i < maxSteps; i++) {
+      const tr = h("tr");
+      tr.appendChild(h("td", "", steps(cells.find((c) => steps(c).length > i))[i].label));
+      for (const c of cells) {
+        const p = steps(c)[i];
+        tr.appendChild(h("td", "num", p ? `${p.heldout === null ? "–" : fmt(p.heldout)} / ${fmt(p.selection, 0)}` : ""));
+      }
+      t.appendChild(tr);
+    }
+    const note = h("tr"); const td = h("td", "sub", `Each cell: held-out lpd / ${cells[0].criterion}, both relative to the best starting model.`); td.colSpan = cells.length + 1; note.appendChild(td); t.appendChild(note);
+  })();
 
   // selection vs generalisation: small multiples
   const STATUS = { exported: { label: "exported", color: "var(--s2)", r: 6 }, live: { label: "live at the end", color: "var(--s1)", r: 4.5 }, pruned: { label: "pruned", color: "var(--pruned)", r: 4 } };
@@ -248,7 +341,7 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
     head.appendChild(h("span", "cell", c.cell));
     head.appendChild(h("span", "sub", c.ground_truth ? `ground truth: ${c.ground_truth}` : "real data"));
     card.appendChild(head);
-    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `${c.cell}: in-sample ELPD-LOO against held-out lpd` });
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `${c.cell}: ${c.criterion} against held-out lpd` });
     card.appendChild(svg);
     $("select").appendChild(card);
     const ms = c.models;
@@ -270,7 +363,7 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
       el("line", { x1: X(t), x2: X(t), y1: M.t, y2: H - M.b, stroke: "var(--grid)", "stroke-width": 1 }, svg);
       el("text", { x: X(t), y: H - M.b + 14, "text-anchor": "middle", "font-size": 10, fill: "var(--muted)" }, svg).textContent = fmt(t, 0);
     }
-    el("text", { x: W - M.r, y: H - 4, "text-anchor": "end", "font-size": 10, fill: "var(--ink-2)" }, svg).textContent = "in-sample ELPD-LOO vs best →";
+    el("text", { x: W - M.r, y: H - 4, "text-anchor": "end", "font-size": 10, fill: "var(--ink-2)" }, svg).textContent = `${c.criterion} vs best →`;
     el("text", { x: W - M.r, y: Y(0) + 12, "text-anchor": "end", "font-size": 10, fill: "var(--ink-2)" }, svg).textContent = `0 = best seed (${c.best_seed})`;
     const order = { pruned: 0, live: 1, exported: 2 };
     for (const m of [...ms].sort((a, b) => order[a.status] - order[b.status])) {
@@ -282,7 +375,7 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
         "fill-opacity": clipped ? 0.5 : 1 }, g);
       const html = `<div class="title">${esc(m.name)}</div>
         <div class="row"><span>status</span><b>${s.label}${m.seed ? ", starting model" : ""}</b></div>
-        <div class="row"><span>in-sample vs best</span><b>${fmt(m.insample)}${clipped ? " (off scale)" : ""}</b></div>
+        <div class="row"><span>${c.criterion} vs best</span><b>${fmt(m.insample)}${clipped ? " (off scale)" : ""}</b></div>
         <div class="row"><span>held-out vs best seed</span><b>${fmt(m.heldout)} ± ${m.se.toFixed(1)}</b></div>
         ${m.hypothesis ? `<p>${esc(m.hypothesis)}</p>` : ""}`;
       g.addEventListener("mouseenter", (e) => showTip(e, html));
