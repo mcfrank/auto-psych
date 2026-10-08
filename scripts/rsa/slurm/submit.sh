@@ -25,7 +25,7 @@ export WORK_ROOT="${WORK_ROOT:-$(rsa_default_work_root)}"
 #   5 rounds x (agents <= 3 x AGENT_TIMEOUT_SEC [first try, retry, repair]
 #   + ~5 min of fits) + ~2 min of scoring.
 CPUS_PER_TASK="${CPUS_PER_TASK:-4}"    # run 1: 6 cells x 4 CPUs fill the mcfrank node; fits run one per CPU
-MEM="${MEM:-30G}"                      # run 1: MaxRSS 15-19 GB per cell
+MEM="${MEM:-36G}"                      # run 2: real cells peaked at 22-26 GB of 30 (8 rounds); 5 x 36G fit the 192 GB node
 TIME="${TIME:-24:00:00}"               # run 1: 4-7 h per cell; > 48 h needs PARTITION=mcfrank (normal refuses it)
 SETUP_CPUS="${SETUP_CPUS:-4}"          # two ground-truth fits, ~70 s each
 SETUP_MEM="${SETUP_MEM:-8G}"

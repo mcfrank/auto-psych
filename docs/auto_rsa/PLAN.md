@@ -51,6 +51,13 @@ are not to be changed after seeing run 2.
 | Held-out claim | "better than the starting models on held-out conditions within the same papers" (the split is unchanged: conditions within papers, not whole experiments) |
 | Claims the runs are for | (1) runs on existing data yield candidates better than the seeds on held-out conditions; (2) used as seeds for new data collection (outer loop), they make further progress |
 
+## Decisions (2026-10-08, after Sherlock run 2)
+
+| Decision | Choice |
+|---|---|
+| Stopping rule | a loop ends early once 2 rounds in a row leave its best model unchanged (`LoopConfig.stop_after_stale_rounds`, `STOP_AFTER_STALE_ROUNDS`; 0 = never). Not 1: on run 2's history, 1 would have stopped real_rep1 after round 1 (rsa_l2 still best), real_rep2 after round 5 (+26.7 instead of +56.2) and real_rep3 after round 3; 2 changes nothing in runs 1 or 2. `max_iterations` stays the ceiling. |
+| Memory | 36G per cell (run 2's real cells peaked at 22-26 GB of 30); 5 cells at once fit the 192 GB node |
+
 ## Architecture
 
 - **Plug-in seams, not a fork.** The outer and inner loop machinery (artifact

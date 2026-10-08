@@ -193,7 +193,7 @@ def test_the_array_runs_the_production_settings():
 
 def test_resources_are_the_measured_sizes_and_overridable():
     text = (SLURM / "submit.sh").read_text()
-    for knob in ('CPUS_PER_TASK="${CPUS_PER_TASK:-4}"', 'MEM="${MEM:-30G}"', 'TIME="${TIME:-24:00:00}"',
+    for knob in ('CPUS_PER_TASK="${CPUS_PER_TASK:-4}"', 'MEM="${MEM:-36G}"', 'TIME="${TIME:-24:00:00}"',
                  'SETUP_TIME="${SETUP_TIME:-01:00:00}"', 'PARTITION="${PARTITION:-mcfrank}"'):
         assert knob in text
     # --qos=long is not on the account (Sherlock run 1): never added.

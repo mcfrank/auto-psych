@@ -59,7 +59,7 @@ Run 1's environment fixes are now defaults, so most of its §2 exports are gone.
   | `VENV_MODE` | `wheels` | `wheels`, by hand |
   | `OPENCODE_BIN_DIR` | `$GROUP_HOME/software/npm-global/bin` when it has opencode | same, by hand |
   | partition | `mcfrank` | `PARTITION=mcfrank` |
-  | array size | 4 CPUs, 30G, 24:00:00 | `CPUS_PER_TASK=4 MEM=30G` |
+  | array size | 4 CPUs, 30G, 24:00:00 (36G after run 2) | `CPUS_PER_TASK=4 MEM=30G` |
 
   `--qos=long` is never added (not on this account); a limit over 48 h on
   `normal` stops `submit.sh` before anything is submitted.

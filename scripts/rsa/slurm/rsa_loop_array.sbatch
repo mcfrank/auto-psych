@@ -3,7 +3,7 @@
 #SBATCH --partition=mcfrank
 #SBATCH --array=0-6
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=30GB
+#SBATCH --mem=36GB
 #SBATCH --time=24:00:00
 #SBATCH --output=%x_%A_%a.out
 #SBATCH --error=%x_%A_%a.out
@@ -73,6 +73,8 @@ TASK="${SLURM_ARRAY_TASK_ID:?not an array task}"
 rsa_cell "$TASK"
 # Rounds per condition (_cells.sh); MAX_ITERATIONS, if exported, overrides every cell.
 MAX_ITERATIONS="${MAX_ITERATIONS:-$ROUNDS}"
+# End a cell early once this many rounds in a row leave its best model unchanged (0: never).
+STOP_AFTER_STALE_ROUNDS="${STOP_AFTER_STALE_ROUNDS:-2}"
 DATA_DIR="$(rsa_condition_data_dir "$DATA_ROOT" "$CONDITION")"
 CELL_DIR="$CELLS_ROOT/$CELL"
 mkdir -p "$CELL_DIR"
@@ -129,6 +131,7 @@ json.dump(dict(
     ground_truth="$GT" or None, excluded_seeds="$EXCLUDED_SEEDS".split(),
     loop_seed=$LOOP_SEED, data_dir="$DATA_DIR", code="$STAGED_CODE",
     max_iterations=$MAX_ITERATIONS, candidate_count=$CANDIDATE_COUNT,
+    stop_after_stale_rounds=$STOP_AFTER_STALE_ROUNDS,
     num_warmup=$NUM_WARMUP, num_samples=$NUM_SAMPLES, num_chains=$NUM_CHAINS,
     agent_model="$AGENT_MODEL", agent_timeout_sec=$AGENT_TIMEOUT_SEC,
 ), open(sys.argv[1], "w"), indent=1)
@@ -241,6 +244,7 @@ else
       --responses "$DATA_DIR/train.csv" \
       ${EXCLUDE_ARGS[@]+"${EXCLUDE_ARGS[@]}"} \
       --max-iterations "$MAX_ITERATIONS" --candidate-count "$CANDIDATE_COUNT" \
+      --stop-after-stale-rounds "$STOP_AFTER_STALE_ROUNDS" \
       --num-warmup "$NUM_WARMUP" --num-samples "$NUM_SAMPLES" --num-chains "$NUM_CHAINS" \
       --agent-root "$RUN_REPO" \
       --agent-model "$AGENT_MODEL" --agent-timeout-sec "$AGENT_TIMEOUT_SEC" \

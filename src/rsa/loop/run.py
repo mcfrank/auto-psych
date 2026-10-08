@@ -68,6 +68,8 @@ class Args:
     cv_folds: int = 5
     max_live_models: int = MAX_LIVE_MODELS
     """The live set's cap after the end-of-run prune (ranked by the selection criterion)."""
+    stop_after_stale_rounds: int = 2
+    """End early once this many rounds in a row leave the best model unchanged (0: never)."""
     fit_time_limit_sec: float = FIT_TIME_LIMIT_SEC
     coding_agent: Optional[Literal["claude", "opencode"]] = None
     """Agent backend; defaults to CODING_AGENT, then opencode (Gemini)."""
@@ -122,6 +124,7 @@ def main(args: Args) -> int:
         novelty_threshold=args.novelty_rmse_threshold, prune_dse_multiplier=args.prune_dse_multiplier,
         selection=args.selection, cv_folds=args.cv_folds, max_live_models=args.max_live_models,
         fit_time_limit_sec=args.fit_time_limit_sec, report_title=args.title, agent_network=args.agent_network,
+        stop_after_stale_rounds=args.stop_after_stale_rounds,
     )
     spawn = coding_agent_spawner(
         models_dir=results / "models", responses_path=results / "responses.csv",

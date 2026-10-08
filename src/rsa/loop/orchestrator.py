@@ -132,6 +132,12 @@ class LoopConfig:
     """Fits run at once (each its own process): a round's candidates, and the
     seeds, are fitted concurrently before their sequential admission. 0: as
     many as the CPUs this process may use (`default_fit_workers`)."""
+    stop_after_stale_rounds: int = 2
+    """End the run early once this many rounds in a row have left the best
+    model unchanged (`stale_rounds`); 0: always run ``max_iterations`` rounds.
+    PI decision 2026-10-08. Not 1: in Sherlock run 2 a round without a new
+    best model was often followed by the run's biggest gain (real_rep1: rsa_l2
+    stayed best after round 1; unchanged at round 6, +40 lpd held out at round 7)."""
 
 
 @dataclass
@@ -489,7 +495,7 @@ class RSALoop:
         return self.score(round_index, events)
 
     # ---------- end of the run ----------
-    def end(self) -> dict:
+    def end(self, stopped: Optional[str] = None) -> dict:
         standing = self.standing()
         trusted = [n for n, s in standing.items() if s["trusted"]]
         events = []
@@ -517,10 +523,15 @@ class RSALoop:
                            key=lambda n: (standing[n]["trusted"], standing[n]["sel_elpd"]))
             self._retire(order[0], "pruned", f"retired by the cap of {self.cfg.max_live_models} live models")
             events.append(dict(name=order[0], outcome="retired", reason="live-set cap"))
+        if stopped:
+            events.append(dict(name="loop", outcome="stopped", reason=stopped))
         entry = self.score(self.cfg.max_iterations, events)
         best = entry["best_model"]
         shutil.copyfile(self.models_dir / f"{best}.py", self.dir / "best_model.py")
-        (self.dir / "export.json").write_text(json.dumps(dict(best_model=best, live=sorted(self.live))))
+        export = dict(best_model=best, live=sorted(self.live))
+        if stopped:
+            export["stopped_early"] = stopped
+        (self.dir / "export.json").write_text(json.dumps(export))
         return entry
 
     def _retire(self, name: str, outcome: str, detail: str) -> None:
@@ -600,9 +611,26 @@ class RSALoop:
             self.setup()
             self.score(-1, [dict(outcome="seeded", name=n) for n in self.live])
             first = 0
+        patience = self.cfg.stop_after_stale_rounds
         for r in range(first, self.cfg.max_iterations):
             self.run_round(r)
+            if patience and r + 1 < self.cfg.max_iterations and stale_rounds(self.history) >= patience:
+                why = (f"stopped after round {r + 1} of {self.cfg.max_iterations}: {patience} rounds in a row "
+                       f"left the best model ({self.history[-1]['best_model']}) unchanged")
+                print(f"[rsa loop] {why}", flush=True)
+                return self.end(stopped=why)
         return self.end()
+
+
+def stale_rounds(history: List[dict]) -> int:
+    """How many of the latest rounds in a row left the best model unchanged
+    (each history step against the one before it; the seeds' step is never stale)."""
+    n = 0
+    for prev, cur in zip(history[-2::-1], history[::-1]):
+        if cur["round"] < 0 or cur["best_model"] != prev["best_model"]:
+            break
+        n += 1
+    return n
 
 
 def _write_atomic(path: Path, text: str) -> None:
