@@ -118,6 +118,32 @@ def write_shell_wrapper(directory: Path, python: str, bash: str) -> Path:
     return wrapper
 
 
+_PROBE = (
+    "import socket\n"
+    "for fam in (socket.AF_INET, socket.AF_INET6):\n"
+    "    try:\n"
+    "        socket.socket(fam, socket.SOCK_STREAM).close()\n"
+    "        print('OPEN', int(fam))\n"
+    "    except OSError:\n"
+    "        pass\n"
+    "print('PROBE-DONE')\n"
+)
+
+
+def verify_wrapper(wrapper: Path, python: str) -> None:
+    """Run the wrapper on this machine: its shell must work and refuse
+    internet sockets. Raises otherwise (e.g. a kernel without seccomp)."""
+    import subprocess
+
+    probe = Path(wrapper).with_name("probe.py")
+    probe.write_text(_PROBE, encoding="utf-8")
+    out = subprocess.run([str(wrapper), "-c", f'"{python}" -I "{probe}"'], capture_output=True, text=True, timeout=120)
+    if out.returncode != 0 or "PROBE-DONE" not in out.stdout:
+        raise RuntimeError(f"the agents' no-network shell {wrapper} does not run here: {out.stderr.strip()[-500:]}")
+    if "OPEN" in out.stdout:
+        raise RuntimeError(f"the agents' no-network shell {wrapper} left internet sockets open: {out.stdout.strip()}")
+
+
 def opencode_permission(existing: str | None) -> str:
     """``OPENCODE_PERMISSION`` with the web tools denied (merged over ``existing``)."""
     permission = json.loads(existing or "{}")

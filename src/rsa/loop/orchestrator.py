@@ -639,6 +639,7 @@ def coding_agent_spawner(*, models_dir: Path, responses_path: Path, timeout_sec:
         if bash is None:
             raise FileNotFoundError("no bash on PATH for the agents' shell wrapper")
         wrapper = no_network.write_shell_wrapper(Path(shell_dir), sys.executable, bash)
+        no_network.verify_wrapper(wrapper, sys.executable)  # before any agent runs
         env = dict(os.environ)
         env["SHELL"] = str(wrapper)
         env["OPENCODE_PERMISSION"] = no_network.opencode_permission(env.get("OPENCODE_PERMISSION"))

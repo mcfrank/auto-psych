@@ -66,3 +66,16 @@ def test_the_spawner_refuses_a_backend_it_cannot_cut_off(tmp_path):
                                  backend="opencode", model=None, agent_root=None, sandbox=True, network=False,
                                  shell_dir=tmp_path / "s")
     assert callable(spawn) and (tmp_path / "s" / "bash").exists()
+
+
+@linux_x86
+def test_the_wrapper_is_verified_before_use(tmp_path):
+    wrapper = no_network.write_shell_wrapper(tmp_path / "shell", sys.executable, shutil.which("bash"))
+    no_network.verify_wrapper(wrapper, sys.executable)
+    # A plain bash in its place (no filter) is caught.
+    leaky = tmp_path / "leaky" / "bash"
+    leaky.parent.mkdir()
+    leaky.write_text(f'#!/bin/sh\nexec "{shutil.which("bash")}" "$@"\n')
+    leaky.chmod(0o755)
+    with pytest.raises(RuntimeError, match="left internet sockets open"):
+        no_network.verify_wrapper(leaky, sys.executable)
