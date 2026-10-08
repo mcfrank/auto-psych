@@ -1,0 +1,1 @@
+Listeners compute pragmatic posterior beliefs about the speaker's intended referent, but rather than probability-matching to these beliefs, they apply a softmax decision rule when selecting an object. A decision sensitivity parameter governs the sharpness of this choice, interpolating between probability matching and probability maximizing.

@@ -1,0 +1,1 @@
+Speakers experience a communicative penalty when choosing an ambiguous word if a uniquely distinguishing word for their intended referent was available in the visual context. Pragmatic listeners invert this speaker, recognizing that a speaker who uses an ambiguous word either had no distinguishing alternative or faced production costs, driving pragmatic reference resolution.

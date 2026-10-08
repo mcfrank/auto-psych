@@ -1,0 +1,1 @@
+Listeners interpret referring expressions under graded semantic truth values rather than binary boolean truth. Words have high semantic compatibility with objects possessing the named feature, but retain a soft, non-zero baseline truth compatibility for objects lacking it, allowing speakers and listeners to reason over continuous degrees of semantic fit.

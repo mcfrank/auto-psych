@@ -1,0 +1,1 @@
+discriminative_singleton_shared_prior
