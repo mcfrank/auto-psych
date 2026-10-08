@@ -1,0 +1,35 @@
+[2026-10-04T14:56:00Z] Collect (live): waiting for Prolific study (poll every 30s)
+[2026-10-04T14:56:00Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=0 target=40
+[2026-10-04T14:56:31Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=0 target=40
+[2026-10-04T14:57:01Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=0 target=40
+[2026-10-04T14:57:31Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=0 target=40
+[2026-10-04T14:58:02Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=0 target=40
+[2026-10-04T14:58:32Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=0 target=40
+[2026-10-04T14:59:02Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=1 target=40
+[2026-10-04T14:59:32Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=3 target=40
+[2026-10-04T15:00:03Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=6 target=40
+[2026-10-04T15:00:33Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=14 target=40
+[2026-10-04T15:01:03Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=17 target=40
+[2026-10-04T15:01:33Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=22 target=40
+[2026-10-04T15:02:04Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=26 target=40
+[2026-10-04T15:02:34Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=29 target=40
+[2026-10-04T15:03:04Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=29 target=40
+[2026-10-04T15:03:34Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=30 target=40
+[2026-10-04T15:04:05Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=30 target=40
+[2026-10-04T15:04:35Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=33 target=40
+[2026-10-04T15:05:05Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=34 target=40
+[2026-10-04T15:05:35Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=36 target=40
+[2026-10-04T15:06:06Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=37 target=40
+[2026-10-04T15:06:36Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=37 target=40
+[2026-10-04T15:07:06Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=37 target=40
+[2026-10-04T15:07:36Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=37 target=40
+[2026-10-04T15:08:07Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=37 target=40
+[2026-10-04T15:08:37Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=38 target=40
+[2026-10-04T15:09:07Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=38 target=40
+[2026-10-04T15:09:37Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=38 target=40
+[2026-10-04T15:10:08Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=39 target=40
+[2026-10-04T15:10:38Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=39 target=40
+[2026-10-04T15:11:08Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=39 target=40
+[2026-10-04T15:11:38Z] Prolific poll: study_id='[REDACTED_PROLIFIC_ID]' completed=40 target=40
+[2026-10-04T15:11:38Z] Collect (live): fetching results from Firebase
+[2026-10-04T15:11:41Z] Collect (live): got 2560 rows from /results

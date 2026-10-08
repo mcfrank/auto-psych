@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Experiment</title>
+    <script src="https://unpkg.com/jspsych@7.3.4"></script>
+    <link
+      href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3"></script>
+    <style>
+      /* Readable prose block for instructions/debrief — constrained width, left
+       aligned, comfortable line height. Without this, text spans the full screen. */
+      .auto-psych-prose {
+        max-width: 620px;
+        margin: 0 auto;
+        text-align: left;
+        line-height: 1.6;
+        font-size: 18px;
+      }
+      .auto-psych-prose p {
+        margin: 0 0 1em;
+      }
+      .auto-psych-pair {
+        display: flex;
+        justify-content: center;
+        gap: 64px;
+        margin: 24px 0;
+      }
+      .auto-psych-seq {
+        font-family: monospace;
+        font-size: 28px;
+        letter-spacing: 4px;
+      }
+      .jspsych-btn {
+        padding: 12px 28px;
+        font-size: 18px;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body></body>
+  <script>
+    const STIMULI = [
+  {
+    "sequence_a": "HTTTTTTT",
+    "sequence_b": "THHHHHHH",
+    "eig": 0.002005,
+    "selection_rank": 1,
+    "joint_eig_bits": 0.068591,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHHHH",
+    "sequence_b": "TTTTTTTT",
+    "eig": 0.00135,
+    "selection_rank": 2,
+    "joint_eig_bits": 0.133145,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTTTTTT",
+    "sequence_b": "TTHHHHHH",
+    "eig": 0.001885,
+    "selection_rank": 3,
+    "joint_eig_bits": 0.193523,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTHHTHH",
+    "sequence_b": "TTTTHTHT",
+    "eig": 0.001333,
+    "selection_rank": 4,
+    "joint_eig_bits": 0.247198,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTTTTT",
+    "sequence_b": "THHHHHH",
+    "eig": 0.001809,
+    "selection_rank": 5,
+    "joint_eig_bits": 0.285507,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHHH",
+    "sequence_b": "TTTTTTT",
+    "eig": 0.001313,
+    "selection_rank": 6,
+    "joint_eig_bits": 0.334173,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHTHTTTT",
+    "sequence_b": "THHHTTHH",
+    "eig": 0.001569,
+    "selection_rank": 7,
+    "joint_eig_bits": 0.369665,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHH",
+    "sequence_b": "TTTTTT",
+    "eig": 0.001283,
+    "selection_rank": 8,
+    "joint_eig_bits": 0.406288,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTHTTTTH",
+    "sequence_b": "HTTHHTHH",
+    "eig": 0.001331,
+    "selection_rank": 9,
+    "joint_eig_bits": 0.436198,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "THHHTTHH",
+    "sequence_b": "TTTTHTHT",
+    "eig": 0.001136,
+    "selection_rank": 10,
+    "joint_eig_bits": 0.468996,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "THTTTTTT",
+    "sequence_b": "TTHHHHHT",
+    "eig": 0.00145,
+    "selection_rank": 11,
+    "joint_eig_bits": 0.502193,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTHHH",
+    "sequence_b": "THTTTTTT",
+    "eig": 0.00111,
+    "selection_rank": 12,
+    "joint_eig_bits": 0.531158,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHTHTTTT",
+    "sequence_b": "HTHHHTHH",
+    "eig": 0.001289,
+    "selection_rank": 13,
+    "joint_eig_bits": 0.559688,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "TTHTTTTT",
+    "sequence_b": "TTTTHHHH",
+    "eig": 0.00094,
+    "selection_rank": 14,
+    "joint_eig_bits": 0.583368,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTHHTHH",
+    "sequence_b": "TTHTHTTT",
+    "eig": 0.001178,
+    "selection_rank": 15,
+    "joint_eig_bits": 0.604188,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTHTHT",
+    "sequence_b": "HTTHHTHH",
+    "eig": 0.001001,
+    "selection_rank": 16,
+    "joint_eig_bits": 0.632835,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHTTTHTH",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.000699,
+    "selection_rank": 17,
+    "joint_eig_bits": 0.684243,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "TTTHTHTH",
+    "eig": 0.000827,
+    "selection_rank": 18,
+    "joint_eig_bits": 0.721708,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTHTTHT",
+    "sequence_b": "THHTTTHH",
+    "eig": 0.000549,
+    "selection_rank": 19,
+    "joint_eig_bits": 0.753756,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "TTTHTTTH",
+    "eig": 0.000415,
+    "selection_rank": 20,
+    "joint_eig_bits": 0.776977,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHTHHTHH",
+    "sequence_b": "HTHHTTTH",
+    "eig": 0.000613,
+    "selection_rank": 21,
+    "joint_eig_bits": 0.809564,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTHHTTH",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.000603,
+    "selection_rank": 22,
+    "joint_eig_bits": 0.837158,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTHHTHH",
+    "sequence_b": "TTTTTHTH",
+    "eig": 0.000876,
+    "selection_rank": 23,
+    "joint_eig_bits": 0.865605,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHTHTTTT",
+    "sequence_b": "HTTHHTTH",
+    "eig": 0.001049,
+    "selection_rank": 24,
+    "joint_eig_bits": 0.888548,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTHHH",
+    "sequence_b": "HTTTTTTT",
+    "eig": 0.000875,
+    "selection_rank": 25,
+    "joint_eig_bits": 0.9058,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "TTHHTHTH",
+    "eig": 0.000879,
+    "selection_rank": 26,
+    "joint_eig_bits": 0.932091,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTHHTTH",
+    "sequence_b": "TTTTHTHT",
+    "eig": 0.001078,
+    "selection_rank": 27,
+    "joint_eig_bits": 0.955957,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTHHHTT",
+    "sequence_b": "TTHTTHTT",
+    "eig": 0.000848,
+    "selection_rank": 28,
+    "joint_eig_bits": 0.982677,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTH",
+    "sequence_b": "TTH",
+    "eig": 0.000278,
+    "selection_rank": 29,
+    "joint_eig_bits": 1.008987,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTHTTHT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.000574,
+    "selection_rank": 30,
+    "joint_eig_bits": 1.034484,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTHHH",
+    "sequence_b": "HTHTTTTT",
+    "eig": 0.000416,
+    "selection_rank": 31,
+    "joint_eig_bits": 1.055497,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTHTTTTT",
+    "sequence_b": "THHHTTHH",
+    "eig": 0.001803,
+    "selection_rank": 32,
+    "joint_eig_bits": 1.071231,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HT",
+    "sequence_b": "TT",
+    "eig": 0.000148,
+    "selection_rank": 33,
+    "joint_eig_bits": 1.096328,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "TH",
+    "sequence_b": "TT",
+    "eig": 0.000148,
+    "selection_rank": 34,
+    "joint_eig_bits": 1.119878,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHHHT",
+    "sequence_b": "TTTTTTTT",
+    "eig": 0.00049,
+    "selection_rank": 35,
+    "joint_eig_bits": 1.148368,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTHHTTH",
+    "sequence_b": "TTTHHTHT",
+    "eig": 0.000882,
+    "selection_rank": 36,
+    "joint_eig_bits": 1.164783,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTTTTTH",
+    "sequence_b": "THHHHHHH",
+    "eig": 0.000341,
+    "selection_rank": 37,
+    "joint_eig_bits": 1.18705,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHTHTHTT",
+    "sequence_b": "HTTHHTTH",
+    "eig": 0.000699,
+    "selection_rank": 38,
+    "joint_eig_bits": 1.209917,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "HTHTTHHT",
+    "eig": 0.000927,
+    "selection_rank": 39,
+    "joint_eig_bits": 1.226244,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHTTHTHT",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.000578,
+    "selection_rank": 40,
+    "joint_eig_bits": 1.248326,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HH",
+    "sequence_b": "HT",
+    "eig": 0.000249,
+    "selection_rank": 41,
+    "joint_eig_bits": 1.270371,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHTHT",
+    "sequence_b": "HTTHHHTT",
+    "eig": 0.000775,
+    "selection_rank": 42,
+    "joint_eig_bits": 1.290008,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "THHTTHHT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.000481,
+    "selection_rank": 43,
+    "joint_eig_bits": 1.312741,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHHHH",
+    "sequence_b": "HTTTTTTT",
+    "eig": 0.000238,
+    "selection_rank": 44,
+    "joint_eig_bits": 1.332817,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "THHHHHHH",
+    "sequence_b": "TTTTTTTT",
+    "eig": 0.000449,
+    "selection_rank": 45,
+    "joint_eig_bits": 1.349551,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "TTHHHTHT",
+    "eig": 0.000745,
+    "selection_rank": 46,
+    "joint_eig_bits": 1.373683,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHTHT",
+    "sequence_b": "HTTHHTTH",
+    "eig": 0.000554,
+    "selection_rank": 47,
+    "joint_eig_bits": 1.399139,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTH",
+    "sequence_b": "THH",
+    "eig": 0.000409,
+    "selection_rank": 48,
+    "joint_eig_bits": 1.418972,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "THHTHHTH",
+    "eig": 0.000775,
+    "selection_rank": 49,
+    "joint_eig_bits": 1.436199,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "THHTTHTT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.000642,
+    "selection_rank": 50,
+    "joint_eig_bits": 1.455161,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTHHHH",
+    "sequence_b": "HTTTTTTT",
+    "eig": 0.00084,
+    "selection_rank": 51,
+    "joint_eig_bits": 1.47187,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTHHTHH",
+    "sequence_b": "TTTHHTHT",
+    "eig": 0.001023,
+    "selection_rank": 52,
+    "joint_eig_bits": 1.49568,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HH",
+    "sequence_b": "TH",
+    "eig": 0.000249,
+    "selection_rank": 53,
+    "joint_eig_bits": 1.508346,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHHTT",
+    "sequence_b": "TTTTTTTT",
+    "eig": 0.00037,
+    "selection_rank": 54,
+    "joint_eig_bits": 1.51595,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTTTTHH",
+    "sequence_b": "THHHHHHH",
+    "eig": 0.000218,
+    "selection_rank": 55,
+    "joint_eig_bits": 1.532183,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHTHT",
+    "sequence_b": "THTTHHTT",
+    "eig": 0.000486,
+    "selection_rank": 56,
+    "joint_eig_bits": 1.546618,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTH",
+    "sequence_b": "HTT",
+    "eig": 0.000351,
+    "selection_rank": 57,
+    "joint_eig_bits": 1.557657,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "HTTHHTHT",
+    "eig": 0.000927,
+    "selection_rank": 58,
+    "joint_eig_bits": 1.571877,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHTTHTHT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.000578,
+    "selection_rank": 59,
+    "joint_eig_bits": 1.581548,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHTHTHTT",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.00059,
+    "selection_rank": 60,
+    "joint_eig_bits": 1.593751,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHTHTHTT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.00059,
+    "selection_rank": 61,
+    "joint_eig_bits": 1.610401,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "THHHTTHT",
+    "eig": 0.000759,
+    "selection_rank": 62,
+    "joint_eig_bits": 1.624284,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "THHTTHTH",
+    "eig": 0.000927,
+    "selection_rank": 63,
+    "joint_eig_bits": 1.633202,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "THTHTHTH",
+    "sequence_b": "TTHHHTHT",
+    "eig": 0.000745,
+    "selection_rank": 64,
+    "joint_eig_bits": 1.652742,
+    "source": "eig"
+  }
+];
+
+    const jsPsych = initJsPsych({
+      on_finish: function () { window.__experimentData = jsPsych.data.get().values(); }
+    });
+
+    const timeline = [];
+
+    // 1. Instructions
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus:
+        '<div class="auto-psych-prose">' +
+          '<p>In this study, you will look at sequences of coin flips and judge how <strong>random</strong> they look.</p>' +
+          '<p>Imagine flipping a fair coin over and over. Each flip is equally likely to come up Heads (H) or Tails (T), and every flip is independent — the coin has no memory, so what came before does not change what comes next.</p>' +
+          '<p>On each trial you will see <strong>two</strong> sequences of coin flips, side by side. The two sequences will have the <strong>same length</strong>. Your task is to pick the <strong>one sequence that looks more random</strong> to you — the one that looks more like it was produced by genuinely random coin flipping.</p>' +
+          '<p>Different people have different impressions of what makes a sequence look random, and there are no right or wrong answers. We are interested in your own honest impression, so go with your gut. You will complete <strong>64 trials</strong>, which takes about 7 minutes. Your responses are anonymous.</p>' +
+        '</div>',
+      choices: ['Begin']
+    });
+
+    // 2. One trial per stimulus, side counterbalanced; data records PRESENTED order.
+    STIMULI.forEach(function (s) {
+      var swap = Math.random() < 0.5;
+      var left = swap ? s.sequence_b : s.sequence_a;
+      var right = swap ? s.sequence_a : s.sequence_b;
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus:
+          '<p>Which sequence looks more random?</p>' +
+          '<div class="auto-psych-pair">' +
+            '<div class="auto-psych-seq">' + left + '</div>' +
+            '<div class="auto-psych-seq">' + right + '</div>' +
+          '</div>',
+        choices: ['Left', 'Right'],
+        data: { sequence_a: left, sequence_b: right },
+        on_finish: function (data) { data.chose_left = data.response === 0 ? 1 : 0; }
+      });
+    });
+
+    // 3. Debrief
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: '<div class="auto-psych-prose"><p>Thank you for participating! Your responses help us understand how people perceive randomness in sequences of coin flips. When you click <strong>Finish</strong>, your responses will be submitted and you will be <strong>redirected back to Prolific</strong> to complete the study and receive your completion code.</p></div>',
+      choices: ['Finish']
+    });
+
+    jsPsych.run(timeline);
+  </script>
+</html>

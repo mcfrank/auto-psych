@@ -44,6 +44,7 @@ never with a plain relaunch.
 | `Could not pause Prolific study …` (or it `… is in state '…'`) | API error or unusual state | **pause it in the dashboard now**, then recover |
 | `live results fetch failed …` | wrong token or network | data are safe in Firestore; fix, recover with `RESUME_AGENTS=4_collect:5_model_loop` |
 | `Collected data failed the quality check: all N responses are identical …` | broken buttons or bots | inspect the page and the dashboard; nothing was modelled |
+| a carried model `dropped` or a proposal `rejected` with `non-finite ELPD-LOO (nan)` | before 2026-10-07: arviz's PSIS turned a trial whose log-likelihood is constant only to rounding (`p_left` = 0.5 ± an ulp on a mirror pair) into NaN; the model was fine | fixed in `loo_reliability.loo_diagnostics`; on current code a NaN means a real non-finite log-likelihood (a `p_left` of exactly 0 or 1 against an observed answer) |
 | proposal rejected with a reason (e.g. `too slow to fit … 30-minute limit`) | a failed admission check | expected, unless every proposal fails every round |
 | `filelock … Timeout … .lock` (PyTensor) | processes sharing a compile directory | each job and fit has its own; do not set `compiledir=` in `PYTENSOR_FLAGS` |
 | `"no_critique"` in `history.json` | the critic produced no usable statistic | the round still ran; see `iter_<i>/critique/` |

@@ -3,9 +3,8 @@
 Three independent runs (run1–run3) of the whole pipeline, three experiments
 each, 40 Prolific participants per experiment, Claude Opus 5.5 agents
 (`full_run_sr-oct26.yaml` at the repository root; runbook:
-`docs/onboarding/full_run_checklist.md`). **Status (2026-10-04): runs 1
-and 2 are complete; run 3 is running (its experiment 1's model loop) and is
-not in `collected/` yet.**
+`docs/onboarding/full_run_checklist.md`). **Status (2026-10-07): all three
+runs are complete and in `collected/`.**
 
 An experiment is final when its `model_loop/export_complete.json` exists;
 `collected/SUMMARY.md` lists each experiment's winning model and marks
@@ -109,7 +108,56 @@ The best model changed after every round of every experiment (5 times in
 each), every time to a model the loop discovered. Prolific again held back
 the fastest submissions for review (10, 8 and 7).
 
-## Run 3 (running)
+**Experiment 2 began with 2 of the 8 carried models.** The other 6,
+experiment 1's winner among them, were dropped at its start as "non-finite
+ELPD-LOO (nan)". That was a scoring bug, not the models: on mirror pairs (HH
+vs TT) a heads/tails-symmetric model's `p_left` is 0.5 give or take an ulp,
+and arviz's PSIS turned that rounding noise into a NaN ELPD. Only the two
+heads-biased models, which never predict 0.5, survived. Fixed on 2026-10-07
+(`src/models/loo_reliability.py`). Scored correctly on experiment 2's data,
+the starting set would have been led by experiment 1's winner:
+
+| carried model | ELPD-LOO | at the start of experiment 2 |
+|---|---|---|
+| `graded_periodicity_personal_ideal` | −2370.3 | dropped |
+| `person_sensitivity_length_scaled_ideal` | −2389.9 | dropped |
+| `heads_default_alternation_ideal` | −2390.1 | kept |
+| `personal_lapse_ideal_streak_excess` | −2418.1 | dropped |
+| `heads_favoring_lapse_ideal_streak` | −2418.5 | kept |
+| `personal_ideal_with_personal_lapse` | −2421.4 | dropped |
+| `length_scaled_alternation_ideal` | −2453.8 | dropped |
+| `periodic_penalized_alternation_ideal` | −2474.6 | dropped |
+
+The same bug, in run 1, rejected two experiment-1 proposals
+(`max_lopsided_stretch_ideal` −1050.6, and an attempt at
+`personal_lapse_ideal_alternation` −973.4 whose later attempt was admitted)
+and dropped `personal_lapse_ideal_alternation` at the start of experiment 2
+(−2605.3; its PSIS-LOO there is unreliable, so it would have been kept but
+not trusted). Run 3 was not affected.
+
+## Run 3 (complete)
+
+Hosting site `auto-psych-2c5da-0926-run3`; 121 people, none of them in run 1
+or run 2 or in another of run 3's experiments; Opus about $65, Prolific about
+$224. It ran start to finish on `4407234` in one job (57 hours, no recovery,
+peak memory 80 GB of 128).
+
+| experiment | trials pooled | best model at the end | ELPD-LOO | carried |
+|---|---|---|---|---|
+| 1 | 2,560 | `length_normalised_chance_vs_motif` | −995.1 | 8 |
+| 2 | 5,120 | `face_specific_streak_chance_coin` | −2103.0 | 8 |
+| 3 | 7,744 | `mild_symmetric_trick_coin_streak_weary` | −3558.5 | 8 |
+
+The best model changed 4, 5 and 5 times, every time to a model the loop
+discovered. No carried model was dropped at the start of an experiment.
+Experiment 3 has **41** people: one participant did all 64 trials but
+returned the study on Prolific (unpaid, not a completion), and collection
+keeps every row the page saved for the study. Their rows are in
+`experiment3/data/responses.csv` like everyone's; whether to exclude them is
+an open decision (below).
+
+The three runs chose a different winner in every experiment
+(`collected/SUMMARY.md`).
 
 Runs 2 and 3 were launched together on 2026-10-02 (`RUNS="2 3"`, on
 `4407234`), but they did not run side by side: at 128 GB Slurm gives each job
@@ -125,11 +173,13 @@ and the other run's so far), read from the account just before the study is
 created. Prolific applies that list when the study is published, so two
 studies published together cannot exclude each other's participants.
 
-Never include run 1 or run 2 in `RUNS`: relaunching an index deletes its
-results. After each experiment, sync the results here (checklist step 11,
-with `RUNS="run1 run2 run3"`).
+Never relaunch run 1, 2 or 3 with `start_full_run.sh`: relaunching an
+index deletes its results.
 
 Open decisions:
+- **Run 3's returned participant** (above): keep their experiment-3 rows or
+  exclude them from the analysis. Collection does not yet filter by Prolific
+  status.
 - **Generalization to new people.** The loop selects and prunes by ELPD-LOO
   that leaves out one *trial*, which rewards fitting known people. A
   new-subject ELPD (each participant scored under a fresh draw from the
