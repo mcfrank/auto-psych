@@ -1,0 +1,487 @@
+<title>Auto-RSA Existing-Data Phase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,500;1,400&display=swap">
+<style>
+/* Layout: one reading column (prose at ~68ch) with figures and tables let out to the full width;
+   the same tokens and faces as the sweep overviews, so the reports read as one set. */
+:root {
+  --page: #f5f6f4;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --pruned: #a9a89f;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --good: #0a7d0a; --warn: #c03030;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0f100f; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, 0.10); --pruned: #75746d;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --good: #3fbf3f; --warn: #e66767;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #0f100f; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, 0.10); --pruned: #75746d;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --good: #3fbf3f; --warn: #e66767;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 72px; display: grid; gap: 44px; }
+header { display: grid; gap: 12px; }
+.eyebrow { font-family: var(--font-data); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(30px, 4.4vw, 44px); line-height: 1.12; margin: 0; text-wrap: balance; max-width: 22ch; }
+h2 { font-family: var(--font-display); font-weight: 500; font-size: 26px; line-height: 1.2; margin: 0; text-wrap: balance; }
+h3 { font-size: 15px; font-weight: 600; margin: 0; }
+p, li { max-width: 68ch; }
+p { margin: 0; }
+.lede { font-size: 18px; line-height: 1.5; color: var(--ink-2); }
+section { display: grid; gap: 16px; min-width: 0; }
+.prose { display: grid; gap: 12px; }
+.prose ul, .prose ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+code, .mono { font-family: var(--font-data); font-size: .88em; }
+.sub { color: var(--muted); font-size: 13px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; min-width: 0; }
+.answers { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.answer { display: grid; gap: 6px; align-content: start; }
+.answer .q { font-size: 13px; color: var(--ink-2); }
+.answer .a { font-family: var(--font-display); font-size: 22px; line-height: 1.2; }
+.answer .a.yes { color: var(--good); }
+.answer .d { font-size: 13px; color: var(--ink-2); }
+.scroll-x { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { font-weight: 500; color: var(--ink-2); font-size: 12px; white-space: nowrap; }
+td.num, th.num { text-align: right; font-family: var(--font-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.name { font-family: var(--font-data); font-size: 12px; overflow-wrap: anywhere; }
+tr.sep td { border-top: 2px solid var(--axis); }
+.pill { display: inline-flex; align-items: center; font-family: var(--font-data); font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap; }
+.pill.ok { color: var(--good); border-color: currentColor; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: var(--ink-2); align-items: center; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+svg text { font-family: var(--font-data); }
+.chart > svg { width: 100%; height: auto; display: block; }
+.hit { cursor: default; outline: none; }
+.hit:focus-visible .ring { stroke: var(--ink); stroke-width: 2; }
+#tooltip { position: fixed; pointer-events: none; z-index: 20; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 6px 24px rgba(0,0,0,0.14); max-width: 340px; }
+#tooltip .title { font-family: var(--font-data); font-weight: 500; margin-bottom: 4px; overflow-wrap: anywhere; }
+#tooltip .row { display: flex; justify-content: space-between; gap: 14px; }
+#tooltip .row span { color: var(--ink-2); }
+#tooltip p { margin: 6px 0 0; color: var(--ink-2); }
+details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
+details[open] summary { margin-bottom: 8px; }
+.two { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.links { display: grid; gap: 6px; }
+a { color: var(--s1); }
+a:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">auto-rsa · existing data · Sherlock runs 1 and 2 · 7–8 October 2026</div>
+    <h1>What the inner loop found on existing reference-game data</h1>
+    <p class="lede">Before running new experiments, we asked whether coding agents that write memo models of
+      reference-game choices can find models that predict people better than the standard RSA models, on
+      conditions they never saw, and whether the same loop recovers a model we hid from it. Two overnight
+      sweeps on Sherlock answer both.</p>
+  </header>
+
+  <section aria-labelledby="h-answers">
+    <h2 id="h-answers" hidden>Answers</h2>
+    <div class="answers" id="answers"></div>
+  </section>
+
+  <section aria-labelledby="h-setup">
+    <h2 id="h-setup">The setup</h2>
+    <div class="prose">
+      <p><b>Data.</b> Forced-choice listener trials from five sources: the lab's pragmods experiments, Sikos et
+        al. (2021), and Mayn &amp; Demberg (2022, 2023, 2026). Within each paper, whole conditions are held out
+        (a condition, or one display of a multi-trial experiment). The loop trains on 39,955 trials; the test
+        set is 10,632 trials in 84 held-out conditions. Agents never see the test set, the split or its
+        provenance.</p>
+      <p><b>Starting models.</b> Five memo models: <code>literal_listener</code>, <code>rsa_l1</code>,
+        <code>rsa_l2</code>, <code>rsa_l1_salience</code> and <code>rsa_l1_shared_prior</code>. On held-out
+        conditions the best of them is <code>rsa_l2</code>, the reference for every comparison below.</p>
+      <p><b>The loop.</b> Each round, six Gemini 3.8 Flash agents (opencode, sandboxed) each write one
+        candidate model: a memo listener plus numpyro priors, checked with the same gates the harness uses.
+        Three slots explore under rotating "lenses", two refine the current best model, one refines a model the
+        agent picks. A candidate is admitted if it fits, converges and predicts differently from every admitted
+        model. At the end of the run, models clearly behind the best (more than 2 clustered SE) are pruned,
+        the live set is capped, and the best model is exported.</p>
+      <p><b>Scoring claim 1.</b> The exported model's held-out log predictive density minus
+        <code>rsa_l2</code>'s, with the SE of the difference clustered by held-out condition.</p>
+      <p><b>Recovery.</b> Choices are simulated for every training and test trial from a starting model fitted
+        to the real training data (<code>literal_listener</code> or <code>rsa_l1_salience</code>). That model,
+        and for salience its near-twin <code>rsa_l1_shared_prior</code>, are withheld from the starting set.
+        The loop recovers it if its exported model predicts within 0.01 RMSE of the ground truth's choice
+        probabilities on a pool of displays.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-runs">
+    <h2 id="h-runs">Two runs</h2>
+    <div class="prose">
+      <p>Run 1 was the pilot. Two things in it changed the design before run 2: trial-level PSIS-LOO pruned
+        the models that generalised best (in real_rep1 the exported model ranked 26th of 40 on held-out
+        conditions), and an agent read the lab's pragmods RSA code from GitHub. Both changes, and the rest of
+        run 2's settings, were fixed before run 2 started.</p>
+    </div>
+    <div class="card scroll-x"><table id="runs-table"></table></div>
+  </section>
+
+  <section aria-labelledby="h-claim1">
+    <h2 id="h-claim1">Claim 1: better than the starting models on held-out conditions</h2>
+    <div class="prose">
+      <p>In run 2 all three real-data replicates exported a model that beats <code>rsa_l2</code> on the
+        held-out conditions, each by about 2 to 2.4 clustered SE. Run 1's two replicates split: one gained
+        +83, the other exported a model that generalised worse than the seed.</p>
+    </div>
+    <div class="card chart"><div class="legend" id="claim1-legend"></div><svg id="claim1" role="img" aria-label="Held-out gain of each real cell's exported model over rsa_l2"></svg></div>
+    <div class="prose">
+      <p><b>What the exported models share.</b> All three combine pragmatic reasoning (depth 2 to 5) with a
+        prior over referents that favours objects that stand out in the display: a singleton feature, an
+        isolated or surprising one, a colour that pops. Each replicate reached it by refining one lineage of
+        mechanisms rather than jumping between families.</p>
+      <p><b>Where the gains are.</b> Almost all of it is pragmods and Sikos 2021. On the three Mayn &amp;
+        Demberg datasets no exported model moves held-out lpd by more than 2.2 from <code>rsa_l2</code>. Most of the
+        spread between replicates is one pragmods experiment, E6 (favorite vs least favorite: 2 held-out
+        conditions, 276 trials). Without it the three exported models gain <span id="no-e6"></span>.</p>
+    </div>
+    <div class="card scroll-x"><table id="source-table"></table></div>
+  </section>
+
+  <section aria-labelledby="h-rounds">
+    <h2 id="h-rounds">Progress over rounds</h2>
+    <div class="prose">
+      <p>The best model after each round of run 2's real cells, scored on the held-out conditions. The real
+        cells kept improving to round 7, and the largest single gains came late (real_rep1 at round 7,
+        real_rep2 at round 5). No cell improved at round 8.</p>
+    </div>
+    <div class="card chart"><div class="legend" id="rounds-legend"></div><svg id="rounds" role="img" aria-label="Held-out gain of the best model after each round, run 2 real cells"></svg>
+      <details><summary>Show as a table</summary><div class="scroll-x"><table id="rounds-table"></table></div></details>
+    </div>
+    <div class="prose">
+      <p><b>Stopping rule (decided).</b> From now on a loop ends early once two rounds in a row leave its best
+        model unchanged. A one-round rule would have hurt: it stops real_rep1 after round 1, when
+        <code>rsa_l2</code> was still the best model, and real_rep2 at +26.7 instead of +56.2. The two-round
+        rule changes nothing in either run; it ends runs that have plateaued. The round limit stays as a
+        ceiling.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-select">
+    <h2 id="h-select">What selection rewards</h2>
+    <div class="prose">
+      <p>Run 2 selected, pruned and exported on grouped cross-validation over training conditions, the same
+        unit the test holds out. The exported models ranked 2nd, 8th and 11th of about 58 on held-out
+        conditions (run 1: 26th and 4th of 40), and the live sets kept 12 models instead of collapsing to 4
+        and 1.</p>
+      <p>Grouped CV and the held-out test still weigh different conditions. In all three replicates CV's lead
+        over <code>rsa_l2</code> is about +350 to +420 nats on Sikos 2021. It comes from about ten Sikos
+        training conditions where every starting model predicts at chance and a singleton prior fixes them.
+        The held-out Sikos conditions are mostly other display types (+15 to +22). This is not overfitting,
+        since CV also holds out whole conditions; the random split put those display types in training. The
+        pruned models that did best on held-out conditions in real_rep3 (+50) won on E6, which CV barely
+        sees.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-rec">
+    <h2 id="h-rec">Recovery</h2>
+    <div class="prose">
+      <p>All eight recovery cells recovered their ground truth, four in each run. Run 2 did it without any
+        internet access. The best starting model left in each set is about 0.048 RMSE from the ground truth,
+        five times the threshold, so no starting model would pass.</p>
+    </div>
+    <div class="card chart"><div class="legend" id="rec-legend"></div><svg id="rec" role="img" aria-label="Distance of the exported model, the closest live model and the best starting model to the ground truth, per recovery cell"></svg></div>
+    <div class="card scroll-x"><table id="rec-table"></table></div>
+    <div class="prose">
+      <ul>
+        <li><b>Run 2 came closer.</b> Exported models are 0.0012 to 0.0053 from the ground truth (run 1:
+          0.0044 to 0.0093). In both salience cells the exported model is also the live model closest to the
+          ground truth, which never happened in run 1.</li>
+        <li><b>The salience ground truth was found close to its own form.</b> <code>rsa_l1_salience</code> is
+          a depth-1 RSA listener whose prior over objects is a softmax of how many features each has and how
+          often it was seen during familiarisation. Both run-2 salience cells exported a depth-1 listener with
+          those two terms in its prior (one adds a cost for ambiguous words).</li>
+        <li><b>The literal ground truth was found as behavioural equivalents.</b> The literal listener picks
+          uniformly among the objects that fit the word. The loop exported a literal/pragmatic mixture and a
+          non-recursive distinctiveness heuristic, both of which predict like it within half a percentage point
+          per choice; 9 or 10 of each literal cell's 12 live models pass. The data cannot tell these apart,
+          and the held-out test agrees (exported minus ground truth within its SE in every cell).</li>
+        <li><b>Recovery is fast.</b> In run 2 the literal cells reach the ground truth's held-out level after
+          round 1 and the salience cells after round 3 or 4; later rounds change held-out lpd by a few tenths of a nat.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-ops">
+    <h2 id="h-ops">Cost and operations</h2>
+    <div class="prose">
+      <p>Run 2 cost $<span id="cost2"></span> over <span id="runs2"></span> agent runs (run 1: $<span id="cost1"></span>, <span id="runs1"></span>). Each cell had 4 CPUs
+        on the lab's Sherlock node; the 8-round real cells took 9 to 12 hours and peaked at 22 to 26 GB of
+        their 30.</p>
+      <ul>
+        <li>Three recovery cells crashed just after midnight: concurrent fit processes collided on arviz's
+          once-a-day cache file. They resumed the same morning from their last scored step (about $10–15 of
+          agent work lost per cell). Fixed since: each fit process has its own cache.</li>
+        <li>The first submission went to run 1's sweep folder (three scripts still defaulted to it) and was
+          cancelled before it started. Fixed since: the default lives in one place.</li>
+        <li>No agent called a web tool in run 2. The activity report now lists web tool calls separately
+          from URLs that only appear in log text.</li>
+        <li>Memory for the next runs is raised to 36 GB per cell (five cells at once on the node).</li>
+      </ul>
+    </div>
+    <details class="card"><summary>Per-cell cost, time and memory</summary><div class="scroll-x"><table id="ops-table"></table></div></details>
+  </section>
+
+  <section aria-labelledby="h-next">
+    <h2 id="h-next">Going into the live experiments</h2>
+    <div class="two">
+      <div class="card prose">
+        <h3>Decided</h3>
+        <ul>
+          <li>Selection on grouped CV over training conditions; no source-specific rule.</li>
+          <li>No internet for agents.</li>
+          <li>Stop after two rounds without a new best model; 36 GB per cell.</li>
+          <li>Claim 1 is reported on the split fixed before the runs, per source and per experiment.</li>
+        </ul>
+      </div>
+      <div class="card prose">
+        <h3>Open</h3>
+        <ul>
+          <li><b>Seeds for the live runs (claim 2).</b> Proposed: the 36 models live at the end of run 2's
+            real cells, refitted on all existing data, duplicates removed, grouped by mechanism, the best of
+            each group by grouped CV, plus <code>rsa_l2</code> as the reference. A CV-only cap would keep
+            almost only the singleton family, because CV is mostly Sikos.</li>
+          <li><b>Round ceiling.</b> With the stopping rule in place, real cells could get 10–12 rounds; run 2's
+            real cells were still finding gains at round 7.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="prose">
+      <p><b>Limitations to state.</b> The held-out gains rest mostly on two sources and, between replicates,
+        on one pragmods experiment; the SEs are clustered over 84 conditions; the Sikos display types are
+        unevenly split; and the exported models are specialists (no model is best on every source).</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-links">
+    <h2 id="h-links">Detail pages</h2>
+    <div class="links" id="links"></div>
+  </section>
+</div>
+<div id="tooltip" hidden></div>
+<script id="data" type="application/json">{"claim1": [{"run": "run 1", "cell": "real_rep1", "exported": "surprisal_multimodal_l2_listener_2", "diff": -7.501553227159093, "se": 71.25731445636606, "rank": 26, "n": 40, "best_seed": "rsa_l2", "by_source": {"mayn_demberg_2022": -0.5184732963880947, "mayn_demberg_2023": -1.3093009447106851, "mayn_demberg_2026": -1.2974469688288082, "pragmods": -16.946673288067814, "sikos_2021": 12.570341270836707}, "hypothesis": "RSA depth-2 pragmatic listener with graded semantics, multimodal salience, utterance costs, and surprisal-based distinctiveness."}, {"run": "run 1", "cell": "real_rep2", "exported": "preemption_softmax_listener", "diff": 83.18526233249531, "se": 27.38788291242735, "rank": 4, "n": 40, "best_seed": "rsa_l2", "by_source": {"mayn_demberg_2022": 11.889111993061533, "mayn_demberg_2023": 15.870392968094848, "mayn_demberg_2026": 6.707713708447898, "pragmods": 40.51715782520205, "sikos_2021": 8.200885837688816}, "hypothesis": "Preemption softmax listener: boundedly rational choice over preemption beliefs."}, {"run": "run 2", "cell": "real_rep1", "exported": "rsa_l2_singleton_feat_color_valence_l0", "diff": 84.31177712687668, "se": 35.730629268458486, "rank": 2, "n": 58, "best_seed": "rsa_l2", "by_source": {"mayn_demberg_2022": -0.24317745545585012, "mayn_demberg_2023": 2.1920036869310024, "mayn_demberg_2026": -0.28194599223013483, "pragmods": 66.44757550955478, "sikos_2021": 16.197321378077163}, "hypothesis": "RSA pragmatic listener at depth 2 with singleton salience, contextual distinctiveness, visual feature complexity, evaluative valence framing, visual color contrast, and literal L0."}, {"run": "run 2", "cell": "real_rep2", "exported": "surprisal_isolated_graded_costly_l5", "diff": 56.24427829353954, "se": 24.121674786278245, "rank": 8, "n": 57, "best_seed": "rsa_l2", "by_source": {"mayn_demberg_2022": -0.46969769618164037, "mayn_demberg_2023": 0.6570983395599796, "mayn_demberg_2026": -0.3314215928573958, "pragmods": 34.70355879128192, "sikos_2021": 21.68474045173639}, "hypothesis": "Pragmatic listener at depth 5 with perceptual isolation, feature surprisal prior, graded semantics, and utterance extension costs."}, {"run": "run 2", "cell": "real_rep3", "exported": "crowd_discrim_confusion_chromatic_l2", "diff": 26.43003215635872, "se": 13.077444488532368, "rank": 11, "n": 58, "best_seed": "rsa_l2", "by_source": {"mayn_demberg_2022": -0.407093266429456, "mayn_demberg_2023": 1.9078572670125595, "mayn_demberg_2026": -0.3261657535812219, "pragmods": 9.878017087877197, "sikos_2021": 15.37741682147987}, "hypothesis": "RSA pragmatic listener at depth 2 with attentional crowding, singleton isolation, chromatic prominence, discriminative alternative cost, and competitor confusion aversion."}], "per_source": [{"cell": "real_rep1", "cv": {"mayn_demberg_2022": 21.116223574016658, "mayn_demberg_2023": -19.328374885025823, "mayn_demberg_2026": -13.899181627662983, "pragmods": 54.02647489208448, "sikos_2021": 405.5869661980132}, "test": {"mayn_demberg_2022": -0.24317745545579328, "mayn_demberg_2023": 2.192003686930775, "mayn_demberg_2026": -0.281945992230078, "pragmods": 66.44757550955501, "sikos_2021": 16.197321378077163}, "e6": 42.949844442701135}, {"cell": "real_rep2", "cv": {"mayn_demberg_2022": 24.935656773263872, "mayn_demberg_2023": -26.50205362037741, "mayn_demberg_2026": -32.93882921223576, "pragmods": -10.001173500524601, "sikos_2021": 351.3151411571939}, "test": {"mayn_demberg_2022": -0.4696976961816972, "mayn_demberg_2023": 0.6570983395599796, "mayn_demberg_2026": -0.3314215928573958, "pragmods": 34.703558791281466, "sikos_2021": 21.684740451736502}, "e6": 8.270410324708877}, {"cell": "real_rep3", "cv": {"mayn_demberg_2022": 21.72140789791092, "mayn_demberg_2023": -18.92583695723124, "mayn_demberg_2026": -20.370505249197777, "pragmods": 24.93000059737824, "sikos_2021": 422.089617343383}, "test": {"mayn_demberg_2022": -0.4070932664295128, "mayn_demberg_2023": 1.9078572670125595, "mayn_demberg_2026": -0.3261657535811082, "pragmods": 9.878017087877424, "sikos_2021": 15.377416821479983}, "e6": -8.111485144652335}], "recovery": [{"run": "run 1", "cell": "recovery_literal_rep1", "ground_truth": "literal_listener", "exported": "softmax_belief_salience_listener", "exported_rmse": 0.00553044777381916, "closest": "limited_attention_listener", "closest_rmse": 0.00421733594581469, "best_seed": null, "best_seed_rmse": 0.048, "n_live": 8, "n_within": 8, "gap": -0.9944861353324086, "gap_se": 0.9252103236295223, "recovered": true, "heldout": 22.83497902615227, "hypothesis": "", "rounds": [0.0, 21.48880265244952, 23.45399438020104, 22.83497902615227, 22.83497902615227, 22.83497902615227]}, {"run": "run 1", "cell": "recovery_literal_rep2", "ground_truth": "literal_listener", "exported": "valence_pragmatic_mixture_listener", "exported_rmse": 0.009335685727977265, "closest": "bounded_capacity_uniform_prior", "closest_rmse": 5.653463449736637e-05, "best_seed": null, "best_seed_rmse": 0.048, "n_live": 8, "n_within": 5, "gap": -2.211858514926007, "gap_se": 2.0364502828464484, "recovered": true, "heldout": 21.604340384610623, "hypothesis": "Discrete mixture of literal and pragmatic listener types with valence modulation.", "rounds": [0.0, 18.63384230941392, 23.348994235949704, 23.227209074472285, 19.148628532080238, 21.604340384610623]}, {"run": "run 1", "cell": "recovery_salience_rep1", "ground_truth": "rsa_l1_salience", "exported": "base_literal_focal_lapse_listener", "exported_rmse": 0.007329864880189306, "closest": "baserate_salience_listener", "closest_rmse": 0.0008035098933999718, "best_seed": null, "best_seed_rmse": 0.049, "n_live": 8, "n_within": 8, "gap": -1.5148387628369164, "gap_se": 1.2676638632757713, "recovered": true, "heldout": 12.031781813383532, "hypothesis": "RSA pragmatic listener with base-rate-informed literal listener, focal attention, and prior-anchored lapse.", "rounds": [0.0, 4.290969502479584, 13.520738681027979, 13.377605686181596, 12.223830296428787, 12.031781813383532]}, {"run": "run 1", "cell": "recovery_salience_rep2", "ground_truth": "rsa_l1_salience", "exported": "distractor_bayesian_salience_listener", "exported_rmse": 0.004418212915767168, "closest": "bayesian_salience_base_rate_listener", "closest_rmse": 0.00102595893842724, "best_seed": null, "best_seed_rmse": 0.049, "n_live": 8, "n_within": 8, "gap": -0.10507175559814641, "gap_se": 0.5077606958369156, "recovered": true, "heldout": 13.362768878188035, "hypothesis": "Pragmatic listener combining Bayesian salience and base rates with distractor suppression.", "rounds": [0.0, 8.14906778408158, 13.039355583859106, 13.391354636433789, 13.362768878188035, 13.362768878188035]}, {"run": "run 2", "cell": "recovery_literal_rep1", "ground_truth": "literal_listener", "exported": "parsimonious_literal_mixture", "exported_rmse": 0.005260951915063906, "closest": "graded_specificity_listener", "closest_rmse": 0.0024115749494172775, "best_seed": "rsa_l1_salience", "best_seed_rmse": 0.048486453830686026, "n_live": 12, "n_within": 9, "gap": -0.3059915409135101, "gap_se": 0.6108900786073959, "recovered": true, "heldout": 23.523473620571167, "hypothesis": "Parsimonious literal mixture: population mixture of literal and parsimonious listeners.", "rounds": [0.0, 23.326253667391484, 23.631835368514203, 23.258001705773495, 23.523473620571167]}, {"run": "run 2", "cell": "recovery_literal_rep2", "ground_truth": "literal_listener", "exported": "distinctiveness_neutral_prior", "exported_rmse": 0.0032251964510931715, "closest": "distinctiveness_heuristic_listener", "closest_rmse": 0.0026682073884638623, "best_seed": "rsa_l1_shared_prior", "best_seed_rmse": 0.048034639891362134, "n_live": 12, "n_within": 10, "gap": -0.26186458939946533, "gap_se": 0.5470478421556138, "recovered": true, "heldout": 23.554334310137165, "hypothesis": "Distinctiveness heuristic listener with neutral prior: contextual distinctiveness heuristic without prior bias.", "rounds": [0.0, 23.652129744734793, 23.26921131358631, 23.30552036168183, 23.554334310137165]}, {"run": "run 2", "cell": "recovery_salience_rep1", "ground_truth": "rsa_l1_salience", "exported": "conservative_base_rate_simplicity", "exported_rmse": 0.001239949269573229, "closest": "conservative_base_rate_simplicity", "closest_rmse": 0.001239949269573229, "best_seed": "rsa_l2", "best_seed_rmse": 0.049290008866545804, "n_live": 6, "n_within": 2, "gap": -0.029597315579849237, "gap_se": 0.0932641283840134, "recovered": true, "heldout": 13.517023260640599, "hypothesis": "Pragmatic listener combining referent simplicity with conservative familiarization base-rate weighting.", "rounds": [0.0, 4.290969502479584, 11.209070040945335, 11.209070040945335, 13.517023260640599]}, {"run": "run 2", "cell": "recovery_salience_rep2", "ground_truth": "rsa_l1_salience", "exported": "salience_base_rate_ambiguity_l1", "exported_rmse": 0.0029911676391370847, "closest": "salience_base_rate_ambiguity_l1", "closest_rmse": 0.0029911676391370847, "best_seed": "rsa_l2", "best_seed_rmse": 0.04900440110134513, "n_live": 5, "n_within": 4, "gap": -0.04927305846467789, "gap_se": 0.05257031673946511, "recovered": true, "heldout": 13.418567575321504, "hypothesis": "RSA pragmatic listener at depth 1 with inductive base-rate prior, feature complexity, and speaker ambiguity cost.", "rounds": [0.0, 7.820661746618498, 7.651876538655415, 13.115931544089563, 13.418567575321504]}], "ops": [{"run": "run 1", "cell": "real_rep1", "cost": 47.82323685, "agent_runs": 35, "wall": "4:54", "max_rss_gb": 18.2, "counts": {"admitted": 30, "rejected": 4, "pruned": 31}, "n_live": 4}, {"run": "run 1", "cell": "real_rep2", "cost": 39.972607725, "agent_runs": 35, "wall": "4:31", "max_rss_gb": 15.9, "counts": {"admitted": 30, "rejected": 4, "pruned": 34}, "n_live": 1}, {"run": "run 1", "cell": "recovery_literal_rep1", "cost": 71.4280608, "agent_runs": 43, "wall": "6:44", "max_rss_gb": 14.9, "counts": {"admitted": 25, "rejected": 13, "pruned": 21}, "n_live": 8}, {"run": "run 1", "cell": "recovery_literal_rep2", "cost": 58.9505616, "agent_runs": 36, "wall": "6:08", "max_rss_gb": 14.4, "counts": {"admitted": 29, "rejected": 6, "pruned": 25}, "n_live": 8}, {"run": "run 1", "cell": "recovery_salience_rep1", "cost": 41.880468225, "agent_runs": 32, "wall": "4:07", "max_rss_gb": 14.6, "counts": {"admitted": 30, "rejected": 2, "pruned": 25}, "n_live": 8}, {"run": "run 1", "cell": "recovery_salience_rep2", "cost": 53.114307975, "agent_runs": 39, "wall": "5:29", "max_rss_gb": 18.2, "counts": {"admitted": 30, "rejected": 7, "pruned": 25}, "n_live": 8}, {"run": "run 2", "cell": "real_rep1", "cost": 89.176016925, "agent_runs": 59, "wall": "10:17", "max_rss_gb": 22.2, "counts": {"admitted": 48, "rejected": 10, "pruned": 41}, "n_live": 12}, {"run": "run 2", "cell": "real_rep2", "cost": 93.68762385, "agent_runs": 62, "wall": "12:09", "max_rss_gb": 26.3, "counts": {"admitted": 47, "rejected": 11, "pruned": 40}, "n_live": 12}, {"run": "run 2", "cell": "real_rep3", "cost": 72.95412285, "agent_runs": 54, "wall": "8:48", "max_rss_gb": 22.3, "counts": {"admitted": 48, "rejected": 6, "pruned": 41}, "n_live": 12}, {"run": "run 2", "cell": "recovery_literal_rep1", "cost": 66.19352175, "agent_runs": 40, "wall": "2:02 + 5:30 (resumed)", "max_rss_gb": 14.0, "counts": {"admitted": 20, "rejected": 11, "pruned": 12}, "n_live": 12}, {"run": "run 2", "cell": "recovery_literal_rep2", "cost": 53.961924375, "agent_runs": 36, "wall": "1:27 + 5:08 (resumed)", "max_rss_gb": 15.4, "counts": {"admitted": 21, "rejected": 6, "pruned": 13}, "n_live": 12}, {"run": "run 2", "cell": "recovery_salience_rep1", "cost": 41.927550075, "agent_runs": 36, "wall": "1:50 + 3:18 (resumed)", "max_rss_gb": 12.8, "counts": {"admitted": 23, "rejected": 4, "pruned": 20}, "n_live": 6}, {"run": "run 2", "cell": "recovery_salience_rep2", "cost": 34.005553875000004, "agent_runs": 30, "wall": "4:26", "max_rss_gb": 16.1, "counts": {"admitted": 22, "rejected": 8, "pruned": 20}, "n_live": 5}], "rounds": [{"cell": "real_rep1", "replicate": 1, "n_rounds": 8, "steps": [{"round": -1, "best": "rsa_l2", "selection": 0.0, "heldout": 0.0}, {"round": 0, "best": "rsa_l2", "selection": 0.0, "heldout": 0.0}, {"round": 1, "best": "rsa_l2_singleton_prior", "selection": 389.12043792853365, "heldout": 21.26326903344352}, {"round": 2, "best": "rsa_l2_singleton_distinctiveness", "selection": 417.04154757427386, "heldout": 28.608917292250226}, {"round": 3, "best": "rsa_l2_singleton_distinct_literal_l0", "selection": 419.5149320089913, "heldout": 26.399622034778986}, {"round": 4, "best": "rsa_l2_singleton_distinct_features_l0", "selection": 426.2762872373969, "heldout": 39.06462989421834}, {"round": 5, "best": "rsa_l2_singleton_distinct_feat_color_l0", "selection": 429.94800988873976, "heldout": 44.688733768389284}, {"round": 6, "best": "rsa_l2_singleton_distinct_feat_color_l0", "selection": 429.94800988873976, "heldout": 44.688733768389284}, {"round": 7, "best": "rsa_l2_singleton_feat_color_valence_l0", "selection": 447.5021081514242, "heldout": 84.31177712687668}]}, {"cell": "real_rep2", "replicate": 2, "n_rounds": 8, "steps": [{"round": -1, "best": "rsa_l2", "selection": 0.0, "heldout": 0.0}, {"round": 0, "best": "distinctive_object_l2", "selection": 94.28474781004479, "heldout": 18.677177732032305}, {"round": 1, "best": "distinctive_graded_l2", "selection": 122.4806034432404, "heldout": 16.62610069535458}, {"round": 2, "best": "isolated_graded_l2", "selection": 217.87498803723065, "heldout": 28.268104929746187}, {"round": 3, "best": "isolated_graded_costly_l2", "selection": 222.19170177918568, "heldout": 26.673064608310597}, {"round": 4, "best": "isolated_graded_costly_l2", "selection": 222.19170177918568, "heldout": 26.673064608310597}, {"round": 5, "best": "isolated_graded_costly_l2_2", "selection": 252.39631397245103, "heldout": 59.10973189647302}, {"round": 6, "best": "surprisal_isolated_graded_costly_l4", "selection": 299.570992197383, "heldout": 58.20171362056044}, {"round": 7, "best": "surprisal_isolated_graded_costly_l5", "selection": 306.8087415973205, "heldout": 56.24427829353954}]}, {"cell": "real_rep3", "replicate": 3, "n_rounds": 8, "steps": [{"round": -1, "best": "rsa_l2", "selection": 0.0, "heldout": 0.0}, {"round": 0, "best": "singleton_isolation_listener", "selection": 361.8002112704671, "heldout": 18.128744827391984}, {"round": 1, "best": "singleton_isolation_l2", "selection": 390.57264435859906, "heldout": 21.16889707672226}, {"round": 2, "best": "singleton_isolation_l2", "selection": 390.57264435859906, "heldout": 21.16889707672226}, {"round": 3, "best": "attentional_crowding_singleton_l2", "selection": 394.128809881051, "heldout": 22.713379290130888}, {"round": 4, "best": "crowding_singleton_chromatic_l2", "selection": 394.88434047982446, "heldout": 27.349619495539628}, {"round": 5, "best": "crowding_singleton_chromatic_l2", "selection": 394.88434047982446, "heldout": 27.349619495539628}, {"round": 6, "best": "crowding_singleton_confusion_l2", "selection": 419.7051994606809, "heldout": 20.285597515186964}, {"round": 7, "best": "crowd_discrim_confusion_chromatic_l2", "selection": 429.44468363224587, "heldout": 26.43003215635872}]}]}</script>
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById("data").textContent);
+  const NS = "http://www.w3.org/2000/svg";
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, attrs = {}, parent) => { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); if (parent) parent.appendChild(n); return n; };
+  const h = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const fmt = (v, d = 1) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
+  const tip = $("tooltip");
+  const showTip = (e, html) => {
+    tip.innerHTML = html; tip.hidden = false;
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = Math.min(window.innerWidth - tip.offsetWidth - 8, r.left + r.width / 2 + 12);
+    const y = r.top - tip.offsetHeight - 8 > 0 ? r.top - tip.offsetHeight - 8 : r.bottom + 8;
+    tip.style.left = Math.max(8, x) + "px"; tip.style.top = y + "px";
+  };
+  const hideTip = () => { tip.hidden = true; };
+  const hover = (g, html) => { g.addEventListener("mouseenter", (e) => showTip(e, html)); g.addEventListener("focus", (e) => showTip(e, html)); g.addEventListener("mouseleave", hideTip); g.addEventListener("blur", hideTip); };
+  const row = (cells, cls = []) => { const tr = h("tr"); cells.forEach((c, i) => { const td = h("td", cls[i] || ""); td.innerHTML = c; tr.appendChild(td); }); return tr; };
+  const head = (t, cols, cls = []) => { const tr = h("tr"); cols.forEach((c, i) => tr.appendChild(h("th", cls[i] || "", c))); t.appendChild(tr); };
+  const SRC = { pragmods: "pragmods", sikos_2021: "Sikos 2021", mayn_demberg_2022: "M&D 2022", mayn_demberg_2023: "M&D 2023", mayn_demberg_2026: "M&D 2026" };
+
+  const c1 = D.claim1, r2 = c1.filter((r) => r.run === "run 2"), rec = D.recovery;
+  const sum = (a) => a.reduce((x, y) => x + y, 0);
+
+  // answers
+  const ans = [
+    ["Claim 1 (run 2): exported model beats the best starting model on held-out conditions?", `Yes, ${r2.length} of ${r2.length}`, "yes",
+      r2.map((r) => `${fmt(r.diff)} (SE ${r.se.toFixed(1)})`).join(", ") + " lpd vs rsa_l2"],
+    ["Recovery: exported model within 0.01 RMSE of the hidden ground truth?", `Yes, ${rec.filter((r) => r.recovered).length} of ${rec.length}`, "yes",
+      "both runs; run 2 without internet access. Best starting model ≈ 0.048."],
+    ["Did selection export models that generalise?", "Better than run 1", "",
+      `held-out ranks ${r2.map((r) => r.rank).join(", ")} of ~58 (run 1: ${c1.filter((r) => r.run === "run 1").map((r) => r.rank).join(", ")} of 40)`],
+    ["Did the loop keep improving?", "Up to round 7", "", "every real cell refined one lineage; none improved at round 8"],
+  ];
+  for (const [q, a, cls, d] of ans) {
+    const c = h("div", "card answer"); c.appendChild(h("div", "q", q)); c.appendChild(h("div", "a " + cls, a)); c.appendChild(h("div", "d", d)); $("answers").appendChild(c);
+  }
+
+  // runs table
+  (function () {
+    const t = $("runs-table");
+    head(t, ["", "Run 1 (pilot)", "Run 2"]);
+    const cost = (run) => sum(D.ops.filter((o) => o.run === run).map((o) => o.cost));
+    const ar = (run) => sum(D.ops.filter((o) => o.run === run).map((o) => o.agent_runs));
+    for (const r of [
+      ["Real-data cells", "2 replicates × 5 rounds", "3 replicates × 8 rounds"],
+      ["Recovery cells", "literal and salience × 2, 5 rounds", "literal and salience × 2, 4 rounds"],
+      ["Selection, pruning, export", "trial-level PSIS-LOO", "grouped 5-fold CV over training conditions"],
+      ["Live-set cap", "8", "12"],
+      ["Agents' internet", "allowed", "none (shell filter, web tools denied)"],
+      ["Recovery verdict", "RMSE ≤ 0.01, with a held-out clause", "RMSE ≤ 0.01 only; held-out reported"],
+      ["Agent runs, cost", `${ar("run 1")}, $${cost("run 1").toFixed(0)}`, `${ar("run 2")}, $${cost("run 2").toFixed(0)}`],
+    ]) t.appendChild(row(r.map(esc), ["", "", ""]));
+  })();
+
+  // claim 1 forest
+  (function () {
+    const svg = $("claim1"), rows = c1, W = 900, rowH = 46, L = 200, R = 120, T = 14, B = 34, H = T + rowH * rows.length + B;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const lo = Math.min(0, ...rows.map((r) => r.diff - 2 * r.se)), hi = Math.max(...rows.map((r) => r.diff + 2 * r.se));
+    const X = (v) => L + (v - lo) / (hi - lo) * (W - L - R);
+    $("claim1-legend").innerHTML = `<span><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="var(--s1)"></circle></svg>run 2</span><span><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="var(--pruned)"></circle></svg>run 1 (pilot)</span><span>whiskers: ±2 SE, clustered by held-out condition</span>`;
+    for (let v = Math.ceil(lo / 50) * 50; v <= hi; v += 50) {
+      el("line", { x1: X(v), x2: X(v), y1: T, y2: H - B, stroke: v === 0 ? "var(--axis)" : "var(--grid)", "stroke-width": v === 0 ? 1.5 : 1 }, svg);
+      el("text", { x: X(v), y: H - B + 16, "text-anchor": "middle", "font-size": 11, fill: "var(--muted)" }, svg).textContent = v === 0 ? "0 = rsa_l2" : fmt(v, 0);
+    }
+    el("text", { x: W - R, y: H - 4, "text-anchor": "end", "font-size": 11, fill: "var(--ink-2)" }, svg).textContent = "held-out lpd vs rsa_l2 →";
+    rows.forEach((r, i) => {
+      const y = T + rowH * i + rowH / 2, color = r.run === "run 2" ? "var(--s1)" : "var(--pruned)";
+      el("text", { x: 0, y: y - 2, "font-size": 12, fill: "var(--ink)" }, svg).textContent = `${r.run} · ${r.cell}`;
+      el("text", { x: 0, y: y + 13, "font-size": 10, fill: "var(--muted)" }, svg).textContent = `rank ${r.rank}/${r.n}`;
+      el("line", { x1: X(r.diff - 2 * r.se), x2: X(r.diff + 2 * r.se), y1: y, y2: y, stroke: color, "stroke-width": 2, "stroke-linecap": "round" }, svg);
+      const g = el("g", { class: "hit", tabindex: 0, "aria-label": `${r.run} ${r.cell}: ${fmt(r.diff)} lpd, SE ${r.se.toFixed(1)}` }, svg);
+      el("circle", { cx: X(r.diff), cy: y, r: 14, fill: "transparent" }, g);
+      el("circle", { class: "ring", cx: X(r.diff), cy: y, r: 6, fill: color, stroke: "var(--surface)", "stroke-width": 2 }, g);
+      el("text", { x: X(r.diff + 2 * r.se) + 8, y: y + 4, "font-size": 12, fill: "var(--ink-2)" }, svg).textContent = `${fmt(r.diff)} ± ${r.se.toFixed(1)}`;
+      hover(g, `<div class="title">${esc(r.exported)}</div><div class="row"><span>${esc(r.run)} · ${esc(r.cell)}</span><b>${fmt(r.diff)} ± ${r.se.toFixed(1)}</b></div><div class="row"><span>held-out rank</span><b>${r.rank}/${r.n}</b></div>${r.hypothesis ? `<p>${esc(r.hypothesis)}</p>` : ""}`);
+    });
+  })();
+
+  // per source (run 2): grouped CV and held out, exported minus rsa_l2
+  (function () {
+    const t = $("source-table"), P = D.per_source;
+    head(t, ["exported − rsa_l2", ...P.map((p) => p.cell)], ["", ...P.map(() => "num")]);
+    const sub = h("tr"); sub.appendChild(h("td", "sub", "")); P.forEach(() => sub.appendChild(h("td", "num sub", "CV / held-out"))); t.appendChild(sub);
+    for (const s of Object.keys(SRC)) {
+      t.appendChild(row([SRC[s], ...P.map((p) => `${fmt(p.cv[s], 0)} / ${fmt(p.test[s])}`)], ["", ...P.map(() => "num")]));
+    }
+    const tot = (p, k) => sum(Object.values(p[k]));
+    const tr = row(["all sources", ...P.map((p) => `${fmt(tot(p, "cv"), 0)} / ${fmt(tot(p, "test"))}`)], ["", ...P.map(() => "num")]); tr.className = "sep"; t.appendChild(tr);
+    t.appendChild(row(["of which pragmods E6 (held out)", ...P.map((p) => `${fmt(p.e6)}`)], ["", ...P.map(() => "num")]));
+    t.appendChild(row(["held out without E6", ...P.map((p) => `${fmt(tot(p, "test") - p.e6)}`)], ["", ...P.map(() => "num")]));
+    $("no-e6").textContent = P.map((p) => fmt(tot(p, "test") - p.e6)).join(", ");
+  })();
+
+  // progress over rounds
+  (function () {
+    const svg = $("rounds"), cells = D.rounds, COL = ["var(--s1)", "var(--s2)", "var(--s3)"];
+    const W = 900, H = 320, M = { l: 50, r: 90, t: 14, b: 36 };
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const n = Math.max(...cells.map((c) => c.steps.length));
+    const all = cells.flatMap((c) => c.steps.map((s) => s.heldout).filter((v) => v !== null));
+    const lo = Math.min(0, ...all) - 4, hi = Math.max(...all) + 6;
+    const X = (i) => M.l + i / (n - 1) * (W - M.l - M.r), Y = (v) => H - M.b - (v - lo) / (hi - lo) * (H - M.t - M.b);
+    $("rounds-legend").innerHTML = cells.map((c, k) => `<span><svg width="22" height="10" aria-hidden="true"><line x1="0" y1="5" x2="22" y2="5" stroke="${COL[k]}" stroke-width="2"></line></svg>${esc(c.cell)}</span>`).join("");
+    for (let v = 0; v <= hi; v += 20) {
+      el("line", { x1: M.l, x2: W - M.r, y1: Y(v), y2: Y(v), stroke: v === 0 ? "var(--axis)" : "var(--grid)", "stroke-width": 1 }, svg);
+      el("text", { x: M.l - 8, y: Y(v) + 4, "text-anchor": "end", "font-size": 11, fill: "var(--muted)" }, svg).textContent = v === 0 ? "0" : fmt(v, 0);
+    }
+    for (let i = 0; i < n; i++) el("text", { x: X(i), y: H - M.b + 18, "text-anchor": "middle", "font-size": 11, fill: "var(--muted)" }, svg).textContent = i === 0 ? "seeds" : String(i);
+    el("text", { x: W - M.r, y: H - 2, "text-anchor": "end", "font-size": 11, fill: "var(--ink-2)" }, svg).textContent = "round →";
+    el("text", { x: M.l, y: M.t + 2, "font-size": 11, fill: "var(--ink-2)" }, svg).textContent = "held-out lpd vs rsa_l2";
+    const ends = [];
+    cells.forEach((c, k) => {
+      const pts = c.steps.map((s, i) => ({ ...s, i })).filter((s) => s.heldout !== null);
+      el("path", { d: pts.map((p, j) => `${j ? "L" : "M"}${X(p.i)},${Y(p.heldout)}`).join(""), fill: "none", stroke: COL[k], "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+      for (const p of pts) {
+        const g = el("g", { class: "hit", tabindex: 0, "aria-label": `${c.cell}, ${p.i ? "round " + p.i : "seeds"}: ${fmt(p.heldout)}` }, svg);
+        el("circle", { cx: X(p.i), cy: Y(p.heldout), r: 11, fill: "transparent" }, g);
+        el("circle", { class: "ring", cx: X(p.i), cy: Y(p.heldout), r: 4.5, fill: COL[k], stroke: "var(--surface)", "stroke-width": 2 }, g);
+        hover(g, `<div class="title">${esc(c.cell)} · ${p.i ? "after round " + p.i : "starting models"}</div><div class="row"><span>best model</span><b>${esc(p.best)}</b></div><div class="row"><span>held-out vs rsa_l2</span><b>${fmt(p.heldout)}</b></div><div class="row"><span>ELPD-CV vs best seed</span><b>${fmt(p.selection, 0)}</b></div>`);
+      }
+      const last = pts[pts.length - 1];
+      ends.push({ y: Y(last.heldout) + 4, x: X(last.i) + 10, text: c.cell });
+    });
+    ends.sort((a, b) => a.y - b.y).forEach((e, j, arr) => { if (j && e.y - arr[j - 1].y < 14) e.y = arr[j - 1].y + 14; el("text", { x: e.x, y: e.y, "font-size": 11, fill: "var(--ink-2)" }, svg).textContent = e.text; });
+    const t = $("rounds-table");
+    head(t, ["round", ...cells.map((c) => c.cell)], ["", ...cells.map(() => "num")]);
+    for (let i = 0; i < n; i++) t.appendChild(row([i ? String(i) : "seeds", ...cells.map((c) => { const s = c.steps[i]; return s ? `${s.heldout === null ? "–" : fmt(s.heldout)} <span class="sub">${esc(s.best)}</span>` : ""; })], ["", ...cells.map(() => "num")]));
+  })();
+
+  // recovery chart (log scale) and table
+  (function () {
+    const svg = $("rec"), R = rec, W = 900, rowH = 38, L = 230, Rm = 40, T = 10, B = 40, H = T + rowH * R.length + B;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const lo = Math.log10(0.00006), hi = Math.log10(0.1);
+    const X = (v) => L + (Math.log10(v) - lo) / (hi - lo) * (W - L - Rm);
+    $("rec-legend").innerHTML = `<span><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="var(--s1)"></circle></svg>exported model</span><span><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="var(--surface)" stroke="var(--s1)" stroke-width="2"></circle></svg>closest live model</span><span><svg width="14" height="14" aria-hidden="true"><rect x="2" y="2" width="10" height="10" fill="var(--s2)"></rect></svg>best starting model</span><span><svg width="22" height="10" aria-hidden="true"><line x1="0" y1="5" x2="22" y2="5" stroke="var(--ink-2)" stroke-dasharray="4 3"></line></svg>verdict threshold 0.01</span>`;
+    for (const v of [0.0001, 0.001, 0.01, 0.1]) {
+      el("line", { x1: X(v), x2: X(v), y1: T, y2: H - B, stroke: v === 0.01 ? "var(--ink-2)" : "var(--grid)", "stroke-dasharray": v === 0.01 ? "4 3" : "", "stroke-width": 1 }, svg);
+      el("text", { x: X(v), y: H - B + 16, "text-anchor": "middle", "font-size": 11, fill: "var(--muted)" }, svg).textContent = String(v);
+    }
+    el("text", { x: W - Rm, y: H - 4, "text-anchor": "end", "font-size": 11, fill: "var(--ink-2)" }, svg).textContent = "RMSE to the ground truth (log) →";
+    R.forEach((r, i) => {
+      const y = T + rowH * i + rowH / 2;
+      if (i && R[i - 1].run !== r.run) el("line", { x1: 0, x2: W, y1: y - rowH / 2, y2: y - rowH / 2, stroke: "var(--axis)" }, svg);
+      el("text", { x: 0, y: y - 1, "font-size": 12, fill: "var(--ink)" }, svg).textContent = `${r.run} · ${r.cell.replace("recovery_", "")}`;
+      el("text", { x: 0, y: y + 13, "font-size": 10, fill: "var(--muted)" }, svg).textContent = `ground truth ${r.ground_truth}`;
+      el("line", { x1: X(Math.min(r.exported_rmse, r.closest_rmse)), x2: X(r.best_seed_rmse), y1: y, y2: y, stroke: "var(--grid)", "stroke-width": 2 }, svg);
+      const marks = [
+        [r.best_seed_rmse, "seed", `best starting model ${r.best_seed || ""}`],
+        [r.closest_rmse, "closest", `closest live: ${r.closest}`],
+        [r.exported_rmse, "exported", `exported: ${r.exported}`],
+      ];
+      for (const [v, kind, label] of marks) {
+        const g = el("g", { class: "hit", tabindex: 0, "aria-label": `${r.cell} ${label}: ${v.toFixed(4)}` }, svg);
+        el("circle", { cx: X(v), cy: y, r: 12, fill: "transparent" }, g);
+        if (kind === "seed") el("rect", { class: "ring", x: X(v) - 5, y: y - 5, width: 10, height: 10, fill: "var(--s2)", stroke: "var(--surface)", "stroke-width": 1.5 }, g);
+        else el("circle", { class: "ring", cx: X(v), cy: y, r: kind === "exported" ? 6 : 4.5, fill: kind === "exported" ? "var(--s1)" : "var(--surface)", stroke: kind === "exported" ? "var(--surface)" : "var(--s1)", "stroke-width": 2 }, g);
+        hover(g, `<div class="title">${esc(label)}</div><div class="row"><span>RMSE to ${esc(r.ground_truth)}</span><b>${v.toFixed(4)}</b></div>${kind === "exported" && r.hypothesis ? `<p>${esc(r.hypothesis)}</p>` : ""}`);
+      }
+    });
+    const t = $("rec-table");
+    head(t, ["cell", "ground truth", "exported model", "RMSE", "closest live (RMSE)", "live within 0.01", "best seed RMSE", "held-out vs truth", "verdict"],
+      ["", "", "", "num", "", "num", "num", "num", ""]);
+    R.forEach((r, i) => {
+      const tr = row([`${r.run} · ${esc(r.cell.replace("recovery_", ""))}`, esc(r.ground_truth), esc(r.exported), r.exported_rmse.toFixed(4),
+        `${esc(r.closest)} (${r.closest_rmse.toFixed(4)})`, `${r.n_within} of ${r.n_live}`, r.best_seed_rmse.toFixed(3), `${fmt(r.gap, 2)} ± ${r.gap_se.toFixed(2)}`,
+        `<span class="pill ${r.recovered ? "ok" : ""}">${r.recovered ? "recovered" : "not recovered"}</span>`],
+        ["", "name", "name", "num", "name", "num", "num", "num", ""]);
+      if (i && R[i - 1].run !== r.run) tr.className = "sep";
+      t.appendChild(tr);
+    });
+  })();
+
+  // ops
+  (function () {
+    const cost = (run) => sum(D.ops.filter((o) => o.run === run).map((o) => o.cost));
+    const ar = (run) => sum(D.ops.filter((o) => o.run === run).map((o) => o.agent_runs));
+    $("cost2").textContent = cost("run 2").toFixed(0); $("runs2").textContent = ar("run 2");
+    $("cost1").textContent = cost("run 1").toFixed(0); $("runs1").textContent = ar("run 1") + " agent runs";
+    const t = $("ops-table");
+    head(t, ["cell", "agent runs", "cost", "wall time", "peak memory", "admitted / rejected / pruned", "live at end"], ["", "num", "num", "num", "num", "num", "num"]);
+    D.ops.forEach((o, i) => {
+      const tr = row([`${o.run} · ${esc(o.cell)}`, o.agent_runs, "$" + o.cost.toFixed(2), esc(o.wall || "–"), o.max_rss_gb ? o.max_rss_gb + " GB" : "–",
+        `${o.counts.admitted} / ${o.counts.rejected} / ${o.counts.pruned}`, o.n_live], ["", "num", "num", "num", "num", "num", "num"]);
+      if (i && D.ops[i - 1].run !== o.run) tr.className = "sep";
+      t.appendChild(tr);
+    });
+  })();
+
+  // links
+  const links = [
+    ["run2/overview.html", "Run 2 overview: every cell, selection against generalisation, by source, progress by round"],
+    ...D.rounds.concat(rec.filter((r) => r.run === "run 2")).map((c) => [`run2/heldout/${c.cell}.html`, `${c.cell}: people against the models on each held-out condition`]),
+    ["https://claude.ai/artifact/2xr49oRd9Vc9A1cRKmicZx", "Run 1 overview (pilot)"],
+  ];
+  for (const [href, label] of links) { const a = h("a", "", label); a.href = href; $("links").appendChild(a); }
+})();
+</script>

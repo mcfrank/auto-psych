@@ -45,7 +45,7 @@
  "decisions": [
   "Claim 2 seeds: which run-2 models start the live experiments? Proposed rule (general, no source labels): every model live at the end of the three real cells (36), refitted on all existing data (train + test), duplicates removed by the novelty gate, grouped into mechanisms by prediction distance on the design pool, and the best by grouped CV kept from each group, plus rsa_l2 as the reference seed.",
   "Claim 1 reporting: keep the pre-registered split and report per source and per experiment, including the E6 sensitivity (+34 to +48 without it). Do not re-split to balance Sikos display types after seeing the results; note the imbalance as a limitation.",
-  "Next RSA inner-loop run (if any): memory needs 36-40 GB per real cell at 8 rounds (5 cells at once on the 192 GB node), and the stop rule could be 'no CV gain for one round' (no cell improved at round 8)."
+  "Decided (PI, 2026-10-08): a loop stops once 2 rounds in a row leave its best model unchanged (a 1-round rule would have stopped real_rep1 after round 1 and real_rep2 at +26.7 instead of +56.2; 2 changes nothing in runs 1-2), and cells get 36 GB. Open: whether real cells get a 10-12 round ceiling under the rule."
  ],
  "links": [],
  "ops_notes": [
