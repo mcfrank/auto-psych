@@ -78,9 +78,9 @@ sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%j.out" scripts/rsa/slu
 ```
 
 - **What it does:**
-  - `src.rsa.outer.chains`: `rsa_l2` goes to every chain, and the other 10 promoted seeds are dealt into 3 chains (4/3/3), choosing the split whose closest pair of models within a chain is farthest apart on the design pool (plain displays). The three plain-display twins must land in different chains;
+  - `src.rsa.outer.chains`: `rsa_l2` and `rsa_l1` (added to the promoted set 2026-10-09; its fit on all data is the only new one, about a minute) go to every chain, and the other 10 promoted seeds are dealt into 3 chains (4/3/3), choosing the split whose closest pair of models within a chain is farthest apart on the design pool (plain displays). The three plain-display twins must land in different chains;
   - then each chain's experiment-1 design at 20 and 40 displays for 200 people, with power at 100 and 200 people.
-- **Reuses:** step 2's fits (`promote_work/.fit_cache`); nothing is refitted.
+- **Reuses:** step 2's fits (`promote_work/.fit_cache`); only `rsa_l1` is fitted.
 - **Writes** `$WORK_ROOT/chains/` (scratch). Copy it to `data/rsa/live_seeds/chains/` (`chains.json`, `chain_<k>/*.py`, `chain_<k>/models_manifest.yaml`, `chain_<k>/design_t10/`) and commit.
 - **Report:**
   - each chain's models, with `min_within_rmse`;

@@ -1,5 +1,5 @@
 {
- "rule": "1. **Candidates**: every model admitted in the sweep's real-data cells, live\n   at the end or pruned (the starting models are not candidates). Identical\n   sources count once. The pruned models are included on purpose: the models\n   that did best on held-out conditions in real_rep3 exist only in the\n   pruned set, and the live sets alone would carry each cell's path\n   dependence (one lineage per replicate) into the live phase.\n2. **Refit** each on all existing data, training and held-out trials\n   together (claim 1 is scored; the test split goes back in), with the\n   loop's fit rule (`loop_fit`) and settings.\n3. **Group by behaviour**: average-linkage clustering of the candidates'\n   posterior-mean choice probabilities on the novelty pool (RMSE distance,\n   the novelty gate's), cut into ``k`` groups.\n4. **Keep one per group**: the member with the best grouped CV (5 folds of\n   whole conditions over all data, as the loop selects); a member whose fit\n   or CV failed to converge only when no member converged.\n5. Add ``rsa_l2``, the starting model every claim is measured against.\n\nIt reads predictions and fit only: never hypotheses or source labels. The\nreason is experimental design: the EIG design can only aim at disagreements\nbetween the models it is given, and near-duplicates give it nothing.",
+ "rule": "1. **Candidates**: every model admitted in the sweep's real-data cells, live\n   at the end or pruned (the starting models are not candidates). Identical\n   sources count once. The pruned models are included on purpose: the models\n   that did best on held-out conditions in real_rep3 exist only in the\n   pruned set, and the live sets alone would carry each cell's path\n   dependence (one lineage per replicate) into the live phase.\n2. **Refit** each on all existing data, training and held-out trials\n   together (claim 1 is scored; the test split goes back in), with the\n   loop's fit rule (`loop_fit`) and settings.\n3. **Group by behaviour**: average-linkage clustering of the candidates'\n   posterior-mean choice probabilities on the novelty pool (RMSE distance,\n   the novelty gate's), cut into ``k`` groups.\n4. **Keep one per group**: the member with the best grouped CV (5 folds of\n   whole conditions over all data, as the loop selects); a member whose fit\n   or CV failed to converge only when no member converged.\n5. Add ``rsa_l2``, the best starting model, and ``rsa_l1``, standard RSA,\n   only marginally behind it (PI 2026-10-09).\n\nIt reads predictions and fit only: never hypotheses or source labels. The\nreason is experimental design: the EIG design can only aim at disagreements\nbetween the models it is given, and near-duplicates give it nothing.",
  "sweep": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2",
  "cells": [
   "real_rep1",
@@ -2509,6 +2509,8 @@
   "competitor_confusion_speaker",
   "softmax_surprisal_isolated_costly_l4",
   "oddity_heuristic_listener",
-  "rsa_l2"
- ]
+  "rsa_l2",
+  "rsa_l1"
+ ],
+ "amended": "2026-10-09: rsa_l1 added as a second reference (PI decision; step 5 of the rule). No other step changed, so the rest of the job was not rerun."
 }

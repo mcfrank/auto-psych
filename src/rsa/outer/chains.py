@@ -3,8 +3,8 @@
     uv run python -m src.rsa.outer.chains --promoted data/rsa/live_seeds/models \
         --data <all existing trials> --cache <fit cache> --out data/rsa/live_seeds/chains
 
-The rule, fixed before any live data: every chain gets the reference model
-(``rsa_l2``, the baseline every claim is measured against); the other promoted
+The rule, fixed before any live data: every chain gets the reference models
+(``rsa_l2`` and ``rsa_l1``, promote's ``REFERENCES``); the other promoted
 seeds are dealt into ``n_chains`` chains of sizes differing by at most one,
 choosing, among all such splits, the one whose closest pair of models within a
 chain is farthest apart (RMSE of posterior-mean choice-class probabilities on
@@ -26,7 +26,7 @@ import json
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Sequence
+from typing import Dict, List, Sequence, Tuple
 
 import numpy as np
 import tyro
@@ -34,8 +34,7 @@ import yaml
 
 from src.rsa.fit import FitSettings
 from src.rsa.outer.ground_truth import pool_predictions
-
-REFERENCE = "rsa_l2"
+from src.rsa.promote import REFERENCES
 
 
 @dataclass
@@ -45,7 +44,7 @@ class Args:
     cache: Path
     out: Path
     n_chains: int = 3
-    reference: str = REFERENCE
+    references: Tuple[str, ...] = REFERENCES
     num_warmup: int = 1000
     num_samples: int = 1000
     num_chains: int = 4
@@ -61,13 +60,14 @@ def _score(groups: Sequence[Sequence[str]], dist: Dict[str, Dict[str, float]]):
     return (min(pairs), float(np.mean(pairs))) if pairs else (np.inf, 0.0)
 
 
-def split(preds: Dict[str, np.ndarray], n_chains: int, reference: str = REFERENCE) -> List[List[str]]:
-    """The chains, each a sorted list of model names with ``reference`` last."""
-    if reference not in preds:
-        raise ValueError(f"the reference model {reference!r} has no predictions")
-    names = sorted(n for n in preds if n != reference)
+def split(preds: Dict[str, np.ndarray], n_chains: int, references: Sequence[str] = REFERENCES) -> List[List[str]]:
+    """The chains, each a sorted list of model names followed by ``references``."""
+    missing = [r for r in references if r not in preds]
+    if missing:
+        raise ValueError(f"the reference models {missing} have no predictions")
+    names = sorted(n for n in preds if n not in references)
     if len(names) < n_chains:
-        raise ValueError(f"{len(names)} models besides {reference} cannot fill {n_chains} chains")
+        raise ValueError(f"{len(names)} models besides {list(references)} cannot fill {n_chains} chains")
     dist = {a: {b: _rmse(preds[a], preds[b]) for b in names} for a in names}
     lo, extra = divmod(len(names), n_chains)
     sizes = sorted([lo + 1] * extra + [lo] * (n_chains - extra))
@@ -92,7 +92,7 @@ def split(preds: Dict[str, np.ndarray], n_chains: int, reference: str = REFERENC
                 groups[k].pop()
 
     deal(0, [[] for _ in range(n_chains)])
-    return [list(g) + [reference] for g in best[1]]
+    return [list(g) + list(references) for g in best[1]]
 
 
 def write_chains(promoted: Path, chains: List[List[str]], out: Path) -> List[Path]:
@@ -115,16 +115,16 @@ def main(args: Args) -> dict:
     settings = FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains,
                            seed=args.fit_seed)
     preds = pool_predictions(args.promoted, args.data, args.cache, settings)
-    chains = split(preds, args.n_chains, args.reference)
+    chains = split(preds, args.n_chains, args.references)
     write_chains(args.promoted, chains, args.out)
-    others = sorted(n for n in preds if n != args.reference)
+    others = sorted(n for n in preds if n not in args.references)
     dist = {a: {b: _rmse(preds[a], preds[b]) for b in others} for a in others}
-    within = [[dist[a][b] for a, b in itertools.combinations(c[:-1], 2)] for c in chains]
+    within = [[dist[a][b] for a, b in itertools.combinations(c[:-len(args.references)], 2)] for c in chains]
     record = dict(
         rule=__doc__.split("The rule, fixed before any live data: ", 1)[1].split("\n\nWrites", 1)[0],
-        reference=args.reference, n_chains=args.n_chains,
+        references=list(args.references), n_chains=args.n_chains,
         distance="RMSE of posterior-mean choice-class probabilities over the design pool",
-        chains=[dict(chain=k, models=c, min_within_rmse=min(w) if w else None,
+        chains=[dict(chain=k, models=c, dealt=c[:-len(args.references)], min_within_rmse=min(w) if w else None,
                      mean_within_rmse=float(np.mean(w)) if w else None) for k, c, w in zip(range(len(chains)), chains, within)],
         min_rmse_all_pairs=min(dist[a][b] for a, b in itertools.combinations(others, 2)),
         design_pool_rmse=dist,

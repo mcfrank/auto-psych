@@ -75,7 +75,7 @@ def test_one_model_per_group_by_grouped_cv_plus_the_reference(sweep, tmp_path):
         assert cv[g["chosen"]] == max(cv[m] for m in g["members"])
     manifest = yaml.safe_load((out / "models" / "models_manifest.yaml").read_text())["models"]
     names = [m["name"] for m in manifest]
-    assert len(names) == 3 and names[-1] == "rsa_l2" and record["promoted"] == names
+    assert len(names) == 4 and names[-2:] == ["rsa_l2", "rsa_l1"] and record["promoted"] == names
     assert all((out / "models" / f"{n}.py").exists() for n in names)
     # The combined data holds every training and held-out trial.
     assert record["data_sha256"].keys() == {"train.csv", "test.csv"}

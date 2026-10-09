@@ -20,7 +20,8 @@ The rule, fixed before any live data:
 4. **Keep one per group**: the member with the best grouped CV (5 folds of
    whole conditions over all data, as the loop selects); a member whose fit
    or CV failed to converge only when no member converged.
-5. Add ``rsa_l2``, the starting model every claim is measured against.
+5. Add ``rsa_l2``, the best starting model, and ``rsa_l1``, standard RSA,
+   only marginally behind it (PI 2026-10-09).
 
 It reads predictions and fit only: never hypotheses or source labels. The
 reason is experimental design: the EIG design can only aim at disagreements
@@ -54,7 +55,11 @@ from src.rsa.model_file import RSAModel
 from src.runtime.config import PROJECT_ASSETS_DIR
 
 SEED_DIR = PROJECT_ASSETS_DIR / "rsa_reference" / "seed_models"
-REFERENCE = "rsa_l2"
+# The starting models every live chain keeps as references: rsa_l2, the best
+# starting model on the existing data, and rsa_l1, standard RSA, only 3.5 nats
+# behind it on held-out data (PI 2026-10-09: keep it in the mix rather than
+# test recursion depth ourselves).
+REFERENCES = ("rsa_l2", "rsa_l1")
 
 
 @dataclass
@@ -210,8 +215,9 @@ def main(args: Args) -> dict:
         names.add(name)
         shutil.copyfile(c.path, models_dir / f"{name}.py")
         entries.append(dict(name=name, rationale=_doc(c.path), source=f"{c.cell}/{c.status}/{c.name}", group=g))
-    shutil.copyfile(SEED_DIR / f"{REFERENCE}.py", models_dir / f"{REFERENCE}.py")
-    entries.append(dict(name=REFERENCE, rationale=_doc(SEED_DIR / f"{REFERENCE}.py"), source="starting model (reference)"))
+    for ref in REFERENCES:
+        shutil.copyfile(SEED_DIR / f"{ref}.py", models_dir / f"{ref}.py")
+        entries.append(dict(name=ref, rationale=_doc(SEED_DIR / f"{ref}.py"), source="starting model (reference)"))
     (models_dir / "models_manifest.yaml").write_text(yaml.safe_dump({"models": entries}, sort_keys=False))
 
     best_cv = max(r.elpd for r in cv.values() if r is not None)

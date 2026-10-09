@@ -145,3 +145,11 @@ models:
     rationality alpha at every level; uniform choice with no informative word; a lapse
     parameter mixes in uniform guessing.'
   source: starting model (reference)
+- name: rsa_l1
+  rationale: Vanilla RSA pragmatic listener (depth 1), uniform prior over objects.
+    The listener reasons about a speaker who chooses a true word with probability
+    proportional to exp(alpha * log L0(object | word)), where L0 is the literal listener;
+    the listener inverts that speaker with a uniform prior over objects (Frank & Goodman,
+    2012). With no informative word the choice is uniform. A lapse parameter mixes
+    in uniform guessing.
+  source: starting model (reference)
