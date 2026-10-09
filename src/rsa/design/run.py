@@ -102,6 +102,8 @@ class Args:
     num_samples: int = 1000
     num_chains: int = 4
     fit_seed: int = 0
+    dense_mass: bool = False
+    """NUTS with a dense mass matrix (`src.rsa.fit.FitSettings.dense_mass`)."""
     time_limit_sec: float = FIT_TIME_LIMIT_SEC
 
 
@@ -109,7 +111,7 @@ def main(args: Args) -> dict:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     settings = FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains,
-                           seed=args.fit_seed)
+                           seed=args.fit_seed, dense_mass=args.dense_mass)
     pool = design_pool()
     valid = class_layout(pool)
     names, probs, screened = [], [], []

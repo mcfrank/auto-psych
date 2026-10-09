@@ -105,6 +105,12 @@ class OuterConfig:
     num_warmup: int = 1000
     num_samples: int = 1000
     num_chains: int = 4
+    dense_mass: bool = True
+    """NUTS with a dense mass matrix (`src.rsa.fit.FitSettings.dense_mass`).
+    Measured 2026-10-09 on 28k existing trials, 4 chains of 1000 + 1000: the
+    same posterior means, higher ESS, and 2.5-9x fewer leapfrog steps on the
+    promoted models with 5-7 parameters (the slowest fit, 494 s -> 149 s);
+    no change on 2-parameter rsa_l2."""
     n_draws: int = 200
     n_scenarios: int = 2000
     seed: int = 0
@@ -133,7 +139,7 @@ class OuterRun:
         self.dir = Path(cfg.run_dir)
         self.spawner = spawner
         self.settings = FitSettings(num_warmup=cfg.num_warmup, num_samples=cfg.num_samples,
-                                    num_chains=cfg.num_chains, seed=cfg.seed)
+                                    num_chains=cfg.num_chains, seed=cfg.seed, dense_mass=cfg.dense_mass)
         # The agents can read the run directory: nothing in it may name the
         # ground truth, so its fit (and every outer fit) is cached privately.
         self.private = Path(cfg.private_dir) if cfg.private_dir else self.dir / ".private"
@@ -180,7 +186,7 @@ class OuterRun:
             trials_per_participant=c.trials, participants=c.participants, displays=[c.displays],
             power_participants=[c.participants], n_draws=c.n_draws, n_scenarios=c.n_scenarios,
             n_power_scenarios=c.n_scenarios, seed=c.seed + n, num_warmup=c.num_warmup,
-            num_samples=c.num_samples, num_chains=c.num_chains, fit_seed=c.seed,
+            num_samples=c.num_samples, num_chains=c.num_chains, fit_seed=c.seed, dense_mass=c.dense_mass,
             time_limit_sec=c.fit_time_limit_sec or FIT_TIME_LIMIT_SEC))
         design = Design.load(out / f"design_d{c.displays}.json")
         shutil.copyfile(out / f"design_d{c.displays}.json", out / "design.json")

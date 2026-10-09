@@ -91,7 +91,7 @@ sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%j.out" scripts/rsa/slu
 
 PI 2026-10-09: try both ways the live loop could select. Agents are on credits; no participants.
 
-JAX now runs on one CPU in every process of every RSA job (`_env.sh`'s `XLA_FLAGS`, Research Computing 2026-10-09; the fit workers already did), agents' self-checks included.
+Every RSA job also shares JAX's persistent compilation cache (`$SCRATCH/auto-psych/jax_cache`, `_env.sh`), and the live loop and the rehearsal fit with a dense mass matrix (`OuterConfig.dense_mass`; 2.5-9x fewer NUTS steps on the promoted models, same posteriors; `PLAN.md`, Compute). JAX now runs on one CPU in every process of every RSA job (`_env.sh`'s `XLA_FLAGS`, Research Computing 2026-10-09; the fit workers already did), agents' self-checks included.
 
 ```bash
 cd ~/auto-psych && git fetch origin && git merge --ff-only origin/auto-rsa   # after step 3b's commit

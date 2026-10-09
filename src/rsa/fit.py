@@ -50,6 +50,12 @@ class FitSettings:
     num_chains: int = 4
     target_accept: float = 0.9
     seed: int = 0
+    # NUTS with a dense mass matrix (adapted covariance): the same posterior,
+    # several times fewer leapfrog steps on these few-parameter models, whose
+    # parameters (rationality, costs, prior weights) are correlated. Off by
+    # default so every earlier fit's cache key stands; the live loop turns it on
+    # (src.rsa.outer.run.OuterConfig.dense_mass, 2026-10-09).
+    dense_mass: bool = False
 
 
 class ZeroProbabilityChoice(ValueError):
@@ -227,7 +233,7 @@ def fit(
     prep = prepare(contexts, choices)
     check_contract(model, {g.shape: g for g in prep.groups})
     _check_possible(model, prep)
-    kernel = NUTS(_numpyro_model, target_accept_prob=settings.target_accept)
+    kernel = NUTS(_numpyro_model, target_accept_prob=settings.target_accept, dense_mass=settings.dense_mass)
     mcmc = MCMC(
         kernel,
         num_warmup=settings.num_warmup,

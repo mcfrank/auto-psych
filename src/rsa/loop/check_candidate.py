@@ -24,7 +24,9 @@ from src.rsa.fit import FitSettings
 from src.rsa.loop.gates import GateConfig, admit
 from src.rsa.loop.novelty import novelty_pool
 
-CHECK_SETTINGS = FitSettings(num_warmup=300, num_samples=300, num_chains=2)
+# Dense mass, as the live loop fits (OuterConfig.dense_mass): the check predicts
+# its admission, in a third of the time on the slowest promoted models.
+CHECK_SETTINGS = FitSettings(num_warmup=300, num_samples=300, num_chains=2, dense_mass=True)
 CHECK_TIME_LIMIT_SEC = 10 * 60
 
 

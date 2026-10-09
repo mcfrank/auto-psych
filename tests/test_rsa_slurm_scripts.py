@@ -481,3 +481,11 @@ def test_jax_runs_on_one_cpu_per_process_and_agents_inherit_it():
     assert SINGLE_THREAD_XLA_FLAGS in (SLURM / "_env.sh").read_text()
     assert "XLA_FLAGS" in AGENT_ENV_NAMES
     assert agent_environment({"XLA_FLAGS": SINGLE_THREAD_XLA_FLAGS}, "opencode")["XLA_FLAGS"] == SINGLE_THREAD_XLA_FLAGS
+
+
+def test_jax_compiles_are_cached_outside_every_agent_tree():
+    text = (SLURM / "_env.sh").read_text()
+    assert 'JAX_COMPILATION_CACHE_DIR="${JAX_COMPILATION_CACHE_DIR:-$(dirname "$WORK_ROOT")/jax_cache}"' in text
+    from src.runtime.agent_sandbox import AGENT_ENV_NAMES
+
+    assert "JAX_COMPILATION_CACHE_DIR" not in AGENT_ENV_NAMES

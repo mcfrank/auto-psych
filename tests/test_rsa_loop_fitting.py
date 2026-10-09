@@ -81,3 +81,25 @@ def test_a_time_limited_fit_imports_arviz_with_a_cache_of_its_own(tmp_path, resp
     fitted = fit_cached(SEEDS / "rsa_l1.py", "rsa_l1", responses, QUICK, tmp_path / "c", time_limit_sec=600)
     assert fitted.param_names
     assert os.environ["XDG_CACHE_HOME"] == str(shared)  # the parent's own is left as it was
+
+
+def test_a_dense_mass_fit_is_its_own_cache_entry_and_old_keys_stand(tmp_path, responses):
+    import hashlib
+    import json
+    from dataclasses import asdict
+
+    from src.rsa.loop.fitting import FIT_FORMAT
+
+    # The key a fit had before dense_mass existed (run 2's caches, promote's).
+    h = hashlib.sha256()
+    h.update(f"format{FIT_FORMAT}".encode())
+    for p in (SEEDS / "rsa_l1.py", responses):
+        h.update(hashlib.sha256(p.read_bytes()).hexdigest().encode())
+    old = {k: v for k, v in asdict(QUICK).items() if k != "dense_mass"}
+    h.update(json.dumps(old, sort_keys=True).encode())
+    assert fingerprint(SEEDS / "rsa_l1.py", responses, QUICK) == h.hexdigest()[:20]
+    dense = FitSettings(num_warmup=100, num_samples=100, num_chains=2, dense_mass=True)
+    assert fingerprint(SEEDS / "rsa_l1.py", responses, dense) != fingerprint(
+        SEEDS / "rsa_l1.py", responses, FitSettings(num_warmup=100, num_samples=100, num_chains=2))
+    fitted = fit_cached(SEEDS / "rsa_l1.py", "rsa_l1", responses, dense, tmp_path / "cache")
+    assert fitted.idata.posterior["alpha"].shape == (2, 100)

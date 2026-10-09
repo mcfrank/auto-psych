@@ -40,6 +40,13 @@ source "$RSA_SLURM_DIR/../../subjective_randomness/slurm/_env.sh"
 # (src.rsa.loop.fitting.SINGLE_THREAD_XLA_FLAGS); now every process does
 # (design, simulation, scoring). Parallelism comes from one process per CPU.
 export XLA_FLAGS="${XLA_FLAGS:+$XLA_FLAGS }--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1"
+# JAX's persistent compilation cache, shared by every RSA job (2026-10-09):
+# a program compiled once (a model's predictions on a fixed pool, a fit on data
+# another job already used) is read back, not recompiled. Measured: a fit's
+# fixed cost fell from 36 s to 15 s (rsa_l2) and 57 s to 23 s on a hit. Outside
+# every agent tree (it holds the ground truth's compiled code in a rehearsal).
+export JAX_COMPILATION_CACHE_DIR="${JAX_COMPILATION_CACHE_DIR:-$(dirname "$WORK_ROOT")/jax_cache}"
+mkdir -p "$JAX_COMPILATION_CACHE_DIR"
 
 # Everything the sweep reads or writes, outside every agent tree. Agents see
 # only their own tree (built from agent_src) and the loop's results dir in it.

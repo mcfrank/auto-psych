@@ -60,7 +60,10 @@ def fingerprint(model_path: Path, responses_path: Path, settings: FitSettings) -
     h.update(f"format{FIT_FORMAT}".encode())
     h.update(_sha_file(model_path).encode())
     h.update(_sha_file(responses_path).encode())
-    h.update(json.dumps(asdict(settings), sort_keys=True).encode())
+    key = asdict(settings)
+    if not key["dense_mass"]:
+        del key["dense_mass"]  # the default: cache keys from before the setting existed stay valid
+    h.update(json.dumps(key, sort_keys=True).encode())
     return h.hexdigest()[:20]
 
 
