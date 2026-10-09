@@ -489,3 +489,14 @@ def test_jax_compiles_are_cached_outside_every_agent_tree():
     from src.runtime.agent_sandbox import AGENT_ENV_NAMES
 
     assert "JAX_COMPILATION_CACHE_DIR" not in AGENT_ENV_NAMES
+
+
+@pytest.mark.parametrize("name", ["chains.sbatch", "design.sbatch"])
+def test_single_process_jobs_ask_for_one_cpu_and_memory_that_buys_no_more(name):
+    # mcfrank's MaxMemPerCPU is 8000 MB: --mem=32GB with -c 4 was allocated 5 CPUs.
+    text = (SLURM / name).read_text()
+    assert "#SBATCH --cpus-per-task=1\n" in text and "#SBATCH --mem=7GB\n" in text
+
+
+def test_openblas_sizes_its_pool_to_one_thread():
+    assert "export OPENBLAS_NUM_THREADS=1" in (SLURM / "_env.sh").read_text()

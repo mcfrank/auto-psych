@@ -28,6 +28,7 @@ from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from src.rsa.cpus import CORES, pinned_thread
 from src.rsa.fit import FitSettings, RSAFit, ZeroProbabilityChoice
 
 FIT_TIME_LIMIT_SEC = 30 * 60  # as the PyMC domain's CANDIDATE_FIT_TIME_LIMIT_SEC
@@ -215,17 +216,26 @@ def _fit_cached(
         target=_child,
         args=(str(model_path), name, str(responses_path), settings, str(nc_path), str(meta_path), queue),
     )
-    with tempfile.TemporaryDirectory(prefix="rsa-fit-cache-") as own_cache:
-        _start_with_cache(proc, own_cache)
-        return _finish_child(proc, queue, name, nc_path, meta_path, time_limit_sec)
+    core = CORES.take()
+    try:
+        with tempfile.TemporaryDirectory(prefix="rsa-fit-cache-") as own_cache:
+            _start_with_cache(proc, own_cache, core)
+            return _finish_child(proc, queue, name, nc_path, meta_path, time_limit_sec)
+    finally:
+        CORES.give_back(core)
 
 
 # The environment a spawned child starts with is the parent's at that moment.
 _SPAWN_LOCK = threading.Lock()
 
 
-def _start_with_cache(proc, cache_dir: str) -> None:
-    """Start a fit child with ``XDG_CACHE_HOME`` of its own.
+def _start_with_cache(proc, cache_dir: str, core: Optional[int] = None) -> None:
+    """Start a fit child with ``XDG_CACHE_HOME`` of its own, on one core.
+
+    The child sees ``core`` alone from its first instruction (`src.rsa.cpus`):
+    started from a thread pinned to it, its JAX and OpenBLAS pools are one
+    core's, about 7 threads instead of 7 per core of the job (Research
+    Computing's warning on job 47042590, 2026-10-08).
 
     On import, arviz writes a once-a-day marker, ``<XDG cache>/arviz/
     daily_warning``, through a fixed-name ``daily_warning.tmp``. Fit children
@@ -239,7 +249,11 @@ def _start_with_cache(proc, cache_dir: str) -> None:
         before = os.environ.get("XDG_CACHE_HOME")
         os.environ["XDG_CACHE_HOME"] = cache_dir
         try:
-            proc.start()
+            if core is None:
+                proc.start()
+            else:
+                with pinned_thread(core):
+                    proc.start()
         finally:
             if before is None:
                 del os.environ["XDG_CACHE_HOME"]

@@ -240,4 +240,7 @@ def _docstring(path: Path) -> str:
 
 
 if __name__ == "__main__":
+    from src.rsa.cpus import pin_main_thread
+
+    pin_main_thread()  # one core per process (src.rsa.cpus)
     main(tyro.cli(Args))

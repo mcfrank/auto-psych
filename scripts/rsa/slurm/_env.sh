@@ -40,6 +40,11 @@ source "$RSA_SLURM_DIR/../../subjective_randomness/slurm/_env.sh"
 # (src.rsa.loop.fitting.SINGLE_THREAD_XLA_FLAGS); now every process does
 # (design, simulation, scoring). Parallelism comes from one process per CPU.
 export XLA_FLAGS="${XLA_FLAGS:+$XLA_FLAGS }--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1"
+# Those flags stop XLA *using* threads, not creating them: pools are sized by
+# the cores a process can see, so every process the harness starts sees one
+# core (src.rsa.cpus; Research Computing's warning on job 47042590,
+# HANDOFF_threads.md). OpenBLAS sizes its pool when numpy loads: one thread.
+export OPENBLAS_NUM_THREADS=1
 # JAX's persistent compilation cache, shared by every RSA job (2026-10-09):
 # a program compiled once (a model's predictions on a fixed pool, a fit on data
 # another job already used) is read back, not recompiled. Measured: a fit's

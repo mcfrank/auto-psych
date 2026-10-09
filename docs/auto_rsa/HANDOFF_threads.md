@@ -193,3 +193,60 @@ The PI wants long jobs spread across `mcfrank` and `owners`:
   behaviour, the probe commands and `MaxMemPerCPU`.
 - No commit on Sherlock. Step 3b's output will be committed from the Mac as the handoff
   says.
+
+## 8. Driver's reply (2026-10-09): done, as suggested
+
+Pull `auto-rsa`. The fix follows §4: every process the harness starts sees one core.
+
+- **`src/rsa/cpus.py`:** the job's cores (what the process saw on first import), a
+  least-used-first core allocator, and per-thread pinning. Affinity is per thread on Linux,
+  and a spawned child inherits the affinity of the thread that started it.
+- **Fit children (§4.1):** `_fit_cached` takes a core and `_start_with_cache` pins the
+  starting thread to it around `proc.start()`. So the child sees one core from its first
+  instruction, before spawn re-imports numpy and arviz. The core is given back when the
+  fit ends. The starting thread is restored at once, and the parent is untouched.
+  - Measured here (4 CPUs): unpinned child 21 threads after a `jit`, pinned child 6.
+  - `tests/test_rsa_cpus.py` checks the child's affinity and that it has ≤ 10 threads,
+    through the real start path.
+- **Parents (§4.2):** every RSA entry point that computes pins its main thread to one core
+  first (`pin_main_thread()` in its `__main__` block), before JAX starts its pools:
+  `outer.run`, `loop.run`, `promote`, `design.run`, `chains`, `ground_truth`,
+  `evaluate_heldout`, `heldout_report`, `recovery`, `simulate`, `cv_rescore`,
+  `compare_seeds` and `check_candidate`.
+  - Threads started later inherit that core; they only wait or start children.
+  - Worker counts come from the job's cores, not the pinned thread's
+    (`default_fit_workers`, promote's `workers`).
+  - Production fits all run time-limited, in children, so no parent runs concurrent
+    in-process fits on its one core.
+- **`_env.sh` (§4.3):** `OPENBLAS_NUM_THREADS=1`. The `XLA_FLAGS` stay.
+- **Agents (§4.4):** each agent call runs inside `one_core()`: the slot's thread is pinned
+  to the least-used core for the call. opencode, its shell and its `check_candidate`
+  self-check (and that self-check's own fit child) all see one core.
+- **Single-process jobs (§4.5):** `chains.sbatch` and `design.sbatch` ask for
+  `-c 1 --mem=7GB`.
+  - The run-2 scripts (`rsa_loop_array`, `heldout_reports`) are left alone. A CPU that
+    memory buys is now simply one more fit worker, since workers come from the job's
+    cores.
+
+**Before the rehearsal**, please verify on Sherlock through the real path. In an
+interactive allocation (`srun -p mcfrank -c 4 --mem=8G -t 00:20:00 --pty bash`), from the
+staged checkout:
+
+```bash
+$VENV_PY -m pytest -q tests/test_rsa_cpus.py      # the child's affinity and threads
+```
+
+During the rehearsal, from the login node:
+
+```bash
+srun --jobid=<id> --overlap -n1 ps -u $USER -o pid,nlwp,pcpu,psr,cmd --sort=-nlwp | head -30
+```
+
+Expect about 7 threads per python process (`nlwp`), and the parent's executor threads on
+top: idle waiters, one per concurrent fit. If a process still shows 7 × cores, send me its
+`cmd` line.
+
+**Partitions (§6):** agreed. Run the rehearsal on `mcfrank` (2 × 8 CPUs). Use
+`-p mcfrank,owners --requeue` only as overflow for the live chains if the node is full.
+A requeued task resumes from its last scored step, and the in-flight agent calls and fits
+are lost.

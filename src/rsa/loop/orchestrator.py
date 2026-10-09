@@ -62,6 +62,7 @@ from src.rsa.fit import FitSettings, RSAFit, compare
 from src.rsa.loop import brief as briefs
 from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC, ModelFailure
 from src.rsa.loop.code_gate import code_problems
+from src.rsa.cpus import job_cpus, one_core
 from src.rsa.loop.cv import CVResult, compare_cv, cv_pointwise, make_folds, source_labels
 from src.rsa.loop.gates import GateConfig, admit, fit_with_refit, read_candidate
 from src.rsa.loop.novelty import (
@@ -159,7 +160,7 @@ class Live:
 def default_fit_workers() -> int:
     """One fit per CPU the job was given (each fit runs single-threaded,
     `src.rsa.loop.fitting.FIT_THREADS_ENV`)."""
-    return max(1, len(os.sched_getaffinity(0)))
+    return max(1, len(job_cpus()))  # the job's cores, not the (pinned) calling thread's
 
 
 class RSALoop:
@@ -710,12 +711,15 @@ def coding_agent_spawner(*, models_dir: Path, responses_path: Path, timeout_sec:
 
     def spawn(candidate_dir: Path, prompt: str) -> bool:
         log = candidate_dir / "agent.jsonl"
-        ok, _ = run_coding_agent(
-            prompt, cwd=agent_root or REPO_ROOT, log_path=log,
-            allowed_dirs=[candidate_dir, models_dir, responses_path.parent], writable_dirs=[candidate_dir],
-            timeout_secs=timeout_sec, backend=backend, model=model, usage_label="rsa:candidate",
-            stock=True, sandbox=sandbox, env=env,
-        )
+        # On a core of its own (src.rsa.cpus): the agent's shell, and the JAX
+        # fit of its self-check, see one core and size their pools to it.
+        with one_core():
+            ok, _ = run_coding_agent(
+                prompt, cwd=agent_root or REPO_ROOT, log_path=log,
+                allowed_dirs=[candidate_dir, models_dir, responses_path.parent], writable_dirs=[candidate_dir],
+                timeout_secs=timeout_sec, backend=backend, model=model, usage_label="rsa:candidate",
+                stock=True, sandbox=sandbox, env=env,
+            )
         if not network:
             from src.rsa.loop.no_network import web_tool_uses
 

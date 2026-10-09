@@ -48,6 +48,7 @@ import tyro
 import yaml
 
 from src.rsa.fit import FitSettings
+from src.rsa.cpus import job_cpus
 from src.rsa.loop.cv import DEFAULT_FOLDS, CVResult, cv_pointwise, make_folds
 from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC, ModelFailure, loop_fit
 from src.rsa.loop.novelty import novelty_pool, pool_digest, posterior_mean_class_probs
@@ -161,7 +162,7 @@ def main(args: Args) -> dict:
     settings = FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains,
                            seed=args.fold_seed)
     cache = work / ".fit_cache"
-    workers = args.workers or max(1, len(__import__("os").sched_getaffinity(0)))
+    workers = args.workers or max(1, len(job_cpus()))
     pool = novelty_pool()
     print(f"{len(cands)} candidates from {', '.join(args.cells)}; fitting on {data} ({workers} at once)", flush=True)
 
@@ -258,4 +259,7 @@ def _doc(path: Path) -> str:
 
 
 if __name__ == "__main__":
+    from src.rsa.cpus import pin_main_thread
+
+    pin_main_thread()  # one core per process (src.rsa.cpus)
     main(tyro.cli(Args))

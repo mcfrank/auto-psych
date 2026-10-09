@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=rsa_chains
 #SBATCH --partition=mcfrank
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=32GB
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=7GB
 #SBATCH --time=10:00:00
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.out
@@ -20,6 +20,8 @@
 # to scratch, so the checkout stays clean: copy it to data/rsa/live_seeds/chains/
 # and commit. Overrides: N_CHAINS (3), TRIALS (10), PARTICIPANTS (200),
 # DISPLAYS ("20 40"), POWER_PARTICIPANTS ("100 200").
+# One process on one CPU (HANDOFF_threads.md): memory buys CPUs on mcfrank
+# (MaxMemPerCPU 8000 MB), so --mem stays under 8 GB; the design peaked at 1.8 GB.
 set -euo pipefail
 export REPO="${REPO:-${SLURM_SUBMIT_DIR:-$HOME/auto-psych}}"
 source "$REPO/scripts/rsa/slurm/_env.sh"
