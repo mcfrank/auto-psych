@@ -15,7 +15,9 @@
 #   task 1: it fits on all data but selects on the live trials only
 # Same ground truth, seed and seeds in both: experiment 1's design and
 # simulated people are identical, so the two runs differ only by how the
-# inner loop selects. After promote.sbatch (it reuses run 2's promote_work).
+# inner loop selects. Both start from one chain's seeds (CHAIN, default 0, of
+# data/rsa/live_seeds/chains: chains.sbatch), as a live chain will. After
+# promote.sbatch and chains.sbatch (it reuses run 2's promote_work).
 #
 #   mkdir -p "$SCRATCH/auto-psych/rsa_rehearsal/logs"
 #   sbatch --chdir="$HOME/auto-psych" -o "$SCRATCH/auto-psych/rsa_rehearsal/logs/%x_%A_%a.out" \
@@ -25,7 +27,8 @@
 # model farthest from every promoted seed) and withheld from the agents' tree.
 # Everything that names it (its fit, the configuration, prospective and
 # recovery records) stays in the cell's private/, outside the tree.
-# Overrides: PARTICIPANTS (100; PI 2026-10-09), DISPLAYS (20), N_EXPERIMENTS (3), AGENT_MODEL,
+# Overrides: PARTICIPANTS (200), DISPLAYS (40; PI 2026-10-09: 50 responses a display), CHAIN (0),
+# N_EXPERIMENTS (3), AGENT_MODEL,
 # AGENT_TIMEOUT_SEC, SEED (0), RUN2_ROOT (run 2's sweep root).
 # Resubmitting a task resumes its run where it stopped.
 set -euo pipefail
@@ -46,8 +49,11 @@ EXISTING="$PROMOTE_WORK/all_trials.csv"
 AGENT_MODEL="${AGENT_MODEL:-google/gemini-3.8-flash}"
 AGENT_TIMEOUT_SEC="${AGENT_TIMEOUT_SEC:-2400}"
 SEED="${SEED:-0}"
-for f in "$EXISTING" "$REPO/data/rsa/live_seeds/models/models_manifest.yaml"; do
-  [[ -f "$f" ]] || { echo "ERROR: $f is missing: run promote.sbatch and commit/pull its output first" >&2; exit 1; }
+CHAIN="${CHAIN:-0}"
+PROMOTED="$REPO/data/rsa/live_seeds/models"
+CHAIN_SEEDS="$REPO/data/rsa/live_seeds/chains/chain_$CHAIN"
+for f in "$EXISTING" "$PROMOTED/models_manifest.yaml" "$CHAIN_SEEDS/models_manifest.yaml"; do
+  [[ -f "$f" ]] || { echo "ERROR: $f is missing: run promote.sbatch and chains.sbatch and commit/pull their output first" >&2; exit 1; }
 done
 mkdir -p "$WORK_ROOT" "$CELLS_ROOT"
 
@@ -56,10 +62,10 @@ mkdir -p "$WORK_ROOT" "$CELLS_ROOT"
   flock 9
   bash "$REPO/scripts/rsa/slurm/stage_code.sh"
   if [[ ! -d "$WORK_ROOT/live_seeds" ]]; then
-    cp -r "$REPO/data/rsa/live_seeds/models" "$WORK_ROOT/live_seeds.tmp" && mv "$WORK_ROOT/live_seeds.tmp" "$WORK_ROOT/live_seeds"
+    cp -r "$CHAIN_SEEDS" "$WORK_ROOT/live_seeds.tmp" && mv "$WORK_ROOT/live_seeds.tmp" "$WORK_ROOT/live_seeds"
   fi
   if [[ ! -f "$WORK_ROOT/ground_truth.json" ]]; then
-    (cd "$WORK_ROOT/harness_repo" && "$VENV_PY" -m src.rsa.outer.ground_truth --promoted "$WORK_ROOT/live_seeds" \
+    (cd "$WORK_ROOT/harness_repo" && "$VENV_PY" -m src.rsa.outer.ground_truth --promoted "$PROMOTED" \
        --data "$EXISTING" --cache "$PROMOTE_WORK/.fit_cache" --out "$WORK_ROOT/ground_truth.json")
   fi
 ) 9>"$WORK_ROOT/.setup.lock"
@@ -101,13 +107,13 @@ done
 UNSET_ARGS=()
 for name in ${WITHHELD[@]+"${WITHHELD[@]}"}; do UNSET_ARGS+=(-u "$name"); done
 echo "[rehearsal $SCOPE] withheld from the agents' environment: ${WITHHELD[*]:-}"
-echo "[rehearsal $SCOPE] ${N_EXPERIMENTS:-3} experiments, ${PARTICIPANTS:-100} people x 10 displays of ${DISPLAYS:-20}, $AGENT_MODEL -> $RUN_DIR"
+echo "[rehearsal $SCOPE] chain $CHAIN, ${N_EXPERIMENTS:-3} experiments, ${PARTICIPANTS:-200} people x 10 displays of ${DISPLAYS:-40}, $AGENT_MODEL -> $RUN_DIR"
 cd "$HARNESS_REPO"
 env ${UNSET_ARGS[@]+"${UNSET_ARGS[@]}"} PATH="$RUN_REPO/.agent_bin:$PATH" \
   "$AGENT_PY" -m src.rsa.outer.run --run-dir "$RUN_DIR" --private-dir "$CELL_DIR/private" \
-    --seeds "$WORK_ROOT/live_seeds" --existing-data "$EXISTING" --collection simulated --ground-truth "$GT_FILE" \
-    --selection-scope "$SCOPE" --n-experiments "${N_EXPERIMENTS:-3}" --participants "${PARTICIPANTS:-100}" \
-    --trials 10 --displays "${DISPLAYS:-20}" --seed "$SEED" \
+    --seeds "$WORK_ROOT/live_seeds" --promoted "$PROMOTED" --existing-data "$EXISTING" --collection simulated --ground-truth "$GT_FILE" \
+    --selection-scope "$SCOPE" --n-experiments "${N_EXPERIMENTS:-3}" --participants "${PARTICIPANTS:-200}" \
+    --trials 10 --displays "${DISPLAYS:-40}" --seed "$SEED" \
     --agent-root "$RUN_REPO" --agent-model "$AGENT_MODEL" --agent-timeout-sec "$AGENT_TIMEOUT_SEC"
 
 # --- outputs: the run without fit caches, and the private records --------------------

@@ -29,8 +29,10 @@ For experiment N (``<run-dir>/experiment<N>/``):
    ``prior.csv``, scores this experiment's new data before any model is
    refitted. The bar is the best of the five starting models fitted to the
    same data (``seed:<name>``; PI 2026-10-09: beat all of them, not only
-   rsa_l2); from experiment 2 on also the promoted seeds the live phase began
-   with (``promoted:<name>``): beating them is the live loop's own progress.
+   rsa_l2); from experiment 2 on also every promoted seed (``promoted:<name>``,
+   ``promoted``: all of them even when this chain began with a share, PI
+   2026-10-09; from experiment 1 on when it did): beating them is the live
+   loop's own progress.
    Held-out lpd, differences and SEs clustered by designed display.
 6. ``model_loop/``: the inner loop on ``data/cumulative.csv`` (prior +
    this experiment), starting from ``models_input/``: ``max_iterations``
@@ -72,21 +74,24 @@ LIVE_SOURCE = "auto_psych"  # src.rsa.experiment.convert's source label
 class OuterConfig:
     run_dir: Path
     seeds: Path
-    """The promoted seed set (data/rsa/live_seeds/models)."""
+    """The seeds this run starts from: the promoted set (data/rsa/live_seeds/models)
+    or one chain's share of it (data/rsa/live_seeds/chains/chain_<k>)."""
     existing_data: Path
     """Every existing trial (train + test; promote's all_trials.csv)."""
     private_dir: Optional[Path] = None
     """Where everything that names the ground truth goes (the run's configuration,
     the recovery records, the fit cache): outside the agents' tree on the
     cluster. Default: <run_dir>/.private (tests)."""
+    promoted: Optional[Path] = None
+    """Every promoted seed, the prospective bar (default: ``seeds``)."""
     collection: Literal["simulated", "live"] = "simulated"
     ground_truth: Optional[Path] = None
     """simulated: the model file people answer from (fitted to the existing data)."""
     n_experiments: int = 3
-    participants: int = 100  # per experiment (PI 2026-10-09: power is flat from 100 to 300)
+    participants: int = 200  # per experiment: 50 responses for each of 40 displays (PI 2026-10-09)
     trials: int = 10
     """Designed displays per participant (plus n_catch catch trials: 12 test trials; PI 2026-10-08)."""
-    displays: int = 20
+    displays: int = 40
     n_catch: int = 2
     max_catch_errors: int = 0
     max_iterations: int = 5
@@ -213,8 +218,9 @@ class OuterRun:
         new = load_forced_choice(self.collect(n))
         units = pd.factorize(new.frame["condition"].astype(str))[0]
         groups = {"live": self.models_input(n), "seed": Path(self.cfg.starting_models)}
-        if n > 1:
-            groups["promoted"] = Path(self.cfg.seeds)
+        promoted = Path(self.cfg.promoted or self.cfg.seeds)
+        if n > 1 or promoted.resolve() != Path(self.cfg.seeds).resolve():
+            groups["promoted"] = promoted
         lpd: Dict[str, np.ndarray] = {}
         for group, folder in groups.items():
             for name in read_manifest_names(folder):

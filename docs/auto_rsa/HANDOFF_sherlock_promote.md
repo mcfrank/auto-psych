@@ -33,7 +33,7 @@ sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%j.out" scripts/rsa/slu
   - copy each `$CELLS_ROOT/<cell>/agent_activity.md` over `data/rsa/sherlock_run2/<cell>/agent_activity.md`.
 - **Report:** the archive's size.
 
-## 2. Promote the seeds (about 1-3 h)
+## 2. Promote the seeds (about 1-3 h) — done 2026-10-08 (job 47042590, commit 277f5877)
 
 ```bash
 sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%j.out" scripts/rsa/slurm/promote.sbatch
@@ -50,7 +50,7 @@ sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%j.out" scripts/rsa/slu
   - any `fit_error` or unconverged candidates in `promotion.json`;
   - the wall time.
 
-## 3. Design experiment 1 and its power (about 1 h, after step 2)
+## 3. Design experiment 1 and its power (about 1 h, after step 2) — done 2026-10-08 (job 47043328)
 
 If the first `design.sbatch` (submitted with the old 60-display, 64-trial settings) ran, discard its
 `design_n100/`: the PI set 12 trials per participant on 2026-10-08. Pull, then:
@@ -67,25 +67,43 @@ sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%j.out" scripts/rsa/slu
 - **Writes:** `data/rsa/live_seeds/design_t10/design_d{10,20,30}.json` and `eig.json`. Commit them.
 - **Report:** the log's power lines (one block per design size).
 
-The power tables set the design size and the number of participants per experiment (PI decision pending).
+Result: power 0.76-0.79, flat in D and N, capped by three seeds that are twins on plain displays (`PLAN.md`, Power). PI 2026-10-09: split the seeds across the chains (step 3b) and run each experiment with **200 people x 40 displays** (50 responses a display).
 
-## 4. Simulated dress rehearsal: cumulative vs live-only selection (after step 2)
+## 3b. Split the seeds across the three chains, and each chain's power (2-3 h, after step 2)
+
+PI 2026-10-09. Pull, then:
+
+```bash
+sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%j.out" scripts/rsa/slurm/chains.sbatch
+```
+
+- **What it does:**
+  - `src.rsa.outer.chains`: `rsa_l2` goes to every chain, and the other 10 promoted seeds are dealt into 3 chains (4/3/3), choosing the split whose closest pair of models within a chain is farthest apart on the design pool (plain displays). The three plain-display twins must land in different chains;
+  - then each chain's experiment-1 design at 20 and 40 displays for 200 people, with power at 100 and 200 people.
+- **Reuses:** step 2's fits (`promote_work/.fit_cache`); nothing is refitted.
+- **Writes** `$WORK_ROOT/chains/` (scratch). Copy it to `data/rsa/live_seeds/chains/` (`chains.json`, `chain_<k>/*.py`, `chain_<k>/models_manifest.yaml`, `chain_<k>/design_t10/`) and commit.
+- **Report:**
+  - each chain's models, with `min_within_rmse`;
+  - for each chain, the power lines (D = 20 and 40, N = 100 and 200);
+  - the wall time.
+
+## 4. Simulated dress rehearsal: cumulative vs live-only selection (after step 3b's commit)
 
 PI 2026-10-09: try both ways the live loop could select. Agents are on credits; no participants.
 
 JAX now runs on one CPU in every process of every RSA job (`_env.sh`'s `XLA_FLAGS`, Research Computing 2026-10-09; the fit workers already did), agents' self-checks included.
 
 ```bash
-cd ~/auto-psych && git fetch origin && git merge --ff-only origin/auto-rsa   # after step 2's commit
+cd ~/auto-psych && git fetch origin && git merge --ff-only origin/auto-rsa   # after step 3b's commit
 mkdir -p "$SCRATCH/auto-psych/rsa_rehearsal/logs"
 sbatch --chdir="$HOME/auto-psych" -o "$SCRATCH/auto-psych/rsa_rehearsal/logs/%x_%A_%a.out" \
   scripts/rsa/slurm/outer_rehearsal.sbatch
 ```
 
-- **What it runs:** two array tasks, each one run of 3 experiments of 100 simulated people (PI 2026-10-09; the live campaign's size) x 10 of 20 displays, with real Gemini agents (sandboxed, no network):
+- **What it runs:** two array tasks, each one run of 3 experiments of 200 simulated people x 10 of 40 displays (PI 2026-10-09; the live campaign's size), starting from chain 0's seeds (`CHAIN`), with real Gemini agents (sandboxed, no network):
   - task 0 selects on all data so far (cumulative);
   - task 1 fits on all data but selects on the live trials only.
-- **Pairing:** both use the same seeds, the same hidden ground truth and the same seed, so experiment 1 is identical in the two; they differ only in how the inner loop selects.
+- **Pairing:** both use the same chain's seeds, the same hidden ground truth and the same seed, so experiment 1 is identical in the two; they differ only in how the inner loop selects.
 - **The ground truth:** picked by rule (`src.rsa.outer.ground_truth`: the starting model farthest from every promoted seed) into `$SCRATCH/auto-psych/rsa_rehearsal/ground_truth.json`, and withheld from the agents' tree.
 - **Its own staged code** in `$SCRATCH/auto-psych/rsa_rehearsal` (the run-2 staging is older code).
 - **Time:** each experiment is a design (~15 min) and an inner loop of up to 5 rounds (several hours on ~52k trials): expect 15-30 h per task; the limit is 48 h. Resubmitting a task resumes it.

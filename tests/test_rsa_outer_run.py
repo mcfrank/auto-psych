@@ -32,6 +32,12 @@ def test_two_experiments_design_collect_score_and_carry_the_live_set(tmp_path):
         shutil.copyfile(SEEDS / f"{n}.py", seeds / f"{n}.py")
     (seeds / "models_manifest.yaml").write_text(yaml.safe_dump({"models": [{"name": "literal_listener"},
                                                                            {"name": "rsa_l1"}]}))
+    # This chain began with a share of the promoted seeds; its bar is all of them.
+    promoted = tmp_path / "promoted"
+    shutil.copytree(seeds, promoted)
+    shutil.copyfile(SEEDS / "rsa_l1_salience.py", promoted / "rsa_l1_salience.py")
+    (promoted / "models_manifest.yaml").write_text(yaml.safe_dump({"models": [
+        {"name": "literal_listener"}, {"name": "rsa_l1"}, {"name": "rsa_l1_salience"}]}))
     df = pd.read_csv(DEFAULT_TRIALS_CSV)
     existing = tmp_path / "existing.csv"
     df[df.experiment.isin(["E8_levels", "E5_baserate"])].assign(source="pragmods").to_csv(existing, index=False)
@@ -44,7 +50,7 @@ def test_two_experiments_design_collect_score_and_carry_the_live_set(tmp_path):
             return True
         return agent
 
-    cfg = OuterConfig(run_dir=tmp_path / "run1", seeds=seeds, existing_data=existing, collection="simulated",
+    cfg = OuterConfig(run_dir=tmp_path / "run1", seeds=seeds, promoted=promoted, existing_data=existing, collection="simulated",
                       ground_truth=SEEDS / "rsa_l2.py", n_experiments=2, participants=12, trials=2, displays=4,
                       n_catch=1, max_catch_errors=1, max_iterations=1, candidate_count=1, cv_folds=2,
                       num_warmup=150, num_samples=150, num_chains=2, n_draws=20, n_scenarios=200,
@@ -63,13 +69,14 @@ def test_two_experiments_design_collect_score_and_carry_the_live_set(tmp_path):
     # starting models, fitted to the same earlier data, before any refit.
     pro = json.loads((tmp_path / "run1" / ".private" / "experiment1" / "prospective.json").read_text())
     seeds5 = {f"seed:{n}" for n in ("literal_listener", "rsa_l1", "rsa_l2", "rsa_l1_salience", "rsa_l1_shared_prior")}
-    assert set(pro["models"]) == {"literal_listener", "rsa_l1"} | seeds5
-    assert pro["best_seed"] in seeds5 and pro["best_promoted"] is None
+    promoted3 = {f"promoted:{n}" for n in ("literal_listener", "rsa_l1", "rsa_l1_salience")}
+    assert set(pro["models"]) == {"literal_listener", "rsa_l1"} | seeds5 | promoted3
+    assert pro["best_seed"] in seeds5 and pro["best_promoted"] in promoted3
     assert pro["models"][pro["best_seed"]]["vs_best_seed"] == {"diff": 0.0, "se": 0.0}
-    assert set(pro["live_vs"]) == {"best_seed"}
-    # From experiment 2 on, also against the promoted seeds the live phase began with.
+    assert set(pro["live_vs"]) == {"best_seed", "best_promoted"}
+    # And from experiment 2 on, against every promoted seed.
     pro2 = json.loads((tmp_path / "run1" / ".private" / "experiment2" / "prospective.json").read_text())
-    assert {"promoted:literal_listener", "promoted:rsa_l1"} <= set(pro2["models"])
+    assert promoted3 <= set(pro2["models"])
     assert set(pro2["live_vs"]) == {"best_seed", "best_promoted"}
     # The inner loop ran on everything so far; its live set is experiment 2's input.
     export = json.loads((e1 / "model_loop" / "export.json").read_text())
