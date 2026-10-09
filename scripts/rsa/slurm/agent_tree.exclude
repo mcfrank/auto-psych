@@ -53,6 +53,10 @@ data
 /src/rsa/simulate.py
 /src/rsa/recovery.py
 /src/rsa/evaluate_heldout.py
+# The live phase's harness: seed promotion, the outer loop (it simulates people
+# and picks a hidden ground truth) and its records; agents need none of it.
+/src/rsa/promote.py
+/src/rsa/outer/
 
 # --- instruction files agent CLIs load into every session ------------------------
 # (claude: CLAUDE.md; codex and opencode: AGENTS.md.) The project CLAUDE.md

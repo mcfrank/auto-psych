@@ -25,7 +25,7 @@ For experiment N (``<run-dir>/experiment<N>/``):
    (not wired yet: it raises). Participants who miss more than
    ``max_catch_errors`` catch trials are excluded (``data/participants.json``).
    Participant ids continue across the run's experiments.
-5. ``prospective.json``: claim 2's measure. Each model going in, fitted only to
+5. ``prospective.json`` (in the private directory): claim 2's measure. Each model going in, fitted only to
    ``prior.csv``, scores this experiment's new data before any model is
    refitted. The bar is the best of the five starting models fitted to the
    same data (``seed:<name>``; PI 2026-10-09: beat all of them, not only
@@ -65,6 +65,7 @@ from src.rsa.outer.simulate import simulate_participants
 from src.runtime.config import PROJECT_ASSETS_DIR
 
 STARTING_MODELS = PROJECT_ASSETS_DIR / "rsa_reference" / "seed_models"
+LIVE_SOURCE = "auto_psych"  # src.rsa.experiment.convert's source label
 
 
 @dataclass
@@ -74,6 +75,10 @@ class OuterConfig:
     """The promoted seed set (data/rsa/live_seeds/models)."""
     existing_data: Path
     """Every existing trial (train + test; promote's all_trials.csv)."""
+    private_dir: Optional[Path] = None
+    """Where everything that names the ground truth goes (the run's configuration,
+    the recovery records, the fit cache): outside the agents' tree on the
+    cluster. Default: <run_dir>/.private (tests)."""
     collection: Literal["simulated", "live"] = "simulated"
     ground_truth: Optional[Path] = None
     """simulated: the model file people answer from (fitted to the existing data)."""
@@ -88,6 +93,10 @@ class OuterConfig:
     candidate_count: int = 6
     stop_after_stale_rounds: int = 2
     cv_folds: int = 5
+    selection_scope: Literal["all", "live"] = "all"
+    """What the inner loop selects on: grouped CV over all data so far, or over
+    the live trials only (every fit still uses all data). Open (PI 2026-10-09):
+    the simulated rehearsal compares the two."""
     num_warmup: int = 1000
     num_samples: int = 1000
     num_chains: int = 4
@@ -120,7 +129,10 @@ class OuterRun:
         self.spawner = spawner
         self.settings = FitSettings(num_warmup=cfg.num_warmup, num_samples=cfg.num_samples,
                                     num_chains=cfg.num_chains, seed=cfg.seed)
-        self.cache = self.dir / ".fit_cache"
+        # The agents can read the run directory: nothing in it may name the
+        # ground truth, so its fit (and every outer fit) is cached privately.
+        self.private = Path(cfg.private_dir) if cfg.private_dir else self.dir / ".private"
+        self.cache = self.private / ".fit_cache"
         if cfg.collection == "simulated" and cfg.ground_truth is None:
             raise ValueError("simulated collection needs --ground-truth")
 
@@ -187,14 +199,15 @@ class OuterRun:
                                      seed=self.cfg.seed * 1000 + n, first_id=first)
         kept, record = exclude_on_catch(rows, self.cfg.max_catch_errors)
         _write_json(dict(record, n_recruited=self.cfg.participants, collection=self.cfg.collection,
-                         ground_truth=gt.stem), self.exp(n) / "data" / "participants.json")
+                         ), self.exp(n) / "data" / "participants.json")
         _write_csv(kept, path)
         return path
 
     def prospective(self, n: int) -> Path:
         """Claim 2: the models going in, fitted to the data before this
         experiment, scored on its new data before anything is refitted."""
-        out = self.exp(n) / "prospective.json"
+        # Private: in a simulated run the best starting model is often the ground truth.
+        out = self.private / f"experiment{n}" / "prospective.json"
         if out.exists():
             return out
         new = load_forced_choice(self.collect(n))
@@ -244,15 +257,54 @@ class OuterRun:
             responses_path=cumulative, seed_models_dir=self.models_input(n), results_dir=out,
             max_iterations=c.max_iterations, candidate_count=c.candidate_count, settings=self.settings,
             fit_time_limit_sec=c.fit_time_limit_sec, stop_after_stale_rounds=c.stop_after_stale_rounds,
-            cv_folds=c.cv_folds,
+            cv_folds=c.cv_folds, selection_source=LIVE_SOURCE if c.selection_scope == "live" else None,
             report_title=f"RSA inner loop · {self.label(n)}",
         )
         RSALoop(cfg, self.spawner(n, out / "models", cumulative)).run(resume=(out / "history.json").exists())
         return out
 
+    def recovery(self, n: int) -> Optional[Path]:
+        """Simulated runs: how far each model is from the hidden ground truth
+        on the design pool (RMSE of choice-class probabilities), going into
+        experiment n and after its inner loop."""
+        if self.cfg.collection != "simulated":
+            return None
+        out = self.private / f"experiment{n}" / "recovery.json"
+        if out.exists():
+            return out
+        from src.rsa.loop.novelty import posterior_mean_class_probs
+
+        pool = design_run.design_pool()
+        gt = Path(self.cfg.ground_truth)
+        gt_fit = loop_fit(gt, gt.stem, self.cfg.existing_data, self.settings, self.cache,
+                          time_limit_sec=self.cfg.fit_time_limit_sec)
+        truth = posterior_mean_class_probs(RSAModel(gt, name=gt.stem), gt_fit, pool)
+
+        def distances(folder: Path, data: Path, cache: Path) -> Dict[str, float]:
+            d = {}
+            for name in read_manifest_names(folder):
+                path = folder / f"{name}.py"
+                fitted = loop_fit(path, name, data, self.settings, cache, time_limit_sec=self.cfg.fit_time_limit_sec)
+                p = posterior_mean_class_probs(RSAModel(path, name=name), fitted, pool)
+                d[name] = float(np.sqrt(np.mean((p - truth) ** 2)))
+            return dict(sorted(d.items(), key=lambda kv: kv[1]))
+
+        loop = self.model_loop(n)
+        export = json.loads((loop / "export.json").read_text())
+        before = distances(self.models_input(n), self.prior_data(n), self.cache)
+        after = distances(loop / "models", self.exp(n) / "data" / "cumulative.csv", loop / ".fit_cache")
+        _write_json(dict(
+            experiment=n, ground_truth=gt.stem, selection_scope=self.cfg.selection_scope,
+            exported=export["best_model"], exported_rmse=after[export["best_model"]],
+            closest_after=next(iter(after)), closest_after_rmse=next(iter(after.values())),
+            closest_before=next(iter(before)), closest_before_rmse=next(iter(before.values())),
+            before=before, after=after,
+        ), out)
+        return out
+
     def run(self) -> None:
         self.dir.mkdir(parents=True, exist_ok=True)
-        record = self.dir / "outer_config.json"
+        record = self.private / "outer_config.json"
         cfg = {k: str(v) if isinstance(v, Path) else v for k, v in asdict(self.cfg).items()}
         if record.exists() and json.loads(record.read_text()) != cfg:
             raise ValueError(f"{record} records another configuration; a run is resumed with its own")
@@ -266,6 +318,7 @@ class OuterRun:
             self.prospective(n)
             print(f"[outer] {self.label(n)}: inner loop", flush=True)
             self.model_loop(n)
+            self.recovery(n)
 
 
 def exclude_on_catch(rows: pd.DataFrame, max_errors: int) -> tuple[pd.DataFrame, dict]:

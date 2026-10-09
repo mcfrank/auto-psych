@@ -137,3 +137,31 @@ def test_an_interrupted_run_resumes_from_its_last_scored_step(loop):
     assert "shared_prior_listener" not in {e["name"] for e in ledger}
     with pytest.raises(RuntimeError, match="nothing to resume"):
         RSALoop(loop.cfg, fake_agent).resume()
+
+
+def test_selection_on_one_source_ranks_and_prunes_on_its_trials_only(tmp_path):
+    """Fit on everything, select on one source (the live loop's option): the
+    standing's sel_* fields are the out-of-fold lpd summed over that source."""
+    seeds = tmp_path / "seeds"
+    seeds.mkdir()
+    for name in ("literal_listener", "rsa_l1"):
+        shutil.copyfile(SEEDS / f"{name}.py", seeds / f"{name}.py")
+    (seeds / "models_manifest.yaml").write_text(yaml.safe_dump({"models": [{"name": "literal_listener"},
+                                                                           {"name": "rsa_l1"}]}))
+    df = pd.read_csv(DEFAULT_TRIALS_CSV)
+    df = df[df.experiment.isin(["E8_levels", "E5_baserate"])]
+    df = df.assign(source=["live" if e == "E5_baserate" else "pragmods" for e in df.experiment])
+    responses = tmp_path / "trials.csv"
+    df.to_csv(responses, index=False)
+    cfg = LoopConfig(responses_path=responses, seed_models_dir=seeds, results_dir=tmp_path / "loop",
+                     max_iterations=0, settings=FitSettings(num_warmup=200, num_samples=200, num_chains=2),
+                     fit_time_limit_sec=None, cv_folds=2, selection_source="live")
+    final = RSALoop(cfg, fake_agent).run()
+    standing = final["standing"]
+    for s in standing.values():
+        assert s["sel_elpd"] == pytest.approx(s["cv_by_source"]["live"])
+    best = max(standing, key=lambda n: standing[n]["sel_elpd"])
+    assert final["best_model"] == best
+    with pytest.raises(ValueError, match="no trials"):
+        RSALoop(LoopConfig(**{**cfg.__dict__, "results_dir": tmp_path / "loop2", "selection_source": "nope"}),
+                fake_agent).run()

@@ -125,6 +125,12 @@ class LoopConfig:
     cross-validation over training conditions (src.rsa.loop.cv; PI decision
     2026-10-08), or "loo", trial-level PSIS-LOO (Sherlock run 1)."""
     cv_folds: int = 5
+    selection_source: Optional[str] = None
+    """With grouped CV, select (standing, incumbent, prune, cap, export) on
+    the out-of-fold lpd of this source's trials only, while every fit uses
+    all trials: the live loop's "fit on everything, select on the live
+    data" (``auto_psych``). None: all trials (Sherlock run 2). The overall
+    ELPD-CV stays in the standing beside it."""
     agent_network: bool = False
     """Whether agents have internet access (see `coding_agent_spawner`); the
     brief tells them which."""
@@ -281,15 +287,28 @@ class RSALoop:
             self._cv_for(list(out))
             have = {n: self.cv[n] for n in out if self.cv[n] is not None}
             cv = compare_cv(have, self.folds.units, source_labels(self.trials.frame)) if have else {}
+            mask, clusters = self._selection_rows()
+            sel = compare_cv({n: CVResult(r.pointwise[mask], r.converged) for n, r in have.items()}, clusters) \
+                if have else {}
             for name, s in out.items():
                 c = cv.get(name, dict(elpd_cv=float("-inf"), cv_diff=float("inf"), cv_dse=0.0, cv_converged=False))
                 s.update(c)
                 s["trusted"] = s["trusted"] and c["cv_converged"]
-                s.update(sel_elpd=c["elpd_cv"], sel_diff=c["cv_diff"], sel_dse=c["cv_dse"])
+                z = sel.get(name, dict(elpd_cv=float("-inf"), cv_diff=float("inf"), cv_dse=0.0))
+                s.update(sel_elpd=z["elpd_cv"], sel_diff=z["cv_diff"], sel_dse=z["cv_dse"])
         else:
             for s in out.values():
                 s.update(sel_elpd=s["elpd_loo"], sel_diff=s["elpd_diff"], sel_dse=s["dse"])
         return out
+
+    def _selection_rows(self) -> tuple[np.ndarray, np.ndarray]:
+        """The trials selection sums over (all, or cfg.selection_source's) and their CV clusters."""
+        if self.cfg.selection_source is None:
+            return np.ones(len(self.folds.units), dtype=bool), self.folds.units
+        mask = source_labels(self.trials.frame) == self.cfg.selection_source
+        if not mask.any():
+            raise ValueError(f"selection_source {self.cfg.selection_source!r} has no trials in {self.responses}")
+        return mask, self.folds.units[mask]
 
     def incumbent(self, standing: Dict[str, dict]) -> str:
         trusted = [n for n, s in standing.items() if s["trusted"]]
@@ -347,6 +366,9 @@ class RSALoop:
                 return "admitted this round, not yet scored"
             s = standing[n]
             what = "on held-out training conditions (grouped CV)" if self.cfg.selection == "cv" else "(PSIS-LOO)"
+            if self.cfg.selection == "cv" and self.cfg.selection_source:
+                what = (f"on held-out {self.cfg.selection_source} conditions (grouped CV over the "
+                        f"{self.cfg.selection_source} trials, the ones the loop selects on)")
             text = (f"best {what}" if s["sel_diff"] == 0
                     else f"{s['sel_diff']:.1f} ± {s['sel_dse']:.1f} nats behind the best {what}")
             by = s.get("cv_behind_by_source")
@@ -500,11 +522,13 @@ class RSALoop:
         trusted = [n for n, s in standing.items() if s["trusted"]]
         events = []
         criterion = "grouped CV" if self.cfg.selection == "cv" else "PSIS-LOO"
+        if self.cfg.selection == "cv" and self.cfg.selection_source:
+            criterion += f" on {self.cfg.selection_source} trials"
         if trusted:
             best = max(trusted, key=lambda n: standing[n]["sel_elpd"])
             if self.cfg.selection == "cv":
-                pw = {n: self.cv[n].pointwise for n in trusted}
-                clusters = self.folds.units
+                mask, clusters = self._selection_rows()
+                pw = {n: self.cv[n].pointwise[mask] for n in trusted}
             else:
                 pw = {n: np.asarray(self.live[n].fit.loo().loo.loo_i).ravel() for n in trusted}
                 clusters = self.clusters

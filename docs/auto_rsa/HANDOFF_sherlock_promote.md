@@ -68,3 +68,33 @@ sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%j.out" scripts/rsa/slu
 - **Report:** the log's power lines (one block per design size).
 
 The power tables set the design size and the number of participants per experiment (PI decision pending).
+
+## 4. Simulated dress rehearsal: cumulative vs live-only selection (after step 2)
+
+PI 2026-10-09: try both ways the live loop could select. Agents are on credits; no participants.
+
+```bash
+cd ~/auto-psych && git fetch origin && git merge --ff-only origin/auto-rsa   # after step 2's commit
+mkdir -p "$SCRATCH/auto-psych/rsa_rehearsal/logs"
+sbatch --chdir="$HOME/auto-psych" -o "$SCRATCH/auto-psych/rsa_rehearsal/logs/%x_%A_%a.out" \
+  scripts/rsa/slurm/outer_rehearsal.sbatch
+```
+
+- **What it runs:** two array tasks, each one run of 3 experiments of 200 simulated people x 10 of 20 displays, with real Gemini agents (sandboxed, no network):
+  - task 0 selects on all data so far (cumulative);
+  - task 1 fits on all data but selects on the live trials only.
+- **Pairing:** both use the same seeds, the same hidden ground truth and the same seed, so experiment 1 is identical in the two; they differ only in how the inner loop selects.
+- **The ground truth:** picked by rule (`src.rsa.outer.ground_truth`: the starting model farthest from every promoted seed) into `$SCRATCH/auto-psych/rsa_rehearsal/ground_truth.json`, and withheld from the agents' tree.
+- **Its own staged code** in `$SCRATCH/auto-psych/rsa_rehearsal` (the run-2 staging is older code).
+- **Time:** each experiment is a design (~15 min) and an inner loop of up to 5 rounds (several hours on ~52k trials): expect 15-30 h per task; the limit is 48 h. Resubmitting a task resumes it.
+- **Bring back** (into `data/rsa/rehearsal/<cell>/`, for `rehearsal_all` and `rehearsal_live`):
+  - `$CELLS_ROOT/<cell>/outputs/` without the trial-level CSVs (`experiment*/data/*.csv`, `model_loop/responses.csv`, `.cv/fold_*.csv`): the designs, `participants.json`, and each inner loop's history, ledger, models and export;
+  - `$CELLS_ROOT/<cell>/private/` (the configuration, `experiment*/prospective.json`, `experiment*/recovery.json`; no fit cache);
+  - `ground_truth.json` once, at `data/rsa/rehearsal/`.
+
+  The simulated responses are not real people's data, but they are generated from the real existing data's fit: keep them on Sherlock like other trial-level files.
+- **Report per task and experiment:**
+  - the exported model and its RMSE to the ground truth (`recovery.json`);
+  - the closest live model before and after;
+  - the prospective `live_vs` lines;
+  - the wall time and any failure.
