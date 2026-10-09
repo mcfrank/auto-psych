@@ -59,10 +59,18 @@ def test_two_experiments_design_collect_score_and_carry_the_live_set(tmp_path):
     r1, r2 = (pd.read_csv(e / "data" / "responses.csv") for e in (e1, e2))
     assert set(r1.experiment) == {"run1_e1"} and set(r2.experiment) == {"run1_e2"}
     assert not set(r1.participant_id) & set(r2.participant_id)
-    # Prospective scoring: the models going in and rsa_l2, before any refit.
+    # Prospective scoring: the models going in against the best of the five
+    # starting models, fitted to the same earlier data, before any refit.
     pro = json.loads((e1 / "prospective.json").read_text())
-    assert set(pro["models"]) == {"literal_listener", "rsa_l1", "rsa_l2"} and pro["reference"] == "rsa_l2"
-    assert pro["models"]["rsa_l2"]["diff_vs_reference"] == 0.0
+    seeds5 = {f"seed:{n}" for n in ("literal_listener", "rsa_l1", "rsa_l2", "rsa_l1_salience", "rsa_l1_shared_prior")}
+    assert set(pro["models"]) == {"literal_listener", "rsa_l1"} | seeds5
+    assert pro["best_seed"] in seeds5 and pro["best_promoted"] is None
+    assert pro["models"][pro["best_seed"]]["vs_best_seed"] == {"diff": 0.0, "se": 0.0}
+    assert set(pro["live_vs"]) == {"best_seed"}
+    # From experiment 2 on, also against the promoted seeds the live phase began with.
+    pro2 = json.loads((e2 / "prospective.json").read_text())
+    assert {"promoted:literal_listener", "promoted:rsa_l1"} <= set(pro2["models"])
+    assert set(pro2["live_vs"]) == {"best_seed", "best_promoted"}
     # The inner loop ran on everything so far; its live set is experiment 2's input.
     export = json.loads((e1 / "model_loop" / "export.json").read_text())
     assert sorted(p.stem for p in (e2 / "models_input").glob("*.py")) == sorted(export["live"])

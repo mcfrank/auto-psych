@@ -27,8 +27,11 @@ For experiment N (``<run-dir>/experiment<N>/``):
    Participant ids continue across the run's experiments.
 5. ``prospective.json``: claim 2's measure. Each model going in, fitted only to
    ``prior.csv``, scores this experiment's new data before any model is
-   refitted, against ``rsa_l2`` fitted to the same data: held-out lpd, its
-   difference and the SE clustered by designed display.
+   refitted. The bar is the best of the five starting models fitted to the
+   same data (``seed:<name>``; PI 2026-10-09: beat all of them, not only
+   rsa_l2); from experiment 2 on also the promoted seeds the live phase began
+   with (``promoted:<name>``): beating them is the live loop's own progress.
+   Held-out lpd, differences and SEs clustered by designed display.
 6. ``model_loop/``: the inner loop on ``data/cumulative.csv`` (prior +
    this experiment), starting from ``models_input/``: ``max_iterations``
    rounds of ``candidate_count`` agents, the two-stale-round stop, grouped CV.
@@ -61,7 +64,7 @@ from src.rsa.model_file import RSAModel
 from src.rsa.outer.simulate import simulate_participants
 from src.runtime.config import PROJECT_ASSETS_DIR
 
-REFERENCE = PROJECT_ASSETS_DIR / "rsa_reference" / "seed_models" / "rsa_l2.py"
+STARTING_MODELS = PROJECT_ASSETS_DIR / "rsa_reference" / "seed_models"
 
 
 @dataclass
@@ -92,7 +95,8 @@ class OuterConfig:
     n_scenarios: int = 2000
     seed: int = 0
     fit_time_limit_sec: Optional[float] = FIT_TIME_LIMIT_SEC
-    reference: Path = REFERENCE
+    starting_models: Path = STARTING_MODELS
+    """The five starting models every claim is measured against (literal, rsa_l1, rsa_l2, salience, shared prior)."""
 
 
 def _copy_models(src_dir: Path, names: List[str], dest: Path) -> None:
@@ -195,20 +199,34 @@ class OuterRun:
             return out
         new = load_forced_choice(self.collect(n))
         units = pd.factorize(new.frame["condition"].astype(str))[0]
-        models = {name: self.models_input(n) / f"{name}.py" for name in read_manifest_names(self.models_input(n))}
-        ref = Path(self.cfg.reference).stem
-        models.setdefault(ref, Path(self.cfg.reference))
+        groups = {"live": self.models_input(n), "seed": Path(self.cfg.starting_models)}
+        if n > 1:
+            groups["promoted"] = Path(self.cfg.seeds)
         lpd: Dict[str, np.ndarray] = {}
-        for name, path in models.items():
-            fitted = loop_fit(path, name, self.prior_data(n), self.settings, self.cache,
-                              time_limit_sec=self.cfg.fit_time_limit_sec)
-            lpd[name] = heldout_lpd(RSAModel(path, name=name), fitted, new.contexts, new.choices)
-        best = max(lpd, key=lambda k: lpd[k].sum())
+        for group, folder in groups.items():
+            for name in read_manifest_names(folder):
+                path = folder / f"{name}.py"
+                fitted = loop_fit(path, name, self.prior_data(n), self.settings, self.cache,
+                                  time_limit_sec=self.cfg.fit_time_limit_sec)
+                label = name if group == "live" else f"{group}:{name}"
+                lpd[label] = heldout_lpd(RSAModel(path, name=name), fitted, new.contexts, new.choices)
+
+        def best_of(prefix):
+            names = [k for k in lpd if (k.startswith(prefix) if prefix else ":" not in k)]
+            return max(names, key=lambda k: lpd[k].sum()) if names else None
+
+        bars = {"best_seed": best_of("seed:"), "best_promoted": best_of("promoted:")}
+        live_best = best_of("")
+
+        def versus(k, ref):
+            return dict(diff=float(lpd[k].sum() - lpd[ref].sum()),
+                        se=0.0 if k == ref else float(cluster_dse(lpd[k], lpd[ref], units)))
+
         _write_json(dict(
-            experiment=n, n_trials=len(new.contexts), n_displays=int(units.max() + 1), reference=ref, best=best,
-            models={k: dict(lpd=float(v.sum()), diff_vs_reference=float(v.sum() - lpd[ref].sum()),
-                            se_diff=0.0 if k == ref else float(cluster_dse(v, lpd[ref], units)),
-                            behind_best=float(lpd[best].sum() - v.sum()))
+            experiment=n, n_trials=len(new.contexts), n_displays=int(units.max() + 1),
+            best_live=live_best, **bars,
+            live_vs={bar: versus(live_best, ref) for bar, ref in bars.items() if ref},
+            models={k: dict(lpd=float(v.sum()), **{f"vs_{bar}": versus(k, ref) for bar, ref in bars.items() if ref})
                     for k, v in sorted(lpd.items(), key=lambda kv: -kv[1].sum())},
         ), out)
         return out
