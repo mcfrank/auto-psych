@@ -1,0 +1,62 @@
+models:
+- name: familiar_isolated_graded_costly_l2
+  rationale: Pragmatic listener at depth 2 combining perceptual isolation, graded
+    semantics, utterance extension costs, and familiarization. Refines isolated_graded_costly_l2
+    by incorporating familiarization base-rate sensitivity into the shared referent
+    prior. Visual pop-out is determined by an object's perceptual isolation (minimum
+    Hamming distance to any other context object), semantic applicability diminishes
+    with additional competing features (graded truth), speakers evaluate communicative
+    utility trade-offs with utterance extension costs proportional to the fraction
+    of display objects sharing each feature, and candidate referents are weighted
+    by prior familiarization history. Listeners reason at depth 2, inverting a speaker
+    who anticipates a pragmatic listener. On uninformative prior trials, choice follows
+    the integrated isolation and familiarization prior. A lapse parameter mixes in
+    uniform guessing.
+  source: real_rep2/pruned/familiar_isolated_graded_costly_l2
+  group: 1
+- name: lexical_preemption_heuristic
+  rationale: Lexical preemption heuristic listener. Listeners interpret referring
+    expressions using a non-Bayesian lexical preemption heuristic rather than recursive
+    Theory of Mind. When hearing a word that applies to multiple referents, listeners
+    choose among candidate objects possessing that feature by penalizing candidates
+    that possess unmentioned distinguishing features that could have uniquely identified
+    them in the context, favoring referents that lack an exclusive alternative label.
+    On uninformative trials without an informative word, listeners choose uniformly
+    among available objects.
+  source: real_rep3/pruned/lexical_preemption_heuristic
+  group: 4
+- name: rsa_l2_singleton_distinct_feat_color_l0
+  rationale: 'RSA pragmatic listener at depth 2 with singleton salience, contextual
+    distinctiveness, visual feature complexity, visual color contrast, and literal
+    L0. Refining rsa_l2_singleton_distinct_features_l0 with the visual color contrast
+    component from rsa_l2_shared_color_prior: speakers and listeners reason at depth
+    2 (inverting a speaker who simulates a depth-1 pragmatic listener) with common
+    knowledge of an object prior combining discrete visual singleton salience (favoring
+    unique objects with no duplicates in the scene), continuous contextual distinctiveness
+    (favoring objects with greater feature contrast relative to the rest of the display),
+    visual feature complexity (weighting objects by total feature count), and visual
+    color contrast (favoring fully colored objects over desaturated grayscale distractors).
+    Crucially, the foundational simulated literal listener L0 operates purely on truth-conditional
+    semantics without perceptual bias, preventing redundant prior compounding across
+    reasoning tiers. On prior trials with no informative word, choices are governed
+    directly by the combined perceptual prior. A lapse parameter mixes in uniform
+    guessing.'
+  source: real_rep1/live/rsa_l2_singleton_distinct_feat_color_l0
+  group: 2
+- name: rsa_l2
+  rationale: 'RSA pragmatic listener at depth 2, uniform prior over objects. One more
+    level of recursion than the vanilla model: a speaker S2 chooses words by how well
+    the depth-1 pragmatic listener L1 would recover the object (exp(alpha * log L1)),
+    and the listener L2 inverts S2. Depth-2 reasoning is what the pragmods "complex"
+    game needs to single out the object described by the twice-implicated word. One
+    rationality alpha at every level; uniform choice with no informative word; a lapse
+    parameter mixes in uniform guessing.'
+  source: starting model (reference)
+- name: rsa_l1
+  rationale: Vanilla RSA pragmatic listener (depth 1), uniform prior over objects.
+    The listener reasons about a speaker who chooses a true word with probability
+    proportional to exp(alpha * log L0(object | word)), where L0 is the literal listener;
+    the listener inverts that speaker with a uniform prior over objects (Frank & Goodman,
+    2012). With no informative word the choice is uniform. A lapse parameter mixes
+    in uniform guessing.
+  source: starting model (reference)

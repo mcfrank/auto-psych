@@ -1,0 +1,187 @@
+{
+ "rule": "every chain gets the reference models\n(``rsa_l2`` and ``rsa_l1``, promote's ``REFERENCES``); the other promoted\nseeds are dealt into ``n_chains`` chains of sizes differing by at most one,\nchoosing, among all such splits, the one whose closest pair of models within a\nchain is farthest apart (RMSE of posterior-mean choice-class probabilities on\nthe design pool, the displays the live experiments can show), ties broken by\nthe larger mean within-chain distance, then by name. Near-twins on the design\npool (models that differ only in terms plain displays cannot reach) end up in\ndifferent chains, where each can be tested against models it actually\ndisagrees with, and the chains start from different hypotheses rather than\nthree copies of one. Every chain is still scored against all promoted seeds.",
+ "references": [
+  "rsa_l2",
+  "rsa_l1"
+ ],
+ "n_chains": 3,
+ "distance": "RMSE of posterior-mean choice-class probabilities over the design pool",
+ "chains": [
+  {
+   "chain": 0,
+   "models": [
+    "competitor_confusion_speaker",
+    "isolated_graded_costly_l3",
+    "oddity_heuristic_listener",
+    "rsa_l2_singleton_feat_color_valence_l0",
+    "rsa_l2",
+    "rsa_l1"
+   ],
+   "dealt": [
+    "competitor_confusion_speaker",
+    "isolated_graded_costly_l3",
+    "oddity_heuristic_listener",
+    "rsa_l2_singleton_feat_color_valence_l0"
+   ],
+   "min_within_rmse": 0.07069963780574666,
+   "mean_within_rmse": 0.09276489022500571
+  },
+  {
+   "chain": 1,
+   "models": [
+    "evaluative_prominence_l2",
+    "rsa_l2_singleton_feat_color_familiar_l0",
+    "softmax_surprisal_isolated_costly_l4",
+    "rsa_l2",
+    "rsa_l1"
+   ],
+   "dealt": [
+    "evaluative_prominence_l2",
+    "rsa_l2_singleton_feat_color_familiar_l0",
+    "softmax_surprisal_isolated_costly_l4"
+   ],
+   "min_within_rmse": 0.06648638194736657,
+   "mean_within_rmse": 0.08127838293301747
+  },
+  {
+   "chain": 2,
+   "models": [
+    "familiar_isolated_graded_costly_l2",
+    "lexical_preemption_heuristic",
+    "rsa_l2_singleton_distinct_feat_color_l0",
+    "rsa_l2",
+    "rsa_l1"
+   ],
+   "dealt": [
+    "familiar_isolated_graded_costly_l2",
+    "lexical_preemption_heuristic",
+    "rsa_l2_singleton_distinct_feat_color_l0"
+   ],
+   "min_within_rmse": 0.06893651473179672,
+   "mean_within_rmse": 0.09899999945254283
+  }
+ ],
+ "min_rmse_all_pairs": 0.0011743752923699105,
+ "design_pool_rmse": {
+  "competitor_confusion_speaker": {
+   "competitor_confusion_speaker": 0.0,
+   "evaluative_prominence_l2": 0.0681680421613272,
+   "familiar_isolated_graded_costly_l2": 0.0693952069026805,
+   "isolated_graded_costly_l3": 0.07529132512112473,
+   "lexical_preemption_heuristic": 0.09460535858604027,
+   "oddity_heuristic_listener": 0.11148376217693727,
+   "rsa_l2_singleton_distinct_feat_color_l0": 0.08364871123629095,
+   "rsa_l2_singleton_feat_color_familiar_l0": 0.0820314603552193,
+   "rsa_l2_singleton_feat_color_valence_l0": 0.08375552336569955,
+   "softmax_surprisal_isolated_costly_l4": 0.0832092938646733
+  },
+  "evaluative_prominence_l2": {
+   "competitor_confusion_speaker": 0.0681680421613272,
+   "evaluative_prominence_l2": 0.0,
+   "familiar_isolated_graded_costly_l2": 0.05354754094151821,
+   "isolated_graded_costly_l3": 0.0585727577975482,
+   "lexical_preemption_heuristic": 0.06776228769232227,
+   "oddity_heuristic_listener": 0.11860155227085473,
+   "rsa_l2_singleton_distinct_feat_color_l0": 0.09873876458203881,
+   "rsa_l2_singleton_feat_color_familiar_l0": 0.09672027655724036,
+   "rsa_l2_singleton_feat_color_valence_l0": 0.0989136858373525,
+   "softmax_surprisal_isolated_costly_l4": 0.08062849029444544
+  },
+  "familiar_isolated_graded_costly_l2": {
+   "competitor_confusion_speaker": 0.0693952069026805,
+   "evaluative_prominence_l2": 0.05354754094151821,
+   "familiar_isolated_graded_costly_l2": 0.0,
+   "isolated_graded_costly_l3": 0.012003239108277153,
+   "lexical_preemption_heuristic": 0.10276203389992855,
+   "oddity_heuristic_listener": 0.11911264326199955,
+   "rsa_l2_singleton_distinct_feat_color_l0": 0.06893651473179672,
+   "rsa_l2_singleton_feat_color_familiar_l0": 0.0662804000204203,
+   "rsa_l2_singleton_feat_color_valence_l0": 0.06878645794690637,
+   "softmax_surprisal_isolated_costly_l4": 0.05759426093278529
+  },
+  "isolated_graded_costly_l3": {
+   "competitor_confusion_speaker": 0.07529132512112473,
+   "evaluative_prominence_l2": 0.0585727577975482,
+   "familiar_isolated_graded_costly_l2": 0.012003239108277153,
+   "isolated_graded_costly_l3": 0.0,
+   "lexical_preemption_heuristic": 0.10553969188981964,
+   "oddity_heuristic_listener": 0.11989466449238112,
+   "rsa_l2_singleton_distinct_feat_color_l0": 0.07083284753901949,
+   "rsa_l2_singleton_feat_color_familiar_l0": 0.06826067485266957,
+   "rsa_l2_singleton_feat_color_valence_l0": 0.07069963780574666,
+   "softmax_surprisal_isolated_costly_l4": 0.055732805627767425
+  },
+  "lexical_preemption_heuristic": {
+   "competitor_confusion_speaker": 0.09460535858604027,
+   "evaluative_prominence_l2": 0.06776228769232227,
+   "familiar_isolated_graded_costly_l2": 0.10276203389992855,
+   "isolated_graded_costly_l3": 0.10553969188981964,
+   "lexical_preemption_heuristic": 0.0,
+   "oddity_heuristic_listener": 0.098893904729887,
+   "rsa_l2_singleton_distinct_feat_color_l0": 0.12530144972590315,
+   "rsa_l2_singleton_feat_color_familiar_l0": 0.12470619097051852,
+   "rsa_l2_singleton_feat_color_valence_l0": 0.1258422039790702,
+   "softmax_surprisal_isolated_costly_l4": 0.102386380727575
+  },
+  "oddity_heuristic_listener": {
+   "competitor_confusion_speaker": 0.11148376217693727,
+   "evaluative_prominence_l2": 0.11860155227085473,
+   "familiar_isolated_graded_costly_l2": 0.11911264326199955,
+   "isolated_graded_costly_l3": 0.11989466449238112,
+   "lexical_preemption_heuristic": 0.098893904729887,
+   "oddity_heuristic_listener": 0.0,
+   "rsa_l2_singleton_distinct_feat_color_l0": 0.09476398947961193,
+   "rsa_l2_singleton_feat_color_familiar_l0": 0.09518550767433503,
+   "rsa_l2_singleton_feat_color_valence_l0": 0.09546442838814494,
+   "softmax_surprisal_isolated_costly_l4": 0.1080768921413127
+  },
+  "rsa_l2_singleton_distinct_feat_color_l0": {
+   "competitor_confusion_speaker": 0.08364871123629095,
+   "evaluative_prominence_l2": 0.09873876458203881,
+   "familiar_isolated_graded_costly_l2": 0.06893651473179672,
+   "isolated_graded_costly_l3": 0.07083284753901949,
+   "lexical_preemption_heuristic": 0.12530144972590315,
+   "oddity_heuristic_listener": 0.09476398947961193,
+   "rsa_l2_singleton_distinct_feat_color_l0": 0.0,
+   "rsa_l2_singleton_feat_color_familiar_l0": 0.0043433740786975586,
+   "rsa_l2_singleton_feat_color_valence_l0": 0.0011743752923699105,
+   "softmax_surprisal_isolated_costly_l4": 0.06588863074813014
+  },
+  "rsa_l2_singleton_feat_color_familiar_l0": {
+   "competitor_confusion_speaker": 0.0820314603552193,
+   "evaluative_prominence_l2": 0.09672027655724036,
+   "familiar_isolated_graded_costly_l2": 0.0662804000204203,
+   "isolated_graded_costly_l3": 0.06826067485266957,
+   "lexical_preemption_heuristic": 0.12470619097051852,
+   "oddity_heuristic_listener": 0.09518550767433503,
+   "rsa_l2_singleton_distinct_feat_color_l0": 0.0043433740786975586,
+   "rsa_l2_singleton_feat_color_familiar_l0": 0.0,
+   "rsa_l2_singleton_feat_color_valence_l0": 0.003667942899559704,
+   "softmax_surprisal_isolated_costly_l4": 0.06648638194736657
+  },
+  "rsa_l2_singleton_feat_color_valence_l0": {
+   "competitor_confusion_speaker": 0.08375552336569955,
+   "evaluative_prominence_l2": 0.0989136858373525,
+   "familiar_isolated_graded_costly_l2": 0.06878645794690637,
+   "isolated_graded_costly_l3": 0.07069963780574666,
+   "lexical_preemption_heuristic": 0.1258422039790702,
+   "oddity_heuristic_listener": 0.09546442838814494,
+   "rsa_l2_singleton_distinct_feat_color_l0": 0.0011743752923699105,
+   "rsa_l2_singleton_feat_color_familiar_l0": 0.003667942899559704,
+   "rsa_l2_singleton_feat_color_valence_l0": 0.0,
+   "softmax_surprisal_isolated_costly_l4": 0.06644297630296658
+  },
+  "softmax_surprisal_isolated_costly_l4": {
+   "competitor_confusion_speaker": 0.0832092938646733,
+   "evaluative_prominence_l2": 0.08062849029444544,
+   "familiar_isolated_graded_costly_l2": 0.05759426093278529,
+   "isolated_graded_costly_l3": 0.055732805627767425,
+   "lexical_preemption_heuristic": 0.102386380727575,
+   "oddity_heuristic_listener": 0.1080768921413127,
+   "rsa_l2_singleton_distinct_feat_color_l0": 0.06588863074813014,
+   "rsa_l2_singleton_feat_color_familiar_l0": 0.06648638194736657,
+   "rsa_l2_singleton_feat_color_valence_l0": 0.06644297630296658,
+   "softmax_surprisal_isolated_costly_l4": 0.0
+  }
+ }
+}
