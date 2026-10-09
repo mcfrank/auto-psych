@@ -88,6 +88,7 @@ AGENT_ENV_NAMES = frozenset(
         "OMP_NUM_THREADS",
         "MKL_NUM_THREADS",
         "OPENBLAS_NUM_THREADS",
+        "XLA_FLAGS",  # JAX's thread cap (RSA models check themselves with JAX)
         "PYTENSOR_FLAGS",
         "PYTHONPYCACHEPREFIX",
     }

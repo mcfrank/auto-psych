@@ -25,7 +25,7 @@
 # model farthest from every promoted seed) and withheld from the agents' tree.
 # Everything that names it (its fit, the configuration, prospective and
 # recovery records) stays in the cell's private/, outside the tree.
-# Overrides: PARTICIPANTS (200), DISPLAYS (20), N_EXPERIMENTS (3), AGENT_MODEL,
+# Overrides: PARTICIPANTS (100; PI 2026-10-09), DISPLAYS (20), N_EXPERIMENTS (3), AGENT_MODEL,
 # AGENT_TIMEOUT_SEC, SEED (0), RUN2_ROOT (run 2's sweep root).
 # Resubmitting a task resumes its run where it stopped.
 set -euo pipefail
@@ -101,12 +101,12 @@ done
 UNSET_ARGS=()
 for name in ${WITHHELD[@]+"${WITHHELD[@]}"}; do UNSET_ARGS+=(-u "$name"); done
 echo "[rehearsal $SCOPE] withheld from the agents' environment: ${WITHHELD[*]:-}"
-echo "[rehearsal $SCOPE] ${N_EXPERIMENTS:-3} experiments, ${PARTICIPANTS:-200} people x 10 displays of ${DISPLAYS:-20}, $AGENT_MODEL -> $RUN_DIR"
+echo "[rehearsal $SCOPE] ${N_EXPERIMENTS:-3} experiments, ${PARTICIPANTS:-100} people x 10 displays of ${DISPLAYS:-20}, $AGENT_MODEL -> $RUN_DIR"
 cd "$HARNESS_REPO"
 env ${UNSET_ARGS[@]+"${UNSET_ARGS[@]}"} PATH="$RUN_REPO/.agent_bin:$PATH" \
   "$AGENT_PY" -m src.rsa.outer.run --run-dir "$RUN_DIR" --private-dir "$CELL_DIR/private" \
     --seeds "$WORK_ROOT/live_seeds" --existing-data "$EXISTING" --collection simulated --ground-truth "$GT_FILE" \
-    --selection-scope "$SCOPE" --n-experiments "${N_EXPERIMENTS:-3}" --participants "${PARTICIPANTS:-200}" \
+    --selection-scope "$SCOPE" --n-experiments "${N_EXPERIMENTS:-3}" --participants "${PARTICIPANTS:-100}" \
     --trials 10 --displays "${DISPLAYS:-20}" --seed "$SEED" \
     --agent-root "$RUN_REPO" --agent-model "$AGENT_MODEL" --agent-timeout-sec "$AGENT_TIMEOUT_SEC"
 

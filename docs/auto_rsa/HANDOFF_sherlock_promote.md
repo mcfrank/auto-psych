@@ -73,6 +73,8 @@ The power tables set the design size and the number of participants per experime
 
 PI 2026-10-09: try both ways the live loop could select. Agents are on credits; no participants.
 
+JAX now runs on one CPU in every process of every RSA job (`_env.sh`'s `XLA_FLAGS`, Research Computing 2026-10-09; the fit workers already did), agents' self-checks included.
+
 ```bash
 cd ~/auto-psych && git fetch origin && git merge --ff-only origin/auto-rsa   # after step 2's commit
 mkdir -p "$SCRATCH/auto-psych/rsa_rehearsal/logs"
@@ -80,7 +82,7 @@ sbatch --chdir="$HOME/auto-psych" -o "$SCRATCH/auto-psych/rsa_rehearsal/logs/%x_
   scripts/rsa/slurm/outer_rehearsal.sbatch
 ```
 
-- **What it runs:** two array tasks, each one run of 3 experiments of 200 simulated people x 10 of 20 displays, with real Gemini agents (sandboxed, no network):
+- **What it runs:** two array tasks, each one run of 3 experiments of 100 simulated people (PI 2026-10-09; the live campaign's size) x 10 of 20 displays, with real Gemini agents (sandboxed, no network):
   - task 0 selects on all data so far (cumulative);
   - task 1 fits on all data but selects on the live trials only.
 - **Pairing:** both use the same seeds, the same hidden ground truth and the same seed, so experiment 1 is identical in the two; they differ only in how the inner loop selects.

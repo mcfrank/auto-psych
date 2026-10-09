@@ -83,7 +83,7 @@ class OuterConfig:
     ground_truth: Optional[Path] = None
     """simulated: the model file people answer from (fitted to the existing data)."""
     n_experiments: int = 3
-    participants: int = 200
+    participants: int = 100  # per experiment (PI 2026-10-09: power is flat from 100 to 300)
     trials: int = 10
     """Designed displays per participant (plus n_catch catch trials: 12 test trials; PI 2026-10-08)."""
     displays: int = 20

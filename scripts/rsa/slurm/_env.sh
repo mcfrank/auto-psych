@@ -34,6 +34,12 @@ fi
 # Shared with subjective randomness: VENV_PY, caches off $HOME, modules,
 # .secrets, BLAS threads.
 source "$RSA_SLURM_DIR/../../subjective_randomness/slurm/_env.sh"
+# JAX on one CPU per process (Research Computing, 2026-10-09): XLA's CPU
+# runtime sizes its thread pool by the node's cores, not the job's allocation,
+# and oversubscribed the cores. Fit children already ran single-threaded
+# (src.rsa.loop.fitting.SINGLE_THREAD_XLA_FLAGS); now every process does
+# (design, simulation, scoring). Parallelism comes from one process per CPU.
+export XLA_FLAGS="${XLA_FLAGS:+$XLA_FLAGS }--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1"
 
 # Everything the sweep reads or writes, outside every agent tree. Agents see
 # only their own tree (built from agent_src) and the loop's results dir in it.

@@ -471,3 +471,13 @@ def test_the_sweep_root_default_lives_in_one_place():
     named = [p.name for p in SCRIPTS if re.search(r"/auto-psych/rsa_run\d|rsa_run\d+\}", p.read_text())]
     assert named == []
     assert 'RSA_SWEEP_NAME="rsa_run' in (SLURM / "_cells.sh").read_text()
+
+
+def test_jax_runs_on_one_cpu_per_process_and_agents_inherit_it():
+    # Research Computing (2026-10-09): XLA sized its thread pool by the node, not the job.
+    from src.rsa.loop.fitting import SINGLE_THREAD_XLA_FLAGS
+    from src.runtime.agent_sandbox import AGENT_ENV_NAMES, agent_environment
+
+    assert SINGLE_THREAD_XLA_FLAGS in (SLURM / "_env.sh").read_text()
+    assert "XLA_FLAGS" in AGENT_ENV_NAMES
+    assert agent_environment({"XLA_FLAGS": SINGLE_THREAD_XLA_FLAGS}, "opencode")["XLA_FLAGS"] == SINGLE_THREAD_XLA_FLAGS
