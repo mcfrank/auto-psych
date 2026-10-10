@@ -127,3 +127,11 @@ def test_deploy_builds_the_page_and_never_deploys_over_a_recorded_live_study(tmp
     with pytest.raises(ValueError, match="trial lists"):
         monkeypatch.setattr(live, "recorded_live_study", lambda d: None)
         live.deploy(tmp_path / "experiment2", doc, 5, 2, s)
+
+
+def test_a_pilot_stops_after_its_data_are_in(tmp_path, monkeypatch):
+    run, _, _ = _setup(tmp_path, monkeypatch)
+    run.cfg.stop_after_collect = True
+    monkeypatch.setattr(run, "prospective", lambda n: (_ for _ in ()).throw(AssertionError("modelled a pilot")))
+    run.run()
+    assert (tmp_path / "run" / "experiment1" / "data" / "responses.csv").exists()

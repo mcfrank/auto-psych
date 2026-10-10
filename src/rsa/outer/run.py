@@ -101,6 +101,9 @@ class OuterConfig:
     repo_root: Optional[Path] = None
     """The checkout that stages and deploys the page (default: this code's)."""
     max_wait_sec: float = 3 * 60 * 60
+    stop_after_collect: bool = False
+    """End the run once the first experiment's data are in (a pilot: the page,
+    the timing, the catch-trial rate, the data path), before any modelling."""
     """How long a live experiment waits for its participants before pausing the study (main's 3 h)."""
     ground_truth: Optional[Path] = None
     """simulated: the model file people answer from (fitted to the existing data)."""
@@ -508,6 +511,9 @@ class OuterRun:
                 self.collect(n)
             except DraftOnly as stop:
                 print(f"[outer] {self.label(n)}: stopped: {stop}", flush=True)
+                return
+            if self.cfg.stop_after_collect:
+                print(f"[outer] {self.label(n)}: stopped after collection (stop_after_collect)", flush=True)
                 return
             print(f"[outer] {self.label(n)}: prospective score", flush=True)
             self.prospective(n)

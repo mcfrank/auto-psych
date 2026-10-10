@@ -507,3 +507,27 @@ def test_stderr_follows_the_output_log(script):
     # A relative --error in a header sent the rehearsal's traceback to the
     # checkout when only -o was overridden (2026-10-09).
     assert "#SBATCH --error" not in script.read_text()
+
+
+def test_the_live_launch_is_double_gated_and_parses():
+    live = (SLURM / "outer_live.sbatch").read_text()
+    launch = (SLURM.parent / "live" / "launch.sh").read_text()
+    assert _run(["bash", "-n", str(SLURM.parent / "live" / "launch.sh")]).returncode == 0
+    # A live launch needs the config's confirmation, the job's flag, and a typed yes.
+    assert 'confirm_live_recruitment)" == "True"' in live and 'CONFIRM_LIVE_RECRUITMENT:-}" == "1"' in live
+    assert 'read -r -p \'Type "yes" to launch: \'' in launch and "CONFIRM_LIVE_RECRUITMENT=1" in launch
+    # Secrets are checked before anything runs; Prolific ids stay in private/.
+    for v in ("PROLIFIC_API_TOKEN", "AUTO_PSYCH_RESULTS_TOKEN", "FIREBASE_TOKEN"):
+        assert v in live
+    assert '--private-dir "$CELL_DIR/private"' in live and "--collection live" in live
+
+
+def test_the_live_config_checks_and_costs_the_campaign():
+    from src.rsa.live.config import cost, hosting_site, load
+
+    cfg = load(SLURM.parent / "live" / "rsa_live.yaml")
+    assert cfg["confirm_live_recruitment"] is False  # committed unconfirmed; flipped deliberately
+    assert all(len(hosting_site(cfg, k)) <= 30 for k in cfg["chains"])
+    c = cost(cfg)
+    assert c["participants"] == len(cfg["chains"]) * cfg["experiments"] * cfg["participants"]
+    assert c["total_cents"] < 400_000  # the PI's ceiling ($2-4k)

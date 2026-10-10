@@ -1,0 +1,26 @@
+# The RSA live campaign (PLAN.md, "Decisions (2026-10-08, the live campaign: claim 2)"
+# and 2026-10-10). Read by `python -m src.rsa.live.config` (check / render) and by
+# scripts/rsa/slurm/outer_live.sbatch. Live recruitment spends real money: it needs
+# confirm_live_recruitment: true here AND CONFIRM_LIVE_RECRUITMENT=1 at submit, and
+# the launcher asks for a typed "yes".
+
+confirm_live_recruitment: false   # set to true, deliberately, for a live (paid) launch
+firebase_project: auto-psych-2c5da
+series_label: rsa                  # Hosting sites <firebase_project>-<series_label>-c<k> (<= 30 characters)
+chains: [0, 1, 2]                  # data/rsa/live_seeds/chains/chain_<k>
+experiments: 3                     # per chain
+participants: 200                  # per experiment: 10 of 40 designed displays each (+ 2 catch)
+displays: 40
+
+prolific:
+  reward_per_hour: 1200            # cents/hour ($12/hr)
+  estimated_completion_time: 4     # minutes: consent, instructions, a practice screen, 12 choices
+  name: "Who is Bob talking about?"
+  description: >-
+    You will see a few pictures and hear one word from a speaker, and choose the picture you
+    think the speaker means. About 4 minutes.
+  device_compatibility: [desktop]
+  completion_code: AUTO_PSYCH_COMPLETE_RSA
+  completion_code_action: AUTOMATICALLY_APPROVE
+  min_approval_rate: 98            # percent
+  exclude_earlier_participants: true
