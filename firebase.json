@@ -16,6 +16,13 @@
         }
       },
       {
+        "source": "/assign",
+        "function": {
+          "functionId": "assign",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/results",
         "function": {
           "functionId": "results",

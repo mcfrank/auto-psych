@@ -50,7 +50,7 @@ def used_images(lists_doc: dict) -> List[str]:
     return sorted(files)
 
 
-def render_page(lists_doc: dict, image_urls: Dict[str, str], *, preview: bool, consent_html: str) -> str:
+def render_page(lists_doc: dict, image_urls: Dict[str, str], *, preview: bool, consent_html: Optional[str]) -> str:
     missing = sorted(set(used_images(lists_doc)) - set(image_urls))
     if missing:
         raise ValueError(f"no URL for images {missing}")
@@ -84,7 +84,7 @@ def build_site(
     out_dir: Path,
     *,
     preview: bool = False,
-    consent_html: str = CONSENT_PLACEHOLDER,
+    consent_html: Optional[str] = CONSENT_PLACEHOLDER,
     images_dir: Path = IMAGES_DIR,
     overwrite: bool = False,
 ) -> Path:

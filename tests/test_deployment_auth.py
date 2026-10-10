@@ -142,7 +142,7 @@ def test_there_is_no_register_session_function_or_route(tmp_path):
     assert "register_session" not in source
     config_path = write_firebase_config(tmp_path / "firebase.json", _manifest(tmp_path))
     rewrites = json.loads(config_path.read_text())["hosting"]["rewrites"]
-    assert sorted(r["source"] for r in rewrites) == ["/results", "/submit"]
+    assert sorted(r["source"] for r in rewrites) == ["/assign", "/results", "/submit"]
 
 
 def test_the_live_env_gives_node_children_the_module_libraries():

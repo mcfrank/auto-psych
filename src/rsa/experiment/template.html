@@ -128,7 +128,8 @@
     // PREVIEW: true shows the recorded data on the end screen.
     const PREVIEW = {{PREVIEW_JSON}};
     // CONSENT_HTML: the consent screen's text. The default is a marked
-    // placeholder (class "rsa-placeholder"); a live deployment must replace it.
+    // placeholder (class "rsa-placeholder"); a live deployment passes null and
+    // the deploy injects the IRB consent gate instead.
     const CONSENT_HTML = {{CONSENT_HTML_JSON}};
 
     // =====================================================================
@@ -180,9 +181,30 @@
       return { index: Math.floor(Math.random() * n), assignment: 'random' };
     }
 
-    const chosen = chooseList();
+    const participantId = urlParam('participant_id') || urlParam('PROLIFIC_PID');
+
+    // A live deployment assigns lists on the server, in arrival order
+    // (functions/index.js /assign): it defines window.assignList(n), which
+    // returns a Promise of the list index. Without it, chooseList() above.
+    function resolveList() {
+      if (typeof window.assignList !== 'function') return Promise.resolve(chooseList());
+      setStatus('<div class="auto-psych-prose"><p>Preparing the study...</p></div>');
+      return Promise.resolve(window.assignList(TRIAL_LISTS.lists.length)).then(function (k) {
+        if (!Number.isInteger(k) || k < 0 || k >= TRIAL_LISTS.lists.length) {
+          throw new Error('the server assigned list ' + k + ' of ' + TRIAL_LISTS.lists.length);
+        }
+        return { index: k, assignment: 'server' };
+      });
+    }
+    resolveList().then(start).catch(function (e) {
+      console.error(e);
+      document.getElementById('rsa-jspsych').innerHTML = '';
+      setStatus('<div class="auto-psych-prose"><p class="rsa-error">The study could not start: ' +
+                escapeHtml(e && e.message ? e.message : e) + '. Please contact the researchers.</p></div>');
+    });
+
+    function start(chosen) {
     const LIST = TRIAL_LISTS.lists[chosen.index];
-    const participantId = urlParam('participant_id');
 
     function imageUrl(file) {
       if (!(file in IMAGE_URLS)) fail('No image "' + file + '" in the build.');
@@ -344,7 +366,8 @@
       button_html: nextButton('Start'),
       data: { task: 'welcome' }
     });
-    timeline.push({
+    // null: the deployment shows its own consent gate (the IRB text), not this screen.
+    if (CONSENT_HTML !== null) timeline.push({
       type: jsPsychHtmlButtonResponse,
       stimulus: '<div class="auto-psych-prose">' + CONSENT_HTML + '</div>',
       choices: ['I agree'],
@@ -394,6 +417,7 @@
       setStatus('');
       jsPsych.run(timeline);
     }).catch(function (e) { fail('The study could not load: ' + e.message); });
+    }  // start
   </script>
   </body>
 </html>

@@ -2,7 +2,10 @@
  * Firebase Cloud Functions for auto-psych deployment V1.
  *
  * POST /submit stores participant trial data under a collection session.
- * GET /results (admin token) exports collection-session responses as CSV.
+ * GET /results (admin token) exports collection-session responses as CSV, or
+ *   whole (format=json) for a domain whose trials are not the CSV's.
+ * POST /assign gives a participant the next trial list of a session, round
+ *   robin (the RSA live experiments; ./lists.js).
  *
  * Auth model: the deployment pipeline holds a shared secret (RESULTS_TOKEN,
  * provisioned via functions/.env at deploy time). /results requires it in the
@@ -16,6 +19,7 @@
 const crypto = require("crypto");
 const functions = require("firebase-functions/v1");
 const admin = require("firebase-admin");
+const { validateAssign, assignmentPlan, responsesToJson } = require("./lists");
 
 admin.initializeApp();
 
@@ -165,6 +169,7 @@ exports.submit = https.onRequest(async (req, res) => {
     prolific_study_id: body.prolific_study_id || body.prolific_study_id_from_url || null,
     prolific_pid: body.prolific_pid || null,
     prolific_session_id: body.prolific_session_id || null,
+    list_index: Number.isInteger(body.list_index) ? body.list_index : null,
     participant_id: participantId,
     consented_at: body.consented_at || null,
     submitted_at_client: body.submitted_at_client || null,
@@ -221,10 +226,60 @@ exports.results = https.onRequest(async (req, res) => {
 
   try {
     const snap = await ref.get();
+    if (req.query.format === "json") {
+      res.set("Content-Type", "application/json");
+      res.send(JSON.stringify(responsesToJson(snap.docs)));
+      return;
+    }
     res.set("Content-Type", "text/csv");
     res.send(responsesToCsv(snap.docs));
   } catch (err) {
     console.error(err);
     res.status(500).send("Read failed");
+  }
+});
+
+exports.assign = https.onRequest(async (req, res) => {
+  res.set("Access-Control-Allow-Origin", "*");
+  if (req.method === "OPTIONS") {
+    res.set("Access-Control-Allow-Headers", "Content-Type");
+    res.status(204).send("");
+    return;
+  }
+  if (req.method !== "POST") {
+    res.status(405).send("Method Not Allowed");
+    return;
+  }
+  let body;
+  try {
+    body = parseBody(req);
+  } catch {
+    res.status(400).send("Invalid JSON");
+    return;
+  }
+  const invalid = validateAssign(body);
+  if (invalid) {
+    res.status(400).send(invalid);
+    return;
+  }
+  const nLists = Number(body.n_lists);
+  const sessionRef = db.collection("collection_sessions").doc(String(body.collection_session_id));
+  const stateRef = sessionRef.collection("meta").doc("list_assignment");
+  const participantRef = sessionRef.collection("list_assignments").doc(String(body.participant_key));
+  try {
+    const listIndex = await db.runTransaction(async (tx) => {
+      const [state, prior] = await Promise.all([tx.get(stateRef), tx.get(participantRef)]);
+      const plan = assignmentPlan(state.exists ? state.data() : null, prior.exists ? prior.data() : null, nLists);
+      if (plan.nextState) {
+        const now = admin.firestore.FieldValue.serverTimestamp();
+        tx.set(stateRef, { ...plan.nextState, updated_at: now });
+        tx.set(participantRef, { list_index: plan.listIndex, assigned_at: now });
+      }
+      return plan.listIndex;
+    });
+    res.status(200).json({ list_index: listIndex });
+  } catch (err) {
+    console.error(err);
+    res.status(409).send(String(err.message || err));
   }
 });

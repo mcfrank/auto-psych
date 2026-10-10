@@ -89,6 +89,19 @@ class OuterConfig:
     promoted: Optional[Path] = None
     """Every promoted seed, the prospective bar (default: ``seeds``)."""
     collection: Literal["simulated", "live"] = "simulated"
+    prolific_mode: Literal["test", "live"] = "test"
+    """Live collection: "test" deploys the page and makes a Prolific draft to
+    preview (nothing is collected); "live" publishes the study (real money)."""
+    confirm_live_recruitment: bool = False
+    """Required with prolific_mode "live" (main's double gate; the launcher asks for a typed yes)."""
+    firebase_project: Optional[str] = None
+    run_label: str = ""
+    """This run's label: its pages are served at <site>/e<N>-<label>/."""
+    collection_owner: str = "auto-psych"
+    repo_root: Optional[Path] = None
+    """The checkout that stages and deploys the page (default: this code's)."""
+    max_wait_sec: float = 3 * 60 * 60
+    """How long a live experiment waits for its participants before pausing the study (main's 3 h)."""
     ground_truth: Optional[Path] = None
     """simulated: the model file people answer from (fitted to the existing data)."""
     n_experiments: int = 3
@@ -261,19 +274,58 @@ class OuterRun:
             return path
         doc = json.loads(self.design(n).read_text())
         if self.cfg.collection == "live":
-            raise NotImplementedError("live collection: deploying the page and collecting its data is not wired yet")
-        gt = Path(self.cfg.ground_truth)
-        fitted = loop_fit(gt, gt.stem, self.existing(), self.settings, self.cache,
-                          time_limit_sec=self.ref_limit)
-        first = sum(json.loads((self.exp(k) / "data" / "participants.json").read_text())["n_recruited"]
-                    for k in range(1, n))
-        rows = simulate_participants(doc, gt, fitted, self.cfg.participants, experiment=self.label(n),
-                                     seed=self.cfg.seed * 1000 + n, first_id=first)
+            rows, extra = self.collect_live(n, doc)
+            n_recruited = extra["n_responses"]
+        else:
+            gt = Path(self.cfg.ground_truth)
+            fitted = loop_fit(gt, gt.stem, self.existing(), self.settings, self.cache,
+                              time_limit_sec=self.ref_limit)
+            first = sum(json.loads((self.exp(k) / "data" / "participants.json").read_text())["n_recruited"]
+                        for k in range(1, n))
+            rows = simulate_participants(doc, gt, fitted, self.cfg.participants, experiment=self.label(n),
+                                         seed=self.cfg.seed * 1000 + n, first_id=first)
+            n_recruited, extra = self.cfg.participants, {}
         kept, record = exclude_on_catch(rows, self.cfg.max_catch_errors)
-        _write_json(dict(record, n_recruited=self.cfg.participants, collection=self.cfg.collection,
-                         ), self.exp(n) / "data" / "participants.json")
+        _write_json(dict(record, n_recruited=n_recruited, n_target=self.cfg.participants,
+                         collection=self.cfg.collection, **extra), self.exp(n) / "data" / "participants.json")
         _write_csv(kept, path)
         return path
+
+    def collect_live(self, n: int, doc: dict) -> tuple[pd.DataFrame, dict]:
+        """Deploy experiment n's page, recruit on Prolific, fetch and convert its data.
+
+        Double-gated like main's live runs: ``prolific_mode="live"`` publishes a
+        paid study, so it also needs ``confirm_live_recruitment``. The raw
+        responses (with Prolific ids) and the map from Prolific ids to the run's
+        participant ids are written to the private directory only."""
+        from src.pipelines.outer_loop.orchestrator import require_outside_agent_trees
+        from src.rsa.live import collect as live
+        from src.runtime.config import REPO_ROOT
+
+        c = self.cfg
+        if c.prolific_mode == "live" and not c.confirm_live_recruitment:
+            raise RuntimeError("prolific_mode 'live' publishes a paid Prolific study: it needs "
+                               "--confirm-live-recruitment as well")
+        if not c.run_label:
+            raise ValueError("live collection needs --run-label (this run's Hosting path and study label)")
+        settings = live.LiveSettings(prolific_mode=c.prolific_mode, firebase_project=c.firebase_project,
+                                     run_label=c.run_label, collection_owner=c.collection_owner,
+                                     repo_root=Path(c.repo_root) if c.repo_root else REPO_ROOT,
+                                     max_wait_sec=c.max_wait_sec)
+        manifest = live.deploy(self.exp(n), doc, c.participants, n, settings)
+        live.wait_for_participants(manifest, c.participants, self.exp(n), settings.max_wait_sec)
+        responses = live.fetch_responses(manifest)
+        raw = self.private / "raw_collected" / f"experiment{n}.json"
+        require_outside_agent_trees(raw, "the raw live responses (Prolific ids)")
+        if self.dir.resolve() in raw.resolve().parents:
+            raise RuntimeError(f"{raw} is inside the run directory the agents read")
+        _write_json(responses, raw)
+        id_map = self.private / "participant_ids.json"
+        ids = json.loads(id_map.read_text()) if id_map.exists() else {}
+        rows, ids, record = live.responses_to_rows(responses, study_id=manifest["prolific_study_id"],
+                                                   experiment=self.label(n), ids=ids)
+        _write_json(ids, id_map)
+        return rows, record
 
     def prospective(self, n: int) -> Path:
         """Claim 2: the models going in, fitted to the data before this
@@ -438,14 +490,25 @@ class OuterRun:
         self.dir.mkdir(parents=True, exist_ok=True)
         record = self.private / "outer_config.json"
         cfg = {k: str(v) if isinstance(v, Path) else v for k, v in asdict(self.cfg).items()}
-        if record.exists() and json.loads(record.read_text()) != cfg:
+        # How a live run recruits may change between its test deployment and its
+        # live one, and on a resume; what it studies may not.
+        operational = ("prolific_mode", "confirm_live_recruitment", "max_wait_sec", "repo_root")
+        same = lambda a, b: {k: v for k, v in a.items() if k not in operational} == {  # noqa: E731
+            k: v for k, v in b.items() if k not in operational}
+        if record.exists() and not same(json.loads(record.read_text()), cfg):
             raise ValueError(f"{record} records another configuration; a run is resumed with its own")
         _write_json(cfg, record)
+        from src.rsa.live.collect import DraftOnly
+
         for n in range(1, self.cfg.n_experiments + 1):
             print(f"[outer] {self.label(n)}: design", flush=True)
             self.design(n)
             print(f"[outer] {self.label(n)}: collect ({self.cfg.collection})", flush=True)
-            self.collect(n)
+            try:
+                self.collect(n)
+            except DraftOnly as stop:
+                print(f"[outer] {self.label(n)}: stopped: {stop}", flush=True)
+                return
             print(f"[outer] {self.label(n)}: prospective score", flush=True)
             self.prospective(n)
             print(f"[outer] {self.label(n)}: inner loop", flush=True)

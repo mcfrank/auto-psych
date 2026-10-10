@@ -404,6 +404,15 @@ def write_firebase_config(config_path: Path, manifest: DeploymentManifest) -> Pa
                     "region": manifest.firebase_region,
                 },
             },
+            # The RSA live pages' list assignment (functions/index.js; a page
+            # that never calls it is unaffected).
+            {
+                "source": "/assign",
+                "function": {
+                    "functionId": "assign",
+                    "region": manifest.firebase_region,
+                },
+            },
         ],
     }
     if manifest.hosting_site or manifest.firebase_project:
