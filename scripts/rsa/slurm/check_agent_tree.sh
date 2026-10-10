@@ -66,6 +66,8 @@ for rel in data docs tests scripts .git .secrets CLAUDE.md AGENTS.md \
   [[ -e "$tree/$rel" ]] && present+=("$rel")
 done
 [[ ${#present[@]} -eq 0 ]] || fail "paths agent_tree.exclude should have removed are present:" "${present[@]}"
+mapfile -t secrets < <(find "$tree" \( -name '.secrets*' -o -name '*.secrets' \) -print | sed "s|^$tree/||")
+[[ ${#secrets[@]} -eq 0 ]] || fail "secrets files (or backups of one) in the tree:" "${secrets[@]}"
 mapfile -t csvs < <(find "$tree" -path "$tree/_runs" -prune -o -type f \( -name '*.csv' -o -name '*.csv.gz' \) -print | sed "s|^$tree/||")
 [[ ${#csvs[@]} -eq 0 ]] || fail "CSV files outside _runs/ (agents must see only their cell's training data):" "${csvs[@]}"
 

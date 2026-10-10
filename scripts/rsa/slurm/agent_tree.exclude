@@ -77,8 +77,10 @@ AGENTS.md
 /HERO_RUN_DESIDERATA.md
 # Credentials: the agents get only their own login, from the sandbox's
 # environment allowlist.
-.secrets
-.secrets.example
+# Any secrets file or backup of one (.secrets~, .secrets.bak, …): the exact
+# name alone let an editor's backup of .secrets through (2026-10-10).
+.secrets*
+*.secrets
 
 # --- subjective randomness's held-out material (not this sweep's; no RSA agent needs it)
 ground_truth_models.py

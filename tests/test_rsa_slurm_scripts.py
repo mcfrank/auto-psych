@@ -35,6 +35,8 @@ REAL_DATA = REPO / "src/pipelines/outer_loop/projects/rsa_reference/data"
 # Paths no RSA agent may see (PI decisions 2026-10-07 and the task brief).
 FORBIDDEN = [
     "data",
+    ".secrets~",  # an editor's backup of .secrets (2026-10-10)
+    ".secrets.bak",
     "data/rsa/external",
     "src/pipelines/outer_loop/projects/rsa_reference/data",
     "src/pipelines/outer_loop/projects/rsa_reference/data/pragmods_trials.csv",
@@ -531,3 +533,15 @@ def test_the_live_config_checks_and_costs_the_campaign():
     c = cost(cfg)
     assert c["participants"] == len(cfg["chains"]) * cfg["experiments"] * cfg["participants"]
     assert c["total_cents"] < 400_000  # the PI's ceiling ($2-4k)
+
+
+def test_staging_never_copies_a_secrets_file_or_its_backup():
+    text = (SLURM / "stage_code.sh").read_text()
+    assert "--exclude '.secrets*'" in text
+
+
+def test_the_check_refuses_a_secrets_backup_in_a_tree(scrubbed_tree):
+    (scrubbed_tree / ".secrets~").write_text("KEY=not-a-real-secret\n")
+    result = _run(["bash", str(SLURM / "check_agent_tree.sh"), str(scrubbed_tree)])
+    (scrubbed_tree / ".secrets~").unlink()
+    assert result.returncode != 0 and "secrets" in (result.stdout + result.stderr)

@@ -63,8 +63,10 @@ preprocess.py
 /src/subjective_randomness/
 .pytest_cache
 # Every agent could read the Prolific, Firebase, Google and Claude tokens.
-.secrets
-.secrets.example
+# Any secrets file or backup of one (.secrets~, .secrets.bak, …): the exact
+# name alone let an editor's backup of .secrets through (2026-10-10).
+.secrets*
+*.secrets
 
 # Project literature: the source papers of the ground truths (Falk & Konold
 # 1997, Hahn & Warren 2009, Kahneman & Tversky 1972, Griffiths et al.) and notes

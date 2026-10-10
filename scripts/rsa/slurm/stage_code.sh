@@ -44,7 +44,7 @@ echo "[stage] staging harness repo -> $HARNESS_REPO"
 mkdir -p "$HARNESS_REPO"
 rsync -a --delete --exclude '.git' --exclude '.venv' --exclude '__pycache__' \
   --exclude '*.nc' --exclude 'node_modules' --exclude '/data/' \
-  --exclude '.secrets' --exclude '.xdg_data' \
+  --exclude '.secrets*' --exclude '*.secrets' --exclude '.xdg_data' \
   --exclude '.uv_cache' --exclude '.pip_cache' --exclude '.cache' --exclude '.hf' \
   "$REPO"/ "$HARNESS_REPO"/
 touch "$HARNESS_REPO/.here"  # pyprojroot sentinel (.git is not copied)
