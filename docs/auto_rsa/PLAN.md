@@ -10,6 +10,9 @@ paradigm.
 This file is the running plan and the record of decisions; update it as phases
 land. Handoffs to local sessions (Sherlock, live runs) should point here.
 
+**For the write-up, start at `CAMPAIGN_LOG.md`:** every decision with its reason and how it
+differs from main, and every run in order, on one page. Add a line there with each new decision or run.
+
 ## Decisions (2026-10-06)
 
 | Decision | Choice | Why |
