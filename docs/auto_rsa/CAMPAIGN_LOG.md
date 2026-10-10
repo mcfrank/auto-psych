@@ -160,7 +160,7 @@ games, and support two claims:
 | 10-09 | **Chains** | Sherlock 47075879 | seeds split 6/5/5 | power at N=200, D=40: 0.982 / 0.849 / 0.978 | the chain seeds | `data/rsa/live_seeds/chains/` |
 | 10-08/09 | **Rehearsal 1** | Sherlock, array 47081376 | chain 0, 3 experiments × 200 simulated people; cumulative vs live-only selection; ground truth `literal_listener` | cumulative never moved; live-only collapsed onto near-copies; experiment 3's design had power 0.25; crashed on a 30-min fit limit; spend not recorded | guarded selection, bar-aware design, distinct carry, no limit on models in play, KL recovery, spend, plain scope, committed-model claim 2 (#26–27, 34–41) | `REHEARSAL_REVIEW.md` |
 | 10-10 | Live wiring | cloud | Firebase `/assign` and `/results` JSON, page, collection, launcher, config | e2e tests | | `HANDOFF_live.md` |
-| 10-10 | **Rehearsal 2** (interim) | Sherlock 47176690 | chain 0, guarded, 2 experiments, coherent ground truth | design power 0.889 → 0.840; **claim 2 +147.0 (SE 43) vs best starting, +49.3 (SE 15) vs best promoted seed**; $57 in experiment 1; not evidence about recovery (the ground truth is the agents' own family) | KL label bug found and fixed (86906717); carry-cap question (§5) | `REHEARSAL2_REPORT.md` |
+| 10-09/10 | **Rehearsal 2** | Sherlock 47176690, 15 h 20 min, completed | chain 0, guarded, 2 experiments, coherent ground truth | design power 0.889 → 0.840; **claim 2 +147.0 (SE 43) vs best starting, +49.3 (SE 15) vs best promoted seed**; per-display KL to the truth 0.0122 → 0.00021 (exp 1), 0.00017 (exp 2); exp 2 stopped after 2 stale rounds; $83 for 60 agent calls; not evidence about recovery (the ground truth is the agents' own family) | KL label bug found and fixed (86906717); carry-cap question (§5) | `REHEARSAL2_REPORT.md`, `data/rsa/rehearsal2/` |
 | 10-10 | **Live stage 1** (test deploy) | Sherlock 47242197 | chain 0's design deployed; Prolific draft | page live, draft made; **not passed:** data didn't save (Firestore nested arrays); 38 of 40 displays were 4×4; a `.secrets~` backup in staging (never read) | JSON-string trials, secrets exclusions, RSA-only blocklist, quotas and wider pool (#28–31, 44, 47) | `STAGE1_FINDINGS.md` |
 | 10-10 | Quota comparison + model check | cloud | chain 0's experiment-1 design, free vs quotas; all 505 model files on the wider pool | power 0.760 vs 0.767 (±0.007); 6 vs 1 two-object displays; every model defined | quotas adopted as defaults | `PLAN.md` "Design mixture" |
 | next | Live stage 1 re-run | Sherlock | fresh `WORK_ROOT`, new design code | | | `STAGE1_FINDINGS.md` §7 |
@@ -169,9 +169,9 @@ games, and support two claims:
 
 ## 5. Open
 
-- **Rehearsal 3?** Leaning no: rehearsal 2 covers the loop, and the design changes since are
-  covered by the quota comparison, the model check and the stage-1 re-run. Decide when rehearsal
-  2 ends.
+- **Rehearsal 3?** Leaning no (rehearsal 2 completed cleanly; it covers the loop, and the design
+  changes since are covered by the quota comparison, the model check and the stage-1 re-run).
+  PI to confirm.
 - **Carry cap and families:** rehearsal 2 kept six close relatives and dropped two distinct
   models over the cap. One option is to fill the cap across families first. No change made.
 - **A recovery test with an unfamiliar, pre-fixed ground truth:** optional, for the paper. It is
