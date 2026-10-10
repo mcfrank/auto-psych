@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from src.rsa.design.eig import power, select
+from src.rsa.design.eig import Quota, composition, power, select
 
 VALID3 = np.array([[True, True, True]])
 
@@ -57,3 +57,49 @@ def test_a_class_slot_outside_the_layout_is_refused():
     probs[0][:, 0, 2] = 0.1
     with pytest.raises(ValueError):
         select(probs, np.array([[True, True, False]]), 1, n_responses=5, n_scenarios=50)
+
+
+def _kinds_design(seed=0):
+    """Displays 0-5 tell the models apart (kind "big"), 6-11 barely do ("small")."""
+    rng = np.random.default_rng(seed)
+    a, b = [], []
+    for d in range(12):
+        gap = 0.4 if d < 6 else 0.04 + 0.01 * rng.random()
+        a.append([0.45 + gap / 2, 0.35 - gap / 2, 0.2])
+        b.append([0.45 - gap / 2, 0.35 + gap / 2, 0.2])
+    small = np.arange(12) >= 6
+    return models_on([a, b], spread=0.05, seed=seed), np.ones((12, 3), dtype=bool), small
+
+
+def test_quotas_take_the_best_displays_of_each_kind_and_leave_the_rest_free():
+    probs, valid, small = _kinds_design()
+    free = select(probs, valid, 6, n_responses=5, n_scenarios=400, seed=2)
+    assert not any(small[free.indices])  # free EIG never goes to the uninformative kind
+    quota = Quota("small", "size", small, 2)
+    sel = select(probs, valid, 6, n_responses=5, n_scenarios=400, seed=2, quotas=[quota])
+    assert int(small[sel.indices].sum()) == 2 and composition([quota], sel.indices) == {"small": 2}
+    # the quota waits until it must: the informative kind comes first
+    assert not any(small[sel.indices[:4]])
+    assert sel.joint_eig_bits[-1] <= free.joint_eig_bits[-1] + 0.02
+
+
+def test_quotas_on_crossing_dimensions_are_all_met():
+    probs, valid, small = _kinds_design(seed=1)
+    odd = np.arange(12) % 2 == 1
+    quotas = [Quota("small", "size", small, 2), Quota("big", "size", ~small, 2),
+              Quota("odd", "parity", odd, 3), Quota("even", "parity", ~odd, 2)]
+    sel = select(probs, valid, 6, n_responses=5, n_scenarios=300, seed=3, quotas=quotas)
+    got = composition(quotas, sel.indices)
+    assert all(got[q.name] >= q.minimum for q in quotas) and len(set(sel.indices)) == 6
+
+
+def test_impossible_quotas_are_refused():
+    probs, valid, small = _kinds_design()
+    with pytest.raises(ValueError, match="pool has 6"):
+        select(probs, valid, 8, n_responses=5, n_scenarios=50, quotas=[Quota("small", "size", small, 7)])
+    with pytest.raises(ValueError, match="need 7 displays of 6"):
+        select(probs, valid, 6, n_responses=5, n_scenarios=50,
+               quotas=[Quota("small", "size", small, 4), Quota("big", "size", ~small, 3)])
+    with pytest.raises(ValueError, match="overlap"):
+        select(probs, valid, 6, n_responses=5, n_scenarios=50,
+               quotas=[Quota("small", "size", small, 1), Quota("all", "size", np.ones(12, bool), 1)])

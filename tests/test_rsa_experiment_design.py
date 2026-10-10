@@ -131,6 +131,20 @@ def test_every_game_of_the_design_space_can_be_drawn():
     assert len(_tests(lst)) == len(pool) + 5
 
 
+def test_every_live_display_can_be_drawn_with_catch_trials_of_its_shape():
+    """The live pool (redundant features, two objects with four features;
+    PI 2026-10-10): every display draws, and a 2 x 4 catch trial exists."""
+    from src.rsa.loop.novelty import plain_pool
+
+    pool = [c for c in plain_pool() if c.shape[0] == 2]
+    specs = tuple(TrialSpec.from_context(ctx, label=f"pool{i}") for i, ctx in enumerate(pool))
+    lst = trial_list(Design(name="two", specs=specs), seed=4, list_index=0, n_catch=20)
+    catch = [t for t in _tests(lst) if t["is_catch"]]
+    assert len(_tests(lst)) == len(pool) + 20 and {len(t["objects"][0]) for t in catch} >= {4}
+    for t in catch:
+        assert sum(row[t["utterance"]] for row in t["objects"]) == 1
+
+
 def test_n_trials_draws_a_subset_per_list():
     lists = trial_lists(DEMO, seed=10, n_lists=10, n_catch=1, n_trials=4)["lists"]
     drawn = [sorted(t["spec_index"] for t in _tests(lst) if not t["is_catch"]) for lst in lists]

@@ -28,14 +28,18 @@ from src.rsa.model_file import RSAModel
 
 DEFAULT_NOVELTY_RMSE_THRESHOLD = 0.002
 POOL_SIZES = ((2, 2), (3, 2), (3, 3), (3, 4), (4, 2), (4, 3), (4, 4))
+# The live phase's displays (PI 2026-10-10): every size up to 4 x 4, features
+# that share an extension included (`src.rsa.design_space`, ``synonyms``), so
+# also two objects with three or four features.
+LIVE_POOL_SIZES = ((2, 2), (2, 3), (2, 4), (3, 2), (3, 3), (3, 4), (4, 2), (4, 3), (4, 4))
 MAX_DRAWS = 100
 
 
 def plain_pool() -> List[Context]:
-    """The novelty pool's plain displays only: the ones the live experiments can
-    show (the design pool). In the live phase two models are distinct only if
-    they differ here (PI 2026-10-10)."""
-    return context_pool(POOL_SIZES, include_prior_queries=True)
+    """The displays the live experiments can show (the design pool): plain, every
+    size in ``LIVE_POOL_SIZES``, redundant features included. In the live phase
+    two models are distinct only if they differ here (PI 2026-10-10)."""
+    return context_pool(LIVE_POOL_SIZES, include_prior_queries=True, synonyms=True)
 
 
 def novelty_pool() -> List[Context]:

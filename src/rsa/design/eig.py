@@ -21,6 +21,12 @@ Two things differ from the binary task:
 * **Power.** The same scenarios, scored on a finished design at several N,
   say how often the model that generated the data ends with the highest
   posterior: the power of one experiment to tell the promoted models apart.
+* **Quotas** (PI 2026-10-10). Optional minimum counts of kinds of display
+  (`Quota`, e.g. at least 6 with two objects). Selection stays greedy on EIG,
+  among the displays that leave every quota reachable with the picks still to
+  make: free while the quotas can wait, and confined to the kinds still short
+  once they cannot. Unconstrained EIG put 31 of 40 displays on 4 x 4 games in
+  the first rehearsal, and 37 of 40 on mumble trials in another experiment.
 
 Inputs are arrays: ``probs[m]`` is model m's (draws, displays, width) class
 probabilities, each class's probability at its first object's index and zero
@@ -122,6 +128,56 @@ class State:
         return _entropy_bits(self._posterior(ll))
 
 
+@dataclass(frozen=True)
+class Quota:
+    """At least ``minimum`` of a design's displays from ``members`` (a bool mask
+    over the displays). The quotas of one ``dimension`` (e.g. "objects") are
+    disjoint kinds of display, so each dimension's shortfall is at most the
+    picks left; kinds of different dimensions (objects, query) cross."""
+
+    name: str
+    dimension: str
+    members: np.ndarray  # (displays,) bool
+    minimum: int
+
+
+def _check_quotas(quotas: Sequence[Quota], pool: Sequence[int], n_select: int) -> None:
+    by_dim: Dict[str, List[Quota]] = {}
+    for q in quotas:
+        by_dim.setdefault(q.dimension, []).append(q)
+        available = int(q.members[list(pool)].sum())
+        if q.minimum > available:
+            raise ValueError(f"quota {q.name}: at least {q.minimum} displays, but the pool has {available}")
+    for dim, qs in by_dim.items():
+        if sum(q.minimum for q in qs) > n_select:
+            raise ValueError(f"the {dim} quotas need {sum(q.minimum for q in qs)} displays of {n_select}")
+        overlap = np.sum([q.members for q in qs], axis=0)
+        if np.any(overlap > 1):
+            raise ValueError(f"the {dim} quotas overlap: a display may count toward one kind per dimension")
+
+
+def _allowed(quotas: Sequence[Quota], picks: Sequence[int], left: Sequence[int], n_select: int) -> List[int]:
+    """The displays in ``left`` whose pick leaves every quota reachable."""
+    if not quotas:
+        return list(left)
+    remaining = n_select - len(picks) - 1
+    short: Dict[str, List[Quota]] = {}
+    for q in quotas:
+        if q.minimum > int(q.members[list(picks)].sum()):
+            short.setdefault(q.dimension, []).append(q)
+    gap = {dim: sum(q.minimum - int(q.members[list(picks)].sum()) for q in qs) for dim, qs in short.items()}
+    out = []
+    for c in left:
+        if all(gap[dim] - any(q.members[c] for q in qs) <= remaining for dim, qs in short.items()):
+            out.append(c)
+    return out
+
+
+def composition(quotas: Sequence[Quota], picks: Sequence[int]) -> Dict[str, int]:
+    """How many of ``picks`` each quota's kind has."""
+    return {q.name: int(q.members[list(picks)].sum()) for q in quotas}
+
+
 @dataclass
 class Selection:
     indices: List[int]
@@ -131,18 +187,21 @@ class Selection:
 
 def select(probs: Sequence[np.ndarray], valid: np.ndarray, n_select: int, *, n_responses: int,
            prior: Optional[np.ndarray] = None, n_scenarios: int = 2000, seed: int = 0,
-           candidates: Optional[Sequence[int]] = None, leave_one_out: bool = True) -> Selection:
+           candidates: Optional[Sequence[int]] = None, leave_one_out: bool = True,
+           quotas: Sequence[Quota] = ()) -> Selection:
     """Greedy joint-EIG selection of ``n_select`` displays, each answered ``n_responses`` times.
 
     Stops at the noise floor (the best gain within two Monte Carlo SE of zero)
     and fills the rest by single-response EIG conditioned on the picks, as
-    main's design does (user decision 2026-09-26).
+    main's design does (user decision 2026-09-26). With ``quotas``, each pick
+    is the best among the displays that keep every quota reachable.
     """
     _validate(probs, valid)
     prior = np.full(len(probs), 1 / len(probs)) if prior is None else np.asarray(prior, float) / np.sum(prior)
     pool = list(range(valid.shape[0])) if candidates is None else list(candidates)
     if n_select > len(pool):
         raise ValueError(f"{n_select} picks from a pool of {len(pool)}")
+    _check_quotas(quotas, pool, n_select)
     h0 = float(_entropy_bits(prior))
     out = Selection([], [], [])
     for responses, source in ((n_responses, "eig"), (1, "eig_single_response_fill")):
@@ -151,7 +210,9 @@ def select(probs: Sequence[np.ndarray], valid: np.ndarray, n_select: int, *, n_r
             state.add(c)
         current = _entropy_bits(state.posterior())
         while len(out.indices) < n_select:
-            left = [c for c in pool if c not in out.indices]
+            left = _allowed(quotas, out.indices, [c for c in pool if c not in out.indices], n_select)
+            if not left:
+                raise ValueError(f"no display keeps the quotas reachable after {len(out.indices)} picks")
             ents = {c: state.entropies_with(c) for c in left}
             best = min(left, key=lambda c: ents[c].mean())
             gain = current - ents[best]

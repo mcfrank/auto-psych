@@ -23,7 +23,8 @@ a prior query, Bob mumbles) and optionally a message set and role labels.
   up to three objects, and a fourth object reuses one.
 * **catch trials** — `n_catch` unambiguous trials are inserted at random
   positions: a game of the shape (objects x features) of a random design
-  trial, from `src.rsa.design_space.games`, with a word true of exactly one
+  trial, from `src.rsa.design_space.games` (with redundant features only when
+  the shape has no other game), with a word true of exactly one
   object (the `catch_target`). They are labelled `condition="catch"`.
 * **practice** — one unambiguous trial (same rule as a catch trial, shape
   `PRACTICE_SHAPE`) before the test trials, recorded as `phase="practice"`.
@@ -275,14 +276,21 @@ def _rotate_domain(n_features: int, order: Sequence[str], counts: Dict[str, int]
 
 
 def _catch_spec(shape: Tuple[int, int], rng: np.random.Generator) -> Tuple[TrialSpec, int]:
-    """An unambiguous trial of this shape: a word true of exactly one object."""
+    """An unambiguous trial of this shape: a word true of exactly one object.
+
+    From the games without redundant features when the shape has one (as every
+    list built before 2026-10-10), else with them (two objects, four features)."""
     n_obj, n_feat = shape
-    candidates = [
-        (matrix, word)
-        for matrix in games(n_obj, n_feat)
-        for word in range(n_feat)
-        if sum(row[word] for row in matrix) == 1
-    ]
+    candidates = []
+    for synonyms in (False, True):
+        candidates = [
+            (matrix, word)
+            for matrix in games(n_obj, n_feat, synonyms)
+            for word in range(n_feat)
+            if sum(row[word] for row in matrix) == 1
+        ]
+        if candidates:
+            break
     if not candidates:
         raise ValueError(f"no {n_obj}x{n_feat} game has a word true of exactly one object")
     matrix, word = candidates[int(rng.integers(len(candidates)))]

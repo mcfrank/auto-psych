@@ -72,6 +72,9 @@ from src.runtime.config import PROJECT_ASSETS_DIR
 
 STARTING_MODELS = PROJECT_ASSETS_DIR / "rsa_reference" / "seed_models"
 LIVE_SOURCE = "auto_psych"  # src.rsa.experiment.convert's source label
+# Every design's minimum shares of kinds of display (PI 2026-10-10): of 40, at
+# least 6 two-object and 10 three-object displays, and 8-20 mumble trials.
+DESIGN_QUOTAS = ("objects=2:0.15", "objects=3:0.25", "query=prior:0.2", "query=word:0.5")
 
 
 @dataclass
@@ -137,6 +140,11 @@ class OuterConfig:
     carried_share: float = 0.5
     """The design's prior mass on the models going in; the bar models (starting
     models and promoted seeds, so the displays test claim 2) share the rest."""
+    quotas: List[str] = field(default_factory=lambda: list(DESIGN_QUOTAS))
+    """Minimum shares of kinds of display in every design, EIG choosing within
+    them (`src.rsa.design.run.parse_quotas`; PI 2026-10-10). The default: of
+    40 displays at least 6 with two objects, 10 with three, 8 mumble trials and
+    20 with a word. Each design also records the free design's power beside it."""
     num_warmup: int = 1000
     num_samples: int = 1000
     num_chains: int = 4
@@ -259,6 +267,7 @@ class OuterRun:
         design_run.main(design_run.Args(
             models_dir=self.models_input(n), data=self.prior_data(n), cache=self.cache, out=out,
             bar_models_dirs=[Path(c.starting_models), Path(c.promoted or c.seeds)], carried_share=c.carried_share,
+            quotas=list(c.quotas),
             withhold=[Path(c.ground_truth)] if c.ground_truth else [],
             trials_per_participant=c.trials, participants=c.participants, displays=[c.displays],
             power_participants=[c.participants], n_draws=c.n_draws, n_scenarios=c.n_scenarios,

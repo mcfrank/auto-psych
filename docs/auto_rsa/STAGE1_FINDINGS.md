@@ -210,7 +210,8 @@ shrinks the pool slightly.
 **PI decisions (§3–4):**
 - **The blocklist** now covers only earlier RSA studies (`exclude_earlier_participants_from: project`).
 - **Display sizes and mumble trials:** the agents are told what the experiments show and why
-  (`brief.PLAIN_SCOPE_NOTE`). Whether the design should also guarantee a mixture is still open.
+  (`brief.PLAIN_SCOPE_NOTE`), and the design now has quotas with EIG inside them (`PLAN.md`,
+  "Design mixture"); the pool also gained redundant features and 2 × 3 / 2 × 4 displays.
 - **The completion time:** the pilot measures it.
 
 ## 8. Secrets check, done (local session, 2026-10-10)

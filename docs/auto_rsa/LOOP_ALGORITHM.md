@@ -17,7 +17,7 @@ out. "Live" settings and rehearsal-2 settings are the same, except where a step 
 | **K** | the chain's seeds, a subset of P. Chain 0 (the rehearsal) = {`competitor_confusion_speaker`, `isolated_graded_costly_l3`, `oddity_heuristic_listener`, `rsa_l2_singleton_feat_color_valence_l0`, `rsa_l2`, `rsa_l1`} |
 | **B** | the *bar*: S ∪ P, the models claim 2 must beat |
 | **M_n** | the models going into experiment *n* |
-| **pool** | the 794 plain displays the design may pick: 3×3 and 4×4 games, twins, prior queries; no valence, familiarization or greyscale |
+| **pool** | the 1,597 plain displays the design may pick (`novelty.plain_pool`): every game from 2 objects × 2 features to 4 × 4, twins, features that share an extension (a redundant feature), each word and a prior query; no valence, familiarization or greyscale. (794 before 2026-10-10: no redundant features and no 2 × 3 or 2 × 4) |
 
 **Fit(m, D).** NUTS on D, dense mass matrix, 4 chains × (1,000 warm-up + 1,000 draws),
 target acceptance 0.9, seed 0.
@@ -68,8 +68,14 @@ target acceptance 0.9, seed 0.
    every pool display.
 3. **Prior over the design set:** 0.5 spread evenly over M_n, 0.5 spread evenly over the
    bar models that stayed in.
-4. **Pick 40 displays by greedy joint EIG.** Each display gets 50 responses (200 people
-   × 10 / 40).
+4. **Pick 40 displays by greedy joint EIG, within quotas.** Each display gets 50
+   responses (200 people × 10 / 40).
+   - **Quotas** (PI 2026-10-10): at least 6 two-object displays, 10 three-object, 8
+     mumble trials and 20 with a word. Each pick is the best display among those that
+     keep every quota reachable with the picks left, so EIG chooses freely until a quota
+     must be met, then within the kinds still short.
+   - **The free design** (no quotas) is selected too, in a second process, and recorded
+     with its kinds and power in `eig.json` (`free`), so what the quotas cost is on record.
    - **Scenarios:** 2,000; draw a model from the prior, one of its draws, and multinomial
      responses.
    - **Leave-one-out:** each scenario's likelihood average leaves out the draw that
@@ -191,7 +197,7 @@ target acceptance 0.9, seed 0.
 | Does the loop's output predict new people better than the literature's models? (claim 2) | `prospective.json`, `live_vs` |
 | Did the loop move toward the truth? (*simulated*) | `recovery.json`, `kl_pool` / `kl_design` |
 | What was carried, and what was merged | `experiment<n>/carry.json` |
-| What the design aimed at | `design/eig.json`: `models`, `model_groups`, `prior`, `merged`, power |
+| What the design aimed at | `design/eig.json`: `models`, `model_groups`, `prior`, `merged`, `kinds`, `quotas`, power, and `free` (the design without quotas, with its power) |
 | What the agents tried | `model_loop/attempted_hypotheses.jsonl`, `history.json` |
 | Agent spend | `model_loop/token_usage_summary.json`, `<run>/token_usage_summary.json` |
 
@@ -227,8 +233,9 @@ target acceptance 0.9, seed 0.
 | rounds / slots per round / stale-round stop | 5 / 6 / 2 |
 | selection | guarded: rank on live rows; eligible within 4 dse on existing rows |
 | prune / live cap / carried cap | 2 dse on live rows / 12 / 8 |
-| novelty (in loop) / same-hypothesis (carry, design) | 0.002 RMSE, both on the plain-display pool |
+| novelty (in loop) / same-hypothesis (carry, design) | 0.002 RMSE, both on the plain-display pool (rechecked on the 1,597-display pool: twins 0.0002, `rsa_l1` vs `rsa_l2` 0.0086) |
 | design prior | 0.5 carried, 0.5 bar |
+| design quotas | of 40: ≥ 6 two-object, ≥ 10 three-object, ≥ 8 mumble, ≥ 20 with a word (`OuterConfig.quotas`) |
 | sampler | dense mass, 4 × (1,000 + 1,000), target 0.9 (refit 0.95) |
 | candidate fit limit | 30 min (models in play: none) |
 | catch exclusion | any miss |

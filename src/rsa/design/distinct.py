@@ -28,6 +28,11 @@ import numpy as np
 # recovered a third of the time) 0.0018-0.0053; evaluative_prominence_l2 and
 # rsa_l2, partly confused (0.6-0.8), 0.0024; rsa_l1 and rsa_l2, recovered at
 # 0.86-0.90, 0.0070. A threshold of 0.01 would have merged rsa_l1 into rsa_l2.
+# Rechecked on the wider live pool (1,597 displays, redundant features and two-object
+# displays; 2026-10-10), same fits: distances grow 20-30% and keep their order
+# (twins median 0.0002; the singleton seeds 0.0021-0.0068; evaluative_prominence_l2
+# and rsa_l2 0.0031; rsa_l1 and rsa_l2 0.0086). 45 of 171 pairs fall below 0.002
+# (46 before), so the threshold stays.
 SAME_ON_POOL_RMSE = 0.002
 
 
