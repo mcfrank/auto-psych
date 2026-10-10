@@ -172,3 +172,63 @@ paper's own claim and from run 2, and can be decided on principle without the re
 
 The local session recommends **option 2**, with the selection rule decided on principle
 (§5). It will act only on the PI's instruction.
+
+## 7. Outcome (2026-10-09, after the PI's decision)
+
+**What happened:**
+- **Task 0** (cumulative) was cancelled at 10 h 25 min, in experiment 2's design (PI).
+- **Task 1** (live-only) was to be cancelled once experiment 3's prospective score was
+  written. It **failed first**, at 15:08 (15 h 36 min).
+- Outputs were brought back by hand into `data/rsa/rehearsal/<cell>/` (`outputs/` and
+  `private/`, no trial CSVs, fit caches or agent logs), with `ground_truth.json`.
+
+### Results
+
+| task / experiment | exported (RMSE to GT) | closest live before → after | prospective `live_vs` best seed (= the GT) | `live_vs` best promoted |
+|---|---|---|---|---|
+| all, 1 | `rsa_l2_visual_confusion_fam_l0` (0.095) | 0.080 → 0.090 | -70.3 (SE 24.4) | -33.8 (SE 28.0) |
+| live, 1 | `twin_contrast_solitary_oddity_listener` (0.026) | 0.080 → 0.026 | -70.3 (SE 24.4) | -33.8 (SE 28.0) |
+| live, 2 | `twin_color_atten_base_valence_listener` (0.020) | 0.026 → 0.020 | -112.5 (SE 41.4) | **-100.0 (SE 42.2)** |
+
+- Experiment 1's prospective score is the same in both tasks: the same models go in.
+- The best promoted seed is `lexical_preemption_heuristic` (L0's nearest, 0.045). **The
+  live models never beat it prospectively,** although by experiment 2 they are closer to
+  the GT on the design pool (0.020-0.026). Design-pool RMSE and held-out lpd on the 40
+  designed displays disagree here; worth understanding before reading claim 2's measure
+  live.
+- Experiment 1 excluded 13 of 200 simulated people for a catch-trial error
+  (`max_catch_errors` 0): the ground truth with its fitted noise misses a catch trial
+  6.5% of the time.
+- Wall time per experiment (live): 7 h, then 7.5 h.
+
+### Four things for the driver
+
+1. **A reference model's fit timeout kills the run.** Experiment 3's prospective step
+   refits every bar model on `prior.csv` (the five starting models, then every promoted
+   seed).
+   - `promoted:isolated_graded_costly_l3` hit the 30-min `FIT_TIME_LIMIT_SEC`. It had fit
+     within the limit for experiment 2, with 2,268 fewer L0-generated trials.
+   - The uncaught `FitTimeLimitExceeded` ended the run (`outer/run.py:234` →
+     `loop/fitting.py:269`).
+   - Live, this would hit *after* real data are collected. A resume would refit and likely
+     time out again.
+   - Suggest:
+     - no time limit (or a much longer one) for bar and carried models: the SR pipeline's
+       rule is "starting and carried models are never limited";
+     - or record the model as unscored in `prospective.json` and go on.
+2. **Experiment 3's design had nothing to discriminate.** The 12 models carried in were
+   one lineage of near-duplicates (`twin_*`). Joint EIG reached only 0.23 of 3.58 bits
+   (14 EIG picks before the noise floor), and power was **0.25**.
+   - Under live-only selection the live set collapses to a single mechanism family, and
+     the next design can't separate its members.
+   - The live campaign needs diversity in what is carried: e.g. group the live set by
+     prediction distance and carry the best of each group, as `promote` does. Or the
+     design should treat near-duplicates as one hypothesis.
+   - The novelty gate's 0.002 RMSE lets these variants through.
+3. **stderr went to the checkout.**
+   - `outer_rehearsal.sbatch` (and other RSA scripts) set `#SBATCH --error=%x_%A_%a.out`, a
+     relative path. The handoffs' launch commands pass only `-o`, so tracebacks land in
+     `~/auto-psych/` on Sherlock.
+   - The rehearsal's error was only there. The checkout holds 11 such `.out` files.
+   - Drop `--error` from the headers (stderr then follows `--output`), or pass `-e` too.
+4. **Agent spend is still unrecorded** (§4).

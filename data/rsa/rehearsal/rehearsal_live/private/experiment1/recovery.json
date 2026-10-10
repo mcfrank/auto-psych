@@ -1,0 +1,29 @@
+{
+ "experiment": 1,
+ "ground_truth": "literal_listener",
+ "selection_scope": "live",
+ "exported": "twin_contrast_solitary_oddity_listener",
+ "exported_rmse": 0.02612705114113993,
+ "closest_after": "twin_contrast_solitary_oddity_listener",
+ "closest_after_rmse": 0.02612705114113993,
+ "closest_before": "oddity_heuristic_listener",
+ "closest_before_rmse": 0.07959345893821466,
+ "before": {
+  "oddity_heuristic_listener": 0.07959345893821466,
+  "rsa_l1": 0.08127044559250048,
+  "rsa_l2": 0.08472032716712131,
+  "competitor_confusion_speaker": 0.10772941933009969,
+  "isolated_graded_costly_l3": 0.11748406786118387,
+  "rsa_l2_singleton_feat_color_valence_l0": 0.12881916691341425
+ },
+ "after": {
+  "twin_contrast_solitary_oddity_listener": 0.02612705114113993,
+  "solitary_oddity_heuristic_listener": 0.03483275037836891,
+  "base_rate_solitary_oddity_listener": 0.035131325098216815,
+  "attenuated_solitary_valence_listener": 0.03557376057520291,
+  "attenuated_solitary_oddity_listener": 0.03562721190421346,
+  "attenuated_oddity_listener": 0.061869476379258055,
+  "contextual_ubiquity_cost_speaker": 0.08485050472116565,
+  "isolated_graded_costly_l3": 0.10521929297901605
+ }
+}

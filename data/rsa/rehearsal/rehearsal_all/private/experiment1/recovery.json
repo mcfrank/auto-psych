@@ -1,0 +1,32 @@
+{
+ "experiment": 1,
+ "ground_truth": "literal_listener",
+ "selection_scope": "all",
+ "exported": "rsa_l2_visual_confusion_fam_l0",
+ "exported_rmse": 0.09486697771296197,
+ "closest_after": "rsa_l2_max_confusion_fam_l0",
+ "closest_after_rmse": 0.09025323510868519,
+ "closest_before": "oddity_heuristic_listener",
+ "closest_before_rmse": 0.07959345893821466,
+ "before": {
+  "oddity_heuristic_listener": 0.07959345893821466,
+  "rsa_l1": 0.08127044559250048,
+  "rsa_l2": 0.08472032716712131,
+  "competitor_confusion_speaker": 0.10772941933009969,
+  "isolated_graded_costly_l3": 0.11748406786118387,
+  "rsa_l2_singleton_feat_color_valence_l0": 0.12881916691341425
+ },
+ "after": {
+  "rsa_l2_max_confusion_fam_l0": 0.09025323510868519,
+  "rsa_l2_decay_confusion_softmax_l0": 0.09104060800262624,
+  "rsa_l2_mean_confusion_softmax_l0": 0.09235690358575716,
+  "rsa_l2_decay_confusion_fam_l0": 0.09373562193587427,
+  "rsa_l2_mean_confusion_fam_l0": 0.09472109496455955,
+  "rsa_l2_visual_confusion_fam_l0": 0.09486697771296197,
+  "limited_attention_listener": 0.09628886123179663,
+  "rsa_l2_confusion_fam_grounded_l0": 0.10290868905775166,
+  "rsa_l2_competitor_confusion_fam_l0": 0.10392036040251064,
+  "rsa_l2_competitor_confusion_l0": 0.10420990934338224,
+  "isolated_graded_costly_l3": 0.10521929297901605
+ }
+}

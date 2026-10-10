@@ -1,0 +1,1 @@
+base_rate_solitary_oddity_listener

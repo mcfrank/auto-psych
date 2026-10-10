@@ -1,0 +1,9 @@
+Pragmatic listeners reason at depth two about a speaker who evaluates referring expressions by the mean confusion across alternative display competitors, avoiding expressions shared with visually confusable objects in proportion to the display's confusable competitor density. Rather than penalizing shared words with an unnormalized sum that artificially grows with display size, communicative speakers assess the average risk of confusion per competitor in the context, preventing multi-object displays from over-penalizing shared descriptions while preserving robust confusion aversion. Pragmatic listeners invert this context-normalized confusion-averse speaker while integrating a shared prior over perceptual salience and empirical familiarization base rates.
+
+Refining rsa_l2_competitor_confusion_fam_l0 by normalizing the competitor confusion penalty by the number of display competitors (N_obj - 1). This should fit better by standardizing the scale of competitor confusion across displays of varying set sizes (from 2 to 4 objects), eliminating the artificial inflation of confusion penalties in larger multi-object displays (such as 4-object contexts) while maintaining depth-two recursive reasoning, competitor-confusion aversion, perceptual salience, and empirical base-rate sensitivity.
+
+Differences from source (rsa_l2_competitor_confusion_fam_l0):
+- Recursion depth: Unchanged; choice_probs calls depth-2 listener L2.
+- Parameters added: None.
+- Parameters removed: None.
+- Terms changed: Exactly one term changed: confusion = (real_lex @ sim) / jnp.maximum(n_obj - 1.0, 1.0) (normalizing the competitor confusion matrix by display competitor count n_obj - 1); prior distribution on w_confusion broadened from Normal(0.0, 2.0) to Normal(0.0, 4.0) to accommodate the normalized scale. The prior computation, S1 and S2 speaker choice utilities, literal L0 semantics, depth-2 recursive reasoning, and lapse process remain identical to the source.

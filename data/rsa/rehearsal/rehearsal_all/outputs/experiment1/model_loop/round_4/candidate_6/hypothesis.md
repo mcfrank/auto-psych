@@ -1,0 +1,9 @@
+Pragmatic listeners reason at depth two about a speaker who evaluates referring expressions by the maximum competitor confusion across the visual display, avoiding expressions shared with the single most confusable competitor. Rather than penalizing shared words with an additive sum that artificially scales with context size, communicative speakers assess the worst-case bottleneck risk of the closest distractor, ensuring robust confusion aversion whenever a referent has an easily confused competitor. Pragmatic listeners invert this worst-case confusion-averse speaker while integrating a shared prior over perceptual salience and empirical familiarization base rates.
+
+Refining rsa_l2_competitor_confusion_fam_l0 by replacing the sum-confusion matrix with the maximum visual similarity across competitors sharing the candidate word. This should fit better by capturing worst-case referential risk without scaling with set size, preventing multi-object displays from over-penalizing shared descriptions while maintaining sharp confusion avoidance whenever a confusable distractor is present.
+
+Differences from source (rsa_l2_competitor_confusion_fam_l0):
+- Recursion depth: Unchanged; choice_probs calls depth-2 listener L2.
+- Parameters added: None.
+- Parameters removed: None.
+- Terms changed: Exactly one term changed: confusion = jnp.max(real_lex[:, None, :] * sim[None, :, :], axis=-1) (evaluating competitor confusion as the maximum visual similarity across competitors sharing the word, rather than the sum real_lex @ sim); prior distribution on w_confusion broadened from Normal(0.0, 2.0) to Normal(0.0, 4.0) to accommodate the normalized maximum scale. The prior computation, S1 and S2 speaker choice utilities, literal L0 semantics, depth-2 recursive reasoning, and lapse process remain identical to the source.

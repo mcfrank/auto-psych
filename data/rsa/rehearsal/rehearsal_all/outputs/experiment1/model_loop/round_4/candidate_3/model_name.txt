@@ -1,0 +1,1 @@
+contrast_criterion_speaker

@@ -1,0 +1,27 @@
+{
+ "ground_truth": "literal_listener",
+ "ground_truth_file": "/scratch/users/mcfrank/auto-psych/rsa_rehearsal/harness_repo/src/pipelines/outer_loop/projects/rsa_reference/seed_models/literal_listener.py",
+ "rule": "the starting model farthest (design-pool RMSE) from its nearest promoted seed",
+ "starting_models": {
+  "literal_listener": {
+   "nearest_promoted": "lexical_preemption_heuristic",
+   "rmse": 0.0449182062385314
+  },
+  "rsa_l1": {
+   "nearest_promoted": "rsa_l1",
+   "rmse": 0.0
+  },
+  "rsa_l2": {
+   "nearest_promoted": "rsa_l2",
+   "rmse": 0.0
+  },
+  "rsa_l1_salience": {
+   "nearest_promoted": "evaluative_prominence_l2",
+   "rmse": 0.00739184116953306
+  },
+  "rsa_l1_shared_prior": {
+   "nearest_promoted": "evaluative_prominence_l2",
+   "rmse": 0.009865741622310235
+  }
+ }
+}

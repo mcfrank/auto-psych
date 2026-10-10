@@ -1,0 +1,445 @@
+models:
+- name: attenuated_oddity_listener
+  rationale: 'Attenuated perceptual oddity listener. Listeners interpret referring
+    expressions using a perceptual oddity heuristic whose salience is strong in ungrounded
+    prior expectations but attenuated during linguistic comprehension. When hearing
+    no informative expression, listeners spontaneously target the unique visual singleton
+    with full pop-out strength. When hearing an informative word, top-down semantic
+    constraints compete with bottom-up visual pop-out, dampening the singleton preference
+    among matching referents. Refining oddity_heuristic_listener: The source model
+    enforced an identical oddity bias across both prior expectations and utterance
+    comprehension. We decouple this mechanism into separate prior and utterance oddity
+    weights, which fits better because spoken words focus attention on semantic applicability
+    and attenuate raw visual pop-out. Differences from source: recursion depth is
+    unchanged at depth 0 (calling L_heur); removed parameter beta; added parameters
+    beta_prior (for uninformative prior trials) and beta_utt (for informative utterance
+    trials); in choice_probs, prior uses beta_prior * is_singleton and heard uses
+    L_heur with beta_utt instead of sharing beta across both.'
+- name: twin_attenuated_color_valence_listener
+  rationale: 'Attenuated solitary perceptual oddity listener with twin contrast, attenuated
+    visual color contrast, and attenuated evaluative valence framing. Listeners interpret
+    referring expressions by integrating visual color contrast and twin-contrast solitary
+    oddity pop-out with evaluative valence framing, where bottom-up perceptual oddity,
+    evaluative framing, and visual chromatic contrast are strong during spontaneous
+    ungrounded expectations but attenuated during linguistic utterance comprehension.
+    When no informative expression is heard, listeners strongly favor feature-rich
+    exemplars under positive framing and sparse exemplars under negative framing,
+    alongside visual preferences for solitary singletons contrasting with twins and
+    fully colored objects; when an informative expression is heard, selective attention
+    to semantic applicability attenuates solitary oddity pop-out, evaluative valence
+    attitude, and chromatic color bias among matching referents. ### Refinement details
+    relative to twin_color_attenuated_valence_listener - **Single stated change**:
+    Decoupled visual color contrast weighting into separate ungrounded prior (`w_color_prior`)
+    and linguistic utterance comprehension (`w_color_utt`) weights. - **Why it should
+    fit better**: In visual reference games where candidate referents vary in chromatic
+    coloration alongside desaturated grayscale distractors (such as experiment E7_color),
+    listeners exhibit an intrinsic bottom-up visual preference toward fully colored
+    items during spontaneous ungrounded visual inspection. However, when an informative
+    referring expression is produced, selective top-down attention shifts toward semantic
+    applicability and referential truth conditions, dampening bottom-up chromatic
+    pop-out among semantically matching referents. The source model (twin_color_attenuated_valence_listener)
+    enforced an identical color weighting across both prior expectations and utterance
+    comprehension, overestimating chromatic bias during linguistic comprehension and
+    underestimating it in ungrounded prior choices; decoupling the color weights allows
+    listeners to attend strongly to visual coloration a priori while attenuating chromatic
+    bias during utterance interpretation, complementing the attenuated oddity and
+    attenuated valence mechanisms while preserving twin-contrast solitary oddity pop-out.
+    - **Recursion depth**: Unchanged at depth 0 (`choice_probs` evaluates `L_heur`
+    directly without recursive speaker simulation). - **Parameters added or removed**:
+    Removed parameter `w_color`; added parameters `w_color_prior` (prior Normal(0.0,
+    2.0)) and `w_color_utt` (prior Normal(0.0, 2.0)); retained parameter `beta_prior`
+    (prior Normal(0.0, 2.0)), parameter `beta_utt` (prior Normal(0.0, 2.0)), parameter
+    `w_valence_prior` (prior Normal(0.0, 2.0)), parameter `w_valence_utt` (prior Normal(0.0,
+    2.0)), and parameter `lapse` (prior Beta(1.0, 9.0)). - **Code differences**: In
+    `PARAMS`, replaced `w_color` with `w_color_prior` and `w_color_utt`. In `choice_probs`,
+    computed `color_prior_bias = params["w_color_prior"] * (1.0 - ctx.grayscale)`
+    and `color_utt_bias = params["w_color_utt"] * (1.0 - ctx.grayscale)`, updated
+    `prior = softmax_prior(params["beta_prior"] * is_singleton + val_prior_bias +
+    color_prior_bias)`, and passed `color_utt_bias` into `L_heur` instead of the shared
+    `color_bias`.'
+- name: twin_base_attenuated_valence_listener
+  rationale: 'Attenuated solitary perceptual oddity listener with twin contrast, familiarization
+    base rates, and attenuated evaluative valence framing. Listeners interpret referring
+    expressions by integrating contextual familiarization base rates and twin-contrast
+    solitary oddity pop-out with evaluative valence framing whose behavioral influence
+    is strong during spontaneous ungrounded expectations but attenuated during linguistic
+    utterance comprehension. When no informative expression is heard, listeners choose
+    candidate referents by joint solitary oddity pop-out, prior familiarization frequency,
+    and unconstrained evaluative framing preferences (favoring feature-rich objects
+    under positive framing and sparse objects under negative framing); when an informative
+    referring expression is heard, selective attention to semantic applicability directs
+    choice among matching referents, attenuating both solitary oddity pop-out and
+    evaluative valence attitude while preserving contextual familiarization base-rate
+    weighting. ### Refinement details relative to twin_contrast_valence_base_rate_listener
+    - **Single stated change**: Decoupled the evaluative valence framing parameter
+    in twin_contrast_valence_base_rate_listener into separate ungrounded prior (`w_valence_prior`)
+    and linguistic utterance comprehension (`w_valence_utt`) weights. - **Why it should
+    fit better**: In visual reference games featuring evaluative framing (such as
+    experiment E6_valence), speakers use positive framing ("my favorite") or negative
+    framing ("my least favorite") to express an emotional attitude toward candidate
+    referents. On ungrounded prior trials without an informative word, listeners follow
+    this evaluative attitude unconstrained, strongly expecting speakers to target
+    feature-rich exemplars under positive framing and sparse exemplars under negative
+    framing; however, when an informative referring expression is produced, selective
+    attention shifts primarily toward semantic truth conditions, dampening the behavioral
+    influence of the speaker''s emotional attitude among matching referents. The source
+    model (twin_contrast_valence_base_rate_listener) enforced an identical valence
+    weighting across both prior expectations and utterance comprehension, systematically
+    overestimating valence distortion during linguistic comprehension and underestimating
+    it in ungrounded prior choices; decoupling the valence weights allows listeners
+    to attend strongly to speaker attitude a priori while attenuating emotional bias
+    during utterance interpretation, while preserving twin-contrast solitary oddity
+    pop-out and empirical familiarization base-rate weighting. - **Recursion depth**:
+    Unchanged at depth 0 (`choice_probs` evaluates `L_heur` directly without recursive
+    speaker simulation). - **Parameters added or removed**: Removed parameter `w_valence`;
+    added parameters `w_valence_prior` (prior Normal(0.0, 2.0)) and `w_valence_utt`
+    (prior Normal(0.0, 2.0)); retained parameter `beta_prior` (prior Normal(0.0, 2.0)),
+    parameter `beta_utt` (prior Normal(0.0, 2.0)), parameter `w_base` (prior Normal(0.0,
+    2.0)), and parameter `lapse` (prior Beta(1.0, 9.0)). - **Code differences**: In
+    `PARAMS`, replaced `w_valence` with `w_valence_prior` and `w_valence_utt`. In
+    `L_heur`, replaced parameter `valence_bias` with `val_utt_bias`. In `choice_probs`,
+    computed `val_prior_bias = params["w_valence_prior"] * ctx.valence * ctx.feature_count`
+    and `val_utt_bias = params["w_valence_utt"] * ctx.valence * ctx.feature_count`,
+    updated `prior = softmax_prior(params["beta_prior"] * is_singleton + val_prior_bias
+    + params["w_base"] * base_rate)`, and passed `val_utt_bias` into `L_heur` instead
+    of the shared `valence_bias`.'
+- name: twin_color_atten_base_valence_listener
+  rationale: 'Attenuated solitary perceptual oddity listener with twin contrast, visual
+    color contrast, attenuated evaluative valence framing, and attenuated contextual
+    familiarization base rates. Listeners interpret referring expressions by integrating
+    visual color contrast, twin-contrast solitary oddity pop-out, and attenuated evaluative
+    valence framing with contextual familiarization base rates whose behavioral influence
+    is strong during spontaneous ungrounded expectations but attenuated during linguistic
+    utterance comprehension. When no informative expression is heard, listeners strongly
+    favor frequently seen exemplars alongside preferences for feature-rich objects
+    under positive framing, solitary singletons contrasting with twins, and fully
+    colored objects; when an informative expression is heard, selective attention
+    to semantic applicability attenuates both familiarization base-rate bias and evaluative
+    attitude among matching referents while continuing to weight candidate referents
+    by chromatic coloration and twin-contrast solitary pop-out. ### Refinement details
+    relative to twin_color_base_atten_valence_listener - **Single stated change**:
+    Decoupled the contextual familiarization base-rate parameter in twin_color_base_atten_valence_listener
+    into separate ungrounded prior (w_base_prior) and linguistic utterance comprehension
+    (w_base_utt) weights. - **Why it should fit better**: In visual reference games
+    with pre-test familiarization phases (such as experiment E5_baserate), listeners
+    develop empirical base-rate expectations favoring candidate referents encountered
+    more frequently during prior exposure. On ungrounded prior trials where no informative
+    word is uttered, listeners follow these exposure frequencies unconstrained, strongly
+    expecting speakers to target frequent exemplars; however, when an informative
+    referring expression is produced, selective attention shifts toward semantic applicability
+    and referential intention, dampening the behavioral influence of pre-test exposure
+    frequencies among semantically matching referents. The source model (twin_color_base_atten_valence_listener)
+    enforced an identical base-rate weight across both prior expectations and utterance
+    comprehension, systematically overestimating base-rate bias during linguistic
+    comprehension (where it contradicted human pragmatic scalar implicature preferences)
+    and constraining the prior base-rate fit; decoupling the base-rate weights allows
+    listeners to attend strongly to familiarization frequency a priori while attenuating
+    base-rate distortion during utterance interpretation, while preserving twin-contrast
+    solitary oddity pop-out, visual color contrast weighting, and attenuated evaluative
+    valence modulation. - **Recursion depth**: Unchanged at depth 0 (choice_probs
+    evaluates L_heur directly without recursive speaker simulation). - **Parameters
+    added or removed**: Removed parameter w_base; added parameters w_base_prior (prior
+    Normal(0.0, 2.0)) and w_base_utt (prior Normal(0.0, 2.0)); retained parameter
+    beta_prior (prior Normal(0.0, 2.0)), parameter beta_utt (prior Normal(0.0, 2.0)),
+    parameter w_valence_prior (prior Normal(0.0, 2.0)), parameter w_valence_utt (prior
+    Normal(0.0, 2.0)), parameter w_color (prior Normal(0.0, 2.0)), and parameter lapse
+    (prior Beta(1.0, 9.0)). - **Code differences**: In PARAMS, replaced w_base with
+    w_base_prior and w_base_utt. In L_heur, renamed array parameter base_bias to base_utt_bias
+    in both the function signature and referent choice weighting expression. In choice_probs,
+    computed base_prior_bias = params["w_base_prior"] * ctx.familiarization and base_utt_bias
+    = params["w_base_utt"] * ctx.familiarization, updated the ungrounded prior calculation
+    to prior = softmax_prior(params["beta_prior"] * is_singleton + val_prior_bias
+    + color_bias + base_prior_bias), and passed base_utt_bias into L_heur.'
+- name: twin_color_attenuated_valence_listener
+  rationale: 'Attenuated solitary perceptual oddity listener with twin contrast, visual
+    color contrast, and attenuated evaluative valence framing. Listeners interpret
+    referring expressions by integrating visual color contrast and twin-contrast solitary
+    oddity pop-out with evaluative valence framing whose behavioral influence is strong
+    during spontaneous ungrounded expectations but attenuated during linguistic utterance
+    comprehension. When no informative expression is heard, listeners strongly favor
+    feature-rich exemplars under positive framing and sparse exemplars under negative
+    framing, alongside visual preferences for solitary singletons contrasting with
+    twins and fully colored objects; when an informative expression is heard, selective
+    attention to semantic applicability attenuates both solitary oddity pop-out and
+    evaluative valence attitude among matching referents while continuing to weight
+    candidate referents by their chromatic coloration. ### Refinement details relative
+    to twin_contrast_valence_color_listener - **Single stated change**: Decoupled
+    the evaluative valence framing parameter in twin_contrast_valence_color_listener
+    into separate ungrounded prior (`w_valence_prior`) and linguistic utterance comprehension
+    (`w_valence_utt`) weights. - **Why it should fit better**: In visual reference
+    games with evaluative framing (such as experiment E6_valence), speakers use positive
+    framing ("my favorite") or negative framing ("my least favorite") to express an
+    emotional attitude toward candidate objects. On ungrounded prior trials without
+    an informative word, listeners follow this evaluative attitude unconstrained,
+    exhibiting a strong preference for feature-rich objects under positive framing
+    and sparse objects under negative framing; however, when an informative referring
+    expression is spoken, selective attention shifts toward semantic applicability
+    and referential denotation, dampening the influence of the speaker''s emotional
+    attitude among matching referents. The source model enforced an identical valence
+    weighting across both prior expectations and utterance comprehension, systematically
+    overestimating valence distortion during linguistic comprehension and underestimating
+    it in ungrounded prior choices; decoupling the valence weights allows listeners
+    to attend strongly to speaker attitude a priori while attenuating emotional bias
+    during utterance interpretation, while preserving twin-contrast solitary oddity
+    pop-out and visual color contrast weighting. - **Recursion depth**: Unchanged
+    at depth 0 (`choice_probs` evaluates `L_heur` directly without recursive speaker
+    simulation). - **Parameters added or removed**: Removed parameter `w_valence`;
+    added parameters `w_valence_prior` (prior Normal(0.0, 2.0)) and `w_valence_utt`
+    (prior Normal(0.0, 2.0)); retained parameter `beta_prior` (prior Normal(0.0, 2.0)),
+    parameter `beta_utt` (prior Normal(0.0, 2.0)), parameter `w_color` (prior Normal(0.0,
+    2.0)), and parameter `lapse` (prior Beta(1.0, 9.0)). - **Code differences**: In
+    `PARAMS`, replaced `w_valence` with `w_valence_prior` and `w_valence_utt`. In
+    `choice_probs`, computed `val_prior_bias = params["w_valence_prior"] * ctx.valence
+    * ctx.feature_count` and `val_utt_bias = params["w_valence_utt"] * ctx.valence
+    * ctx.feature_count`, updated `prior = softmax_prior(params["beta_prior"] * is_singleton
+    + val_prior_bias + color_bias)`, and passed `val_utt_bias` into `L_heur` instead
+    of the shared `valence_bias`.'
+- name: twin_color_base_atten_valence_listener
+  rationale: 'Attenuated solitary perceptual oddity listener with twin contrast, visual
+    color contrast, attenuated evaluative valence framing, and contextual familiarization
+    base rates. Listeners interpret referring expressions by integrating contextual
+    familiarization base rates with visual color contrast, attenuated evaluative valence
+    framing, and a solitary perceptual oddity heuristic that operates exclusively
+    when a unique solitary singleton contrasts against an identical twin pair. When
+    candidate referents have been encountered during prior familiarization or appear
+    in full chromatic coloration, listeners favor more frequent and chromatic exemplars,
+    while ungrounded expectations follow speaker evaluative attitudes that become
+    attenuated during semantic comprehension and solitary oddity pop-out directs attention
+    to singleton-twin contrasts. ### Refinement details relative to twin_color_attenuated_valence_listener
+    - **Single stated change**: Extended twin_color_attenuated_valence_listener by
+    incorporating contextual familiarization base-rate weighting into candidate referent
+    evaluation, adopted from twin_valence_color_base_rate_listener. - **Why it should
+    fit better**: In visual reference games with pre-test familiarization phases (such
+    as experiment E5_baserate), listeners form empirical base-rate expectations favoring
+    candidate referents they observed more frequently during prior exposure. The source
+    model (twin_color_attenuated_valence_listener) captured visual color contrast,
+    twin-contrast solitary oddity pop-out, and attenuated evaluative valence framing,
+    but treated familiarized and novel objects as equally appealing a priori regardless
+    of exposure frequency; incorporating familiarization base-rate weighting allows
+    listeners to favor frequently seen exemplars across both ungrounded prior expectations
+    and semantic utterance comprehension, while preserving visual color contrast weighting
+    on chromatic displays, attenuated evaluative valence modulation under positive
+    and negative framing, and twin-contrast solitary oddity pop-out when identical
+    twin pairs are present. - **Recursion depth**: Unchanged at depth 0 (`choice_probs`
+    evaluates `L_heur` directly without recursive speaker simulation). - **Parameters
+    added or removed**: Added parameter `w_base` (prior Normal(0.0, 2.0)); retained
+    parameter `beta_prior` (prior Normal(0.0, 2.0)), parameter `beta_utt` (prior Normal(0.0,
+    2.0)), parameter `w_valence_prior` (prior Normal(0.0, 2.0)), parameter `w_valence_utt`
+    (prior Normal(0.0, 2.0)), parameter `w_color` (prior Normal(0.0, 2.0)), and parameter
+    `lapse` (prior Beta(1.0, 9.0)). - **Code differences**: In `PARAMS`, added `"w_base":
+    dist.Normal(0.0, 2.0)`. In `L_heur`, added array parameter `base_bias: ...` and
+    updated the referent choice weighting expression to include `+ vec(base_bias,
+    r)`. In `choice_probs`, computed `base_bias = params["w_base"] * ctx.familiarization`,
+    updated the ungrounded prior calculation to `prior = softmax_prior(params["beta_prior"]
+    * is_singleton + val_prior_bias + color_bias + base_bias)`, and passed `base_bias`
+    into `L_heur`.'
+- name: twin_contrast_solitary_oddity_listener
+  rationale: 'Attenuated solitary perceptual oddity listener with twin contrast. Listeners
+    interpret referring expressions using a solitary perceptual oddity heuristic where
+    an odd-one-out pop-out bias operates exclusively when a solitary singleton contrasts
+    against an identical twin pair, rather than against majority triplets or larger
+    background groups. When no informative expression is heard, listeners spontaneously
+    select the solitary singleton contrasting with twins; when an informative referring
+    expression is heard, selective attention to semantic applicability competes with
+    and attenuates oddity pop-out among matching referents, while defaulting to uniform
+    baseline expectations on scenes with majority triplets or no twin contrast. ###
+    Refinement details relative to attenuated_solitary_oddity_listener - **Single
+    stated change**: Restricted the solitary oddity heuristic indicator from triggering
+    against any duplicate background to triggering exclusively when the background
+    consists of an identical twin pair (maximum copy count of 2), eliminating false
+    pop-out on scenes containing majority triplets or larger clusters. - **Why it
+    should fit better**: In triad reference games, a singleton contrasting against
+    an identical twin pair produces salient perceptual oddity pop-out; however, in
+    displays containing a majority triplet of three identical objects, the triplet
+    establishes a dominant visual majority category rather than a pair contrast, leading
+    participants to distribute their prior expectations across the display rather
+    than concentrating choices on the singleton. Restricting oddity to twin-contrast
+    contexts eliminates spurious singleton biases on majority-triplet scenes while
+    preserving solitary oddity on twin displays. - **Recursion depth**: Unchanged
+    at depth 0 (`choice_probs` evaluates `L_heur` directly without recursive speaker
+    simulation). - **Parameters added or removed**: None. Retains parameter `beta_prior`
+    (prior Normal(0.0, 2.0)), parameter `beta_utt` (prior Normal(0.0, 2.0)), and parameter
+    `lapse` (prior Beta(1.0, 9.0)). - **Code differences**: In `compute_singleton_indicator`,
+    added condition `& (max_copy > 1.5) & (max_copy < 2.5)` to require that the maximum
+    copy count among objects in the visual display equals 2 (`max_copy = jnp.max(copy_count)`),
+    restricting solitary singleton pop-out exclusively to twin-contrast visual scenes.'
+- name: twin_contrast_solitary_valence_listener
+  rationale: 'Attenuated solitary perceptual oddity listener with twin contrast and
+    evaluative valence framing. Listeners interpret referring expressions by combining
+    evaluative valence framing with a solitary perceptual oddity heuristic that operates
+    exclusively when a unique singleton contrasts against an identical twin pair,
+    rather than against majority triplets or larger clusters. When no informative
+    expression is heard, listeners spontaneously select the solitary singleton contrasting
+    with twins; when an informative expression is heard, selective attention to semantic
+    applicability attenuates oddity pop-out among matching referents; and under evaluative
+    framing, expectations modulate toward feature-rich exemplars for positive framing
+    and sparse exemplars for negative framing. ### Refinement details relative to
+    attenuated_solitary_valence_listener - **Single stated change**: Restricted the
+    solitary oddity heuristic indicator from triggering against any duplicate background
+    to triggering exclusively when the background consists of an identical twin pair
+    (maximum copy count equals 2), incorporating the twin-contrast mechanism from
+    twin_contrast_solitary_oddity_listener. - **Why it should fit better**: In reference
+    games with a majority triplet of identical objects and one solitary item (such
+    as ungrounded prior displays), the triplet establishes a dominant visual majority
+    baseline rather than a pair contrast, leading listeners to distribute choices
+    uniformly across the display rather than concentrating them on the solitary item.
+    Restricting oddity pop-out to twin-contrast displays eliminates spurious singleton
+    choices on majority-triplet displays while preserving solitary oddity pop-out
+    on twin displays and evaluative valence sensitivity under positive and negative
+    framing. - **Recursion depth**: Unchanged at depth 0 (`choice_probs` evaluates
+    `L_heur` directly without recursive speaker simulation). - **Parameters added
+    or removed**: None. Retains parameter `beta_prior` (prior Normal(0.0, 2.0)), parameter
+    `beta_utt` (prior Normal(0.0, 2.0)), parameter `w_valence` (prior Normal(0.0,
+    2.0)), and parameter `lapse` (prior Beta(1.0, 9.0)). - **Code differences**: In
+    `compute_singleton_indicator`, added `max_copy = jnp.max(copy_count)` and appended
+    `& (max_copy > 1.5) & (max_copy < 2.5)` to the `is_solitary_singleton` condition,
+    restricting solitary singleton pop-out exclusively to twin-contrast visual scenes.'
+- name: twin_contrast_valence_base_rate_listener
+  rationale: 'Attenuated solitary perceptual oddity listener with twin contrast, evaluative
+    valence framing, and familiarization base rates. Listeners interpret referring
+    expressions by integrating contextual familiarization base rates with evaluative
+    valence framing and a solitary perceptual oddity heuristic that operates exclusively
+    when a unique solitary singleton contrasts against an identical twin pair, rather
+    than against majority triplets or larger clusters. When no informative expression
+    is heard, listeners choose candidate referents by joint solitary oddity pop-out,
+    prior familiarization frequency, and evaluative valence attitude; when an informative
+    referring expression is heard, selective attention to semantic applicability attenuates
+    oddity pop-out among matching referents while continuing to weight candidate referents
+    by both their familiarization base rates and evaluative valence bias. ### Refinement
+    details relative to twin_contrast_solitary_valence_listener - **Single stated
+    change**: Extended twin_contrast_solitary_valence_listener by incorporating contextual
+    familiarization base-rate weighting from twin_contrast_base_rate_listener. - **Why
+    it should fit better**: In visual reference games featuring pre-test familiarization
+    phases (such as E5_baserate), listeners form empirical base-rate priors favoring
+    objects they encountered more frequently. The source model lacked sensitivity
+    to familiarization exposure, treating all referents as equally frequent a priori
+    regardless of base-rate experience; incorporating familiarization base-rate weighting
+    allows listeners to favor frequently seen exemplars in both ungrounded prior expectations
+    and semantic utterance comprehension, while preserving twin-contrast solitary
+    oddity pop-out when identical duplicate objects are present and evaluative valence
+    sensitivity under positive and negative framing. - **Recursion depth**: Unchanged
+    at depth 0 (`choice_probs` evaluates `L_heur` directly without recursive speaker
+    simulation). - **Parameters added or removed**: Added parameter `w_base` (prior
+    Normal(0.0, 2.0)); retained parameter `beta_prior` (prior Normal(0.0, 2.0)), parameter
+    `beta_utt` (prior Normal(0.0, 2.0)), parameter `w_valence` (prior Normal(0.0,
+    2.0)), and parameter `lapse` (prior Beta(1.0, 9.0)). - **Code differences**: In
+    `PARAMS`, added `"w_base": dist.Normal(0.0, 2.0)`. In `L_heur`, added scalar parameter
+    `w_base` and array parameter `base_rate: ...`, and updated the referent choice
+    weighting expression to `at(lex, u, r) * exp(beta_utt * vec(is_singleton, r) +
+    vec(valence_bias, r) + w_base * vec(base_rate, r))`. In `choice_probs`, extracted
+    `base_rate = ctx.familiarization`, updated the ungrounded prior calculation to
+    `prior = softmax_prior(params["beta_prior"] * is_singleton + valence_bias + params["w_base"]
+    * base_rate)`, and passed `params["w_base"]` and `base_rate` to `L_heur`.'
+- name: twin_contrast_valence_color_listener
+  rationale: 'Attenuated solitary perceptual oddity listener with twin contrast, evaluative
+    valence framing, and visual color contrast. Listeners interpret referring expressions
+    by integrating visual color contrast and evaluative valence framing with a solitary
+    perceptual oddity heuristic that operates exclusively when a unique solitary singleton
+    contrasts against an identical twin pair, rather than against majority triplets
+    or larger clusters. When candidate referents are displayed in full chromatic coloration
+    alongside desaturated grayscale distractors, listeners exhibit an intrinsic perceptual
+    bias toward fully colored objects; when an informative expression is heard, selective
+    attention to semantic applicability attenuates oddity pop-out among matching referents
+    while continuing to weight candidate referents by their chromatic coloration and
+    evaluative valence attitude. ### Refinement details relative to twin_contrast_solitary_valence_listener
+    - **Single stated change**: Extended twin_contrast_solitary_valence_listener by
+    incorporating visual color contrast weighting into candidate referent evaluation,
+    adopted from rsa_l2_singleton_feat_color_valence_l0. - **Why it should fit better**:
+    In visual reference games where candidate referents appear in full chromatic coloration
+    alongside desaturated grayscale distractors (such as experiment E7_color), listeners
+    exhibit an intrinsic perceptual preference toward fully colored items in both
+    ungrounded prior expectations and semantic utterance comprehension. The source
+    model (twin_contrast_solitary_valence_listener) captured twin-contrast solitary
+    oddity and evaluative valence framing but treated colored and grayscale objects
+    as equally appealing a priori; incorporating visual color contrast weighting allows
+    listeners to favor fully colored exemplars across visual displays, while preserving
+    twin-contrast solitary oddity pop-out when identical twin pairs are present and
+    evaluative valence modulation under positive and negative framing. - **Recursion
+    depth**: Unchanged at depth 0 (`choice_probs` evaluates `L_heur` directly without
+    recursive speaker simulation). - **Parameters added or removed**: Added parameter
+    `w_color` (prior Normal(0.0, 2.0)); retained parameter `beta_prior` (prior Normal(0.0,
+    2.0)), parameter `beta_utt` (prior Normal(0.0, 2.0)), parameter `w_valence` (prior
+    Normal(0.0, 2.0)), and parameter `lapse` (prior Beta(1.0, 9.0)). - **Code differences**:
+    In `PARAMS`, added `"w_color": dist.Normal(0.0, 2.0)`. In `L_heur`, added array
+    parameter `color_bias: ...` and updated the referent choice weighting expression
+    to `at(lex, u, r) * exp(beta_utt * vec(is_singleton, r) + vec(valence_bias, r)
+    + vec(color_bias, r))`. In `choice_probs`, computed `color_bias = params["w_color"]
+    * (1.0 - ctx.grayscale)`, updated `prior = softmax_prior(params["beta_prior"]
+    * is_singleton + valence_bias + color_bias)`, and passed `color_bias` to `L_heur`.'
+- name: twin_feature_base_valence_listener
+  rationale: 'Attenuated solitary perceptual oddity listener with twin contrast, evaluative
+    valence framing, familiarization base rates, and visual feature complexity. Listeners
+    interpret referring expressions by integrating visual feature complexity expectations
+    and contextual familiarization base rates with evaluative valence framing and
+    a solitary perceptual oddity heuristic that operates exclusively when a unique
+    solitary singleton contrasts against an identical twin pair. When no informative
+    expression is heard, listeners choose candidate referents by joint solitary oddity
+    pop-out, prior familiarization frequency, evaluative valence framing, and descriptive
+    visual feature complexity; when an informative referring expression is heard,
+    selective attention to semantic applicability directs choice among matching referents,
+    preserving solitary oddity pop-out when contrasting with twins, familiarization
+    base rates, and evaluative valence attitude. ### Refinement details relative to
+    twin_contrast_valence_base_rate_listener - **Single stated change**: Extended
+    twin_contrast_valence_base_rate_listener by incorporating visual feature complexity
+    weighting into the ungrounded prior over candidate referents from twin_contrast_feature_prior_listener.
+    - **Why it should fit better**: On uninformative prior trials lacking twin contrast
+    (no identical duplicates) and lacking pre-test familiarization, the source model
+    predicts an uninformative uniform choice distribution across candidate referents
+    regardless of visual feature complexity. However, human participants show a systematic
+    communicative and perceptual preference for feature-rich, descriptive exemplars
+    over sparse or featureless objects. Incorporating visual feature complexity weighting
+    into ungrounded prior expectations allows the model to predict these descriptive
+    complexity preferences on neutral prior displays, while preserving twin-contrast
+    solitary oddity pop-out when identical duplicates are present, evaluative valence
+    modulation under positive ("favorite") and negative ("least favorite") framing,
+    and empirical familiarization base-rate sensitivity. - **Recursion depth**: Unchanged
+    at depth 0 (`choice_probs` evaluates `L_heur` directly without recursive speaker
+    simulation). - **Parameters added or removed**: Added parameter `w_feat` (prior
+    Normal(0.0, 1.0)); retained parameter `beta_prior` (prior Normal(0.0, 2.0)), parameter
+    `beta_utt` (prior Normal(0.0, 2.0)), parameter `w_valence` (prior Normal(0.0,
+    2.0)), parameter `w_base` (prior Normal(0.0, 2.0)), and parameter `lapse` (prior
+    Beta(1.0, 9.0)). - **Code differences**: In `PARAMS`, added `"w_feat": dist.Normal(0.0,
+    1.0)`. In `choice_probs`, updated the ungrounded prior calculation from `prior
+    = softmax_prior(params["beta_prior"] * is_singleton + valence_bias + params["w_base"]
+    * base_rate)` to `prior = softmax_prior(params["beta_prior"] * is_singleton +
+    valence_bias + params["w_base"] * base_rate + params["w_feat"] * ctx.feature_count)`,
+    incorporating visual feature complexity into ungrounded prior choices while leaving
+    `L_heur` unchanged.'
+- name: twin_valence_color_base_rate_listener
+  rationale: 'Attenuated solitary perceptual oddity listener with twin contrast, evaluative
+    valence framing, visual color contrast, and contextual familiarization base rates.
+    Listeners interpret referring expressions by integrating contextual familiarization
+    base rates with visual color contrast, evaluative valence framing, and a solitary
+    perceptual oddity heuristic that operates exclusively when a unique solitary singleton
+    contrasts against an identical twin pair. When candidate referents have been encountered
+    during prior familiarization or appear in full chromatic coloration, listeners
+    favor more frequent and chromatic exemplars in both spontaneous expectations and
+    semantic comprehension, while selective attention to an informative word attenuates
+    solitary oddity pop-out among matching referents and evaluative attitude modulates
+    feature richness expectations. ### Refinement details relative to twin_contrast_valence_color_listener
+    - **Single stated change**: Extended twin_contrast_valence_color_listener by incorporating
+    contextual familiarization base-rate weighting into candidate referent evaluation,
+    adopted from twin_contrast_valence_base_rate_listener. - **Why it should fit better**:
+    In visual reference games featuring pre-test familiarization phases (such as experiment
+    E5_baserate), listeners form empirical base-rate expectations favoring candidate
+    referents they observed more frequently during prior exposure. The source model
+    (twin_contrast_valence_color_listener) integrated visual color contrast, evaluative
+    valence framing, and twin-contrast solitary oddity, but treated familiarized and
+    novel objects as equally appealing a priori regardless of exposure frequency;
+    incorporating familiarization base-rate weighting allows listeners to favor frequently
+    seen exemplars in both ungrounded prior expectations and semantic utterance comprehension,
+    while preserving visual color contrast weighting on chromatic displays, evaluative
+    valence modulation under positive and negative framing, and twin-contrast solitary
+    oddity pop-out when identical twin pairs are present. - **Recursion depth**: Unchanged
+    at depth 0 (`choice_probs` evaluates `L_heur` directly without recursive speaker
+    simulation). - **Parameters added or removed**: Added parameter `w_base` (prior
+    Normal(0.0, 2.0)); retained parameter `beta_prior` (prior Normal(0.0, 2.0)), parameter
+    `beta_utt` (prior Normal(0.0, 2.0)), parameter `w_valence` (prior Normal(0.0,
+    2.0)), parameter `w_color` (prior Normal(0.0, 2.0)), and parameter `lapse` (prior
+    Beta(1.0, 9.0)). - **Code differences**: In `PARAMS`, added `"w_base": dist.Normal(0.0,
+    2.0)`. In `L_heur`, added array parameter `base_bias: ...` and updated the referent
+    choice weighting expression to `at(lex, u, r) * exp(beta_utt * vec(is_singleton,
+    r) + vec(valence_bias, r) + vec(color_bias, r) + vec(base_bias, r))`. In `choice_probs`,
+    computed `base_bias = params["w_base"] * ctx.familiarization`, updated the ungrounded
+    prior calculation to `prior = softmax_prior(params["beta_prior"] * is_singleton
+    + valence_bias + color_bias + base_bias)`, and passed `base_bias` to `L_heur`.'

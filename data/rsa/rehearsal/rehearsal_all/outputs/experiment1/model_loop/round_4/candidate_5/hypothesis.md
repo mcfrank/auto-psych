@@ -1,0 +1,9 @@
+Listeners in reference games convert their communicative and prior beliefs into choices through an internal softmax decision rule governed by decision rationality, rather than passively matching probabilities. When decision rationality exceeds one, listeners act decisively by amplifying the most probable referent over less likely alternatives. Pragmatic listeners invert a depth-two speaker who evaluates referring expressions by mean competitor confusion across alternative display items while integrating a shared perceptual and empirical prior.
+
+Refining rsa_l2_mean_confusion_fam_l0 by incorporating the softmax belief decision rule from softmax_belief_listener into referent selection. This should fit better by decoupling decision rationality from communicative inference rationality, capturing participants' tendency to select favored pragmatic referents more decisively than predicted by linear probability matching while maintaining depth-two recursive reasoning, competitor-confusion aversion, perceptual salience, and empirical base-rate sensitivity.
+
+Differences from source (rsa_l2_mean_confusion_fam_l0):
+- Recursion depth: Unchanged; choice_probs calls depth-2 listener L2.
+- Parameters added: beta ~ LogNormal(0.0, 1.0).
+- Parameters removed: None.
+- Terms changed: Exactly one term changed: choice probabilities are computed by applying a softmax decision rule with decision rationality beta to log posterior beliefs (decision = jax.nn.softmax(params["beta"] * jnp.log(belief + EPS)) where belief = jnp.where(ctx.is_prior > 0, prior, heard)), returning with_lapse(decision, params["lapse"]) instead of with_lapse(belief, params["lapse"]). The prior computation, competitor confusion matrix calculation, S1 and S2 speaker choice utilities, literal L0 semantics, depth-2 recursive reasoning, and lapse process remain identical to the source.

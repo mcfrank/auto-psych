@@ -1,0 +1,166 @@
+models:
+- name: isolated_graded_costly_l3
+  rationale: Pragmatic listener at depth 3 with perceptual isolation, graded semantics,
+    and utterance extension costs. Refines isolated_graded_costly_l2 by increasing
+    the recursion depth from depth 2 to depth 3. Listeners reason at depth 3, inverting
+    a speaker who simulates a depth-2 pragmatic listener. Visual pop-out is determined
+    by an object's perceptual isolation (minimum Hamming distance to any other context
+    object), semantic applicability diminishes with additional competing features
+    (graded truth), and speakers evaluate communicative utility trade-offs with utterance
+    extension costs proportional to the fraction of display objects sharing each feature.
+    On uninformative prior trials, choice follows the perceptual isolation prior.
+    A lapse parameter mixes in uniform guessing.
+- name: solitary_oddity_heuristic_listener
+  rationale: 'Solitary perceptual oddity heuristic listener. Listeners interpret referring
+    expressions using a perceptual oddity heuristic where an item receives an oddity
+    pop-out boost only when it constitutes the sole, solitary singleton contrasting
+    against identical background duplicates in the visual context. When multiple distinct
+    singletons exist alongside duplicates, or when all items are distinct, no solitary
+    oddity contrast exists and listeners choose uniformly among referents satisfying
+    the literal semantics. On uninformative trials without an informative word, listeners
+    spontaneously select the solitary singleton, defaulting to uniform choice when
+    no solitary contrast exists. ### Refinement details relative to oddity_heuristic_listener
+    - **Single stated change**: Restricted the oddity heuristic indicator from tagging
+    any object without an identical twin to triggering exclusively when exactly one
+    solitary singleton exists in the visual scene. In displays containing multiple
+    singletons (such as two distinct items and one twin pair), the original model
+    erroneously favored both singletons over the duplicates; the revised mechanism
+    correctly treats them as lacking a solitary oddity contrast, defaulting to uniform
+    choice over matching items. - **Recursion depth**: Unchanged at depth 0 (`choice_probs`
+    evaluates `L_heur` directly without recursive speaker simulation). - **Parameters
+    added or removed**: None. The model retains exactly two parameters: `beta` (prior
+    Normal(0.0, 2.0)) for solitary singleton weighting, and `lapse` (prior Beta(1.0,
+    9.0)) for random clicking. - **Code differences**: In `compute_singleton_indicator`,
+    `is_singleton` is calculated by checking both that an object has a copy count
+    of 1 and that the sum of singleton items across the entire visual display equals
+    1 (`(is_item_singleton > 0.0) & (singleton_count > 0.5) & (singleton_count < 1.5)`),
+    replacing the unconstrained `(copy_count <= 1.0)`.'
+- name: attenuated_oddity_listener
+  rationale: 'Attenuated perceptual oddity listener. Listeners interpret referring
+    expressions using a perceptual oddity heuristic whose salience is strong in ungrounded
+    prior expectations but attenuated during linguistic comprehension. When hearing
+    no informative expression, listeners spontaneously target the unique visual singleton
+    with full pop-out strength. When hearing an informative word, top-down semantic
+    constraints compete with bottom-up visual pop-out, dampening the singleton preference
+    among matching referents. Refining oddity_heuristic_listener: The source model
+    enforced an identical oddity bias across both prior expectations and utterance
+    comprehension. We decouple this mechanism into separate prior and utterance oddity
+    weights, which fits better because spoken words focus attention on semantic applicability
+    and attenuate raw visual pop-out. Differences from source: recursion depth is
+    unchanged at depth 0 (calling L_heur); removed parameter beta; added parameters
+    beta_prior (for uninformative prior trials) and beta_utt (for informative utterance
+    trials); in choice_probs, prior uses beta_prior * is_singleton and heard uses
+    L_heur with beta_utt instead of sharing beta across both.'
+- name: attenuated_solitary_oddity_listener
+  rationale: 'Attenuated solitary perceptual oddity listener. Listeners interpret
+    referring expressions using a solitary perceptual oddity heuristic whose salience
+    is strong during ungrounded prior expectations but attenuated during linguistic
+    utterance comprehension. When no informative expression is heard, listeners spontaneously
+    select the unique solitary singleton with full bottom-up pop-out strength; when
+    an informative referring expression is heard, top-down semantic constraints compete
+    with bottom-up visual pop-out, dampening the solitary singleton bias among semantically
+    matching referents. ### Refinement details relative to solitary_oddity_heuristic_listener
+    - **Single stated change**: Decoupled the solitary oddity weighting parameter
+    into separate uninformative prior (`beta_prior`) and linguistic utterance comprehension
+    (`beta_utt`) weights. Spoken referring expressions draw selective attention to
+    semantic truth conditions, which attenuates bottom-up perceptual oddity pop-out
+    relative to spontaneous prior expectations. - **Recursion depth**: Unchanged at
+    depth 0 (`choice_probs` evaluates `L_heur` directly without recursive speaker
+    simulation). - **Parameters added or removed**: Removed parameter `beta`; added
+    parameters `beta_prior` (prior Normal(0.0, 2.0)) and `beta_utt` (prior Normal(0.0,
+    2.0)); retained parameter `lapse` (prior Beta(1.0, 9.0)). - **Code differences**:
+    In `PARAMS`, replaced `beta` with `beta_prior` and `beta_utt`. In `L_heur`, replaced
+    `beta` with `beta_utt`. In `choice_probs`, `prior` is computed using `params["beta_prior"]
+    * is_singleton` and `heard` evaluates `L_heur(params["beta_utt"], ctx.lex, is_singleton)[ctx.utterance]`,
+    decoupling the ungrounded prior and grounded utterance choice pathways.'
+- name: twin_contrast_solitary_oddity_listener
+  rationale: 'Attenuated solitary perceptual oddity listener with twin contrast. Listeners
+    interpret referring expressions using a solitary perceptual oddity heuristic where
+    an odd-one-out pop-out bias operates exclusively when a solitary singleton contrasts
+    against an identical twin pair, rather than against majority triplets or larger
+    background groups. When no informative expression is heard, listeners spontaneously
+    select the solitary singleton contrasting with twins; when an informative referring
+    expression is heard, selective attention to semantic applicability competes with
+    and attenuates oddity pop-out among matching referents, while defaulting to uniform
+    baseline expectations on scenes with majority triplets or no twin contrast. ###
+    Refinement details relative to attenuated_solitary_oddity_listener - **Single
+    stated change**: Restricted the solitary oddity heuristic indicator from triggering
+    against any duplicate background to triggering exclusively when the background
+    consists of an identical twin pair (maximum copy count of 2), eliminating false
+    pop-out on scenes containing majority triplets or larger clusters. - **Why it
+    should fit better**: In triad reference games, a singleton contrasting against
+    an identical twin pair produces salient perceptual oddity pop-out; however, in
+    displays containing a majority triplet of three identical objects, the triplet
+    establishes a dominant visual majority category rather than a pair contrast, leading
+    participants to distribute their prior expectations across the display rather
+    than concentrating choices on the singleton. Restricting oddity to twin-contrast
+    contexts eliminates spurious singleton biases on majority-triplet scenes while
+    preserving solitary oddity on twin displays. - **Recursion depth**: Unchanged
+    at depth 0 (`choice_probs` evaluates `L_heur` directly without recursive speaker
+    simulation). - **Parameters added or removed**: None. Retains parameter `beta_prior`
+    (prior Normal(0.0, 2.0)), parameter `beta_utt` (prior Normal(0.0, 2.0)), and parameter
+    `lapse` (prior Beta(1.0, 9.0)). - **Code differences**: In `compute_singleton_indicator`,
+    added condition `& (max_copy > 1.5) & (max_copy < 2.5)` to require that the maximum
+    copy count among objects in the visual display equals 2 (`max_copy = jnp.max(copy_count)`),
+    restricting solitary singleton pop-out exclusively to twin-contrast visual scenes.'
+- name: attenuated_solitary_valence_listener
+  rationale: 'Attenuated solitary perceptual oddity listener with evaluative valence
+    framing. Listeners interpret referring expressions using a solitary perceptual
+    oddity heuristic whose bottom-up pop-out salience is strong during spontaneous
+    ungrounded expectations but attenuated during linguistic utterance comprehension,
+    while modulating their expectations according to the speaker''s evaluative framing
+    attitude. Under positive framing ("favorite"), listeners expect speakers to target
+    richer, feature-laden exemplars; under negative framing ("least favorite"), this
+    expectation inverts to favor minimal, sparse exemplars; and under neutral framing,
+    choices follow the solitary oddity heuristic alone. ### Refinement details relative
+    to attenuated_solitary_oddity_listener - **Single stated change**: Extended attenuated_solitary_oddity_listener
+    by incorporating the evaluative valence framing component from rsa_l2_singleton_feat_color_valence_l0.
+    The source model treated all trials as emotionally neutral and predicted an equal
+    choice split across referents regardless of speaker attitude; incorporating evaluative
+    valence framing allows listeners to modulate their expectations over referent
+    feature complexity under positive ("favorite") and negative ("least favorite")
+    frames while preserving solitary oddity pop-out under neutral framing. - **Recursion
+    depth**: Unchanged at depth 0 (`choice_probs` evaluates `L_heur` directly without
+    recursive speaker simulation). - **Parameters added or removed**: Added parameter
+    `w_valence` (prior Normal(0.0, 2.0)); retained parameters `beta_prior` (prior
+    Normal(0.0, 2.0)), `beta_utt` (prior Normal(0.0, 2.0)), and `lapse` (prior Beta(1.0,
+    9.0)). - **Code differences**: In `PARAMS`, added `w_valence`. In `L_heur`, added
+    parameter `valence_bias: ...` and updated the referent choice weighting expression
+    to include `vec(valence_bias, r)`. In `choice_probs`, computed `valence_bias =
+    params["w_valence"] * ctx.valence * ctx.feature_count`, updated `prior` to include
+    `valence_bias`, and passed `valence_bias` to `L_heur`.'
+- name: base_rate_solitary_oddity_listener
+  rationale: 'Listeners interpret referring expressions by integrating a solitary
+    perceptual oddity heuristic with contextual familiarization base rates. When evaluating
+    candidate referents, listeners favor solitary singletons contrasting against identical
+    background duplicates, while additionally favoring referents that were encountered
+    more frequently during prior familiarization. On uninformative prior trials without
+    an informative word, choices follow both solitary oddity pop-out and familiarization
+    frequency; when an informative referring expression is heard, listeners choose
+    among semantically matching referents weighted by both solitary oddity and familiarization
+    frequency. ### Refinement details relative to solitary_oddity_heuristic_listener
+    - **Single stated change**: Extended solitary_oddity_heuristic_listener by incorporating
+    contextual familiarization base-rate weighting. The source model treated all referents
+    as having equal a priori base rates even when prior experience established strong
+    frequency asymmetries; incorporating familiarization base rates allows listeners
+    to weight candidate referents by their observed exposure frequencies in both prior
+    expectations and utterance comprehension, while preserving solitary oddity pop-out
+    on scenes with duplicate items. - **Recursion depth**: Unchanged at depth 0 (`choice_probs`
+    evaluates `L_heur` directly without recursive speaker simulation). - **Parameters
+    added or removed**: Added parameter `w_base` (prior Normal(0.0, 2.0)); retained
+    parameter `beta` (prior Normal(0.0, 2.0)) and parameter `lapse` (prior Beta(1.0,
+    9.0)). - **Code differences**: In `PARAMS`, added `w_base`. In `L_heur`, added
+    parameter `base_rate: ...` and updated the referent choice weighting expression
+    to `at(lex, u, r) * exp(beta * vec(is_singleton, r) + w_base * vec(base_rate,
+    r))`. In `choice_probs`, extracted `base_rate = ctx.familiarization`, computed
+    `prior = softmax_prior(params["beta"] * is_singleton + params["w_base"] * base_rate)`,
+    and passed `base_rate` and `params["w_base"]` to `L_heur`.'
+- name: contextual_ubiquity_cost_speaker
+  rationale: Speakers in reference games actively avoid producing referring expressions
+    that are contextually ubiquitous across the visual display, incurring a cognitive
+    production cost proportional to the fraction of display competitors sharing the
+    feature. Pragmatic listeners invert this ubiquity-averse speaker, inferring that
+    when an ambiguous expression is produced, the speaker lacked a less ubiquitous
+    alternative for that referent. On uninformative trials where no informative word
+    is uttered, listener choices reflect expectations that speakers prefer to communicate
+    about referents with higher baseline communicative contrast.

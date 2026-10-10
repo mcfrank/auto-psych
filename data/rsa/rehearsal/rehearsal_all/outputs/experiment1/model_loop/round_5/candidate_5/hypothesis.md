@@ -1,0 +1,9 @@
+Pragmatic listeners reason at depth two about a speaker who evaluates competitor confusion based solely on physical visual appearance, maintaining a clean separation between bottom-up perceptual similarity and top-down empirical base rates. While prior exposure during familiarization establishes learned expectations that directly bias prior referent beliefs, exposure frequency does not alter an object's visual confusability or physical singleton status in the display. Pragmatic listeners invert this appearance-based confusion-averse speaker while integrating a shared object prior combining visual salience and empirical familiarization base rates.
+
+Refining rsa_l2_mean_confusion_fam_l0 by restricting perceptual distance and competitor similarity to physical appearance dimensions (semantic features and color), separating visual confusability from empirical familiarization base rates. This should fit better by preventing exposure frequency differences from distorting pairwise visual similarity and singleton detection in familiarization conditions (such as E5_baserate), allowing empirical base rates to inform prior referent expectations without corrupting bottom-up perceptual confusion calculations.
+
+Differences from source (rsa_l2_mean_confusion_fam_l0):
+- Recursion depth: Unchanged; choice_probs calls depth-2 listener L2.
+- Parameters added: None.
+- Parameters removed: None.
+- Terms changed: Exactly one term changed in pairwise distance computation: total_dist = pair_dist + gray_diff (removing the artificial + fam_diff term that conflated familiarization exposure frequency with visual perceptual distance). The prior computation (including familiarization base rate sensitivity + params["w_familiar"] * ctx.familiarization), competitor confusion normalization by n_obj - 1, literal L0 semantics, S1 and S2 speaker choice utilities, depth-2 recursive reasoning, prior distributions, and lapse process remain identical to the source.

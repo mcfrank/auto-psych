@@ -1,0 +1,35 @@
+{
+ "experiment": 2,
+ "ground_truth": "literal_listener",
+ "selection_scope": "live",
+ "exported": "twin_color_atten_base_valence_listener",
+ "exported_rmse": 0.020073154300514425,
+ "closest_after": "twin_color_base_atten_valence_listener",
+ "closest_after_rmse": 0.02002335465426384,
+ "closest_before": "twin_contrast_solitary_oddity_listener",
+ "closest_before_rmse": 0.02612705114113993,
+ "before": {
+  "twin_contrast_solitary_oddity_listener": 0.02612705114113993,
+  "solitary_oddity_heuristic_listener": 0.03483275037836891,
+  "base_rate_solitary_oddity_listener": 0.035131325098216815,
+  "attenuated_solitary_valence_listener": 0.03557376057520291,
+  "attenuated_solitary_oddity_listener": 0.03562721190421346,
+  "attenuated_oddity_listener": 0.061869476379258055,
+  "contextual_ubiquity_cost_speaker": 0.08485050472116565,
+  "isolated_graded_costly_l3": 0.10521929297901605
+ },
+ "after": {
+  "twin_color_base_atten_valence_listener": 0.02002335465426384,
+  "twin_attenuated_color_valence_listener": 0.020026926602554933,
+  "twin_base_attenuated_valence_listener": 0.02004730898312179,
+  "twin_valence_color_base_rate_listener": 0.020067010692755308,
+  "twin_color_atten_base_valence_listener": 0.020073154300514425,
+  "twin_contrast_solitary_oddity_listener": 0.020123991380032916,
+  "twin_contrast_valence_base_rate_listener": 0.020125202217553487,
+  "twin_contrast_valence_color_listener": 0.02015304278695849,
+  "twin_contrast_solitary_valence_listener": 0.020173554605220974,
+  "twin_color_attenuated_valence_listener": 0.020231274403839435,
+  "twin_feature_base_valence_listener": 0.024770244909550904,
+  "attenuated_oddity_listener": 0.03577071252359139
+ }
+}

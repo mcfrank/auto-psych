@@ -1,0 +1,67 @@
+"""Pragmatic listener reasoning about a competitor-reliance-sensitive speaker.
+
+Speakers in reference games avoid using referring expressions that deprive competitor
+referents of their sole identifying labels, choosing words based on how exclusively
+competitors rely on them as their primary descriptive option. Candidate words are penalized
+proportionally to the inverse feature count of competitor referents that also satisfy the
+word. Pragmatic listeners invert this reliance-sensitive speaker, expecting ambiguous
+words to refer to feature-sparse referents rather than feature-rich items that possess
+alternative communicative options.
+"""
+
+import jax.numpy as jnp
+import numpyro.distributions as dist
+from memo import memo
+
+from src.rsa.memo_kit import EPS, at, with_lapse
+
+PARAMS = {
+    "alpha": dist.LogNormal(0.0, 1.0),
+    "w_reliance": dist.Normal(0.0, 2.0),
+    "lapse": dist.Beta(1.0, 9.0),
+}
+
+
+@memo
+def L0[u: UTT, r: OBJ](lex: ...):
+    listener: knows(u)
+    listener: chooses(r in OBJ, wpp=at(lex, u, r))
+    return Pr[listener.r == r]
+
+
+@memo
+def L1[u: UTT, r: OBJ](alpha, w_reliance, lex: ..., reliance: ...):
+    listener: thinks[
+        speaker: given(r in OBJ, wpp=1),
+        speaker: chooses(
+            u in UTT,
+            wpp=at(lex, u, r)
+            * exp(
+                alpha * log(L0[u, r](lex) + {EPS})
+                - w_reliance * at(reliance, u, r)
+            ),
+        ),
+    ]
+    listener: observes [speaker.u] is u
+    listener: chooses(r in OBJ, wpp=Pr[speaker.r == r])
+    return Pr[listener.r == r]
+
+
+def compute_reliance(ctx):
+    real_words = (1.0 - ctx.is_sink)[:, None]
+    real_lex = ctx.lex * real_words
+    fc = jnp.maximum(ctx.feature_count, 1.0)
+    rel = real_lex / fc[None, :]
+    competitor_reliance = jnp.sum(rel, axis=1)[:, None] - rel
+    return competitor_reliance * real_words
+
+
+def choice_probs(params, ctx):
+    reliance = compute_reliance(ctx)
+    heard = L1(
+        params["alpha"], params["w_reliance"], ctx.lex, reliance
+    )[ctx.utterance]
+    uniform = jnp.full_like(heard, 1.0 / heard.shape[0])
+    return with_lapse(
+        jnp.where(ctx.is_prior > 0, uniform, heard), params["lapse"]
+    )

@@ -1,0 +1,21 @@
+{
+ "n_included": 187,
+ "excluded": [
+  "auto_psych:sim111",
+  "auto_psych:sim117",
+  "auto_psych:sim133",
+  "auto_psych:sim146",
+  "auto_psych:sim154",
+  "auto_psych:sim168",
+  "auto_psych:sim198",
+  "auto_psych:sim23",
+  "auto_psych:sim36",
+  "auto_psych:sim56",
+  "auto_psych:sim60",
+  "auto_psych:sim74",
+  "auto_psych:sim89"
+ ],
+ "max_catch_errors": 0,
+ "n_recruited": 200,
+ "collection": "simulated"
+}

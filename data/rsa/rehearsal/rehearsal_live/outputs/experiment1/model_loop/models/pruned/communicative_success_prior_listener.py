@@ -1,0 +1,63 @@
+"""Communicative success prior listener.
+
+Listeners expect speakers to communicate about referents with higher expected
+communicative success, placing a prior over candidate objects proportional to the
+informativeness of the best referring expression available for each object in the
+context. An object that possesses an exclusive, distinguishing feature can be
+reliably communicated to a listener, whereas an ambiguous or featureless object
+carries low referential utility. In pragmatic comprehension, listeners invert an
+informative speaker using this communicative success prior, and on uninformative
+prior trials where no informative word is uttered, listener choices track expected
+communicative success directly.
+"""
+
+import jax.numpy as jnp
+import numpyro.distributions as dist
+from memo import memo
+
+from src.rsa.memo_kit import EPS, at, softmax_prior, vec, with_lapse
+
+PARAMS = {
+    "alpha": dist.LogNormal(0.0, 1.0),
+    "w_comm": dist.Normal(0.0, 2.0),
+    "lapse": dist.Beta(1.0, 9.0),
+}
+
+
+@memo
+def L0[u: UTT, r: OBJ](lex: ...):
+    listener: knows(u)
+    listener: chooses(r in OBJ, wpp=at(lex, u, r))
+    return Pr[listener.r == r]
+
+
+@memo
+def L1[u: UTT, r: OBJ](alpha, lex: ..., prior: ...):
+    listener: thinks[
+        speaker: given(r in OBJ, wpp=vec(prior, r)),
+        speaker: chooses(
+            u in UTT,
+            wpp=at(lex, u, r) * exp(alpha * log(L0[u, r](lex) + {EPS})),
+        ),
+    ]
+    listener: observes [speaker.u] is u
+    listener: chooses(r in OBJ, wpp=Pr[speaker.r == r])
+    return Pr[listener.r == r]
+
+
+def compute_communicative_prior(w_comm, ctx):
+    real_words = (1.0 - ctx.is_sink)[:, None]
+    real_lex = ctx.lex * real_words
+    ext = jnp.maximum(jnp.sum(real_lex, axis=1, keepdims=True), 1.0)
+    l0 = real_lex / ext
+    success = jnp.max(l0 * real_lex, axis=0)
+    return softmax_prior(w_comm * success)
+
+
+def choice_probs(params, ctx):
+    prior = compute_communicative_prior(params["w_comm"], ctx)
+    heard = L1(params["alpha"], ctx.lex, prior)[ctx.utterance]
+    return with_lapse(
+        jnp.where(ctx.is_prior > 0, prior, heard),
+        params["lapse"],
+    )
