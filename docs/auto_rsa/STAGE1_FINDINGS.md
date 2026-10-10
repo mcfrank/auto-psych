@@ -247,3 +247,60 @@ the checkout had held `.secrets~` (dated 2026-05-08) until the PI deleted it on
 **Done:** all four copies deleted. `find $SCRATCH/auto-psych` now finds no secrets file
 other than `.secrets.example`, and `~/auto-psych` holds only `.secrets` and
 `.secrets.example`. **No key rotation is needed.**
+
+## 9. Stage 1 re-run (2026-10-10, job 47272640, code 90a06be): passed
+
+**The job:** COMPLETED in 49 min (design, deploy, draft).
+- Page `https://auto-psych-2c5da-rsa-c0.web.app/e1-c0/`, session
+  `session_rsa_reference-e1-c0-20261010T211312Z-90a06be`.
+- Draft `6acaaa90665e4a53bd804a51` (unpublished).
+- The earlier attempt was moved to `rsa_live_stage1_attempt2`.
+
+**The design** (`experiment1/design/eig.json`):
+- **Quotas all met:**
+
+  | quota | count | minimum |
+  |---|---|---|
+  | `objects=2` | 6 | 6 |
+  | `objects=3` | 10 | 10 |
+  | `query=prior` | 13 | 8 |
+  | `query=word` | 27 | 20 |
+
+- **Kinds:** 2×3 prior 1 / word 1; 2×4 prior 3 / word 1; 3×3 word 1; 3×4 prior 3 / word
+  6; 4×3 prior 1; 4×4 prior 5 / word 18.
+- **Power:** 0.932 ± 0.006 (free design 0.931); joint EIG 3.45 of 3.70 bits. The weakest
+  models are `bar:rsa_l1_shared_prior` 0.69 and `bar:rsa_l1_salience` 0.74.
+- `screened_out`: empty.
+- Every one of the 200 trial lists has at least one 2-object display.
+
+**The deploy:** functions deployed; `/results` without the token returns 403; the page
+returns 200.
+
+**The page**, run through in a browser as TEST1 (to the end) and TEST2 (to the first
+trial, twice):
+- consent, welcome, instructions (mumbling explained), 1 practice screen, then 12 choices;
+- word trials and mumble trials ("*mumblemumble* (You couldn't hear what he said.)") both
+  render;
+- a **two-object display** (two pizzas, mumble) renders cleanly;
+- displays with identical objects (e.g. two identical snowmen) render as designed;
+- the last choice posts and redirects to Prolific's completion URL;
+- **each id gets a different list** (TEST1's first trial: 4 snowmen, "mittens"; TEST2's:
+  3 friends, "bowtie");
+- **a reload with the same id gives the same list** (TEST2 again: the same first trial).
+
+**The submissions** (`/results?format=json`, the token used on Sherlock only): one
+response for TEST1. Its `trials` is one item `{format: "rsa_jspsych_json", data: <string>}`,
+and the data decode to 16 jsPsych rows. (TEST2 was not submitted; the PI's MCF_TEST3 run
+was not in when checked.)
+
+**The draft** (API): "Who is Bob talking about?", unpublished, $0.80, 200 places,
+estimated 4 min / maximum 16, desktop only, country / language / approval-rate (98-100)
+filters. There is no earlier-participants blocklist, by design in test mode.
+
+**Small notes:**
+- The welcome screen says "It takes about 3 minutes", while Prolific's estimate is 4. The
+  PI's run took 1-2 min; the pilot will measure it.
+- The consent overlay is not in the page's accessibility tree: its "I agree" button can't
+  be reached by a screen reader or by ref, only by a pointer.
+- The first draft `6aca6c2a3e69a3f93c402401` is still in Prolific (unpublished); the PI
+  will delete it in the dashboard.
