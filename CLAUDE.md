@@ -611,7 +611,7 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   § 9): `scancel`, rsync into the run's own copy (its `public/` holds the
   earlier pages Firebase serves) and record the commit, then the unfinished
   stage with `RESUME_AGENTS` and the rest with `EXPERIMENTS=<next>-<last>`
-  and `--dependency=afterok`. `--qos=long` refuses limits under 48 h.
+  and `--dependency=afterok`. `--qos=long` is not on this account; jobs default to the `mcfrank` partition (the lab's owner node, up to 7 days; `normal` caps at 48 h).
 - **The page is deployed before the study exists.** A Firebase deploy
   (`run_deployment` in `deployment/local.py`) checks the results token and,
   for `live`, Prolific's eligibility IDs (`verify_live_eligibility`), deploys

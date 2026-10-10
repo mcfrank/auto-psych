@@ -102,7 +102,7 @@ Keys (read by `_pilot_config.py`):
 | `agent_model` | optional: the agents' model, e.g. `google/gemini-3.7-flash` (exported as `CODING_AGENT_MODEL`). Default: `google/gemini-3.1-pro-preview` for opencode, `claude-sonnet-4-6` for claude. Printed in the launcher summary |
 | `prolific_mode` | `test` (the pilot preset): deploy, create a draft study, not published, then stop. `live`: publish, recruit, pay, model. `none`: deploy the page, no study, then stop. Missing key ⇒ `test`. |
 | `confirm_live_recruitment` | must be `true` for `live`. `full_run.yaml` and `hero_run.yaml` say `live` without it, so they are refused until you choose. |
-| `walltime`, `qos` | Slurm limit; `qos: long` above 2 days, and only there: it refuses a limit under 48 hours |
+| `walltime`, `qos` | Slurm limit, up to 7 days on the `mcfrank` partition the job scripts use; leave `qos` empty (`long` is not on this account and is refused) |
 | `prolific.participants` | per experiment: the places recruited, the collection target **and** the design's N |
 | `prolific.reward_per_hour` (cents) or `reward` (cents flat), `estimated_completion_time` (min) | pay |
 | `prolific.name`, `description`, `completion_code`, `min_approval_rate` | study settings; use a distinct completion code per series |
@@ -434,8 +434,8 @@ sbatch --job-name=resume_$LABEL --time=12:00:00 \
   Both can be queued at once: submit the resumed stage first, then the
   remaining experiments with `--dependency=afterok:<its job id>`, so they
   start only if the stage succeeds (if it fails, the second job stays
-  pending with `DependencyNeverSatisfied`: `scancel` it). `--qos=long`
-  refuses a time limit under 48 hours; leave it out below that. To queue the
+  pending with `DependencyNeverSatisfied`: `scancel` it). Do not add
+  `--qos=long`: it is not on this account (the `mcfrank` partition allows 7 days). To queue the
   remaining experiments on code the running stage's copy does not have yet,
   rsync the checkout into a second directory beside the copy now (and record
   its commit there), and make the queued job rsync that directory into the

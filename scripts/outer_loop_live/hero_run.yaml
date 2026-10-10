@@ -27,7 +27,7 @@ prolific_mode: live                # REAL recruiting + payment
 # --- where / how it runs (Slurm + Firebase) --------------------------------
 firebase_project: auto-psych-2c5da
 walltime: "1-23:00:00"             # 47h — deeper search than full_run, still generous
-qos: ""                            # "" = default normal QoS
+qos: ""                            # leave empty ("long" is not on this account)
 
 # --- the Prolific study (per experiment) -----------------------------------
 prolific:

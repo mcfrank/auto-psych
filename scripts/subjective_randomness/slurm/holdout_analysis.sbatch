@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=holdout_test_retest
-#SBATCH --partition=normal
+#SBATCH --partition=mcfrank
 #SBATCH --time=00:20:00
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=8GB
