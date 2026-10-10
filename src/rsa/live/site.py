@@ -11,7 +11,9 @@ trial_lists.json), the layout main's deployment stages
   falls back to a random list;
 * shows no consent screen of its own: the deployment injects the IRB consent
   gate (`templates/consent.txt`) in front of it;
-* posts the jsPsych data to ``POST /submit`` with the client config the
+* posts the jsPsych data, as one JSON string (``trials: [{format:
+  "rsa_jspsych_json", data}]``: Firestore cannot store a list inside a list,
+  and each trial's display is a matrix), to ``POST /submit`` with the client config the
   deployment writes beside it (``auto_psych_config.json``: the collection
   session, the study), the Prolific ids from the URL and the list, then sends
   the participant to Prolific's completion URL. A failed post shows an error
@@ -71,7 +73,9 @@ LIVE_JS = """
         prolific_study_id_from_url: p.get("STUDY_ID"),
         prolific_session_id: p.get("SESSION_ID"),
         list_index: meta.list_index,
-        trials: JSON.parse(json),
+        // One JSON string: Firestore cannot store a list inside a list, and every
+        // trial records its display as a matrix (live stage 1, 2026-10-10).
+        trials: [{ format: "rsa_jspsych_json", data: json }],
         consented_at: window.__autoPsychConsentedAt || null,
         submitted_at_client: new Date().toISOString(),
         user_agent: navigator.userAgent

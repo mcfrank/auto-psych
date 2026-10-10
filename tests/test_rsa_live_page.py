@@ -19,12 +19,28 @@ from src.pipelines.outer_loop.deployment.firebase import (
 )
 from src.rsa.experiment.convert import convert
 from src.rsa.experiment.design import EXPERIMENT_ASSETS_DIR, Design, trial_lists
+from src.rsa.live.collect import decode_trials
 from src.rsa.live.site import LIVE_MARKER, build_live_site
 from tests.rsa_experiment_browser import CHROMIUM, chromium_available, fetch_cdn
 
 pytestmark = pytest.mark.skipif(not chromium_available(), reason=f"Playwright or Chromium ({CHROMIUM}) missing")
 
 ORIGIN = "https://live.test"
+
+
+def nested_arrays(value, path="payload"):
+    """Where a list sits directly inside a list: what Firestore refuses to store
+    ("Property array contains an invalid nested entity", live stage 1)."""
+    found = []
+    if isinstance(value, list):
+        for i, v in enumerate(value):
+            if isinstance(v, list):
+                found.append(f"{path}[{i}]")
+            found += nested_arrays(v, f"{path}[{i}]")
+    elif isinstance(value, dict):
+        for k, v in value.items():
+            found += nested_arrays(v, f"{path}.{k}")
+    return found
 REDIRECT = f"{ORIGIN}/done?cc=RSA123"
 
 
@@ -128,11 +144,13 @@ def test_a_participant_consents_gets_the_assigned_list_submits_and_returns_to_pr
     assert (payload["prolific_pid"], payload["prolific_study_id_from_url"], payload["prolific_session_id"]) == (
         "P1", "S1", "X1")
     assert payload["consented_at"]
-    tasks = [r.get("task") for r in payload["trials"]]
+    assert nested_arrays(payload) == []  # Firestore stores it as posted
+    records = decode_trials(payload["trials"])
+    tasks = [r.get("task") for r in records]
     assert "consent" not in tasks  # the deployment's IRB gate replaces the page's own screen
-    assert {r["list_index"] for r in payload["trials"]} == {2}
-    assert {r["list_assignment"] for r in payload["trials"]} == {"server"}
-    frame = convert(json.dumps(payload["trials"]), participant_id="p0", experiment="live_test")
+    assert {r["list_index"] for r in records} == {2}
+    assert {r["list_assignment"] for r in records} == {"server"}
+    frame = convert(records, participant_id="p0", experiment="live_test")
     tests = [t for t in doc["lists"][2]["trials"] if t["phase"] == "test"]
     assert list(frame["condition"]) == [("catch" if t["is_catch"] else t["condition"]) for t in tests]
 
@@ -165,3 +183,9 @@ def test_the_live_page_carries_its_hooks_once():
         html = build_live_site(doc, Path(d)).read_text()
     assert html.count(LIVE_MARKER) >= 1 and html.index(LIVE_MARKER) < html.index("const TRIAL_LISTS")
     assert "const CONSENT_HTML = null;" in html
+
+
+def test_the_nested_array_check_finds_what_firestore_refuses():
+    assert nested_arrays({"trials": [{"objects": [[0, 1], [1, 0]]}]}) == ["payload.trials[0].objects[0]",
+                                                                          "payload.trials[0].objects[1]"]
+    assert nested_arrays({"trials": [{"format": "x", "data": "[[0, 1]]"}]}) == []

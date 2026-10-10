@@ -151,3 +151,62 @@ shrinks the pool slightly.
 - **The RSA functions**, now deployed project-wide (`/assign`, the JSON `/results`).
 - **Timing:** the PI's run through the page took about 1-2 min against the 4 min budgeted;
   the pilot will measure it properly.
+
+## 7. Driver's reply (2026-10-10)
+
+**Fixed (pull `auto-rsa`):**
+
+- **The submit bug.** The page now posts its jsPsych data as one JSON string,
+  `trials: [{format: "rsa_jspsych_json", data: "<json>"}]`:
+  - no list sits inside another, which is what Firestore requires;
+  - `/submit` is unchanged;
+  - `src.rsa.live.collect.decode_trials` is the one place that decodes it, and it raises
+    on anything else.
+
+  The browser test now checks the exact payload the page posts for nested arrays, and
+  fails on the old one.
+- **Secrets.** Staging and both `agent_tree.exclude` files excluded `.secrets` by exact
+  name, so the `.secrets~` backup was copied into the staged harness and the agents'
+  readable tree. Now `.secrets*` and `*.secrets` are excluded, and
+  `check_agent_tree.sh` refuses a tree holding one. **Check rehearsal 2 now** (it was
+  staged from the same checkout):
+  ```bash
+  ls -a $SCRATCH/auto-psych/rsa_rehearsal2/harness_repo $SCRATCH/auto-psych/rsa_rehearsal2/agent_src | grep -i secret
+  find $SCRATCH/auto-psych/agent_trees -name '.secrets*' -o -name '*.secrets'
+  ```
+  If either finds a file:
+  1. delete it from the trees (and from `harness_repo`/`agent_src`);
+  2. grep the rehearsal's agent logs for its name:
+     `grep -rl 'secrets' $SCRATCH/auto-psych/agent_trees/*/repo/_runs/outer/experiment*/model_loop/round_*/*/agent.jsonl`;
+  3. tell the PI.
+
+  If any agent read it, rotate the keys it held. The agents had no network, but their
+  logs and outputs are brought back.
+- **Setup defaults:**
+  - every RSA job now uses run 2's venv (`$GROUP_HOME/venvs/auto-psych_rsa_run2`);
+  - `nodejs/24.13.0` is the default module;
+  - untracked files outside `src/`, `scripts/`, `functions/` and `templates/` no longer
+    make staged code "dirty";
+  - `.secrets.example` names the Firebase account (michaelcfrank@gmail.com) and says the
+    results token is shared project-wide.
+
+**Re-running stage 1:**
+1. **The test draft doesn't block a redeploy.** The "one live study" guard counts only
+   *live* studies, so a recorded test draft never refuses one.
+2. **But use a fresh `WORK_ROOT`.** The fix is new code, and staging refuses to run old
+   cells on new code:
+   ```bash
+   mv $SCRATCH/auto-psych/rsa_live $SCRATCH/auto-psych/rsa_live_stage1_attempt2
+   ```
+3. **Delete draft `6aca6c2a3e69a3f93c402401`** in Prolific's dashboard. It's harmless
+   but confusing.
+4. **Relaunch:** `PROLIFIC_MODE=test CHAINS_TO_RUN=0 bash scripts/rsa/live/launch.sh`
+   (Node 24 and the venv are now the defaults).
+5. **Pass criteria** are as in `HANDOFF_live.md` §2, plus:
+   - each test id's submission ends on Prolific's completion page;
+   - `/results?format=json` shows one response per id;
+   - each response's `trials` is a single JSON string.
+
+**Open for the PI (§3–4):** display sizes, mumble trials, the earlier-participants
+blocklist, and the completion time. The driver's recommendations are in the session
+reply. Decisions go into `PLAN.md` before the pilot.

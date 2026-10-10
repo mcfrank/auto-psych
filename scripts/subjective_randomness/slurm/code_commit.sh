@@ -12,7 +12,10 @@ set -euo pipefail
 [[ $# -eq 1 ]] || { echo "usage: $0 <repo>" >&2; exit 2; }
 cd "$1"
 commit=$(git rev-parse HEAD)
-changes=$(git status --porcelain; git diff HEAD)
+# Untracked files count only where staged code lives: logs, editor backups and
+# the like at the repository root made a clean checkout read as dirty (RSA live
+# stage 1, 2026-10-10). Tracked changes count everywhere.
+changes=$(git status --porcelain --untracked-files=no; git ls-files --others --exclude-standard -- src scripts functions templates; git diff HEAD)
 if [[ -n "$changes" ]]; then
   echo "$commit-dirty-$(printf '%s' "$changes" | sha256sum | cut -c1-12)"
 else

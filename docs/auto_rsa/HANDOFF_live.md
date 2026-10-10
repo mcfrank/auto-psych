@@ -57,6 +57,8 @@ cd ~/auto-psych && git fetch origin && git merge --ff-only origin/auto-rsa
 Make sure `.secrets` has `PROLIFIC_API_TOKEN`, `AUTO_PSYCH_RESULTS_TOKEN` and
 `FIREBASE_TOKEN` (the job checks; never print them).
 
+**After stage 1's first attempt** (`STAGE1_FINDINGS.md`): re-run in a fresh `WORK_ROOT` (§7 there). Use a `FIREBASE_TOKEN` from the account that owns the Firebase project (michaelcfrank@gmail.com).
+
 ## 2. Stage 1: test deploy (no money)
 
 ```bash

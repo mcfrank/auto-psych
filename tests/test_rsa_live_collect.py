@@ -11,6 +11,11 @@ from src.rsa.outer.run import OuterConfig, OuterRun
 from src.rsa.outer.simulate import page_records
 
 
+def enc(records):
+    """As the live page stores them (src.rsa.live.site)."""
+    return [{"format": live.TRIALS_FORMAT, "data": json.dumps(records)}]
+
+
 def _setup(tmp_path, monkeypatch, *, prolific_mode="live", confirm=True, responses=None):
     doc = trial_lists(Design.load(EXPERIMENT_ASSETS_DIR / "demo_design.json"), seed=3, n_lists=4, n_catch=2)
     lists_path = tmp_path / "lists.json"
@@ -31,7 +36,7 @@ def _setup(tmp_path, monkeypatch, *, prolific_mode="live", confirm=True, respons
     if responses is None:
         responses = [dict(participant_id_str=f"PID{k}", prolific_pid=f"PID{k}", prolific_study_id="STUDY",
                           submitted_at_client=f"2026-10-10T10:0{k}:00Z", list_index=k,
-                          trials=page_records(doc, k, [0] * len(doc["lists"][k]["trials"]), participant_id=f"PID{k}"))
+                          trials=enc(page_records(doc, k, [0] * len(doc["lists"][k]["trials"]), participant_id=f"PID{k}")))
                      for k in range(4)]
         responses.append(dict(participant_id_str="PREVIEW", prolific_pid=None, prolific_study_id="other",
                               trials=responses[0]["trials"]))
@@ -67,7 +72,7 @@ def test_a_published_study_needs_the_confirmation_too(tmp_path, monkeypatch):
 def test_ids_continue_across_experiments_and_a_returning_person_keeps_theirs():
     doc = trial_lists(Design.load(EXPERIMENT_ASSETS_DIR / "demo_design.json"), seed=3, n_lists=2, n_catch=0)
     resp = lambda pid, k: dict(participant_id_str=pid, prolific_pid=pid, prolific_study_id="S2",  # noqa: E731
-                               trials=page_records(doc, k, [0] * len(doc["lists"][k]["trials"])))
+                               trials=enc(page_records(doc, k, [0] * len(doc["lists"][k]["trials"]))))
     _, ids, _ = live.responses_to_rows([resp("A", 0), resp("NEW", 1)], study_id="S2", experiment="r_e2",
                                        ids={"A": "live0", "B": "live1"})
     assert ids == {"A": "live0", "B": "live1", "NEW": "live2"}
@@ -135,3 +140,11 @@ def test_a_pilot_stops_after_its_data_are_in(tmp_path, monkeypatch):
     monkeypatch.setattr(run, "prospective", lambda n: (_ for _ in ()).throw(AssertionError("modelled a pilot")))
     run.run()
     assert (tmp_path / "run" / "experiment1" / "data" / "responses.csv").exists()
+
+
+def test_stored_trials_decode_and_anything_else_raises():
+    records = [{"task": "rsa_choice", "objects": [[0, 1], [1, 0]]}]
+    assert live.decode_trials(enc(records)) == records
+    for bad in (records, [], [{"format": "other", "data": "[]"}], [{"format": live.TRIALS_FORMAT, "data": "{}"}]):
+        with pytest.raises(ValueError):
+            live.decode_trials(bad)

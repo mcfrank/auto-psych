@@ -115,7 +115,9 @@ rsa_default_venv() {
   if [[ -n "${UV_PROJECT_ENVIRONMENT:-}" ]]; then
     echo "$UV_PROJECT_ENVIRONMENT"
   elif [[ -n "${GROUP_HOME:-}" ]]; then
-    echo "$GROUP_HOME/venvs/auto-psych_$(basename "$work_root")"
+    # One venv for every RSA job: run 2's, built by its prepare step. A venv named
+    # after each WORK_ROOT (rehearsals, live) was never built (live stage 1, 2026-10-10).
+    echo "$GROUP_HOME/venvs/auto-psych_$RSA_SWEEP_NAME"
   else
     echo "$work_root/venv"
   fi

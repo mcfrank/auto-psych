@@ -74,7 +74,9 @@ if [[ -n "${OPENCODE_BIN_DIR:-}" ]]; then
   [[ -x "$OPENCODE_BIN_DIR/opencode" ]] || { echo "FATAL: OPENCODE_BIN_DIR=$OPENCODE_BIN_DIR has no opencode" >&2; exit 1; }
   # The npm package's launcher is a node script; node comes from a module
   # (mounted read-only into the sandbox with the rest of /share/software).
-  ml load "${NODEJS_MODULE:-nodejs/25.3.0}"
+  # Node 24, as main's live jobs: firebase-tools 15 does not support Node 25 (live
+  # stage 1, 2026-10-10); opencode 1.18.35 runs under 24.
+  ml load "${NODEJS_MODULE:-nodejs/24.13.0}"
   export PATH="$OPENCODE_BIN_DIR:$PATH"
 fi
 

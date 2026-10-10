@@ -39,6 +39,22 @@ from src.rsa.live.site import build_live_site
 PROJECT_ID = "rsa_reference"  # the Prolific config's project (src/pipelines/outer_loop/projects/)
 
 
+TRIALS_FORMAT = "rsa_jspsych_json"  # how the page stores its data in Firestore (src.rsa.live.site)
+
+
+def decode_trials(stored) -> List[dict]:
+    """The page's jsPsych records from a stored response's ``trials``: one
+    JSON string (Firestore rejects nested arrays, and each trial's display is
+    a matrix). Anything else is not this page's data, and raises."""
+    if (isinstance(stored, list) and len(stored) == 1 and isinstance(stored[0], dict)
+            and stored[0].get("format") == TRIALS_FORMAT and isinstance(stored[0].get("data"), str)):
+        records = json.loads(stored[0]["data"])
+        if not isinstance(records, list):
+            raise ValueError("the stored jsPsych data are not a list of records")
+        return records
+    raise ValueError(f"stored trials are not {TRIALS_FORMAT!r} (one JSON string): another page's data?")
+
+
 class DraftOnly(RuntimeError):
     """A test-mode deployment: the page is live and the study is a Prolific draft, nothing to collect."""
 
@@ -119,7 +135,7 @@ def responses_to_rows(responses: List[dict], *, study_id: str, experiment: str,
         pid = resp.get("prolific_pid") or resp["participant_id_str"]
         if pid not in ids:
             ids[pid] = f"live{len(ids)}"
-        frame = convert(json.dumps(resp["trials"]), participant_id=ids[pid], experiment=experiment)
+        frame = convert(decode_trials(resp["trials"]), participant_id=ids[pid], experiment=experiment)
         if frame.empty:
             empty.append(ids[pid])
             continue
