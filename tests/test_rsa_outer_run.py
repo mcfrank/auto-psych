@@ -3,6 +3,7 @@
 import json
 import shutil
 
+import numpy as np
 import pandas as pd
 import pytest
 import yaml
@@ -128,3 +129,15 @@ def test_two_experiments_design_collect_score_and_carry_the_live_set(tmp_path):
     cfg.participants = 13
     with pytest.raises(ValueError, match="another configuration"):
         OuterRun(cfg, spawner).run()
+
+
+def test_the_recovery_kl_is_a_mean_per_display_of_flattened_class_probabilities():
+    from src.rsa.outer.run import mean_kl
+
+    one = [0.5, 0.5]  # a two-class display
+    two = [0.25, 0.25, 0.5]  # a three-class display
+    truth = np.array(one + two)
+    model = np.array([0.25, 0.75] + two)  # wrong on the first display only
+    first = 0.5 * np.log(0.5 / 0.25) + 0.5 * np.log(0.5 / 0.75)
+    assert mean_kl(truth, model, 2) == pytest.approx(first / 2)
+    assert mean_kl(truth, truth, 2) == 0.0

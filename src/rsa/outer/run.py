@@ -162,6 +162,16 @@ class OuterConfig:
     """The five starting models every claim is measured against (literal, rsa_l1, rsa_l2, salience, shared prior)."""
 
 
+def mean_kl(p, q, n_displays: int) -> float:
+    """Mean KL(p || q) per display, in nats. The class probabilities come
+    flattened over the displays (`posterior_mean_class_probs`), so the total is
+    divided by the display count (rehearsal 2's interim report, 2026-10-10,
+    found the recovery record holding the sum)."""
+    p, q = np.asarray(p, float), np.clip(np.asarray(q, float), 1e-12, None)
+    total = np.sum(np.where(p > 0, p * (np.log(np.clip(p, 1e-12, None)) - np.log(q)), 0.0))
+    return float(total / n_displays)
+
+
 def _copy_models(src_dir: Path, names: List[str], dest: Path) -> None:
     tmp = dest.with_name(dest.name + ".tmp")
     if tmp.exists():
@@ -467,10 +477,6 @@ class OuterRun:
         truth_pool = posterior_mean_class_probs(gt_model, gt_fit, pool)
         truth_design = posterior_mean_class_probs(gt_model, gt_fit, designed)
 
-        def kl(p, q):
-            p, q = np.asarray(p, float), np.clip(np.asarray(q, float), 1e-12, None)
-            return float(np.mean(np.sum(np.where(p > 0, p * (np.log(np.clip(p, 1e-12, None)) - np.log(q)), 0.0), -1)))
-
         def distances(folder: Path, data: Path, cache: Path) -> Dict[str, dict]:
             d = {}
             for name in read_manifest_names(folder):
@@ -479,7 +485,8 @@ class OuterRun:
                 model = RSAModel(path, name=name)
                 p_pool = posterior_mean_class_probs(model, fitted, pool)
                 p_design = posterior_mean_class_probs(model, fitted, designed)
-                d[name] = dict(kl_pool=kl(truth_pool, p_pool), kl_design=kl(truth_design, p_design),
+                d[name] = dict(kl_pool=mean_kl(truth_pool, p_pool, len(pool)),
+                               kl_design=mean_kl(truth_design, p_design, len(designed)),
                                rmse_pool=float(np.sqrt(np.mean((p_pool - truth_pool) ** 2))))
             return dict(sorted(d.items(), key=lambda kv: kv[1]["kl_pool"]))
 
