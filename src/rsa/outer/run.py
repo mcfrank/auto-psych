@@ -55,13 +55,14 @@ import yaml
 
 from src.models.clustered_se import cluster_dse
 from src.models.model_manifest import read_manifest_entries, read_manifest_names
-from src.rsa.dataset import load_forced_choice
+from src.rsa.dataset import load_forced_choice, write_plain_trials
 from src.rsa.design import run as design_run
 from src.rsa.design.distinct import SAME_ON_POOL_RMSE, keep_distinct
 from src.rsa.evaluate_heldout import heldout_lpd
 from src.rsa.experiment.design import Design, trial_lists
 from src.rsa.fit import FitSettings
 from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC, NO_TIME_LIMIT, loop_fit
+from src.rsa.loop.brief import DEFAULT_RSA_LENSES, PLAIN_RSA_LENSES, PLAIN_SCOPE_NOTE
 from src.rsa.loop.novelty import posterior_mean_class_probs
 from src.rsa.loop.orchestrator import LoopConfig, RSALoop, SpawnFn
 from src.rsa.model_file import RSAModel
@@ -109,6 +110,12 @@ class OuterConfig:
     rehearsal: "all" never moved off the literature, "live" collapsed onto one
     family of near-copies that predicted worse than plain RSA)."""
     selection_guard_dse: float = 4.0
+    scope: Literal["plain", "all"] = "plain"
+    """The live phase's scope (PI 2026-10-10): "plain" leaves the existing trials
+    on valence, familiarization and greyscale displays out of every fit
+    (pragmods E5, E6, E7 and the colour-prior rerun; the live displays vary
+    none of them), compares models for novelty on plain displays only, drops
+    the framing lens and tells the agents. "all": everything, as run 2."""
     max_carried: int = 8
     """Models carried into the next experiment, one per distinct hypothesis (`carry`)."""
     carried_share: float = 0.5
@@ -205,10 +212,22 @@ class OuterRun:
                          order=order, **chosen), out)
         return chosen["kept"]
 
+    def existing(self) -> Path:
+        """The existing data the run fits: all of it, or (scope "plain") its
+        plain-display trials, with what was left out in ``existing_scope.json``."""
+        if self.cfg.scope == "all":
+            return Path(self.cfg.existing_data)
+        out = self.private / "existing_plain.csv"
+        if not out.exists():
+            record = write_plain_trials(Path(self.cfg.existing_data), out)
+            _write_json(dict(record, scope="plain", source=str(self.cfg.existing_data)),
+                        self.dir / "existing_scope.json")
+        return out
+
     def prior_data(self, n: int) -> Path:
         path = self.exp(n) / "data" / "prior.csv"
         if not path.exists():
-            existing = pd.read_csv(self.cfg.existing_data)
+            existing = pd.read_csv(self.existing())
             if "source" not in existing.columns or existing["source"].isna().any():
                 raise ValueError(f"{self.cfg.existing_data} needs a source on every row (live rows are 'auto_psych')")
             frames = [existing] + [pd.read_csv(self.exp(k) / "data" / "responses.csv") for k in range(1, n)]
@@ -244,7 +263,7 @@ class OuterRun:
         if self.cfg.collection == "live":
             raise NotImplementedError("live collection: deploying the page and collecting its data is not wired yet")
         gt = Path(self.cfg.ground_truth)
-        fitted = loop_fit(gt, gt.stem, self.cfg.existing_data, self.settings, self.cache,
+        fitted = loop_fit(gt, gt.stem, self.existing(), self.settings, self.cache,
                           time_limit_sec=self.ref_limit)
         first = sum(json.loads((self.exp(k) / "data" / "participants.json").read_text())["n_recruited"]
                     for k in range(1, n))
@@ -289,9 +308,25 @@ class OuterRun:
             return dict(diff=float(lpd[k].sum() - lpd[ref].sum()),
                         se=0.0 if k == ref else float(cluster_dse(lpd[k], lpd[ref], units)))
 
+        # Claim 2's test (PI 2026-10-10): the model the loop committed to before
+        # these data existed, the previous inner loop's export, against the bar.
+        # The bar's best is picked after the fact, so the comparison is
+        # conservative. Experiment 1 has no committed model: the loop has not
+        # chosen one yet (its models going in are the chain's seeds, part of the bar).
+        committed = None
+        if n > 1:
+            committed = json.loads((self.exp(n - 1) / "model_loop" / "export.json").read_text())["best_model"]
+            if committed not in lpd:
+                raise RuntimeError(f"the committed model {committed} is not among the models going into "
+                                   f"experiment {n}: carry-forward must keep the export")
+        bar_models = [k for k in lpd if k.startswith(("seed:", "promoted:"))]
         _write_json(dict(
             experiment=n, n_trials=len(new.contexts), n_displays=int(units.max() + 1),
-            best_live=live_best, **bars,
+            committed=committed, **bars,
+            committed_vs=None if committed is None else dict(
+                {bar: versus(committed, ref) for bar, ref in bars.items() if ref},
+                each_bar_model={k: versus(committed, k) for k in bar_models}),
+            best_live=live_best,
             live_vs={bar: versus(live_best, ref) for bar, ref in bars.items() if ref},
             models={k: dict(lpd=float(v.sum()), **{f"vs_{bar}": versus(k, ref) for bar, ref in bars.items() if ref})
                     for k, v in sorted(lpd.items(), key=lambda kv: -kv[1].sum())},
@@ -307,6 +342,8 @@ class OuterRun:
             frames = [pd.read_csv(self.prior_data(n)), pd.read_csv(self.collect(n))]
             _write_csv(pd.concat(frames, ignore_index=True), cumulative)
         c = self.cfg
+        plain = c.scope == "plain"
+        prev_ledger = self.exp(n - 1) / "model_loop" / "attempted_hypotheses.jsonl" if n > 1 else None
         cfg = LoopConfig(
             responses_path=cumulative, seed_models_dir=self.models_input(n), results_dir=out,
             max_iterations=c.max_iterations, candidate_count=c.candidate_count, settings=self.settings,
@@ -314,6 +351,8 @@ class OuterRun:
             cv_folds=c.cv_folds, selection_source=None if c.selection_scope == "all" else LIVE_SOURCE,
             selection_guard_dse=c.selection_guard_dse if c.selection_scope == "guarded" else 0.0,
             report_title=f"RSA inner loop · {self.label(n)}",
+            novelty_pool="plain" if plain else "full", brief_note=PLAIN_SCOPE_NOTE if plain else "",
+            lenses=list(PLAIN_RSA_LENSES if plain else DEFAULT_RSA_LENSES), inherit_ledger=prev_ledger,
         )
         # The agents' spend, per experiment (appended across resumes; the summary
         # covers the whole log), written even when the loop fails. The rehearsal
@@ -358,7 +397,7 @@ class OuterRun:
         pool = design_run.design_pool()
         designed = [spec.context() for spec in Design.load(self.exp(n) / "design" / "design.json").specs]
         gt = Path(self.cfg.ground_truth)
-        gt_fit = loop_fit(gt, gt.stem, self.cfg.existing_data, self.settings, self.cache,
+        gt_fit = loop_fit(gt, gt.stem, self.existing(), self.settings, self.cache,
                           time_limit_sec=self.ref_limit)
         gt_model = RSAModel(gt, name=gt.stem)
         truth_pool = posterior_mean_class_probs(gt_model, gt_fit, pool)

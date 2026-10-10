@@ -1,14 +1,14 @@
-# The live loop, as it runs (code `b6b7db7f`, rehearsal 2's settings)
+# The live loop, as it runs (rehearsal 2's settings; PI decisions of 2026-10-10 included)
 
 What `src.rsa.outer.run` does, with every set of models and every scoring rule spelled
 out. "Live" settings and rehearsal-2 settings are the same, except where a step says
-*simulated*. Points worth reviewing are in §4, and the parameters in §5.
+*simulated*. What was decided and what is open is in §4, and the parameters in §5.
 
 ## 0. Notation
 
 | Symbol | Meaning |
 |---|---|
-| **E** | the existing data: 50,587 human trials from 5 sources (pragmods, Sikos 2021, Mayn & Demberg 2022/2023/2026), train and test together |
+| **E** | the existing data on **plain displays**: the human trials from 5 sources (pragmods, Sikos 2021, Mayn & Demberg 2022/2023/2026), train and test together, minus the trials on valence, familiarization or greyscale displays (pragmods E5, E6, E7 and the colour-prior rerun; the live displays vary none of them). `existing_scope.json` records what was left out |
 | **L_k** | experiment *k*'s live trials (source `auto_psych`), after catch exclusion |
 | **D_n** | the data before experiment *n*: E ∪ L_1 ∪ … ∪ L_(n−1) (`prior.csv`) |
 | **C_n** | the data after it: D_n ∪ L_n (`cumulative.csv`) |
@@ -103,10 +103,16 @@ target acceptance 0.9, seed 0.
    - The promoted set is scored from experiment 1, because the chain began with only part
      of P.
 2. **Score** each on L_n: held-out log predictive density, nothing refitted.
-3. **Report:**
-   - `best_seed` = the best `seed:` model; `best_promoted` = the best `promoted:` model;
-   - `best_live` = the best model in M_n;
-   - `live_vs`: best_live − each bar, with the SE clustered by designed display.
+3. **Claim 2's test** (`committed_vs`): the model the loop **committed to before L_n
+   existed**, i.e. the previous inner loop's export, against the bar.
+   - `best_seed` = the best `seed:` model and `best_promoted` = the best `promoted:`
+     model, both picked after seeing L_n, so the comparison is conservative.
+   - `each_bar_model`: the committed model against every bar model.
+   - Differences in summed lpd, SE clustered by designed display.
+   - Experiment 1 has no committed model: the loop hasn't chosen one yet, and the chain's
+     seeds are part of the bar.
+4. **Secondary** (`live_vs`): `best_live`, the best of M_n picked after seeing L_n,
+   against the same bars.
 
 ### 2.5 The inner loop (`model_loop/`): on C_n
 
@@ -116,13 +122,15 @@ target acceptance 0.9, seed 0.
 - **Grouped CV folds:** 5 folds of whole units, balanced in trials within each source.
   - A unit is a condition of a source's experiment. For multi-trial experiments it is a
     display, so each live display is a unit.
-- **The ledger starts empty.** It does not carry the previous experiment's attempted
-  hypotheses (see the review points).
+- **The ledger continues the previous experiment's.** The agents' "tried before" list
+  covers the whole run: every earlier experiment's rejected and retired hypotheses, and
+  the models carry-forward merged.
 
 **Rounds** r = 1 … 5, each with 6 agent slots:
 
 - **Slot roles:**
-  - 3 *explore* slots, each given the next of 11 lenses in rotation;
+  - 3 *explore* slots, each given the next of 10 lenses in rotation (run 2's 11 minus
+    the framing/colour lens);
   - 2 *refine the incumbent* slots;
   - 1 *refine a model of the agent's choosing*, from the menu of live and pruned models.
 - **What an agent gets:**
@@ -143,7 +151,8 @@ target acceptance 0.9, seed 0.
   5. converged;
   6. finite LOO;
   7. **novelty:** posterior-mean predictions ≥ 0.002 RMSE from every live model, on the
-     *novelty pool*. That pool includes valence, familiarization and greyscale displays.
+     **plain-display pool** (the 794 displays). A model that differs only in terms
+     those displays can't reach is a duplicate.
 - **A rejected candidate** is re-spawned once with the reason (a repair); the repair is
   final.
 - **Score the round** (the standing):
@@ -186,35 +195,28 @@ target acceptance 0.9, seed 0.
 | What the agents tried | `model_loop/attempted_hypotheses.jsonl`, `history.json` |
 | Agent spend | `model_loop/token_usage_summary.json`, `<run>/token_usage_summary.json` |
 
-## 4. Points worth reviewing before the run
+## 4. Decided 2026-10-10, and what remains open
 
-1. **Claim 2's comparison is chosen after the fact on both sides.**
-   - `best_live` is the best of ≤ 8 models going in, picked after seeing L_n. The bar
-     is the best of ~17, also picked after seeing L_n.
-   - A pre-registered version: the model the previous inner loop *exported* (chosen
-     before L_n existed) against each bar model, and against the best bar (post hoc,
-     so conservative).
-   - Recording that alongside costs nothing.
-2. **One of the 11 exploration lenses asks for framing mechanisms** ("favorite / least
-   favorite", one object in colour). The live displays can't test those, so they only
-   affect eligibility on E, and they bred rehearsal 1's `twin_*_valence` copies.
-   - Option: drop that lens in the live phase.
-3. **The in-loop novelty gate still uses the novelty pool** (with valence and
-   familiarization displays).
-   - Twins that differ only off the live displays are admitted. They are merged only at
-     carry-forward, so they can use up agent slots and the cap of 12 within an
-     experiment.
-   - Option: in the live phase, also require 0.002 on the plain-display pool at
-     admission.
-4. **The ledger starts empty every experiment.** Experiment 2's agents don't see what
-   was tried or pruned in experiment 1.
-5. **Selection sums over every live experiment so far** (L_1 ∪ … ∪ L_n), not only the
-   newest. That's the intended reading of "rank on the live trials", but it means later
-   experiments weigh the earlier ones equally.
-6. **The simulation is optimistic about noise:** every simulated person answers from the
-   same probabilities. Real people differ, and the live data will be noisier per trial.
-7. **Pruning on the live rows is weak:** 2 dse on 2,000–4,000 trials over 40–80
+**Decided (PI):**
+- Claim 2 is the committed model's prospective test (§2.4).
+- The live phase is plain displays only:
+  - E without the framing, exposure and colour experiments;
+  - no framing lens;
+  - novelty measured on the plain pool;
+  - the agents told.
+- The tried-hypotheses list carries across experiments.
+- Selection is cumulative over the live experiments (L_1 ∪ … ∪ L_n).
+
+**Still open, for after rehearsal 2:**
+1. **The simulation is optimistic about noise.** Every simulated person answers from the
+   same probabilities; real people differ, and the live data will be noisier per trial.
+2. **Pruning on the live rows is weak:** 2 dse on 2,000–4,000 trials over 40–80
    displays. The carried cap of 8 does most of the narrowing.
+3. **Some promoted seeds have valence or familiarization terms.** On plain data those
+   terms' parameters have nothing to fit and sit at their priors. Harmless for
+   prediction, but they slow sampling and widen p_loo.
+4. **The rehearsal's ground truth** was chosen on grouped CV over *all* of E (run 2's
+   promotion record), but is fitted for the simulation on the plain part.
 
 ## 5. Parameters (OuterConfig / LoopConfig defaults)
 
@@ -225,8 +227,10 @@ target acceptance 0.9, seed 0.
 | rounds / slots per round / stale-round stop | 5 / 6 / 2 |
 | selection | guarded: rank on live rows; eligible within 4 dse on existing rows |
 | prune / live cap / carried cap | 2 dse on live rows / 12 / 8 |
-| novelty (in loop) / same-hypothesis (carry, design) | 0.002 RMSE on the novelty pool / 0.002 RMSE on the plain-display pool |
+| novelty (in loop) / same-hypothesis (carry, design) | 0.002 RMSE, both on the plain-display pool |
 | design prior | 0.5 carried, 0.5 bar |
 | sampler | dense mass, 4 × (1,000 + 1,000), target 0.9 (refit 0.95) |
 | candidate fit limit | 30 min (models in play: none) |
 | catch exclusion | any miss |
+| scope | plain displays (`OuterConfig.scope`): E's framing, exposure and colour experiments left out |
+| claim 2 | the committed model (previous export) vs the best starting model, the best promoted seed and each bar model |

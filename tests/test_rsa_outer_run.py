@@ -41,7 +41,7 @@ def test_two_experiments_design_collect_score_and_carry_the_live_set(tmp_path):
         {"name": "literal_listener"}, {"name": "rsa_l1"}, {"name": "rsa_l1_salience"}]}))
     df = pd.read_csv(DEFAULT_TRIALS_CSV)
     existing = tmp_path / "existing.csv"
-    df[df.experiment.isin(["E8_levels", "E5_baserate"])].assign(source="pragmods").to_csv(existing, index=False)
+    df[df.experiment.isin(["E8_levels", "E9_twins", "E5_baserate"])].assign(source="pragmods").to_csv(existing, index=False)
 
     def spawner(n, models_dir, responses):
         def agent(cdir, prompt):  # proposes the hidden ground truth's mechanism
@@ -87,7 +87,21 @@ def test_two_experiments_design_collect_score_and_carry_the_live_set(tmp_path):
     assert sorted(p.stem for p in (e2 / "models_input").glob("*.py")) == sorted(carry["kept"])
     assert set(carry["kept"]) <= set(export["live"]) and set(carry["order"]) == set(export["live"])
     prior2 = pd.read_csv(e2 / "data" / "prior.csv")
-    assert len(prior2) == len(pd.read_csv(existing)) + len(r1)
+    # The live phase fits plain displays only: E5's familiarization trials are left out, on record.
+    plain = pd.read_csv(tmp_path / "run1" / ".private" / "existing_plain.csv")
+    assert len(prior2) == len(plain) + len(r1) and "E5_baserate" not in set(plain.experiment)
+    scope = json.loads((tmp_path / "run1" / "existing_scope.json").read_text())
+    assert scope["scope"] == "plain" and set(scope["left_out"]) == {"pragmods|E5_baserate"}
+    # The agents are told, and experiment 2's ledger continues experiment 1's.
+    assert "Scope: plain displays" in next((e1 / "model_loop").glob("round_1/candidate_1/CONTEXT.md")).read_text()
+    l1 = (e1 / "model_loop" / "attempted_hypotheses.jsonl").read_text().splitlines()
+    l2 = (e2 / "model_loop" / "attempted_hypotheses.jsonl").read_text().splitlines()
+    assert l1 and l2[:len(l1)] == l1
+    # Claim 2's test: the model experiment 1's loop exported, committed before experiment 2's data.
+    assert pro["committed"] is None
+    assert pro2["committed"] == export["best_model"] and set(pro2["committed_vs"]) == {
+        "best_seed", "best_promoted", "each_bar_model"}
+    assert set(pro2["committed_vs"]["each_bar_model"]) == {k for k in pro2["models"] if ":" in k}
     # Simulated runs record each model's distance to the hidden ground truth.
     private = tmp_path / "run1" / ".private"
     rec = json.loads((private / "experiment1" / "recovery.json").read_text())

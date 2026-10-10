@@ -68,6 +68,7 @@ from src.rsa.loop.gates import GateConfig, admit, fit_with_refit, read_candidate
 from src.rsa.loop.novelty import (
     DEFAULT_NOVELTY_RMSE_THRESHOLD,
     novelty_pool,
+    plain_pool,
     pool_digest,
     pool_record,
     posterior_mean_class_probs,
@@ -140,6 +141,15 @@ class LoopConfig:
     answerable to the literature. 0: no guard. Without it the 2026-10-09
     rehearsal's live-only selection collapsed onto one family of near-copies
     that predicted the next experiment worse than plain RSA."""
+    novelty_pool: str = "full"
+    """The displays the novelty gate compares predictions on: "full" (with
+    valence, familiarization and greyscale displays) or "plain" (the live
+    phase's displays, `src.rsa.loop.novelty.plain_pool`; PI 2026-10-10)."""
+    brief_note: str = ""
+    """Text added to every agent's context (the live phase's scope note)."""
+    inherit_ledger: Optional[Path] = None
+    """A previous inner loop's ledger to continue (the live phase: what earlier
+    experiments tried and pruned reaches this experiment's agents; PI 2026-10-10)."""
     agent_network: bool = False
     """Whether agents have internet access (see `coding_agent_spawner`); the
     brief tells them which."""
@@ -193,7 +203,9 @@ class RSALoop:
         if not self.trials.contexts:
             raise ValueError(f"{self.cfg.responses_path} has no included forced-choice trials")
         self.clusters = cluster_ids(self.trials.frame)
-        self.pool = novelty_pool()
+        if self.cfg.novelty_pool not in ("full", "plain"):
+            raise ValueError(f"novelty_pool must be 'full' or 'plain', not {self.cfg.novelty_pool!r}")
+        self.pool = plain_pool() if self.cfg.novelty_pool == "plain" else novelty_pool()
         if self.cfg.selection not in ("cv", "loo"):
             raise ValueError(f"selection must be 'cv' or 'loo', not {self.cfg.selection!r}")
         self.cv: Dict[str, Optional[CVResult]] = {}
@@ -213,7 +225,9 @@ class RSALoop:
         self._prepare()
         (self.dir / "novelty_pool.json").write_text(json.dumps(
             dict(digest=pool_digest(self.pool), contexts=[pool_record(c) for c in self.pool])))
-        self.ledger = HypothesisLedger.create(self.dir / LEDGER_FILENAME, inherit_from=None)
+        if self.cfg.inherit_ledger is not None and not Path(self.cfg.inherit_ledger).exists():
+            raise FileNotFoundError(f"inherit_ledger {self.cfg.inherit_ledger} does not exist")
+        self.ledger = HypothesisLedger.create(self.dir / LEDGER_FILENAME, inherit_from=self.cfg.inherit_ledger)
         self.models_dir.mkdir(exist_ok=True)
         entries = read_manifest_entries(self.cfg.seed_models_dir)
         for entry in entries:
@@ -420,7 +434,8 @@ class RSALoop:
         context = briefs.context_md(
             candidate_dir=cdir, responses_path=self.responses, round_index=round_index,
             n_rounds=self.cfg.max_iterations, n_trials=len(self.trials.contexts),
-            experiments=sorted(self.trials.frame["experiment"].unique()), network=self.cfg.agent_network)
+            experiments=sorted(self.trials.frame["experiment"].unique()), network=self.cfg.agent_network,
+            scope_note=self.cfg.brief_note)
         docs = briefs.write_docs(cdir, role=role, lens=lens, context=context, live=live, pruned=pruned,
                                  incumbent=incumbent, ledger=self.ledger, attempt_note=note)
         return briefs.build_prompt(cdir, docs)

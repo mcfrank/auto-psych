@@ -62,6 +62,17 @@ DEFAULT_RSA_LENSES = [
     "structure, with the type proportions as parameters.",
 ]
 
+# The live phase studies plain displays only (PI 2026-10-10): no lens asks
+# for framing or colour mechanisms, which its experiments cannot test.
+PLAIN_RSA_LENSES = [lens for lens in DEFAULT_RSA_LENSES if not lens.startswith("Explain the framing")]
+PLAIN_SCOPE_NOTE = (
+    "- **Scope: plain displays.** Every trial in the responses and every display the next "
+    "experiments can show is plain: valence 0 (no favourite / least favourite framing), no "
+    "familiarization and no greyscale. Mechanisms that act through those fields cannot be "
+    "tested or rewarded here; spend your proposal on how listeners reason about the words "
+    "and the display.\n"
+)
+
 # The harness's own interpreter, as in the PyMC loop: sandboxed agents have no
 # `uv` (it lives in ~/.local/bin, which the private home hides) and `uv run`
 # would sync the read-only venv; the 2026-10-07 smoke test found the `uv run`
@@ -89,7 +100,8 @@ NO_NETWORK_NOTE = """- You have no internet access: shell commands cannot open n
 
 
 def context_md(*, candidate_dir: Path, responses_path: Path, round_index: int,
-               n_rounds: int, n_trials: int, experiments: Sequence[str], network: bool = False) -> str:
+               n_rounds: int, n_trials: int, experiments: Sequence[str], network: bool = False,
+               scope_note: str = "") -> str:
     return f"""# Context
 
 - Candidate directory (write your three files here): `{candidate_dir}`
@@ -110,7 +122,7 @@ def context_md(*, candidate_dir: Path, responses_path: Path, round_index: int,
 - Do not refit the models in the set: their standings above are from the
   loop's own fits. Write memo code in a `.py` file (memo reads its source
   back, so `python -c` raises "couldn't find your memo source code").
-{"" if network else NO_NETWORK_NOTE}- Write and test your files **in your candidate directory only**: no drafts in
+{scope_note}{"" if network else NO_NETWORK_NOTE}- Write and test your files **in your candidate directory only**: no drafts in
   `/tmp`, the repository root or anywhere else. The loop reads only
   `{candidate_dir}`; a candidate.py anywhere else counts as no candidate.
 """

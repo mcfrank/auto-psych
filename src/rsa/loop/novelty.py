@@ -31,6 +31,13 @@ POOL_SIZES = ((2, 2), (3, 2), (3, 3), (3, 4), (4, 2), (4, 3), (4, 4))
 MAX_DRAWS = 100
 
 
+def plain_pool() -> List[Context]:
+    """The novelty pool's plain displays only: the ones the live experiments can
+    show (the design pool). In the live phase two models are distinct only if
+    they differ here (PI 2026-10-10)."""
+    return context_pool(POOL_SIZES, include_prior_queries=True)
+
+
 def novelty_pool() -> List[Context]:
     pool = context_pool(POOL_SIZES, include_prior_queries=True)
     for n_feat in (2, 3):

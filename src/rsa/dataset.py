@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Sequence
 
+import numpy as np
 import pandas as pd
 
 from src.rsa.context import Context
@@ -104,3 +105,26 @@ def load_forced_choice(
     contexts = [context_from_row(r) for _, r in rows.iterrows()]
     choices = [int(c) for c in rows["choice"]]
     return Trials(contexts=contexts, choices=choices, frame=rows)
+
+
+def is_plain(ctx: Context) -> bool:
+    """A display the live experiments can show: no valence framing, no
+    familiarization, no greyscale (PI 2026-10-10: the live phase's scope)."""
+    return ctx.valence in (0, None) and ctx.familiarization is None and ctx.grayscale is None
+
+
+def write_plain_trials(path: Path, out: Path) -> dict:
+    """The included forced-choice trials of ``path`` on plain displays, as a
+    trials CSV at ``out``; returns what was left out, by source and experiment."""
+    trials = load_forced_choice(path)
+    keep = np.array([is_plain(c) for c in trials.contexts], dtype=bool)
+    dropped = trials.frame[~keep]
+    src = dropped["source"] if "source" in dropped.columns else pd.Series("pragmods", index=dropped.index)
+    left_out = {f"{a}|{b}": int(n) for (a, b), n in dropped.groupby([src, dropped["experiment"]]).size().items()}
+    out = Path(out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    tmp = out.with_suffix(".tmp.csv")
+    trials.frame[keep].to_csv(tmp, index=False, lineterminator="\n")
+    tmp.replace(out)
+    return dict(n_kept=int(keep.sum()), n_left_out=int((~keep).sum()), left_out=left_out)
+

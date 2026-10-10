@@ -3,6 +3,8 @@
 From the driver session, 2026-10-10, for the local Sherlock session.
 Context: `REHEARSAL_REVIEW.md` and the PI's decisions of 2026-10-10 (`PLAN.md`).
 
+**Launch signal:** a commit on `auto-rsa` whose message starts `RSA: rehearsal 2 ready`.
+
 ## 0. Pull
 
 ```bash
@@ -39,6 +41,13 @@ cd ~/auto-psych && git fetch origin && git merge --ff-only origin/auto-rsa
   `token_usage_summary.json`, and the run has `token_usage_summary.json` (per experiment
   and total).
 - **Job headers have no `--error`:** stderr follows `-o`.
+- **Plain-display scope** (PI 2026-10-10): the run fits the existing data without
+  pragmods E5/E6/E7 and the colour-prior rerun (`<run>/existing_scope.json` lists what
+  was left out). Novelty is measured on plain displays, there is no framing lens, and the
+  agents' context says so.
+- **Claim 2 is the committed model's test:** `prospective.json` `committed_vs`, from
+  experiment 2 on.
+- **The ledger carries across experiments.**
 
 ## 2. Submit (after a pull; ~15 h)
 
@@ -86,7 +95,8 @@ sbatch --chdir="$HOME/auto-psych" -o "$SCRATCH/auto-psych/rsa_rehearsal2/logs/%x
 ## 5. Report per experiment
 
 - **The design:** the models in it (carried / bar / merged), joint EIG, and power.
-- **Prospective `live_vs`:** against the best starting model and the best promoted seed.
+- **Claim 2 (experiment 2):** `committed_vs`, the committed model against the best starting model, the best
+  promoted seed and each bar model; and `live_vs` as the secondary measure.
 - **Recovery:** the exported model's `kl_pool` and `kl_design`, and the closest model
   before and after.
 - **`carry.json`:** kept, merged and over the cap.
