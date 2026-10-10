@@ -210,3 +210,37 @@ shrinks the pool slightly.
 **Open for the PI (§3–4):** display sizes, mumble trials, the earlier-participants
 blocklist, and the completion time. The driver's recommendations are in the session
 reply. Decisions go into `PLAN.md` before the pilot.
+
+## 8. Secrets check, done (local session, 2026-10-10)
+
+The driver's two commands, run on every run's staging (not only rehearsal 2's), since
+the checkout had held `.secrets~` (dated 2026-05-08) until the PI deleted it on
+2026-10-10.
+
+**Where it was:**
+- **Rehearsal 2 was clean.** Its `harness_repo` and `agent_src` hold only
+  `.secrets.example`, and its agent tree has nothing.
+- **Found only in stage 1's first attempt** (staged 2026-10-09), in four places:
+  - `rsa_live_stage1_attempt1/harness_repo/.secrets~`
+  - `rsa_live_stage1_attempt1/agent_src/.secrets~`
+  - `rsa_live_stage1_attempt1/cells/live_rsa_c0/deploy_repo/.secrets~`
+  - `agent_trees/835850e3e0cdb405/repo/.secrets~` (that attempt's agent tree)
+- **Every other staging and agent tree was clean,** including runs 1 and 2, rehearsal 1
+  and the current `rsa_live`.
+
+**Nobody read it:**
+- No agent ever ran in that tree. The attempt failed at the deploy, before any inner
+  loop: it has 0 `agent.jsonl` files.
+- None of the 698 agent logs on Sherlock mentions `.secrets~`.
+- Three logs mention `.secrets`, and each is an agent reading `src/runtime/config.py`'s
+  `SECRETS_PATH = REPO_ROOT / ".secrets"` (code, not the file), in trees that never held
+  one.
+
+**Nothing left Sherlock:**
+- Firebase uploads only `public/` and `functions/`, and that attempt's deploy failed before
+  hosting.
+- No secrets file is in any tracked file or anywhere in git history.
+
+**Done:** all four copies deleted. `find $SCRATCH/auto-psych` now finds no secrets file
+other than `.secrets.example`, and `~/auto-psych` holds only `.secrets` and
+`.secrets.example`. **No key rotation is needed.**
