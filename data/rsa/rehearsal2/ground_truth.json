@@ -1,0 +1,165 @@
+{
+ "ground_truth": "crowd_discrim_confusion_chromatic_l2",
+ "ground_truth_key": "real_rep3/crowd_discrim_confusion_chromatic_l2",
+ "ground_truth_file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep3/models/crowd_discrim_confusion_chromatic_l2.py",
+ "rule": "coherent: among run 2's unpromoted, converged models within 150.0 nats of the best on grouped CV, the one farthest (design-pool RMSE) from its nearest seed of the chain",
+ "chain": "/home/users/mcfrank/auto-psych/data/rsa/live_seeds/chains/chain_0",
+ "candidates": {
+  "real_rep1/rsa_l2_singleton_exhaustivity": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep1/models/pruned/rsa_l2_singleton_exhaustivity.py",
+   "cv_behind_best": 147.05595151249145,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.045598702320548336
+  },
+  "real_rep1/rsa_l2_singleton_distinctiveness": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep1/models/rsa_l2_singleton_distinctiveness.py",
+   "cv_behind_best": 117.22314799706146,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.02960762234091614
+  },
+  "real_rep1/rsa_l2_singleton_distinct_literal_l0": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep1/models/rsa_l2_singleton_distinct_literal_l0.py",
+   "cv_behind_best": 113.39136159464033,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.027587121951357093
+  },
+  "real_rep1/rsa_l2_singleton_distinct_familiar": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep1/models/pruned/rsa_l2_singleton_distinct_familiar.py",
+   "cv_behind_best": 109.98669148242334,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.02974873726078067
+  },
+  "real_rep1/rsa_l2_singleton_distinct_exhaustivity": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep1/models/rsa_l2_singleton_distinct_exhaustivity.py",
+   "cv_behind_best": 121.34117569535738,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.03231383523747959
+  },
+  "real_rep1/rsa_l2_singleton_distinct_familiar_l0": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep1/models/pruned/rsa_l2_singleton_distinct_familiar_l0.py",
+   "cv_behind_best": 107.0687774138787,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.027576277805894674
+  },
+  "real_rep1/rsa_l2_singleton_distinct_literal_exh": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep1/models/rsa_l2_singleton_distinct_literal_exh.py",
+   "cv_behind_best": 117.80572689535984,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.030066636669453556
+  },
+  "real_rep1/rsa_l2_singleton_distinct_features_l0": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep1/models/rsa_l2_singleton_distinct_features_l0.py",
+   "cv_behind_best": 95.83772009025415,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.0005870544964617443
+  },
+  "real_rep1/rsa_l2_singleton_features_familiar_l0": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep1/models/pruned/rsa_l2_singleton_features_familiar_l0.py",
+   "cv_behind_best": 97.78875025732123,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.003935613362265268
+  },
+  "real_rep1/rsa_l2_singleton_distinct_features_exh": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep1/models/rsa_l2_singleton_distinct_features_exh.py",
+   "cv_behind_best": 108.74432861733658,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.0071978150380511054
+  },
+  "real_rep1/rsa_l2_singleton_distinct_feat_color_exh": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep1/models/rsa_l2_singleton_distinct_feat_color_exh.py",
+   "cv_behind_best": 100.23705450140551,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.006789528092132681
+  },
+  "real_rep1/rsa_l2_singleton_distinct_color_exh": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep1/models/rsa_l2_singleton_distinct_color_exh.py",
+   "cv_behind_best": 109.86651595011426,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.02995772346935369
+  },
+  "real_rep1/rsa_l2_singleton_feat_color_load_l0": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep1/models/rsa_l2_singleton_feat_color_load_l0.py",
+   "cv_behind_best": 93.30634282984101,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.011281185914906953
+  },
+  "real_rep1/rsa_l2_feat_color_exh_valence": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep1/models/rsa_l2_feat_color_exh_valence.py",
+   "cv_behind_best": 7.333162194656325,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.010519241496468823
+  },
+  "real_rep3/attentional_crowding_singleton_l2": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep3/models/attentional_crowding_singleton_l2.py",
+   "cv_behind_best": 145.33845457382995,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.03673204835917383
+  },
+  "real_rep3/crowding_singleton_familiarization_l2": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep3/models/pruned/crowding_singleton_familiarization_l2.py",
+   "cv_behind_best": 139.91087114217225,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.036785282689872044
+  },
+  "real_rep3/crowding_singleton_chromatic_l2": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep3/models/crowding_singleton_chromatic_l2.py",
+   "cv_behind_best": 139.00692415085723,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.03690121538699313
+  },
+  "real_rep3/crowd_singleton_chromatic_familiar_l2": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep3/models/pruned/crowd_singleton_chromatic_familiar_l2.py",
+   "cv_behind_best": 133.88294674530698,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.036998496577244674
+  },
+  "real_rep3/crowding_decision_chromatic_l2": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep3/models/pruned/crowding_decision_chromatic_l2.py",
+   "cv_behind_best": 139.36894906702946,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.03555327676142622
+  },
+  "real_rep3/crowd_decision_chromatic_familiar_l2": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep3/models/crowd_decision_chromatic_familiar_l2.py",
+   "cv_behind_best": 123.58335323859137,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.03559993943436858
+  },
+  "real_rep3/crowd_singleton_chromatic_parsimony_l2": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep3/models/crowd_singleton_chromatic_parsimony_l2.py",
+   "cv_behind_best": 145.2444108915879,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.03192187850491014
+  },
+  "real_rep3/crowding_discriminative_chromatic_l2": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep3/models/crowding_discriminative_chromatic_l2.py",
+   "cv_behind_best": 144.3225728225916,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.03952673833837418
+  },
+  "real_rep3/crowding_singleton_confusion_l2": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep3/models/crowding_singleton_confusion_l2.py",
+   "cv_behind_best": 121.30657770010657,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.04021123006299215
+  },
+  "real_rep3/crowd_singleton_confusion_chromatic_l2": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep3/models/crowd_singleton_confusion_chromatic_l2.py",
+   "cv_behind_best": 116.11885218754105,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.040126435107901696
+  },
+  "real_rep3/crowding_confusion_discriminative_l2": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep3/models/crowding_confusion_discriminative_l2.py",
+   "cv_behind_best": 114.31521541237453,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.047161545651665936
+  },
+  "real_rep3/crowd_discrim_confusion_chromatic_l2": {
+   "file": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep3/models/crowd_discrim_confusion_chromatic_l2.py",
+   "cv_behind_best": 108.09606569582684,
+   "nearest_seed": "rsa_l2_singleton_feat_color_valence_l0",
+   "rmse": 0.04777965847016227
+  }
+ }
+}

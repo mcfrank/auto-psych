@@ -1,0 +1,10 @@
+Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, account for visual singleton salience, and adapt communicative choice rationality when facing expressive dilemmas. When an intended referent cannot be uniquely distinguished in the visual scene because every applicable descriptor is shared with competitors, the speaker faces an expressive dilemma and chooses among imperfect descriptors with a distinct dilemma choice rationality. Pragmatic listeners invert this two-regime speaker, directing ambiguous expressions toward referents trapped in expressive dilemmas rather than uniquely nameable referents whose distinguishing descriptors were withheld.
+
+Refining rsa_l2_singleton_confusion_omission by incorporating dilemma fallback choice rationality from dilemma_fallback_speaker:
+When an intended referent can be uniquely distinguished in the visual context, speakers produce distinguishing expressions with communicative rationality alpha. When an intended referent cannot be uniquely named in the display, the speaker faces an expressive dilemma where no word guarantees recovery and selects among imperfect descriptors with a distinct dilemma choice rationality alpha_dilemma. Pragmatic listeners at depth 2 invert this two-regime speaker, recognizing that ambiguous expressions indicate referents in expressive dilemmas rather than referents whose unique descriptors were withheld.
+
+Differences from rsa_l2_singleton_confusion_omission:
+- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).
+- Parameters added: alpha_dilemma (LogNormal(0.0, 1.0), governing speaker choice rationality when the intended referent has no uniquely distinguishing descriptor).
+- Parameters removed: None.
+- Other terms: Added compute_nameability to identify referents that possess at least one uniquely distinguishing descriptor in the visual context; incorporated vec(is_nameable, r) * alpha + (1.0 - vec(is_nameable, r)) * alpha_dilemma into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).

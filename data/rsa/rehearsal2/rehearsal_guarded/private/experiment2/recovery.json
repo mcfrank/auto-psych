@@ -1,0 +1,103 @@
+{
+ "experiment": 2,
+ "ground_truth": "crowd_discrim_confusion_chromatic_l2",
+ "selection_scope": "guarded",
+ "measure": "kl_pool: mean KL(ground truth || model) over the design pool's displays (nats); kl_design: the same over this experiment's designed displays; rmse_pool: RMSE on the pool",
+ "exported": "rsa_l2_singleton_confusion_omission_cost",
+ "exported_distance": {
+  "kl_pool": 0.1384840890043439,
+  "kl_design": 0.013104685311483037,
+  "rmse_pool": 0.005345051379891178
+ },
+ "closest_after": "rsa_l2_singleton_confusion_omission_cost",
+ "closest_after_distance": {
+  "kl_pool": 0.1384840890043439,
+  "kl_design": 0.013104685311483037,
+  "rmse_pool": 0.005345051379891178
+ },
+ "closest_before": "rsa_l2_singleton_confusion_omission_cost",
+ "closest_before_distance": {
+  "kl_pool": 0.1658746477450564,
+  "kl_design": 0.026455140930976687,
+  "rmse_pool": 0.005916112492632663
+ },
+ "before": {
+  "rsa_l2_singleton_confusion_omission_cost": {
+   "kl_pool": 0.1658746477450564,
+   "kl_design": 0.026455140930976687,
+   "rmse_pool": 0.005916112492632663
+  },
+  "rsa_l2_singleton_confusion_omission": {
+   "kl_pool": 0.37175806877948114,
+   "kl_design": 0.08506821281674874,
+   "rmse_pool": 0.008874622076842031
+  },
+  "rsa_l2_distinct_confusion_omission_cost": {
+   "kl_pool": 0.3734395047360376,
+   "kl_design": 0.05774218196540984,
+   "rmse_pool": 0.009126313584089865
+  },
+  "rsa_l2_distinct_confusion_omission": {
+   "kl_pool": 0.6235686995240304,
+   "kl_design": 0.10891268941544582,
+   "rmse_pool": 0.0118033620340751
+  },
+  "rsa_l2_singleton_confusion_cost": {
+   "kl_pool": 1.3429069680698895,
+   "kl_design": 0.3980684869238852,
+   "rmse_pool": 0.01685830572113209
+  },
+  "rsa_l2_singleton_confusion": {
+   "kl_pool": 1.675093020009805,
+   "kl_design": 0.42691087424291313,
+   "rmse_pool": 0.01879344491947704
+  },
+  "incremental_alternative_speaker": {
+   "kl_pool": 4.427404673456376,
+   "kl_design": 1.1117019574553453,
+   "rmse_pool": 0.03254893732598332
+  },
+  "aspect_goal_listener": {
+   "kl_pool": 6.7105912138621635,
+   "kl_design": 1.3333580224275277,
+   "rmse_pool": 0.04043436743024458
+  }
+ },
+ "after": {
+  "rsa_l2_singleton_confusion_omission_cost": {
+   "kl_pool": 0.1384840890043439,
+   "kl_design": 0.013104685311483037,
+   "rmse_pool": 0.005345051379891178
+  },
+  "rsa_l2_exclusive_confusion_cost": {
+   "kl_pool": 0.13876701096543076,
+   "kl_design": 0.022157875152237085,
+   "rmse_pool": 0.005515827126344184
+  },
+  "rsa_l2_dilemma_confusion_omission_cost": {
+   "kl_pool": 0.17453861101927837,
+   "kl_design": 0.021642208014646683,
+   "rmse_pool": 0.00586395780043706
+  },
+  "rsa_l2_distinct_confusion_omission_cost": {
+   "kl_pool": 0.18381712545026704,
+   "kl_design": 0.01780588165120088,
+   "rmse_pool": 0.006312952724371823
+  },
+  "rsa_l2_dilemma_confusion_omission": {
+   "kl_pool": 0.30720504602462434,
+   "kl_design": 0.059823622641377965,
+   "rmse_pool": 0.007925504823661545
+  },
+  "rsa_l2_singleton_confusion_omission": {
+   "kl_pool": 0.3142277844304525,
+   "kl_design": 0.06835731739692633,
+   "rmse_pool": 0.008183738545067386
+  },
+  "rsa_l2_distinct_confusion_omission": {
+   "kl_pool": 0.36942915380556085,
+   "kl_design": 0.06444822953102428,
+   "rmse_pool": 0.009044158729222124
+  }
+ }
+}

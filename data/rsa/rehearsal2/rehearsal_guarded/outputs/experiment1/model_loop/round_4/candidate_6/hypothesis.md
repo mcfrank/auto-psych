@@ -1,0 +1,10 @@
+Pragmatic listeners reason at depth 2 about speakers who balance communicative informativeness against competitor confusion avoidance, utterance extension costs, and omitted-alternative exhaustification penalties, guided by visual singleton salience. When selecting a referring expression for an object, speakers avoid descriptions that are broadly shared across the scene or that overlap with visually similar competitors, and actively penalize expressions that leave more distinctive alternative features of the target unsaid. Listeners invert this multi-criterion speaker at depth 2, rejecting candidate referents for which the heard expression was unnecessarily broad, confusable, or less informative than an available unstated descriptor.
+
+Refining rsa_l2_singleton_confusion_cost by incorporating omitted-alternative exhaustification from alternative_exhaustification_listener:
+Speakers evaluate candidate referring expressions not only by informativeness to simulated listeners, competitor confusion avoidance, and utterance extension costs, but also by penalizing expressions that leave more distinctive alternative features of the intended referent unsaid. When an intended referent possesses a highly informative alternative feature in the scene, choosing a less specific or shared descriptor incurs an omission penalty, capturing listeners' strong implicatures against targets with superior unmentioned descriptors while maintaining sensitivity to utterance extension costs and visual singleton salience.
+
+Differences from rsa_l2_singleton_confusion_cost:
+- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).
+- Parameters added: w_omission (Normal(0.0, 1.0), penalizing candidate referring expressions that omit informative alternative features of the intended referent).
+- Parameters removed: None.
+- Other terms: Added compute_exhaustification_violation to quantify the contextual informativeness of unmentioned features for each candidate referent; incorporated - w_omission * at(violation, u, r) into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).

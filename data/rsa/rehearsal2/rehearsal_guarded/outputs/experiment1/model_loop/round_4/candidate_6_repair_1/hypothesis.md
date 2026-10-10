@@ -1,0 +1,10 @@
+Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion and penalize broadly shared descriptors with utterance extension costs, guided by an integrated visual prior combining singleton salience with Shannon feature surprisal. When multiple descriptions apply to an object, speakers prefer specific, less widely shared words over descriptors extending broadly across scene objects while steering clear of descriptions shared with confusable competitors. On uninformative trials or ambiguous contexts, listeners spontaneously favor objects that possess rare or surprising visual features in the display as well as unique singletons lacking identical duplicates.
+
+Refining rsa_l2_singleton_confusion_cost by incorporating feature surprisal salience from feature_surprisal_salience_listener:
+Speakers and listeners evaluate visual referents with common knowledge of an object prior combining discrete visual singleton salience with continuous Shannon feature surprisal. In addition to preferring contextually unique singletons that lack identical duplicates in the scene, listeners and simulated speakers favor objects possessing rare or unexpected visual features over ubiquitous background items. On uninformative trials, choices reflect both visual singleton status and feature surprisal. Simulated speakers at both depth 1 and depth 2 evaluate candidate referring expressions by balancing informativeness against competitor confusion avoidance and utterance extension costs.
+
+Differences from rsa_l2_singleton_confusion_cost:
+- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).
+- Parameters added: w_surprisal (Normal(0.0, 1.0), weighting the Shannon feature surprisal prior over candidate referents).
+- Parameters removed: None.
+- Other terms: Added compute_feature_surprisal to calculate the accumulated Shannon self-information of each object's features relative to their scene frequencies; incorporated + params["w_surprisal"] * obj_surprisal into the softmax object prior passed to speakers S1 and S2 and governing uninformative prior trials.

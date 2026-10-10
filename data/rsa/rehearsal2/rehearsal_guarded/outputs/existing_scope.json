@@ -1,0 +1,12 @@
+{
+ "n_kept": 49274,
+ "n_left_out": 1313,
+ "left_out": {
+  "pragmods|E5_baserate": 488,
+  "pragmods|E6_valence": 478,
+  "pragmods|E7_color": 264,
+  "pragmods|color_prior_rerun": 83
+ },
+ "scope": "plain",
+ "source": "/scratch/users/mcfrank/auto-psych/rsa_run2/promote_work/all_trials.csv"
+}

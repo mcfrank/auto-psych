@@ -1,0 +1,38 @@
+{
+ "rule": "best first by the loop's final standing; a model within 0.002 (RMSE of posterior-mean choice-class probabilities over the design pool) of one kept is the same hypothesis for the live phase; at most 8",
+ "order": [
+  "rsa_l2_singleton_confusion_omission_cost",
+  "rsa_l2_singleton_confusion_omission",
+  "rsa_l2_singleton_confusion",
+  "rsa_l2_singleton_confusion_cost",
+  "rsa_l2_distinct_confusion_omission_cost",
+  "rsa_l2_distinct_confusion_omission",
+  "aspect_goal_listener",
+  "incremental_alternative_speaker",
+  "simplicity_pragmatic_mixture",
+  "similarity_attention_listener"
+ ],
+ "kept": [
+  "rsa_l2_singleton_confusion_omission_cost",
+  "rsa_l2_singleton_confusion_omission",
+  "rsa_l2_singleton_confusion",
+  "rsa_l2_singleton_confusion_cost",
+  "rsa_l2_distinct_confusion_omission_cost",
+  "rsa_l2_distinct_confusion_omission",
+  "aspect_goal_listener",
+  "incremental_alternative_speaker"
+ ],
+ "merged": [],
+ "over_cap": [
+  {
+   "name": "simplicity_pragmatic_mixture",
+   "nearest": "aspect_goal_listener",
+   "rmse": 0.021545305059962595
+  },
+  {
+   "name": "similarity_attention_listener",
+   "nearest": "aspect_goal_listener",
+   "rmse": 0.02178420144569245
+  }
+ ]
+}

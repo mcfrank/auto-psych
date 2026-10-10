@@ -1,4 +1,4 @@
-# Rehearsal 2: interim report (experiment 1 done, experiment 2 running)
+# Rehearsal 2: report (finished 2026-10-10 12:07; interim sections 1-6, final section 7)
 
 From the local Sherlock session, 2026-10-10 11:35 PDT, for the driver session and the PI.
 Handoff: `HANDOFF_rehearsal2.md`. Job 47176690 (one task, `SCOPES=guarded`), code
@@ -140,3 +140,44 @@ simulated people better than the seeds". The pilot and the campaign test it on p
    - `carry.json` for a third experiment (none here, `N_EXPERIMENTS=2`);
    - total spend and wall time;
    - the bring-back.
+
+## 7. Final (the run ended 2026-10-10 12:07, COMPLETED, 15 h 20 min)
+
+**Experiment 2's inner loop** stopped early: "stopped after round 2 of 5: 2 rounds in a row
+left the best model (`rsa_l2_singleton_confusion_omission_cost`) unchanged".
+- The export is unchanged, refitted on experiment 2's data.
+- The ledger, cumulative across experiments, now reads 37 admitted, 20 rejected and 34
+  pruned: experiment 2 added 11, 5 and 12.
+- No new `ineligible:` prunes.
+- No agent output names the ground truth (`gt_name_mentions.txt` is empty).
+
+**The ground truth's distance**, per display. The run's records hold **sums** over the
+displays (86906717): `kl_pool` over 794 and `kl_design` over 40. Divided here:
+
+| | `kl_pool` (mean per display) | `kl_design` (mean per display) | `rmse_pool` |
+|---|---|---|---|
+| experiment 1, closest before (`rsa_l2_singleton_feat_color_valence_l0`) | 0.0122 | 0.0207 | 0.047 |
+| experiment 1, exported | 0.00021 | 0.00032 | 0.0059 |
+| experiment 2, exported (the same model, refitted) | 0.00017 | 0.00033 | 0.0053 |
+
+The point of §5 stands: this shows movement toward a nearby mechanism, not recovery.
+
+**Spend and time:**
+
+| | agent calls | cost |
+|---|---|---|
+| experiment 1 | 42 | $56.90 |
+| experiment 2 | 18 | $26.21 |
+| **total** | **60** | **$83.12** (none missing usage) |
+
+Wall time was 15 h 20 min in all. Experiment 2's early stop saved about three rounds.
+
+**Brought back** (handoff §4) into `data/rsa/rehearsal2/`:
+- `rehearsal_guarded/outputs/`: designs, carry records, participants, the inner loops'
+  history, ledger, models, exports, candidates and token usage;
+- `rehearsal_guarded/private/`: configuration, `prospective.json`, `recovery.json`;
+- `ground_truth.json`;
+- `logs/rsa_outer_rehearsal_47176690_0.out`.
+
+Left out: trial-level CSVs (`private/existing_plain.csv` included), fit caches and agent
+logs. Scanned for keys and Prolific ids; none.

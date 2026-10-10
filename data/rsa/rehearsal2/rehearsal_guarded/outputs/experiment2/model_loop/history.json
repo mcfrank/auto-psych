@@ -1,0 +1,2675 @@
+[
+ {
+  "step": 0,
+  "round": -1,
+  "best_model": "rsa_l2_singleton_confusion_omission_cost",
+  "standing": {
+   "rsa_l2_distinct_confusion_omission_cost": {
+    "rank": 0,
+    "elpd_loo": -23181.838675498962,
+    "se": 159.93427333721812,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 6.603690794298018,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23192.53598793,
+    "cv_diff": 0.10147448381758295,
+    "cv_dse": 5.7392549818977106,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3608.577983984949,
+     "mayn_demberg_2022": -2511.519074951916,
+     "mayn_demberg_2023": -4931.275453997597,
+     "mayn_demberg_2026": -5118.836570160041,
+     "pragmods": -3895.514342557978,
+     "sikos_2021": -3126.8125622775206
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 3.2442012786559644,
+     "mayn_demberg_2022": 2.7708291959952476,
+     "mayn_demberg_2023": 10.89067597155372,
+     "mayn_demberg_2026": 21.10644938403857,
+     "pragmods": 1.3052983530437814,
+     "sikos_2021": 0.0
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 2.418406352449486,
+     "mayn_demberg_2022": 1.3105044643314654,
+     "mayn_demberg_2023": 9.723265023953937,
+     "mayn_demberg_2026": 7.292135036419809,
+     "pragmods": 2.3646718175748616,
+     "sikos_2021": 0.0
+    },
+    "sel_elpd": -3608.577983984949,
+    "sel_diff": 3.2442012786559644,
+    "sel_dse": 2.418406352449486,
+    "guard_diff": 0.0,
+    "guard_dse": 0.0,
+    "eligible": true
+   },
+   "rsa_l2_singleton_confusion_omission_cost": {
+    "rank": 1,
+    "elpd_loo": -23184.5698223114,
+    "se": 159.7336949562225,
+    "elpd_diff": 2.731146812438965,
+    "dse": 3.177292290607747,
+    "p_loo": 5.589027810186963,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23192.434513446184,
+    "cv_diff": 0.0,
+    "cv_dse": 0.0,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3605.333782706293,
+     "mayn_demberg_2022": -2515.0983992609254,
+     "mayn_demberg_2023": -4929.184558175363,
+     "mayn_demberg_2026": -5111.669607048879,
+     "pragmods": -3902.4987997496564,
+     "sikos_2021": -3128.6493665050666
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 0.0,
+     "mayn_demberg_2022": 6.350153505004528,
+     "mayn_demberg_2023": 8.799780149320213,
+     "mayn_demberg_2026": 13.93948627287591,
+     "pragmods": 8.289755544722084,
+     "sikos_2021": 1.8368042275460539
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 0.0,
+     "mayn_demberg_2022": 3.0165068575764065,
+     "mayn_demberg_2023": 8.400668669274673,
+     "mayn_demberg_2026": 4.90461444820523,
+     "pragmods": 3.4714288455183606,
+     "sikos_2021": 2.647539844301045
+    },
+    "sel_elpd": -3605.333782706293,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "guard_diff": 3.1427267948420194,
+    "guard_dse": 5.201084776284302,
+    "eligible": true
+   },
+   "rsa_l2_distinct_confusion_omission": {
+    "rank": 2,
+    "elpd_loo": -23186.785059928894,
+    "se": 159.94161321419233,
+    "elpd_diff": 4.946384429931641,
+    "dse": 3.0068763447446236,
+    "p_loo": 5.767254684549698,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23195.970736828298,
+    "cv_diff": 3.536223382114258,
+    "cv_dse": 8.108072468881545,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3609.387628875775,
+     "mayn_demberg_2022": -2508.748245755921,
+     "mayn_demberg_2023": -4934.009160592494,
+     "mayn_demberg_2026": -5121.556483887574,
+     "pragmods": -3894.2090442049343,
+     "sikos_2021": -3128.0601735115997
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 4.053846169482313,
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 13.62438256645055,
+     "mayn_demberg_2026": 23.82636311157148,
+     "pragmods": 0.0,
+     "sikos_2021": 1.2476112340791587
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 3.3977098378268966,
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 10.976921989565469,
+     "mayn_demberg_2026": 8.225242839753395,
+     "pragmods": 0.0,
+     "sikos_2021": 1.3411028458815015
+    },
+    "sel_elpd": -3609.387628875775,
+    "sel_diff": 4.053846169482313,
+    "sel_dse": 3.3977098378268966,
+    "guard_diff": 2.6251040074712364,
+    "guard_dse": 3.635028040208762,
+    "eligible": true
+   },
+   "rsa_l2_singleton_confusion_omission": {
+    "rank": 3,
+    "elpd_loo": -23191.710388183594,
+    "se": 159.68567270297206,
+    "elpd_diff": 9.871712684631348,
+    "dse": 4.846006747114789,
+    "p_loo": 4.8032324449086445,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23198.845651684966,
+    "cv_diff": 6.411138238781859,
+    "cv_dse": 5.034580083465446,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3607.1885863857115,
+     "mayn_demberg_2022": -2512.3965231430666,
+     "mayn_demberg_2023": -4932.025455220896,
+     "mayn_demberg_2026": -5113.139388712054,
+     "pragmods": -3903.21379305984,
+     "sikos_2021": -3130.8819051633973
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 1.8548036794186373,
+     "mayn_demberg_2022": 3.648277387145754,
+     "mayn_demberg_2023": 11.640677194853197,
+     "mayn_demberg_2026": 15.409267936051037,
+     "pragmods": 9.004748854905756,
+     "sikos_2021": 4.069342885876722
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 3.005746217282568,
+     "mayn_demberg_2022": 1.943890999070243,
+     "mayn_demberg_2023": 9.556450684744572,
+     "mayn_demberg_2026": 5.615397266980621,
+     "pragmods": 2.996274668341169,
+     "sikos_2021": 2.818777711955627
+    },
+    "sel_elpd": -3607.1885863857115,
+    "sel_diff": 1.8548036794186373,
+    "sel_dse": 3.005746217282568,
+    "guard_diff": 7.699061354203877,
+    "guard_dse": 5.987919602554228,
+    "eligible": true
+   },
+   "rsa_l2_singleton_confusion_cost": {
+    "rank": 4,
+    "elpd_loo": -23217.571066856384,
+    "se": 159.5541467479479,
+    "elpd_diff": 35.732391357421875,
+    "dse": 8.297088179692562,
+    "p_loo": 4.093629163540754,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23223.080128808557,
+    "cv_diff": 30.645615362373064,
+    "cv_dse": 13.952889026187618,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3620.409911175695,
+     "mayn_demberg_2022": -2509.1011527443356,
+     "mayn_demberg_2023": -4935.261138898724,
+     "mayn_demberg_2026": -5113.42750553342,
+     "pragmods": -3909.602031136753,
+     "sikos_2021": -3135.2783893196265
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 15.076128469402192,
+     "mayn_demberg_2022": 0.3529069884148157,
+     "mayn_demberg_2023": 14.876360872681289,
+     "mayn_demberg_2026": 15.69738475741724,
+     "pragmods": 15.392986931818541,
+     "sikos_2021": 8.465827042105957
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 6.753417370579708,
+     "mayn_demberg_2022": 1.979410508834307,
+     "mayn_demberg_2023": 10.540251216080907,
+     "mayn_demberg_2026": 6.575583028271023,
+     "pragmods": 7.1003198124602855,
+     "sikos_2021": 6.03152061845862
+    },
+    "sel_elpd": -3620.409911175695,
+    "sel_diff": 15.076128469402192,
+    "sel_dse": 6.753417370579708,
+    "guard_diff": 18.712213687809708,
+    "guard_dse": 12.343322998227494,
+    "eligible": true
+   },
+   "rsa_l2_singleton_confusion": {
+    "rank": 5,
+    "elpd_loo": -23226.773003578186,
+    "se": 159.44647820572584,
+    "elpd_diff": 44.93432807922363,
+    "dse": 9.292036014385612,
+    "p_loo": 3.1834085231676,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23231.09592458573,
+    "cv_diff": 38.661411139546544,
+    "cv_dse": 17.622687547416458,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3622.202167299175,
+     "mayn_demberg_2022": -2510.795498370014,
+     "mayn_demberg_2023": -4934.904495761255,
+     "mayn_demberg_2026": -5109.964318618539,
+     "pragmods": -3914.252075649095,
+     "sikos_2021": -3138.9773688876526
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 16.868384592882194,
+     "mayn_demberg_2022": 2.0472526140929403,
+     "mayn_demberg_2023": 14.519717735211998,
+     "mayn_demberg_2026": 12.23419784253656,
+     "pragmods": 20.043031444160533,
+     "sikos_2021": 12.164806610132018
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 7.366108601607629,
+     "mayn_demberg_2022": 2.6414593505543436,
+     "mayn_demberg_2023": 9.648519143486276,
+     "mayn_demberg_2026": 5.741418994527316,
+     "pragmods": 9.291786822404655,
+     "sikos_2021": 10.194443549920704
+    },
+    "sel_elpd": -3622.202167299175,
+    "sel_diff": 16.868384592882194,
+    "sel_dse": 7.366108601607629,
+    "guard_diff": 24.935753341502277,
+    "guard_dse": 16.406472800702833,
+    "eligible": true
+   },
+   "incremental_alternative_speaker": {
+    "rank": 6,
+    "elpd_loo": -23321.49062538147,
+    "se": 157.84779740228066,
+    "elpd_diff": 139.65194988250732,
+    "dse": 16.425593171124056,
+    "p_loo": 3.8752567661649664,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23327.207533968634,
+    "cv_diff": 134.77302052245068,
+    "cv_dse": 35.79832661654735,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3661.638231685026,
+     "mayn_demberg_2022": -2533.6710120157677,
+     "mayn_demberg_2023": -4920.384778026043,
+     "mayn_demberg_2026": -5099.232109756874,
+     "pragmods": -3951.509211246648,
+     "sikos_2021": -3160.7721912382767
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 56.304448978733035,
+     "mayn_demberg_2022": 24.922766259846867,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 1.5019889808709195,
+     "pragmods": 57.30016704171385,
+     "sikos_2021": 33.95962896075616
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 17.91282944267447,
+     "mayn_demberg_2022": 10.812029629087329,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 3.323820086257223,
+     "pragmods": 18.084721875584084,
+     "sikos_2021": 22.124620952029424
+    },
+    "sel_elpd": -3661.638231685026,
+    "sel_diff": 56.304448978733035,
+    "sel_dse": 17.91282944267447,
+    "guard_diff": 81.61129833855375,
+    "guard_dse": 32.513843449232425,
+    "eligible": true
+   },
+   "aspect_goal_listener": {
+    "rank": 7,
+    "elpd_loo": -23325.48844051361,
+    "se": 158.45684314750636,
+    "elpd_diff": 143.64976501464844,
+    "dse": 17.143815324051157,
+    "p_loo": 3.010017139808042,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23331.13885418038,
+    "cv_diff": 138.70434073419528,
+    "cv_dse": 40.587133821991856,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3671.415354790981,
+     "mayn_demberg_2022": -2527.460065643717,
+     "mayn_demberg_2023": -4928.3323659412035,
+     "mayn_demberg_2026": -5097.730120776003,
+     "pragmods": -3941.697038835193,
+     "sikos_2021": -3164.5039081932828
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 66.0815720846881,
+     "mayn_demberg_2022": 18.711819887796082,
+     "mayn_demberg_2023": 7.947587915160511,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 47.48799463025853,
+     "sikos_2021": 37.69134591576221
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 20.7154439774817,
+     "mayn_demberg_2022": 8.559733100210371,
+     "mayn_demberg_2023": 2.9462759310590103,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 21.640705481183332,
+     "sikos_2021": 25.099040319894232
+    },
+    "sel_elpd": -3671.415354790981,
+    "sel_diff": 66.0815720846881,
+    "sel_dse": 20.7154439774817,
+    "guard_diff": 75.76549544434602,
+    "guard_dse": 36.05570940618476,
+    "eligible": true
+   }
+  },
+  "events": [
+   {
+    "outcome": "seeded",
+    "name": "rsa_l2_singleton_confusion_omission_cost"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l2_singleton_confusion_omission"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l2_singleton_confusion"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l2_singleton_confusion_cost"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l2_distinct_confusion_omission_cost"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l2_distinct_confusion_omission"
+   },
+   {
+    "outcome": "seeded",
+    "name": "aspect_goal_listener"
+   },
+   {
+    "outcome": "seeded",
+    "name": "incremental_alternative_speaker"
+   }
+  ],
+  "live": [
+   {
+    "name": "rsa_l2_singleton_confusion_omission_cost",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, and account for visual singleton salience. When multiple descriptions apply to an object, speakers prefer specific, less widely shared words over descriptors that extend to many scene objects, while avoiding ambiguous words when the target possesses superior unstated descriptors. On uninformative trials, listeners spontaneously favor unique visual singletons over duplicated items in the display. Refining rsa_l2_singleton_confusion_omission by incorporating utterance extension costs from rsa_l2_singleton_confusion_cost: Speakers evaluate candidate referring expressions not only by informativeness to simulated listeners, distractor confusion avoidance, and omitted-alternative exhaustification penalties, but also by penalizing words proportional to their visual extension (the fraction of display objects satisfying the feature). When an object possesses multiple valid descriptions, speakers avoid broadly applicable words in favor of more specific descriptors, capturing listeners' preference for specific descriptions on displays where features differ in contextual generality while preserving sensitivity to unmentioned target features. Differences from rsa_l2_singleton_confusion_omission: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_cost (Normal(0.0, 1.0), penalizing candidate words proportional to their visual extension / scene frequency). - Parameters removed: None. - Other terms: Added compute_extension_cost to calculate the scene-wide object fraction sharing each word; incorporated - w_cost * vec(cost, u) into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_singleton_confusion_omission",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, and account for visual singleton salience. When multiple descriptions apply to an object, speakers avoid using an ambiguous descriptor if the target possesses an unmentioned, highly discriminative alternative feature in the display, leading listeners to reject referents with superior unstated descriptors. On uninformative trials, listeners spontaneously favor unique visual singletons over duplicated items in the display. Refining rsa_l2_singleton_confusion by incorporating omitted-alternative exhaustification from alternative_exhaustification_listener: Speakers evaluate candidate referring expressions not only by informativeness to simulated listeners and distractor confusion avoidance, but also by penalizing expressions that leave more distinctive alternative features of the intended referent unsaid. This improves fit on displays where referents vary in contextual alternative availability, capturing human listeners' strong implicatures against targets with superior unmentioned descriptors while preserving visual singleton salience on uninformative displays. Differences from rsa_l2_singleton_confusion: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_omission (Normal(0.0, 1.0), penalizing referring expressions that omit informative alternative features of the intended referent). - Parameters removed: None. - Other terms: Added compute_exhaustification_violation to quantify the contextual informativeness of unmentioned features for each candidate referent; incorporated - w_omission * at(violation, u, r) into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_singleton_confusion",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion while accounting for visual singleton salience. When multiple objects satisfy a description, speakers avoid referring to a target if its competitors share many visual features, leading listeners to expect words to target objects whose competitors are visually distinct. On uninformative trials, listeners spontaneously favor unique visual singletons over duplicated items in the display. Refining rsa_l2_singleton by incorporating competitor confusion avoidance from competitor_confusion_speaker: Speakers evaluate candidate words not only by their informativeness to simulated listeners, but also by penalizing words that overlap with visually similar competitor objects in the context. This improves fit on displays where distractors share visual features with the intended referent, guiding listeners away from targets whose competitors create visual confusion. Differences from rsa_l2_singleton: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_confusion (Normal(0.0, 1.0), penalizing candidate words proportional to their visual similarity overlap with alternative referents satisfying the word). - Parameters removed: None. - Other terms: Added compute_confusion to calculate pairwise visual similarity between referents and competitors sharing each utterance; incorporated - w_confusion * at(confusion, u, r) into the simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_singleton_confusion_cost",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize broadly shared descriptors with high utterance extension costs, and account for visual singleton salience. When multiple descriptions apply to an object, speakers prefer more specific, less widely shared words over descriptors that extend to many scene objects, guiding listeners to reject referents for which the heard expression was unnecessarily broad. On uninformative trials, listeners spontaneously favor unique visual singletons over duplicated items in the display. Refining rsa_l2_singleton_confusion by incorporating utterance extension costs from isolated_graded_costly_l3: Speakers evaluate candidate referring expressions not only by informativeness to simulated listeners and competitor confusion avoidance, but also by penalizing words proportional to their visual extension (the fraction of display objects satisfying the feature). When an object possesses multiple valid descriptions, speakers avoid broadly applicable words in favor of more specific descriptors, capturing listeners' preference for specific descriptions on displays where features differ in contextual generality. Differences from rsa_l2_singleton_confusion: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_cost (Normal(0.0, 1.0), penalizing candidate words proportional to their visual extension / scene frequency). - Parameters removed: None. - Other terms: Added compute_extension_cost to calculate the scene-wide object fraction sharing each word; incorporated - w_cost * vec(cost, u) into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_distinct_confusion_omission_cost",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, and account for visual singleton salience and contextual feature distinctiveness. When multiple descriptions apply to an object, speakers prefer specific, less widely shared words over descriptors that extend to many scene objects, while avoiding ambiguous words when the target possesses superior unstated descriptors. On uninformative trials, listeners spontaneously favor items that contrast more strongly against the ensemble of display objects in overall feature space as well as discrete visual singletons. Refining rsa_l2_singleton_confusion_omission_cost by incorporating contextual distinctiveness from rsa_l2_salience_confusion_l0: Visual salience in reference games operates continuously across feature space rather than solely as an all-or-nothing binary distinction between duplicates and non-duplicates. Listeners and simulated speakers evaluate candidate referents with common-ground visual priors that combine discrete singleton salience with continuous contextual distinctiveness (the accumulated visual feature contrast between each object and all other display items), directing attention toward contextually distinctive objects even when all items in the display are distinct. Differences from rsa_l2_singleton_confusion_omission_cost: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_distinct (Normal(0.0, 1.0), weighting the contextual feature distinctiveness prior over candidate referents). - Parameters removed: None. - Other terms: Added distinct calculation (accumulated pairwise visual feature distance between each referent and all other display objects); incorporated + params[\"w_distinct\"] * distinct into the softmax object prior passed to simulated speakers S1 and S2 and governing uninformative prior trials.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_distinct_confusion_omission",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, and account for visual singleton salience and contextual feature distinctiveness. When multiple descriptions apply to an object, speakers avoid using an ambiguous descriptor if the target possesses an unmentioned, highly discriminative alternative feature in the display, leading listeners to reject referents with superior unstated descriptors. On uninformative trials, listeners spontaneously favor items that contrast more strongly against the ensemble of display objects in overall feature space as well as discrete visual singletons. Refining rsa_l2_singleton_confusion_omission by incorporating contextual feature distinctiveness from rsa_l2_salience_confusion_l0: Visual salience in reference games operates continuously across feature space rather than solely as an all-or-nothing binary distinction between duplicates and non-duplicates. Listeners and simulated speakers evaluate candidate referents with common-ground visual priors that combine discrete singleton salience with continuous contextual distinctiveness (the accumulated visual feature contrast between each object and all other display items), directing attention toward contextually distinctive objects even when all items in the display are distinct. Differences from rsa_l2_singleton_confusion_omission: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_distinct (Normal(0.0, 1.0), weighting the continuous contextual feature distinctiveness prior over candidate referents). - Parameters removed: None. - Other terms: Added compute_distinctiveness to calculate the accumulated visual feature distance between each referent and all other display objects; incorporated + params[\"w_distinct\"] * distinct into the common-ground softmax object prior passed to simulated speakers S1 and S2 and governing choices on uninformative prior trials.",
+    "source": "seed"
+   },
+   {
+    "name": "aspect_goal_listener",
+    "hypothesis": "Listeners interpret referring expressions by reasoning about the speaker's communicative goal or question under discussion: rather than attempting to uniquely pinpoint the referent's complete scene identity, speakers aim to be informative about a specific visual aspect (feature) of the target object. When selecting which aspect of a referent to communicate, speakers favor features that are contextually informative and distinctive in the display, and express that chosen aspect with a descriptive word. Pragmatic listeners invert this process by jointly inferring the intended referent and the speaker's communicative goal, expecting a heard feature to pick out objects for which that feature was the most contextually relevant aspect to highlight.",
+    "source": "seed"
+   },
+   {
+    "name": "incremental_alternative_speaker",
+    "hypothesis": "Speakers formulate referring expressions by evaluating candidate words against an active alternative feature of the intended referent, choosing words that eliminate visual competitors the alternative feature left confusable. Pragmatic listeners invert this two-stage communicative process by jointly inferring the intended referent and the alternative descriptor the speaker sought to improve upon. On uninformative trials with no descriptive word, choices default to common-ground visual singleton salience.",
+    "source": "seed"
+   }
+  ],
+  "ledger_entries": 63
+ },
+ {
+  "step": 1,
+  "round": 0,
+  "best_model": "rsa_l2_singleton_confusion_omission_cost",
+  "standing": {
+   "rsa_l2_distinct_dilemma_omission_cost": {
+    "rank": 0,
+    "elpd_loo": -23176.84057712555,
+    "se": 159.87292989992002,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 7.102508027182921,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23188.736270024106,
+    "cv_diff": 0.0,
+    "cv_dse": 0.0,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3614.887276566988,
+     "mayn_demberg_2022": -2515.070873181692,
+     "mayn_demberg_2023": -4929.52254517861,
+     "mayn_demberg_2026": -5110.584885092549,
+     "pragmods": -3891.9345647918108,
+     "sikos_2021": -3126.7361252124538
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 9.553493860695198,
+     "mayn_demberg_2022": 6.322627425771316,
+     "mayn_demberg_2023": 13.636971654062108,
+     "mayn_demberg_2026": 12.854764316545698,
+     "pragmods": 0.0,
+     "sikos_2021": 0.0
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 3.9453853019442335,
+     "mayn_demberg_2022": 3.1130414635627233,
+     "mayn_demberg_2023": 10.031896364322284,
+     "mayn_demberg_2026": 4.438099957814774,
+     "pragmods": 0.0,
+     "sikos_2021": 0.0
+    },
+    "sel_elpd": -3614.887276566988,
+    "sel_diff": 9.553493860695198,
+    "sel_dse": 3.9453853019442335,
+    "guard_diff": 0.0,
+    "guard_dse": 0.0,
+    "eligible": true
+   },
+   "rsa_l2_distinct_confusion_omission_cost": {
+    "rank": 1,
+    "elpd_loo": -23181.838675498962,
+    "se": 159.93427333721812,
+    "elpd_diff": 4.998098373413086,
+    "dse": 3.167286010343491,
+    "p_loo": 6.603690794298018,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23192.53598793,
+    "cv_diff": 3.799717905894795,
+    "cv_dse": 5.868700754934444,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3608.577983984949,
+     "mayn_demberg_2022": -2511.519074951916,
+     "mayn_demberg_2023": -4931.275453997597,
+     "mayn_demberg_2026": -5118.836570160041,
+     "pragmods": -3895.514342557978,
+     "sikos_2021": -3126.8125622775206
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 3.2442012786559644,
+     "mayn_demberg_2022": 2.7708291959952476,
+     "mayn_demberg_2023": 15.389880473048834,
+     "mayn_demberg_2026": 21.10644938403857,
+     "pragmods": 3.5797777661673535,
+     "sikos_2021": 0.07643706506678427
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 2.418406352449486,
+     "mayn_demberg_2022": 1.3105044643314654,
+     "mayn_demberg_2023": 11.419148885066356,
+     "mayn_demberg_2026": 7.292135036419809,
+     "pragmods": 2.933059862438002,
+     "sikos_2021": 1.5689161513500016
+    },
+    "sel_elpd": -3608.577983984949,
+    "sel_diff": 3.2442012786559644,
+    "sel_dse": 2.418406352449486,
+    "guard_diff": 10.10901048793312,
+    "guard_dse": 5.381080089900223,
+    "eligible": true
+   },
+   "rsa_l2_dilemma_confusion_omission_cost": {
+    "rank": 2,
+    "elpd_loo": -23183.413103103638,
+    "se": 159.64058490318538,
+    "elpd_diff": 6.572525978088379,
+    "dse": 4.115201601610485,
+    "p_loo": 6.199448154595302,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23190.656893399693,
+    "cv_diff": 1.9206233755867288,
+    "cv_dse": 6.205785827119504,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3606.8841030630347,
+     "mayn_demberg_2022": -2517.6358152834873,
+     "mayn_demberg_2023": -4928.576288014563,
+     "mayn_demberg_2026": -5106.819518257838,
+     "pragmods": -3902.01192009541,
+     "sikos_2021": -3128.729248685358
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 1.5503203567418495,
+     "mayn_demberg_2022": 8.887569527566484,
+     "mayn_demberg_2023": 12.690714490015125,
+     "mayn_demberg_2026": 9.089397481835476,
+     "pragmods": 10.077355303599234,
+     "sikos_2021": 1.9931234729042444
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 1.0837273344595606,
+     "mayn_demberg_2022": 4.352333939957015,
+     "mayn_demberg_2023": 9.265743530212994,
+     "mayn_demberg_2026": 3.188616795083155,
+     "pragmods": 2.6444657845001918,
+     "sikos_2021": 3.5028304431011468
+    },
+    "sel_elpd": -3606.8841030630347,
+    "sel_diff": 1.5503203567418495,
+    "sel_dse": 1.0837273344595606,
+    "guard_diff": 9.923796879538713,
+    "guard_dse": 4.933244440164982,
+    "eligible": true
+   },
+   "rsa_l2_singleton_confusion_omission_cost": {
+    "rank": 3,
+    "elpd_loo": -23184.5698223114,
+    "se": 159.7336949562225,
+    "elpd_diff": 7.729245185852051,
+    "dse": 4.427948355863269,
+    "p_loo": 5.589027810186963,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23192.434513446184,
+    "cv_diff": 3.698243422077212,
+    "cv_dse": 6.152010668143811,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3605.333782706293,
+     "mayn_demberg_2022": -2515.0983992609254,
+     "mayn_demberg_2023": -4929.184558175363,
+     "mayn_demberg_2026": -5111.669607048879,
+     "pragmods": -3902.4987997496564,
+     "sikos_2021": -3128.6493665050666
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 0.0,
+     "mayn_demberg_2022": 6.350153505004528,
+     "mayn_demberg_2023": 13.298984650815328,
+     "mayn_demberg_2026": 13.93948627287591,
+     "pragmods": 10.564234957845656,
+     "sikos_2021": 1.9132412926128382
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 0.0,
+     "mayn_demberg_2022": 3.0165068575764065,
+     "mayn_demberg_2023": 10.153549246889245,
+     "mayn_demberg_2026": 4.90461444820523,
+     "pragmods": 3.0277143142683194,
+     "sikos_2021": 3.4381728021171023
+    },
+    "sel_elpd": -3605.333782706293,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "guard_diff": 13.251737282775139,
+    "guard_dse": 4.66218869113381,
+    "eligible": true
+   },
+   "rsa_l2_distinct_confusion_omission": {
+    "rank": 4,
+    "elpd_loo": -23186.785059928894,
+    "se": 159.94161321419233,
+    "elpd_diff": 9.944482803344727,
+    "dse": 4.414970072358626,
+    "p_loo": 5.767254684549698,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23195.970736828298,
+    "cv_diff": 7.23446680419147,
+    "cv_dse": 8.458491122527347,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3609.387628875775,
+     "mayn_demberg_2022": -2508.748245755921,
+     "mayn_demberg_2023": -4934.009160592494,
+     "mayn_demberg_2026": -5121.556483887574,
+     "pragmods": -3894.2090442049343,
+     "sikos_2021": -3128.0601735115997
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 4.053846169482313,
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 18.123587067945664,
+     "mayn_demberg_2026": 23.82636311157148,
+     "pragmods": 2.274479413123572,
+     "sikos_2021": 1.324048299145943
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 3.3977098378268966,
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 12.759897613729127,
+     "mayn_demberg_2026": 8.225242839753395,
+     "pragmods": 4.130270028776215,
+     "sikos_2021": 2.4729829843382936
+    },
+    "sel_elpd": -3609.387628875775,
+    "sel_diff": 4.053846169482313,
+    "sel_dse": 3.3977098378268966,
+    "guard_diff": 12.734114495404356,
+    "guard_dse": 7.647882258630344,
+    "eligible": true
+   },
+   "rsa_l2_singleton_confusion_omission": {
+    "rank": 5,
+    "elpd_loo": -23191.710388183594,
+    "se": 159.68567270297206,
+    "elpd_diff": 14.869811058044434,
+    "dse": 5.774730546591599,
+    "p_loo": 4.8032324449086445,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23198.845651684966,
+    "cv_diff": 10.109381660859071,
+    "cv_dse": 8.503268005641873,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3607.1885863857115,
+     "mayn_demberg_2022": -2512.3965231430666,
+     "mayn_demberg_2023": -4932.025455220896,
+     "mayn_demberg_2026": -5113.139388712054,
+     "pragmods": -3903.21379305984,
+     "sikos_2021": -3130.8819051633973
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 1.8548036794186373,
+     "mayn_demberg_2022": 3.648277387145754,
+     "mayn_demberg_2023": 16.13988169634831,
+     "mayn_demberg_2026": 15.409267936051037,
+     "pragmods": 11.279228268029328,
+     "sikos_2021": 4.145779950943506
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 3.005746217282568,
+     "mayn_demberg_2022": 1.943890999070243,
+     "mayn_demberg_2023": 11.431696890508475,
+     "mayn_demberg_2026": 5.615397266980621,
+     "pragmods": 4.8047545881736955,
+     "sikos_2021": 3.892735707603192
+    },
+    "sel_elpd": -3607.1885863857115,
+    "sel_diff": 1.8548036794186373,
+    "sel_dse": 3.005746217282568,
+    "guard_diff": 17.808071842136997,
+    "guard_dse": 6.639519899264386,
+    "eligible": true
+   },
+   "rsa_l2_singleton_confusion_cost": {
+    "rank": 6,
+    "elpd_loo": -23217.571066856384,
+    "se": 159.5541467479479,
+    "elpd_diff": 40.73048973083496,
+    "dse": 9.171079295979563,
+    "p_loo": 4.093629163540754,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23223.080128808557,
+    "cv_diff": 34.343858784450276,
+    "cv_dse": 15.337567444237543,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3620.409911175695,
+     "mayn_demberg_2022": -2509.1011527443356,
+     "mayn_demberg_2023": -4935.261138898724,
+     "mayn_demberg_2026": -5113.42750553342,
+     "pragmods": -3909.602031136753,
+     "sikos_2021": -3135.2783893196265
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 15.076128469402192,
+     "mayn_demberg_2022": 0.3529069884148157,
+     "mayn_demberg_2023": 19.375565374176404,
+     "mayn_demberg_2026": 15.69738475741724,
+     "pragmods": 17.667466344942113,
+     "sikos_2021": 8.542264107172741
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 6.753417370579708,
+     "mayn_demberg_2022": 1.979410508834307,
+     "mayn_demberg_2023": 12.80678709896707,
+     "mayn_demberg_2026": 6.575583028271023,
+     "pragmods": 10.22786818342484,
+     "sikos_2021": 5.334171572410196
+    },
+    "sel_elpd": -3620.409911175695,
+    "sel_diff": 15.076128469402192,
+    "sel_dse": 6.753417370579708,
+    "guard_diff": 28.821224175742827,
+    "guard_dse": 12.91091842261938,
+    "eligible": true
+   },
+   "rsa_l2_singleton_confusion": {
+    "rank": 7,
+    "elpd_loo": -23226.773003578186,
+    "se": 159.44647820572584,
+    "elpd_diff": 49.93242645263672,
+    "dse": 10.058045484444428,
+    "p_loo": 3.1834085231676,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23231.09592458573,
+    "cv_diff": 42.359654561623756,
+    "cv_dse": 18.537814666804632,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3622.202167299175,
+     "mayn_demberg_2022": -2510.795498370014,
+     "mayn_demberg_2023": -4934.904495761255,
+     "mayn_demberg_2026": -5109.964318618539,
+     "pragmods": -3914.252075649095,
+     "sikos_2021": -3138.9773688876526
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 16.868384592882194,
+     "mayn_demberg_2022": 2.0472526140929403,
+     "mayn_demberg_2023": 19.018922236707112,
+     "mayn_demberg_2026": 12.23419784253656,
+     "pragmods": 22.317510857284105,
+     "sikos_2021": 12.241243675198803
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 7.366108601607629,
+     "mayn_demberg_2022": 2.6414593505543436,
+     "mayn_demberg_2023": 12.096143546091039,
+     "mayn_demberg_2026": 5.741418994527316,
+     "pragmods": 12.12603198569426,
+     "sikos_2021": 9.210873885180455
+    },
+    "sel_elpd": -3622.202167299175,
+    "sel_diff": 16.868384592882194,
+    "sel_dse": 7.366108601607629,
+    "guard_diff": 35.0447638294354,
+    "guard_dse": 16.287260254540634,
+    "eligible": true
+   },
+   "dilemma_fallback_speaker": {
+    "rank": 8,
+    "elpd_loo": -23309.173092842102,
+    "se": 158.40382343078988,
+    "elpd_diff": 132.33251571655273,
+    "dse": 16.10579038530583,
+    "p_loo": 4.01485830861202,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23313.155810589968,
+    "cv_diff": 124.4195405658611,
+    "cv_dse": 32.351446576513716,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3685.1187106249827,
+     "mayn_demberg_2022": -2534.3767822281034,
+     "mayn_demberg_2023": -4919.60150172933,
+     "mayn_demberg_2026": -5100.507565542597,
+     "pragmods": -3921.7112236166085,
+     "sikos_2021": -3151.8400268483456
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 79.78492791868985,
+     "mayn_demberg_2022": 25.62853647218253,
+     "mayn_demberg_2023": 3.715928204782358,
+     "mayn_demberg_2026": 2.7774447665942716,
+     "pragmods": 29.776658824797778,
+     "sikos_2021": 25.103901635891816
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 19.431198101268794,
+     "mayn_demberg_2022": 11.350785593906066,
+     "mayn_demberg_2023": 2.7285207358187153,
+     "mayn_demberg_2026": 3.614993168753916,
+     "pragmods": 9.543427537471878,
+     "sikos_2021": 20.628341262304577
+    },
+    "sel_elpd": -3685.1187106249827,
+    "sel_diff": 79.78492791868985,
+    "sel_dse": 19.431198101268794,
+    "guard_diff": 54.18810650786327,
+    "guard_dse": 26.180114611505587,
+    "eligible": true
+   },
+   "incremental_alternative_speaker": {
+    "rank": 9,
+    "elpd_loo": -23321.49062538147,
+    "se": 157.84779740228066,
+    "elpd_diff": 144.6500482559204,
+    "dse": 16.568762958198572,
+    "p_loo": 3.8752567661649664,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23327.207533968634,
+    "cv_diff": 138.4712639445279,
+    "cv_dse": 36.422680616831734,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3661.638231685026,
+     "mayn_demberg_2022": -2533.6710120157677,
+     "mayn_demberg_2023": -4920.384778026043,
+     "mayn_demberg_2026": -5099.232109756874,
+     "pragmods": -3951.509211246648,
+     "sikos_2021": -3160.7721912382767
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 56.304448978733035,
+     "mayn_demberg_2022": 24.922766259846867,
+     "mayn_demberg_2023": 4.4992045014951145,
+     "mayn_demberg_2026": 1.5019889808709195,
+     "pragmods": 59.57464645483742,
+     "sikos_2021": 34.03606602582295
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 17.91282944267447,
+     "mayn_demberg_2022": 10.812029629087329,
+     "mayn_demberg_2023": 3.1632417089473828,
+     "mayn_demberg_2026": 3.323820086257223,
+     "pragmods": 19.720543440675137,
+     "sikos_2021": 21.091428888390737
+    },
+    "sel_elpd": -3661.638231685026,
+    "sel_diff": 56.304448978733035,
+    "sel_dse": 17.91282944267447,
+    "guard_diff": 91.72030882648687,
+    "guard_dse": 31.355197310282055,
+    "eligible": true
+   },
+   "aspect_goal_listener": {
+    "rank": 10,
+    "elpd_loo": -23325.48844051361,
+    "se": 158.45684314750636,
+    "elpd_diff": 148.64786338806152,
+    "dse": 17.13505591723531,
+    "p_loo": 3.010017139808042,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23331.13885418038,
+    "cv_diff": 142.4025841562725,
+    "cv_dse": 41.016914394051085,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3671.415354790981,
+     "mayn_demberg_2022": -2527.460065643717,
+     "mayn_demberg_2023": -4928.3323659412035,
+     "mayn_demberg_2026": -5097.730120776003,
+     "pragmods": -3941.697038835193,
+     "sikos_2021": -3164.5039081932828
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 66.0815720846881,
+     "mayn_demberg_2022": 18.711819887796082,
+     "mayn_demberg_2023": 12.446792416655626,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 49.7624740433821,
+     "sikos_2021": 37.767782980829
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 20.7154439774817,
+     "mayn_demberg_2022": 8.559733100210371,
+     "mayn_demberg_2023": 6.019904856822969,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 23.926848666206496,
+     "sikos_2021": 24.12344105724983
+    },
+    "sel_elpd": -3671.415354790981,
+    "sel_diff": 66.0815720846881,
+    "sel_dse": 20.7154439774817,
+    "guard_diff": 85.87450593227913,
+    "guard_dse": 35.401309983011494,
+    "eligible": true
+   },
+   "diagnostic_evidence_listener": {
+    "rank": 11,
+    "elpd_loo": -23376.115299224854,
+    "se": 157.87661686547963,
+    "elpd_diff": 199.2747220993042,
+    "dse": 19.413425925899283,
+    "p_loo": 3.5375965275197814,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23383.97905973127,
+    "cv_diff": 195.24278970716477,
+    "cv_dse": 47.922760429100165,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3700.823597395174,
+     "mayn_demberg_2022": -2536.887383358252,
+     "mayn_demberg_2023": -4917.973963716569,
+     "mayn_demberg_2026": -5101.468906513784,
+     "pragmods": -3958.297172691445,
+     "sikos_2021": -3168.5280360560446
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 95.48981468888132,
+     "mayn_demberg_2022": 28.139137602331175,
+     "mayn_demberg_2023": 2.0883901920215067,
+     "mayn_demberg_2026": 3.738785737780745,
+     "pragmods": 66.36260789963444,
+     "sikos_2021": 41.79191084359081
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 27.6181233809734,
+     "mayn_demberg_2022": 12.229549979226352,
+     "mayn_demberg_2023": 1.7954411416627813,
+     "mayn_demberg_2026": 4.7226225492689045,
+     "pragmods": 29.79462870719853,
+     "sikos_2021": 21.161764989585365
+    },
+    "sel_elpd": -3700.823597395174,
+    "sel_diff": 95.48981468888132,
+    "sel_dse": 27.6181233809734,
+    "guard_diff": 109.3064688789782,
+    "guard_dse": 39.06527748394098,
+    "eligible": true
+   },
+   "exclusive_alternative_speaker": {
+    "rank": 12,
+    "elpd_loo": -23386.24840450287,
+    "se": 157.7894216917033,
+    "elpd_diff": 209.40782737731934,
+    "dse": 20.090355558426324,
+    "p_loo": 4.252146123631974,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23398.964019281055,
+    "cv_diff": 210.2277492569483,
+    "cv_dse": 49.95302028308657,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3712.1901600509646,
+     "mayn_demberg_2022": -2541.1372896594858,
+     "mayn_demberg_2023": -4915.885573524548,
+     "mayn_demberg_2026": -5104.773874776591,
+     "pragmods": -3960.631650637364,
+     "sikos_2021": -3164.3454706321018
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 106.85637734467173,
+     "mayn_demberg_2022": 32.389043903564925,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 7.043754000587796,
+     "pragmods": 68.69708584555337,
+     "sikos_2021": 37.60934541964798
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 30.90399292134877,
+     "mayn_demberg_2022": 13.917379559172552,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 6.660398706953121,
+     "pragmods": 29.970678854395782,
+     "sikos_2021": 19.365183049660082
+    },
+    "sel_elpd": -3712.1901600509646,
+    "sel_diff": 106.85637734467173,
+    "sel_dse": 30.90399292134877,
+    "guard_diff": 112.92486577297313,
+    "guard_dse": 39.16699726109913,
+    "eligible": true
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "diagnostic_evidence_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referring expressions by evaluating the weight of evidence each word provides in favor of the target over the scene distractors. Rather than engaging in nested recursive Theory of Mind, listeners invert a speaker who chooses descriptions proportional to their diagnostic log-odds\u2014the degree to which the named feature singles out the intended referent rather than alternative objects in the context. On uninformative trials without a distinguishing word, choices default to visual singleton salience, favoring contextually unique objects over duplicated items."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "exclusive_alternative_speaker",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Speakers formulate referring expressions by prioritizing dedicated exclusive descriptors that uniquely single out the target, penalizing ambiguous descriptors whenever the intended referent possesses a foolproof exclusive alternative in the display. Pragmatic listeners invert this speaker by directing ambiguous expressions toward candidate referents that lack any exclusive descriptor in the context. On a display where one candidate possesses an exclusive unique descriptor alongside the heard word while another candidate has multiple cluttered background features that are never exclusive, this exclusive-alternative listener selects the cluttered candidate because it lacked an exclusive descriptor, whereas the current best model selects the candidate with the exclusive descriptor due to accumulated omission and confusion penalties."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "dilemma_fallback_speaker",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "When an intended referent can be uniquely named in the display, speakers reliably produce that distinguishing descriptor to ensure communicative recovery. When an intended referent cannot be uniquely named, the speaker faces an expressive dilemma where no word guarantees recovery and falls back on selecting among imperfect descriptors with a distinct dilemma choice rationality. Pragmatic listeners invert this two-regime speaker, recognizing that ambiguous expressions indicate unnameable referents facing communicative compromise rather than uniquely nameable referents whose distinguishing descriptors were withheld."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": null,
+    "outcome": "no file",
+    "reason": ""
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "rsa_l2_singleton_elim_omission_cost",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0018 of rsa_l2_singleton_confusion_omission_cost's (threshold 0.002) over the loop's novelty pool of 794 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, account for visual singleton salience, and actively reward referring expressions that eliminate visual competitors satisfying alternative features of the target. When multiple descriptions apply to an intended referent, speakers prefer expressions that eliminate scene competitors that alternative descriptors would have left confusable, capturing listeners' communicative expectation that speakers select words to prune the contextual competitor set while preserving sensitivity to unmentioned target features. On uninformative trials, choices default to common-ground visual singleton salience.\n\nRefining rsa_l2_singleton_confusion_omission_cost by incorporating competitor elimination from incremental_alternative_speaker:\nSpeakers evaluate candidate referring expressions not only by informativeness to simulated listeners, distractor confusion avoidance, omitted-alternative exhaustification penalties, and utterance extension costs, but also by rewarding candidate words that eliminate visual competitors satisfying alternative features of the intended referent. When an intended referent possesses multiple features, choosing a word that eliminates competitors that would satisfy the other features provides communicative utility, guiding listeners to favor referents whose alternative competitors are actively eliminated.\n\nDifferences from rsa_l2_singleton_confusion_omission_cost:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: w_elim (Normal(0.0, 1.0), weighting the communicative utility bonus for candidate words that eliminate contextual competitors satisfying alternative target features).\n- Parameters removed: None.\n- Other terms: Added compute_competitor_elimination to calculate the fraction of scene competitors satisfying alternative features of the intended referent eliminated by each candidate word; incorporated + w_elim * at(elim_for_r, u, r) into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2)."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "rsa_l2_distinct_elim_omission_cost",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0013 of rsa_l2_distinct_confusion_omission_cost's (threshold 0.002) over the loop's novelty pool of 794 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, account for visual singleton salience and contextual feature distinctiveness, and actively reward referring expressions that eliminate visual competitors satisfying alternative features of the target. When multiple descriptions apply to an intended referent, speakers prefer expressions that eliminate scene competitors that alternative descriptors would have left confusable, capturing listeners' communicative expectation that speakers select words to prune the contextual competitor set while preserving sensitivity to visual distinctiveness and unmentioned target features. On uninformative trials, choices default to common-ground visual singleton salience and contextual feature distinctiveness.\n\nRefining rsa_l2_distinct_confusion_omission_cost by incorporating competitor elimination from incremental_alternative_speaker:\nSpeakers evaluate candidate referring expressions not only by informativeness to simulated listeners, distractor confusion avoidance, omitted-alternative exhaustification penalties, and utterance extension costs, but also by rewarding candidate words that eliminate visual competitors satisfying alternative features of the intended referent. When an intended referent possesses multiple features, choosing a word that eliminates competitors that would satisfy the other features provides communicative utility, guiding listeners to favor referents whose alternative competitors are actively eliminated.\n\nDifferences from rsa_l2_distinct_confusion_omission_cost:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: w_elim (Normal(0.0, 1.0), weighting the communicative utility bonus for candidate words that eliminate contextual competitors satisfying alternative target features).\n- Parameters removed: None.\n- Other terms: Added compute_competitor_elimination to calculate the fraction of scene competitors satisfying alternative features of the intended referent eliminated by each candidate word; incorporated + w_elim * at(elim_for_r, u, r) into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2)."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "rsa_l2_dilemma_confusion_omission_cost",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, account for visual singleton salience, and adapt communicative choice rationality when facing expressive dilemmas. When an intended referent cannot be uniquely distinguished in the visual scene because every applicable descriptor is shared with competitors, the speaker faces an expressive dilemma and chooses among imperfect descriptors with a distinct dilemma choice rationality. Pragmatic listeners invert this two-regime speaker, directing ambiguous expressions toward referents trapped in expressive dilemmas rather than uniquely nameable referents whose distinguishing descriptors were withheld.\n\nRefining rsa_l2_singleton_confusion_omission_cost by incorporating dilemma fallback choice rationality from dilemma_fallback_speaker:\nWhen an intended referent can be uniquely distinguished in the visual context, speakers produce distinguishing expressions with communicative rationality alpha. When an intended referent cannot be uniquely named in the display, the speaker faces an expressive dilemma where no word guarantees recovery and selects among imperfect descriptors with a distinct dilemma choice rationality alpha_dilemma. Pragmatic listeners at depth 2 invert this two-regime speaker, recognizing that ambiguous expressions indicate referents in expressive dilemmas rather than referents whose unique descriptors were withheld.\n\nDifferences from rsa_l2_singleton_confusion_omission_cost:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: alpha_dilemma (LogNormal(0.0, 1.0), governing speaker choice rationality when the intended referent has no uniquely distinguishing descriptor).\n- Parameters removed: None.\n- Other terms: Added compute_nameability to identify referents that possess at least one uniquely distinguishing descriptor in the visual context; incorporated vec(is_nameable, r) * alpha + (1.0 - vec(is_nameable, r)) * alpha_dilemma into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "repair": true
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "rsa_l2_distinct_dilemma_omission_cost",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "When interpreting referring expressions in reference games, listeners reason about speakers who adapt their communicative precision depending on whether an object can be uniquely named: speakers communicate uniquely distinguishing descriptors with high fidelity when available, but when an intended referent cannot be uniquely named and faces an expressive dilemma, they fall back on selecting among imperfect descriptors with a distinct dilemma choice rationality. Pragmatic listeners invert this two-regime speaker at depth 2 while integrating visual singleton salience, contextual feature distinctiveness, competitor confusion avoidance, omitted-alternative penalties, and utterance extension costs. On uninformative trials with no descriptive word, choices default to common-ground visual singleton salience and contextual feature distinctiveness.\n\nRefining rsa_l2_distinct_confusion_omission_cost by incorporating dilemma fallback choice rationality from dilemma_fallback_speaker:\nSpeakers evaluate candidate referring expressions not only by informativeness to simulated listeners, competitor confusion avoidance, omitted-alternative exhaustification penalties, and utterance extension costs, but also by distinguishing whether the intended referent is uniquely nameable in the display or presents an expressive dilemma. When an intended referent possesses at least one unique descriptor that singles it out in the scene, the speaker selects words with standard communicative rationality; when an intended referent has no unique descriptor and must compromise on an ambiguous expression, the speaker falls back to choosing among imperfect descriptors with a separate dilemma choice rationality. Pragmatic listeners invert this two-regime communicative process at depth 2.\n\nDifferences from rsa_l2_distinct_confusion_omission_cost:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: alpha_dilemma (LogNormal(0.0, 1.0), governing speaker choice rationality when communicating unnameable referents that face an expressive dilemma).\n- Parameters removed: None.\n- Other terms: Added compute_nameability to identify whether each referent possesses at least one unique descriptor in the display; incorporated vec(is_nameable, r) * alpha + (1.0 - vec(is_nameable, r)) * alpha_dilemma into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "repair": true
+   }
+  ],
+  "live": [
+   {
+    "name": "rsa_l2_singleton_confusion_omission_cost",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, and account for visual singleton salience. When multiple descriptions apply to an object, speakers prefer specific, less widely shared words over descriptors that extend to many scene objects, while avoiding ambiguous words when the target possesses superior unstated descriptors. On uninformative trials, listeners spontaneously favor unique visual singletons over duplicated items in the display. Refining rsa_l2_singleton_confusion_omission by incorporating utterance extension costs from rsa_l2_singleton_confusion_cost: Speakers evaluate candidate referring expressions not only by informativeness to simulated listeners, distractor confusion avoidance, and omitted-alternative exhaustification penalties, but also by penalizing words proportional to their visual extension (the fraction of display objects satisfying the feature). When an object possesses multiple valid descriptions, speakers avoid broadly applicable words in favor of more specific descriptors, capturing listeners' preference for specific descriptions on displays where features differ in contextual generality while preserving sensitivity to unmentioned target features. Differences from rsa_l2_singleton_confusion_omission: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_cost (Normal(0.0, 1.0), penalizing candidate words proportional to their visual extension / scene frequency). - Parameters removed: None. - Other terms: Added compute_extension_cost to calculate the scene-wide object fraction sharing each word; incorporated - w_cost * vec(cost, u) into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_singleton_confusion_omission",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, and account for visual singleton salience. When multiple descriptions apply to an object, speakers avoid using an ambiguous descriptor if the target possesses an unmentioned, highly discriminative alternative feature in the display, leading listeners to reject referents with superior unstated descriptors. On uninformative trials, listeners spontaneously favor unique visual singletons over duplicated items in the display. Refining rsa_l2_singleton_confusion by incorporating omitted-alternative exhaustification from alternative_exhaustification_listener: Speakers evaluate candidate referring expressions not only by informativeness to simulated listeners and distractor confusion avoidance, but also by penalizing expressions that leave more distinctive alternative features of the intended referent unsaid. This improves fit on displays where referents vary in contextual alternative availability, capturing human listeners' strong implicatures against targets with superior unmentioned descriptors while preserving visual singleton salience on uninformative displays. Differences from rsa_l2_singleton_confusion: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_omission (Normal(0.0, 1.0), penalizing referring expressions that omit informative alternative features of the intended referent). - Parameters removed: None. - Other terms: Added compute_exhaustification_violation to quantify the contextual informativeness of unmentioned features for each candidate referent; incorporated - w_omission * at(violation, u, r) into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_singleton_confusion",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion while accounting for visual singleton salience. When multiple objects satisfy a description, speakers avoid referring to a target if its competitors share many visual features, leading listeners to expect words to target objects whose competitors are visually distinct. On uninformative trials, listeners spontaneously favor unique visual singletons over duplicated items in the display. Refining rsa_l2_singleton by incorporating competitor confusion avoidance from competitor_confusion_speaker: Speakers evaluate candidate words not only by their informativeness to simulated listeners, but also by penalizing words that overlap with visually similar competitor objects in the context. This improves fit on displays where distractors share visual features with the intended referent, guiding listeners away from targets whose competitors create visual confusion. Differences from rsa_l2_singleton: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_confusion (Normal(0.0, 1.0), penalizing candidate words proportional to their visual similarity overlap with alternative referents satisfying the word). - Parameters removed: None. - Other terms: Added compute_confusion to calculate pairwise visual similarity between referents and competitors sharing each utterance; incorporated - w_confusion * at(confusion, u, r) into the simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_singleton_confusion_cost",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize broadly shared descriptors with high utterance extension costs, and account for visual singleton salience. When multiple descriptions apply to an object, speakers prefer more specific, less widely shared words over descriptors that extend to many scene objects, guiding listeners to reject referents for which the heard expression was unnecessarily broad. On uninformative trials, listeners spontaneously favor unique visual singletons over duplicated items in the display. Refining rsa_l2_singleton_confusion by incorporating utterance extension costs from isolated_graded_costly_l3: Speakers evaluate candidate referring expressions not only by informativeness to simulated listeners and competitor confusion avoidance, but also by penalizing words proportional to their visual extension (the fraction of display objects satisfying the feature). When an object possesses multiple valid descriptions, speakers avoid broadly applicable words in favor of more specific descriptors, capturing listeners' preference for specific descriptions on displays where features differ in contextual generality. Differences from rsa_l2_singleton_confusion: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_cost (Normal(0.0, 1.0), penalizing candidate words proportional to their visual extension / scene frequency). - Parameters removed: None. - Other terms: Added compute_extension_cost to calculate the scene-wide object fraction sharing each word; incorporated - w_cost * vec(cost, u) into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_distinct_confusion_omission_cost",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, and account for visual singleton salience and contextual feature distinctiveness. When multiple descriptions apply to an object, speakers prefer specific, less widely shared words over descriptors that extend to many scene objects, while avoiding ambiguous words when the target possesses superior unstated descriptors. On uninformative trials, listeners spontaneously favor items that contrast more strongly against the ensemble of display objects in overall feature space as well as discrete visual singletons. Refining rsa_l2_singleton_confusion_omission_cost by incorporating contextual distinctiveness from rsa_l2_salience_confusion_l0: Visual salience in reference games operates continuously across feature space rather than solely as an all-or-nothing binary distinction between duplicates and non-duplicates. Listeners and simulated speakers evaluate candidate referents with common-ground visual priors that combine discrete singleton salience with continuous contextual distinctiveness (the accumulated visual feature contrast between each object and all other display items), directing attention toward contextually distinctive objects even when all items in the display are distinct. Differences from rsa_l2_singleton_confusion_omission_cost: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_distinct (Normal(0.0, 1.0), weighting the contextual feature distinctiveness prior over candidate referents). - Parameters removed: None. - Other terms: Added distinct calculation (accumulated pairwise visual feature distance between each referent and all other display objects); incorporated + params[\"w_distinct\"] * distinct into the softmax object prior passed to simulated speakers S1 and S2 and governing uninformative prior trials.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_distinct_confusion_omission",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, and account for visual singleton salience and contextual feature distinctiveness. When multiple descriptions apply to an object, speakers avoid using an ambiguous descriptor if the target possesses an unmentioned, highly discriminative alternative feature in the display, leading listeners to reject referents with superior unstated descriptors. On uninformative trials, listeners spontaneously favor items that contrast more strongly against the ensemble of display objects in overall feature space as well as discrete visual singletons. Refining rsa_l2_singleton_confusion_omission by incorporating contextual feature distinctiveness from rsa_l2_salience_confusion_l0: Visual salience in reference games operates continuously across feature space rather than solely as an all-or-nothing binary distinction between duplicates and non-duplicates. Listeners and simulated speakers evaluate candidate referents with common-ground visual priors that combine discrete singleton salience with continuous contextual distinctiveness (the accumulated visual feature contrast between each object and all other display items), directing attention toward contextually distinctive objects even when all items in the display are distinct. Differences from rsa_l2_singleton_confusion_omission: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_distinct (Normal(0.0, 1.0), weighting the continuous contextual feature distinctiveness prior over candidate referents). - Parameters removed: None. - Other terms: Added compute_distinctiveness to calculate the accumulated visual feature distance between each referent and all other display objects; incorporated + params[\"w_distinct\"] * distinct into the common-ground softmax object prior passed to simulated speakers S1 and S2 and governing choices on uninformative prior trials.",
+    "source": "seed"
+   },
+   {
+    "name": "aspect_goal_listener",
+    "hypothesis": "Listeners interpret referring expressions by reasoning about the speaker's communicative goal or question under discussion: rather than attempting to uniquely pinpoint the referent's complete scene identity, speakers aim to be informative about a specific visual aspect (feature) of the target object. When selecting which aspect of a referent to communicate, speakers favor features that are contextually informative and distinctive in the display, and express that chosen aspect with a descriptive word. Pragmatic listeners invert this process by jointly inferring the intended referent and the speaker's communicative goal, expecting a heard feature to pick out objects for which that feature was the most contextually relevant aspect to highlight.",
+    "source": "seed"
+   },
+   {
+    "name": "incremental_alternative_speaker",
+    "hypothesis": "Speakers formulate referring expressions by evaluating candidate words against an active alternative feature of the intended referent, choosing words that eliminate visual competitors the alternative feature left confusable. Pragmatic listeners invert this two-stage communicative process by jointly inferring the intended referent and the alternative descriptor the speaker sought to improve upon. On uninformative trials with no descriptive word, choices default to common-ground visual singleton salience.",
+    "source": "seed"
+   },
+   {
+    "name": "diagnostic_evidence_listener",
+    "hypothesis": "Listeners interpret referring expressions by evaluating the weight of evidence each word provides in favor of the target over the scene distractors. Rather than engaging in nested recursive Theory of Mind, listeners invert a speaker who chooses descriptions proportional to their diagnostic log-odds\u2014the degree to which the named feature singles out the intended referent rather than alternative objects in the context. On uninformative trials without a distinguishing word, choices default to visual singleton salience, favoring contextually unique objects over duplicated items.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "exclusive_alternative_speaker",
+    "hypothesis": "Speakers formulate referring expressions by prioritizing dedicated exclusive descriptors that uniquely single out the target, penalizing ambiguous descriptors whenever the intended referent possesses a foolproof exclusive alternative in the display. Pragmatic listeners invert this speaker by directing ambiguous expressions toward candidate referents that lack any exclusive descriptor in the context. On a display where one candidate possesses an exclusive unique descriptor alongside the heard word while another candidate has multiple cluttered background features that are never exclusive, this exclusive-alternative listener selects the cluttered candidate because it lacked an exclusive descriptor, whereas the current best model selects the candidate with the exclusive descriptor due to accumulated omission and confusion penalties.\n",
+    "source": "round 1 candidate 2 explore"
+   },
+   {
+    "name": "dilemma_fallback_speaker",
+    "hypothesis": "When an intended referent can be uniquely named in the display, speakers reliably produce that distinguishing descriptor to ensure communicative recovery. When an intended referent cannot be uniquely named, the speaker faces an expressive dilemma where no word guarantees recovery and falls back on selecting among imperfect descriptors with a distinct dilemma choice rationality. Pragmatic listeners invert this two-regime speaker, recognizing that ambiguous expressions indicate unnameable referents facing communicative compromise rather than uniquely nameable referents whose distinguishing descriptors were withheld.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "rsa_l2_dilemma_confusion_omission_cost",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, account for visual singleton salience, and adapt communicative choice rationality when facing expressive dilemmas. When an intended referent cannot be uniquely distinguished in the visual scene because every applicable descriptor is shared with competitors, the speaker faces an expressive dilemma and chooses among imperfect descriptors with a distinct dilemma choice rationality. Pragmatic listeners invert this two-regime speaker, directing ambiguous expressions toward referents trapped in expressive dilemmas rather than uniquely nameable referents whose distinguishing descriptors were withheld.\n\nRefining rsa_l2_singleton_confusion_omission_cost by incorporating dilemma fallback choice rationality from dilemma_fallback_speaker:\nWhen an intended referent can be uniquely distinguished in the visual context, speakers produce distinguishing expressions with communicative rationality alpha. When an intended referent cannot be uniquely named in the display, the speaker faces an expressive dilemma where no word guarantees recovery and selects among imperfect descriptors with a distinct dilemma choice rationality alpha_dilemma. Pragmatic listeners at depth 2 invert this two-regime speaker, recognizing that ambiguous expressions indicate referents in expressive dilemmas rather than referents whose unique descriptors were withheld.\n\nDifferences from rsa_l2_singleton_confusion_omission_cost:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: alpha_dilemma (LogNormal(0.0, 1.0), governing speaker choice rationality when the intended referent has no uniquely distinguishing descriptor).\n- Parameters removed: None.\n- Other terms: Added compute_nameability to identify referents that possess at least one uniquely distinguishing descriptor in the visual context; incorporated vec(is_nameable, r) * alpha + (1.0 - vec(is_nameable, r)) * alpha_dilemma into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l2_singleton_confusion_omission_cost retry 1 repair 1"
+   },
+   {
+    "name": "rsa_l2_distinct_dilemma_omission_cost",
+    "hypothesis": "When interpreting referring expressions in reference games, listeners reason about speakers who adapt their communicative precision depending on whether an object can be uniquely named: speakers communicate uniquely distinguishing descriptors with high fidelity when available, but when an intended referent cannot be uniquely named and faces an expressive dilemma, they fall back on selecting among imperfect descriptors with a distinct dilemma choice rationality. Pragmatic listeners invert this two-regime speaker at depth 2 while integrating visual singleton salience, contextual feature distinctiveness, competitor confusion avoidance, omitted-alternative penalties, and utterance extension costs. On uninformative trials with no descriptive word, choices default to common-ground visual singleton salience and contextual feature distinctiveness.\n\nRefining rsa_l2_distinct_confusion_omission_cost by incorporating dilemma fallback choice rationality from dilemma_fallback_speaker:\nSpeakers evaluate candidate referring expressions not only by informativeness to simulated listeners, competitor confusion avoidance, omitted-alternative exhaustification penalties, and utterance extension costs, but also by distinguishing whether the intended referent is uniquely nameable in the display or presents an expressive dilemma. When an intended referent possesses at least one unique descriptor that singles it out in the scene, the speaker selects words with standard communicative rationality; when an intended referent has no unique descriptor and must compromise on an ambiguous expression, the speaker falls back to choosing among imperfect descriptors with a separate dilemma choice rationality. Pragmatic listeners invert this two-regime communicative process at depth 2.\n\nDifferences from rsa_l2_distinct_confusion_omission_cost:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: alpha_dilemma (LogNormal(0.0, 1.0), governing speaker choice rationality when communicating unnameable referents that face an expressive dilemma).\n- Parameters removed: None.\n- Other terms: Added compute_nameability to identify whether each referent possesses at least one unique descriptor in the display; incorporated vec(is_nameable, r) * alpha + (1.0 - vec(is_nameable, r)) * alpha_dilemma into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).\n",
+    "source": "round 1 candidate 6 refine chosen repair 1"
+   }
+  ],
+  "ledger_entries": 71
+ },
+ {
+  "step": 2,
+  "round": 1,
+  "best_model": "rsa_l2_singleton_confusion_omission_cost",
+  "standing": {
+   "rsa_l2_distinct_dilemma_omission_cost": {
+    "rank": 0,
+    "elpd_loo": -23176.84057712555,
+    "se": 159.87292989992002,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 7.102508027182921,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23188.736270024106,
+    "cv_diff": 0.0,
+    "cv_dse": 0.0,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3614.887276566988,
+     "mayn_demberg_2022": -2515.070873181692,
+     "mayn_demberg_2023": -4929.52254517861,
+     "mayn_demberg_2026": -5110.584885092549,
+     "pragmods": -3891.9345647918108,
+     "sikos_2021": -3126.7361252124538
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 9.553493860695198,
+     "mayn_demberg_2022": 6.322627425771316,
+     "mayn_demberg_2023": 13.636971654062108,
+     "mayn_demberg_2026": 14.583761466020405,
+     "pragmods": 0.0,
+     "sikos_2021": 0.0
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 3.9453853019442335,
+     "mayn_demberg_2022": 3.1130414635627233,
+     "mayn_demberg_2023": 10.031896364322284,
+     "mayn_demberg_2026": 8.734706042321168,
+     "pragmods": 0.0,
+     "sikos_2021": 0.0
+    },
+    "sel_elpd": -3614.887276566988,
+    "sel_diff": 9.553493860695198,
+    "sel_dse": 3.9453853019442335,
+    "guard_diff": 0.0,
+    "guard_dse": 0.0,
+    "eligible": true
+   },
+   "rsa_l2_distinct_confusion_omission_cost": {
+    "rank": 1,
+    "elpd_loo": -23181.838675498962,
+    "se": 159.93427333721812,
+    "elpd_diff": 4.998098373413086,
+    "dse": 3.167286010343491,
+    "p_loo": 6.603690794298018,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23192.53598793,
+    "cv_diff": 3.799717905894795,
+    "cv_dse": 5.868700754934444,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3608.577983984949,
+     "mayn_demberg_2022": -2511.519074951916,
+     "mayn_demberg_2023": -4931.275453997597,
+     "mayn_demberg_2026": -5118.836570160041,
+     "pragmods": -3895.514342557978,
+     "sikos_2021": -3126.8125622775206
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 3.2442012786559644,
+     "mayn_demberg_2022": 2.7708291959952476,
+     "mayn_demberg_2023": 15.389880473048834,
+     "mayn_demberg_2026": 22.835446533513277,
+     "pragmods": 3.5797777661673535,
+     "sikos_2021": 0.07643706506678427
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 2.418406352449486,
+     "mayn_demberg_2022": 1.3105044643314654,
+     "mayn_demberg_2023": 11.419148885066356,
+     "mayn_demberg_2026": 11.33927192811341,
+     "pragmods": 2.933059862438002,
+     "sikos_2021": 1.5689161513500016
+    },
+    "sel_elpd": -3608.577983984949,
+    "sel_diff": 3.2442012786559644,
+    "sel_dse": 2.418406352449486,
+    "guard_diff": 10.10901048793312,
+    "guard_dse": 5.381080089900223,
+    "eligible": true
+   },
+   "rsa_l2_express_confusion_omission_cost": {
+    "rank": 2,
+    "elpd_loo": -23182.920095443726,
+    "se": 159.7848842487846,
+    "elpd_diff": 6.0795183181762695,
+    "dse": 4.359684432041183,
+    "p_loo": 6.768110965389496,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23192.151444959578,
+    "cv_diff": 3.415174935471441,
+    "cv_dse": 6.963519221781636,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3611.1570174805274,
+     "mayn_demberg_2022": -2513.9692943693913,
+     "mayn_demberg_2023": -4929.828049068168,
+     "mayn_demberg_2026": -5114.501863896934,
+     "pragmods": -3895.0756315114277,
+     "sikos_2021": -3127.619588633127
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 5.8232347742346064,
+     "mayn_demberg_2022": 5.22104861347043,
+     "mayn_demberg_2023": 13.942475543620276,
+     "mayn_demberg_2026": 18.500740270405913,
+     "pragmods": 3.1410667196169015,
+     "sikos_2021": 0.8834634206732517
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 2.6951930679591145,
+     "mayn_demberg_2022": 2.35615125693999,
+     "mayn_demberg_2023": 10.752784450652987,
+     "mayn_demberg_2026": 10.153603820164331,
+     "pragmods": 3.9330786504198687,
+     "sikos_2021": 2.850144748175882
+    },
+    "sel_elpd": -3611.1570174805274,
+    "sel_diff": 5.8232347742346064,
+    "sel_dse": 2.6951930679591145,
+    "guard_diff": 7.145434021931578,
+    "guard_dse": 5.41495062018452,
+    "eligible": true
+   },
+   "rsa_l2_dilemma_confusion_omission_cost": {
+    "rank": 3,
+    "elpd_loo": -23183.413103103638,
+    "se": 159.64058490318538,
+    "elpd_diff": 6.572525978088379,
+    "dse": 4.115201601610485,
+    "p_loo": 6.199448154595302,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23190.656893399693,
+    "cv_diff": 1.9206233755867288,
+    "cv_dse": 6.205785827119504,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3606.8841030630347,
+     "mayn_demberg_2022": -2517.6358152834873,
+     "mayn_demberg_2023": -4928.576288014563,
+     "mayn_demberg_2026": -5106.819518257838,
+     "pragmods": -3902.01192009541,
+     "sikos_2021": -3128.729248685358
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 1.5503203567418495,
+     "mayn_demberg_2022": 8.887569527566484,
+     "mayn_demberg_2023": 12.690714490015125,
+     "mayn_demberg_2026": 10.818394631310184,
+     "pragmods": 10.077355303599234,
+     "sikos_2021": 1.9931234729042444
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 1.0837273344595606,
+     "mayn_demberg_2022": 4.352333939957015,
+     "mayn_demberg_2023": 9.265743530212994,
+     "mayn_demberg_2026": 7.704782439070137,
+     "pragmods": 2.6444657845001918,
+     "sikos_2021": 3.5028304431011468
+    },
+    "sel_elpd": -3606.8841030630347,
+    "sel_diff": 1.5503203567418495,
+    "sel_dse": 1.0837273344595606,
+    "guard_diff": 9.923796879538713,
+    "guard_dse": 4.933244440164982,
+    "eligible": true
+   },
+   "rsa_l2_singleton_confusion_omission_cost": {
+    "rank": 4,
+    "elpd_loo": -23184.5698223114,
+    "se": 159.7336949562225,
+    "elpd_diff": 7.729245185852051,
+    "dse": 4.427948355863269,
+    "p_loo": 5.589027810186963,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23192.434513446184,
+    "cv_diff": 3.698243422077212,
+    "cv_dse": 6.152010668143811,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3605.333782706293,
+     "mayn_demberg_2022": -2515.0983992609254,
+     "mayn_demberg_2023": -4929.184558175363,
+     "mayn_demberg_2026": -5111.669607048879,
+     "pragmods": -3902.4987997496564,
+     "sikos_2021": -3128.6493665050666
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 0.0,
+     "mayn_demberg_2022": 6.350153505004528,
+     "mayn_demberg_2023": 13.298984650815328,
+     "mayn_demberg_2026": 15.668483422350619,
+     "pragmods": 10.564234957845656,
+     "sikos_2021": 1.9132412926128382
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 0.0,
+     "mayn_demberg_2022": 3.0165068575764065,
+     "mayn_demberg_2023": 10.153549246889245,
+     "mayn_demberg_2026": 9.183637035707513,
+     "pragmods": 3.0277143142683194,
+     "sikos_2021": 3.4381728021171023
+    },
+    "sel_elpd": -3605.333782706293,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "guard_diff": 13.251737282775139,
+    "guard_dse": 4.66218869113381,
+    "eligible": true
+   },
+   "rsa_l2_exclusive_confusion_cost": {
+    "rank": 5,
+    "elpd_loo": -23185.60351085663,
+    "se": 159.7400294636026,
+    "elpd_diff": 8.762933731079102,
+    "dse": 4.861888090500223,
+    "p_loo": 5.736283156387799,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23194.438719697227,
+    "cv_diff": 5.702449673121009,
+    "cv_dse": 6.894983154502846,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3606.595079459403,
+     "mayn_demberg_2022": -2515.89651170694,
+     "mayn_demberg_2023": -4928.647219852968,
+     "mayn_demberg_2026": -5111.927645356626,
+     "pragmods": -3903.7495962374223,
+     "sikos_2021": -3127.622667083864
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 1.2612967531104005,
+     "mayn_demberg_2022": 7.148265951019312,
+     "mayn_demberg_2023": 12.761646328420284,
+     "mayn_demberg_2026": 15.926521730098102,
+     "pragmods": 11.815031445611567,
+     "sikos_2021": 0.8865418714103726
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 1.0695846146321977,
+     "mayn_demberg_2022": 3.331843220587163,
+     "mayn_demberg_2023": 9.859059537824946,
+     "mayn_demberg_2026": 9.44367714754404,
+     "pragmods": 3.7568465556539055,
+     "sikos_2021": 3.61882574583591
+    },
+    "sel_elpd": -3606.595079459403,
+    "sel_diff": 1.2612967531104005,
+    "sel_dse": 1.0695846146321977,
+    "guard_diff": 13.994646780705807,
+    "guard_dse": 5.419484184556852,
+    "eligible": true
+   },
+   "rsa_l2_distinct_confusion_omission": {
+    "rank": 6,
+    "elpd_loo": -23186.785059928894,
+    "se": 159.94161321419233,
+    "elpd_diff": 9.944482803344727,
+    "dse": 4.414970072358626,
+    "p_loo": 5.767254684549698,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23195.970736828298,
+    "cv_diff": 7.23446680419147,
+    "cv_dse": 8.458491122527347,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3609.387628875775,
+     "mayn_demberg_2022": -2508.748245755921,
+     "mayn_demberg_2023": -4934.009160592494,
+     "mayn_demberg_2026": -5121.556483887574,
+     "pragmods": -3894.2090442049343,
+     "sikos_2021": -3128.0601735115997
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 4.053846169482313,
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 18.123587067945664,
+     "mayn_demberg_2026": 25.55536026104619,
+     "pragmods": 2.274479413123572,
+     "sikos_2021": 1.324048299145943
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 3.3977098378268966,
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 12.759897613729127,
+     "mayn_demberg_2026": 11.743561515155786,
+     "pragmods": 4.130270028776215,
+     "sikos_2021": 2.4729829843382936
+    },
+    "sel_elpd": -3609.387628875775,
+    "sel_diff": 4.053846169482313,
+    "sel_dse": 3.3977098378268966,
+    "guard_diff": 12.734114495404356,
+    "guard_dse": 7.647882258630344,
+    "eligible": true
+   },
+   "rsa_l2_dilemma_confusion_omission": {
+    "rank": 7,
+    "elpd_loo": -23187.024159431458,
+    "se": 159.60155091350904,
+    "elpd_diff": 10.183582305908203,
+    "dse": 5.058298119666014,
+    "p_loo": 5.291051771288039,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23193.221702456078,
+    "cv_diff": 4.485432431971276,
+    "cv_dse": 7.697714272776609,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3607.9986892704196,
+     "mayn_demberg_2022": -2516.7993064517277,
+     "mayn_demberg_2023": -4930.466131208622,
+     "mayn_demberg_2026": -5105.233477952245,
+     "pragmods": -3902.592584555326,
+     "sikos_2021": -3130.1315130177386
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 2.6649065641267953,
+     "mayn_demberg_2022": 8.051060695806882,
+     "mayn_demberg_2023": 14.580557684073938,
+     "mayn_demberg_2026": 9.232354325717097,
+     "pragmods": 10.658019763515313,
+     "sikos_2021": 3.3953878052848268
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 2.729215941279724,
+     "mayn_demberg_2022": 4.155686252904467,
+     "mayn_demberg_2023": 9.875271720877315,
+     "mayn_demberg_2026": 6.948544808009485,
+     "pragmods": 3.7634386163939255,
+     "sikos_2021": 3.6020163169388737
+    },
+    "sel_elpd": -3607.9986892704196,
+    "sel_diff": 2.6649065641267953,
+    "sel_dse": 2.729215941279724,
+    "guard_diff": 11.37401972853695,
+    "guard_dse": 6.06797836151853,
+    "eligible": true
+   },
+   "rsa_l2_singleton_confusion_omission": {
+    "rank": 8,
+    "elpd_loo": -23191.710388183594,
+    "se": 159.68567270297206,
+    "elpd_diff": 14.869811058044434,
+    "dse": 5.774730546591599,
+    "p_loo": 4.8032324449086445,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23198.845651684966,
+    "cv_diff": 10.109381660859071,
+    "cv_dse": 8.503268005641873,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3607.1885863857115,
+     "mayn_demberg_2022": -2512.3965231430666,
+     "mayn_demberg_2023": -4932.025455220896,
+     "mayn_demberg_2026": -5113.139388712054,
+     "pragmods": -3903.21379305984,
+     "sikos_2021": -3130.8819051633973
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 1.8548036794186373,
+     "mayn_demberg_2022": 3.648277387145754,
+     "mayn_demberg_2023": 16.13988169634831,
+     "mayn_demberg_2026": 17.138265085525745,
+     "pragmods": 11.279228268029328,
+     "sikos_2021": 4.145779950943506
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 3.005746217282568,
+     "mayn_demberg_2022": 1.943890999070243,
+     "mayn_demberg_2023": 11.431696890508475,
+     "mayn_demberg_2026": 9.184719985330354,
+     "pragmods": 4.8047545881736955,
+     "sikos_2021": 3.892735707603192
+    },
+    "sel_elpd": -3607.1885863857115,
+    "sel_diff": 1.8548036794186373,
+    "sel_dse": 3.005746217282568,
+    "guard_diff": 17.808071842136997,
+    "guard_dse": 6.639519899264386,
+    "eligible": true
+   },
+   "rsa_l2_singleton_confusion_cost": {
+    "rank": 9,
+    "elpd_loo": -23217.571066856384,
+    "se": 159.5541467479479,
+    "elpd_diff": 40.73048973083496,
+    "dse": 9.171079295979563,
+    "p_loo": 4.093629163540754,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23223.080128808557,
+    "cv_diff": 34.343858784450276,
+    "cv_dse": 15.337567444237543,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3620.409911175695,
+     "mayn_demberg_2022": -2509.1011527443356,
+     "mayn_demberg_2023": -4935.261138898724,
+     "mayn_demberg_2026": -5113.42750553342,
+     "pragmods": -3909.602031136753,
+     "sikos_2021": -3135.2783893196265
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 15.076128469402192,
+     "mayn_demberg_2022": 0.3529069884148157,
+     "mayn_demberg_2023": 19.375565374176404,
+     "mayn_demberg_2026": 17.426381906891947,
+     "pragmods": 17.667466344942113,
+     "sikos_2021": 8.542264107172741
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 6.753417370579708,
+     "mayn_demberg_2022": 1.979410508834307,
+     "mayn_demberg_2023": 12.80678709896707,
+     "mayn_demberg_2026": 8.859121361028732,
+     "pragmods": 10.22786818342484,
+     "sikos_2021": 5.334171572410196
+    },
+    "sel_elpd": -3620.409911175695,
+    "sel_diff": 15.076128469402192,
+    "sel_dse": 6.753417370579708,
+    "guard_diff": 28.821224175742827,
+    "guard_dse": 12.91091842261938,
+    "eligible": true
+   },
+   "rsa_l2_singleton_confusion": {
+    "rank": 10,
+    "elpd_loo": -23226.773003578186,
+    "se": 159.44647820572584,
+    "elpd_diff": 49.93242645263672,
+    "dse": 10.058045484444428,
+    "p_loo": 3.1834085231676,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23231.09592458573,
+    "cv_diff": 42.359654561623756,
+    "cv_dse": 18.537814666804632,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3622.202167299175,
+     "mayn_demberg_2022": -2510.795498370014,
+     "mayn_demberg_2023": -4934.904495761255,
+     "mayn_demberg_2026": -5109.964318618539,
+     "pragmods": -3914.252075649095,
+     "sikos_2021": -3138.9773688876526
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 16.868384592882194,
+     "mayn_demberg_2022": 2.0472526140929403,
+     "mayn_demberg_2023": 19.018922236707112,
+     "mayn_demberg_2026": 13.963194992011267,
+     "pragmods": 22.317510857284105,
+     "sikos_2021": 12.241243675198803
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 7.366108601607629,
+     "mayn_demberg_2022": 2.6414593505543436,
+     "mayn_demberg_2023": 12.096143546091039,
+     "mayn_demberg_2026": 7.749096796101562,
+     "pragmods": 12.12603198569426,
+     "sikos_2021": 9.210873885180455
+    },
+    "sel_elpd": -3622.202167299175,
+    "sel_diff": 16.868384592882194,
+    "sel_dse": 7.366108601607629,
+    "guard_diff": 35.0447638294354,
+    "guard_dse": 16.287260254540634,
+    "eligible": true
+   },
+   "expressibility_prior_listener": {
+    "rank": 11,
+    "elpd_loo": -23284.30138683319,
+    "se": 159.26190999553356,
+    "elpd_diff": 107.4608097076416,
+    "dse": 14.876651953278989,
+    "p_loo": 4.035784780411632,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23291.16476796268,
+    "cv_diff": 102.42849793857386,
+    "cv_dse": 33.86957595904267,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3679.677336916975,
+     "mayn_demberg_2022": -2517.793332264975,
+     "mayn_demberg_2023": -4926.095212713017,
+     "mayn_demberg_2026": -5107.900710294937,
+     "pragmods": -3922.0174636474903,
+     "sikos_2021": -3137.680712125283
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 74.34355421068221,
+     "mayn_demberg_2022": 9.045086509054272,
+     "mayn_demberg_2023": 10.209639188468827,
+     "mayn_demberg_2026": 11.899586668409029,
+     "pragmods": 30.08289885567956,
+     "sikos_2021": 10.944586912829436
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 20.374309453033252,
+     "mayn_demberg_2022": 4.344696648966897,
+     "mayn_demberg_2023": 8.726479159657485,
+     "mayn_demberg_2026": 8.326485444515752,
+     "pragmods": 26.05121569915712,
+     "sikos_2021": 7.135440605358892
+    },
+    "sel_elpd": -3679.677336916975,
+    "sel_diff": 74.34355421068221,
+    "sel_dse": 20.374309453033252,
+    "guard_diff": 37.638437588586385,
+    "guard_dse": 27.15847156778837,
+    "eligible": true
+   },
+   "contextual_alignment_listener": {
+    "rank": 12,
+    "elpd_loo": -23303.264065742493,
+    "se": 158.6052858871648,
+    "elpd_diff": 126.42348861694336,
+    "dse": 17.196331434889252,
+    "p_loo": 3.9891658288397593,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23312.024488986503,
+    "cv_diff": 123.28821896239606,
+    "cv_dse": 43.80597333542104,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3680.9087353682944,
+     "mayn_demberg_2022": -2521.304311755258,
+     "mayn_demberg_2023": -4933.3659611763,
+     "mayn_demberg_2026": -5096.001123626528,
+     "pragmods": -3932.5309996964406,
+     "sikos_2021": -3147.913357363682
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 75.57495266200158,
+     "mayn_demberg_2022": 12.55606599933708,
+     "mayn_demberg_2023": 17.4803876517517,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 40.59643490462986,
+     "sikos_2021": 21.177232151228054
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 22.871208175100584,
+     "mayn_demberg_2022": 7.623113129856745,
+     "mayn_demberg_2023": 8.61871819936141,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 32.1386209722048,
+     "sikos_2021": 14.880125789345085
+    },
+    "sel_elpd": -3680.9087353682944,
+    "sel_diff": 75.57495266200158,
+    "sel_dse": 22.871208175100584,
+    "guard_diff": 57.266760161088314,
+    "guard_dse": 37.31253583776262,
+    "eligible": true
+   },
+   "dilemma_fallback_speaker": {
+    "rank": 13,
+    "elpd_loo": -23309.173092842102,
+    "se": 158.40382343078988,
+    "elpd_diff": 132.33251571655273,
+    "dse": 16.10579038530583,
+    "p_loo": 4.01485830861202,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23313.155810589968,
+    "cv_diff": 124.4195405658611,
+    "cv_dse": 32.351446576513716,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3685.1187106249827,
+     "mayn_demberg_2022": -2534.3767822281034,
+     "mayn_demberg_2023": -4919.60150172933,
+     "mayn_demberg_2026": -5100.507565542597,
+     "pragmods": -3921.7112236166085,
+     "sikos_2021": -3151.8400268483456
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 79.78492791868985,
+     "mayn_demberg_2022": 25.62853647218253,
+     "mayn_demberg_2023": 3.715928204782358,
+     "mayn_demberg_2026": 4.5064419160689795,
+     "pragmods": 29.776658824797778,
+     "sikos_2021": 25.103901635891816
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 19.431198101268794,
+     "mayn_demberg_2022": 11.350785593906066,
+     "mayn_demberg_2023": 2.7285207358187153,
+     "mayn_demberg_2026": 9.655866950910024,
+     "pragmods": 9.543427537471878,
+     "sikos_2021": 20.628341262304577
+    },
+    "sel_elpd": -3685.1187106249827,
+    "sel_diff": 79.78492791868985,
+    "sel_dse": 19.431198101268794,
+    "guard_diff": 54.18810650786327,
+    "guard_dse": 26.180114611505587,
+    "eligible": true
+   },
+   "bounded_sampling_listener": {
+    "rank": 14,
+    "elpd_loo": -23316.991416931152,
+    "se": 158.77302542180468,
+    "elpd_diff": 140.15083980560303,
+    "dse": 16.218717299617914,
+    "p_loo": 3.7288160484422406,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23326.08311473333,
+    "cv_diff": 137.34684470922366,
+    "cv_dse": 42.99973191858816,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3678.6114463050935,
+     "mayn_demberg_2022": -2520.230420006067,
+     "mayn_demberg_2023": -4927.906852218186,
+     "mayn_demberg_2026": -5101.815982157161,
+     "pragmods": -3952.062548981414,
+     "sikos_2021": -3145.455865065409
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 73.2776635988007,
+     "mayn_demberg_2022": 11.482174250146272,
+     "mayn_demberg_2023": 12.021278693638124,
+     "mayn_demberg_2026": 5.814858530632591,
+     "pragmods": 60.12798418960301,
+     "sikos_2021": 18.719739852955172
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 23.553487925030417,
+     "mayn_demberg_2022": 6.2580101247005295,
+     "mayn_demberg_2023": 7.977371554291646,
+     "mayn_demberg_2026": 6.954885597855146,
+     "pragmods": 32.1855542797302,
+     "sikos_2021": 14.605677142314397
+    },
+    "sel_elpd": -3678.6114463050935,
+    "sel_diff": 73.2776635988007,
+    "sel_dse": 23.553487925030417,
+    "guard_diff": 73.6226749711168,
+    "guard_dse": 35.92988971126796,
+    "eligible": true
+   },
+   "incremental_alternative_speaker": {
+    "rank": 15,
+    "elpd_loo": -23321.49062538147,
+    "se": 157.84779740228066,
+    "elpd_diff": 144.6500482559204,
+    "dse": 16.568762958198572,
+    "p_loo": 3.8752567661649664,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23327.207533968634,
+    "cv_diff": 138.4712639445279,
+    "cv_dse": 36.422680616831734,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3661.638231685026,
+     "mayn_demberg_2022": -2533.6710120157677,
+     "mayn_demberg_2023": -4920.384778026043,
+     "mayn_demberg_2026": -5099.232109756874,
+     "pragmods": -3951.509211246648,
+     "sikos_2021": -3160.7721912382767
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 56.304448978733035,
+     "mayn_demberg_2022": 24.922766259846867,
+     "mayn_demberg_2023": 4.4992045014951145,
+     "mayn_demberg_2026": 3.2309861303456273,
+     "pragmods": 59.57464645483742,
+     "sikos_2021": 34.03606602582295
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 17.91282944267447,
+     "mayn_demberg_2022": 10.812029629087329,
+     "mayn_demberg_2023": 3.1632417089473828,
+     "mayn_demberg_2026": 9.428204299556246,
+     "pragmods": 19.720543440675137,
+     "sikos_2021": 21.091428888390737
+    },
+    "sel_elpd": -3661.638231685026,
+    "sel_diff": 56.304448978733035,
+    "sel_dse": 17.91282944267447,
+    "guard_diff": 91.72030882648687,
+    "guard_dse": 31.355197310282055,
+    "eligible": true
+   },
+   "aspect_goal_listener": {
+    "rank": 16,
+    "elpd_loo": -23325.48844051361,
+    "se": 158.45684314750636,
+    "elpd_diff": 148.64786338806152,
+    "dse": 17.13505591723531,
+    "p_loo": 3.010017139808042,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23331.13885418038,
+    "cv_diff": 142.4025841562725,
+    "cv_dse": 41.016914394051085,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3671.415354790981,
+     "mayn_demberg_2022": -2527.460065643717,
+     "mayn_demberg_2023": -4928.3323659412035,
+     "mayn_demberg_2026": -5097.730120776003,
+     "pragmods": -3941.697038835193,
+     "sikos_2021": -3164.5039081932828
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 66.0815720846881,
+     "mayn_demberg_2022": 18.711819887796082,
+     "mayn_demberg_2023": 12.446792416655626,
+     "mayn_demberg_2026": 1.7289971494747078,
+     "pragmods": 49.7624740433821,
+     "sikos_2021": 37.767782980829
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 20.7154439774817,
+     "mayn_demberg_2022": 8.559733100210371,
+     "mayn_demberg_2023": 6.019904856822969,
+     "mayn_demberg_2026": 6.919212181620279,
+     "pragmods": 23.926848666206496,
+     "sikos_2021": 24.12344105724983
+    },
+    "sel_elpd": -3671.415354790981,
+    "sel_diff": 66.0815720846881,
+    "sel_dse": 20.7154439774817,
+    "guard_diff": 85.87450593227913,
+    "guard_dse": 35.401309983011494,
+    "eligible": true
+   },
+   "diagnostic_evidence_listener": {
+    "rank": 17,
+    "elpd_loo": -23376.115299224854,
+    "se": 157.87661686547963,
+    "elpd_diff": 199.2747220993042,
+    "dse": 19.413425925899283,
+    "p_loo": 3.5375965275197814,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23383.97905973127,
+    "cv_diff": 195.24278970716477,
+    "cv_dse": 47.922760429100165,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3700.823597395174,
+     "mayn_demberg_2022": -2536.887383358252,
+     "mayn_demberg_2023": -4917.973963716569,
+     "mayn_demberg_2026": -5101.468906513784,
+     "pragmods": -3958.297172691445,
+     "sikos_2021": -3168.5280360560446
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 95.48981468888132,
+     "mayn_demberg_2022": 28.139137602331175,
+     "mayn_demberg_2023": 2.0883901920215067,
+     "mayn_demberg_2026": 5.467782887255453,
+     "pragmods": 66.36260789963444,
+     "sikos_2021": 41.79191084359081
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 27.6181233809734,
+     "mayn_demberg_2022": 12.229549979226352,
+     "mayn_demberg_2023": 1.7954411416627813,
+     "mayn_demberg_2026": 10.645971633033286,
+     "pragmods": 29.79462870719853,
+     "sikos_2021": 21.161764989585365
+    },
+    "sel_elpd": -3700.823597395174,
+    "sel_diff": 95.48981468888132,
+    "sel_dse": 27.6181233809734,
+    "guard_diff": 109.3064688789782,
+    "guard_dse": 39.06527748394098,
+    "eligible": true
+   },
+   "exclusive_alternative_speaker": {
+    "rank": 18,
+    "elpd_loo": -23386.24840450287,
+    "se": 157.7894216917033,
+    "elpd_diff": 209.40782737731934,
+    "dse": 20.090355558426324,
+    "p_loo": 4.252146123631974,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23398.964019281055,
+    "cv_diff": 210.2277492569483,
+    "cv_dse": 49.95302028308657,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3712.1901600509646,
+     "mayn_demberg_2022": -2541.1372896594858,
+     "mayn_demberg_2023": -4915.885573524548,
+     "mayn_demberg_2026": -5104.773874776591,
+     "pragmods": -3960.631650637364,
+     "sikos_2021": -3164.3454706321018
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 106.85637734467173,
+     "mayn_demberg_2022": 32.389043903564925,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 8.772751150062504,
+     "pragmods": 68.69708584555337,
+     "sikos_2021": 37.60934541964798
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 30.90399292134877,
+     "mayn_demberg_2022": 13.917379559172552,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 12.373431849962445,
+     "pragmods": 29.970678854395782,
+     "sikos_2021": 19.365183049660082
+    },
+    "sel_elpd": -3712.1901600509646,
+    "sel_diff": 106.85637734467173,
+    "sel_dse": 30.90399292134877,
+    "guard_diff": 112.92486577297313,
+    "guard_dse": 39.16699726109913,
+    "eligible": true
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "expressibility_prior_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referring expressions by reasoning that speakers choose what to talk about based on an object's communicative expressibility\u2014how uniquely and informatively that object can be identified in the scene. Rather than assuming speakers choose referents uniformly, listeners model a speaker who selects intended referents in proportion to their maximum recovery probability under the available vocabulary, favoring uniquely nameable objects over ambiguous or featureless items. On uninformative trials with no descriptive word, choices directly reflect this communicative expressibility expectation alongside visual singleton salience."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "bounded_sampling_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referring expressions through resource-bounded sampled inference rather than exact Bayesian marginalization. When hearing a descriptive word, the listener draws a bounded budget of mental simulation samples from candidate referents in the visual scene, accepting an interpretation if the speaker would produce the heard expression. When the sample budget is exhausted without confirming an intended target, the listener defaults to visual prior expectations favoring unique singletons."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "feature_alignment_listener",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0010 of bounded_sampling_listener's (threshold 0.002) over the loop's novelty pool of 794 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Listeners interpret referring expressions under lexical uncertainty about which visual feature a word picks out, grounded in the contextual co-occurrence of features across scene objects. Rather than assuming words map deterministically to features in isolation, listeners allocate semantic interpretation probability across features that co-occur with the named attribute in the display. Pragmatic listeners invert speakers who evaluate communicative recovery under this soft, co-occurrence-based lexical alignment, while defaulting to visual singleton salience on uninformative displays."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "rsa_l2_exclusive_confusion_cost",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Speakers formulate referring expressions by prioritizing dedicated exclusive descriptors that uniquely single out the target, penalizing ambiguous descriptors whenever the intended referent possesses a foolproof exclusive alternative in the display. Pragmatic listeners invert this speaker at depth 2, directing ambiguous expressions toward candidate referents that lack any exclusive descriptor in the context. On uninformative trials with no informative word, choices default to common-ground visual singleton salience.\n\nRefining rsa_l2_singleton_confusion_omission_cost by replacing cumulative omission violation with the exclusive alternative withholding penalty from exclusive_alternative_speaker:\nWhen communicating about a target object, speakers evaluate candidate descriptions not by summing informativeness across all unmentioned features (which artificially penalizes cluttered objects with non-discriminative background attributes), but by specifically penalizing ambiguous expressions when the intended referent possesses a dedicated exclusive descriptor that singles it out in the visual scene. Pragmatic listeners invert this multi-criterion communicative process at depth 2 alongside visual singleton salience, competitor confusion avoidance, and utterance extension costs, recognizing that ambiguous expressions indicate referents lacking exclusive descriptors rather than uniquely nameable referents whose distinguishing descriptors were withheld.\n\nDifferences from rsa_l2_singleton_confusion_omission_cost:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: w_exclusive (Normal(0.0, 1.0), governing the penalty on ambiguous referring expressions when the intended referent possesses an exclusive descriptor in the display).\n- Parameters removed: w_omission.\n- Other terms: Replaced compute_exhaustification_violation with compute_exclusive_penalty from exclusive_alternative_speaker, replacing - w_omission * at(violation, u, r) with - w_exclusive * at(exclusive_penalty, u, r) in simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2)."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "rsa_l2_exclusive_confusion_omission_cost",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0014 of rsa_l2_exclusive_confusion_cost's (threshold 0.002) over the loop's novelty pool of 794 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, account for visual singleton salience, and prioritize exclusive distinguishing descriptors. When an intended referent possesses a dedicated exclusive descriptor that uniquely singles it out in the display, speakers strongly avoid choosing an ambiguous shared expression, leading listeners to direct ambiguous expressions toward candidate referents that lack any exclusive descriptor in the context. On uninformative trials with no descriptive word, choices default to common-ground visual singleton salience.\n\nRefining rsa_l2_singleton_confusion_omission_cost by incorporating exclusive alternative penalties from exclusive_alternative_speaker:\nSpeakers evaluate candidate referring expressions not only by informativeness to simulated listeners, competitor confusion avoidance, omitted-alternative exhaustification penalties, and utterance extension costs, but also by penalizing ambiguous descriptors whenever the intended referent possesses a foolproof exclusive descriptor in the display. On displays where one candidate referent possesses an exclusive unique descriptor alongside the heard word while another candidate possesses multiple non-exclusive features, listeners hearing the ambiguous word recognize that a speaker intending the first candidate would have produced its exclusive descriptor, thereby correctly guiding choices toward the non-exclusive candidate and overcoming the spurious preference for exclusive referents induced by uncalibrated omission penalties.\n\nDifferences from rsa_l2_singleton_confusion_omission_cost:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: w_exclusive (Normal(0.0, 1.0), penalizing ambiguous referring expressions when the intended referent possesses at least one uniquely distinguishing descriptor in the visual context).\n- Parameters removed: None.\n- Other terms: Added compute_exclusive_penalty to identify referring expressions that are non-exclusive for referents possessing at least one contextually unique descriptor; incorporated - w_exclusive * at(exclusive_penalty, u, r) into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2)."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "rsa_l2_dilemma_confusion_omission",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, account for visual singleton salience, and adapt communicative choice rationality when facing expressive dilemmas. When an intended referent cannot be uniquely distinguished in the visual scene because every applicable descriptor is shared with competitors, the speaker faces an expressive dilemma and chooses among imperfect descriptors with a distinct dilemma choice rationality. Pragmatic listeners invert this two-regime speaker, directing ambiguous expressions toward referents trapped in expressive dilemmas rather than uniquely nameable referents whose distinguishing descriptors were withheld.\n\nRefining rsa_l2_singleton_confusion_omission by incorporating dilemma fallback choice rationality from dilemma_fallback_speaker:\nWhen an intended referent can be uniquely distinguished in the visual context, speakers produce distinguishing expressions with communicative rationality alpha. When an intended referent cannot be uniquely named in the display, the speaker faces an expressive dilemma where no word guarantees recovery and selects among imperfect descriptors with a distinct dilemma choice rationality alpha_dilemma. Pragmatic listeners at depth 2 invert this two-regime speaker, recognizing that ambiguous expressions indicate referents in expressive dilemmas rather than referents whose unique descriptors were withheld.\n\nDifferences from rsa_l2_singleton_confusion_omission:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: alpha_dilemma (LogNormal(0.0, 1.0), governing speaker choice rationality when the intended referent has no uniquely distinguishing descriptor).\n- Parameters removed: None.\n- Other terms: Added compute_nameability to identify referents that possess at least one uniquely distinguishing descriptor in the visual context; incorporated vec(is_nameable, r) * alpha + (1.0 - vec(is_nameable, r)) * alpha_dilemma into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2)."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "contextual_alignment_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referring expressions under uncertainty about which visual feature a word picks out, reasoning that an utterance can be associated with features that contextually co-occur with the named property across objects in the display. When interpreting a word, pragmatic listeners model a speaker who selects an informative feature to describe the intended referent and transmits that feature through this contextual alignment mapping, inverting the joint process to infer the referent. On uninformative trials with no descriptive word, choices default to common-ground visual singleton salience.",
+    "repair": true
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "rsa_l2_express_confusion_omission_cost",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, and evaluate visual referents with an object prior combining discrete visual singleton salience with communicative expressibility. Listeners and simulated speakers expect people to communicate about objects that are communicatively expressible\u2014objects possessing at least one feature that singles them out or distinguishes them with high recovery probability\u2014rather than ambiguous or featureless items. On uninformative trials with no descriptive word, choices directly reflect this communicative expressibility expectation alongside visual singleton salience.\n\nRefining rsa_l2_singleton_confusion_omission_cost by incorporating communicative expressibility from expressibility_prior_listener:\nSpeakers and listeners evaluate visual referents with common knowledge of an object prior combining discrete visual singleton salience with continuous communicative expressibility. In addition to preferring contextually unique singletons that lack identical duplicates in the scene, listeners and simulated speakers favor objects possessing descriptors with high communicative recovery probability in the visual context over ambiguous or featureless items. When multiple descriptions apply to an object, speakers balance informativeness against competitor confusion avoidance, omitted-alternative exhaustification penalties, and utterance extension costs. On uninformative trials with no descriptive word, choices reflect both visual singleton status and communicative expressibility.\n\nDifferences from rsa_l2_singleton_confusion_omission_cost:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: w_express (Normal(0.0, 1.0), weighting the communicative expressibility prior over candidate referents).\n- Parameters removed: None.\n- Other terms: Added compute_expressibility to calculate the maximum recovery probability across available features for each candidate referent; incorporated + params[\"w_express\"] * express into the softmax object prior passed to simulated speakers S1 and S2 and governing choices on uninformative prior trials.",
+    "repair": true
+   }
+  ],
+  "live": [
+   {
+    "name": "rsa_l2_singleton_confusion_omission_cost",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, and account for visual singleton salience. When multiple descriptions apply to an object, speakers prefer specific, less widely shared words over descriptors that extend to many scene objects, while avoiding ambiguous words when the target possesses superior unstated descriptors. On uninformative trials, listeners spontaneously favor unique visual singletons over duplicated items in the display. Refining rsa_l2_singleton_confusion_omission by incorporating utterance extension costs from rsa_l2_singleton_confusion_cost: Speakers evaluate candidate referring expressions not only by informativeness to simulated listeners, distractor confusion avoidance, and omitted-alternative exhaustification penalties, but also by penalizing words proportional to their visual extension (the fraction of display objects satisfying the feature). When an object possesses multiple valid descriptions, speakers avoid broadly applicable words in favor of more specific descriptors, capturing listeners' preference for specific descriptions on displays where features differ in contextual generality while preserving sensitivity to unmentioned target features. Differences from rsa_l2_singleton_confusion_omission: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_cost (Normal(0.0, 1.0), penalizing candidate words proportional to their visual extension / scene frequency). - Parameters removed: None. - Other terms: Added compute_extension_cost to calculate the scene-wide object fraction sharing each word; incorporated - w_cost * vec(cost, u) into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_singleton_confusion_omission",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, and account for visual singleton salience. When multiple descriptions apply to an object, speakers avoid using an ambiguous descriptor if the target possesses an unmentioned, highly discriminative alternative feature in the display, leading listeners to reject referents with superior unstated descriptors. On uninformative trials, listeners spontaneously favor unique visual singletons over duplicated items in the display. Refining rsa_l2_singleton_confusion by incorporating omitted-alternative exhaustification from alternative_exhaustification_listener: Speakers evaluate candidate referring expressions not only by informativeness to simulated listeners and distractor confusion avoidance, but also by penalizing expressions that leave more distinctive alternative features of the intended referent unsaid. This improves fit on displays where referents vary in contextual alternative availability, capturing human listeners' strong implicatures against targets with superior unmentioned descriptors while preserving visual singleton salience on uninformative displays. Differences from rsa_l2_singleton_confusion: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_omission (Normal(0.0, 1.0), penalizing referring expressions that omit informative alternative features of the intended referent). - Parameters removed: None. - Other terms: Added compute_exhaustification_violation to quantify the contextual informativeness of unmentioned features for each candidate referent; incorporated - w_omission * at(violation, u, r) into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_singleton_confusion",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion while accounting for visual singleton salience. When multiple objects satisfy a description, speakers avoid referring to a target if its competitors share many visual features, leading listeners to expect words to target objects whose competitors are visually distinct. On uninformative trials, listeners spontaneously favor unique visual singletons over duplicated items in the display. Refining rsa_l2_singleton by incorporating competitor confusion avoidance from competitor_confusion_speaker: Speakers evaluate candidate words not only by their informativeness to simulated listeners, but also by penalizing words that overlap with visually similar competitor objects in the context. This improves fit on displays where distractors share visual features with the intended referent, guiding listeners away from targets whose competitors create visual confusion. Differences from rsa_l2_singleton: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_confusion (Normal(0.0, 1.0), penalizing candidate words proportional to their visual similarity overlap with alternative referents satisfying the word). - Parameters removed: None. - Other terms: Added compute_confusion to calculate pairwise visual similarity between referents and competitors sharing each utterance; incorporated - w_confusion * at(confusion, u, r) into the simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_singleton_confusion_cost",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize broadly shared descriptors with high utterance extension costs, and account for visual singleton salience. When multiple descriptions apply to an object, speakers prefer more specific, less widely shared words over descriptors that extend to many scene objects, guiding listeners to reject referents for which the heard expression was unnecessarily broad. On uninformative trials, listeners spontaneously favor unique visual singletons over duplicated items in the display. Refining rsa_l2_singleton_confusion by incorporating utterance extension costs from isolated_graded_costly_l3: Speakers evaluate candidate referring expressions not only by informativeness to simulated listeners and competitor confusion avoidance, but also by penalizing words proportional to their visual extension (the fraction of display objects satisfying the feature). When an object possesses multiple valid descriptions, speakers avoid broadly applicable words in favor of more specific descriptors, capturing listeners' preference for specific descriptions on displays where features differ in contextual generality. Differences from rsa_l2_singleton_confusion: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_cost (Normal(0.0, 1.0), penalizing candidate words proportional to their visual extension / scene frequency). - Parameters removed: None. - Other terms: Added compute_extension_cost to calculate the scene-wide object fraction sharing each word; incorporated - w_cost * vec(cost, u) into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_distinct_confusion_omission_cost",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, and account for visual singleton salience and contextual feature distinctiveness. When multiple descriptions apply to an object, speakers prefer specific, less widely shared words over descriptors that extend to many scene objects, while avoiding ambiguous words when the target possesses superior unstated descriptors. On uninformative trials, listeners spontaneously favor items that contrast more strongly against the ensemble of display objects in overall feature space as well as discrete visual singletons. Refining rsa_l2_singleton_confusion_omission_cost by incorporating contextual distinctiveness from rsa_l2_salience_confusion_l0: Visual salience in reference games operates continuously across feature space rather than solely as an all-or-nothing binary distinction between duplicates and non-duplicates. Listeners and simulated speakers evaluate candidate referents with common-ground visual priors that combine discrete singleton salience with continuous contextual distinctiveness (the accumulated visual feature contrast between each object and all other display items), directing attention toward contextually distinctive objects even when all items in the display are distinct. Differences from rsa_l2_singleton_confusion_omission_cost: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_distinct (Normal(0.0, 1.0), weighting the contextual feature distinctiveness prior over candidate referents). - Parameters removed: None. - Other terms: Added distinct calculation (accumulated pairwise visual feature distance between each referent and all other display objects); incorporated + params[\"w_distinct\"] * distinct into the softmax object prior passed to simulated speakers S1 and S2 and governing uninformative prior trials.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_distinct_confusion_omission",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, and account for visual singleton salience and contextual feature distinctiveness. When multiple descriptions apply to an object, speakers avoid using an ambiguous descriptor if the target possesses an unmentioned, highly discriminative alternative feature in the display, leading listeners to reject referents with superior unstated descriptors. On uninformative trials, listeners spontaneously favor items that contrast more strongly against the ensemble of display objects in overall feature space as well as discrete visual singletons. Refining rsa_l2_singleton_confusion_omission by incorporating contextual feature distinctiveness from rsa_l2_salience_confusion_l0: Visual salience in reference games operates continuously across feature space rather than solely as an all-or-nothing binary distinction between duplicates and non-duplicates. Listeners and simulated speakers evaluate candidate referents with common-ground visual priors that combine discrete singleton salience with continuous contextual distinctiveness (the accumulated visual feature contrast between each object and all other display items), directing attention toward contextually distinctive objects even when all items in the display are distinct. Differences from rsa_l2_singleton_confusion_omission: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_distinct (Normal(0.0, 1.0), weighting the continuous contextual feature distinctiveness prior over candidate referents). - Parameters removed: None. - Other terms: Added compute_distinctiveness to calculate the accumulated visual feature distance between each referent and all other display objects; incorporated + params[\"w_distinct\"] * distinct into the common-ground softmax object prior passed to simulated speakers S1 and S2 and governing choices on uninformative prior trials.",
+    "source": "seed"
+   },
+   {
+    "name": "aspect_goal_listener",
+    "hypothesis": "Listeners interpret referring expressions by reasoning about the speaker's communicative goal or question under discussion: rather than attempting to uniquely pinpoint the referent's complete scene identity, speakers aim to be informative about a specific visual aspect (feature) of the target object. When selecting which aspect of a referent to communicate, speakers favor features that are contextually informative and distinctive in the display, and express that chosen aspect with a descriptive word. Pragmatic listeners invert this process by jointly inferring the intended referent and the speaker's communicative goal, expecting a heard feature to pick out objects for which that feature was the most contextually relevant aspect to highlight.",
+    "source": "seed"
+   },
+   {
+    "name": "incremental_alternative_speaker",
+    "hypothesis": "Speakers formulate referring expressions by evaluating candidate words against an active alternative feature of the intended referent, choosing words that eliminate visual competitors the alternative feature left confusable. Pragmatic listeners invert this two-stage communicative process by jointly inferring the intended referent and the alternative descriptor the speaker sought to improve upon. On uninformative trials with no descriptive word, choices default to common-ground visual singleton salience.",
+    "source": "seed"
+   },
+   {
+    "name": "diagnostic_evidence_listener",
+    "hypothesis": "Listeners interpret referring expressions by evaluating the weight of evidence each word provides in favor of the target over the scene distractors. Rather than engaging in nested recursive Theory of Mind, listeners invert a speaker who chooses descriptions proportional to their diagnostic log-odds\u2014the degree to which the named feature singles out the intended referent rather than alternative objects in the context. On uninformative trials without a distinguishing word, choices default to visual singleton salience, favoring contextually unique objects over duplicated items.\n",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "exclusive_alternative_speaker",
+    "hypothesis": "Speakers formulate referring expressions by prioritizing dedicated exclusive descriptors that uniquely single out the target, penalizing ambiguous descriptors whenever the intended referent possesses a foolproof exclusive alternative in the display. Pragmatic listeners invert this speaker by directing ambiguous expressions toward candidate referents that lack any exclusive descriptor in the context. On a display where one candidate possesses an exclusive unique descriptor alongside the heard word while another candidate has multiple cluttered background features that are never exclusive, this exclusive-alternative listener selects the cluttered candidate because it lacked an exclusive descriptor, whereas the current best model selects the candidate with the exclusive descriptor due to accumulated omission and confusion penalties.\n",
+    "source": "round 1 candidate 2 explore"
+   },
+   {
+    "name": "dilemma_fallback_speaker",
+    "hypothesis": "When an intended referent can be uniquely named in the display, speakers reliably produce that distinguishing descriptor to ensure communicative recovery. When an intended referent cannot be uniquely named, the speaker faces an expressive dilemma where no word guarantees recovery and falls back on selecting among imperfect descriptors with a distinct dilemma choice rationality. Pragmatic listeners invert this two-regime speaker, recognizing that ambiguous expressions indicate unnameable referents facing communicative compromise rather than uniquely nameable referents whose distinguishing descriptors were withheld.\n",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "rsa_l2_dilemma_confusion_omission_cost",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, account for visual singleton salience, and adapt communicative choice rationality when facing expressive dilemmas. When an intended referent cannot be uniquely distinguished in the visual scene because every applicable descriptor is shared with competitors, the speaker faces an expressive dilemma and chooses among imperfect descriptors with a distinct dilemma choice rationality. Pragmatic listeners invert this two-regime speaker, directing ambiguous expressions toward referents trapped in expressive dilemmas rather than uniquely nameable referents whose distinguishing descriptors were withheld.\n\nRefining rsa_l2_singleton_confusion_omission_cost by incorporating dilemma fallback choice rationality from dilemma_fallback_speaker:\nWhen an intended referent can be uniquely distinguished in the visual context, speakers produce distinguishing expressions with communicative rationality alpha. When an intended referent cannot be uniquely named in the display, the speaker faces an expressive dilemma where no word guarantees recovery and selects among imperfect descriptors with a distinct dilemma choice rationality alpha_dilemma. Pragmatic listeners at depth 2 invert this two-regime speaker, recognizing that ambiguous expressions indicate referents in expressive dilemmas rather than referents whose unique descriptors were withheld.\n\nDifferences from rsa_l2_singleton_confusion_omission_cost:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: alpha_dilemma (LogNormal(0.0, 1.0), governing speaker choice rationality when the intended referent has no uniquely distinguishing descriptor).\n- Parameters removed: None.\n- Other terms: Added compute_nameability to identify referents that possess at least one uniquely distinguishing descriptor in the visual context; incorporated vec(is_nameable, r) * alpha + (1.0 - vec(is_nameable, r)) * alpha_dilemma into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l2_singleton_confusion_omission_cost retry 1 repair 1"
+   },
+   {
+    "name": "rsa_l2_distinct_dilemma_omission_cost",
+    "hypothesis": "When interpreting referring expressions in reference games, listeners reason about speakers who adapt their communicative precision depending on whether an object can be uniquely named: speakers communicate uniquely distinguishing descriptors with high fidelity when available, but when an intended referent cannot be uniquely named and faces an expressive dilemma, they fall back on selecting among imperfect descriptors with a distinct dilemma choice rationality. Pragmatic listeners invert this two-regime speaker at depth 2 while integrating visual singleton salience, contextual feature distinctiveness, competitor confusion avoidance, omitted-alternative penalties, and utterance extension costs. On uninformative trials with no descriptive word, choices default to common-ground visual singleton salience and contextual feature distinctiveness.\n\nRefining rsa_l2_distinct_confusion_omission_cost by incorporating dilemma fallback choice rationality from dilemma_fallback_speaker:\nSpeakers evaluate candidate referring expressions not only by informativeness to simulated listeners, competitor confusion avoidance, omitted-alternative exhaustification penalties, and utterance extension costs, but also by distinguishing whether the intended referent is uniquely nameable in the display or presents an expressive dilemma. When an intended referent possesses at least one unique descriptor that singles it out in the scene, the speaker selects words with standard communicative rationality; when an intended referent has no unique descriptor and must compromise on an ambiguous expression, the speaker falls back to choosing among imperfect descriptors with a separate dilemma choice rationality. Pragmatic listeners invert this two-regime communicative process at depth 2.\n\nDifferences from rsa_l2_distinct_confusion_omission_cost:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: alpha_dilemma (LogNormal(0.0, 1.0), governing speaker choice rationality when communicating unnameable referents that face an expressive dilemma).\n- Parameters removed: None.\n- Other terms: Added compute_nameability to identify whether each referent possesses at least one unique descriptor in the display; incorporated vec(is_nameable, r) * alpha + (1.0 - vec(is_nameable, r)) * alpha_dilemma into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).\n",
+    "source": "round 1 candidate 6 refine chosen repair 1"
+   },
+   {
+    "name": "expressibility_prior_listener",
+    "hypothesis": "Listeners interpret referring expressions by reasoning that speakers choose what to talk about based on an object's communicative expressibility\u2014how uniquely and informatively that object can be identified in the scene. Rather than assuming speakers choose referents uniformly, listeners model a speaker who selects intended referents in proportion to their maximum recovery probability under the available vocabulary, favoring uniquely nameable objects over ambiguous or featureless items. On uninformative trials with no descriptive word, choices directly reflect this communicative expressibility expectation alongside visual singleton salience.\n",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "bounded_sampling_listener",
+    "hypothesis": "Listeners interpret referring expressions through resource-bounded sampled inference rather than exact Bayesian marginalization. When hearing a descriptive word, the listener draws a bounded budget of mental simulation samples from candidate referents in the visual scene, accepting an interpretation if the speaker would produce the heard expression. When the sample budget is exhausted without confirming an intended target, the listener defaults to visual prior expectations favoring unique singletons.\n",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "rsa_l2_exclusive_confusion_cost",
+    "hypothesis": "Speakers formulate referring expressions by prioritizing dedicated exclusive descriptors that uniquely single out the target, penalizing ambiguous descriptors whenever the intended referent possesses a foolproof exclusive alternative in the display. Pragmatic listeners invert this speaker at depth 2, directing ambiguous expressions toward candidate referents that lack any exclusive descriptor in the context. On uninformative trials with no informative word, choices default to common-ground visual singleton salience.\n\nRefining rsa_l2_singleton_confusion_omission_cost by replacing cumulative omission violation with the exclusive alternative withholding penalty from exclusive_alternative_speaker:\nWhen communicating about a target object, speakers evaluate candidate descriptions not by summing informativeness across all unmentioned features (which artificially penalizes cluttered objects with non-discriminative background attributes), but by specifically penalizing ambiguous expressions when the intended referent possesses a dedicated exclusive descriptor that singles it out in the visual scene. Pragmatic listeners invert this multi-criterion communicative process at depth 2 alongside visual singleton salience, competitor confusion avoidance, and utterance extension costs, recognizing that ambiguous expressions indicate referents lacking exclusive descriptors rather than uniquely nameable referents whose distinguishing descriptors were withheld.\n\nDifferences from rsa_l2_singleton_confusion_omission_cost:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: w_exclusive (Normal(0.0, 1.0), governing the penalty on ambiguous referring expressions when the intended referent possesses an exclusive descriptor in the display).\n- Parameters removed: w_omission.\n- Other terms: Replaced compute_exhaustification_violation with compute_exclusive_penalty from exclusive_alternative_speaker, replacing - w_omission * at(violation, u, r) with - w_exclusive * at(exclusive_penalty, u, r) in simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).\n",
+    "source": "round 2 candidate 4 refine incumbent rsa_l2_singleton_confusion_omission_cost"
+   },
+   {
+    "name": "rsa_l2_dilemma_confusion_omission",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, account for visual singleton salience, and adapt communicative choice rationality when facing expressive dilemmas. When an intended referent cannot be uniquely distinguished in the visual scene because every applicable descriptor is shared with competitors, the speaker faces an expressive dilemma and chooses among imperfect descriptors with a distinct dilemma choice rationality. Pragmatic listeners invert this two-regime speaker, directing ambiguous expressions toward referents trapped in expressive dilemmas rather than uniquely nameable referents whose distinguishing descriptors were withheld.\n\nRefining rsa_l2_singleton_confusion_omission by incorporating dilemma fallback choice rationality from dilemma_fallback_speaker:\nWhen an intended referent can be uniquely distinguished in the visual context, speakers produce distinguishing expressions with communicative rationality alpha. When an intended referent cannot be uniquely named in the display, the speaker faces an expressive dilemma where no word guarantees recovery and selects among imperfect descriptors with a distinct dilemma choice rationality alpha_dilemma. Pragmatic listeners at depth 2 invert this two-regime speaker, recognizing that ambiguous expressions indicate referents in expressive dilemmas rather than referents whose unique descriptors were withheld.\n\nDifferences from rsa_l2_singleton_confusion_omission:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: alpha_dilemma (LogNormal(0.0, 1.0), governing speaker choice rationality when the intended referent has no uniquely distinguishing descriptor).\n- Parameters removed: None.\n- Other terms: Added compute_nameability to identify referents that possess at least one uniquely distinguishing descriptor in the visual context; incorporated vec(is_nameable, r) * alpha + (1.0 - vec(is_nameable, r)) * alpha_dilemma into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).\n",
+    "source": "round 2 candidate 6 refine chosen"
+   },
+   {
+    "name": "contextual_alignment_listener",
+    "hypothesis": "Listeners interpret referring expressions under uncertainty about which visual feature a word picks out, reasoning that an utterance can be associated with features that contextually co-occur with the named property across objects in the display. When interpreting a word, pragmatic listeners model a speaker who selects an informative feature to describe the intended referent and transmits that feature through this contextual alignment mapping, inverting the joint process to infer the referent. On uninformative trials with no descriptive word, choices default to common-ground visual singleton salience.",
+    "source": "round 2 candidate 3 explore repair 1"
+   },
+   {
+    "name": "rsa_l2_express_confusion_omission_cost",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, and evaluate visual referents with an object prior combining discrete visual singleton salience with communicative expressibility. Listeners and simulated speakers expect people to communicate about objects that are communicatively expressible\u2014objects possessing at least one feature that singles them out or distinguishes them with high recovery probability\u2014rather than ambiguous or featureless items. On uninformative trials with no descriptive word, choices directly reflect this communicative expressibility expectation alongside visual singleton salience.\n\nRefining rsa_l2_singleton_confusion_omission_cost by incorporating communicative expressibility from expressibility_prior_listener:\nSpeakers and listeners evaluate visual referents with common knowledge of an object prior combining discrete visual singleton salience with continuous communicative expressibility. In addition to preferring contextually unique singletons that lack identical duplicates in the scene, listeners and simulated speakers favor objects possessing descriptors with high communicative recovery probability in the visual context over ambiguous or featureless items. When multiple descriptions apply to an object, speakers balance informativeness against competitor confusion avoidance, omitted-alternative exhaustification penalties, and utterance extension costs. On uninformative trials with no descriptive word, choices reflect both visual singleton status and communicative expressibility.\n\nDifferences from rsa_l2_singleton_confusion_omission_cost:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: w_express (Normal(0.0, 1.0), weighting the communicative expressibility prior over candidate referents).\n- Parameters removed: None.\n- Other terms: Added compute_expressibility to calculate the maximum recovery probability across available features for each candidate referent; incorporated + params[\"w_express\"] * express into the softmax object prior passed to simulated speakers S1 and S2 and governing choices on uninformative prior trials.\n",
+    "source": "round 2 candidate 5 refine incumbent rsa_l2_singleton_confusion_omission_cost repair 1"
+   }
+  ],
+  "ledger_entries": 79
+ },
+ {
+  "step": 3,
+  "round": 5,
+  "best_model": "rsa_l2_singleton_confusion_omission_cost",
+  "standing": {
+   "rsa_l2_distinct_confusion_omission_cost": {
+    "rank": 0,
+    "elpd_loo": -23181.838675498962,
+    "se": 159.93427333721812,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 6.603690794298018,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23192.53598793,
+    "cv_diff": 1.8790945303080662,
+    "cv_dse": 8.562939384333824,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3608.577983984949,
+     "mayn_demberg_2022": -2511.519074951916,
+     "mayn_demberg_2023": -4931.275453997597,
+     "mayn_demberg_2026": -5118.836570160041,
+     "pragmods": -3895.514342557978,
+     "sikos_2021": -3126.8125622775206
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 3.2442012786559644,
+     "mayn_demberg_2022": 2.7708291959952476,
+     "mayn_demberg_2023": 2.6991659830337085,
+     "mayn_demberg_2026": 13.60309220779618,
+     "pragmods": 1.3052983530437814,
+     "sikos_2021": 0.0
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 2.418406352449486,
+     "mayn_demberg_2022": 1.3105044643314654,
+     "mayn_demberg_2023": 3.242536788604108,
+     "mayn_demberg_2026": 5.406556812879222,
+     "pragmods": 2.3646718175748616,
+     "sikos_2021": 0.0
+    },
+    "sel_elpd": -3608.577983984949,
+    "sel_diff": 3.2442012786559644,
+    "sel_dse": 2.418406352449486,
+    "guard_diff": 0.18521360839440604,
+    "guard_dse": 8.089067928518876,
+    "eligible": true
+   },
+   "rsa_l2_dilemma_confusion_omission_cost": {
+    "rank": 1,
+    "elpd_loo": -23183.413103103638,
+    "se": 159.64058490318538,
+    "elpd_diff": 1.574427604675293,
+    "dse": 4.338689530945014,
+    "p_loo": 6.199448154595302,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23190.656893399693,
+    "cv_diff": 0.0,
+    "cv_dse": 0.0,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3606.8841030630347,
+     "mayn_demberg_2022": -2517.6358152834873,
+     "mayn_demberg_2023": -4928.576288014563,
+     "mayn_demberg_2026": -5106.819518257838,
+     "pragmods": -3902.01192009541,
+     "sikos_2021": -3128.729248685358
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 1.5503203567418495,
+     "mayn_demberg_2022": 8.887569527566484,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 1.5860403055930874,
+     "pragmods": 7.802875890475661,
+     "sikos_2021": 1.9166864078374601
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 1.0837273344595606,
+     "mayn_demberg_2022": 4.352333939957015,
+     "mayn_demberg_2023": 0.0,
+     "mayn_demberg_2026": 1.2748557694743694,
+     "pragmods": 4.761745405072664,
+     "sikos_2021": 3.1148380964278797
+    },
+    "sel_elpd": -3606.8841030630347,
+    "sel_diff": 1.5503203567418495,
+    "sel_dse": 1.0837273344595606,
+    "guard_diff": 0.0,
+    "guard_dse": 0.0,
+    "eligible": true
+   },
+   "rsa_l2_singleton_confusion_omission_cost": {
+    "rank": 2,
+    "elpd_loo": -23184.5698223114,
+    "se": 159.7336949562225,
+    "elpd_diff": 2.731146812438965,
+    "dse": 3.177292290607747,
+    "p_loo": 5.589027810186963,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23192.434513446184,
+    "cv_diff": 1.7776200464904832,
+    "cv_dse": 3.652317285662798,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3605.333782706293,
+     "mayn_demberg_2022": -2515.0983992609254,
+     "mayn_demberg_2023": -4929.184558175363,
+     "mayn_demberg_2026": -5111.669607048879,
+     "pragmods": -3902.4987997496564,
+     "sikos_2021": -3128.6493665050666
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 0.0,
+     "mayn_demberg_2022": 6.350153505004528,
+     "mayn_demberg_2023": 0.6082701608002026,
+     "mayn_demberg_2026": 6.436129096633522,
+     "pragmods": 8.289755544722084,
+     "sikos_2021": 1.8368042275460539
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 0.0,
+     "mayn_demberg_2022": 3.0165068575764065,
+     "mayn_demberg_2023": 1.5078443851723327,
+     "mayn_demberg_2026": 2.958045592043036,
+     "pragmods": 3.4714288455183606,
+     "sikos_2021": 2.647539844301045
+    },
+    "sel_elpd": -3605.333782706293,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "guard_diff": 3.3279404032364255,
+    "guard_dse": 3.4840068100930366,
+    "eligible": true
+   },
+   "rsa_l2_exclusive_confusion_cost": {
+    "rank": 3,
+    "elpd_loo": -23185.60351085663,
+    "se": 159.7400294636026,
+    "elpd_diff": 3.7648353576660156,
+    "dse": 3.597704601332096,
+    "p_loo": 5.736283156387799,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23194.438719697227,
+    "cv_diff": 3.7818262975342805,
+    "cv_dse": 4.241859710930843,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3606.595079459403,
+     "mayn_demberg_2022": -2515.89651170694,
+     "mayn_demberg_2023": -4928.647219852968,
+     "mayn_demberg_2026": -5111.927645356626,
+     "pragmods": -3903.7495962374223,
+     "sikos_2021": -3127.622667083864
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 1.2612967531104005,
+     "mayn_demberg_2022": 7.148265951019312,
+     "mayn_demberg_2023": 0.07093183840515849,
+     "mayn_demberg_2026": 6.694167404381005,
+     "pragmods": 9.540552032487994,
+     "sikos_2021": 0.8101048063435883
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 1.0695846146321977,
+     "mayn_demberg_2022": 3.331843220587163,
+     "mayn_demberg_2023": 1.5313608328417665,
+     "mayn_demberg_2026": 3.327800964813365,
+     "pragmods": 4.064783162976283,
+     "sikos_2021": 2.5770476521985266
+    },
+    "sel_elpd": -3606.595079459403,
+    "sel_diff": 1.2612967531104005,
+    "sel_dse": 1.0695846146321977,
+    "guard_diff": 4.070849901167094,
+    "guard_dse": 3.978597144152099,
+    "eligible": true
+   },
+   "rsa_l2_distinct_confusion_omission": {
+    "rank": 4,
+    "elpd_loo": -23186.785059928894,
+    "se": 159.94161321419233,
+    "elpd_diff": 4.946384429931641,
+    "dse": 3.0068763447446236,
+    "p_loo": 5.767254684549698,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23195.970736828298,
+    "cv_diff": 5.313843428604741,
+    "cv_dse": 10.937053758738855,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3609.387628875775,
+     "mayn_demberg_2022": -2508.748245755921,
+     "mayn_demberg_2023": -4934.009160592494,
+     "mayn_demberg_2026": -5121.556483887574,
+     "pragmods": -3894.2090442049343,
+     "sikos_2021": -3128.0601735115997
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 4.053846169482313,
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 5.432872577930539,
+     "mayn_demberg_2026": 16.323005935329093,
+     "pragmods": 0.0,
+     "sikos_2021": 1.2476112340791587
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 3.3977098378268966,
+     "mayn_demberg_2022": 0.0,
+     "mayn_demberg_2023": 4.380006751398606,
+     "mayn_demberg_2026": 5.945167793236717,
+     "pragmods": 0.0,
+     "sikos_2021": 1.3411028458815015
+    },
+    "sel_elpd": -3609.387628875775,
+    "sel_diff": 4.053846169482313,
+    "sel_dse": 3.3977098378268966,
+    "guard_diff": 2.8103176158656424,
+    "guard_dse": 10.277952837486655,
+    "eligible": true
+   },
+   "rsa_l2_dilemma_confusion_omission": {
+    "rank": 5,
+    "elpd_loo": -23187.024159431458,
+    "se": 159.60155091350904,
+    "elpd_diff": 5.185483932495117,
+    "dse": 5.657230525675499,
+    "p_loo": 5.291051771288039,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23193.221702456078,
+    "cv_diff": 2.564809056384547,
+    "cv_dse": 3.6886479144849993,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3607.9986892704196,
+     "mayn_demberg_2022": -2516.7993064517277,
+     "mayn_demberg_2023": -4930.466131208622,
+     "mayn_demberg_2026": -5105.233477952245,
+     "pragmods": -3902.592584555326,
+     "sikos_2021": -3130.1315130177386
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 2.6649065641267953,
+     "mayn_demberg_2022": 8.051060695806882,
+     "mayn_demberg_2023": 1.8898431940588125,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 8.38354035039174,
+     "sikos_2021": 3.3189507402180425
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 2.729215941279724,
+     "mayn_demberg_2022": 4.155686252904467,
+     "mayn_demberg_2023": 0.8754061335204832,
+     "mayn_demberg_2026": 0.0,
+     "pragmods": 4.758173972983365,
+     "sikos_2021": 3.2114801806736977
+    },
+    "sel_elpd": -3607.9986892704196,
+    "sel_diff": 2.6649065641267953,
+    "sel_dse": 2.729215941279724,
+    "guard_diff": 1.4502228489982372,
+    "guard_dse": 2.847445341639906,
+    "eligible": true
+   },
+   "rsa_l2_singleton_confusion_omission": {
+    "rank": 6,
+    "elpd_loo": -23191.710388183594,
+    "se": 159.68567270297206,
+    "elpd_diff": 9.871712684631348,
+    "dse": 4.846006747114789,
+    "p_loo": 4.8032324449086445,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": "",
+    "trusted": true,
+    "elpd_cv": -23198.845651684966,
+    "cv_diff": 8.188758285272343,
+    "cv_dse": 7.015379624064314,
+    "cv_converged": true,
+    "cv_by_source": {
+     "auto_psych": -3607.1885863857115,
+     "mayn_demberg_2022": -2512.3965231430666,
+     "mayn_demberg_2023": -4932.025455220896,
+     "mayn_demberg_2026": -5113.139388712054,
+     "pragmods": -3903.21379305984,
+     "sikos_2021": -3130.8819051633973
+    },
+    "cv_behind_by_source": {
+     "auto_psych": 1.8548036794186373,
+     "mayn_demberg_2022": 3.648277387145754,
+     "mayn_demberg_2023": 3.449167206333186,
+     "mayn_demberg_2026": 7.905910759808648,
+     "pragmods": 9.004748854905756,
+     "sikos_2021": 4.069342885876722
+    },
+    "cv_dse_by_source": {
+     "auto_psych": 3.005746217282568,
+     "mayn_demberg_2022": 1.943890999070243,
+     "mayn_demberg_2023": 2.538337343560683,
+     "mayn_demberg_2026": 3.0353808547703642,
+     "pragmods": 2.996274668341169,
+     "sikos_2021": 2.818777711955627
+    },
+    "sel_elpd": -3607.1885863857115,
+    "sel_diff": 1.8548036794186373,
+    "sel_dse": 3.005746217282568,
+    "guard_diff": 7.884274962598283,
+    "guard_dse": 6.25645813114478,
+    "eligible": true
+   }
+  },
+  "events": [
+   {
+    "name": "rsa_l2_distinct_dilemma_omission_cost",
+    "outcome": "pruned",
+    "reason": "9.6 nats behind rsa_l2_singleton_confusion_omission_cost on grouped CV on auto_psych trials (clustered dse 3.9)"
+   },
+   {
+    "name": "rsa_l2_express_confusion_omission_cost",
+    "outcome": "pruned",
+    "reason": "5.8 nats behind rsa_l2_singleton_confusion_omission_cost on grouped CV on auto_psych trials (clustered dse 2.7)"
+   },
+   {
+    "name": "rsa_l2_singleton_confusion_cost",
+    "outcome": "pruned",
+    "reason": "15.1 nats behind rsa_l2_singleton_confusion_omission_cost on grouped CV on auto_psych trials (clustered dse 6.8)"
+   },
+   {
+    "name": "rsa_l2_singleton_confusion",
+    "outcome": "pruned",
+    "reason": "16.9 nats behind rsa_l2_singleton_confusion_omission_cost on grouped CV on auto_psych trials (clustered dse 7.4)"
+   },
+   {
+    "name": "expressibility_prior_listener",
+    "outcome": "pruned",
+    "reason": "74.3 nats behind rsa_l2_singleton_confusion_omission_cost on grouped CV on auto_psych trials (clustered dse 20.4)"
+   },
+   {
+    "name": "contextual_alignment_listener",
+    "outcome": "pruned",
+    "reason": "75.6 nats behind rsa_l2_singleton_confusion_omission_cost on grouped CV on auto_psych trials (clustered dse 22.9)"
+   },
+   {
+    "name": "dilemma_fallback_speaker",
+    "outcome": "pruned",
+    "reason": "79.8 nats behind rsa_l2_singleton_confusion_omission_cost on grouped CV on auto_psych trials (clustered dse 19.4)"
+   },
+   {
+    "name": "bounded_sampling_listener",
+    "outcome": "pruned",
+    "reason": "73.3 nats behind rsa_l2_singleton_confusion_omission_cost on grouped CV on auto_psych trials (clustered dse 23.6)"
+   },
+   {
+    "name": "incremental_alternative_speaker",
+    "outcome": "pruned",
+    "reason": "56.3 nats behind rsa_l2_singleton_confusion_omission_cost on grouped CV on auto_psych trials (clustered dse 17.9)"
+   },
+   {
+    "name": "aspect_goal_listener",
+    "outcome": "pruned",
+    "reason": "66.1 nats behind rsa_l2_singleton_confusion_omission_cost on grouped CV on auto_psych trials (clustered dse 20.7)"
+   },
+   {
+    "name": "diagnostic_evidence_listener",
+    "outcome": "pruned",
+    "reason": "95.5 nats behind rsa_l2_singleton_confusion_omission_cost on grouped CV on auto_psych trials (clustered dse 27.6)"
+   },
+   {
+    "name": "exclusive_alternative_speaker",
+    "outcome": "pruned",
+    "reason": "106.9 nats behind rsa_l2_singleton_confusion_omission_cost on grouped CV on auto_psych trials (clustered dse 30.9)"
+   },
+   {
+    "name": "loop",
+    "outcome": "stopped",
+    "reason": "stopped after round 2 of 5: 2 rounds in a row left the best model (rsa_l2_singleton_confusion_omission_cost) unchanged"
+   }
+  ],
+  "live": [
+   {
+    "name": "rsa_l2_singleton_confusion_omission_cost",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, and account for visual singleton salience. When multiple descriptions apply to an object, speakers prefer specific, less widely shared words over descriptors that extend to many scene objects, while avoiding ambiguous words when the target possesses superior unstated descriptors. On uninformative trials, listeners spontaneously favor unique visual singletons over duplicated items in the display. Refining rsa_l2_singleton_confusion_omission by incorporating utterance extension costs from rsa_l2_singleton_confusion_cost: Speakers evaluate candidate referring expressions not only by informativeness to simulated listeners, distractor confusion avoidance, and omitted-alternative exhaustification penalties, but also by penalizing words proportional to their visual extension (the fraction of display objects satisfying the feature). When an object possesses multiple valid descriptions, speakers avoid broadly applicable words in favor of more specific descriptors, capturing listeners' preference for specific descriptions on displays where features differ in contextual generality while preserving sensitivity to unmentioned target features. Differences from rsa_l2_singleton_confusion_omission: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_cost (Normal(0.0, 1.0), penalizing candidate words proportional to their visual extension / scene frequency). - Parameters removed: None. - Other terms: Added compute_extension_cost to calculate the scene-wide object fraction sharing each word; incorporated - w_cost * vec(cost, u) into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_singleton_confusion_omission",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, and account for visual singleton salience. When multiple descriptions apply to an object, speakers avoid using an ambiguous descriptor if the target possesses an unmentioned, highly discriminative alternative feature in the display, leading listeners to reject referents with superior unstated descriptors. On uninformative trials, listeners spontaneously favor unique visual singletons over duplicated items in the display. Refining rsa_l2_singleton_confusion by incorporating omitted-alternative exhaustification from alternative_exhaustification_listener: Speakers evaluate candidate referring expressions not only by informativeness to simulated listeners and distractor confusion avoidance, but also by penalizing expressions that leave more distinctive alternative features of the intended referent unsaid. This improves fit on displays where referents vary in contextual alternative availability, capturing human listeners' strong implicatures against targets with superior unmentioned descriptors while preserving visual singleton salience on uninformative displays. Differences from rsa_l2_singleton_confusion: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_omission (Normal(0.0, 1.0), penalizing referring expressions that omit informative alternative features of the intended referent). - Parameters removed: None. - Other terms: Added compute_exhaustification_violation to quantify the contextual informativeness of unmentioned features for each candidate referent; incorporated - w_omission * at(violation, u, r) into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_distinct_confusion_omission_cost",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, and account for visual singleton salience and contextual feature distinctiveness. When multiple descriptions apply to an object, speakers prefer specific, less widely shared words over descriptors that extend to many scene objects, while avoiding ambiguous words when the target possesses superior unstated descriptors. On uninformative trials, listeners spontaneously favor items that contrast more strongly against the ensemble of display objects in overall feature space as well as discrete visual singletons. Refining rsa_l2_singleton_confusion_omission_cost by incorporating contextual distinctiveness from rsa_l2_salience_confusion_l0: Visual salience in reference games operates continuously across feature space rather than solely as an all-or-nothing binary distinction between duplicates and non-duplicates. Listeners and simulated speakers evaluate candidate referents with common-ground visual priors that combine discrete singleton salience with continuous contextual distinctiveness (the accumulated visual feature contrast between each object and all other display items), directing attention toward contextually distinctive objects even when all items in the display are distinct. Differences from rsa_l2_singleton_confusion_omission_cost: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_distinct (Normal(0.0, 1.0), weighting the contextual feature distinctiveness prior over candidate referents). - Parameters removed: None. - Other terms: Added distinct calculation (accumulated pairwise visual feature distance between each referent and all other display objects); incorporated + params[\"w_distinct\"] * distinct into the softmax object prior passed to simulated speakers S1 and S2 and governing uninformative prior trials.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_distinct_confusion_omission",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, and account for visual singleton salience and contextual feature distinctiveness. When multiple descriptions apply to an object, speakers avoid using an ambiguous descriptor if the target possesses an unmentioned, highly discriminative alternative feature in the display, leading listeners to reject referents with superior unstated descriptors. On uninformative trials, listeners spontaneously favor items that contrast more strongly against the ensemble of display objects in overall feature space as well as discrete visual singletons. Refining rsa_l2_singleton_confusion_omission by incorporating contextual feature distinctiveness from rsa_l2_salience_confusion_l0: Visual salience in reference games operates continuously across feature space rather than solely as an all-or-nothing binary distinction between duplicates and non-duplicates. Listeners and simulated speakers evaluate candidate referents with common-ground visual priors that combine discrete singleton salience with continuous contextual distinctiveness (the accumulated visual feature contrast between each object and all other display items), directing attention toward contextually distinctive objects even when all items in the display are distinct. Differences from rsa_l2_singleton_confusion_omission: - Recursion depth: Unchanged at depth 2 (choice_probs calls L2). - Parameters added: w_distinct (Normal(0.0, 1.0), weighting the continuous contextual feature distinctiveness prior over candidate referents). - Parameters removed: None. - Other terms: Added compute_distinctiveness to calculate the accumulated visual feature distance between each referent and all other display objects; incorporated + params[\"w_distinct\"] * distinct into the common-ground softmax object prior passed to simulated speakers S1 and S2 and governing choices on uninformative prior trials.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_dilemma_confusion_omission_cost",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, penalize broadly shared descriptors with utterance extension costs, account for visual singleton salience, and adapt communicative choice rationality when facing expressive dilemmas. When an intended referent cannot be uniquely distinguished in the visual scene because every applicable descriptor is shared with competitors, the speaker faces an expressive dilemma and chooses among imperfect descriptors with a distinct dilemma choice rationality. Pragmatic listeners invert this two-regime speaker, directing ambiguous expressions toward referents trapped in expressive dilemmas rather than uniquely nameable referents whose distinguishing descriptors were withheld.\n\nRefining rsa_l2_singleton_confusion_omission_cost by incorporating dilemma fallback choice rationality from dilemma_fallback_speaker:\nWhen an intended referent can be uniquely distinguished in the visual context, speakers produce distinguishing expressions with communicative rationality alpha. When an intended referent cannot be uniquely named in the display, the speaker faces an expressive dilemma where no word guarantees recovery and selects among imperfect descriptors with a distinct dilemma choice rationality alpha_dilemma. Pragmatic listeners at depth 2 invert this two-regime speaker, recognizing that ambiguous expressions indicate referents in expressive dilemmas rather than referents whose unique descriptors were withheld.\n\nDifferences from rsa_l2_singleton_confusion_omission_cost:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: alpha_dilemma (LogNormal(0.0, 1.0), governing speaker choice rationality when the intended referent has no uniquely distinguishing descriptor).\n- Parameters removed: None.\n- Other terms: Added compute_nameability to identify referents that possess at least one uniquely distinguishing descriptor in the visual context; incorporated vec(is_nameable, r) * alpha + (1.0 - vec(is_nameable, r)) * alpha_dilemma into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).\n",
+    "source": "round 1 candidate 5 refine incumbent rsa_l2_singleton_confusion_omission_cost retry 1 repair 1"
+   },
+   {
+    "name": "rsa_l2_exclusive_confusion_cost",
+    "hypothesis": "Speakers formulate referring expressions by prioritizing dedicated exclusive descriptors that uniquely single out the target, penalizing ambiguous descriptors whenever the intended referent possesses a foolproof exclusive alternative in the display. Pragmatic listeners invert this speaker at depth 2, directing ambiguous expressions toward candidate referents that lack any exclusive descriptor in the context. On uninformative trials with no informative word, choices default to common-ground visual singleton salience.\n\nRefining rsa_l2_singleton_confusion_omission_cost by replacing cumulative omission violation with the exclusive alternative withholding penalty from exclusive_alternative_speaker:\nWhen communicating about a target object, speakers evaluate candidate descriptions not by summing informativeness across all unmentioned features (which artificially penalizes cluttered objects with non-discriminative background attributes), but by specifically penalizing ambiguous expressions when the intended referent possesses a dedicated exclusive descriptor that singles it out in the visual scene. Pragmatic listeners invert this multi-criterion communicative process at depth 2 alongside visual singleton salience, competitor confusion avoidance, and utterance extension costs, recognizing that ambiguous expressions indicate referents lacking exclusive descriptors rather than uniquely nameable referents whose distinguishing descriptors were withheld.\n\nDifferences from rsa_l2_singleton_confusion_omission_cost:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: w_exclusive (Normal(0.0, 1.0), governing the penalty on ambiguous referring expressions when the intended referent possesses an exclusive descriptor in the display).\n- Parameters removed: w_omission.\n- Other terms: Replaced compute_exhaustification_violation with compute_exclusive_penalty from exclusive_alternative_speaker, replacing - w_omission * at(violation, u, r) with - w_exclusive * at(exclusive_penalty, u, r) in simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).\n",
+    "source": "round 2 candidate 4 refine incumbent rsa_l2_singleton_confusion_omission_cost"
+   },
+   {
+    "name": "rsa_l2_dilemma_confusion_omission",
+    "hypothesis": "Pragmatic listeners reason at depth 2 about speakers who avoid competitor confusion, penalize unmentioned informative features of the target, account for visual singleton salience, and adapt communicative choice rationality when facing expressive dilemmas. When an intended referent cannot be uniquely distinguished in the visual scene because every applicable descriptor is shared with competitors, the speaker faces an expressive dilemma and chooses among imperfect descriptors with a distinct dilemma choice rationality. Pragmatic listeners invert this two-regime speaker, directing ambiguous expressions toward referents trapped in expressive dilemmas rather than uniquely nameable referents whose distinguishing descriptors were withheld.\n\nRefining rsa_l2_singleton_confusion_omission by incorporating dilemma fallback choice rationality from dilemma_fallback_speaker:\nWhen an intended referent can be uniquely distinguished in the visual context, speakers produce distinguishing expressions with communicative rationality alpha. When an intended referent cannot be uniquely named in the display, the speaker faces an expressive dilemma where no word guarantees recovery and selects among imperfect descriptors with a distinct dilemma choice rationality alpha_dilemma. Pragmatic listeners at depth 2 invert this two-regime speaker, recognizing that ambiguous expressions indicate referents in expressive dilemmas rather than referents whose unique descriptors were withheld.\n\nDifferences from rsa_l2_singleton_confusion_omission:\n- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).\n- Parameters added: alpha_dilemma (LogNormal(0.0, 1.0), governing speaker choice rationality when the intended referent has no uniquely distinguishing descriptor).\n- Parameters removed: None.\n- Other terms: Added compute_nameability to identify referents that possess at least one uniquely distinguishing descriptor in the visual context; incorporated vec(is_nameable, r) * alpha + (1.0 - vec(is_nameable, r)) * alpha_dilemma into simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).\n",
+    "source": "round 2 candidate 6 refine chosen"
+   }
+  ],
+  "ledger_entries": 91
+ }
+]

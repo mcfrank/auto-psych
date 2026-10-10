@@ -1,0 +1,10 @@
+Speakers formulate referring expressions by prioritizing dedicated exclusive descriptors that uniquely single out the target, penalizing ambiguous descriptors whenever the intended referent possesses a foolproof exclusive alternative in the display. Pragmatic listeners invert this speaker at depth 2, directing ambiguous expressions toward candidate referents that lack any exclusive descriptor in the context. On uninformative trials with no informative word, choices default to common-ground visual singleton salience.
+
+Refining rsa_l2_singleton_confusion_omission_cost by replacing cumulative omission violation with the exclusive alternative withholding penalty from exclusive_alternative_speaker:
+When communicating about a target object, speakers evaluate candidate descriptions not by summing informativeness across all unmentioned features (which artificially penalizes cluttered objects with non-discriminative background attributes), but by specifically penalizing ambiguous expressions when the intended referent possesses a dedicated exclusive descriptor that singles it out in the visual scene. Pragmatic listeners invert this multi-criterion communicative process at depth 2 alongside visual singleton salience, competitor confusion avoidance, and utterance extension costs, recognizing that ambiguous expressions indicate referents lacking exclusive descriptors rather than uniquely nameable referents whose distinguishing descriptors were withheld.
+
+Differences from rsa_l2_singleton_confusion_omission_cost:
+- Recursion depth: Unchanged at depth 2 (choice_probs calls L2).
+- Parameters added: w_exclusive (Normal(0.0, 1.0), governing the penalty on ambiguous referring expressions when the intended referent possesses an exclusive descriptor in the display).
+- Parameters removed: w_omission.
+- Other terms: Replaced compute_exhaustification_violation with compute_exclusive_penalty from exclusive_alternative_speaker, replacing - w_omission * at(violation, u, r) with - w_exclusive * at(exclusive_penalty, u, r) in simulated speaker utility at both depth-1 (S1 in L1) and depth-2 (S2 in L2).

@@ -1,0 +1,91 @@
+{
+ "total": {
+  "n_calls": 60,
+  "n_calls_missing_usage": 0,
+  "input_tokens": 35204637,
+  "output_tokens": 980647,
+  "reasoning_tokens": 2452987,
+  "cache_read_tokens": 584492059,
+  "cache_write_tokens": 0,
+  "total_tokens": 623130330,
+  "cost_usd": 83.116509675,
+  "n_usage_limit_hits": 0,
+  "usage_limit_wait_sec": 0.0,
+  "by_source": {
+   "rsa:candidate": {
+    "n_calls": 60,
+    "n_calls_missing_usage": 0,
+    "input_tokens": 35204637,
+    "output_tokens": 980647,
+    "reasoning_tokens": 2452987,
+    "cache_read_tokens": 584492059,
+    "cache_write_tokens": 0,
+    "total_tokens": 623130330,
+    "cost_usd": 83.116509675,
+    "n_usage_limit_hits": 0,
+    "usage_limit_wait_sec": 0.0
+   }
+  },
+  "claude_auth": []
+ },
+ "experiments": {
+  "experiment1": {
+   "n_calls": 42,
+   "n_calls_missing_usage": 0,
+   "input_tokens": 25503333,
+   "output_tokens": 690127,
+   "reasoning_tokens": 1633605,
+   "cache_read_tokens": 387502236,
+   "cache_write_tokens": 0,
+   "total_tokens": 415329301,
+   "cost_usd": 56.90416245,
+   "n_usage_limit_hits": 0,
+   "usage_limit_wait_sec": 0.0,
+   "by_source": {
+    "rsa:candidate": {
+     "n_calls": 42,
+     "n_calls_missing_usage": 0,
+     "input_tokens": 25503333,
+     "output_tokens": 690127,
+     "reasoning_tokens": 1633605,
+     "cache_read_tokens": 387502236,
+     "cache_write_tokens": 0,
+     "total_tokens": 415329301,
+     "cost_usd": 56.90416245,
+     "n_usage_limit_hits": 0,
+     "usage_limit_wait_sec": 0.0
+    }
+   },
+   "claude_auth": []
+  },
+  "experiment2": {
+   "n_calls": 18,
+   "n_calls_missing_usage": 0,
+   "input_tokens": 9701304,
+   "output_tokens": 290520,
+   "reasoning_tokens": 819382,
+   "cache_read_tokens": 196989823,
+   "cache_write_tokens": 0,
+   "total_tokens": 207801029,
+   "cost_usd": 26.212347225000002,
+   "n_usage_limit_hits": 0,
+   "usage_limit_wait_sec": 0.0,
+   "by_source": {
+    "rsa:candidate": {
+     "n_calls": 18,
+     "n_calls_missing_usage": 0,
+     "input_tokens": 9701304,
+     "output_tokens": 290520,
+     "reasoning_tokens": 819382,
+     "cache_read_tokens": 196989823,
+     "cache_write_tokens": 0,
+     "total_tokens": 207801029,
+     "cost_usd": 26.212347225000002,
+     "n_usage_limit_hits": 0,
+     "usage_limit_wait_sec": 0.0
+    }
+   },
+   "claude_auth": []
+  }
+ }
+}

@@ -1,0 +1,108 @@
+{
+ "experiment": 1,
+ "ground_truth": "crowd_discrim_confusion_chromatic_l2",
+ "selection_scope": "guarded",
+ "measure": "kl_pool: mean KL(ground truth || model) over the design pool's displays (nats); kl_design: the same over this experiment's designed displays; rmse_pool: RMSE on the pool",
+ "exported": "rsa_l2_singleton_confusion_omission_cost",
+ "exported_distance": {
+  "kl_pool": 0.1658746477450564,
+  "kl_design": 0.012951607878487066,
+  "rmse_pool": 0.005916112492632663
+ },
+ "closest_after": "rsa_l2_singleton_confusion_omission_cost",
+ "closest_after_distance": {
+  "kl_pool": 0.1658746477450564,
+  "kl_design": 0.012951607878487066,
+  "rmse_pool": 0.005916112492632663
+ },
+ "closest_before": "rsa_l2_singleton_feat_color_valence_l0",
+ "closest_before_distance": {
+  "kl_pool": 9.707460391256461,
+  "kl_design": 0.8270769510614351,
+  "rmse_pool": 0.046986115787891004
+ },
+ "before": {
+  "rsa_l2_singleton_feat_color_valence_l0": {
+   "kl_pool": 9.707460391256461,
+   "kl_design": 0.8270769510614351,
+   "rmse_pool": 0.046986115787891004
+  },
+  "competitor_confusion_speaker": {
+   "kl_pool": 23.689903122414083,
+   "kl_design": 2.0199587347184917,
+   "rmse_pool": 0.07672108835851345
+  },
+  "isolated_graded_costly_l3": {
+   "kl_pool": 24.869761221696564,
+   "kl_design": 3.6010946883979225,
+   "rmse_pool": 0.07113298098437666
+  },
+  "rsa_l2": {
+   "kl_pool": 34.56075704665079,
+   "kl_design": 2.458301542267767,
+   "rmse_pool": 0.09329633647835488
+  },
+  "rsa_l1": {
+   "kl_pool": 35.927356710924,
+   "kl_design": 2.851087634434612,
+   "rmse_pool": 0.09531904718136618
+  },
+  "oddity_heuristic_listener": {
+   "kl_pool": 43.11590028330199,
+   "kl_design": 4.382449473507984,
+   "rmse_pool": 0.10434726513920377
+  }
+ },
+ "after": {
+  "rsa_l2_singleton_confusion_omission_cost": {
+   "kl_pool": 0.1658746477450564,
+   "kl_design": 0.012951607878487066,
+   "rmse_pool": 0.005916112492632663
+  },
+  "rsa_l2_singleton_confusion_omission": {
+   "kl_pool": 0.37175806877948114,
+   "kl_design": 0.03203962886820441,
+   "rmse_pool": 0.008874622076842031
+  },
+  "rsa_l2_distinct_confusion_omission_cost": {
+   "kl_pool": 0.3734395047360376,
+   "kl_design": 0.029640168103332587,
+   "rmse_pool": 0.009126313584089865
+  },
+  "rsa_l2_distinct_confusion_omission": {
+   "kl_pool": 0.6235686995240304,
+   "kl_design": 0.04624267445365243,
+   "rmse_pool": 0.0118033620340751
+  },
+  "rsa_l2_singleton_confusion_cost": {
+   "kl_pool": 1.3429069680698895,
+   "kl_design": 0.13839325565572946,
+   "rmse_pool": 0.01685830572113209
+  },
+  "rsa_l2_singleton_confusion": {
+   "kl_pool": 1.675093020009805,
+   "kl_design": 0.2010762377141202,
+   "rmse_pool": 0.01879344491947704
+  },
+  "incremental_alternative_speaker": {
+   "kl_pool": 4.427404673456376,
+   "kl_design": 0.42781143334471183,
+   "rmse_pool": 0.03254893732598332
+  },
+  "simplicity_pragmatic_mixture": {
+   "kl_pool": 5.2741057123840935,
+   "kl_design": 0.4302537511377478,
+   "rmse_pool": 0.03443047323812205
+  },
+  "similarity_attention_listener": {
+   "kl_pool": 5.757886403353022,
+   "kl_design": 0.5199949067653673,
+   "rmse_pool": 0.03561411574352688
+  },
+  "aspect_goal_listener": {
+   "kl_pool": 6.7105912138621635,
+   "kl_design": 0.35471891080133267,
+   "rmse_pool": 0.04043436743024458
+  }
+ }
+}

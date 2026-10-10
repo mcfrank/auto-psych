@@ -1,0 +1,275 @@
+{
+ "experiment": 1,
+ "n_trials": 2268,
+ "n_displays": 41,
+ "committed": null,
+ "best_seed": "seed:rsa_l2",
+ "best_promoted": "promoted:rsa_l2_singleton_feat_color_familiar_l0",
+ "committed_vs": null,
+ "best_live": "rsa_l2_singleton_feat_color_valence_l0",
+ "live_vs": {
+  "best_seed": {
+   "diff": 51.71196632775241,
+   "se": 40.92324474212855
+  },
+  "best_promoted": {
+   "diff": -0.2904064683468732,
+   "se": 0.11043578130837821
+  }
+ },
+ "models": {
+  "promoted:rsa_l2_singleton_feat_color_familiar_l0": {
+   "lpd": -1839.2997638783731,
+   "vs_best_seed": {
+    "diff": 52.00237279609928,
+    "se": 40.88414352625173
+   },
+   "vs_best_promoted": {
+    "diff": 0.0,
+    "se": 0.0
+   }
+  },
+  "rsa_l2_singleton_feat_color_valence_l0": {
+   "lpd": -1839.59017034672,
+   "vs_best_seed": {
+    "diff": 51.71196632775241,
+    "se": 40.92324474212855
+   },
+   "vs_best_promoted": {
+    "diff": -0.2904064683468732,
+    "se": 0.11043578130837821
+   }
+  },
+  "promoted:rsa_l2_singleton_feat_color_valence_l0": {
+   "lpd": -1839.59017034672,
+   "vs_best_seed": {
+    "diff": 51.71196632775241,
+    "se": 40.92324474212855
+   },
+   "vs_best_promoted": {
+    "diff": -0.2904064683468732,
+    "se": 0.11043578130837821
+   }
+  },
+  "promoted:rsa_l2_singleton_distinct_feat_color_l0": {
+   "lpd": -1839.6018830315943,
+   "vs_best_seed": {
+    "diff": 51.700253642878124,
+    "se": 40.921907766553744
+   },
+   "vs_best_promoted": {
+    "diff": -0.302119153221156,
+    "se": 0.10292330266887283
+   }
+  },
+  "competitor_confusion_speaker": {
+   "lpd": -1880.5314577786569,
+   "vs_best_seed": {
+    "diff": 10.770678895815536,
+    "se": 12.137263824580476
+   },
+   "vs_best_promoted": {
+    "diff": -41.231693900283744,
+    "se": 33.618599942912326
+   }
+  },
+  "promoted:competitor_confusion_speaker": {
+   "lpd": -1880.5314577786569,
+   "vs_best_seed": {
+    "diff": 10.770678895815536,
+    "se": 12.137263824580476
+   },
+   "vs_best_promoted": {
+    "diff": -41.231693900283744,
+    "se": 33.618599942912326
+   }
+  },
+  "promoted:evaluative_prominence_l2": {
+   "lpd": -1887.3808998885509,
+   "vs_best_seed": {
+    "diff": 3.9212367859215647,
+    "se": 5.332982663381809
+   },
+   "vs_best_promoted": {
+    "diff": -48.081136010177715,
+    "se": 39.92816962521957
+   }
+  },
+  "rsa_l2": {
+   "lpd": -1891.3021366744724,
+   "vs_best_seed": {
+    "diff": 0.0,
+    "se": 0.0
+   },
+   "vs_best_promoted": {
+    "diff": -52.00237279609928,
+    "se": 40.88414352625173
+   }
+  },
+  "seed:rsa_l2": {
+   "lpd": -1891.3021366744724,
+   "vs_best_seed": {
+    "diff": 0.0,
+    "se": 0.0
+   },
+   "vs_best_promoted": {
+    "diff": -52.00237279609928,
+    "se": 40.88414352625173
+   }
+  },
+  "promoted:rsa_l2": {
+   "lpd": -1891.3021366744724,
+   "vs_best_seed": {
+    "diff": 0.0,
+    "se": 0.0
+   },
+   "vs_best_promoted": {
+    "diff": -52.00237279609928,
+    "se": 40.88414352625173
+   }
+  },
+  "seed:rsa_l1_shared_prior": {
+   "lpd": -1896.565249449277,
+   "vs_best_seed": {
+    "diff": -5.26311277480454,
+    "se": 7.33826318556654
+   },
+   "vs_best_promoted": {
+    "diff": -57.26548557090382,
+    "se": 41.6971701395115
+   }
+  },
+  "seed:rsa_l1_salience": {
+   "lpd": -1898.7064220618158,
+   "vs_best_seed": {
+    "diff": -7.404285387343407,
+    "se": 5.252454348016174
+   },
+   "vs_best_promoted": {
+    "diff": -59.40665818344269,
+    "se": 42.57078108142832
+   }
+  },
+  "rsa_l1": {
+   "lpd": -1906.2599149242258,
+   "vs_best_seed": {
+    "diff": -14.957778249753346,
+    "se": 5.561414703743067
+   },
+   "vs_best_promoted": {
+    "diff": -66.96015104585263,
+    "se": 44.39243526459972
+   }
+  },
+  "seed:rsa_l1": {
+   "lpd": -1906.2599149242258,
+   "vs_best_seed": {
+    "diff": -14.957778249753346,
+    "se": 5.561414703743067
+   },
+   "vs_best_promoted": {
+    "diff": -66.96015104585263,
+    "se": 44.39243526459972
+   }
+  },
+  "promoted:rsa_l1": {
+   "lpd": -1906.2599149242258,
+   "vs_best_seed": {
+    "diff": -14.957778249753346,
+    "se": 5.561414703743067
+   },
+   "vs_best_promoted": {
+    "diff": -66.96015104585263,
+    "se": 44.39243526459972
+   }
+  },
+  "promoted:familiar_isolated_graded_costly_l2": {
+   "lpd": -1919.693745907617,
+   "vs_best_seed": {
+    "diff": -28.391609233144663,
+    "se": 42.803213096164214
+   },
+   "vs_best_promoted": {
+    "diff": -80.39398202924394,
+    "se": 29.317817170057175
+   }
+  },
+  "oddity_heuristic_listener": {
+   "lpd": -1979.6023578838963,
+   "vs_best_seed": {
+    "diff": -88.30022120942385,
+    "se": 51.43532280777321
+   },
+   "vs_best_promoted": {
+    "diff": -140.30259400552313,
+    "se": 37.97483593698145
+   }
+  },
+  "promoted:oddity_heuristic_listener": {
+   "lpd": -1979.6023578838963,
+   "vs_best_seed": {
+    "diff": -88.30022120942385,
+    "se": 51.43532280777321
+   },
+   "vs_best_promoted": {
+    "diff": -140.30259400552313,
+    "se": 37.97483593698145
+   }
+  },
+  "isolated_graded_costly_l3": {
+   "lpd": -1990.8059422221138,
+   "vs_best_seed": {
+    "diff": -99.50380554764138,
+    "se": 58.33594287091317
+   },
+   "vs_best_promoted": {
+    "diff": -151.50617834374066,
+    "se": 43.34169543994795
+   }
+  },
+  "promoted:isolated_graded_costly_l3": {
+   "lpd": -1990.8059422221138,
+   "vs_best_seed": {
+    "diff": -99.50380554764138,
+    "se": 58.33594287091317
+   },
+   "vs_best_promoted": {
+    "diff": -151.50617834374066,
+    "se": 43.34169543994795
+   }
+  },
+  "promoted:softmax_surprisal_isolated_costly_l4": {
+   "lpd": -2014.5929099224518,
+   "vs_best_seed": {
+    "diff": -123.29077324797936,
+    "se": 52.387340501437215
+   },
+   "vs_best_promoted": {
+    "diff": -175.29314604407864,
+    "se": 24.501503679558674
+   }
+  },
+  "seed:literal_listener": {
+   "lpd": -2051.2603989524077,
+   "vs_best_seed": {
+    "diff": -159.95826227793532,
+    "se": 43.77553504568865
+   },
+   "vs_best_promoted": {
+    "diff": -211.9606350740346,
+    "se": 53.031152551425805
+   }
+  },
+  "promoted:lexical_preemption_heuristic": {
+   "lpd": -2070.1519776701653,
+   "vs_best_seed": {
+    "diff": -178.84984099569283,
+    "se": 38.67859631245493
+   },
+   "vs_best_promoted": {
+    "diff": -230.8522137917921,
+    "se": 63.97919062693206
+   }
+  }
+ }
+}
