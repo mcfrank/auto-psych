@@ -165,7 +165,7 @@ games, and support two claims:
 | 10-10 | Quota comparison + model check | cloud | chain 0's experiment-1 design, free vs quotas; all 505 model files on the wider pool | power 0.760 vs 0.767 (±0.007); 6 vs 1 two-object displays; every model defined | quotas adopted as defaults | `PLAN.md` "Design mixture" |
 | 10-10 | Critique step built | cloud | main's CriticAL ported (#7); e2e tests with scripted agents | 28k trials: 12 s for 1,000 replicates, ~12 s per statistic | rehearsal 3 | `PLAN.md` "Critique step" |
 | next | **Rehearsal 3** (short) | Sherlock | chain 0, 1 experiment, 2 rounds, rehearsal 2's ground truth: the critique and the new design with real agents | | | `HANDOFF_rehearsal3.md` |
-| next | Live stage 1 re-run | Sherlock | fresh `WORK_ROOT`, new design code | | | `STAGE1_FINDINGS.md` §7 |
+| 10-10 | **Live stage 1 re-run: passed** | Sherlock 47272640, 49 min | chain 0's design with quotas, deployed; Prolific draft `6acaaa90…` | quotas met (6 two-object, 10 three-object, 13 mumble, 27 word); power 0.932 vs 0.931 free; page works end to end (consent → redirect; word, mumble and two-object displays; a list per id, the same on reload); data saved as one JSON string | the pilot can go (PI) | `STAGE1_FINDINGS.md` §9 |
 | next | Pilot (about 20 people, about $21) | Sherlock + Prolific | PI go-ahead | | | `HANDOFF_live.md` §3 |
 | next | Campaign (3 chains × 3 experiments × 200, about $1,915) | Sherlock + Prolific | PI go-ahead after the pilot | | | `HANDOFF_live.md` §4 |
 
@@ -177,7 +177,10 @@ games, and support two claims:
   models over the cap. One option is to fill the cap across families first. No change made.
 - **A recovery test with an unfamiliar, pre-fixed ground truth:** optional, for the paper. It is
   simulated, so it can run alongside the live campaign.
-- **The real completion time:** the pilot measures it, and it sets the pay.
+- **The real completion time:** the pilot measures it, and it sets the pay. The welcome screen
+  says "about 3 minutes", Prolific's estimate is 4, and the PI's run took 1–2.
+- **The consent overlay** (main's deployment gate) is not in the page's accessibility tree:
+  its "I agree" button is pointer-only (stage 1 re-run note).
 - **Known limits to report:**
   - simulated people are less noisy than real ones;
   - pruning on the live rows is weak;
