@@ -161,3 +161,24 @@ def test_live_eligibility_requires_the_blocklist_filter():
     deploy_prolific.verify_eligibility_choice_ids(
         filters + [{"filter_id": "previous_studies_blocklist", "data_type": "StudyID"}]
     )
+
+
+def test_a_project_can_exclude_only_its_own_earlier_participants(prolific, tmp_path):
+    # The RSA campaign (PI 2026-10-10): subjective-randomness participants may take part.
+    (tmp_path / "rsa_reference").mkdir()
+    (tmp_path / "rsa_reference" / "prolific_config.yaml").write_text(
+        "exclude_earlier_participants_from: project\n", encoding="utf-8")
+    prolific["studies"] += [
+        {"id": "rsa_c0_e1", "status": "COMPLETED", "internal_name": "auto-psych deploy_rsa_reference-e1-c0-x"},
+        {"id": "rsa_c1_e1", "status": "ACTIVE", "internal_name": "auto-psych deploy_rsa_reference-e1-c1-x"},
+        {"id": "rsa_draft", "status": "UNPUBLISHED", "internal_name": "auto-psych deploy_rsa_reference-e2-c0-x"},
+    ]
+    deploy_prolific.create_draft_study("rsa_reference", _manifest(), 200, "live")
+    (payload,) = prolific["created"]
+    assert _blocklist(payload)["selected_values"] == ["rsa_c0_e1", "rsa_c1_e1"]
+
+
+def test_the_exclusion_scope_is_all_or_project(prolific):
+    prolific["settings"].write_text("exclude_earlier_participants_from: sr\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="'all' or 'project'"):
+        deploy_prolific.create_draft_study(PROJECT, _manifest(), 40, "live")

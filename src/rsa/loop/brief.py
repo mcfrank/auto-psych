@@ -71,6 +71,19 @@ PLAIN_SCOPE_NOTE = (
     "familiarization and no greyscale. Mechanisms that act through those fields cannot be "
     "tested or rewarded here; spend your proposal on how listeners reason about the words "
     "and the display.\n"
+    "- **What the next experiments show** (PI 2026-10-10). The displays are chosen by "
+    "expected information over the current models, from 2-4 objects x 2-4 features, so "
+    "they go where models disagree, which is often the largest displays (4 x 4). The "
+    "existing data are mostly 3-object displays, so a 4 x 4 display asks a model to "
+    "extrapolate: a mechanism that only fits the familiar sizes, or behaves oddly as "
+    "displays grow, will be found out there. Make your model's predictions sensible across "
+    "display sizes, and say in your hypothesis how it scales.\n"
+    "- **Mumble trials** are part of every experiment: the speaker's word is not heard "
+    "(`query` is `prior`, `is_prior` in the model's context), and the click shows which "
+    "object the listener expected the speaker to mean before any word: the prior over "
+    "referents (salience, distinctiveness, what speakers tend to talk about). A model's "
+    "prior is half of its account of the word trials too, so it is worth getting right; "
+    "the data have such trials (pragmods, Sikos 2021) to learn it from.\n"
 )
 
 # The harness's own interpreter, as in the PyMC loop: sandboxed agents have no

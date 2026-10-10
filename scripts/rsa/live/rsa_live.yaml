@@ -24,3 +24,4 @@ prolific:
   completion_code_action: AUTOMATICALLY_APPROVE
   min_approval_rate: 98            # percent
   exclude_earlier_participants: true
+  exclude_earlier_participants_from: project   # only earlier RSA studies (PI 2026-10-10: subjective randomness is a different task)

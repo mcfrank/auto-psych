@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, Sequence
 import urllib.parse
 
-from .manifest import DeploymentManifest
+from .manifest import DeploymentManifest, slug
 
 
 @dataclass
@@ -221,9 +221,22 @@ def excludes_earlier_participants(cfg: dict[str, Any]) -> bool:
     return value
 
 
-def earlier_pipeline_study_ids() -> list[str]:
+def earlier_participants_scope(cfg: dict[str, Any]) -> str:
+    """Whose earlier participants a live study excludes
+    (``exclude_earlier_participants_from``): every pipeline study ("all", the
+    default) or only this project's ("project"; the RSA campaign, PI
+    2026-10-10: subjective randomness is a different enough task that its
+    participants may take part)."""
+    value = cfg.get("exclude_earlier_participants_from", "all")
+    if value not in ("all", "project"):
+        raise ValueError(f"exclude_earlier_participants_from must be 'all' or 'project', got {value!r}.")
+    return value
+
+
+def earlier_pipeline_study_ids(project_id: str | None = None) -> list[str]:
     """IDs of the account's earlier pipeline studies that people could take
-    part in: named ``STUDY_INTERNAL_NAME_PREFIX``, and published (a draft,
+    part in: named ``STUDY_INTERNAL_NAME_PREFIX`` (with ``project_id``, only
+    that project's: ``auto-psych deploy_<project>-…``), and published (a draft,
     ``UNPUBLISHED``, never had participants). Raises when Prolific cannot
     list them, so no study is created without the exclusion."""
     from src.runtime.prolific import list_studies
@@ -234,10 +247,11 @@ def earlier_pipeline_study_ids() -> list[str]:
             "Could not list the account's Prolific studies to exclude earlier "
             f"participants; no study was created: {err}"
         )
+    prefix = STUDY_INTERNAL_NAME_PREFIX + (f"deploy_{slug(project_id)}-e" if project_id else "")
     return [
         str(study["id"])
         for study in studies
-        if str(study.get("internal_name") or "").startswith(STUDY_INTERNAL_NAME_PREFIX)
+        if str(study.get("internal_name") or "").startswith(prefix)
         and study.get("status") != "UNPUBLISHED"
     ]
 
@@ -349,16 +363,16 @@ def create_draft_study(
     """
     from src.runtime.prolific import create_study
 
-    exclude = excludes_earlier_participants(
-        load_recruitment_config(project_id, n_participants)
-    )
+    recruitment = load_recruitment_config(project_id, n_participants)
+    exclude = excludes_earlier_participants(recruitment)
+    scope = earlier_participants_scope(recruitment)
     excluded: list[str] = []
     # Live studies recruit paid participants gated by hardcoded choice IDs, so
     # confirm those IDs still mean what we think before any study is created.
     if mode == "live":
         verify_live_eligibility()
         if exclude:
-            excluded = earlier_pipeline_study_ids()
+            excluded = earlier_pipeline_study_ids(project_id if scope == "project" else None)
     plan = build_prolific_plan(
         project_id=project_id,
         manifest=manifest,

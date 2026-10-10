@@ -207,9 +207,11 @@ shrinks the pool slightly.
    - `/results?format=json` shows one response per id;
    - each response's `trials` is a single JSON string.
 
-**Open for the PI (§3–4):** display sizes, mumble trials, the earlier-participants
-blocklist, and the completion time. The driver's recommendations are in the session
-reply. Decisions go into `PLAN.md` before the pilot.
+**PI decisions (§3–4):**
+- **The blocklist** now covers only earlier RSA studies (`exclude_earlier_participants_from: project`).
+- **Display sizes and mumble trials:** the agents are told what the experiments show and why
+  (`brief.PLAIN_SCOPE_NOTE`). Whether the design should also guarantee a mixture is still open.
+- **The completion time:** the pilot measures it.
 
 ## 8. Secrets check, done (local session, 2026-10-10)
 
