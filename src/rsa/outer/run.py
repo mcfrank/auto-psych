@@ -135,6 +135,10 @@ class OuterConfig:
     (pragmods E5, E6, E7 and the colour-prior rerun; the live displays vary
     none of them), compares models for novelty on plain displays only, drops
     the framing lens and tells the agents. "all": everything, as run 2."""
+    critique: bool = True
+    """The critique step before every inner-loop round (main's CriticAL,
+    `src.rsa.loop.critique`; PI 2026-10-10: one framework across phenomena).
+    Sherlock runs 1-2 (claim 1) and rehearsals 1-2 ran without it."""
     max_carried: int = 8
     """Models carried into the next experiment, one per distinct hypothesis (`carry`)."""
     carried_share: float = 0.5
@@ -427,6 +431,7 @@ class OuterRun:
             report_title=f"RSA inner loop · {self.label(n)}",
             novelty_pool="plain" if plain else "full", brief_note=PLAIN_SCOPE_NOTE if plain else "",
             lenses=list(PLAIN_RSA_LENSES if plain else DEFAULT_RSA_LENSES), inherit_ledger=prev_ledger,
+            critique=c.critique,
         )
         # The agents' spend, per experiment (appended across resumes; the summary
         # covers the whole log), written even when the loop fails. The rehearsal

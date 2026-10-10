@@ -45,6 +45,7 @@ CLI (run by the critique agent over a directory of test-statistic files)::
 from __future__ import annotations
 
 import contextlib
+import itertools
 import json
 import math
 import re
@@ -269,9 +270,13 @@ def evaluate_test_statistic(
     over ``_TEST_STAT_BUDGET_SEC`` — returns a result with ``error`` set (saying
     which call) and NaN p-values.
     """
-    frames = [("the observed data", human_df)] + [
-        (f"replicate {i + 1} of {len(model_dfs)}", df) for i, df in enumerate(model_dfs)
-    ]
+    # Lazily: ``model_dfs`` may build each replicate on demand (the RSA domain's
+    # replicates of ~50k trials would not all fit in memory at once).
+    n_frames = 1 + len(model_dfs)
+    frames = itertools.chain(
+        [("the observed data", human_df)],
+        ((f"replicate {i + 1} of {len(model_dfs)}", df) for i, df in enumerate(model_dfs)),
+    )
     values: List[float] = []
     try:
         fn = _compile_test_statistic(test_statistic.code)
@@ -285,10 +290,10 @@ def evaluate_test_statistic(
                     f"{type(exc).__name__}: {exc} (on {label})"
                 ) from exc
             spent = time.monotonic() - started
-            if spent > _TEST_STAT_BUDGET_SEC and len(values) < len(frames):
+            if spent > _TEST_STAT_BUDGET_SEC and len(values) < n_frames:
                 raise TimeoutError(
                     f"its calls exceeded the {_TEST_STAT_BUDGET_SEC:g} s budget per "
-                    f"statistic after {len(values)} of {len(frames)} "
+                    f"statistic after {len(values)} of {n_frames} "
                     f"(~{spent / len(values):.2f} s per call)"
                 )
     except Exception as exc:  # an agent-authored statistic that does not run
@@ -503,7 +508,25 @@ def evaluate_test_stat_dir(
     human_df, model_dfs = build_critique_frames(
         fitted, responses_path, n_replicates=n_replicates, seed=seed
     )
+    return score_statistics(
+        fitted.name, human_df, model_dfs, stat_files, significance_alpha=significance_alpha
+    )
 
+
+def score_statistics(
+    model_name: str,
+    human_df: Any,
+    model_dfs: Any,
+    stat_files: List[Path],
+    *,
+    significance_alpha: float = 0.05,
+) -> Dict[str, Any]:
+    """Score statistic files on observed and replicate frames (any domain).
+
+    ``model_dfs`` is a sized iterable of replicate frames (a list, or a lazy
+    sequence that builds each frame when iterated: the RSA domain,
+    `src.rsa.loop.critique`). Returns `evaluate_test_stat_dir`'s dict.
+    """
     statistics = [load_test_statistic_file(p) for p in stat_files]
     results = [evaluate_test_statistic(ts, human_df, model_dfs) for ts in statistics]
 
@@ -529,7 +552,7 @@ def evaluate_test_stat_dir(
         )
     )
     return {
-        "model": fitted.name,
+        "model": model_name,
         "n_test_statistics": len(rows),
         "n_replicates": len(model_dfs),
         "significance_alpha": significance_alpha,

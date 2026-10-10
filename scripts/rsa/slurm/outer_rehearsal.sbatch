@@ -29,8 +29,14 @@
 # The ground truth is withheld from the agents' tree. Everything that names it
 # (its fit, the configuration, prospective and recovery records) stays in the
 # cell's private/, outside the tree.
+# Rehearsal 3 (PI 2026-10-10, short): the critique step (main's CriticAL) and
+# the new design (quotas, the wider display pool) with real agents:
+# N_EXPERIMENTS=1 MAX_ITERATIONS=2, in $SCRATCH/auto-psych/rsa_rehearsal3, with
+# rehearsal 2's ground_truth.json copied in (the coherent rule measures distance
+# on the design pool, which changed). docs/auto_rsa/HANDOFF_rehearsal3.md.
+#
 # Overrides: SCOPES ("guarded"; with more, --array=0-<n-1>), GT_RULE (coherent),
-# PARTICIPANTS (200), DISPLAYS (40), CHAIN (0), N_EXPERIMENTS (2), AGENT_MODEL,
+# PARTICIPANTS (200), DISPLAYS (40), CHAIN (0), N_EXPERIMENTS (2), MAX_ITERATIONS (5), AGENT_MODEL,
 # AGENT_TIMEOUT_SEC, SEED (0), RUN2_ROOT (run 2's sweep root).
 # Resubmitting a task resumes its run where it stopped.
 set -euo pipefail
@@ -47,6 +53,7 @@ read -r -a SCOPE_LIST <<< "${SCOPES:-guarded}"
 SCOPE="${SCOPE_LIST[$TASK]:?array task $TASK has no scope in SCOPES=${SCOPES:-guarded}}"
 GT_RULE="${GT_RULE:-coherent}"
 N_EXPERIMENTS="${N_EXPERIMENTS:-2}"
+MAX_ITERATIONS="${MAX_ITERATIONS:-5}"
 RUN2_ROOT="${RUN2_ROOT:-$(rsa_default_work_root)}"  # the run-2 sweep (_cells.sh)
 PROMOTE_WORK="$RUN2_ROOT/promote_work"
 EXISTING="$PROMOTE_WORK/all_trials.csv"
@@ -118,13 +125,13 @@ done
 UNSET_ARGS=()
 for name in ${WITHHELD[@]+"${WITHHELD[@]}"}; do UNSET_ARGS+=(-u "$name"); done
 echo "[rehearsal $SCOPE] withheld from the agents' environment: ${WITHHELD[*]:-}"
-echo "[rehearsal $SCOPE] chain $CHAIN, ${N_EXPERIMENTS} experiments, ${PARTICIPANTS:-200} people x 10 displays of ${DISPLAYS:-40}, $AGENT_MODEL -> $RUN_DIR"
+echo "[rehearsal $SCOPE] chain $CHAIN, ${N_EXPERIMENTS} experiments of ${MAX_ITERATIONS} rounds, ${PARTICIPANTS:-200} people x 10 displays of ${DISPLAYS:-40}, $AGENT_MODEL -> $RUN_DIR"
 cd "$HARNESS_REPO"
 env ${UNSET_ARGS[@]+"${UNSET_ARGS[@]}"} PATH="$RUN_REPO/.agent_bin:$PATH" \
   "$AGENT_PY" -m src.rsa.outer.run --run-dir "$RUN_DIR" --private-dir "$CELL_DIR/private" \
     --seeds "$WORK_ROOT/live_seeds" --promoted "$PROMOTED" --existing-data "$EXISTING" --collection simulated --ground-truth "$GT_FILE" \
     --selection-scope "$SCOPE" --n-experiments "${N_EXPERIMENTS}" --participants "${PARTICIPANTS:-200}" \
-    --trials 10 --displays "${DISPLAYS:-40}" --seed "$SEED" \
+    --trials 10 --displays "${DISPLAYS:-40}" --seed "$SEED" --max-iterations "$MAX_ITERATIONS" \
     --agent-root "$RUN_REPO" --agent-model "$AGENT_MODEL" --agent-timeout-sec "$AGENT_TIMEOUT_SEC"
 
 # --- outputs: the run without fit caches, and the private records --------------------

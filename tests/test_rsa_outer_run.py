@@ -46,6 +46,12 @@ def test_two_experiments_design_collect_score_and_carry_the_live_set(tmp_path):
 
     def spawner(n, models_dir, responses):
         def agent(cdir, prompt):  # proposes the hidden ground truth's mechanism
+            if cdir.name.startswith("critique"):  # the critique step (main's CriticAL)
+                (cdir / "test_stats").mkdir(parents=True, exist_ok=True)
+                (cdir / "test_stats" / "share_first.py").write_text(
+                    "# name: share_first\n# description: Share choosing object 0.\n"
+                    "def test_statistic(df):\n    return float((df['choice'] == 0).mean())\n")
+                return True
             record_usage(source="rsa:candidate", backend="opencode", model="m", input_tokens=100, cost_usd=0.25)
             (cdir / "candidate.py").write_text((SEEDS / "rsa_l2.py").read_text())
             (cdir / "hypothesis.md").write_text("Listeners reason at depth 2.")
@@ -95,6 +101,13 @@ def test_two_experiments_design_collect_score_and_carry_the_live_set(tmp_path):
     assert scope["scope"] == "plain" and set(scope["left_out"]) == {"pragmods|E5_baserate"}
     # The agents are told, and experiment 2's ledger continues experiment 1's.
     assert "Scope: plain displays" in next((e1 / "model_loop").glob("round_1/candidate_1/CONTEXT.md")).read_text()
+    # Every round critiques its incumbent first, and the candidates get it.
+    for e in (e1, e2):
+        rounds = [h for h in json.loads((e / "model_loop" / "history.json").read_text())
+                  if 0 <= h["round"] < cfg.max_iterations]  # not the seed step (-1) or the end-of-run prune
+        assert rounds and all(h["critique"]["status"] == "critiqued" for h in rounds)
+    assert "## critiques.md" not in (e1 / "model_loop" / "round_1" / "candidate_1" / "CONTEXT.md").read_text()
+    assert (e1 / "model_loop" / "round_1" / "candidate_1" / "critiques.md").exists()
     l1 = (e1 / "model_loop" / "attempted_hypotheses.jsonl").read_text().splitlines()
     l2 = (e2 / "model_loop" / "attempted_hypotheses.jsonl").read_text().splitlines()
     assert l1 and l2[:len(l1)] == l1

@@ -134,6 +134,16 @@ target acceptance 0.9, seed 0.
 
 **Rounds** r = 1 … 5, each with 6 agent slots:
 
+- **First, the critique** (main's CriticAL, `src/rsa/loop/critique.py`; PI 2026-10-10):
+  1. A critique agent writes 8 test statistics `test_statistic(df)` on the trials (design
+     columns plus the chosen class).
+  2. Each is scored on the data and on 1,000 datasets simulated from the incumbent's
+     posterior, one draw each: a two-sided empirical p, with a Benjamini–Hochberg q.
+  3. The statistics with p ≤ 0.05 go into every slot's brief as `critiques.md`, with main's
+     instruction to address one.
+
+  One retry; a round whose agent writes no usable statistic runs without a critique. Either
+  way, the round's `history.json` entry records it (`critique`).
 - **Slot roles:**
   - 3 *explore* slots, each given the next of 10 lenses in rotation (run 2's 11 minus
     the framing/colour lens);
@@ -144,6 +154,7 @@ target acceptance 0.9, seed 0.
     is eligible);
   - the refinement menu;
   - the ledger of tried hypotheses;
+  - this round's critique of the incumbent (`critiques.md`), when there is one;
   - the cumulative trials C_n: raw rows; the `auto_psych` rows are the live ones;
   - a self-check command.
 

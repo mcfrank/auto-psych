@@ -194,3 +194,47 @@ def test_guarded_selection_ranks_on_one_source_among_models_not_clearly_behind_o
     assert all(s["eligible"] for s in final["standing"].values())
     assert final["best_model"] == max(final["standing"], key=lambda n: final["standing"][n]["sel_elpd"])
     assert any(e.name == "literal_listener" and e.detail.startswith("ineligible") for e in loop.ledger.entries())
+
+
+def test_with_the_critique_on_each_round_critiques_the_incumbent_and_the_candidates_get_it(tmp_path):
+    """Main's CriticAL step in the RSA loop: the critique agent runs first, its
+    significant discrepancies reach every candidate, and history records it."""
+    seeds = tmp_path / "seeds"
+    seeds.mkdir()
+    shutil.copyfile(SEEDS / "rsa_l1.py", seeds / "rsa_l1.py")
+    (seeds / "models_manifest.yaml").write_text(yaml.safe_dump({"models": [{"name": "rsa_l1", "rationale": "RSA."}]}))
+    df = pd.read_csv(DEFAULT_TRIALS_CSV)
+    responses = tmp_path / "trials.csv"
+    df[df.experiment.isin(["E8_levels"])].to_csv(responses, index=False)
+    prompts = {}
+
+    def agent(cdir, prompt):
+        prompts[cdir.name] = prompt
+        if cdir.name.startswith("critique"):
+            (cdir / "test_stats").mkdir(parents=True, exist_ok=True)
+            (cdir / "test_stats" / "share_first.py").write_text(
+                "# name: share_first\n# description: Share choosing object 0.\n"
+                "def test_statistic(df):\n    return float((df['choice'] == 0).mean())\n")
+        else:
+            write(cdir, (SEEDS / "rsa_l2.py").read_text(), "Depth 2.", "deeper")
+        return True
+
+    cfg = LoopConfig(responses_path=responses, seed_models_dir=seeds, results_dir=tmp_path / "model_loop",
+                     max_iterations=1, candidate_count=1, cv_folds=2, fit_time_limit_sec=None,
+                     settings=FitSettings(num_warmup=200, num_samples=200, num_chains=2),
+                     critique=True, n_critique_replicates=50)
+    RSALoop(cfg, agent).run()
+    assert list(prompts)[:2] == ["critique", "candidate_1"]  # the critique comes first
+    assert "## CRITIQUE_CONTEXT.md" in prompts["critique"]
+    assert "## critiques.md" in prompts["candidate_1"]
+    history = json.loads((tmp_path / "model_loop" / "history.json").read_text())
+    assert history[0]["critique"] is None  # the seeds' step
+    crit = history[1]["critique"]
+    assert crit["status"] == "critiqued" and crit["incumbent"] == "rsa_l1" and crit["n_evaluated"] == 1
+    assert (tmp_path / "model_loop" / "round_1" / "critique" / "critiques.md").exists()
+
+
+def test_with_the_critique_off_the_round_records_it_disabled(loop):
+    loop.run()
+    history = json.loads((loop.dir / "history.json").read_text())
+    assert history[1]["critique"] == {"status": "disabled"}

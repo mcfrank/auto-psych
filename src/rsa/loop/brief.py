@@ -211,6 +211,23 @@ def brief_md(role: str, *, lens: Optional[str], incumbent: Optional[ZooModel]) -
     raise ValueError(f"unknown slot role {role!r}")
 
 
+# Main's wording (`candidate_agent`): the critique note in every brief, and the
+# context paragraph that says what critiques.md is.
+CRITIQUE_NOTE = (
+    "\nIf `critiques.md` is present, prioritise a hypothesis that addresses one of "
+    "the significant discrepancies it reports.\n"
+)
+CRITIQUE_CONTEXT = (
+    "- `critiques.md` is a posterior-predictive critique of the current **best** "
+    "model: the test statistics on which it significantly fails to reproduce the "
+    "data, each with the direction of the discrepancy and a raw p plus an "
+    "FDR-adjusted q. These are *exploratory* screens, not confirmatory tests "
+    "(several are checked per round), so prefer a discrepancy that survives the FDR "
+    "(`q <= alpha`). Use the strongest such discrepancy to motivate a single "
+    "mechanism that would close that gap.\n"
+)
+
+
 def write_docs(
     candidate_dir: Path,
     *,
@@ -222,21 +239,25 @@ def write_docs(
     incumbent: Optional[str],
     ledger: HypothesisLedger,
     attempt_note: Optional[str] = None,
+    critiques: Optional[str] = None,
 ) -> Dict[str, Optional[str]]:
+    """The candidate's documents. ``critiques``: this round's critiques.md (the
+    critique step, `src.rsa.loop.critique`), or None when the round has none."""
     candidate_dir.mkdir(parents=True, exist_ok=True)
     inc = next((m for m in live if m.name == incumbent), None)
     docs: Dict[str, Optional[str]] = {
-        "context": context,
-        "brief": brief_md(role, lens=lens, incumbent=inc),
+        "context": context + (CRITIQUE_CONTEXT if critiques else ""),
+        "brief": brief_md(role, lens=lens, incumbent=inc) + (CRITIQUE_NOTE if critiques else ""),
         "existing_hypotheses": existing_md(live),
         "attempted": ledger.render_markdown([m.name for m in live]) if role == SLOT_EXPLORE else None,
         "menu": menu_md(live, pruned, incumbent or "") if role == SLOT_REFINE_CHOSEN else None,
         "attempt_note": attempt_note,
+        "critiques": critiques,
     }
     files = {
         "CONTEXT.md": "context", "CANDIDATE_BRIEF.md": "brief",
         "existing_hypotheses.md": "existing_hypotheses", "attempted_hypotheses.md": "attempted",
-        "refinement_menu.md": "menu",
+        "refinement_menu.md": "menu", "critiques.md": "critiques",
     }
     for fname, key in files.items():
         if docs[key]:
@@ -270,6 +291,8 @@ def build_prompt(candidate_dir: Path, docs: Mapping[str, Optional[str]]) -> str:
         sections.append(f"## attempted_hypotheses.md\n\n{docs['attempted']}")
     if docs.get("menu"):
         sections.append(f"## refinement_menu.md\n\n{docs['menu']}")
+    if docs.get("critiques"):
+        sections.append(f"## critiques.md\n\n{docs['critiques']}")
     sections.append(f"## memo_handbook.md\n\n{HANDBOOK.read_text(encoding='utf-8')}")
     return "\n\n".join(sections) + "\n"
 

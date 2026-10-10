@@ -60,6 +60,7 @@ from src.pipelines.inner_loop.model_zoo import (
 from src.rsa.dataset import load_forced_choice
 from src.rsa.fit import FitSettings, RSAFit, compare
 from src.rsa.loop import brief as briefs
+from src.rsa.loop import critique as critique_mod
 from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC, NO_TIME_LIMIT, ModelFailure
 from src.rsa.loop.code_gate import code_problems
 from src.rsa.cpus import job_cpus, one_core
@@ -157,6 +158,15 @@ class LoopConfig:
     """Fits run at once (each its own process): a round's candidates, and the
     seeds, are fitted concurrently before their sequential admission. 0: as
     many as the CPUs this process may use (`default_fit_workers`)."""
+    critique: bool = False
+    """Run the critique step before every round (`src.rsa.loop.critique`, main's
+    CriticAL): a critique agent's test statistics, scored against the
+    incumbent's posterior-predictive replicates, and the significant
+    discrepancies in every candidate's brief (PI 2026-10-10: on for the live
+    phase; runs 1-2 had none)."""
+    n_critique_proposals: int = critique_mod.CRITIQUE_N_PROPOSALS
+    critique_alpha: float = critique_mod.CRITIQUE_SIGNIFICANCE_ALPHA
+    n_critique_replicates: int = critique_mod.CRITIQUE_PPC_REPLICATES
     stop_after_stale_rounds: int = 2
     """End the run early once this many rounds in a row have left the best
     model unchanged (`stale_rounds`); 0: always run ``max_iterations`` rounds.
@@ -354,7 +364,7 @@ class RSALoop:
         pool = trusted or list(standing)
         return max(pool, key=lambda n: standing[n]["sel_elpd"])
 
-    def score(self, round_index: int, events: List[dict]) -> dict:
+    def score(self, round_index: int, events: List[dict], critique: Optional[dict] = None) -> dict:
         from src.rsa.compare_seeds import cell_table
         from src.rsa.fit import posterior_mean_probs
 
@@ -377,6 +387,7 @@ class RSALoop:
         # The live set and the ledger's length at this step: what --resume
         # restores (`resume`).
         entry = dict(step=self.step, round=round_index, best_model=best, standing=standing, events=events,
+                     critique=critique,
                      live=[dict(name=m.name, hypothesis=m.hypothesis, source=m.source) for m in self.live.values()],
                      ledger_entries=len(self.ledger.entries()))
         self.history.append(entry)
@@ -399,7 +410,8 @@ class RSALoop:
 
     # ---------- a round ----------
     def _docs_for(self, cdir: Path, role: str, lens: Optional[str], round_index: int,
-                  standing: Dict[str, dict], incumbent: str, note: Optional[str]) -> str:
+                  standing: Dict[str, dict], incumbent: str, note: Optional[str],
+                  critiques: Optional[str] = None) -> str:
         def desc(n):
             if n not in standing:
                 return "admitted this round, not yet scored"
@@ -437,7 +449,7 @@ class RSALoop:
             experiments=sorted(self.trials.frame["experiment"].unique()), network=self.cfg.agent_network,
             scope_note=self.cfg.brief_note)
         docs = briefs.write_docs(cdir, role=role, lens=lens, context=context, live=live, pruned=pruned,
-                                 incumbent=incumbent, ledger=self.ledger, attempt_note=note)
+                                 incumbent=incumbent, ledger=self.ledger, attempt_note=note, critiques=critiques)
         return briefs.build_prompt(cdir, docs)
 
     def _spawn_all(self, jobs: List[tuple[Path, str]]) -> List[bool]:
@@ -491,6 +503,8 @@ class RSALoop:
         roles = slot_roles(self.cfg.candidate_count)
         per_round = exploratory_slots_per_round(self.cfg.candidate_count)
         rdir = self.dir / f"round_{round_index + 1}"
+        crit = self._critique(rdir, incumbent)
+        critiques = crit.critiques_md
         slots, explore_i = [], 0
         for i, role in enumerate(roles):
             lens = None
@@ -502,7 +516,8 @@ class RSALoop:
             context = f"round {round_index + 1} candidate {i + 1} {role}" + (
                 f" {incumbent}" if role == SLOT_REFINE_INCUMBENT else "")
             slots.append(dict(i=i, role=role, lens=lens, dir=rdir / f"candidate_{i + 1}", context=context))
-        jobs = [(s["dir"], self._docs_for(s["dir"], s["role"], s["lens"], round_index, standing, incumbent, None))
+        jobs = [(s["dir"], self._docs_for(s["dir"], s["role"], s["lens"], round_index, standing, incumbent, None,
+                                          critiques))
                 for s in slots]
         self._spawn_all(jobs)
         # Retry once a slot that wrote no candidate.py.
@@ -512,7 +527,7 @@ class RSALoop:
             s["dir"] = s["dir"].with_name(s["dir"].name + "_retry_1")
             s["context"] += " retry 1"
             retry_jobs.append((s["dir"], self._docs_for(s["dir"], s["role"], s["lens"], round_index, standing,
-                                                        incumbent, briefs.retry_note())))
+                                                        incumbent, briefs.retry_note(), critiques)))
         self._spawn_all(retry_jobs)
         events, repairs = [], []
         # Names first (as sequential admission would give them), then every
@@ -544,7 +559,7 @@ class RSALoop:
                     shutil.copyfile(s["dir"] / f, rd / f)
             s["repair_dir"] = rd
             repair_jobs.append((rd, self._docs_for(rd, s["role"], s["lens"], round_index, standing, incumbent,
-                                                   briefs.repair_note(reason))))
+                                                   briefs.repair_note(reason), critiques)))
         self._spawn_all(repair_jobs)
         taken = set()
         for s, _ in repairs:
@@ -558,7 +573,34 @@ class RSALoop:
             ok, reason = self._try_admit(rd, name, s["context"] + " repair 1")
             events.append(dict(slot=s["i"] + 1, role=s["role"], name=name, outcome="admitted" if ok else "rejected",
                                reason=reason, hypothesis=_read(rd / "hypothesis.md"), repair=True))
-        return self.score(round_index, events)
+        return self.score(round_index, events, crit.status)
+
+    def _critique(self, rdir: Path, incumbent: str) -> "critique_mod.CritiqueOutcome":
+        """The round's critique of the incumbent (`src.rsa.loop.critique`), or a
+        disabled record. A critique that fails for any reason but the agents'
+        own infrastructure is recorded and the round runs without one (main's
+        rule: a critique failure must not end a long run)."""
+        if not self.cfg.critique:
+            return critique_mod.CritiqueOutcome(None, critique_mod.disabled_status())
+        from src.runtime.coding_agent import AgentPermissionDenied
+        from src.runtime.usage_limits import AgentInfrastructureError
+
+        m = self.live[incumbent]
+        try:
+            return critique_mod.run_critique(
+                rdir, spawn=self.spawn, incumbent=incumbent, model=m.model, fitted=m.fit,
+                hypothesis=m.hypothesis, incumbent_file=self.models_dir / f"{incumbent}.py",
+                frame=self.trials.frame, contexts=self.trials.contexts, choices=self.trials.choices,
+                responses_path=self.responses, n_proposals=self.cfg.n_critique_proposals,
+                alpha=self.cfg.critique_alpha, n_replicates=self.cfg.n_critique_replicates,
+                seed=self.cfg.settings.seed + self.step, scope_note=self.cfg.brief_note)
+        except (AgentPermissionDenied, AgentInfrastructureError):
+            raise
+        except Exception as exc:  # recorded, never swallowed silently
+            reason = f"{type(exc).__name__}: {exc}"
+            print(f"  [critique] NO CRITIQUE this round: {reason}", flush=True)
+            return critique_mod.CritiqueOutcome(None, dict(
+                status=critique_mod.CRITIQUE_STATUS_NONE, incumbent=incumbent, reason=reason))
 
     # ---------- end of the run ----------
     def end(self, stopped: Optional[str] = None) -> dict:
@@ -769,7 +811,8 @@ def coding_agent_spawner(*, models_dir: Path, responses_path: Path, timeout_sec:
             ok, _ = run_coding_agent(
                 prompt, cwd=agent_root or REPO_ROOT, log_path=log,
                 allowed_dirs=[candidate_dir, models_dir, responses_path.parent], writable_dirs=[candidate_dir],
-                timeout_secs=timeout_sec, backend=backend, model=model, usage_label="rsa:candidate",
+                timeout_secs=timeout_sec, backend=backend, model=model,
+                usage_label="rsa:critique" if candidate_dir.name.startswith("critique") else "rsa:candidate",
                 stock=True, sandbox=sandbox, env=env,
             )
         if not network:

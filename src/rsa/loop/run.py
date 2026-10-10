@@ -82,6 +82,10 @@ class Args:
     at 1,200 s the smoke test's agents ran out mid-check."""
     agent_root: Optional[Path] = None
     """Directory agents run from (the scrubbed agent tree on the cluster; default: the repo)."""
+    critique: bool = False
+    """Critique the incumbent before every round (main's CriticAL step,
+    `src.rsa.loop.critique`). Off by default here: Sherlock runs 1-2 had none.
+    The live outer loop turns it on (`OuterConfig.critique`)."""
     agent_network: bool = False
     """Give agents internet access. Off by default (PI decision 2026-10-08:
     contamination risk outweighs the upside): their shell commands get no
@@ -124,7 +128,7 @@ def main(args: Args) -> int:
         novelty_threshold=args.novelty_rmse_threshold, prune_dse_multiplier=args.prune_dse_multiplier,
         selection=args.selection, cv_folds=args.cv_folds, max_live_models=args.max_live_models,
         fit_time_limit_sec=args.fit_time_limit_sec, report_title=args.title, agent_network=args.agent_network,
-        stop_after_stale_rounds=args.stop_after_stale_rounds,
+        stop_after_stale_rounds=args.stop_after_stale_rounds, critique=args.critique,
     )
     spawn = coding_agent_spawner(
         models_dir=results / "models", responses_path=results / "responses.csv",

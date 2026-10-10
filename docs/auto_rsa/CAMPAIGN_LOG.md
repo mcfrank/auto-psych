@@ -41,7 +41,7 @@ games, and support two claims:
 | 4 | 10-07 | Agents: Gemini 3.8 Flash via opencode, 2,400 s per agent, sandboxed (bubblewrap) | credits; smoke tests | same sandbox; different model | `SMOKE_RESULTS_2.md` |
 | 5 | 10-08 | **Agents have no network** | in run 1 the agents read the pragmods GitHub repository (70 API calls), OSF and papers | **differs:** main's agents can browse (their URLs are reported) | `SHERLOCK_RUN1_RESULTS.md` |
 | 6 | 10-06 | Agents never see held-out data, provenance or a simulated run's ground truth | validity | same | `HANDOFF_rehearsal2.md` |
-| 7 | 10-06 | **No critique step** (main's CriticAL posterior-predictive check) | not built yet for memo models | **differs:** main runs it each round | `PLAN.md` Phases ("later") |
+| 7 | 10-06 → 10-10 | **The critique step (main's CriticAL) runs before every inner-loop round in the live phase:** 8 agent-written test statistics scored against 1,000 posterior-predictive replicates of the incumbent; the significant discrepancies go into every candidate's brief. Deferred on 10-06, so runs 1–2 and rehearsals 1–2 ran without it | one framework across phenomena: the paper plays up the critique loop (PI) | **same** as main from the live phase on (main's code and settings; RSA's own data frame and replicates) | `src/rsa/loop/critique.py`, `PLAN.md` "Critique step" |
 | 8 | 10-06 | Slot roles (exploratory lenses, refine the incumbent, refine a model of the agent's choice), the ledger of tried hypotheses, starting models not protected | reused from main | same | `src/rsa/loop/` |
 
 ### 2.2 Data
@@ -119,7 +119,7 @@ games, and support two claims:
 ## 3. How this differs from main, at a glance
 
 - **Stack:** Python 3.12 + memo/JAX/numpyro instead of 3.11 + PyMC, in a parallel loop.
-- **Agents:** no network; no critique step.
+- **Agents:** no network. The critique step is main's from the live phase on (claim 1's runs had none).
 - **Data:**
   - literature data are always in the fit;
   - claim 1 is scored on conditions held out within papers;
@@ -163,15 +163,16 @@ games, and support two claims:
 | 10-09/10 | **Rehearsal 2** | Sherlock 47176690, 15 h 20 min, completed | chain 0, guarded, 2 experiments, coherent ground truth | design power 0.889 → 0.840; **claim 2 +147.0 (SE 43) vs best starting, +49.3 (SE 15) vs best promoted seed**; per-display KL to the truth 0.0122 → 0.00021 (exp 1), 0.00017 (exp 2); exp 2 stopped after 2 stale rounds; $83 for 60 agent calls; not evidence about recovery (the ground truth is the agents' own family) | KL label bug found and fixed (86906717); carry-cap question (§5) | `REHEARSAL2_REPORT.md`, `data/rsa/rehearsal2/` |
 | 10-10 | **Live stage 1** (test deploy) | Sherlock 47242197 | chain 0's design deployed; Prolific draft | page live, draft made; **not passed:** data didn't save (Firestore nested arrays); 38 of 40 displays were 4×4; a `.secrets~` backup in staging (never read) | JSON-string trials, secrets exclusions, RSA-only blocklist, quotas and wider pool (#28–31, 44, 47) | `STAGE1_FINDINGS.md` |
 | 10-10 | Quota comparison + model check | cloud | chain 0's experiment-1 design, free vs quotas; all 505 model files on the wider pool | power 0.760 vs 0.767 (±0.007); 6 vs 1 two-object displays; every model defined | quotas adopted as defaults | `PLAN.md` "Design mixture" |
+| 10-10 | Critique step built | cloud | main's CriticAL ported (#7); e2e tests with scripted agents | 28k trials: 12 s for 1,000 replicates, ~12 s per statistic | rehearsal 3 | `PLAN.md` "Critique step" |
+| next | **Rehearsal 3** (short) | Sherlock | chain 0, 1 experiment, 2 rounds, rehearsal 2's ground truth: the critique and the new design with real agents | | | `HANDOFF_rehearsal3.md` |
 | next | Live stage 1 re-run | Sherlock | fresh `WORK_ROOT`, new design code | | | `STAGE1_FINDINGS.md` §7 |
 | next | Pilot (about 20 people, about $21) | Sherlock + Prolific | PI go-ahead | | | `HANDOFF_live.md` §3 |
 | next | Campaign (3 chains × 3 experiments × 200, about $1,915) | Sherlock + Prolific | PI go-ahead after the pilot | | | `HANDOFF_live.md` §4 |
 
 ## 5. Open
 
-- **Rehearsal 3?** Leaning no (rehearsal 2 completed cleanly; it covers the loop, and the design
-  changes since are covered by the quota comparison, the model check and the stage-1 re-run).
-  PI to confirm.
+- **Rehearsal 3:** decided yes, short (PI 10-10), to check the critique step with real agents
+  (`HANDOFF_rehearsal3.md`). The campaign waits for its report.
 - **Carry cap and families:** rehearsal 2 kept six close relatives and dropped two distinct
   models over the cap. One option is to fill the cap across families first. No change made.
 - **A recovery test with an unfamiliar, pre-fixed ground truth:** optional, for the paper. It is
