@@ -1,0 +1,17 @@
+{
+  "run1:personal_pattern_detection_gain vs run1:local_representativeness": 0.10074244458621258,
+  "run1:personal_pattern_detection_gain vs run2:edge_streak_primacy_recency_pattern_rule": 0.09396338472064208,
+  "run1:personal_pattern_detection_gain vs run2:local_representativeness": 0.10231555345799401,
+  "run1:personal_pattern_detection_gain vs run3:mild_symmetric_trick_coin_streak_weary": 0.09015757118047249,
+  "run1:personal_pattern_detection_gain vs run3:local_representativeness": 0.10265136580629476,
+  "run1:local_representativeness vs run2:edge_streak_primacy_recency_pattern_rule": 0.07960963336612945,
+  "run1:local_representativeness vs run2:local_representativeness": 0.034216634620305914,
+  "run1:local_representativeness vs run3:mild_symmetric_trick_coin_streak_weary": 0.09064410393404088,
+  "run1:local_representativeness vs run3:local_representativeness": 0.04533343517585018,
+  "run2:edge_streak_primacy_recency_pattern_rule vs run2:local_representativeness": 0.06479201485606163,
+  "run2:edge_streak_primacy_recency_pattern_rule vs run3:mild_symmetric_trick_coin_streak_weary": 0.06610562456667692,
+  "run2:edge_streak_primacy_recency_pattern_rule vs run3:local_representativeness": 0.07338267961194797,
+  "run2:local_representativeness vs run3:mild_symmetric_trick_coin_streak_weary": 0.07568671435825876,
+  "run2:local_representativeness vs run3:local_representativeness": 0.0342921491269729,
+  "run3:mild_symmetric_trick_coin_streak_weary vs run3:local_representativeness": 0.07746683750792048
+}

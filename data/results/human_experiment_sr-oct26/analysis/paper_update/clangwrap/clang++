@@ -1,0 +1,5 @@
+#!/bin/bash
+# Apple clang 21 dropped -ld64; PyTensor still passes it.
+args=()
+for a in "$@"; do [[ "$a" == "-ld64" ]] || args+=("$a"); done
+exec /usr/bin/clang++ "${args[@]}"

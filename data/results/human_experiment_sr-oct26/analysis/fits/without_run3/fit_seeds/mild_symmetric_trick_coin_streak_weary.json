@@ -1,0 +1,16 @@
+{
+  "seed": 6,
+  "tried": [
+    {
+      "seed": 20261003,
+      "problems": [
+        "max R-hat 1.530 > 1.05",
+        "min bulk ESS 7 < 100"
+      ]
+    },
+    {
+      "seed": 6,
+      "problems": []
+    }
+  ]
+}

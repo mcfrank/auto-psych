@@ -1,0 +1,72 @@
+{
+  "pooled_runs123": {
+    "n_stimuli": 416,
+    "responses_per_stimulus": [
+      40,
+      241
+    ],
+    "split_half_r": 0.8694827528340611,
+    "spearman_brown": 0.9301853697403306,
+    "variance_decomposition": 0.9292925588694443
+  },
+  "run1": {
+    "n_stimuli": 190,
+    "responses_per_stimulus": [
+      40,
+      80
+    ],
+    "split_half_r": 0.8718697839985782,
+    "spearman_brown": 0.9315496103966603,
+    "variance_decomposition": 0.9310594442366485
+  },
+  "run2": {
+    "n_stimuli": 178,
+    "responses_per_stimulus": [
+      40,
+      120
+    ],
+    "split_half_r": 0.8730320139616484,
+    "spearman_brown": 0.9322125916204701,
+    "variance_decomposition": 0.9311337512065492
+  },
+  "run3": {
+    "n_stimuli": 180,
+    "responses_per_stimulus": [
+      40,
+      121
+    ],
+    "split_half_r": 0.8771261392947841,
+    "spearman_brown": 0.9345415003642865,
+    "variance_decomposition": 0.9342737294877803
+  },
+  "without_run1": {
+    "n_stimuli": 289,
+    "responses_per_stimulus": [
+      40,
+      201
+    ],
+    "split_half_r": 0.8689169875558792,
+    "spearman_brown": 0.9298615116043502,
+    "variance_decomposition": 0.9302798682066644
+  },
+  "without_run2": {
+    "n_stimuli": 310,
+    "responses_per_stimulus": [
+      40,
+      161
+    ],
+    "split_half_r": 0.8732137988691915,
+    "spearman_brown": 0.932316214407909,
+    "variance_decomposition": 0.9316696020161315
+  },
+  "without_run3": {
+    "n_stimuli": 308,
+    "responses_per_stimulus": [
+      40,
+      160
+    ],
+    "split_half_r": 0.8745347856886205,
+    "spearman_brown": 0.9330686123995885,
+    "variance_decomposition": 0.9330874453645368
+  }
+}

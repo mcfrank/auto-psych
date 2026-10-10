@@ -1,0 +1,361 @@
+gt_model,metric,error,series,position,experiment,label,mean,err,n
+falk_konold_dp,rmse,sem,best,0,1,seed,0.077171316582329,0.02358623826221914,4
+falk_konold_dp,rmse,sem,best,1,1,round 0,0.06374842302159071,0.03688050643685727,4
+falk_konold_dp,rmse,sem,best,2,1,round 1,0.06829250769721441,0.03609481194726794,4
+falk_konold_dp,rmse,sem,best,3,1,round 2,0.0663167168288513,0.033666785055788434,4
+falk_konold_dp,rmse,sem,best,4,1,round 3,0.06819694384196648,0.030361040755946846,4
+falk_konold_dp,rmse,sem,best,5,1,end,0.06911849482416596,0.030137241934908483,4
+falk_konold_dp,rmse,sem,best,6,2,seed,0.02414890191904083,0.009585110270412766,4
+falk_konold_dp,rmse,sem,best,7,2,round 0,0.023675325738892885,0.009039124958250539,4
+falk_konold_dp,rmse,sem,best,8,2,round 1,0.020746859955493482,0.008959093663589508,4
+falk_konold_dp,rmse,sem,best,9,2,round 2,0.024028756910341384,0.008370506647048382,4
+falk_konold_dp,rmse,sem,best,10,2,round 3,0.029314288543775734,0.009550513760511326,4
+falk_konold_dp,rmse,sem,best,11,2,end,0.03218776848925744,0.00852674488822086,4
+falk_konold_dp,rmse,sem,best,12,3,seed,0.023123027343439146,0.00996368504665245,4
+falk_konold_dp,rmse,sem,best,13,3,round 0,0.023937625365837035,0.008415282358855487,4
+falk_konold_dp,rmse,sem,best,14,3,round 1,0.02083714876576104,0.004615281501585197,4
+falk_konold_dp,rmse,sem,best,15,3,round 2,0.022552335421214147,0.004848248801955528,4
+falk_konold_dp,rmse,sem,best,16,3,round 3,0.024052623911306054,0.0048118324910419,4
+falk_konold_dp,rmse,sem,best,17,3,end,0.02595018075298718,0.005800863987216695,4
+falk_konold_dp,rmse,sem,fitted_baseline,0,1,seed,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,1,1,round 0,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,2,1,round 1,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,3,1,round 2,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,4,1,round 3,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,5,1,end,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,6,2,seed,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,7,2,round 0,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,8,2,round 1,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,9,2,round 2,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,10,2,round 3,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,11,2,end,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,12,3,seed,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,13,3,round 0,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,14,3,round 1,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,15,3,round 2,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,16,3,round 3,0.046300654156798224,0.0020019444928802872,4
+falk_konold_dp,rmse,sem,fitted_baseline,17,3,end,0.046300654156798224,0.0020019444928802872,4
+finite_experience_occurrence,rmse,sem,best,0,1,seed,0.07621424564081257,0.0028478386053121096,4
+finite_experience_occurrence,rmse,sem,best,1,1,round 0,0.06173890060872592,0.013212058712349338,4
+finite_experience_occurrence,rmse,sem,best,2,1,round 1,0.06426435605760339,0.009306543684498458,4
+finite_experience_occurrence,rmse,sem,best,3,1,round 2,0.05365381665478958,0.01117372275166026,4
+finite_experience_occurrence,rmse,sem,best,4,1,round 3,0.039576285973238416,0.007063654098523617,4
+finite_experience_occurrence,rmse,sem,best,5,1,end,0.03673342614247559,0.009144012429369524,4
+finite_experience_occurrence,rmse,sem,best,6,2,seed,0.03255586080053315,0.00932683947601277,4
+finite_experience_occurrence,rmse,sem,best,7,2,round 0,0.023098412891041472,0.0014191429999236274,4
+finite_experience_occurrence,rmse,sem,best,8,2,round 1,0.024183960297351648,0.002226205478546221,4
+finite_experience_occurrence,rmse,sem,best,9,2,round 2,0.02469093128730268,0.00166347685208325,4
+finite_experience_occurrence,rmse,sem,best,10,2,round 3,0.026668731746416194,0.0027028851242641445,4
+finite_experience_occurrence,rmse,sem,best,11,2,end,0.02843577802364884,0.004275927241260936,4
+finite_experience_occurrence,rmse,sem,best,12,3,seed,0.020748238299860226,0.0009471012200085319,4
+finite_experience_occurrence,rmse,sem,best,13,3,round 0,0.019604964635849747,0.0010588629202637513,4
+finite_experience_occurrence,rmse,sem,best,14,3,round 1,0.018336446106503156,0.001597158769368856,4
+finite_experience_occurrence,rmse,sem,best,15,3,round 2,0.019773725389715568,0.0028112143232551737,4
+finite_experience_occurrence,rmse,sem,best,16,3,round 3,0.02245672066235648,0.002856597877947934,4
+finite_experience_occurrence,rmse,sem,best,17,3,end,0.023319945514907237,0.002539696959073551,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,0,1,seed,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,1,1,round 0,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,2,1,round 1,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,3,1,round 2,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,4,1,round 3,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,5,1,end,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,6,2,seed,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,7,2,round 0,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,8,2,round 1,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,9,2,round 2,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,10,2,round 3,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,11,2,end,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,12,3,seed,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,13,3,round 0,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,14,3,round 1,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,15,3,round 2,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,16,3,round 3,0.07721472779596847,0.0058679626341844844,4
+finite_experience_occurrence,rmse,sem,fitted_baseline,17,3,end,0.07721472779596847,0.0058679626341844844,4
+local_representativeness,rmse,sem,best,0,1,seed,0.1298908086,0.0005781004033679595,4
+local_representativeness,rmse,sem,best,1,1,round 0,0.10342558706517721,0.002711600998817751,4
+local_representativeness,rmse,sem,best,2,1,round 1,0.09932971063063262,0.0074435696150151436,4
+local_representativeness,rmse,sem,best,3,1,round 2,0.0911763524600889,0.00986302127449086,4
+local_representativeness,rmse,sem,best,4,1,round 3,0.08131010460422307,0.0074794035453136475,4
+local_representativeness,rmse,sem,best,5,1,end,0.08601497616340473,0.009279046907362044,4
+local_representativeness,rmse,sem,best,6,2,seed,0.07806058722617415,0.0058881904411830985,4
+local_representativeness,rmse,sem,best,7,2,round 0,0.07986147021925509,0.006472590554557966,4
+local_representativeness,rmse,sem,best,8,2,round 1,0.08121191674636696,0.007704616900245091,4
+local_representativeness,rmse,sem,best,9,2,round 2,0.08387297581724959,0.012548785764406632,4
+local_representativeness,rmse,sem,best,10,2,round 3,0.08552400450477803,0.013207647297802227,4
+local_representativeness,rmse,sem,best,11,2,end,0.0895881797074387,0.01573615536754858,4
+local_representativeness,rmse,sem,best,12,3,seed,0.07488969526724149,0.00984506258506758,4
+local_representativeness,rmse,sem,best,13,3,round 0,0.07347364274342794,0.010464839709908228,4
+local_representativeness,rmse,sem,best,14,3,round 1,0.07200503385176303,0.011192711837326811,4
+local_representativeness,rmse,sem,best,15,3,round 2,0.07259033064331769,0.01139831281607307,4
+local_representativeness,rmse,sem,best,16,3,round 3,0.07037761960026412,0.01024593027708356,4
+local_representativeness,rmse,sem,best,17,3,end,0.06751137468049266,0.008315368916992149,4
+local_representativeness,rmse,sem,fitted_baseline,0,1,seed,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,1,1,round 0,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,2,1,round 1,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,3,1,round 2,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,4,1,round 3,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,5,1,end,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,6,2,seed,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,7,2,round 0,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,8,2,round 1,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,9,2,round 2,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,10,2,round 3,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,11,2,end,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,12,3,seed,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,13,3,round 0,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,14,3,round 1,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,15,3,round 2,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,16,3,round 3,0.12954326433737554,0.0003535279222985737,4
+local_representativeness,rmse,sem,fitted_baseline,17,3,end,0.12954326433737554,0.0003535279222985737,4
+motif_stack,rmse,sem,best,0,1,seed,0.1581166031377093,0.0005301479361462548,5
+motif_stack,rmse,sem,best,1,1,round 0,0.1651487914055772,0.008336929076324483,5
+motif_stack,rmse,sem,best,2,1,round 1,0.18801939801758977,0.044312386208151366,5
+motif_stack,rmse,sem,best,3,1,round 2,0.1794195274827267,0.04851004070094148,5
+motif_stack,rmse,sem,best,4,1,round 3,0.17856354223182372,0.048833152134507236,5
+motif_stack,rmse,sem,best,5,1,end,0.15584496129727024,0.028540636554321274,5
+motif_stack,rmse,sem,best,6,2,seed,0.13754490666883612,0.02769363621023413,5
+motif_stack,rmse,sem,best,7,2,round 0,0.13568310961029614,0.03025440695636659,5
+motif_stack,rmse,sem,best,8,2,round 1,0.14186916715293993,0.033383894076260676,5
+motif_stack,rmse,sem,best,9,2,round 2,0.14614481221757483,0.03390761390021141,5
+motif_stack,rmse,sem,best,10,2,round 3,0.1406251797400698,0.034103834753371635,5
+motif_stack,rmse,sem,best,11,2,end,0.11384130170603175,0.013393523868442754,5
+motif_stack,rmse,sem,best,12,3,seed,0.10812742323875578,0.014306360990501926,5
+motif_stack,rmse,sem,best,13,3,round 0,0.09930445150368354,0.01353665971394535,5
+motif_stack,rmse,sem,best,14,3,round 1,0.10011798131960781,0.016399758810584305,5
+motif_stack,rmse,sem,best,15,3,round 2,0.09443225026434157,0.014001483719107926,5
+motif_stack,rmse,sem,best,16,3,round 3,0.09206904779014512,0.013159739933022002,5
+motif_stack,rmse,sem,best,17,3,end,0.09353415936006437,0.013171056293408517,5
+motif_stack,rmse,sem,fitted_baseline,0,1,seed,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,1,1,round 0,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,2,1,round 1,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,3,1,round 2,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,4,1,round 3,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,5,1,end,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,6,2,seed,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,7,2,round 0,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,8,2,round 1,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,9,2,round 2,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,10,2,round 3,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,11,2,end,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,12,3,seed,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,13,3,round 0,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,14,3,round 1,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,15,3,round 2,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,16,3,round 3,0.17511669810080985,0.010291121406599425,5
+motif_stack,rmse,sem,fitted_baseline,17,3,end,0.17511669810080985,0.010291121406599425,5
+falk_konold_dp,pearson_r,sem,best,0,1,seed,0.9385486408795366,0.038917656648654785,4
+falk_konold_dp,pearson_r,sem,best,1,1,round 0,0.9303642129697928,0.061530839912138216,4
+falk_konold_dp,pearson_r,sem,best,2,1,round 1,0.9292813903864053,0.061334323805192804,4
+falk_konold_dp,pearson_r,sem,best,3,1,round 2,0.9383988663740722,0.05185126929685402,4
+falk_konold_dp,pearson_r,sem,best,4,1,round 3,0.9438823160122307,0.04444642656147914,4
+falk_konold_dp,pearson_r,sem,best,5,1,end,0.9444605389061217,0.043780423765267376,4
+falk_konold_dp,pearson_r,sem,best,6,2,seed,0.9942678274997893,0.0045691738607906325,4
+falk_konold_dp,pearson_r,sem,best,7,2,round 0,0.9939635872147867,0.004099570044458601,4
+falk_konold_dp,pearson_r,sem,best,8,2,round 1,0.9950633869429896,0.0041471657535827305,4
+falk_konold_dp,pearson_r,sem,best,9,2,round 2,0.9949980680015404,0.0038673055635454834,4
+falk_konold_dp,pearson_r,sem,best,10,2,round 3,0.992421375967654,0.004125145424975619,4
+falk_konold_dp,pearson_r,sem,best,11,2,end,0.9913567586452641,0.004478143796480903,4
+falk_konold_dp,pearson_r,sem,best,12,3,seed,0.9948577292326959,0.004332993751731165,4
+falk_konold_dp,pearson_r,sem,best,13,3,round 0,0.9945626947519501,0.0036397651743516,4
+falk_konold_dp,pearson_r,sem,best,14,3,round 1,0.9965776461468343,0.0014816208928761882,4
+falk_konold_dp,pearson_r,sem,best,15,3,round 2,0.9959249918316148,0.0015963275454553942,4
+falk_konold_dp,pearson_r,sem,best,16,3,round 3,0.9953808935377014,0.001638689901708777,4
+falk_konold_dp,pearson_r,sem,best,17,3,end,0.9944358275020273,0.0022152635161141066,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,0,1,seed,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,1,1,round 0,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,2,1,round 1,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,3,1,round 2,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,4,1,round 3,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,5,1,end,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,6,2,seed,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,7,2,round 0,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,8,2,round 1,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,9,2,round 2,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,10,2,round 3,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,11,2,end,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,12,3,seed,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,13,3,round 0,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,14,3,round 1,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,15,3,round 2,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,16,3,round 3,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,fitted_baseline,17,3,end,0.9837778685740927,0.0011904684073938156,4
+falk_konold_dp,pearson_r,sem,baseline,0,1,seed,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,1,1,round 0,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,2,1,round 1,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,3,1,round 2,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,4,1,round 3,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,5,1,end,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,6,2,seed,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,7,2,round 0,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,8,2,round 1,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,9,2,round 2,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,10,2,round 3,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,11,2,end,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,12,3,seed,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,13,3,round 0,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,14,3,round 1,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,15,3,round 2,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,16,3,round 3,0.6752842706748226,0.00036984048614976836,4
+falk_konold_dp,pearson_r,sem,baseline,17,3,end,0.6752842706748226,0.00036984048614976836,4
+finite_experience_occurrence,pearson_r,sem,best,0,1,seed,0.5325022802915672,0.01053157743899965,4
+finite_experience_occurrence,pearson_r,sem,best,1,1,round 0,0.6625558895030202,0.11740447879997046,4
+finite_experience_occurrence,pearson_r,sem,best,2,1,round 1,0.6666447446195652,0.09049964251493316,4
+finite_experience_occurrence,pearson_r,sem,best,3,1,round 2,0.7412289688760996,0.09870160161906237,4
+finite_experience_occurrence,pearson_r,sem,best,4,1,round 3,0.8507819466626516,0.0635438889098814,4
+finite_experience_occurrence,pearson_r,sem,best,5,1,end,0.8695926512511988,0.07225696752930551,4
+finite_experience_occurrence,pearson_r,sem,best,6,2,seed,0.9021117593910464,0.05611815218905844,4
+finite_experience_occurrence,pearson_r,sem,best,7,2,round 0,0.9547281801543943,0.0070418770930222654,4
+finite_experience_occurrence,pearson_r,sem,best,8,2,round 1,0.9495192119558128,0.012000450193380807,4
+finite_experience_occurrence,pearson_r,sem,best,9,2,round 2,0.9478951955539784,0.009540201958544778,4
+finite_experience_occurrence,pearson_r,sem,best,10,2,round 3,0.9399201191653215,0.014172315018773864,4
+finite_experience_occurrence,pearson_r,sem,best,11,2,end,0.9320431489172011,0.021123773755802423,4
+finite_experience_occurrence,pearson_r,sem,best,12,3,seed,0.9626842445912573,0.0029870165475138766,4
+finite_experience_occurrence,pearson_r,sem,best,13,3,round 0,0.9671660424805189,0.001430508733157412,4
+finite_experience_occurrence,pearson_r,sem,best,14,3,round 1,0.9713309114606963,0.003617555032844264,4
+finite_experience_occurrence,pearson_r,sem,best,15,3,round 2,0.9641479522418892,0.008871957637752415,4
+finite_experience_occurrence,pearson_r,sem,best,16,3,round 3,0.9582353735828205,0.007544923281112531,4
+finite_experience_occurrence,pearson_r,sem,best,17,3,end,0.954722782966602,0.0070153791747131185,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,0,1,seed,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,1,1,round 0,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,2,1,round 1,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,3,1,round 2,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,4,1,round 3,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,5,1,end,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,6,2,seed,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,7,2,round 0,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,8,2,round 1,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,9,2,round 2,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,10,2,round 3,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,11,2,end,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,12,3,seed,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,13,3,round 0,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,14,3,round 1,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,15,3,round 2,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,16,3,round 3,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,fitted_baseline,17,3,end,0.5343671138689485,0.010835875860488718,4
+finite_experience_occurrence,pearson_r,sem,baseline,0,1,seed,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,1,1,round 0,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,2,1,round 1,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,3,1,round 2,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,4,1,round 3,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,5,1,end,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,6,2,seed,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,7,2,round 0,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,8,2,round 1,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,9,2,round 2,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,10,2,round 3,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,11,2,end,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,12,3,seed,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,13,3,round 0,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,14,3,round 1,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,15,3,round 2,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,16,3,round 3,0.4410354702649627,0.0006259241072208159,4
+finite_experience_occurrence,pearson_r,sem,baseline,17,3,end,0.4410354702649627,0.0006259241072208159,4
+local_representativeness,pearson_r,sem,best,0,1,seed,0.44079495877003855,0.0007630514076026983,4
+local_representativeness,pearson_r,sem,best,1,1,round 0,0.709450178590562,0.013781693556826001,4
+local_representativeness,pearson_r,sem,best,2,1,round 1,0.7224444338809237,0.049971727136916076,4
+local_representativeness,pearson_r,sem,best,3,1,round 2,0.7856277081977424,0.039450875860856105,4
+local_representativeness,pearson_r,sem,best,4,1,round 3,0.8279003739533131,0.03025223087027486,4
+local_representativeness,pearson_r,sem,best,5,1,end,0.8135310210784746,0.034416630795521604,4
+local_representativeness,pearson_r,sem,best,6,2,seed,0.8468448026114569,0.020742712165191805,4
+local_representativeness,pearson_r,sem,best,7,2,round 0,0.8385080669941034,0.023302148029553705,4
+local_representativeness,pearson_r,sem,best,8,2,round 1,0.8382035793136298,0.02330120209211106,4
+local_representativeness,pearson_r,sem,best,9,2,round 2,0.8243977222865482,0.04580063433544047,4
+local_representativeness,pearson_r,sem,best,10,2,round 3,0.8056818887910793,0.06053872407400696,4
+local_representativeness,pearson_r,sem,best,11,2,end,0.799059920801922,0.059902290639856255,4
+local_representativeness,pearson_r,sem,best,12,3,seed,0.8581083294898061,0.03322089624395213,4
+local_representativeness,pearson_r,sem,best,13,3,round 0,0.8594571473907336,0.03695988311429057,4
+local_representativeness,pearson_r,sem,best,14,3,round 1,0.8550793861741609,0.04725051151717618,4
+local_representativeness,pearson_r,sem,best,15,3,round 2,0.8525822044849005,0.04691136864634164,4
+local_representativeness,pearson_r,sem,best,16,3,round 3,0.8660620898489466,0.03858889441331068,4
+local_representativeness,pearson_r,sem,best,17,3,end,0.8797917039741949,0.02912393540620477,4
+local_representativeness,pearson_r,sem,fitted_baseline,0,1,seed,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,1,1,round 0,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,2,1,round 1,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,3,1,round 2,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,4,1,round 3,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,5,1,end,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,6,2,seed,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,7,2,round 0,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,8,2,round 1,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,9,2,round 2,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,10,2,round 3,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,11,2,end,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,12,3,seed,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,13,3,round 0,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,14,3,round 1,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,15,3,round 2,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,16,3,round 3,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,fitted_baseline,17,3,end,0.44089339265043914,0.0008441300385951384,4
+local_representativeness,pearson_r,sem,baseline,0,1,seed,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,1,1,round 0,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,2,1,round 1,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,3,1,round 2,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,4,1,round 3,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,5,1,end,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,6,2,seed,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,7,2,round 0,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,8,2,round 1,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,9,2,round 2,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,10,2,round 3,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,11,2,end,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,12,3,seed,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,13,3,round 0,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,14,3,round 1,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,15,3,round 2,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,16,3,round 3,0.603715697794952,0.0002538166637229032,4
+local_representativeness,pearson_r,sem,baseline,17,3,end,0.603715697794952,0.0002538166637229032,4
+motif_stack,pearson_r,sem,best,0,1,seed,0.8332249486971791,0.000120730127156598,5
+motif_stack,pearson_r,sem,best,1,1,round 0,0.8118035626470077,0.023947130806911927,5
+motif_stack,pearson_r,sem,best,2,1,round 1,0.7410598764742323,0.12045468447379197,5
+motif_stack,pearson_r,sem,best,3,1,round 2,0.7537957980417942,0.12980327470286906,5
+motif_stack,pearson_r,sem,best,4,1,round 3,0.7542954413748383,0.1300466040003243,5
+motif_stack,pearson_r,sem,best,5,1,end,0.8106809512253516,0.081763839836233,5
+motif_stack,pearson_r,sem,best,6,2,seed,0.8639503280280497,0.05241585927543787,5
+motif_stack,pearson_r,sem,best,7,2,round 0,0.8636352178576875,0.056147867391729896,5
+motif_stack,pearson_r,sem,best,8,2,round 1,0.8509722974086034,0.06821582749875897,5
+motif_stack,pearson_r,sem,best,9,2,round 2,0.8415485867449989,0.06784052671409609,5
+motif_stack,pearson_r,sem,best,10,2,round 3,0.8519965660536506,0.06896472795430438,5
+motif_stack,pearson_r,sem,best,11,2,end,0.9146672068249962,0.016594607253067748,5
+motif_stack,pearson_r,sem,best,12,3,seed,0.9205587146531335,0.017949663099963573,5
+motif_stack,pearson_r,sem,best,13,3,round 0,0.9323574526220213,0.01735679822690925,5
+motif_stack,pearson_r,sem,best,14,3,round 1,0.9280260401878045,0.023887889742985974,5
+motif_stack,pearson_r,sem,best,15,3,round 2,0.9379069663240922,0.01836883506912161,5
+motif_stack,pearson_r,sem,best,16,3,round 3,0.9417951604643394,0.01622657800580236,5
+motif_stack,pearson_r,sem,best,17,3,end,0.9403507837981832,0.016361562704536422,5
+motif_stack,pearson_r,sem,fitted_baseline,0,1,seed,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,1,1,round 0,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,2,1,round 1,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,3,1,round 2,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,4,1,round 3,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,5,1,end,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,6,2,seed,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,7,2,round 0,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,8,2,round 1,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,9,2,round 2,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,10,2,round 3,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,11,2,end,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,12,3,seed,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,13,3,round 0,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,14,3,round 1,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,15,3,round 2,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,16,3,round 3,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,fitted_baseline,17,3,end,0.8024327465438148,0.03149374782209082,5
+motif_stack,pearson_r,sem,baseline,0,1,seed,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,1,1,round 0,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,2,1,round 1,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,3,1,round 2,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,4,1,round 3,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,5,1,end,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,6,2,seed,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,7,2,round 0,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,8,2,round 1,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,9,2,round 2,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,10,2,round 3,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,11,2,end,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,12,3,seed,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,13,3,round 0,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,14,3,round 1,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,15,3,round 2,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,16,3,round 3,0.6752805079736328,0.0002105322014486158,5
+motif_stack,pearson_r,sem,baseline,17,3,end,0.6752805079736328,0.0002105322014486158,5

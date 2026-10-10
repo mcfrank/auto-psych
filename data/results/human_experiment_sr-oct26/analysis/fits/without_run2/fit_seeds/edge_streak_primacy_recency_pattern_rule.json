@@ -1,0 +1,71 @@
+{
+  "seed": 8,
+  "tried": [
+    {
+      "seed": 6,
+      "problems": [
+        "3000 divergent transitions of 12000",
+        "max R-hat 1.536 > 1.05",
+        "min bulk ESS 7 < 100"
+      ]
+    },
+    {
+      "seed": 20261003,
+      "problems": [
+        "3000 divergent transitions of 12000",
+        "max R-hat 1.608 > 1.05",
+        "min bulk ESS 7 < 100"
+      ]
+    },
+    {
+      "seed": 2,
+      "problems": [
+        "3001 divergent transitions of 12000",
+        "max R-hat 1.626 > 1.05",
+        "min bulk ESS 7 < 100"
+      ]
+    },
+    {
+      "seed": 1,
+      "problems": [
+        "3022 divergent transitions of 12000",
+        "max R-hat 1.709 > 1.05",
+        "min bulk ESS 7 < 100"
+      ]
+    },
+    {
+      "seed": 5,
+      "problems": [
+        "max R-hat 1.139 > 1.05",
+        "min bulk ESS 20 < 100"
+      ]
+    },
+    {
+      "seed": 3,
+      "problems": [
+        "max R-hat 1.162 > 1.05",
+        "min bulk ESS 18 < 100"
+      ]
+    },
+    {
+      "seed": 4,
+      "problems": [
+        "3000 divergent transitions of 12000",
+        "max R-hat 1.529 > 1.05",
+        "min bulk ESS 7 < 100"
+      ]
+    },
+    {
+      "seed": 7,
+      "problems": [
+        "3000 divergent transitions of 12000",
+        "max R-hat 1.528 > 1.05",
+        "min bulk ESS 7 < 100"
+      ]
+    },
+    {
+      "seed": 8,
+      "problems": []
+    }
+  ]
+}

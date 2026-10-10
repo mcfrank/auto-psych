@@ -1,0 +1,55 @@
+{
+  "falk_konold_dp": {
+    "seed": 20261003,
+    "tried": [
+      {
+        "seed": 20261003,
+        "problems": []
+      }
+    ]
+  },
+  "finite_experience_occurrence": {
+    "seed": 20261003,
+    "tried": [
+      {
+        "seed": 20261003,
+        "problems": []
+      }
+    ]
+  },
+  "local_representativeness": {
+    "seed": 20261003,
+    "tried": [
+      {
+        "seed": 20261003,
+        "problems": []
+      }
+    ]
+  },
+  "motif_stack": {
+    "seed": 6,
+    "tried": [
+      {
+        "seed": 20261003,
+        "problems": [
+          "6000 divergent transitions of 12000",
+          "max R-hat 4.108 > 1.05",
+          "min bulk ESS 4 < 100"
+        ]
+      },
+      {
+        "seed": 6,
+        "problems": []
+      }
+    ]
+  },
+  "mild_symmetric_trick_coin_streak_weary": {
+    "seed": 20261003,
+    "tried": [
+      {
+        "seed": 20261003,
+        "problems": []
+      }
+    ]
+  }
+}
