@@ -167,7 +167,7 @@ def _run_agent(
             # sampled 14 times in round 0). Inside model_loop/, so every
             # (re)start of the stage empties it; results collection leaves
             # .fit_cache out.
-            cache_dir=exp_dir / "model_loop" / ".fit_cache",
+            cache_dir=_loop_fit_cache_dir(exp_dir),
             enable_critique=enable_critique,
             n_critique_proposals=n_critique_proposals,
             critique_alpha=critique_alpha,
@@ -225,6 +225,35 @@ def _run_agent(
                     file=sys.stderr,
                 )
                 sys.exit(1)
+
+
+def _loop_fit_cache_dir(exp_dir: Path) -> Path:
+    """Where an experiment's model loop caches its fits (and the next
+    experiment's design loads them from)."""
+    return exp_dir / "model_loop" / ".fit_cache"
+
+
+def _run_design_stage(
+    exp_dir: Path,
+    project_id: str,
+    *,
+    exp_num: int,
+    prev_exp_dir: Optional[Path],
+    n_participants: int,
+    fit_kwargs: Optional[dict],
+) -> None:
+    """The programmatic design. After experiment 1 it predicts from the
+    previous model loop's own fits (its cache, at the run's sampler settings),
+    sampling nothing."""
+    run_design_programmatic(
+        exp_dir,
+        project_id,
+        exp_num=exp_num,
+        prev_exp_dir=prev_exp_dir,
+        n_responses=n_participants,  # every participant answers every stimulus
+        fit_kwargs=fit_kwargs,
+        loop_fit_cache_dir=_loop_fit_cache_dir(prev_exp_dir) if prev_exp_dir else None,
+    )
 
 
 def _validate_or_exit(agent_key: str, exp_dir: Path, validate: bool) -> None:
@@ -478,12 +507,13 @@ def _run_experiment_stages(
         # after the model set is seeded / carried forward so experiments >= 2
         # see the current models.
         if agent_key == "2_design":
-            run_design_programmatic(
+            _run_design_stage(
                 exp_dir_path,
                 project_id,
                 exp_num=exp_num,
                 prev_exp_dir=prev_exp_dir,
-                n_responses=n_participants,  # every participant answers every stimulus
+                n_participants=n_participants,
+                fit_kwargs=fit_kwargs,
             )
             if validate:
                 ok, msg = validate_cc_output("2_design", exp_dir_path)

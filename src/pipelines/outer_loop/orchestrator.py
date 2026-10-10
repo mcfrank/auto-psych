@@ -554,7 +554,8 @@ def run_design_programmatic(
     n_responses: int,
     seed: int = 42,
     pool: Optional[Sequence[Dict[str, Any]]] = None,
-    fit_method: Optional[str] = None,
+    fit_kwargs: Optional[Dict[str, Any]] = None,
+    loop_fit_cache_dir: Optional[Path] = None,
 ) -> None:
     """Select the design's stimuli by exhaustive enumeration (no design agent).
 
@@ -565,12 +566,15 @@ def run_design_programmatic(
     writing ``design/stimuli.json``. Each model computes its own features from
     raw stimulus rows via its ``compute_features`` or ``prepare_observed`` hook.
     Experiment 1 scores from the models' prior predictive with uniform model
-    weights; experiments >= 2 fit each model on all responses so far (the
-    previous experiment's cumulative ``model_loop/responses.csv``) and score
-    from its posterior predictive, with model weights from
-    the previous registry (weights over models absent here fall back to
-    uniform, loudly). Works for any PyMC model in the set — no pure-Python
-    family twin needed. ``n_responses`` is the experiment's participant count: every
+    weights; experiments >= 2 score from each model's posterior predictive
+    given all responses so far (the previous experiment's cumulative
+    ``model_loop/responses.csv``), with model weights from the previous
+    registry (weights over models absent here fall back to uniform, loudly).
+    That posterior is the previous model loop's own fit, loaded from its cache
+    ``loop_fit_cache_dir`` at its sampler settings ``fit_kwargs`` (both
+    required after experiment 1; nothing is sampled). Works for any PyMC
+    model in the set — no pure-Python family twin needed. ``n_responses`` is
+    the experiment's participant count: every
     participant answers every selected stimulus, and the EIG scores them all.
     ``seed`` seeds the predictive draws, the EIG scenarios and the random
     half; the holdout harness derives one per cell and experiment (a live run
@@ -599,6 +603,13 @@ def run_design_programmatic(
         )
         basis = "prior predictive + uniform model weights"
     else:
+        for knob, value in (("loop_fit_cache_dir", loop_fit_cache_dir), ("fit_kwargs", fit_kwargs)):
+            if value is None:
+                raise ValueError(
+                    f"The design of experiment {exp_num} predicts from "
+                    f"{prev_exp_dir.name}'s model-loop fits: pass {knob} (the "
+                    "cache that loop fitted into and its sampler settings)."
+                )
         stimuli = eig_mod.design_exhaustive(
             models_dir,
             prev_exp_dir / "model_registry.yaml",
@@ -610,8 +621,8 @@ def run_design_programmatic(
             seed=seed,
             random_seed=seed,
             responses_csv=prev_exp_dir / "model_loop" / "responses.csv",
-            fit_cache_dir=exp_dir / "design" / "_fit_cache",
-            fit_method=fit_method,
+            fit_cache_dir=loop_fit_cache_dir,
+            fit_kwargs=fit_kwargs,
             n_responses=n_responses,
         )
         basis = f"posterior after experiments 1..{exp_num - 1} (model weights + parameter posteriors)"

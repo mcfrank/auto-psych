@@ -363,37 +363,48 @@ def test_exhaustive_design_never_scores_cross_length_pairs(tmp_path, monkeypatch
 @pytest.mark.slow
 def test_exhaustive_design_posterior_mode_scores_from_fitted_models(tmp_path):
     """With a responses CSV, exhaustive design scores the pool from each
-    model's *posterior*-predictive p_left (fit on those responses) instead of
-    the prior — no pure-Python twin involved.
+    model's *posterior*-predictive p_left instead of the prior — no
+    pure-Python twin involved. The posterior is the model loop's own fit,
+    loaded from its cache: the design samples nothing.
 
     Marked slow: unlike the prior-only tests above, this one runs real NUTS
-    (two chains per model), which is what every other MCMC test in the suite is
-    marked for."""
+    (two chains per model, as the loop would), which is what every other MCMC
+    test in the suite is marked for."""
     import json
+
+    from src.models.pymc_inference import fit_model
 
     models_dir = _seed(tmp_path)
     responses = PYMC_MODEL_FIXTURES_DIR / "responses.csv"
     cache = tmp_path / "fit_cache"
+    loop_settings = {"draws": 100, "tune": 100, "chains": 2}
+    for name in ("bayesian_fair_coin", "representativeness"):
+        fit_model(name, models_dir, responses, cache_dir=cache, **loop_settings)
+    loop_fits = set(cache.iterdir())
+    # The design reads the next experiment's carried copies of the files the
+    # loop fitted; a fit is keyed on the file's contents, not its directory.
+    carried = tmp_path / "experiment2" / "cognitive_models"
+    shutil.copytree(models_dir, carried)
 
     stimuli = _design(
-        models_dir,
+        carried,
         pool=sr_pairs(3,4),
         n_select=4,
         n_samples=50,
         n_scenarios=300,
         responses_csv=responses,
         fit_cache_dir=cache,
-        fit_draws=100,
-        fit_tune=100,
-        fit_chains=2,
+        fit_kwargs=loop_settings,
     )
+    # The design loaded the loop's fits and sampled nothing.
+    assert set(cache.iterdir()) == loop_fits
 
     assert len(stimuli) == 4
     for rank, item in enumerate(stimuli, start=1):
         assert isinstance(item["eig"], float) and item["eig"] >= 0.0
         assert item["selection_rank"] == rank
-    # The models were actually fitted: the cache holds a posterior for each
-    # (two, when a fit this short fails the convergence gate and is refit).
+    # The cache holds a posterior for each model (two, when a fit this short
+    # fails the convergence gate and is refit).
     assert {nc.name.split(".")[0] for nc in cache.glob("*.nc")} == {
         "bayesian_fair_coin",
         "representativeness",
@@ -585,8 +596,7 @@ def test_posterior_design_screens_out_a_model_with_an_undefined_p_left(
                 raise InvalidPredictions("bad", np.array([[np.nan, 0.5]]))
             return np.full((1, 2), 0.5)
 
-    monkeypatch.setattr(pymc_inference, "fit_model", lambda name, *a, **k: Fitted(name))
-    monkeypatch.setattr(pymc_inference, "model_sampler_settings", lambda n, d: {})
+    monkeypatch.setattr(pymc_inference, "load_cached_fit", lambda name, *a, **k: Fitted(name))
     monkeypatch.setattr(data_binding, "make_stim_data", lambda model, rows: {})
     rows = [
         {"sequence_a": "HT", "sequence_b": "HH"},
@@ -598,7 +608,8 @@ def test_posterior_design_screens_out_a_model_with_an_undefined_p_left(
         tmp_path,
         rows,
         responses_csv=tmp_path / "r.csv",
-        fit_cache_dir=None,
+        fit_cache_dir=tmp_path / "loop_fit_cache",
+        fit_kwargs={},
         max_draws=10,
         seed=0,
         task=SUBJECTIVE_RANDOMNESS,

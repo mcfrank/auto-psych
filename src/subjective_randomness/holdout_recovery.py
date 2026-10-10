@@ -279,9 +279,12 @@ def run_holdout_experiments(
                 n_random=design_n_random,
                 n_responses=n_participants,  # every participant answers every stimulus
                 seed=derive_seed(seed, gt_model, exp_num, "design"),
-                # The loop's fit method (fit.method); the design's own draws.
-                fit_method=fit_kwargs.get("method"),
                 pool=dataset.available(task.design_pool(), drawn) if dataset is not None else None,
+                # After experiment 1: the previous loop's own fits, which it
+                # cached in the shared cache at these settings (fit.method
+                # included).
+                fit_kwargs=dict(fit_kwargs),
+                loop_fit_cache_dir=cache_dir,
             )
             _require_valid("2_design", exp_dir)
 

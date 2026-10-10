@@ -68,12 +68,15 @@ DESIGN_STIMULI = [
 ]
 
 
-def _stub_design(calls, stimuli=DESIGN_STIMULI):
+def _stub_design(calls, stimuli=DESIGN_STIMULI, kwargs_seen=None):
     """Stand-in for the programmatic exhaustive design (the holdout harness
     spawns no agents itself — only the inner loop does, internally).
-    Writes a valid EIG-annotated stimuli.json."""
+    Writes a valid EIG-annotated stimuli.json. ``kwargs_seen``, when given,
+    collects each call's keyword arguments."""
 
     def design(exp_dir, project_id, *, exp_num=1, prev_exp_dir=None, **kwargs):
+        if kwargs_seen is not None:
+            kwargs_seen.append(kwargs)
         calls.append(
             (
                 Path(exp_dir).name,
@@ -250,12 +253,15 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(
     tmp_path, monkeypatch
 ):
     design_calls = []
+    design_kwargs = []
     collect_calls = []
     fit_calls = []
     inner_loop_kwargs = []
 
     monkeypatch.setattr(
-        holdout_recovery, "run_design_programmatic", _stub_design(design_calls)
+        holdout_recovery,
+        "run_design_programmatic",
+        _stub_design(design_calls, kwargs_seen=design_kwargs),
     )
     monkeypatch.setattr(
         holdout_recovery, "generate_responses", _stub_generate_responses(collect_calls)
@@ -373,6 +379,12 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(
     ]
     # The design split (n_eig/n_random) threads config->CLI-override->design stage.
     assert all((c[3], c[4]) == (3, 5) for c in design_calls)
+    # A design after data loads the previous loop's fits: the loop's own cache
+    # and sampler settings, never a refit of its own.
+    assert all(k["loop_fit_cache_dir"] == tmp_path / "cache" for k in design_kwargs)
+    assert all(
+        k["fit_kwargs"] == inner_loop_kwargs[0]["fit_kwargs"] for k in design_kwargs
+    )
     assert [k["agent_model"] for k in inner_loop_kwargs] == [
         "fireworks-ai/test-model",
         "fireworks-ai/test-model",

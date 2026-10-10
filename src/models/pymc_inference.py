@@ -892,6 +892,44 @@ def fit_model(
     return fitted
 
 
+class FitNotCached(LookupError):
+    """A fit a caller must load, not sample, is not in its cache."""
+
+
+def load_cached_fit(
+    name: str,
+    models_dir: Path,
+    responses_path: Path,
+    *,
+    cache_dir: Path,
+    **fit_kwargs: Any,
+) -> FittedModel:
+    """The fit :func:`fit_model` returns for these arguments, read from
+    ``cache_dir`` only: the first fit, or its near-miss refit when
+    ``fit_model`` would refit it. Raises :class:`FitNotCached` instead of
+    sampling when either is missing.
+
+    The design after data uses it to predict from the previous model loop's
+    own fits (user decision 2026-10-08).
+    """
+    models_dir, responses_path, cache_dir = Path(models_dir), Path(responses_path), Path(cache_dir)
+    settings = resolve_fit_settings(name, models_dir, fit_kwargs)
+
+    def load(at: Dict[str, Any], what: str) -> FittedModel:
+        fingerprint = fit_fingerprint(name, models_dir, responses_path, at)
+        if not cached_fit_path(cache_dir, name, fingerprint).exists():
+            raise FitNotCached(
+                f"No cached {what} of {name!r} on {responses_path} in {cache_dir} "
+                f"(settings {at}); it is loaded, never sampled here."
+            )
+        return _fit_once(name, models_dir, responses_path, at, cache_dir)
+
+    fitted = load(settings, "fit")
+    if _refit_decision(name, fitted, settings):
+        fitted = load(refit_settings(settings, fitted.fingerprint), "near-miss refit")
+    return fitted
+
+
 def refit_settings(settings: Dict[str, Any], first_fingerprint: str) -> Dict[str, Any]:
     """The settings of a near miss's refit: ``ESCALATED_TARGET_ACCEPT`` and a
     random seed of its own.

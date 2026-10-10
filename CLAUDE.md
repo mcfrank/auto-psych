@@ -91,10 +91,16 @@ model-loop stage validates (its export record, below).
   once the best gain is within two Monte Carlo standard errors of zero (or
   below `NEGLIGIBLE_GAIN_BITS`), and the remaining slots are filled by
   single-response EIG conditioned on the picks so far (`source`
-  `eig_single_response_fill` in `stimuli.json`). Experiment 1 uses prior-predictive draws; experiments ≥2 fit
-  the models on all data so far (the previous experiment's cumulative
-  `model_loop/responses.csv`) at the model's declared `target_accept`, else
-  `DESIGN_TWIN_TARGET_ACCEPT` (0.9). The holdout harness derives every seed
+  `eig_single_response_fill` in `stimuli.json`). Experiment 1 uses prior-predictive draws; experiments ≥2 use
+  each model's posterior given all data so far (the previous experiment's
+  cumulative `model_loop/responses.csv`), **loaded from the previous model
+  loop's own fits** (`load_cached_fit` in `pymc_inference.py`: its cache —
+  `model_loop/.fit_cache` live, the shared cache in the harness — at the run's
+  sampler settings, near-miss refit included). Nothing is sampled: a missing
+  fit raises `FitNotCached`. Until 2026-10-08 the design refitted every carried
+  model at cheap design-time settings (`DESIGN_TWIN_*`, now kept only for
+  `validate_lazy_eig.py`) with no convergence gate (user decision;
+  `tests/test_design_reuses_loop_fits.py`). The holdout harness derives every seed
   from (cell seed, ground truth, experiment, purpose) (`derive_seed`). The
   greedy search is **lazy batched greedy in float32 on every allocated CPU**
   (`DESIGN_LAZY_SEARCH`, `DESIGN_SCORING_DTYPE` in `eig.py`): a full pass over
@@ -432,7 +438,7 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   with any other column, and `tests/test_agent_prompts_raw_only.py` fails if
   an agent-facing text presents a feature column as data (first audit, D9).
 - `src/models/mcmc_defaults.py` — the **single source of MCMC sampler defaults**
-  (`PRODUCTION_*`, `DESIGN_TWIN_*`). Every entry point imports from here; change
+  (`PRODUCTION_*`; `DESIGN_TWIN_*` are the retired design-time settings). Every entry point imports from here; change
   defaults only here.
 - `src/models/model_loading.py` — loads agent-written `.py` files; requires a
   module-level `model: pm.Model`. Attaches optional data-binding hooks

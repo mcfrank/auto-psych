@@ -1,10 +1,10 @@
 """What the stimulus design is computed from.
 
-- Experiments >= 2 fit the design's models on ALL data collected so far (the
-  previous experiment's cumulative inner-loop responses), matching the
-  posterior the inner loop reasons with — not the previous experiment alone.
-- Design-time fits use the model's own declared target_accept, else 0.9 (a
-  compromise between the production 0.99 and PyMC's 0.8).
+- Experiments >= 2 predict from the models' posteriors given ALL data
+  collected so far (the previous experiment's cumulative inner-loop
+  responses) — not the previous experiment alone. Those are the previous
+  model loop's own fits, loaded from its cache
+  (tests/test_design_reuses_loop_fits.py).
 - The EIG scores each stimulus as answered by every participant of the
   experiment; the caller must say how many there are.
 """
@@ -19,6 +19,13 @@ from src.pipelines.outer_loop.orchestrator import run_design_programmatic
 from tests.paths import PYMC_MODEL_FIXTURES_DIR
 from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 from tests.paths import sr_pairs
+
+LOOP_FITS = {"fit_kwargs": {"draws": 10}}
+
+
+def _loop_fits(prev):
+    """The previous loop's fit cache and settings, as run.py passes them."""
+    return {**LOOP_FITS, "loop_fit_cache_dir": prev / "model_loop" / ".fit_cache"}
 
 
 @pytest.fixture
@@ -36,7 +43,8 @@ def captured_design(monkeypatch):
 def test_later_designs_fit_on_all_data_collected_so_far(tmp_path, captured_design):
     prev, exp = tmp_path / "experiment1", tmp_path / "experiment2"
     run_design_programmatic(
-        exp, "subjective_randomness", exp_num=2, prev_exp_dir=prev, k=4, n_responses=40
+        exp, "subjective_randomness", exp_num=2, prev_exp_dir=prev, k=4, n_responses=40,
+        **_loop_fits(prev),
     )
     assert captured_design["responses_csv"] == prev / "model_loop" / "responses.csv"
 
@@ -51,6 +59,7 @@ def test_the_eig_counts_every_participants_response(tmp_path, captured_design, e
         prev_exp_dir=prev,
         k=4,
         n_responses=40,
+        **(_loop_fits(prev) if prev is not None else {}),
     )
     assert captured_design["n_responses"] == 40
 
@@ -58,42 +67,6 @@ def test_the_eig_counts_every_participants_response(tmp_path, captured_design, e
 def test_the_caller_must_say_how_many_responses_each_stimulus_gets(tmp_path):
     with pytest.raises(TypeError, match="n_responses"):
         run_design_programmatic(tmp_path / "experiment1", "subjective_randomness", k=4)
-
-
-def test_design_fits_use_the_models_own_target_accept_else_0_9(tmp_path, monkeypatch):
-    import src.models.data_binding as data_binding
-    import src.models.pymc_inference as pymc_inference
-
-    requested = {}
-
-    class Fitted:
-        model = None
-
-        def predict_p_left_draws(self, stim_data, *, seed, max_draws, var_name="p_left"):
-            return "draws"
-
-    def fake_fit_model(name, models_dir, responses_csv, **kwargs):
-        requested[name] = kwargs["target_accept"]
-        return Fitted()
-
-    declared = {"careful": {"target_accept": 0.97}, "plain": {}}
-    monkeypatch.setattr(pymc_inference, "fit_model", fake_fit_model)
-    monkeypatch.setattr(
-        pymc_inference, "model_sampler_settings", lambda n, d: declared[n]
-    )
-    monkeypatch.setattr(data_binding, "make_stim_data", lambda model, rows: {})
-    draws, screened = eig_mod._posterior_p_left_draws(
-        ["careful", "plain"],
-        tmp_path,
-        [],
-        responses_csv=tmp_path / "r.csv",
-        fit_cache_dir=None,
-        max_draws=10,
-        seed=0,
-        task=SUBJECTIVE_RANDOMNESS,
-    )
-    assert requested == {"careful": 0.97, "plain": 0.9}
-    assert draws == {"careful": "draws", "plain": "draws"} and screened == []
 
 
 def test_a_saturated_selection_is_filled_by_single_response_eig(tmp_path, monkeypatch):
@@ -255,8 +228,8 @@ def test_run_design_programmatic_writes_stimuli_json(tmp_path):
 
 def test_run_design_programmatic_posterior_wiring(tmp_path, monkeypatch):
     """Experiment >= 2: the previous experiment's responses and registry are
-    threaded into design_exhaustive's posterior mode, with the fit cache under
-    this experiment's design dir."""
+    threaded into design_exhaustive's posterior mode, with the previous
+    loop's fit cache and sampler settings."""
     import json
 
     calls: dict = {}
@@ -293,13 +266,16 @@ def test_run_design_programmatic_posterior_wiring(tmp_path, monkeypatch):
         k=1,
         pool=sr_pairs(3,4),
         n_responses=40,
+        **_loop_fits(prev),
     )
 
     assert calls["models_dir"] == exp_dir / "cognitive_models"
     assert calls["registry_path"] == prev / "model_registry.yaml"
     # All data so far: the previous experiment's cumulative inner-loop responses.
     assert calls["responses_csv"] == prev / "model_loop" / "responses.csv"
-    assert calls["fit_cache_dir"] == exp_dir / "design" / "_fit_cache"
+    # The previous loop's own fits: its cache and sampler settings.
+    assert calls["fit_cache_dir"] == prev / "model_loop" / ".fit_cache"
+    assert calls["fit_kwargs"] == LOOP_FITS["fit_kwargs"]
     assert calls["n_select"] == 1
     data = json.loads((exp_dir / "design" / "stimuli.json").read_text(encoding="utf-8"))
     assert data[0]["eig"] == 0.5

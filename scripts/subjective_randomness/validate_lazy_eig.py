@@ -62,6 +62,27 @@ from src.models.eig_selection import (  # noqa: E402
 )
 from src.pipelines.outer_loop import eig as eig_mod  # noqa: E402
 from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS  # noqa: E402
+from src.models.mcmc_defaults import (  # noqa: E402
+    DESIGN_TWIN_CHAINS,
+    DESIGN_TWIN_DRAWS,
+    DESIGN_TWIN_TARGET_ACCEPT,
+    DESIGN_TWIN_TUNE,
+)
+from src.models.pymc_inference import model_sampler_settings  # noqa: E402
+
+
+def _design_time_fit_kwargs(name: str, models_dir: Path) -> Dict[str, Any]:
+    """The settings the September 2026 designs fitted at (design-time fits,
+    replaced on 2026-10-08 by the model loop's own): DESIGN_TWIN_* and the
+    model's declared target_accept, else DESIGN_TWIN_TARGET_ACCEPT."""
+    return {
+        "draws": DESIGN_TWIN_DRAWS,
+        "tune": DESIGN_TWIN_TUNE,
+        "chains": DESIGN_TWIN_CHAINS,
+        "target_accept": model_sampler_settings(name, models_dir).get(
+            "target_accept", DESIGN_TWIN_TARGET_ACCEPT
+        ),
+    }
 
 Picks = List[Tuple[int, float, str]]
 
@@ -162,38 +183,38 @@ def design_draws(
 
     Rebuilt from the copied fit cache exactly as the design built them
     (``eig._posterior_p_left_draws``), and cached in ``cache`` (.npz). Raises
-    when rebuilding would have sampled: a new file in the fit cache means a
-    fit was missing, and this script compares searches, never refits.
+    when rebuilding would have sampled: the fits are loaded from the copied
+    cache only (``FitNotCached``), and this script compares searches, never
+    refits.
     """
     if cache.exists():
         with np.load(cache) as saved:
             return {name: saved[name] for name in saved.files}
     exp = staged / f"experiment{experiment}"
     fit_cache = exp / "design" / "_fit_cache"
-    before = set(fit_cache.iterdir())
     names = eig_mod._load_model_names(exp / "cognitive_models")
     names, unbindable = eig_mod._screen_usable_models(
         names, exp / "cognitive_models", rows[0], SUBJECTIVE_RANDOMNESS
     )
-    draws, undefined = eig_mod._posterior_p_left_draws(
-        names,
-        exp / "cognitive_models",
-        rows,
-        responses_csv=staged
-        / f"experiment{experiment - 1}"
-        / "model_loop"
-        / "responses.csv",
-        fit_cache_dir=fit_cache,
-        max_draws=n_samples,
-        seed=42,
-        task=SUBJECTIVE_RANDOMNESS,
-    )
-    sampled = sorted(p.name for p in set(fit_cache.iterdir()) - before)
-    if sampled:
-        raise RuntimeError(
-            f"Rebuilding the design sampled new fits {sampled}: the copied fit cache "
-            "does not hold the design's fits, so these draws would not be the design's."
+    # One model at a time: each was fitted at its own design-time target_accept.
+    draws, undefined = {}, []
+    for name in names:
+        one, bad = eig_mod._posterior_p_left_draws(
+            [name],
+            exp / "cognitive_models",
+            rows,
+            responses_csv=staged
+            / f"experiment{experiment - 1}"
+            / "model_loop"
+            / "responses.csv",
+            fit_cache_dir=fit_cache,
+            fit_kwargs=_design_time_fit_kwargs(name, exp / "cognitive_models"),
+            max_draws=n_samples,
+            seed=42,
+            task=SUBJECTIVE_RANDOMNESS,
         )
+        draws.update(one)
+        undefined += bad
     if unbindable or undefined:
         print(
             f"  [inputs] screened out as in the design: {unbindable + undefined}",

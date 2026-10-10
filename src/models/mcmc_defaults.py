@@ -20,14 +20,15 @@ PRODUCTION_TARGET_ACCEPT = 0.99
 # should pass cores=1 explicitly to avoid oversubscribing the machine.
 PRODUCTION_CORES = 4
 
-# Design-time fits (posterior-informed exhaustive design, experiments >= 2):
-# cheaper on purpose — the design step only needs posterior-predictive means
-# to weight EIG scenarios, not publication-grade posteriors.
+# Design-time fits: the settings the posterior-informed design refitted every
+# carried model at until 2026-10-08, when it began loading the previous model
+# loop's own fits instead (user decision). Kept only to rebuild designs made
+# with them (scripts/subjective_randomness/validate_lazy_eig.py).
 DESIGN_TWIN_DRAWS = 500
 DESIGN_TWIN_TUNE = 500
 DESIGN_TWIN_CHAINS = 2
-# Design-time fits use a model's own SAMPLER_SETTINGS target_accept when it
-# declares one, else this: a compromise between the production 0.99 (slow,
+# Those fits used a model's own SAMPLER_SETTINGS target_accept when it
+# declared one, else this: a compromise between the production 0.99 (slow,
 # tiny steps) and PyMC's 0.8 (user decision, 2026-09-26).
 DESIGN_TWIN_TARGET_ACCEPT = 0.9
 

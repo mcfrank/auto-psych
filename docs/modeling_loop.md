@@ -449,19 +449,15 @@ enumeration orientation) under parameter draw d.
   `pm.sample_prior_predictive(draws=200, var_names=["p_left"], random_seed=<design seed>)`.
   D_m = 200 draws from each model's **prior** over its parameters.
 - **Experiments k ≥ 2: posterior predictive given all data so far.**
-  `_posterior_p_left_draws` (eig.py:137) calls `fit_model` for each model, one
-  at a time, on `experiment{k-1}/model_loop/responses.csv`, which is the
-  cumulative file holding experiments 1..k−1 (2,560 · (k−1) rows). Settings:
-  `DESIGN_TWIN_DRAWS = 500`, `DESIGN_TWIN_TUNE = 500`, `DESIGN_TWIN_CHAINS = 2`
-  (mcmc_defaults.py:26-28), and `target_accept` = the model's own
-  `SAMPLER_SETTINGS` value if it declares one, else
-  `DESIGN_TWIN_TARGET_ACCEPT = 0.9` (mcmc_defaults.py:32, eig.py:177-179). The
-  config's `fit` block does not reach the design. Other settings: `cores` 4
-  (2 chain processes), `random_seed` 42, max_treedepth 10. A fit that fails
-  the convergence gate (§5.3) as a near miss is refit once at target_accept
-  0.95, with its own random seed, and that fit is used; a fit far from converging is used as it is. Either
-  way a model that fails is still scored (the design does not check the gate
-  itself). The posterior is thinned by
+  `_posterior_p_left_draws` (eig.py) loads each model's fit on
+  `experiment{k-1}/model_loop/responses.csv`, the cumulative file holding
+  experiments 1..k−1 (2,560 · (k−1) rows), from the previous model loop's own
+  cache at the run's sampler settings (`load_cached_fit`): the fit the loop
+  scored, pruned and exported, its near-miss refit included. Nothing is
+  sampled; a missing fit raises `FitNotCached` (user decision 2026-10-08).
+  Until then the design refitted every model at `DESIGN_TWIN_DRAWS = 500`,
+  `DESIGN_TWIN_TUNE = 500`, `DESIGN_TWIN_CHAINS = 2` and target_accept 0.9 (or
+  the model's own), with no convergence gate. The posterior is thinned by
   `_thin_posterior(max_draws=200)` (pymc_inference.py:466) to 100 evenly
   spaced draws per chain, and `pm.sample_posterior_predictive` of `p_left`
   (`predict_p_left_draws`, pymc_inference.py:510, seed = design seed) gives
@@ -694,12 +690,12 @@ order (then any random picks in pool order). This order becomes
 ### 3.9 Caching
 
 - Prior-predictive draws are recomputed every time; they are not cached.
-- Design-time posterior fits (k ≥ 2) are cached on disk in
-  `experiment{k}/design/_fit_cache/<name>.<fingerprint>.nc` and in process
-  (`_FIT_CACHE`). The key is (model file sha256, responses file sha256,
-  resolved sampler settings), pymc_inference.py:665-702; an escalated refit has
-  its own fingerprint. This cache is separate from the cell's shared
-  `mcmc_cache`.
+- The design after data (k ≥ 2) reads the previous model loop's cached fits
+  (`experiment{k-1}/model_loop/.fit_cache` live, the cell's shared
+  `mcmc_cache` in the harness) and writes none of its own. The key is (model
+  file sha256, responses file sha256, resolved sampler settings); an escalated
+  refit has its own fingerprint. Until 2026-10-08 the design kept its own
+  refits in `experiment{k}/design/_fit_cache/`.
 - `load_pymc_model_cached` caches model loading for the screen.
 
 ---
@@ -1641,9 +1637,11 @@ Bugs and behaviour worth a decision (read from the code, not observed in a run):
   both PSIS-reliable and converged (after escalation), `_best_exportable_model`
   raises in `_record_history_step`. Seeds and carried models are never gated,
   only excluded from selection.
-- **The design scores a non-converged posterior.** A design-time fit that
-  still fails the gate after its refit is used for the posterior-predictive
-  draws without a warning beyond the sampler's own.
+- **The design scores a non-converged posterior** (until 2026-10-08). A
+  design-time fit that still failed the gate after its refit was used for the
+  posterior-predictive draws. The design now loads the loop's own fits; a
+  carried model's fit can still be unconverged (carried models are not gated,
+  only excluded from selection), but it is the fit the loop scored.
 - **EIG ignores counterbalancing** (§3.3): it scores 40 responses to the
   enumeration orientation, while the data show each pair in a random
   orientation. The difference matters only for draws with a nonzero

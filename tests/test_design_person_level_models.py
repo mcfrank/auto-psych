@@ -91,11 +91,11 @@ def stub_fits(monkeypatch):
     monkeypatch.setattr(eig_mod, "DESIGN_NEW_PARTICIPANTS", 3)
     fits = {}
 
-    def fit_model(name, models_dir, responses_csv, **kwargs):
+    def load_cached_fit(name, models_dir, responses_csv, *, cache_dir, **settings):
         fits[name] = _Fitted(name, models_dir)
         return fits[name]
 
-    monkeypatch.setattr(pymc_inference, "fit_model", fit_model)
+    monkeypatch.setattr(pymc_inference, "load_cached_fit", load_cached_fit)
     return fits
 
 
@@ -122,7 +122,8 @@ def _posterior_draws(models_dir, tmp_path, names=("person_a", "bayesian_fair_coi
         models_dir,
         [{"sequence_a": "HHT", "sequence_b": "HTH", "chose_left": 0}],
         responses_csv=_responses(tmp_path),
-        fit_cache_dir=None,
+        fit_cache_dir=tmp_path / "loop_fit_cache",
+        fit_kwargs={},
         max_draws=2,
         seed=0,
         task=SUBJECTIVE_RANDOMNESS,
@@ -152,6 +153,8 @@ def test_a_design_after_data_predicts_a_person_level_model_as_new_participants(
         n_scenarios=10,
         n_responses=40,
         responses_csv=_responses(tmp_path),
+        fit_cache_dir=tmp_path / "loop_fit_cache",
+        fit_kwargs={},
         screened_out_path=screened,
     )
 

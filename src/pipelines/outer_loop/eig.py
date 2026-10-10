@@ -383,50 +383,34 @@ def _posterior_p_left_draws(
     rows: List[Dict[str, Any]],
     *,
     responses_csv: Path,
-    fit_cache_dir: Optional[Path],
+    fit_cache_dir: Path,
+    fit_kwargs: Dict[str, Any],
     max_draws: int,
     seed: int,
     task: Any,
-    fit_draws: Optional[int] = None,
-    fit_tune: Optional[int] = None,
-    fit_chains: Optional[int] = None,
-    fit_method: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Per-draw posterior-predictive prediction (the task's probability) over ``rows`` for each model.
 
-    Fits every model on ``responses_csv`` (design-time MCMC settings from
-    ``src.models.mcmc_defaults`` unless overridden; target_accept is the
-    model's own declared value, else DESIGN_TWIN_TARGET_ACCEPT) and predicts
-    prediction draws (the task's ``prediction_var``) for the stimulus pool,
-    thinned to ``max_draws`` posterior samples; a model with a participant
-    effect is predicted as new participants and averaged
-    (``_new_participant_draws``; one that cannot be is screened out on record).
-    Returns the draws of every model whose prediction is defined on the whole
-    pool, and the ``screened_out.json`` records of the others
+    Loads each model's fit on ``responses_csv`` from ``fit_cache_dir`` at the
+    sampler settings ``fit_kwargs``: the previous model loop's own fit, which
+    it cached for every model it carried (``load_cached_fit``; a missing fit
+    raises ``FitNotCached``, nothing is sampled). The design used to refit
+    every model at cheaper design-time settings, with no convergence gate
+    (user decision 2026-10-08). Predicts prediction draws (the task's
+    ``prediction_var``) for the stimulus pool, thinned to ``max_draws``
+    posterior samples; a model with a participant effect is predicted as new
+    participants and averaged (``_new_participant_draws``; one that cannot be
+    is screened out on record). Returns the draws of every model whose
+    prediction is defined on the whole pool, and the ``screened_out.json``
+    records of the others
     (``_screen_invalid_predictions``).
     """
-    from src.models.mcmc_defaults import (  # type: ignore
-        DESIGN_TWIN_CHAINS,
-        DESIGN_TWIN_DRAWS,
-        DESIGN_TWIN_TARGET_ACCEPT,
-        DESIGN_TWIN_TUNE,
-    )
+    from src.models import pymc_inference  # type: ignore
     from src.models.data_binding import MissingStimulusColumns, make_stim_data  # type: ignore
-    from src.models.pymc_inference import fit_model, model_sampler_settings  # type: ignore
 
     def posterior_draws(name: str) -> Any:
-        fitted = fit_model(
-            name,
-            models_dir,
-            responses_csv,
-            cache_dir=fit_cache_dir,
-            draws=fit_draws if fit_draws is not None else DESIGN_TWIN_DRAWS,
-            tune=fit_tune if fit_tune is not None else DESIGN_TWIN_TUNE,
-            chains=fit_chains if fit_chains is not None else DESIGN_TWIN_CHAINS,
-            target_accept=model_sampler_settings(name, models_dir).get(
-                "target_accept", DESIGN_TWIN_TARGET_ACCEPT
-            ),
-            method=fit_method,
+        fitted = pymc_inference.load_cached_fit(
+            name, models_dir, responses_csv, cache_dir=fit_cache_dir, **fit_kwargs
         )
         try:
             stim_data = make_stim_data(fitted.model, rows)
@@ -587,10 +571,7 @@ def design_exhaustive(
     screened_out_path: Optional[Path] = None,
     responses_csv: Optional[Path] = None,
     fit_cache_dir: Optional[Path] = None,
-    fit_draws: Optional[int] = None,
-    fit_tune: Optional[int] = None,
-    fit_chains: Optional[int] = None,
-    fit_method: Optional[str] = None,
+    fit_kwargs: Optional[Dict[str, Any]] = None,
     n_responses: int,
     lazy: bool = DESIGN_LAZY_SEARCH,
     scoring_dtype: str = DESIGN_SCORING_DTYPE,
@@ -607,11 +588,13 @@ def design_exhaustive(
     space, so nothing an agent could conjecture is outside it.
 
     Without ``responses_csv``, per-draw predictions come from each model's
-    **prior** predictive (experiment 1). With ``responses_csv``, each model is
-    first fitted on those responses (MCMC, at the design-time settings from
-    ``src.models.mcmc_defaults`` unless fit_* override them) and per-draw
-    predictions come from its **posterior** predictive, thinned to ``n_samples``
-    draws — sequential design informed by the data so far.
+    **prior** predictive (experiment 1). With ``responses_csv`` (the previous
+    experiment's cumulative ``model_loop/responses.csv``), per-draw
+    predictions come from each model's **posterior** predictive, thinned to
+    ``n_samples`` draws — sequential design informed by the data so far. The
+    posterior is the previous model loop's own fit, loaded from its cache
+    ``fit_cache_dir`` at its sampler settings ``fit_kwargs`` (both required);
+    nothing is sampled, and a missing fit raises ``FitNotCached``.
 
     ``n_responses`` is how many responses each selected stimulus receives (the
     experiment's participant count): the joint EIG scores the count of
@@ -643,6 +626,13 @@ def design_exhaustive(
         raise ValueError(f"n_select/n_random must be >= 0; got {n_select}, {n_random}.")
     if n_select == 0 and n_random == 0:
         raise ValueError("design_exhaustive needs n_select > 0 or n_random > 0.")
+    if responses_csv is not None:
+        for knob, value in (("fit_cache_dir", fit_cache_dir), ("fit_kwargs", fit_kwargs)):
+            if value is None:
+                raise ValueError(
+                    f"A design after data predicts from the previous model loop's "
+                    f"fits: pass {knob} (the loop's fit cache and sampler settings)."
+                )
 
     pool = list(pool) if pool is not None else task.design_pool()
     rows = task.stimulus_rows(pool)
@@ -692,14 +682,11 @@ def design_exhaustive(
                 models_dir,
                 rows,
                 responses_csv=Path(responses_csv),
-                fit_cache_dir=fit_cache_dir,
+                fit_cache_dir=Path(fit_cache_dir),
+                fit_kwargs=dict(fit_kwargs),
                 max_draws=n_samples,
                 seed=seed,
                 task=task,
-                fit_draws=fit_draws,
-                fit_tune=fit_tune,
-                fit_chains=fit_chains,
-                fit_method=fit_method,
             )
         screened_out += invalid
         if screened_out_path is not None:
@@ -800,7 +787,19 @@ class Args:
     fit each model on them and design from the POSTERIOR predictive instead of
     the prior."""
     fit_cache: Optional[Path] = None
-    """Cache dir for the design-time MCMC fits (with --responses)."""
+    """With --responses: the previous model loop's fit cache
+    (``model_loop/.fit_cache``, or the recovery harness's shared cache). The
+    design loads the loop's fits from it and samples nothing."""
+    fit_draws: Optional[int] = None
+    """With --responses: the model loop's draws (unset: the production default)."""
+    fit_tune: Optional[int] = None
+    """With --responses: the model loop's tune steps."""
+    fit_chains: Optional[int] = None
+    """With --responses: the model loop's chains."""
+    fit_target_accept: Optional[float] = None
+    """With --responses: the model loop's target_accept."""
+    fit_method: Optional[str] = None
+    """With --responses: the model loop's fit method (``fit.method``; unset: nuts)."""
     lazy: bool = DESIGN_LAZY_SEARCH
     """Lazy batched greedy search instead of exact greedy (an approximation;
     see src/models/eig_selection.py)."""
@@ -842,6 +841,17 @@ def main(args: Args) -> None:
         seed=args.seed,
         responses_csv=args.responses,
         fit_cache_dir=args.fit_cache,
+        fit_kwargs=(
+            {
+                "draws": args.fit_draws,
+                "tune": args.fit_tune,
+                "chains": args.fit_chains,
+                "target_accept": args.fit_target_accept,
+                "method": args.fit_method,
+            }
+            if args.responses is not None
+            else None
+        ),
         n_responses=args.n_responses,
         lazy=args.lazy,
         scoring_dtype=args.scoring_dtype,
