@@ -122,12 +122,16 @@ In short: the consent gate is added for you, so your timeline begins with the
     });
 
     // 2. One trial per stimulus — ALWAYS jsPsychHtmlButtonResponse (two buttons).
+    //    SHUFFLE the trial order for each participant: jsPsych.randomization.shuffle
+    //    returns a shuffled copy when each participant's browser builds the
+    //    timeline, so a stimulus's position varies across participants and is not
+    //    confounded with the stimulus. Never iterate STIMULI in its embedded order.
     //    COUNTERBALANCE the side: randomly show one of the pair on the left each
     //    trial, and RECORD the presented order (sequence_a = the sequence shown on
     //    the LEFT). This decouples content from physical side so a side bias is
     //    identifiable. Math.random() runs once per stimulus when each participant's
     //    browser builds the timeline, so the side varies across participants/trials.
-    STIMULI.forEach(function (s) {
+    jsPsych.randomization.shuffle(STIMULI).forEach(function (s) {
       var swap = Math.random() < 0.5;
       var left = swap ? s.sequence_b : s.sequence_a;
       var right = swap ? s.sequence_a : s.sequence_b;
@@ -164,6 +168,11 @@ In short: the consent gate is added for you, so your timeline begins with the
   `jsPsychHtmlButtonResponse` with exactly two choices (the first button is the
   LEFT option, the second is the RIGHT option). **Never** use keyboard responses
   for the choice.
+- **Shuffle the trial order for every participant.** Build the trials from
+  `jsPsych.randomization.shuffle(STIMULI)`, exactly as the skeleton does. Never
+  run the trials in the embedded order (`STIMULI.forEach`, `STIMULI.map`,
+  `for … of STIMULI`): every participant would then see the same order, and a
+  stimulus's effect could not be told apart from its position.
 - **Counterbalance the side, every trial.** Randomly choose which of the pair's
   two sequences is shown on the LEFT (e.g. `Math.random() < 0.5`). Do NOT always
   put `sequence_a` on the left — that confounds a side bias with content.
@@ -173,7 +182,8 @@ In short: the consent gate is added for you, so your timeline begins with the
   (`1` if the LEFT sequence was chosen — i.e. `response === 0` — else `0`).
   Collection parses exactly these fields.
 - **Embed every design stimulus verbatim.** Do not sample, reorder into new
-  stimuli, or alter the sequences.
+  stimuli, or alter the sequences. (The per-participant shuffle above changes
+  only the order in which they are shown.)
 - **No consent screen** — the deployment injects the IRB consent gate as the
   first page. Do not add your own.
 - **No fixation cross or inter-trial screen.** Trials run back-to-back; the next
@@ -200,6 +210,7 @@ In short: the consent gate is added for you, so your timeline begins with the
 ## Self-validation checklist
 
 - [ ] `experiment/index.html` uses `jsPsychHtmlButtonResponse` for the choice (no keyboard)
+- [ ] The trials are built from `jsPsych.randomization.shuffle(STIMULI)` (a fresh order per participant)
 - [ ] Each trial randomizes which sequence is shown on the left (side counterbalancing)
 - [ ] Every trial sets `chose_left`, `sequence_a` (= left), `sequence_b` (= right)
 - [ ] All `design/stimuli.json` stimuli are embedded verbatim

@@ -116,7 +116,12 @@ model-loop stage validates (its export record, below).
   validation designs). Same cost; the estimate is consistent but not
   unbiased (finite draw average); a model needs ≥ 2 draws.
 - `3_implement` — the one true coding-agent stage: writes a jsPsych experiment;
-  skipped in `simulated_participants_nobrowser` mode. Optional Firebase/Prolific
+  skipped in `simulated_participants_nobrowser` mode. The page must build its
+  trials from `jsPsych.randomization.shuffle(STIMULI)` (a fresh order per
+  participant; the validator rejects iterating `STIMULI` in its embedded
+  order): every page of the October 2026 live series ran the design's
+  selection order for everyone, confounding stimulus with position
+  (`tests/test_validate_implement.py`). Side is counterbalanced per trial. Optional Firebase/Prolific
   deploy phase follows when `--deploy-target != none`.
 - `4_collect` — programmatic: writes `data/responses.csv` (simulated / LLM-as-
   participant / live / ground-truth).

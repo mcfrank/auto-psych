@@ -233,6 +233,21 @@ def _validate_implement(exp_dir: Path) -> tuple[bool, str]:
             "left-aligned, line-height block) so prose does not span the full screen "
             "width. Copy the .auto-psych-prose rule and wrappers from the skeleton."
         )
+    # Trial order: each participant's browser shuffles the stimuli (the
+    # skeleton's `jsPsych.randomization.shuffle(STIMULI)`), and nothing runs the
+    # embedded array in its own order. Every page of the October 2026 live series
+    # ran `STIMULI.forEach`, so all participants saw the design's selection order
+    # and a stimulus's effect was confounded with its position (user decision
+    # 2026-10-10). A static check of the fixed skeleton, not of every possible
+    # loop.
+    if not re.search(r"jsPsych\.randomization\.shuffle\(\s*STIMULI\s*\)", visible) or re.search(
+        r"\bSTIMULI\s*\.\s*(forEach|map)\s*\(|\bof\s+STIMULI\b", visible
+    ):
+        return False, (
+            "trial order: every participant must see the stimuli in their own random "
+            "order. Build the trials from `jsPsych.randomization.shuffle(STIMULI)` "
+            "(as the skeleton does), never by iterating STIMULI in its embedded order."
+        )
     # Data contract: each trial must record chose_left (1=left/first sequence) plus
     # the raw sequences, or the collection/Firestore step cannot parse the data.
     for needed in ("chose_left", "sequence_a", "sequence_b"):
