@@ -5,7 +5,6 @@
 #SBATCH --mem=7GB
 #SBATCH --time=06:00:00
 #SBATCH --output=%x_%j.out
-#SBATCH --error=%x_%j.out
 #
 # The first live experiment's design and its power (src.rsa.design.run), from
 # the promoted seeds, after promote.sbatch: their fits on all existing data are

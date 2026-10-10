@@ -165,3 +165,32 @@ def test_selection_on_one_source_ranks_and_prunes_on_its_trials_only(tmp_path):
     with pytest.raises(ValueError, match="no trials"):
         RSALoop(LoopConfig(**{**cfg.__dict__, "results_dir": tmp_path / "loop2", "selection_source": "nope"}),
                 fake_agent).run()
+
+
+def test_guarded_selection_ranks_on_one_source_among_models_not_clearly_behind_on_the_rest(tmp_path):
+    seeds = tmp_path / "seeds"
+    seeds.mkdir()
+    for n in ("literal_listener", "rsa_l1", "rsa_l2"):
+        shutil.copyfile(SEEDS / f"{n}.py", seeds / f"{n}.py")
+    (seeds / "models_manifest.yaml").write_text(yaml.safe_dump({"models": [
+        {"name": "literal_listener"}, {"name": "rsa_l1"}, {"name": "rsa_l2"}]}))
+    df = pd.read_csv(DEFAULT_TRIALS_CSV)
+    df = df[df.experiment.isin(["E8_levels", "E5_baserate"])]
+    df = df.assign(source=["live" if e == "E5_baserate" else "pragmods" for e in df.experiment])
+    responses = tmp_path / "trials.csv"
+    df.to_csv(responses, index=False)
+    cfg = LoopConfig(responses_path=responses, seed_models_dir=seeds, results_dir=tmp_path / "loop",
+                     max_iterations=0, settings=FitSettings(num_warmup=200, num_samples=200, num_chains=2),
+                     fit_time_limit_sec=None, cv_folds=2, selection_source="live", selection_guard_dse=1.0)
+    loop = RSALoop(cfg, fake_agent)
+    loop.setup()
+    before = loop.standing()
+    for s in before.values():
+        assert s["eligible"] == (s["guard_diff"] <= 1.0 * s["guard_dse"])
+    # The literal listener is far behind on the pragmods trials: never eligible.
+    assert not before["literal_listener"]["eligible"]
+    final = loop.end()
+    assert "literal_listener" not in final["standing"]
+    assert all(s["eligible"] for s in final["standing"].values())
+    assert final["best_model"] == max(final["standing"], key=lambda n: final["standing"][n]["sel_elpd"])
+    assert any(e.name == "literal_listener" and e.detail.startswith("ineligible") for e in loop.ledger.entries())

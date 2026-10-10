@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import multiprocessing as mp
 import os
 import tempfile
@@ -32,6 +33,12 @@ from src.rsa.cpus import CORES, pinned_thread
 from src.rsa.fit import FitSettings, RSAFit, ZeroProbabilityChoice
 
 FIT_TIME_LIMIT_SEC = 30 * 60  # as the PyMC domain's CANDIDATE_FIT_TIME_LIMIT_SEC
+# A fit that runs in its own (pinned) child and is never killed: for models
+# already in play (seeds, carried and admitted models, the outer loop's bar
+# models and ground truth). Only a new candidate's admission fit is limited,
+# the SR pipeline's rule. The 2026-10-09 rehearsal died when a promoted
+# reference model's prospective fit passed 30 minutes.
+NO_TIME_LIMIT = math.inf
 # A fit child runs single-threaded: measured on the combined data (40k trials,
 # 2026-10-07), one fit takes ~55 s on one thread and ~53 s on four, and four
 # single-threaded fits at once on four cores ~75 s each. So the loop runs one
@@ -262,7 +269,7 @@ def _start_with_cache(proc, cache_dir: str, core: Optional[int] = None) -> None:
 
 
 def _finish_child(proc, queue, name: str, nc_path: Path, meta_path: Path, time_limit_sec: float) -> RSAFit:
-    proc.join(time_limit_sec)
+    proc.join(None if math.isinf(time_limit_sec) else time_limit_sec)
     if proc.is_alive():
         proc.kill()
         proc.join()

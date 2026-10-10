@@ -5,7 +5,6 @@
 #SBATCH --mem=30GB
 #SBATCH --time=04:00:00
 #SBATCH --output=%x_%j.out
-#SBATCH --error=%x_%j.out
 #
 # The held-out condition-by-condition page (src.rsa.heldout_report) of every
 # finished cell, from each loop's own fit cache: the held-out evaluation

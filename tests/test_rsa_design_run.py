@@ -55,3 +55,32 @@ def test_a_design_separates_literal_from_pragmatic_listeners_and_builds(tmp_path
     lst = trial_list(design, seed=1, list_index=0, n_catch=2, n_trials=4)
     assert sum(not t["is_catch"] for t in lst["trials"] if t["phase"] == "test") == 4
     assert json.loads((tmp_path / "out" / "eig.json").read_text())["trials_per_participant"] == 4
+
+
+@pytest.mark.slow  # runs NUTS
+def test_the_bar_models_join_the_design_merged_where_they_duplicate_and_with_their_share_of_the_prior(tmp_path):
+    def folder(name, models):
+        d = tmp_path / name
+        d.mkdir()
+        for n in models:
+            shutil.copyfile(SEEDS / f"{n}.py", d / f"{n}.py")
+        (d / "models_manifest.yaml").write_text(yaml.safe_dump({"models": [{"name": n} for n in models]}))
+        return d
+
+    carried = folder("carried", ["rsa_l1", "rsa_l2"])
+    bar = folder("bar", ["literal_listener", "rsa_l1", "rsa_l1_salience"])
+    df = pd.read_csv(DEFAULT_TRIALS_CSV)
+    data = tmp_path / "trials.csv"
+    df[df.experiment.isin(["E8_levels", "E9_twins"])].to_csv(data, index=False)
+    record = main(Args(models_dir=carried, bar_models_dirs=[bar], data=data, cache=tmp_path / "cache",
+                       out=tmp_path / "out", trials_per_participant=4, participants=40, displays=[8],
+                       power_participants=[40], n_draws=20, n_scenarios=300, n_power_scenarios=300,
+                       num_warmup=200, num_samples=200, num_chains=2))
+    # The bar's rsa_l1 is the carried file: merged, not designed for twice.
+    assert {"model": "bar:rsa_l1", "same_as": "rsa_l1", "reason": "the same model file"} in record["merged"]
+    assert record["models"][:2] == ["rsa_l1", "rsa_l2"] and "bar:literal_listener" in record["models"]
+    groups = record["model_groups"]
+    prior = dict(zip(record["models"], record["prior"]))
+    assert prior["rsa_l1"] == pytest.approx(0.25)  # half the mass over the two carried models
+    assert sum(p for p, g in zip(record["prior"], groups) if g == "bar") == pytest.approx(0.5)
+    assert set(record["designs"][0]["power"][0]["by_model"]) == set(record["models"])

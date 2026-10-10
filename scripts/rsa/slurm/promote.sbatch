@@ -5,7 +5,6 @@
 #SBATCH --mem=64GB
 #SBATCH --time=12:00:00
 #SBATCH --output=%x_%j.out
-#SBATCH --error=%x_%j.out
 #
 # Promote run 2's models to seed the live experiments (src.rsa.promote; PI
 # decision 2026-10-08): every model the three real-data cells admitted (143),

@@ -5,7 +5,6 @@
 #SBATCH --mem=8GB
 #SBATCH --time=01:00:00
 #SBATCH --output=%x_%j.out
-#SBATCH --error=%x_%j.out
 #
 # RSA run 1, step 2 (compute node; submit.sh submits it, with resources from
 # its SETUP_* variables, and the array after it with afterok):

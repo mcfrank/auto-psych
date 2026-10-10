@@ -40,6 +40,7 @@ import tyro
 
 from src.models.model_manifest import read_manifest_names
 from src.rsa.context import Context, group_by_shape
+from src.rsa.design.distinct import SAME_ON_POOL_RMSE, rmse
 from src.rsa.design.eig import power, select
 from src.rsa.design_space import context_pool
 from src.rsa.experiment.design import Design, TrialSpec
@@ -87,6 +88,19 @@ class Args:
     cache: Path
     """Fit cache (promote's, to reuse its fits)."""
     out: Path
+    bar_models_dirs: List[Path] = field(default_factory=list)
+    """Further models the design must also tell apart: the outer loop's bar
+    (the starting models and every promoted seed), so a design tests the claim
+    it is scored on (PI 2026-10-10: the rehearsal's displays aimed only at the
+    carried models, and the bar models were never exposed). Each is labelled
+    ``bar:<name>``; one that is the same file as, or the same hypothesis on
+    this pool (`src.rsa.design.distinct`) as, a model already in is merged."""
+    carried_share: float = 0.5
+    withhold: List[Path] = field(default_factory=list)
+    """Model files left out of the bar, unnamed (a simulated run's ground truth:
+    the design must not be handed it, and its record is readable by agents)."""
+    """With bar models, the prior mass on ``models_dir``'s models (spread
+    evenly); the bar models share the rest."""
     trials_per_participant: int = 10
     """Designed displays a participant answers (12 test trials with 2 catch trials; PI 2026-10-08)."""
     participants: int = 200
@@ -114,33 +128,63 @@ def main(args: Args) -> dict:
                            seed=args.fit_seed, dense_mass=args.dense_mass)
     pool = design_pool()
     valid = class_layout(pool)
-    names, probs, screened = [], [], []
-    for name in read_manifest_names(args.models_dir):
-        path = Path(args.models_dir) / f"{name}.py"
+    names, probs, screened, merged, groups = [], [], [], [], []
+    shas = {}
+    entries = [(Path(args.models_dir), name, name, "carried") for name in read_manifest_names(args.models_dir)]
+    for folder in args.bar_models_dirs:
+        entries += [(Path(folder), name, f"bar:{name}", "bar") for name in read_manifest_names(folder)]
+    withheld = {hashlib.sha256(Path(f).read_bytes()).hexdigest() for f in args.withhold}
+    n_withheld = 0
+    for folder, name, label, group in entries:
+        path = folder / f"{name}.py"
+        sha = hashlib.sha256(path.read_bytes()).hexdigest()
+        if group == "bar" and sha in withheld:
+            n_withheld += 1
+            continue
+        if label in names or sha in shas:
+            merged.append(dict(model=label, same_as=shas.get(sha, label), reason="the same model file"))
+            continue
         fitted = loop_fit(path, name, args.data, settings, args.cache, time_limit_sec=args.time_limit_sec)
         p = class_prob_draws(RSAModel(path, name=name), posterior_flat(fitted), pool, args.n_draws)
         bad = ~np.isfinite(p).all(axis=(0, 2)) | ~np.isclose(p.sum(-1), 1.0, atol=1e-4).all(0)
         if bad.any():
-            screened.append(dict(model=name, reason="choice probabilities undefined on some pool displays",
+            screened.append(dict(model=label, reason="choice probabilities undefined on some pool displays",
                                  n_displays=int(bad.sum()), examples=[pool_record(pool[i]) for i in np.where(bad)[0][:3]]))
-            print(f"  {name}: screened out ({int(bad.sum())} pool displays undefined)", flush=True)
+            print(f"  {label}: screened out ({int(bad.sum())} pool displays undefined)", flush=True)
             continue
-        names.append(name)
+        if group == "bar" and names:
+            dist = {n: rmse(q.mean(0), p.mean(0)) for n, q in zip(names, probs)}
+            twin = min(dist, key=dist.get)
+            if dist[twin] < SAME_ON_POOL_RMSE:
+                merged.append(dict(model=label, same_as=twin, rmse=dist[twin],
+                                   reason=f"the same hypothesis on the design pool (RMSE < {SAME_ON_POOL_RMSE})"))
+                continue
+        names.append(label)
         probs.append(p)
-        print(f"  {name}: {p.shape[0]} draws on {len(pool)} displays", flush=True)
+        groups.append(group)
+        shas[sha] = label
+        print(f"  {label}: {p.shape[0]} draws on {len(pool)} displays", flush=True)
     if len(names) < 2:
         raise ValueError(f"{len(names)} usable models: a design needs at least two to tell apart")
 
+    n_carried = groups.count("carried")
+    if n_carried < len(groups):
+        share = args.carried_share if n_carried else 0.0
+        prior = np.array([share / n_carried if g == "carried" else (1 - share) / (len(groups) - n_carried)
+                          for g in groups])
+    else:
+        prior = None
     t = args.trials_per_participant
     designs = []
     for d in args.displays:
         if d < t:
             raise ValueError(f"a design of {d} displays cannot fill {t} trials per participant")
         per_display = responses_per_display(args.participants, t, d)
-        sel = select(probs, valid, d, n_responses=per_display, n_scenarios=args.n_scenarios, seed=args.seed)
+        sel = select(probs, valid, d, n_responses=per_display, prior=prior, n_scenarios=args.n_scenarios,
+                     seed=args.seed)
         ns = [responses_per_display(n, t, d) for n in args.power_participants]
-        table = power(probs, valid, sel.indices, ns, n_scenarios=args.n_power_scenarios, seed=args.seed + 101,
-                      names=names)
+        table = power(probs, valid, sel.indices, ns, prior=prior, n_scenarios=args.n_power_scenarios,
+                      seed=args.seed + 101, names=names)
         for row, n in zip(table, args.power_participants):
             row["participants"] = n
         specs = tuple(TrialSpec.from_context(pool[i], label=f"eig_{k:02d}") for k, i in enumerate(sel.indices))
@@ -160,7 +204,9 @@ def main(args: Args) -> dict:
             print(f"  N={row['participants']}: P(generating model wins) {row['p_correct']:.3f} ± "
                   f"{row['p_correct_se']:.3f}, joint EIG {row['joint_eig_bits']:.2f} bits", flush=True)
     record = dict(
-        models=names, screened_out=screened, trials_per_participant=t, participants=args.participants,
+        models=names, model_groups=groups, prior=None if prior is None else prior.tolist(), merged=merged,
+        n_withheld=n_withheld,
+        screened_out=screened, trials_per_participant=t, participants=args.participants,
         pool_size=len(pool), pool_digest=pool_digest(pool), n_draws=args.n_draws, n_scenarios=args.n_scenarios,
         seed=args.seed, fit_settings=vars(settings),
         data_sha256=hashlib.sha256(Path(args.data).read_bytes()).hexdigest(),

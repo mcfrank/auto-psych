@@ -34,7 +34,7 @@ import re
 import shutil
 import sys
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
@@ -60,7 +60,7 @@ from src.pipelines.inner_loop.model_zoo import (
 from src.rsa.dataset import load_forced_choice
 from src.rsa.fit import FitSettings, RSAFit, compare
 from src.rsa.loop import brief as briefs
-from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC, ModelFailure
+from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC, NO_TIME_LIMIT, ModelFailure
 from src.rsa.loop.code_gate import code_problems
 from src.rsa.cpus import job_cpus, one_core
 from src.rsa.loop.cv import CVResult, compare_cv, cv_pointwise, make_folds, source_labels
@@ -132,6 +132,14 @@ class LoopConfig:
     all trials: the live loop's "fit on everything, select on the live
     data" (``auto_psych``). None: all trials (Sherlock run 2). The overall
     ELPD-CV stays in the standing beside it."""
+    selection_guard_dse: float = 0.0
+    """With ``selection_source``: a model may be selected (incumbent, export)
+    only while its ELPD-CV on the *other* trials is within this many clustered
+    SEs of the best there; one further behind is pruned at the end. The live
+    loop's guarded rule (PI 2026-10-10): rank on the new experiment, but stay
+    answerable to the literature. 0: no guard. Without it the 2026-10-09
+    rehearsal's live-only selection collapsed onto one family of near-copies
+    that predicted the next experiment worse than plain RSA."""
     agent_network: bool = False
     """Whether agents have internet access (see `coding_agent_spawner`); the
     brief tells them which."""
@@ -196,6 +204,10 @@ class RSALoop:
             settings=self.cfg.settings, novelty_threshold=self.cfg.novelty_threshold,
             time_limit_sec=self.cfg.fit_time_limit_sec,
         )
+        # Models already in play (seeds, carried, admitted) are never time-limited:
+        # only a candidate's admission fit is (`src.rsa.loop.fitting.NO_TIME_LIMIT`).
+        self.live_cfg = replace(
+            self.gate_cfg, time_limit_sec=None if self.cfg.fit_time_limit_sec is None else NO_TIME_LIMIT)
 
     def setup(self) -> None:
         self._prepare()
@@ -207,13 +219,13 @@ class RSALoop:
         for entry in entries:
             shutil.copyfile(Path(self.cfg.seed_models_dir) / f"{entry['name']}.py",
                             self.models_dir / f"{entry['name']}.py")
-        self._prefit([(self.models_dir / f"{e['name']}.py", e["name"]) for e in entries])
+        self._prefit([(self.models_dir / f"{e['name']}.py", e["name"]) for e in entries], self.live_cfg)
         for entry in entries:
             name, rationale = entry["name"], entry.get("rationale", "")
             dst = self.models_dir / f"{name}.py"
             model = RSAModel(dst, name=name)
             try:
-                fitted = fit_with_refit(dst, name, self.gate_cfg)
+                fitted = fit_with_refit(dst, name, self.live_cfg)
             except ModelFailure as exc:
                 dst.unlink()
                 self._ledger(name, "dropped", f"seed failed to fit: {exc}", rationale, "seed")
@@ -260,13 +272,13 @@ class RSALoop:
             try:
                 return name, cv_pointwise(self.models_dir / f"{name}.py", name, self.responses, self.folds,
                                           self.cfg.settings, self.dir / ".fit_cache",
-                                          time_limit_sec=self.gate_cfg.time_limit_sec,
+                                          time_limit_sec=self.live_cfg.time_limit_sec,
                                           workers=self.cfg.cv_folds)
             except ModelFailure as exc:
                 print(f"  {name}: no grouped CV ({exc})")
                 return name, None
 
-        parallel = 1 if self.gate_cfg.time_limit_sec is None else max(1, workers // self.cfg.cv_folds)
+        parallel = 1 if self.live_cfg.time_limit_sec is None else max(1, workers // self.cfg.cv_folds)
         with ThreadPoolExecutor(max_workers=parallel) as pool:
             for name, result in pool.map(one, todo):
                 self.cv[name] = result
@@ -297,10 +309,22 @@ class RSALoop:
                 s["trusted"] = s["trusted"] and c["cv_converged"]
                 z = sel.get(name, dict(elpd_cv=float("-inf"), cv_diff=float("inf"), cv_dse=0.0))
                 s.update(sel_elpd=z["elpd_cv"], sel_diff=z["cv_diff"], sel_dse=z["cv_dse"])
+            if self._guarded() and have:
+                rest = compare_cv({n: CVResult(r.pointwise[~mask], r.converged) for n, r in have.items()},
+                                  self.folds.units[~mask])
+                for name, s in out.items():
+                    g = rest.get(name)
+                    s["guard_diff"] = float("inf") if g is None else g["cv_diff"]
+                    s["guard_dse"] = 0.0 if g is None else g["cv_dse"]
+                    s["eligible"] = g is not None and g["cv_diff"] <= self.cfg.selection_guard_dse * g["cv_dse"]
+                    s["trusted"] = s["trusted"] and s["eligible"]
         else:
             for s in out.values():
                 s.update(sel_elpd=s["elpd_loo"], sel_diff=s["elpd_diff"], sel_dse=s["dse"])
         return out
+
+    def _guarded(self) -> bool:
+        return self.cfg.selection == "cv" and bool(self.cfg.selection_source) and self.cfg.selection_guard_dse > 0
 
     def _selection_rows(self) -> tuple[np.ndarray, np.ndarray]:
         """The trials selection sums over (all, or cfg.selection_source's) and their CV clusters."""
@@ -370,6 +394,10 @@ class RSALoop:
             if self.cfg.selection == "cv" and self.cfg.selection_source:
                 what = (f"on held-out {self.cfg.selection_source} conditions (grouped CV over the "
                         f"{self.cfg.selection_source} trials, the ones the loop selects on)")
+            if self._guarded() and "guard_diff" in s and not s["eligible"]:
+                what += (f"; NOT eligible for selection: {s['guard_diff']:.1f} ± {s['guard_dse']:.1f} nats behind "
+                         f"the best on the existing (non-{self.cfg.selection_source}) data, more than "
+                         f"{self.cfg.selection_guard_dse:g} SEs")
             text = (f"best {what}" if s["sel_diff"] == 0
                     else f"{s['sel_diff']:.1f} ± {s['sel_dse']:.1f} nats behind the best {what}")
             by = s.get("cv_behind_by_source")
@@ -403,7 +431,7 @@ class RSALoop:
         with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
             return list(pool.map(lambda j: self.spawn(*j), jobs))
 
-    def _prefit(self, items: List[tuple[Path, str]]) -> None:
+    def _prefit(self, items: List[tuple[Path, str]], cfg: Optional[GateConfig] = None) -> None:
         """Fit models concurrently (cached; a model's failure is remembered) so
         that their sequential admission reads finished fits: the same
         verdicts as fitting at admission, in the time of the slowest fit
@@ -415,7 +443,7 @@ class RSALoop:
             if code_problems(path.read_text(encoding="utf-8")):
                 return
             try:
-                fit_with_refit(path, name, self.gate_cfg)
+                fit_with_refit(path, name, cfg or self.gate_cfg)
             except ModelFailure:
                 pass  # remembered; admission reports it
 
@@ -525,6 +553,15 @@ class RSALoop:
         criterion = "grouped CV" if self.cfg.selection == "cv" else "PSIS-LOO"
         if self.cfg.selection == "cv" and self.cfg.selection_source:
             criterion += f" on {self.cfg.selection_source} trials"
+        if self._guarded():
+            for n, s in standing.items():
+                if not s["eligible"] and s["guard_diff"] != float("inf") and n in self.live:
+                    reason = (f"{s['guard_diff']:.1f} nats behind the best on the other trials (grouped CV), "
+                              f"> {self.cfg.selection_guard_dse} x clustered dse {s['guard_dse']:.1f}")
+                    self._retire(n, "pruned", f"ineligible: {reason}")
+                    events.append(dict(name=n, outcome="pruned", reason=reason))
+            standing = {n: s for n, s in standing.items() if n in self.live}
+            trusted = [n for n in trusted if n in self.live]
         if trusted:
             best = max(trusted, key=lambda n: standing[n]["sel_elpd"])
             if self.cfg.selection == "cv":
@@ -618,11 +655,11 @@ class RSALoop:
             while (self.dir / f"round_{next_round + 1}_abandoned_{k}").exists():
                 k += 1
             partial.rename(self.dir / f"round_{next_round + 1}_abandoned_{k}")
-        self._prefit([(self.models_dir / f"{n}.py", n) for n in live])
+        self._prefit([(self.models_dir / f"{n}.py", n) for n in live], self.live_cfg)
         for name, e in live.items():
             path = self.models_dir / f"{name}.py"
             model = RSAModel(path, name=name)
-            fitted = fit_with_refit(path, name, self.gate_cfg)
+            fitted = fit_with_refit(path, name, self.live_cfg)
             self.live[name] = Live(name, e["hypothesis"], model, fitted,
                                    posterior_mean_class_probs(model, fitted, self.pool), e["source"])
         self._write_manifest()

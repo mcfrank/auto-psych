@@ -1,48 +1,52 @@
 #!/bin/bash
 #SBATCH --job-name=rsa_outer_rehearsal
 #SBATCH --partition=mcfrank
-#SBATCH --array=0-1
+#SBATCH --array=0
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=48GB
 #SBATCH --time=48:00:00
 #SBATCH --output=%x_%A_%a.out
-#SBATCH --error=%x_%A_%a.out
 #
-# The simulated dress rehearsal of the live campaign (PI 2026-10-09): one run of
-# three experiments per selection scope, with real agents (sandboxed, no
-# network) and simulated participants answering from a hidden ground truth.
-#   task 0: the inner loop selects on all data so far (cumulative)
-#   task 1: it fits on all data but selects on the live trials only
-# Same ground truth, seed and seeds in both: experiment 1's design and
-# simulated people are identical, so the two runs differ only by how the
-# inner loop selects. Both start from one chain's seeds (CHAIN, default 0, of
-# data/rsa/live_seeds/chains: chains.sbatch), as a live chain will. After
-# promote.sbatch and chains.sbatch (it reuses run 2's promote_work).
+# A simulated dress rehearsal of the live campaign: one run per selection scope
+# (array task i runs SCOPES[i]), with real agents (sandboxed, no network) and
+# simulated participants answering from a hidden ground truth. Every run starts
+# from one chain's seeds (CHAIN, default 0, of data/rsa/live_seeds/chains), as
+# a live chain will. After promote.sbatch and chains.sbatch (it reuses run 2's
+# promote_work).
 #
-#   mkdir -p "$SCRATCH/auto-psych/rsa_rehearsal/logs"
-#   sbatch --chdir="$HOME/auto-psych" -o "$SCRATCH/auto-psych/rsa_rehearsal/logs/%x_%A_%a.out" \
+# Rehearsal 2 (PI 2026-10-10, the default): one run, the guarded rule, two
+# experiments, and a ground truth coherent with the human data (GT_RULE
+# coherent: run 2's unpromoted model near the CV front farthest from the
+# chain; src.rsa.outer.ground_truth). Rehearsal 1 (2026-10-09) was
+# SCOPES="all live", GT_RULE=farthest_starting, N_EXPERIMENTS=3, in
+# $SCRATCH/auto-psych/rsa_rehearsal; its literal-listener ground truth
+# contradicted the human data (docs/auto_rsa/REHEARSAL_REVIEW.md).
+#
+#   mkdir -p "$SCRATCH/auto-psych/rsa_rehearsal2/logs"
+#   sbatch --chdir="$HOME/auto-psych" -o "$SCRATCH/auto-psych/rsa_rehearsal2/logs/%x_%A_%a.out" \
 #     scripts/rsa/slurm/outer_rehearsal.sbatch
 #
-# The ground truth is picked by rule (src.rsa.outer.ground_truth: the starting
-# model farthest from every promoted seed) and withheld from the agents' tree.
-# Everything that names it (its fit, the configuration, prospective and
-# recovery records) stays in the cell's private/, outside the tree.
-# Overrides: PARTICIPANTS (200), DISPLAYS (40; PI 2026-10-09: 50 responses a display), CHAIN (0),
-# N_EXPERIMENTS (3), AGENT_MODEL,
+# The ground truth is withheld from the agents' tree. Everything that names it
+# (its fit, the configuration, prospective and recovery records) stays in the
+# cell's private/, outside the tree.
+# Overrides: SCOPES ("guarded"; with more, --array=0-<n-1>), GT_RULE (coherent),
+# PARTICIPANTS (200), DISPLAYS (40), CHAIN (0), N_EXPERIMENTS (2), AGENT_MODEL,
 # AGENT_TIMEOUT_SEC, SEED (0), RUN2_ROOT (run 2's sweep root).
 # Resubmitting a task resumes its run where it stopped.
 set -euo pipefail
 export REPO="${REPO:-${SLURM_SUBMIT_DIR:-$HOME/auto-psych}}"
-export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/rsa_rehearsal}"
+export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/rsa_rehearsal2}"
 source "$REPO/scripts/rsa/slurm/_env.sh"
 rsa_require_opencode
 rsa_require_gemini_key
 command -v bwrap >/dev/null || { echo "FATAL: no bwrap (sandboxed agents need it)" >&2; exit 1; }
 command -v flock >/dev/null || { echo "FATAL: no flock" >&2; exit 1; }
 
-TASK="${SLURM_ARRAY_TASK_ID:?run as an array task (0: all, 1: live)}"
-SCOPES=(all live)
-SCOPE="${SCOPES[$TASK]:?task $TASK is not 0 or 1}"
+TASK="${SLURM_ARRAY_TASK_ID:?run as an array task}"
+read -r -a SCOPE_LIST <<< "${SCOPES:-guarded}"
+SCOPE="${SCOPE_LIST[$TASK]:?array task $TASK has no scope in SCOPES=${SCOPES:-guarded}}"
+GT_RULE="${GT_RULE:-coherent}"
+N_EXPERIMENTS="${N_EXPERIMENTS:-2}"
 RUN2_ROOT="${RUN2_ROOT:-$(rsa_default_work_root)}"  # the run-2 sweep (_cells.sh)
 PROMOTE_WORK="$RUN2_ROOT/promote_work"
 EXISTING="$PROMOTE_WORK/all_trials.csv"
@@ -66,14 +70,21 @@ mkdir -p "$WORK_ROOT" "$CELLS_ROOT"
   fi
   if [[ ! -f "$WORK_ROOT/ground_truth.json" ]]; then
     (cd "$WORK_ROOT/harness_repo" && "$VENV_PY" -m src.rsa.outer.ground_truth --promoted "$PROMOTED" \
-       --data "$EXISTING" --cache "$PROMOTE_WORK/.fit_cache" --out "$WORK_ROOT/ground_truth.json")
+       --data "$EXISTING" --cache "$PROMOTE_WORK/.fit_cache" --out "$WORK_ROOT/ground_truth.json" \
+       --rule "$GT_RULE" --promotion "$REPO/data/rsa/live_seeds/promotion.json" \
+       --sweep "$REPO/data/rsa/sherlock_run2" --chain "$CHAIN_SEEDS")
   fi
 ) 9>"$WORK_ROOT/.setup.lock"
 HARNESS_REPO="$WORK_ROOT/harness_repo"
 SLURM_DIR="$HARNESS_REPO/scripts/rsa/slurm"
 GT="$("$VENV_PY" -c 'import json,sys; print(json.load(open(sys.argv[1]))["ground_truth"])' "$WORK_ROOT/ground_truth.json")"
-GT_FILE="$HARNESS_REPO/$RSA_SEED_MODELS_REL/$GT.py"
+GT_FILE="$("$VENV_PY" -c 'import json,sys; print(json.load(open(sys.argv[1]))["ground_truth_file"])' "$WORK_ROOT/ground_truth.json")"
 [[ -f "$GT_FILE" ]] || { echo "ERROR: no ground-truth file $GT_FILE" >&2; exit 1; }
+# A starting model as ground truth is scrubbed from the tree's seeds; a run-2
+# model (coherent) is in no seed set, and check_agent_tree.sh still refuses any
+# copy of it or file named after it.
+SCRUB=()
+[[ -f "$HARNESS_REPO/$RSA_SEED_MODELS_REL/$GT.py" ]] && SCRUB=("$GT")
 
 # --- the cell and its agent tree (as rsa_loop_array.sbatch) --------------------------
 CELL="rehearsal_$SCOPE"
@@ -93,7 +104,7 @@ export PYTENSOR_FLAGS="base_compiledir=$PYTENSOR_BASE"
 VENV_DIR="$(dirname "$(dirname "$VENV_PY")")"
 ln -sfn "$VENV_DIR" "$AGENT_DIR/venv"
 AGENT_PY="$AGENT_DIR/venv/bin/python"
-bash "$SLURM_DIR/build_agent_tree.sh" "$WORK_ROOT/agent_src" "$RUN_REPO" "$AGENT_PY" "$GT"
+bash "$SLURM_DIR/build_agent_tree.sh" "$WORK_ROOT/agent_src" "$RUN_REPO" "$AGENT_PY" ${SCRUB[@]+"${SCRUB[@]}"}
 bash "$SLURM_DIR/check_agent_tree.sh" "$RUN_REPO" --gt-file "$GT_FILE"
 
 # --- the run ------------------------------------------------------------------------
@@ -107,12 +118,12 @@ done
 UNSET_ARGS=()
 for name in ${WITHHELD[@]+"${WITHHELD[@]}"}; do UNSET_ARGS+=(-u "$name"); done
 echo "[rehearsal $SCOPE] withheld from the agents' environment: ${WITHHELD[*]:-}"
-echo "[rehearsal $SCOPE] chain $CHAIN, ${N_EXPERIMENTS:-3} experiments, ${PARTICIPANTS:-200} people x 10 displays of ${DISPLAYS:-40}, $AGENT_MODEL -> $RUN_DIR"
+echo "[rehearsal $SCOPE] chain $CHAIN, ${N_EXPERIMENTS} experiments, ${PARTICIPANTS:-200} people x 10 displays of ${DISPLAYS:-40}, $AGENT_MODEL -> $RUN_DIR"
 cd "$HARNESS_REPO"
 env ${UNSET_ARGS[@]+"${UNSET_ARGS[@]}"} PATH="$RUN_REPO/.agent_bin:$PATH" \
   "$AGENT_PY" -m src.rsa.outer.run --run-dir "$RUN_DIR" --private-dir "$CELL_DIR/private" \
     --seeds "$WORK_ROOT/live_seeds" --promoted "$PROMOTED" --existing-data "$EXISTING" --collection simulated --ground-truth "$GT_FILE" \
-    --selection-scope "$SCOPE" --n-experiments "${N_EXPERIMENTS:-3}" --participants "${PARTICIPANTS:-200}" \
+    --selection-scope "$SCOPE" --n-experiments "${N_EXPERIMENTS}" --participants "${PARTICIPANTS:-200}" \
     --trials 10 --displays "${DISPLAYS:-40}" --seed "$SEED" \
     --agent-root "$RUN_REPO" --agent-model "$AGENT_MODEL" --agent-timeout-sec "$AGENT_TIMEOUT_SEC"
 

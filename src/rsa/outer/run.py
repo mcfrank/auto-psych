@@ -57,13 +57,16 @@ from src.models.clustered_se import cluster_dse
 from src.models.model_manifest import read_manifest_entries, read_manifest_names
 from src.rsa.dataset import load_forced_choice
 from src.rsa.design import run as design_run
+from src.rsa.design.distinct import SAME_ON_POOL_RMSE, keep_distinct
 from src.rsa.evaluate_heldout import heldout_lpd
 from src.rsa.experiment.design import Design, trial_lists
 from src.rsa.fit import FitSettings
-from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC, loop_fit
+from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC, NO_TIME_LIMIT, loop_fit
+from src.rsa.loop.novelty import posterior_mean_class_probs
 from src.rsa.loop.orchestrator import LoopConfig, RSALoop, SpawnFn
 from src.rsa.model_file import RSAModel
 from src.rsa.outer.simulate import simulate_participants
+from src.runtime.token_usage import read_usage_log, start_usage_log, summarize, write_usage_report
 from src.runtime.config import PROJECT_ASSETS_DIR
 
 STARTING_MODELS = PROJECT_ASSETS_DIR / "rsa_reference" / "seed_models"
@@ -98,10 +101,19 @@ class OuterConfig:
     candidate_count: int = 6
     stop_after_stale_rounds: int = 2
     cv_folds: int = 5
-    selection_scope: Literal["all", "live"] = "all"
-    """What the inner loop selects on: grouped CV over all data so far, or over
-    the live trials only (every fit still uses all data). Open (PI 2026-10-09):
-    the simulated rehearsal compares the two."""
+    selection_scope: Literal["all", "live", "guarded"] = "guarded"
+    """What the inner loop selects on (every fit uses all data): grouped CV over
+    all data so far ("all"), over the live trials only ("live"), or over the
+    live trials among the models within ``selection_guard_dse`` clustered SEs
+    of the best on the existing data ("guarded"; PI 2026-10-10, after the
+    rehearsal: "all" never moved off the literature, "live" collapsed onto one
+    family of near-copies that predicted worse than plain RSA)."""
+    selection_guard_dse: float = 4.0
+    max_carried: int = 8
+    """Models carried into the next experiment, one per distinct hypothesis (`carry`)."""
+    carried_share: float = 0.5
+    """The design's prior mass on the models going in; the bar models (starting
+    models and promoted seeds, so the displays test claim 2) share the rest."""
     num_warmup: int = 1000
     num_samples: int = 1000
     num_chains: int = 4
@@ -138,6 +150,9 @@ class OuterRun:
         self.cfg = cfg
         self.dir = Path(cfg.run_dir)
         self.spawner = spawner
+        # The outer loop fits only models already in play (the models going in,
+        # the bar models, the ground truth): never time-limited (fitting.NO_TIME_LIMIT).
+        self.ref_limit = None if cfg.fit_time_limit_sec is None else NO_TIME_LIMIT
         self.settings = FitSettings(num_warmup=cfg.num_warmup, num_samples=cfg.num_samples,
                                     num_chains=cfg.num_chains, seed=cfg.seed, dense_mass=cfg.dense_mass)
         # The agents can read the run directory: nothing in it may name the
@@ -162,8 +177,33 @@ class OuterRun:
             else:
                 prev = self.exp(n - 1) / "model_loop"
                 export = json.loads((prev / "export.json").read_text())
-                _copy_models(prev / "models", export["live"], dest)
+                _copy_models(prev / "models", self.carry(n, prev, export["live"]), dest)
         return dest
+
+    def carry(self, n: int, prev: Path, live: List[str]) -> List[str]:
+        """The previous experiment's live set, one model per hypothesis the live
+        displays can tell apart (`src.rsa.design.distinct`), best first by the
+        loop's final standing (trusted, then its selection criterion), at most
+        ``max_carried``. Recorded in ``experiment<n>/carry.json``. The
+        2026-10-09 rehearsal carried 12 near-copies into experiment 3."""
+        out = self.exp(n) / "carry.json"
+        if out.exists():
+            return json.loads(out.read_text())["kept"]
+        standing = json.loads((prev / "history.json").read_text())[-1]["standing"]
+        order = sorted(live, key=lambda m: (not standing[m]["trusted"], -standing[m]["sel_elpd"], m))
+        pool = design_run.design_pool()
+        preds = {}
+        for name in order:
+            path = prev / "models" / f"{name}.py"
+            fitted = loop_fit(path, name, prev / "responses.csv", self.settings, prev / ".fit_cache",
+                              time_limit_sec=self.ref_limit)
+            preds[name] = posterior_mean_class_probs(RSAModel(path, name=name), fitted, pool)
+        chosen = keep_distinct(order, preds, cap=self.cfg.max_carried)
+        _write_json(dict(rule=f"best first by the loop's final standing; a model within {SAME_ON_POOL_RMSE} "
+                              f"(RMSE of posterior-mean choice-class probabilities over the design pool) of one "
+                              f"kept is the same hypothesis for the live phase; at most {self.cfg.max_carried}",
+                         order=order, **chosen), out)
+        return chosen["kept"]
 
     def prior_data(self, n: int) -> Path:
         path = self.exp(n) / "data" / "prior.csv"
@@ -183,11 +223,13 @@ class OuterRun:
         c = self.cfg
         design_run.main(design_run.Args(
             models_dir=self.models_input(n), data=self.prior_data(n), cache=self.cache, out=out,
+            bar_models_dirs=[Path(c.starting_models), Path(c.promoted or c.seeds)], carried_share=c.carried_share,
+            withhold=[Path(c.ground_truth)] if c.ground_truth else [],
             trials_per_participant=c.trials, participants=c.participants, displays=[c.displays],
             power_participants=[c.participants], n_draws=c.n_draws, n_scenarios=c.n_scenarios,
             n_power_scenarios=c.n_scenarios, seed=c.seed + n, num_warmup=c.num_warmup,
             num_samples=c.num_samples, num_chains=c.num_chains, fit_seed=c.seed, dense_mass=c.dense_mass,
-            time_limit_sec=c.fit_time_limit_sec or FIT_TIME_LIMIT_SEC))
+            time_limit_sec=self.ref_limit if self.ref_limit is not None else FIT_TIME_LIMIT_SEC))
         design = Design.load(out / f"design_d{c.displays}.json")
         shutil.copyfile(out / f"design_d{c.displays}.json", out / "design.json")
         doc = trial_lists(design, seed=c.seed * 1000 + n, n_lists=c.participants, n_catch=c.n_catch, n_trials=c.trials)
@@ -203,7 +245,7 @@ class OuterRun:
             raise NotImplementedError("live collection: deploying the page and collecting its data is not wired yet")
         gt = Path(self.cfg.ground_truth)
         fitted = loop_fit(gt, gt.stem, self.cfg.existing_data, self.settings, self.cache,
-                          time_limit_sec=self.cfg.fit_time_limit_sec)
+                          time_limit_sec=self.ref_limit)
         first = sum(json.loads((self.exp(k) / "data" / "participants.json").read_text())["n_recruited"]
                     for k in range(1, n))
         rows = simulate_participants(doc, gt, fitted, self.cfg.participants, experiment=self.label(n),
@@ -232,7 +274,7 @@ class OuterRun:
             for name in read_manifest_names(folder):
                 path = folder / f"{name}.py"
                 fitted = loop_fit(path, name, self.prior_data(n), self.settings, self.cache,
-                                  time_limit_sec=self.cfg.fit_time_limit_sec)
+                                  time_limit_sec=self.ref_limit)
                 label = name if group == "live" else f"{group}:{name}"
                 lpd[label] = heldout_lpd(RSAModel(path, name=name), fitted, new.contexts, new.choices)
 
@@ -269,37 +311,74 @@ class OuterRun:
             responses_path=cumulative, seed_models_dir=self.models_input(n), results_dir=out,
             max_iterations=c.max_iterations, candidate_count=c.candidate_count, settings=self.settings,
             fit_time_limit_sec=c.fit_time_limit_sec, stop_after_stale_rounds=c.stop_after_stale_rounds,
-            cv_folds=c.cv_folds, selection_source=LIVE_SOURCE if c.selection_scope == "live" else None,
+            cv_folds=c.cv_folds, selection_source=None if c.selection_scope == "all" else LIVE_SOURCE,
+            selection_guard_dse=c.selection_guard_dse if c.selection_scope == "guarded" else 0.0,
             report_title=f"RSA inner loop · {self.label(n)}",
         )
-        RSALoop(cfg, self.spawner(n, out / "models", cumulative)).run(resume=(out / "history.json").exists())
+        # The agents' spend, per experiment (appended across resumes; the summary
+        # covers the whole log), written even when the loop fails. The rehearsal
+        # of 2026-10-09 recorded none.
+        usage_log = out / "token_usage.jsonl"
+        marker = start_usage_log(usage_log)
+        try:
+            RSALoop(cfg, self.spawner(n, out / "models", cumulative)).run(resume=(out / "history.json").exists())
+        finally:
+            write_usage_report(out, marker, heading=f"RSA inner loop, {self.label(n)}",
+                               records=read_usage_log(usage_log) if usage_log.exists() else [])
+            self.write_usage_summary()
         return out
 
+    def write_usage_summary(self) -> dict:
+        """The run's agent spend, per experiment and in total: ``<run>/token_usage_summary.json``."""
+        per, every = {}, []
+        for n in range(1, self.cfg.n_experiments + 1):
+            log = self.exp(n) / "model_loop" / "token_usage.jsonl"
+            if log.exists():
+                records = read_usage_log(log)
+                per[f"experiment{n}"] = summarize(records)
+                every += records
+        summary = dict(total=summarize(every), experiments=per)
+        _write_json(summary, self.dir / "token_usage_summary.json")
+        return summary
+
     def recovery(self, n: int) -> Optional[Path]:
-        """Simulated runs: how far each model is from the hidden ground truth
-        on the design pool (RMSE of choice-class probabilities), going into
-        experiment n and after its inner loop."""
+        """Simulated runs: how far each model is from the hidden ground truth,
+        going into experiment n and after its inner loop. The measure is the
+        mean KL divergence from the ground truth's choice-class probabilities
+        (nats per display), on the design pool and on this experiment's
+        designed displays; RMSE on the pool is kept beside it. The 2026-10-09
+        rehearsal's pool RMSE said its models were getting closer while they
+        predicted the designed displays worse: an average over 794 displays,
+        most of which tell little apart, hides the few that matter."""
         if self.cfg.collection != "simulated":
             return None
         out = self.private / f"experiment{n}" / "recovery.json"
         if out.exists():
             return out
-        from src.rsa.loop.novelty import posterior_mean_class_probs
-
         pool = design_run.design_pool()
+        designed = [spec.context() for spec in Design.load(self.exp(n) / "design" / "design.json").specs]
         gt = Path(self.cfg.ground_truth)
         gt_fit = loop_fit(gt, gt.stem, self.cfg.existing_data, self.settings, self.cache,
-                          time_limit_sec=self.cfg.fit_time_limit_sec)
-        truth = posterior_mean_class_probs(RSAModel(gt, name=gt.stem), gt_fit, pool)
+                          time_limit_sec=self.ref_limit)
+        gt_model = RSAModel(gt, name=gt.stem)
+        truth_pool = posterior_mean_class_probs(gt_model, gt_fit, pool)
+        truth_design = posterior_mean_class_probs(gt_model, gt_fit, designed)
 
-        def distances(folder: Path, data: Path, cache: Path) -> Dict[str, float]:
+        def kl(p, q):
+            p, q = np.asarray(p, float), np.clip(np.asarray(q, float), 1e-12, None)
+            return float(np.mean(np.sum(np.where(p > 0, p * (np.log(np.clip(p, 1e-12, None)) - np.log(q)), 0.0), -1)))
+
+        def distances(folder: Path, data: Path, cache: Path) -> Dict[str, dict]:
             d = {}
             for name in read_manifest_names(folder):
                 path = folder / f"{name}.py"
-                fitted = loop_fit(path, name, data, self.settings, cache, time_limit_sec=self.cfg.fit_time_limit_sec)
-                p = posterior_mean_class_probs(RSAModel(path, name=name), fitted, pool)
-                d[name] = float(np.sqrt(np.mean((p - truth) ** 2)))
-            return dict(sorted(d.items(), key=lambda kv: kv[1]))
+                fitted = loop_fit(path, name, data, self.settings, cache, time_limit_sec=self.ref_limit)
+                model = RSAModel(path, name=name)
+                p_pool = posterior_mean_class_probs(model, fitted, pool)
+                p_design = posterior_mean_class_probs(model, fitted, designed)
+                d[name] = dict(kl_pool=kl(truth_pool, p_pool), kl_design=kl(truth_design, p_design),
+                               rmse_pool=float(np.sqrt(np.mean((p_pool - truth_pool) ** 2))))
+            return dict(sorted(d.items(), key=lambda kv: kv[1]["kl_pool"]))
 
         loop = self.model_loop(n)
         export = json.loads((loop / "export.json").read_text())
@@ -307,9 +386,11 @@ class OuterRun:
         after = distances(loop / "models", self.exp(n) / "data" / "cumulative.csv", loop / ".fit_cache")
         _write_json(dict(
             experiment=n, ground_truth=gt.stem, selection_scope=self.cfg.selection_scope,
-            exported=export["best_model"], exported_rmse=after[export["best_model"]],
-            closest_after=next(iter(after)), closest_after_rmse=next(iter(after.values())),
-            closest_before=next(iter(before)), closest_before_rmse=next(iter(before.values())),
+            measure="kl_pool: mean KL(ground truth || model) over the design pool's displays (nats); "
+                    "kl_design: the same over this experiment's designed displays; rmse_pool: RMSE on the pool",
+            exported=export["best_model"], exported_distance=after[export["best_model"]],
+            closest_after=next(iter(after)), closest_after_distance=next(iter(after.values())),
+            closest_before=next(iter(before)), closest_before_distance=next(iter(before.values())),
             before=before, after=after,
         ), out)
         return out

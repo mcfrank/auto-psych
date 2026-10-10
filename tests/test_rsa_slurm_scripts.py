@@ -500,3 +500,10 @@ def test_single_process_jobs_ask_for_one_cpu_and_memory_that_buys_no_more(name):
 
 def test_openblas_sizes_its_pool_to_one_thread():
     assert "export OPENBLAS_NUM_THREADS=1" in (SLURM / "_env.sh").read_text()
+
+
+@pytest.mark.parametrize("script", sorted(SLURM.glob("*.sbatch")), ids=lambda p: p.name)
+def test_stderr_follows_the_output_log(script):
+    # A relative --error in a header sent the rehearsal's traceback to the
+    # checkout when only -o was overridden (2026-10-09).
+    assert "#SBATCH --error" not in script.read_text()

@@ -103,3 +103,19 @@ def test_a_dense_mass_fit_is_its_own_cache_entry_and_old_keys_stand(tmp_path, re
         SEEDS / "rsa_l1.py", responses, FitSettings(num_warmup=100, num_samples=100, num_chains=2))
     fitted = fit_cached(SEEDS / "rsa_l1.py", "rsa_l1", responses, dense, tmp_path / "cache")
     assert fitted.idata.posterior["alpha"].shape == (2, 100)
+
+
+def test_a_fit_without_a_time_limit_runs_in_a_child_and_is_never_killed(tmp_path, responses, monkeypatch):
+    from src.rsa.loop import fitting
+
+    joined = []
+    real = fitting._finish_child
+
+    def spy(proc, queue, name, nc, meta, limit):
+        joined.append(limit)
+        return real(proc, queue, name, nc, meta, limit)
+
+    monkeypatch.setattr(fitting, "_finish_child", spy)
+    fitted = fit_cached(SEEDS / "rsa_l1.py", "rsa_l1", responses, QUICK, tmp_path / "c",
+                        time_limit_sec=fitting.NO_TIME_LIMIT)
+    assert joined == [fitting.NO_TIME_LIMIT] and fitted.param_names == ["alpha", "lapse"]

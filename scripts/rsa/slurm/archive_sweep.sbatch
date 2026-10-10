@@ -5,7 +5,6 @@
 #SBATCH --mem=8GB
 #SBATCH --time=08:00:00
 #SBATCH --output=%x_%j.out
-#SBATCH --error=%x_%j.out
 #
 # Archive a finished RSA sweep off $SCRATCH (purged after 90 days) for the
 # paper: everything the repository does not hold. From the checkout:

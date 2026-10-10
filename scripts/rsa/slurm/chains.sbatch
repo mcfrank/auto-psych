@@ -5,7 +5,6 @@
 #SBATCH --mem=7GB
 #SBATCH --time=10:00:00
 #SBATCH --output=%x_%j.out
-#SBATCH --error=%x_%j.out
 #
 # Split the promoted seeds across the live chains (src.rsa.outer.chains; PI
 # 2026-10-09), then each chain's experiment-1 design and its power

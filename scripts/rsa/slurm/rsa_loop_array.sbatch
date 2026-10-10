@@ -6,7 +6,6 @@
 #SBATCH --mem=36GB
 #SBATCH --time=24:00:00
 #SBATCH --output=%x_%A_%a.out
-#SBATCH --error=%x_%A_%a.out
 #
 # RSA run 1, step 3: one array task per cell (_cells.sh maps task -> cell:
 # 3 conditions x 2 replicates). submit.sh submits it after the setup job and
