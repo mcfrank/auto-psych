@@ -277,8 +277,7 @@ def main(args: Args) -> dict:
             free=free,
         ))
         print(f"D={d} ({per_display} responses per display at N={args.participants}): "
-              f"{designs[-1]['n_eig_picks']} EIG picks, joint EIG {sel.joint_eig_bits[-1]:.2f} of "
-              f"{np.log2(len(names)):.2f} bits; {designs[-1]['kinds']}", flush=True)
+              f"{designs[-1]['n_eig_picks']} EIG picks; {designs[-1]['kinds']}", flush=True)
         for label, rows in [("", table)] + ([("free: ", free["power"])] if free else []):
             for row in rows:
                 print(f"  {label}N={row['participants']}: P(generating model wins) {row['p_correct']:.3f} ± "

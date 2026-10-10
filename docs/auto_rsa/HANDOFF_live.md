@@ -67,16 +67,27 @@ PROLIFIC_MODE=test CHAINS_TO_RUN=0 bash scripts/rsa/live/launch.sh
 
 **What happens:** chain 0 designs experiment 1, deploys its page to
 `https://auto-psych-2c5da-rsa-c0.web.app/e1-c0/`, creates a **draft** Prolific study and
-stops. Expect about 30 min (the design fits).
+stops. Expect about 1.5 h: the fits (about 30 min), then the display selection (about
+1 h; the pool doubled on 2026-10-10, and the free design is selected beside it on a
+second core).
 
 **Check, and report:**
+- **The design** (`experiment1/design/eig.json`): the quotas met (`designs[0].quotas`:
+  each `count` ≥ `minimum`), the mix (`kinds`), the power (`power`) beside the free
+  design's (`free.power`), and `screened_out` (should be empty). The local run of the same
+  design on 2026-10-10 (fits to all human trials) gave power 0.760 ± 0.007 with quotas vs
+  0.767 ± 0.007 free, 6 two-object displays vs 1.
 - **The deploy log:** functions deployed; `/results` refuses without the token; the site
   is live.
 - **The page.** Open `…/e1-c0/?PROLIFIC_PID=TEST1&STUDY_ID=x&SESSION_ID=y` twice (two
   ids). Confirm:
   - consent, then the practice screen, then 12 choices;
   - at the end it redirects to Prolific's completion page;
-  - each id gets a different list, and reloading with the same id gives the same list.
+  - each id gets a different list, and reloading with the same id gives the same list;
+  - **the new display kinds look right:** a two-object display, and one where two features
+    are on exactly the same objects (both 2×4 displays are like that). Find a list that has
+    them in `experiment1/design/trial_lists.json` (`objects` with 2 rows), and use its
+    index + 1 as the participant's arrival order (or use more test ids).
 - **The draft in Prolific's dashboard:** name, reward, places, device filter, and the
   earlier-participants exclusion.
 - **The test submissions:**
@@ -112,7 +123,7 @@ PROLIFIC_MODE=live bash scripts/rsa/live/launch.sh
 ```
 
 Three array tasks, one per chain, each 3 experiments. Each experiment is: a design
-(about 30 min), recruitment (up to 3 h; the study is paused if short), the prospective
+(about 1.5 h), recruitment (up to 3 h; the study is paused if short), the prospective
 score, then the inner loop (about 7 h).
 - **Owners overflow:** add `-p mcfrank,owners --requeue` only if the node is full. A
   requeued task resumes and never republishes.
