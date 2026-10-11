@@ -487,7 +487,7 @@ class RSALoop:
         hypothesis = hyp_file.read_text(encoding="utf-8") if hyp_file.exists() else ""
         same = self._same_hypothesis(hypothesis)
         if same is not None:
-            reason = (f"hypothesis.md is word for word {same}'s hypothesis. State this candidate's own "
+            reason = (f"hypothesis.md is word for word {same}'s hypothesis, or part of it. State this candidate's own "
                       "mechanism, including what it changes from the model it refines: the ledger, the "
                       "briefs and the critique describe every model by its hypothesis.")
             self._ledger(name, "rejected", reason, hypothesis, context)
@@ -506,16 +506,19 @@ class RSALoop:
 
     def _same_hypothesis(self, hypothesis: str) -> Optional[str]:
         """The model (live, or admitted earlier in the run's ledger) whose hypothesis
-        this one repeats verbatim, ignoring whitespace and case; None if it is new.
-        Rehearsal 3's round-1 winner copied its parent's hypothesis, so the ledger,
-        every brief and the next critique described it without its new mechanism."""
+        contains this one word for word, ignoring whitespace and case: a copy, or a
+        part of it (its first sentence); None if this one says something of its own.
+        Rehearsal 3's round-1 winner copied its parent's hypothesis, and in the
+        campaign (chain 0, experiment 1) a refinement wrote its parent's first
+        sentence alone, so the ledger, every brief and the next critique described
+        them without their new mechanisms."""
         key = collapse_whitespace(hypothesis).strip().lower()
         if not key:
             return None
         texts = [(m.name, m.hypothesis) for m in self.live.values()]
         texts += [(e.name, e.hypothesis) for e in self.ledger.entries() if e.outcome == "admitted"]
         for name, text in texts:
-            if collapse_whitespace(text).strip().lower() == key:
+            if key in collapse_whitespace(text).strip().lower():
                 return name
         return None
 

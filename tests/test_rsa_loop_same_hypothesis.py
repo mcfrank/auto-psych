@@ -23,6 +23,9 @@ def test_a_verbatim_hypothesis_is_found_ignoring_whitespace_and_case(loop):
     assert loop._same_hypothesis("A SALIENCE PRIOR.") == "gone"  # admitted earlier, since retired
     assert loop._same_hypothesis("Listeners reason at depth 2 about a confusable speaker, with a cost.") is None
     assert loop._same_hypothesis("  ") is None
+    # A part of a model's hypothesis (its first sentence alone: campaign chain 0, experiment 1) is no new statement.
+    loop.live["parent"].hypothesis = "Listeners reason at depth 2. A confusable speaker avoids shared words."
+    assert loop._same_hypothesis("Listeners reason at depth 2.") == "parent"
 
 
 def test_the_candidate_is_rejected_with_the_reason_before_any_fit(loop, tmp_path, monkeypatch):
