@@ -93,3 +93,39 @@ with 12 rows (10 designed + 2 catch; the catch condition holds 40 rows).
 - **The Prolific study** awaits the PI's review of the 10 held submissions.
 - **The test draft** `6acaaa90665e4a53bd804a51` (stage 1) and the older
   `6aca6c2a3e69a3f93c402401` are still unpublished drafts.
+
+## 6. The PI's decisions (2026-10-10, after this report)
+
+- **Held submissions:** the PI approved the 10 held submissions in the Prolific dashboard, so
+  all 20 are approved.
+- **Pay:** **$0.50** a person. The campaign comes to about **$1,200**: 9 studies × 200 × $0.50
+  = $900, plus Prolific's fee at the rate in the earlier $1,915 figure.
+- **Time estimate:** **2.5 min.**
+- **Welcome screen:** keep "about 3 minutes".
+
+**For the driver: 2.5 min cannot go to Prolific as written.**
+- In `scripts/rsa/live/rsa_live.yaml`, `estimated_completion_time` does two jobs:
+  - the reward (`compute_reward_cents`: `round(reward_per_hour × minutes / 60)`, where 1200 ×
+    2.5 / 60 = 50¢);
+  - the estimate sent to Prolific, as `int(...)` (`deployment/prolific.py:301`).
+- Prolific takes whole minutes, so **setting it to 2.5 would silently list 2 min** at 50¢.
+  That is $15/h on Prolific's listing.
+- Two ways to get the PI's 50¢:
+
+  | option | config | Prolific shows | held for review |
+  |---|---|---|---|
+  | **a** | estimate 2, 50¢ (e.g. `reward_per_hour: 1500`) | 2 min, $15/h | fewest (see below) |
+  | **b** | estimate 3, `reward: 50` and no `reward_per_hour` | 3 min, $10/h | more than a |
+
+- **About the hold.** With the 4-min estimate, Prolific held the completions under about 2 min
+  (held at ≤ 111 s, approved at ≥ 127 s), roughly half the estimate. If the threshold scales
+  with the estimate:
+  - a 2-min estimate puts it near 1 min, below every pilot time (fastest 80 s);
+  - a 3-min estimate puts it near 1.5 min, which would have held a few pilot people.
+- **My suggestion: option a, written explicitly** (estimate 2 at 1500¢/h) rather than 2.5
+  truncated in the code. It is closest to the PI's 2.5 min and 50¢, and it holds the fewest.
+  The PI's call if it should be b.
+- **Either way, change the Prolific description's "About 4 minutes" to "About 3 minutes"**
+  (`rsa_live.yaml`, `prolific.description`), so it matches the welcome screen. The welcome
+  screen itself stays as it is.
+- Someone should still glance at the dashboard during the campaign for held submissions.

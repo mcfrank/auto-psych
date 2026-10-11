@@ -164,21 +164,23 @@ games, and support two claims:
 | 10-10 | **Live stage 1** (test deploy) | Sherlock 47242197 | chain 0's design deployed; Prolific draft | page live, draft made; **not passed:** data didn't save (Firestore nested arrays); 38 of 40 displays were 4×4; a `.secrets~` backup in staging (never read) | JSON-string trials, secrets exclusions, RSA-only blocklist, quotas and wider pool (#28–31, 44, 47) | `STAGE1_FINDINGS.md` |
 | 10-10 | Quota comparison + model check | cloud | chain 0's experiment-1 design, free vs quotas; all 505 model files on the wider pool | power 0.760 vs 0.767 (±0.007); 6 vs 1 two-object displays; every model defined | quotas adopted as defaults | `PLAN.md` "Design mixture" |
 | 10-10 | Critique step built | cloud | main's CriticAL ported (#7); e2e tests with scripted agents | 28k trials: 12 s for 1,000 replicates, ~12 s per statistic | rehearsal 3 | `PLAN.md` "Critique step" |
-| next | **Rehearsal 3** (short) | Sherlock | chain 0, 1 experiment, 2 rounds, rehearsal 2's ground truth: the critique and the new design with real agents | | | `HANDOFF_rehearsal3.md` |
 | 10-10 | **Live stage 1 re-run: passed** | Sherlock 47272640, 49 min | chain 0's design with quotas, deployed; Prolific draft `6acaaa90…` | quotas met (6 two-object, 10 three-object, 13 mumble, 27 word); power 0.932 vs 0.931 free; page works end to end (consent → redirect; word, mumble and two-object displays; a list per id, the same on reload); data saved as one JSON string | the pilot can go (PI) | `STAGE1_FINDINGS.md` §9 |
-| next | Pilot (about 20 people, about $21) | Sherlock + Prolific | PI go-ahead | | | `HANDOFF_live.md` §3 |
-| next | Campaign (3 chains × 3 experiments × 200, about $1,915) | Sherlock + Prolific | PI go-ahead after the pilot | | | `HANDOFF_live.md` §4 |
+| 10-10 | **Pilot** (live, 20 people) | Sherlock 47283766 + Prolific `6acabe15…`, 1 h 21 min | chain 0's experiment-1 design at N=20, $0.80 each | 20/20; median 119 s (80–670); 0 catch exclusions; every display exactly 5 responses; 1 timed out; Prolific held the 10 fastest for review (PI approved them) | **PI: $0.50 a person, estimate 2.5 min (Prolific takes whole minutes: see the report §6), welcome screen stays at 3 min; campaign about $1,200** | `PILOT_REPORT.md` |
+| 10-10 | **Rehearsal 3** (critique) | Sherlock 47283774, 5 h 18 min, completed | chain 0, 1 experiment, 2 rounds × 6, rehearsal 2's ground truth | both rounds critiqued (8/8 statistics significant, none broken); 10 of 16 hypotheses cite a discrepancy; quotas met, power 0.933 vs 0.931 free; per-display KL 0.0168 → 0.0020; critique 15% of time and 17% of spend ($4.04 of $23.78) | **driver's call:** the critic scores all 51,530 trials (live 4.4%; 3 of 9 statistics pragmods-only) while selection ranks on live trials; 15/16 p at the floor (rank by z?); an incumbent with a stale hypothesis | `REHEARSAL3_REPORT.md`, `data/rsa/rehearsal3/` |
+| next | Campaign (3 chains × 3 experiments × 200, about $1,200 at $0.50) | Sherlock + Prolific | PI go-ahead after the pilot | | | `HANDOFF_live.md` §4 |
 
 ## 5. Open
 
-- **Rehearsal 3:** decided yes, short (PI 10-10), to check the critique step with real agents
-  (`HANDOFF_rehearsal3.md`). The campaign waits for its report.
+- **Rehearsal 3's three questions** (`REHEARSAL3_REPORT.md` §2–4):
+  - what data the critic scores;
+  - whether to rank discrepancies by z;
+  - whether to require a hypothesis that differs from the parent's.
+- **Pay and estimate:** set in `rsa_live.yaml` per `PILOT_REPORT.md` §6 (whole minutes), and
+  change the Prolific description to "About 3 minutes".
 - **Carry cap and families:** rehearsal 2 kept six close relatives and dropped two distinct
   models over the cap. One option is to fill the cap across families first. No change made.
 - **A recovery test with an unfamiliar, pre-fixed ground truth:** optional, for the paper. It is
   simulated, so it can run alongside the live campaign.
-- **The real completion time:** the pilot measures it, and it sets the pay. The welcome screen
-  says "about 3 minutes", Prolific's estimate is 4, and the PI's run took 1–2.
 - **The consent overlay** (main's deployment gate) is not in the page's accessibility tree:
   its "I agree" button is pointer-only (stage 1 re-run note).
 - **Known limits to report:**
