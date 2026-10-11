@@ -124,7 +124,7 @@ data are in. **Report:**
 - **The critic** scores the live trials only.
 - **Admission** rejects a candidate whose hypothesis repeats a model's word for word.
 
-**The code is frozen** at the commit you pull for this launch. Record it in the report.
+**The code is frozen at `b162c960`.** Later commits on `auto-rsa` change docs only until the campaign ends, unless a bug fix is logged in `CAMPAIGN_LOG.md`. Record the commit you stage (`$WORK_ROOT/code_commit`) in the report.
 
 **1. Pull, and use a fresh work root.** `rsa_live` was staged from older code.
 
