@@ -10,7 +10,9 @@
 # the subjective-randomness exclude list and guards that sweep's cell layout
 # (run<r>/<gt>/). Every job after setup runs on these copies, never on the
 # live checkout; with code_commit present this stages nothing and fails if the
-# checkout's code differs from what was staged.
+# checkout's code differs from what was staged, unless RESTAGE_REASON names the
+# logged bug fix being applied (re-staged from a clean checkout, recorded in
+# $WORK_ROOT/code_history; a frozen campaign changes code only this way).
 #
 #   $WORK_ROOT/harness_repo  full copy (no .git, no data/, no .secrets); the
 #                            loop, simulation and scoring run from here
@@ -25,17 +27,28 @@ CODE_COMMIT_FILE="$WORK_ROOT/code_commit"
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_code=$(bash "$here/../../subjective_randomness/slurm/code_commit.sh" "$REPO")
 
+RESTAGING=""
 if [[ -f "$CODE_COMMIT_FILE" ]]; then
   staged_code=$(cat "$CODE_COMMIT_FILE")
-  if [[ "$staged_code" != "$repo_code" ]]; then
+  if [[ "$staged_code" == "$repo_code" ]]; then
+    echo "[stage] code already staged for this sweep ($staged_code); not re-staging"
+    exit 0
+  fi
+  if [[ -z "${RESTAGE_REASON:-}" ]]; then
     echo "ERROR: $WORK_ROOT was staged from code $staged_code, but $REPO is now at $repo_code." >&2
-    echo "       Its cells must not run on other code. Check out $staged_code, or use a new WORK_ROOT." >&2
+    echo "       Its cells must not run on other code. Check out $staged_code, or use a new WORK_ROOT," >&2
+    echo "       or apply logged bug fixes deliberately: RESTAGE_REASON='<the campaign-log entry>'." >&2
     exit 1
   fi
-  echo "[stage] code already staged for this sweep ($staged_code); not re-staging"
-  exit 0
+  # A frozen campaign takes logged bug fixes only through here (PI 2026-10-11):
+  # from a clean checkout, recorded with the reason in code_history.
+  [[ "$repo_code" != *-dirty-* ]] || { echo "ERROR: re-staging needs a clean checkout, not $repo_code" >&2; exit 1; }
+  printf '%s\t%s -> %s\t%s\n' "$(date -Is)" "$staged_code" "$repo_code" "$RESTAGE_REASON" >> "$WORK_ROOT/code_history"
+  echo "[stage] RE-STAGING $staged_code -> $repo_code: $RESTAGE_REASON"
+  RESTAGING=1
+  rm -f "$CODE_COMMIT_FILE"
 fi
-if compgen -G "$WORK_ROOT/cells/*/" >/dev/null; then
+if [[ -z "$RESTAGING" ]] && compgen -G "$WORK_ROOT/cells/*/" >/dev/null; then
   echo "ERROR: $WORK_ROOT has cells but no record of the code they ran on ($CODE_COMMIT_FILE). Use a new WORK_ROOT." >&2
   exit 1
 fi

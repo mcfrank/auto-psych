@@ -590,3 +590,36 @@ def test_the_launcher_states_a_launchs_cost_through_the_config_module():
         array_tasks("a-b")
     cfg = load(SLURM.parent / "live" / "rsa_live.yaml")
     assert "experiments 1-3 of 1 chain(s): up to 3 studies, ~$399.00" in launch_summary(cfg, 3, "0")
+
+
+def test_a_frozen_campaign_takes_other_code_only_by_a_recorded_restage(tmp_path):
+    """PI 2026-10-11: after the freeze, code changes only as logged bug fixes.
+    stage_code.sh refuses other code unless RESTAGE_REASON names the fix; it then
+    re-stages from a clean checkout and records old -> new and the reason."""
+    repo, work = tmp_path / "repo", tmp_path / "work"
+    (repo / "scripts" / "rsa" / "slurm").mkdir(parents=True)
+    (repo / "scripts" / "rsa" / "slurm" / "agent_tree.exclude").write_text(".secrets*\n")
+    (repo / "src").mkdir()
+    (repo / "src" / "loop.py").write_text("V = 1\n")
+    git = lambda *a: _run(["git", "-C", str(repo), *a])  # noqa: E731
+    for args in (["init", "-q"], ["config", "user.email", "t@t"], ["config", "user.name", "t"], ["add", "-A"],
+                 ["commit", "-qm", "frozen"]):
+        assert git(*args).returncode == 0
+    stage = lambda **env: _run(["bash", str(SLURM / "stage_code.sh")],  # noqa: E731
+                               env={"PATH": os.environ["PATH"], "REPO": str(repo), "WORK_ROOT": str(work), **env})
+    assert stage().returncode == 0
+    frozen = (work / "code_commit").read_text().strip()
+    (work / "cells" / "live_rsa_c0").mkdir(parents=True)  # a campaign under way
+    (repo / "src" / "loop.py").write_text("V = 2\n")
+    assert git("commit", "-qam", "bug fix").returncode == 0
+    refused = stage()
+    assert refused.returncode != 0 and "RESTAGE_REASON" in refused.stderr
+    assert (work / "code_commit").read_text().strip() == frozen
+    ok = stage(RESTAGE_REASON="campaign log: catch trials")
+    assert ok.returncode == 0, ok.stderr
+    fixed = (work / "code_commit").read_text().strip()
+    assert fixed != frozen and (work / "harness_repo" / "src" / "loop.py").read_text() == "V = 2\n"
+    assert f"{frozen} -> {fixed}\tcampaign log: catch trials" in (work / "code_history").read_text()
+    (repo / "src" / "loop.py").write_text("V = 3\n")  # uncommitted: never staged into a campaign
+    dirty = stage(RESTAGE_REASON="x")
+    assert dirty.returncode != 0 and "clean checkout" in dirty.stderr
