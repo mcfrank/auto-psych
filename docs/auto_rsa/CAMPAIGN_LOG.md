@@ -171,14 +171,17 @@ games, and support two claims:
 | 10-10 | **Pilot** (live, 20 people) | Sherlock 47283766 + Prolific `6acabe15…`, 1 h 21 min | chain 0's experiment-1 design at N=20, $0.80 each | 20/20; median 119 s (80–670); 0 catch exclusions; every display exactly 5 responses; 1 timed out; Prolific held the 10 fastest for review (PI approved them) | **PI: $0.50 a person, estimate 2.5 min (Prolific takes whole minutes: see the report §6), welcome screen stays at 3 min; campaign about $1,200** | `PILOT_REPORT.md` |
 | 10-10 | **Rehearsal 3** (critique) | Sherlock 47283774, 5 h 18 min, completed | chain 0, 1 experiment, 2 rounds × 6, rehearsal 2's ground truth | both rounds critiqued (8/8 statistics significant, none broken); 10 of 16 hypotheses cite a discrepancy; quotas met, power 0.933 vs 0.931 free; per-display KL 0.0168 → 0.0020; critique 15% of time and 17% of spend ($4.04 of $23.78) | **driver's call:** the critic scores all 51,530 trials (live 4.4%; 3 of 9 statistics pragmods-only) while selection ranks on live trials; 15/16 p at the floor (rank by z?); an incumbent with a stale hypothesis | `REHEARSAL3_REPORT.md`, `data/rsa/rehearsal3/` |
 | 10-11 | Pre-campaign changes and **code freeze at `b162c960`** (later commits until the campaign ends change docs only, or are logged bug fixes) | cloud | the critic on live trials (#7); duplicate-hypothesis rejection (#51); 13 + 2 trials, 52 displays, $0.50 at 3 min (#24, 25, 43); resume with more experiments (#52) | fast suite 2,000 passed; slow end-to-end (two-experiment outer loop with the critique on live trials; loop with the critique on and off) passed | the campaign | this log, `HANDOFF_live.md` §4 |
-| next | **Campaign, experiment 1** (3 chains × 200, about $399) | Sherlock + Prolific | `N_EXPERIMENTS=1`, frozen code | | review, then experiments 2–3 | `HANDOFF_live.md` §4 |
+| 10-11 | **Campaign, chain 0, experiment 1** | Sherlock 47331282_0, code b162c960, `$SCRATCH/auto-psych/rsa_campaign` | launched as 3 chains × 1 experiment (§4). **PI changed the plan:** his "experiment" is our chain and his "round" is our experiment. So it is chain 0 alone through experiments 1–3 (~$400), then chains 1 and 2 (~$800) if it works. Tasks 1 and 2 were cancelled in their design step, with no study created. Chain 0 runs experiment 1 (1 study, ~$133) and stops for review | | **`launch.sh` line 30 is a SyntaxError** (`\"` inside bash single quotes) whenever `N_EXPERIMENTS` is set, so the launcher exits before its prompt. Submitted with the launcher's own submit command by hand (`$WORK_ROOT/launch_campaign_e1.sh`). Fix before the next launch | `HANDOFF_live.md` §4 |
+| next | Chain 0, experiments 2–3 (~$266), then chains 1 and 2 × 3 experiments (~$800) | Sherlock + Prolific | PI go-ahead after the review; resubmit chain 0 with `N_EXPERIMENTS=3` (continues in place) | | | |
 
 ## 5. Open
 
 - **Rehearsal 3's questions,** decided 10-11: the critic scores the live trials (#7); a copied
   hypothesis is rejected (#51). Ranking by z instead of FDR survival is not needed: on the live
   trials alone the p-values carry information again (main's wording is kept).
-- **After experiment 1 (before experiments 2–3):** completion times at 15 choices against
+- **`scripts/rsa/live/launch.sh` line 30:** the cost print fails, so every `N_EXPERIMENTS` launch
+  exits before its prompt. Fix it before chain 0's experiments 2–3.
+- **After chain 0's experiment 1 (before its experiments 2–3):** completion times at 15 choices against
   the 3-min listing, exclusions and held submissions, the critic's statistics on real
   live trials, and the agents' use of them.
 - **Carry cap and families:** rehearsal 2 kept six close relatives and dropped two distinct
