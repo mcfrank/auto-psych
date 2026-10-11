@@ -53,9 +53,13 @@ if [[ -z "$RESTAGING" ]] && compgen -G "$WORK_ROOT/cells/*/" >/dev/null; then
   exit 1
 fi
 
+# A re-stage compares contents, not size and time: a fixed file of the same size
+# written within the staged one's second would otherwise keep the old code.
+COMPARE=()
+[[ -n "$RESTAGING" ]] && COMPARE=(--checksum)
 echo "[stage] staging harness repo -> $HARNESS_REPO"
 mkdir -p "$HARNESS_REPO"
-rsync -a --delete --exclude '.git' --exclude '.venv' --exclude '__pycache__' \
+rsync -a ${COMPARE[@]+"${COMPARE[@]}"} --delete --exclude '.git' --exclude '.venv' --exclude '__pycache__' \
   --exclude '*.nc' --exclude 'node_modules' --exclude '/data/' \
   --exclude '.secrets*' --exclude '*.secrets' --exclude '.xdg_data' \
   --exclude '.uv_cache' --exclude '.pip_cache' --exclude '.cache' --exclude '.hf' \
@@ -64,7 +68,7 @@ touch "$HARNESS_REPO/.here"  # pyprojroot sentinel (.git is not copied)
 
 echo "[stage] staging agent source -> $AGENT_SRC"
 mkdir -p "$AGENT_SRC"
-rsync -a --delete --delete-excluded \
+rsync -a ${COMPARE[@]+"${COMPARE[@]}"} --delete --delete-excluded \
   --exclude-from="$HARNESS_REPO/scripts/rsa/slurm/agent_tree.exclude" \
   "$HARNESS_REPO"/ "$AGENT_SRC"/
 
