@@ -96,7 +96,12 @@ def test_two_experiments_design_collect_score_and_carry_the_live_set(tmp_path):
     prior2 = pd.read_csv(e2 / "data" / "prior.csv")
     # The live phase fits plain displays only: E5's familiarization trials are left out, on record.
     plain = pd.read_csv(tmp_path / "run1" / ".private" / "existing_plain.csv")
-    assert len(prior2) == len(plain) + len(r1) and "E5_baserate" not in set(plain.experiment)
+    # Catch trials are checked, not modelled: experiment 1's enter experiment 2's data without them.
+    m1 = pd.read_csv(e1 / "data" / "modelled.csv")
+    assert (r1.condition == "catch").any() and not (m1.condition == "catch").any()
+    assert len(m1) == (r1.condition != "catch").sum()
+    assert len(prior2) == len(plain) + len(m1) and "E5_baserate" not in set(plain.experiment)
+    assert not (pd.read_csv(e2 / "data" / "cumulative.csv").condition == "catch").any()
     scope = json.loads((tmp_path / "run1" / "existing_scope.json").read_text())
     assert scope["scope"] == "plain" and set(scope["left_out"]) == {"pragmods|E5_baserate"}
     # The agents are told, and experiment 2's ledger continues experiment 1's.

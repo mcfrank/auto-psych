@@ -268,7 +268,7 @@ class OuterRun:
             existing = pd.read_csv(self.existing())
             if "source" not in existing.columns or existing["source"].isna().any():
                 raise ValueError(f"{self.cfg.existing_data} needs a source on every row (live rows are 'auto_psych')")
-            frames = [existing] + [pd.read_csv(self.exp(k) / "data" / "responses.csv") for k in range(1, n)]
+            frames = [existing] + [pd.read_csv(self.modelled(k)) for k in range(1, n)]
             _write_csv(pd.concat(frames, ignore_index=True), path)
         return path
 
@@ -317,6 +317,20 @@ class OuterRun:
         _write_csv(kept, path)
         return path
 
+    def modelled(self, n: int) -> Path:
+        """Experiment n's trials the models see: its responses without the catch
+        trials (``data/modelled.csv``). Catch trials check attention: after the
+        exclusion rule every kept person's are correct by construction, so in the
+        fits they pushed lapse rates down and the critic scored the exclusion
+        rule (campaign chain 0, experiment 1: 370 of 2,775 trials; PI 2026-10-11).
+        ``responses.csv`` keeps them, as collected. Chain 0's experiment 1 was
+        fitted with them, before this."""
+        path = self.exp(n) / "data" / "modelled.csv"
+        if not path.exists():
+            rows = pd.read_csv(self.collect(n))
+            _write_csv(rows[rows["condition"].astype(str) != "catch"].reset_index(drop=True), path)
+        return path
+
     def collect_live(self, n: int, doc: dict) -> tuple[pd.DataFrame, dict]:
         """Deploy experiment n's page, recruit on Prolific, fetch and convert its data.
 
@@ -360,7 +374,7 @@ class OuterRun:
         out = self.private / f"experiment{n}" / "prospective.json"
         if out.exists():
             return out
-        new = load_forced_choice(self.collect(n))
+        new = load_forced_choice(self.modelled(n))
         units = pd.factorize(new.frame["condition"].astype(str))[0]
         groups = {"live": self.models_input(n), "seed": Path(self.cfg.starting_models)}
         promoted = Path(self.cfg.promoted or self.cfg.seeds)
@@ -417,7 +431,7 @@ class OuterRun:
             return out
         cumulative = self.exp(n) / "data" / "cumulative.csv"
         if not cumulative.exists():
-            frames = [pd.read_csv(self.prior_data(n)), pd.read_csv(self.collect(n))]
+            frames = [pd.read_csv(self.prior_data(n)), pd.read_csv(self.modelled(n))]
             _write_csv(pd.concat(frames, ignore_index=True), cumulative)
         c = self.cfg
         plain = c.scope == "plain"
