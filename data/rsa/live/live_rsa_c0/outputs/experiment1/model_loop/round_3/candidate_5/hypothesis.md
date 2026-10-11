@@ -1,0 +1,6 @@
+Listeners interpret referring expressions under capacity-limited visual attention while reasoning about speakers who maximize expected communicative success rather than logarithmic surprisal. By refining limited_attention_listener with the linear expected success utility from expected_success_speaker, candidate expressions are evaluated by their bounded probability of referent recovery, preventing the severe logarithmic compounding of scalar exclusion across recursive reasoning tiers while preserving visual load-dependent attentional capture. This elevates choice probabilities for feature-rich referents on ubiquitous utterance and scalar displays, directly addressing the posterior predictive underprediction of complex referents.
+
+Differences from limited_attention_listener:
+- Recursion depth: Unchanged at depth 2 (choice_probs calls L_attention, which inverts S2 reasoning about L1, which inverts S1 reasoning about L0).
+- Parameters: None added or removed (retains alpha, logit_p_base, w_load, w_popout, w_singleton, w_distinct, w_features, and lapse with identical priors).
+- Utility formulation: In both S1 (inside L1) and S2 (inside L_attention), the speaker utility function is changed from logarithmic surprisal (exp(alpha * log(L + EPS))) to linear expected communicative success (exp(alpha * L)).
