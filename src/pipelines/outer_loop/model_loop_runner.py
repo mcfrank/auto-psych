@@ -29,10 +29,10 @@ from src.models.model_manifest import (
     read_manifest_names,
 )
 from src.pipelines.outer_loop.columns import (
-    RAW_RESPONSE_COLUMNS,
     raw_response_rows,
     write_responses_csv,
 )
+from src.tasks import all_tasks, task_present_in
 from src.pipelines.outer_loop.orchestrator_validators import (
     EXPORT_RECORD_FILENAME,
     _ZOO_NAME_RE,
@@ -53,8 +53,9 @@ from src.runtime.config import REPO_ROOT
 
 def _pooled_response_rows(exp_dir: Path) -> list[dict[str, str]]:
     """Concatenate response rows from experiment 1 through ``exp_dir``, keeping
-    only the raw columns (a run collected before collection dropped the others
-    still has them in its ``data/responses.csv``)."""
+    only the raw columns of the task the files are from (a run collected
+    before collection dropped the others still has them in its
+    ``data/responses.csv``)."""
     project_dir = exp_dir.parent
     current_num = int(exp_dir.name.removeprefix("experiment"))
     rows: list[dict] = []
@@ -62,7 +63,8 @@ def _pooled_response_rows(exp_dir: Path) -> list[dict[str, str]]:
         path = project_dir / f"experiment{exp_num}" / "data" / "responses.csv"
         if path.exists():
             with path.open(encoding="utf-8") as f:
-                rows.extend(raw_response_rows(csv.DictReader(f)))
+                reader = csv.DictReader(f)
+                rows.extend(raw_response_rows(reader, task_present_in(reader.fieldnames or [])))
     return rows
 
 
@@ -257,14 +259,13 @@ def _export_inner_loop_models(
     if responses_csv.exists():
         with responses_csv.open(encoding="utf-8") as f:
             csv_header = [c.strip() for c in f.readline().strip().split(",")]
-        is_raw = csv_header == list(RAW_RESPONSE_COLUMNS)
+        raw_task = next((t for t in all_tasks() if list(t.raw_columns) == csv_header), None)
+        is_raw = raw_task is not None
     if is_raw:
         from src.models.data_binding import MissingStimulusColumns, make_stim_data
         from src.models.model_loading import load_pymc_model
 
-        raw_row = {c: "0" for c in RAW_RESPONSE_COLUMNS}
-        raw_row["sequence_a"] = "HHT"
-        raw_row["sequence_b"] = "THT"
+        raw_row = dict(raw_task.probe_row)
         for name in rationales:
             try:
                 m = load_pymc_model(name, zoo_dir)

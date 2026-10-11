@@ -34,6 +34,7 @@ from src.subjective_randomness.leakage_audit import (
     leakage_check,
 )
 from src.subjective_randomness.holdout_data import p_left_fixed_params
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 from tests.model_registry import FAITHFUL_MODEL_NAMES
 from tests.recovery_fixtures import CannedPredictionFit
 from tests.paths import REPO_ROOT
@@ -76,6 +77,7 @@ def _stub_generate_responses(calls):
         params,
         n_participants,
         *,
+        task,
         seed=0,
         participant_id_offset,
     ):
@@ -331,12 +333,14 @@ def test_impossible_model_prefers_its_feature(model_name, more, less):
         IMPOSSIBLE_MODELS_DIR,
         [{"sequence_a": more, "sequence_b": less}],
         IMPOSSIBLE_PARAMS,
+        task=SUBJECTIVE_RANDOMNESS,
     )
     backward = p_left_fixed_params(
         model_name,
         IMPOSSIBLE_MODELS_DIR,
         [{"sequence_a": less, "sequence_b": more}],
         IMPOSSIBLE_PARAMS,
+        task=SUBJECTIVE_RANDOMNESS,
     )
     assert forward[0] > 0.5
     assert backward[0] < 0.5
@@ -351,7 +355,8 @@ def test_impossible_model_p_left_varies_across_stimuli():
         {"sequence_a": "HTHTHT", "sequence_b": "HHHHHH"},
     ]
     p_left = p_left_fixed_params(
-        "more_heads_more_random", IMPOSSIBLE_MODELS_DIR, stimuli, IMPOSSIBLE_PARAMS
+        "more_heads_more_random", IMPOSSIBLE_MODELS_DIR, stimuli, IMPOSSIBLE_PARAMS,
+        task=SUBJECTIVE_RANDOMNESS,
     )
     assert len(set(np.round(p_left, 6))) > 1
 
@@ -360,7 +365,8 @@ def test_impossible_model_requires_exact_params():
     stimuli = [{"sequence_a": "HHHHHT", "sequence_b": "HTHTHT"}]
     # Exactly {beta, side_bias} is accepted.
     p_left_fixed_params(
-        "more_heads_more_random", IMPOSSIBLE_MODELS_DIR, stimuli, IMPOSSIBLE_PARAMS
+        "more_heads_more_random", IMPOSSIBLE_MODELS_DIR, stimuli, IMPOSSIBLE_PARAMS,
+        task=SUBJECTIVE_RANDOMNESS,
     )
     # An unexpected extra parameter fails loudly.
     with pytest.raises(ValueError, match="free parameters"):
@@ -369,6 +375,7 @@ def test_impossible_model_requires_exact_params():
             IMPOSSIBLE_MODELS_DIR,
             stimuli,
             {"beta": 4.0, "side_bias": 0.0, "theta": 1.0},
+            task=SUBJECTIVE_RANDOMNESS,
         )
 
 
@@ -448,6 +455,7 @@ def test_build_eval_stimuli_exhaustive_enumerates_all_pairs(tmp_path):
         seed=0,
         min_remaining=1,
         exhaustive=True,
+        task=SUBJECTIVE_RANDOMNESS,
     )
     # Every same-length pair: C(4, 2) + C(8, 2) = 34. None are dropped
     # because the training pair has length 6.
@@ -463,7 +471,7 @@ def test_impossible_holdout_exhaustive_eval_thins_posterior(tmp_path, monkeypatc
     class _RecordingFitted:
         model = None
 
-        def predict_p_left(self, stim_data, *, max_draws=None):
+        def predict_p_left(self, stim_data, *, var_name="p_left", max_draws=None):
             predict_max_draws_seen.append(max_draws)
             return np.linspace(0.1, 0.9, stim_data["n"])
 

@@ -25,6 +25,7 @@ import numpy as np
 import pytest
 import yaml
 
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
 from src.models import pymc_inference as pi
 from src.pipelines.inner_loop import model_zoo
@@ -119,7 +120,7 @@ def test_saved_predictions_give_the_same_nearest_model_and_rmse(tmp_path, monkey
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: SimpleNamespace())
     calls = _counting_pool_prediction(monkeypatch)
     models_dir, responses = _set_with_candidate(tmp_path)
-    pool = model_zoo.novelty_pool_rows()
+    pool = SUBJECTIVE_RANDOMNESS.novelty_pool()
 
     recomputed = _gate(models_dir, responses, None, pool)
     saved = {}
@@ -137,7 +138,7 @@ def test_new_data_a_changed_model_or_another_pool_is_predicted_afresh(
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: SimpleNamespace())
     calls = _counting_pool_prediction(monkeypatch)
     models_dir, responses = _set_with_candidate(tmp_path)
-    pool = model_zoo.novelty_pool_rows()
+    pool = SUBJECTIVE_RANDOMNESS.novelty_pool()
     saved = {}
 
     _gate(models_dir, responses, saved, pool)

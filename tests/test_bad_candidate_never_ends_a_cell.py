@@ -34,6 +34,8 @@ from src.pipelines.inner_loop import model_zoo
 from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
 from src.pipelines.outer_loop import eig as eig_mod
 from src.subjective_randomness.holdout_eval import _eval_prediction
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
+from tests.paths import sr_pairs
 
 _GOOD = """
 import numpy as np
@@ -244,7 +246,7 @@ def test_the_novelty_gate_rejects_a_candidate_whose_p_left_cannot_be_predicted(
         "bad_p_left",
         _responses(tmp_path),
         ledger=ledger,
-        novelty_pool=model_zoo.novelty_pool_rows()[:40],
+        novelty_pool=SUBJECTIVE_RANDOMNESS.novelty_pool()[:40],
     )
 
     assert not admission.admitted
@@ -269,7 +271,7 @@ def test_the_novelty_gate_still_raises_an_infrastructure_error(tmp_path, monkeyp
             "cand",
             models_dir,
             _responses(tmp_path),
-            pool_rows=model_zoo.novelty_pool_rows()[:10],
+            pool_rows=SUBJECTIVE_RANDOMNESS.novelty_pool()[:10],
         )
 
 
@@ -286,7 +288,7 @@ def test_a_carried_model_that_cannot_bind_short_pairs_is_screened_out_of_the_des
 
     picks = eig_mod.design_exhaustive(
         models_dir,
-        lengths=(2, 3, 4),
+        task=SUBJECTIVE_RANDOMNESS, pool=sr_pairs(2,3,4),
         n_select=3,
         n_samples=20,
         n_scenarios=50,
@@ -298,7 +300,10 @@ def test_a_carried_model_that_cannot_bind_short_pairs_is_screened_out_of_the_des
     assert len(picks) == 3
     (record,) = json.loads(screened.read_text(encoding="utf-8"))
     assert record["model"] == "short_fails"
-    assert "IndexError" in record["reason"] and "length [2, 3]" in record["reason"]
+    assert "IndexError" in record["reason"]
+    # The reason names stimuli it fails on: short pairs, never the length-4 ones.
+    examples = record["reason"].split("fails on e.g. ")[1].split(", ")
+    assert examples and all(len(e.split(" vs ")[0]) < 4 for e in examples)
     assert "short_fails" in capsys.readouterr().out
 
 
@@ -313,7 +318,7 @@ def test_the_design_still_raises_when_the_harness_binding_is_broken(
     monkeypatch.setattr("src.models.data_binding.make_stim_data", broken)
     with pytest.raises(RuntimeError, match="harness is broken"):
         eig_mod._screen_usable_models(
-            ["good"], models_dir, [{"sequence_a": "HT", "sequence_b": "TH"}]
+            ["good"], models_dir, [{"sequence_a": "HT", "sequence_b": "TH"}], SUBJECTIVE_RANDOMNESS
         )
 
 
@@ -336,16 +341,19 @@ def test_evaluation_leaves_out_pairs_a_model_cannot_bind(tmp_path, capsys):
         rows,
         participant_ids=None,
         mask_invalid=True,
+        var_name="p_left",
     )
 
     assert np.isnan(pred[short]).all()
     assert np.isfinite(pred[~short]).all()
     out = capsys.readouterr().out
     assert (
-        f"cannot be bound to {int(short.sum())} of the {len(rows)} held-out pairs"
+        f"cannot be bound to {int(short.sum())} of the {len(rows)} held-out stimuli"
         in out
     )
-    assert "lengths [1, 2, 3]" in out
+    # It names stimuli it left out: short pairs, the ones the model breaks on.
+    examples = out.split("(e.g. ")[1].split(";")[0].split(", ")
+    assert examples and all(len(e.split(" vs ")[0]) <= 3 for e in examples)
 
 
 def test_evaluation_without_masking_still_raises(tmp_path):
@@ -355,4 +363,5 @@ def test_evaluation_without_masking_still_raises(tmp_path):
             _prior_fit("short_fails", models_dir),
             _eval_rows((2, 4)),
             participant_ids=None,
+            var_name="p_left",
         )

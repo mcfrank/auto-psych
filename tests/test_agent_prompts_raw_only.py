@@ -27,7 +27,7 @@ from src.models.model_loading import (
     pm_data_inputs,
 )
 from src.pipelines.inner_loop import candidate_agent, critique_round
-from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 from src.subjective_randomness.features import featurize_stimulus
 from tests.inner_loop_fixtures import write_task_description_beside
 from tests.paths import REPO_ROOT
@@ -65,7 +65,7 @@ FENCED = re.compile(r"```.*?```", re.DOTALL)
 
 def _raw_responses(path: Path) -> Path:
     with path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=list(RAW_RESPONSE_COLUMNS))
+        writer = csv.DictWriter(f, fieldnames=list(SUBJECTIVE_RANDOMNESS.raw_columns))
         writer.writeheader()
         writer.writerow(
             {
@@ -137,7 +137,7 @@ def agent_facing_texts(tmp_path):
         "CONTEXT.md": _candidate_context(tmp_path, responses),
         "CRITIQUE_CONTEXT.md": critique_text,
         "critique prompt": critique_round._build_critique_prompt(
-            tmp_path / "critique", critique_text
+            tmp_path / "critique", critique_text, prompt_path=SUBJECTIVE_RANDOMNESS.critique_prompt
         ),
         "exploration lenses": "\n".join(candidate_agent.DEFAULT_CANDIDATE_HINTS),
     }
@@ -225,7 +225,7 @@ def test_a_brief_for_responses_with_feature_columns_fails_loudly(tmp_path):
     raw-only pipeline's, so writing the brief raises instead of describing it."""
     responses = tmp_path / "responses.csv"
     with responses.open("w", encoding="utf-8", newline="") as f:
-        f.write(",".join([*RAW_RESPONSE_COLUMNS, "h_a"]) + "\nHHTH,THTT,1,0,1,3\n")
+        f.write(",".join([*SUBJECTIVE_RANDOMNESS.raw_columns, "h_a"]) + "\nHHTH,THTT,1,0,1,3\n")
     write_task_description_beside(responses)
     with pytest.raises(ValueError, match=r"beyond the raw ones"):
         _candidate_context(tmp_path, responses)

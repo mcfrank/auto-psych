@@ -14,10 +14,10 @@ sigma = 10; here both are fitted.
 
 One addition: with pure strong sampling a target that is one of the examples
 gets p(yes) = 1, and people answer "no" to such targets about a quarter of the
-time (a log likelihood of -inf at every parameter value). As in Bigelow &
-Piantadosi (2016), each example is drawn from the concept with probability
-1 - NOISE and uniformly from 1..100 otherwise, NOISE fixed at their 0.1.
-(Fitted, it went to 0.68 on the whole dataset, with sigma in the thousands.)
+time (a log likelihood of -inf at every parameter value). So each example is
+drawn from the concept with probability 1 - NOISE and uniformly from 1..100
+otherwise, NOISE fixed at 0.1. (Fitted, it went to 0.68 on the whole dataset,
+with sigma in the thousands.)
 """
 
 import numpy as np

@@ -32,19 +32,24 @@ from src.pipelines.inner_loop import model_zoo
 from src.pipelines.inner_loop.model_zoo import (
     DEFAULT_NOVELTY_RMSE_THRESHOLD,
     NOVELTY_POOL_FILENAME,
-    NOVELTY_POOL_LENGTHS,
-    NOVELTY_POOL_N_PAIRS,
-    NOVELTY_POOL_SEED,
     _admit_candidate,
     _min_prediction_rmse,
-    novelty_pool_rows,
 )
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 from src.subjective_randomness.stimulus_design import (
     enumerate_all_pairs,
     generate_candidate_pool,
 )
+from src.tasks.subjective_randomness import (
+    NOVELTY_POOL_LENGTHS,
+    NOVELTY_POOL_N_PAIRS,
+    NOVELTY_POOL_SEED,
+    SUBJECTIVE_RANDOMNESS,
+)
 from tests.inner_loop_fixtures import write_responses, write_seed_models
+
+# The coin-flip task's novelty pool (the loop takes its task's).
+novelty_pool_rows = SUBJECTIVE_RANDOMNESS.novelty_pool
 
 # The recovery harness's default ``eval_pool.seed`` (holdout_recovery.py,
 # ``run_holdout_recovery_from_config``); the loop's pool must not be that sample.

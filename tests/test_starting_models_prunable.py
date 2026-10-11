@@ -513,6 +513,7 @@ def test_the_fitted_baseline_fits_a_pruned_starting_model_from_its_pruned_file(
         participant_ids=None,
         cache_dir=None,
         fit_kwargs={},
+        var_name="p_left",
     )
 
     assert set(baseline["per_model"]) == {"seed_a", "seed_b"}

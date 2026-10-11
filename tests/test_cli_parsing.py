@@ -106,7 +106,8 @@ def test_eig_cli_defaults_and_required():
     assert args.models_dir == Path("m")
     assert args.n_responses == 40
     assert args.select == 32
-    assert args.lengths == (4, 5, 6, 7, 8)
+    # The pool is the project task's design pool, or a JSON file of part of it.
+    assert args.project == "subjective_randomness" and args.pool is None
     assert args.n_samples == 200
     # The candidate-pool mode is gone: exhaustive selection is the only mode.
     assert not hasattr(args, "candidates")

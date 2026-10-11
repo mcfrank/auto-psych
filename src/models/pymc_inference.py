@@ -1407,7 +1407,8 @@ def _use_own_compile_dir(compile_dir: str) -> None:
     )
     from pytensor import config as pytensor_config
 
-    if not Path(pytensor_config.compiledir).is_relative_to(compile_dir):
+    # Resolved: a home reached through a symlink names one directory two ways.
+    if not Path(pytensor_config.compiledir).resolve().is_relative_to(Path(compile_dir).resolve()):
         raise RuntimeError(
             f"this fit process compiles in {pytensor_config.compiledir}, not under its "
             f"own {compile_dir} (a .pytensorrc setting compiledir?)."

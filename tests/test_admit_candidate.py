@@ -156,6 +156,8 @@ def test_admit_uses_hypothesis_as_rationale_and_copies_it(tmp_path, monkeypatch)
     models_dir = _models_dir_with_seed(tmp_path)
     hyp = "People judge a sequence as more random when it alternates more often."
     cand_dir = _candidate_dir(tmp_path, hypothesis=hyp + "\n")
+    # A coin-flip response file: the novelty gate gates on its task's pool.
+    (tmp_path / "responses.csv").write_text("sequence_a,sequence_b,participant_id,trial_index,chose_left\n")
 
     ok = _admit_candidate(
         cand_dir / "candidate.py",

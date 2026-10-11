@@ -9,6 +9,7 @@ delimited sections (the files are still written for audit/reproducibility).
 
 from __future__ import annotations
 
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 from src.pipelines.inner_loop.candidate_agent import (
     _build_candidate_prompt,
     _write_candidate_context,
@@ -23,7 +24,7 @@ def test_prompt_inlines_all_context_documents(tmp_path):
         "existing_hypotheses": "- seed_a: mechanism seed_a (posterior 0.9)",
         "critiques": "## overalternation_rate — observed 0.7, model 0.5",
     }
-    prompt = _build_candidate_prompt(tmp_path / "candidate_0", docs)
+    prompt = _build_candidate_prompt(tmp_path / "candidate_0", docs, theory_prompt=SUBJECTIVE_RANDOMNESS.theory_prompt)
     for text in docs.values():
         assert text in prompt
     # The instruction still names the working dir and the three output files.
@@ -46,7 +47,7 @@ def test_prompt_demands_absolute_output_paths(tmp_path):
         "critiques": None,
     }
     candidate_dir = tmp_path / "candidate_0"
-    prompt = _build_candidate_prompt(candidate_dir, docs)
+    prompt = _build_candidate_prompt(candidate_dir, docs, theory_prompt=SUBJECTIVE_RANDOMNESS.theory_prompt)
     assert f"{candidate_dir}/candidate.py" in prompt
     assert "NOT the candidate directory" in prompt
 
@@ -58,7 +59,7 @@ def test_prompt_omits_critiques_section_when_absent(tmp_path):
         "existing_hypotheses": "hyps",
         "critiques": None,
     }
-    prompt = _build_candidate_prompt(tmp_path / "candidate_0", docs)
+    prompt = _build_candidate_prompt(tmp_path / "candidate_0", docs, theory_prompt=SUBJECTIVE_RANDOMNESS.theory_prompt)
     assert "critiques.md" not in prompt
 
 

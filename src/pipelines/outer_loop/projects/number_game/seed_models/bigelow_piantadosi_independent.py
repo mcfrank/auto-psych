@@ -1,5 +1,5 @@
-"""Bayesian concept learning over rules and intervals (Tenenbaum 1999/2000),
-with the grammar prior inferred from data as in Bigelow & Piantadosi (2016).
+"""Bayesian concept learning over rules and intervals, with a prior weight
+inferred for every rule (Bigelow & Piantadosi 2016).
 
 A PyMC port of Eric Bigelow's numpyro model (`number_bpl_model`,
 `prior_type='basic'`; reference copy in `scripts/number_game/numpyro_reference/`,

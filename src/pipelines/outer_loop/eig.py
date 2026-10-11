@@ -1,7 +1,9 @@
 """
 Exhaustive stimulus design by Expected Information Gain (EIG) over PyMC models.
 
-Enumerate EVERY sequence pair over the given lengths, score all of them in one
+Take EVERY stimulus in the task's design pool (for the coin-flip task every
+same-length H/T pair at lengths 2-8; for the number game every (set, target)
+cell), score all of them in one
 batched per-draw pass per PyMC model (module-level `model: pm.Model`), and
 greedily select the set with maximal *joint* EIG about model identity
 (src.models.eig_selection). Each model computes its own features from raw
@@ -9,7 +11,7 @@ stimulus rows via its ``compute_features`` or ``prepare_observed`` hook.
 
 Usage (CLI):
     python3 -m src.pipelines.outer_loop.eig \\
-        --select 32 --lengths 4 5 6 7 8 \\
+        --select 32 --project subjective_randomness \\
         --models-dir PATH/cognitive_models \\
         --registry   PATH/model_registry.yaml \\
         --out        PATH/design/stimuli.json
@@ -60,7 +62,7 @@ def _load_model_weights(registry_path: Optional[Path]) -> Dict[str, float]:
 
 
 def _screen_usable_models(
-    model_names: List[str], models_dir: Path, rows: List[Dict[str, Any]]
+    model_names: List[str], models_dir: Path, rows: List[Dict[str, Any]], task: Any
 ) -> Tuple[List[str], List[Dict[str, Any]]]:
     """Drop models that cannot be evaluated on the design pool's stimulus rows.
 
@@ -130,9 +132,8 @@ def _screen_usable_models(
                 ) from e
             reason = f"cannot be evaluated on a stimulus ({type(e).__name__}: {e})"
             if model is not None:
-                reason += (
-                    f"; fails on pairs of length {_failing_pair_lengths(model, rows)}"
-                )
+                failing = [task.stimulus_label(row) for row in _failing_rows(model, rows)]
+                reason += f"; fails on e.g. {', '.join(failing)}"
             dropped.append({"model": name, "missing": [], "reason": reason})
             print(
                 f"  [drop] EIG: model {name!r} {reason}; excluding it from EIG.",
@@ -149,33 +150,42 @@ def _screen_usable_models(
     return usable, dropped
 
 
-def _failing_pair_lengths(model: Any, rows: List[Dict[str, Any]]) -> List[int]:
-    """The pair lengths among ``rows`` on which ``model`` cannot be bound."""
+def _failing_rows(model: Any, rows: List[Dict[str, Any]], limit: int = 3) -> List[Dict[str, Any]]:
+    """Up to ``limit`` rows on which ``model`` cannot be bound, found by
+    bisection (binding every row on its own would take a pass per row)."""
     from src.models.data_binding import make_stim_data  # type: ignore
 
-    by_length: Dict[int, List[Dict[str, Any]]] = {}
-    for row in rows:
-        by_length.setdefault(len(row["sequence_a"]), []).append(row)
-    failing = []
-    for length, length_rows in sorted(by_length.items()):
+    def binds(chunk: List[Dict[str, Any]]) -> bool:
         try:
-            make_stim_data(model, length_rows)
-        except Exception:  # noqa: BLE001 — only which lengths fail is wanted here
-            failing.append(length)
+            make_stim_data(model, chunk)
+            return True
+        except Exception:  # noqa: BLE001 — only which rows fail is wanted here
+            return False
+
+    failing: List[Dict[str, Any]] = []
+    pending = [rows]
+    while pending and len(failing) < limit:
+        chunk = pending.pop(0)
+        if binds(chunk):
+            continue
+        if len(chunk) == 1:
+            failing.append(chunk[0])
+        else:
+            pending += [chunk[: len(chunk) // 2], chunk[len(chunk) // 2 :]]
     return failing
 
 
 def _invalid_predictions_entry(
-    name: str, exc: Any, rows: List[Dict[str, Any]], basis: str
+    name: str, exc: Any, rows: List[Dict[str, Any]], basis: str, task: Any
 ) -> Dict[str, Any]:
-    """The ``screened_out.json`` record of a model whose ``p_left`` is undefined
-    (NaN or outside [0, 1]) on some design-pool pairs (``exc`` is its
+    """The ``screened_out.json`` record of a model whose prediction is undefined
+    (NaN or outside [0, 1]) on some design-pool stimuli (``exc`` is its
     ``InvalidPredictions``)."""
     bad = [int(i) for i in exc.invalid_stimuli().nonzero()[0]]
-    examples = [f"{rows[i]['sequence_a']} vs {rows[i]['sequence_b']}" for i in bad[:5]]
+    examples = [task.stimulus_label(rows[i]) for i in bad[:5]]
     reason = (
-        f"{basis} p_left is undefined (NaN or outside [0, 1]) on {len(bad)} of "
-        f"{len(rows)} design-pool pairs (e.g. {', '.join(examples)})"
+        f"{basis} {task.prediction_var} is undefined (NaN or outside [0, 1]) on {len(bad)} of "
+        f"{len(rows)} design-pool stimuli (e.g. {', '.join(examples)})"
     )
     return {"model": name, "missing": [], "reason": reason, "invalid_pairs": len(bad)}
 
@@ -185,10 +195,11 @@ def _screen_invalid_predictions(
     model_names: List[str],
     rows: List[Dict[str, Any]],
     basis: str,
+    task: Any,
 ) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
-    """``{name: draws_of(name)}`` over the models whose ``p_left`` is a
+    """``{name: draws_of(name)}`` over the models whose prediction is a
     probability on every pair, and a ``screened_out.json`` record for each
-    model whose ``p_left`` is not.
+    model whose prediction is not.
 
     A carried model can break on pairs unlike any it was trained on (the
     recovery evaluation met one, commit 4de536c), and one such model used to
@@ -204,7 +215,7 @@ def _screen_invalid_predictions(
         try:
             draws[name] = draws_of(name)
         except InvalidPredictions as exc:
-            entry = _invalid_predictions_entry(name, exc, rows, basis)
+            entry = _invalid_predictions_entry(name, exc, rows, basis, task)
             screened.append(entry)
             print(
                 f"  [screen] EIG: model {name!r} excluded from this design: "
@@ -212,13 +223,6 @@ def _screen_invalid_predictions(
                 flush=True,
             )
     return draws, screened
-
-
-def _raw_row(item: Dict[str, Any]) -> Dict[str, Any]:
-    """Build a raw stimulus row: sequence_a, sequence_b, chose_left (dummy)."""
-    row: Dict[str, Any] = dict(item)
-    row.setdefault("chose_left", 0)
-    return row
 
 
 def _posterior_p_left_draws(
@@ -230,17 +234,18 @@ def _posterior_p_left_draws(
     fit_cache_dir: Optional[Path],
     max_draws: int,
     seed: int,
+    task: Any,
     fit_draws: Optional[int] = None,
     fit_tune: Optional[int] = None,
     fit_chains: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Per-draw posterior-predictive p_left over ``rows`` for each model.
+    """Per-draw posterior-predictive prediction (the task's probability) over ``rows`` for each model.
 
     Fits every model on ``responses_csv`` (design-time MCMC settings from
     ``src.models.mcmc_defaults`` unless overridden; target_accept is the
     model's own declared value, else DESIGN_TWIN_TARGET_ACCEPT) and predicts
-    p_left draws for the stimulus pool, thinned to ``max_draws`` posterior
-    samples. Returns the draws of every model whose p_left is defined on the
+    prediction draws for the stimulus pool, thinned to ``max_draws`` posterior
+    samples. Returns the draws of every model whose prediction is defined on the
     whole pool, and the ``screened_out.json`` records of the others
     (``_screen_invalid_predictions``).
     """
@@ -267,10 +272,12 @@ def _posterior_p_left_draws(
             ),
         )
         stim_data = make_stim_data(fitted.model, rows)
-        return fitted.predict_p_left_draws(stim_data, seed=seed, max_draws=max_draws)
+        return fitted.predict_p_left_draws(
+            stim_data, var_name=task.prediction_var, seed=seed, max_draws=max_draws
+        )
 
     return _screen_invalid_predictions(
-        posterior_draws, model_names, rows, "posterior-predictive"
+        posterior_draws, model_names, rows, "posterior-predictive", task
     )
 
 
@@ -398,7 +405,8 @@ def design_exhaustive(
     models_dir: Path,
     registry_path: Optional[Path] = None,
     *,
-    lengths: tuple = (4, 5, 6, 7, 8),
+    task: Any,
+    pool: Optional[List[Dict[str, Any]]] = None,
     n_select: int = 32,
     n_random: int = 0,
     n_samples: int = 200,
@@ -417,24 +425,25 @@ def design_exhaustive(
     n_threads: Optional[int] = None,
     leave_one_out: bool = DESIGN_LEAVE_ONE_OUT,
 ) -> List[Dict[str, Any]]:
-    """Select the max-joint-EIG stimulus set from the FULL pair universe.
+    """Select the max-joint-EIG stimulus set from the task's FULL design pool.
 
-    Enumerates every distinct same-length sequence pair over ``lengths``,
-    scores all of them in one batched per-draw pass per
+    Takes every stimulus in ``task.design_pool()`` (or in ``pool``, a part of
+    it), scores all of them in one
+    batched per-draw pass per
     model, and greedily selects the ``n_select`` stimuli with maximal joint
     EIG about model identity. No candidates file — the pool is the whole
     space, so nothing an agent could conjecture is outside it.
 
-    Without ``responses_csv``, per-draw p_left comes from each model's
+    Without ``responses_csv``, per-draw predictions come from each model's
     **prior** predictive (experiment 1). With ``responses_csv``, each model is
     first fitted on those responses (MCMC, at the design-time settings from
     ``src.models.mcmc_defaults`` unless fit_* override them) and per-draw
-    p_left comes from its **posterior** predictive, thinned to ``n_samples``
+    predictions come from its **posterior** predictive, thinned to ``n_samples``
     draws — sequential design informed by the data so far.
 
     ``n_responses`` is how many responses each selected stimulus receives (the
-    experiment's participant count): the joint EIG scores the count of "left"
-    choices, Binomial(n_responses, p_left), not a single response.
+    experiment's participant count): the joint EIG scores the count of
+    positive responses, Binomial(n_responses, p), not a single response.
 
     ``lazy``, ``scoring_dtype``, ``n_threads`` and ``leave_one_out`` set the
     greedy search (:func:`select_design_picks`); by default
@@ -450,10 +459,6 @@ def design_exhaustive(
         eig_from_prior_means,
         prior_predict_p_left_draws,
     )
-    from src.subjective_randomness.stimulus_design import (  # type: ignore
-        enumerate_all_pairs,
-    )
-
     import random as _random
 
     models_dir = Path(models_dir)
@@ -467,8 +472,8 @@ def design_exhaustive(
     if n_select == 0 and n_random == 0:
         raise ValueError("design_exhaustive needs n_select > 0 or n_random > 0.")
 
-    pool = enumerate_all_pairs(list(lengths), same_length_only=True)
-    rows = [_raw_row(item) for item in pool]
+    pool = list(pool) if pool is not None else task.design_pool()
+    rows = task.stimulus_rows(pool)
 
     results: List[Dict[str, Any]] = []
     chosen: set = set()
@@ -478,7 +483,7 @@ def design_exhaustive(
     if n_select > 0:
         model_names = _load_model_names(models_dir)
         model_weights = _load_model_weights(registry_path)
-        model_names, screened_out = _screen_usable_models(model_names, models_dir, rows)
+        model_names, screened_out = _screen_usable_models(model_names, models_dir, rows, task)
         if model_weights and not any(
             model_weights.get(n, 0.0) > 0 for n in model_names
         ):
@@ -489,7 +494,7 @@ def design_exhaustive(
             )
         basis = "prior predictive" if responses_csv is None else "posterior predictive"
         print(
-            f"Exhaustive design: {len(pool):,d} pairs over lengths {list(lengths)}, "
+            f"Exhaustive design: {len(pool):,d} {task.name} stimuli, "
             f"{len(model_names)} models ({basis}), selecting {n_select} by EIG "
             f"+ {n_random} random.",
             flush=True,
@@ -497,11 +502,13 @@ def design_exhaustive(
         if responses_csv is None:
             draws, invalid = _screen_invalid_predictions(
                 lambda name: prior_predict_p_left_draws(
-                    [name], models_dir, rows, n_samples=n_samples, seed=seed
+                    [name], models_dir, rows, n_samples=n_samples, seed=seed,
+                    var_name=task.prediction_var,
                 )[name],
                 model_names,
                 rows,
                 "prior-predictive",
+                task,
             )
         else:
             draws, invalid = _posterior_p_left_draws(
@@ -512,6 +519,7 @@ def design_exhaustive(
                 fit_cache_dir=fit_cache_dir,
                 max_draws=n_samples,
                 seed=seed,
+                task=task,
                 fit_draws=fit_draws,
                 fit_tune=fit_tune,
                 fit_chains=fit_chains,
@@ -526,7 +534,7 @@ def design_exhaustive(
             )
         if not draws:
             raise ValueError(
-                f"No model in {models_dir} has a defined p_left on the design pool "
+                f"No model in {models_dir} has a defined {task.prediction_var} on the design pool "
                 f"({[e['model'] for e in invalid]} screened out); cannot compute EIG."
             )
         picks = select_design_picks(
@@ -556,7 +564,7 @@ def design_exhaustive(
             chosen.add(int(idx))
     else:
         print(
-            f"Exhaustive design: {len(pool):,d} pairs over lengths {list(lengths)}, "
+            f"Exhaustive design: {len(pool):,d} {task.name} stimuli, "
             f"{n_random} random (no EIG selection).",
             flush=True,
         )
@@ -568,8 +576,8 @@ def design_exhaustive(
         remaining = [i for i in range(len(pool)) if i not in chosen]
         if n_random > len(remaining):
             raise ValueError(
-                f"n_random={n_random} exceeds the {len(remaining)} pairs left after "
-                f"EIG selection over lengths {list(lengths)}."
+                f"n_random={n_random} exceeds the {len(remaining)} stimuli left after "
+                f"EIG selection."
             )
         rng = _random.Random(random_seed if random_seed is not None else seed)
         for offset, idx in enumerate(sorted(rng.sample(remaining, n_random)), start=1):
@@ -588,7 +596,7 @@ def design_exhaustive(
 
 @dataclass
 class Args:
-    """Exhaustively enumerate the pair universe and select the max-joint-EIG set."""
+    """Score the task's whole design pool and select the max-joint-EIG set."""
 
     models_dir: Path
     """Path to the cognitive_models/ directory."""
@@ -598,10 +606,12 @@ class Args:
     """Path to model_registry.yaml (optional; uniform prior if omitted)."""
     out: Optional[Path] = None
     """Output JSON file path (default: stdout)."""
+    project: str = "subjective_randomness"
+    """The project whose task's design pool is scored."""
+    pool: Optional[Path] = None
+    """A JSON list of stimuli to score instead of the task's whole design pool."""
     n_samples: int = 200
-    """Per-draw p_left samples per model (prior- or posterior-predictive)."""
-    lengths: tuple = (4, 5, 6, 7, 8)
-    """Sequence lengths for the exhaustive pair universe."""
+    """Per-draw prediction samples per model (prior- or posterior-predictive)."""
     select: int = 32
     """Stimulus-set size for the joint-EIG selection."""
     n_scenarios: int = 1000
@@ -642,10 +652,13 @@ def _write_output(stimuli: List[Dict[str, Any]], out: Optional[Path]) -> None:
 
 def main(args: Args) -> None:
     """CLI entry point: run exhaustive EIG design and write selected stimuli."""
+    from src.tasks import task_for_project  # type: ignore
+
     selected = design_exhaustive(
         models_dir=args.models_dir,
         registry_path=args.registry,
-        lengths=tuple(args.lengths),
+        task=task_for_project(args.project),
+        pool=json.loads(args.pool.read_text(encoding="utf-8")) if args.pool else None,
         n_select=args.select,
         n_samples=args.n_samples,
         n_scenarios=args.n_scenarios,

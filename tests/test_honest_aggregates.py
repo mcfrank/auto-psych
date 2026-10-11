@@ -27,6 +27,7 @@ from src.subjective_randomness.reporting import (
     holdout_trajectories_ggplot,
 )
 from src.subjective_randomness.sweep_cells import accounting_lines, survey_sweep
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 
 # ── the cell survey ───────────────────────────────────────────────────────
 
@@ -281,6 +282,7 @@ def test_the_fitted_seed_baseline_is_scored_on_each_experiments_cumulative_data(
         other_seed_models=["seed_x", "seed_y"],
         cache_dir=None,
         fit_kwargs={},
+        task=SUBJECTIVE_RANDOMNESS,
     )
     assert [entry["experiment"] for entry in out] == [1, 2]
     assert [entry["n_responses"] for entry in out] == [2, 3]

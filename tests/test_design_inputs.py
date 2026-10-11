@@ -17,6 +17,8 @@ import pytest
 from src.pipelines.outer_loop import eig as eig_mod
 from src.pipelines.outer_loop.orchestrator import run_design_programmatic
 from tests.paths import PYMC_MODEL_FIXTURES_DIR
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
+from tests.paths import sr_pairs
 
 
 @pytest.fixture
@@ -67,7 +69,7 @@ def test_design_fits_use_the_models_own_target_accept_else_0_9(tmp_path, monkeyp
     class Fitted:
         model = None
 
-        def predict_p_left_draws(self, stim_data, *, seed, max_draws):
+        def predict_p_left_draws(self, stim_data, *, seed, max_draws, var_name="p_left"):
             return "draws"
 
     def fake_fit_model(name, models_dir, responses_csv, **kwargs):
@@ -88,6 +90,7 @@ def test_design_fits_use_the_models_own_target_accept_else_0_9(tmp_path, monkeyp
         fit_cache_dir=None,
         max_draws=10,
         seed=0,
+        task=SUBJECTIVE_RANDOMNESS,
     )
     assert requested == {"careful": 0.97, "plain": 0.9}
     assert draws == {"careful": "draws", "plain": "draws"} and screened == []
@@ -119,11 +122,11 @@ def test_a_saturated_selection_is_filled_by_single_response_eig(tmp_path, monkey
     )
     monkeypatch.setattr(eig_mod, "_load_model_names", lambda d: ["m1", "m2"])
     monkeypatch.setattr(
-        eig_mod, "_screen_usable_models", lambda names, d, rows: (names, [])
+        eig_mod, "_screen_usable_models", lambda names, d, rows, task: (names, [])
     )
 
     stimuli = eig_mod.design_exhaustive(
-        tmp_path, lengths=(2, 3), n_select=5, n_responses=40, seed=9
+        tmp_path, task=SUBJECTIVE_RANDOMNESS, pool=sr_pairs(2,3), n_select=5, n_responses=40, seed=9
     )
 
     assert calls[0]["stop_below_noise"] is True and calls[0]["n_responses"] == 40
@@ -160,12 +163,12 @@ def test_the_design_search_settings_reach_both_selections(tmp_path, monkeypatch)
     )
     monkeypatch.setattr(eig_mod, "_load_model_names", lambda d: ["m1", "m2"])
     monkeypatch.setattr(
-        eig_mod, "_screen_usable_models", lambda names, d, rows: (names, [])
+        eig_mod, "_screen_usable_models", lambda names, d, rows, task: (names, [])
     )
 
     eig_mod.design_exhaustive(
         tmp_path,
-        lengths=(2, 3),
+        task=SUBJECTIVE_RANDOMNESS, pool=sr_pairs(2,3),
         n_select=2,
         n_responses=40,
         seed=9,
@@ -204,11 +207,11 @@ def test_the_design_searches_lazily_in_float32_by_default(tmp_path, monkeypatch)
     )
     monkeypatch.setattr(eig_mod, "_load_model_names", lambda d: ["m1", "m2"])
     monkeypatch.setattr(
-        eig_mod, "_screen_usable_models", lambda names, d, rows: (names, [])
+        eig_mod, "_screen_usable_models", lambda names, d, rows, task: (names, [])
     )
 
     eig_mod.design_exhaustive(
-        tmp_path, lengths=(2, 3), n_select=2, n_responses=40, seed=9
+        tmp_path, task=SUBJECTIVE_RANDOMNESS, pool=sr_pairs(2,3), n_select=2, n_responses=40, seed=9
     )
 
     [call] = calls
@@ -242,7 +245,7 @@ def test_run_design_programmatic_writes_stimuli_json(tmp_path):
     exp_dir = tmp_path / "experiment1"
     _seed_experiment_models(exp_dir)
     run_design_programmatic(
-        exp_dir, "subjective_randomness", k=4, lengths=(3, 4), n_responses=40
+        exp_dir, "subjective_randomness", k=4, pool=sr_pairs(3,4), n_responses=40
     )
     data = json.loads((exp_dir / "design" / "stimuli.json").read_text(encoding="utf-8"))
     assert isinstance(data, list) and len(data) == 4
@@ -288,7 +291,7 @@ def test_run_design_programmatic_posterior_wiring(tmp_path, monkeypatch):
         exp_num=2,
         prev_exp_dir=prev,
         k=1,
-        lengths=(3, 4),
+        pool=sr_pairs(3,4),
         n_responses=40,
     )
 

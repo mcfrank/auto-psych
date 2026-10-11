@@ -12,6 +12,7 @@ from collections import Counter
 
 import pytest
 
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 from src.pipelines.inner_loop.candidate_agent import (
     DEFAULT_CANDIDATE_HINTS,
     _build_candidate_prompt,
@@ -398,12 +399,13 @@ def test_prompt_inlines_the_menu_for_refinement_slots(tmp_path):
         "critiques": None,
         "attempt_note": None,
     }
-    prompt = _build_candidate_prompt(tmp_path / "candidate_2", docs)
+    prompt = _build_candidate_prompt(tmp_path / "candidate_2", docs, theory_prompt=SUBJECTIVE_RANDOMNESS.theory_prompt)
     assert "## refinement_menu.md\n\n# Refinement menu" in prompt
     assert "## attempted_hypotheses.md" not in prompt
     docs["menu"] = None
     assert "## refinement_menu.md" not in _build_candidate_prompt(
-        tmp_path / "candidate_0", docs
+        tmp_path / "candidate_0", docs,
+        theory_prompt=SUBJECTIVE_RANDOMNESS.theory_prompt,
     )
 
 

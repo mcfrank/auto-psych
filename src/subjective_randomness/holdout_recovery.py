@@ -60,7 +60,7 @@ from src.runtime.coding_agent import select_backend
 from src.runtime.config import REPO_ROOT
 from src.runtime.token_usage import start_usage_log, write_usage_report
 from src.subjective_randomness.config import resolve_path
-from src.subjective_randomness.simulate import load_stimuli
+from src.tasks import task_for_project
 
 from src.subjective_randomness.holdout_data import (
     PROJECT_ID,
@@ -198,6 +198,7 @@ def run_holdout_experiments(
     """
     run_root = Path(run_root)
     seed_models_dir = Path(seed_models_dir)
+    task = task_for_project(project_id)
     # seed_models_dir is the GT/baseline registry; the agent seed pool always
     # comes from the live project assets (project_seed_models_dir). The
     # ground-truth generator may live elsewhere (e.g. the impossible-models dir).
@@ -272,13 +273,14 @@ def run_holdout_experiments(
         # Collect: every response comes from the held-out ground truth, with a
         # seed of its own per cell and experiment (repeated stimuli get fresh draws).
         if not (resume and _stage_done("4_collect", exp_dir)):
-            stimuli = load_stimuli(exp_dir / "design" / "stimuli.json")
+            stimuli = task.load_stimuli(exp_dir / "design" / "stimuli.json")
             rows = generate_responses(
                 gt_model,
                 gt_models_dir,
                 stimuli,
                 gt_params,
                 n_participants=n_participants,
+                task=task,
                 seed=derive_seed(seed, gt_model, exp_num, "responses"),
                 # Pooled across experiments, each experiment's participants are
                 # different people.
@@ -444,6 +446,9 @@ def run_holdout_recovery_from_config(
         gt_params_by_model = resolve_generating_params(
             config.get("gt_models"), seed_models_dir, gt_family_dir
         )
+    # Every configured model's parameters, before --gt-model narrows the
+    # cells: the no-learning baseline scores the other seeds at theirs.
+    seed_params = dict(gt_params_by_model)
     if gt_model_override is not None:
         if gt_model_override not in gt_params_by_model:
             raise ValueError(
@@ -543,6 +548,7 @@ def run_holdout_recovery_from_config(
         result = _run_holdout_recovery_resolved(
             gt_params_by_model,
             results_root,
+            seed_params=seed_params,
             seed_models_dir=seed_models_dir,
             gt_models_dir=gt_models_dir,
             gt_family_dir=gt_family_dir,
@@ -603,6 +609,7 @@ def _run_holdout_recovery_resolved(
     gt_params_by_model: Dict[str, Dict[str, float]],
     results_root: Path,
     *,
+    seed_params: Mapping[str, Mapping[str, Any]],
     seed_models_dir: Path,
     gt_models_dir: Path,
     gt_family_dir: Optional[Path] = None,
@@ -633,6 +640,7 @@ def _run_holdout_recovery_resolved(
     # Names only — the fitted-seed baseline fits these by MCMC, so no
     # pure-Python family twin (and no default params) is required here.
     all_seed_models = set(seed_model_names(seed_models_dir))
+    task = task_for_project(project_id)
     gt_runs: List[Dict[str, Any]] = []
     for cell_number, (gt_model, gt_params) in enumerate(gt_params_by_model.items(), 1):
         # results_root is the agents' working tree and every path in it reaches
@@ -692,6 +700,7 @@ def _run_holdout_recovery_resolved(
 
         eval_info = build_eval_stimuli(
             run_root,
+            task=task,
             n_experiments=n_experiments,
             n_pairs=eval_pool["n_pairs"],
             lengths=eval_pool["lengths"],
@@ -716,6 +725,7 @@ def _run_holdout_recovery_resolved(
             gt_model,
             gt_params,
             eval_info["stimuli"],
+            task=task,
             seed_models_dir=seed_models_dir,
             n_experiments=n_experiments,
             cache_dir=cache_dir,
@@ -752,6 +762,8 @@ def _run_holdout_recovery_resolved(
             gt_model,
             gt_params,
             eval_info["stimuli"],
+            task=task,
+            params_by_model=seed_params,
             seed_models_dir=seed_models_dir,
             seeded_models_dir=seeded_models_dir(run_root),
             gt_models_dir=gt_models_dir,
@@ -766,6 +778,7 @@ def _run_holdout_recovery_resolved(
             gt_model,
             gt_params,
             eval_info["stimuli"],
+            task=task,
             seed_models_dir=seed_models_dir,
             n_experiments=n_experiments,
             other_seed_models=other_seeds,
@@ -819,6 +832,7 @@ def _run_holdout_recovery_resolved(
         "fit_kwargs": fit_kwargs,
         "seed": seed,
         "eval_pool": eval_pool,
+        "seed_params": {name: dict(params) for name, params in seed_params.items()},
         "metrics_version": 2,
         "gt_runs": gt_runs,
     }

@@ -12,6 +12,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 from src.subjective_randomness import holdout_data
 from src.subjective_randomness.holdout_data import generate_responses
 
@@ -25,7 +26,7 @@ STIMULI = [
 def prefers_the_mixed_sequence(monkeypatch):
     """A ground truth that almost always picks the sequence that is not all H."""
 
-    def fake_p_left(model_name, models_dir, stimuli, params, *, seed=0):
+    def fake_p_left(model_name, models_dir, stimuli, params, *, task, seed=0):
         return np.array([0.95 if "T" in s["sequence_a"] else 0.05 for s in stimuli])
 
     monkeypatch.setattr(holdout_data, "p_left_fixed_params", fake_p_left)
@@ -33,7 +34,8 @@ def prefers_the_mixed_sequence(monkeypatch):
 
 def _generate(**kwargs):
     return generate_responses(
-        "gt", None, STIMULI, {}, 200, seed=3, participant_id_offset=0, **kwargs
+        "gt", None, STIMULI, {}, 200, seed=3, participant_id_offset=0, **kwargs,
+        task=SUBJECTIVE_RANDOMNESS,
     )
 
 
@@ -54,14 +56,15 @@ def test_the_choice_follows_the_displayed_order():
 
 def test_participant_ids_start_at_the_offset():
     rows = generate_responses(
-        "gt", None, STIMULI, {}, 3, seed=3, participant_id_offset=80
+        "gt", None, STIMULI, {}, 3, seed=3, participant_id_offset=80,
+        task=SUBJECTIVE_RANDOMNESS,
     )
     assert sorted({r["participant_id"] for r in rows}) == [80, 81, 82]
 
 
 def test_the_offset_is_required():
     with pytest.raises(TypeError, match="participant_id_offset"):
-        generate_responses("gt", None, STIMULI, {}, 3, seed=3)
+        generate_responses("gt", None, STIMULI, {}, 3, seed=3, task=SUBJECTIVE_RANDOMNESS)
 
 
 def test_the_same_seed_gives_the_same_rows():

@@ -1,8 +1,8 @@
-"""Raw response columns and shared CSV writer for the pipeline.
+"""Raw response rows and shared CSV writer for the pipeline.
 
 Every model computes its own features from raw stimulus rows via its
 ``compute_features`` or ``prepare_observed`` hook. The pipeline passes only
-the raw columns below.
+the task's raw columns (``TaskSpec.raw_columns``, ``src.tasks``).
 """
 
 from __future__ import annotations
@@ -12,17 +12,11 @@ import os
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Sequence
 
-RAW_RESPONSE_COLUMNS = (
-    "sequence_a",
-    "sequence_b",
-    "participant_id",
-    "trial_index",
-    "chose_left",
-)
+from src.tasks import TaskSpec
 
 
-def raw_response_rows(rows: Iterable[Mapping[str, Any]]) -> List[Dict[str, Any]]:
-    """Copy ``rows`` keeping only :data:`RAW_RESPONSE_COLUMNS`, in that order.
+def raw_response_rows(rows: Iterable[Mapping[str, Any]], task: TaskSpec) -> List[Dict[str, Any]]:
+    """Copy ``rows`` keeping only the task's raw columns, in that order.
 
     Everything agents can read carries only these. Collection returns more:
     ``/results`` adds ``participant_id_str`` (the Prolific ID), ``chose_right``
@@ -31,12 +25,12 @@ def raw_response_rows(rows: Iterable[Mapping[str, Any]]) -> List[Dict[str, Any]]
     """
     raw_rows = []
     for index, row in enumerate(rows):
-        missing = [column for column in RAW_RESPONSE_COLUMNS if column not in row]
+        missing = [column for column in task.raw_columns if column not in row]
         if missing:
             raise ValueError(
                 f"response row {index} lacks raw column(s) {missing}; got {sorted(row)}"
             )
-        raw_rows.append({column: row[column] for column in RAW_RESPONSE_COLUMNS})
+        raw_rows.append({column: row[column] for column in task.raw_columns})
     return raw_rows
 
 

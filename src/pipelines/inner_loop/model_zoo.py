@@ -31,6 +31,7 @@ from src.models.mcmc_defaults import (
 )
 from src.models.model_contract import model_contract_violation
 from src.models.model_manifest import manifest_path, read_manifest_entries
+from src.tasks import task_of_file, task_present_in
 from src.models.data_binding import MissingStimulusColumns, make_stim_data
 from src.models.model_loading import load_pymc_model, pm_data_inputs
 from src.models.pymc_inference import (
@@ -549,7 +550,7 @@ class NoveltyPoolUndefined(ValueError):
         self.n_invalid = n_invalid
         self.n_pool = n_pool
         super().__init__(
-            f"model {model_name!r} has an undefined p_left on {n_invalid} of the "
+            f"model {model_name!r} has an undefined prediction on {n_invalid} of the "
             f"{n_pool} novelty-pool stimuli"
         )
 
@@ -568,16 +569,15 @@ class NoveltyPoolFailed(ValueError):
         self.model_name = model_name
         self.error = f"{type(error).__name__}: {error}"
         super().__init__(
-            f"model {model_name!r} cannot predict p_left on the novelty pool ({self.error})"
+            f"model {model_name!r} cannot predict on the novelty pool ({self.error})"
         )
 
 
 def _pair_labels(pool_rows: Sequence[Mapping[str, str]], mask: np.ndarray) -> List[str]:
-    """``"<sequence_a> vs <sequence_b>"`` for the pool rows ``mask`` selects."""
-    return [
-        f"{pool_rows[i]['sequence_a']} vs {pool_rows[i]['sequence_b']}"
-        for i in np.flatnonzero(mask)
-    ]
+    """The task's labels (``"HHT vs THT"``, ``"{16,8} -> 4"``) for the pool
+    rows ``mask`` selects."""
+    task = task_present_in(pool_rows[0], "stimulus_columns")
+    return [task.stimulus_label(pool_rows[i]) for i in np.flatnonzero(mask)]
 
 
 def _participant_ids_in(responses_path: Path) -> Optional[List[int]]:
@@ -597,7 +597,8 @@ def _pool_prediction(
     model_name: str,
     participant_ids: Optional[Sequence[int]],
 ) -> np.ndarray:
-    """Posterior-mean ``p_left`` of one fitted model on the pool, population-level.
+    """Posterior-mean prediction (the task's ``prediction_var``; ``p_left``
+    below) of one fitted model on the pool, population-level.
 
     The observed-response container is filled with dummies (``p_left`` never
     reads it), as the recovery evaluation does with its pool. A model without
@@ -609,11 +610,14 @@ def _pool_prediction(
     A stimulus where any draw of ``p_left`` is not a probability comes back
     NaN (as in the recovery evaluation); the caller decides what that means.
     """
-    rows = [{**row, "chose_left": 0} for row in pool_rows]
+    task = task_present_in(pool_rows[0], "stimulus_columns")
+    rows = task.stimulus_rows(pool_rows)
 
     def predict(stim_data: Dict[str, np.ndarray]) -> np.ndarray:
         try:
-            return np.asarray(fitted.predict_p_left(stim_data), dtype="float64")
+            return np.asarray(
+                fitted.predict_p_left(stim_data, var_name=task.prediction_var), dtype="float64"
+            )
         except InvalidPredictions as exc:
             return exc.draws.mean(axis=0)
 
@@ -797,36 +801,23 @@ DEFAULT_PRUNE_DSE_MULTIPLIER = 2.0
 DEFAULT_NOVELTY_RMSE_THRESHOLD = 0.002
 
 # The novelty pool: the stimuli on which a candidate's predictions are compared
-# to every admitted model's. The loop generates it from its own seed over the
-# design's pair universe (same-length H/T pairs at lengths 4–8), so two
-# mechanisms are compared across the stimulus space rather than on the few
-# dozen training stimuli the design happened to select. It is deliberately NOT
-# the recovery harness's eval pool (``holdout_eval.build_eval_stimuli``, seeded
-# from the holdout config's ``eval_pool``): the loop must not select models on
-# the stimuli it is later scored against. The orchestrator writes the pool to
-# the run tree as ``novelty_pool.json`` so what the gate saw is auditable.
-NOVELTY_POOL_SEED = 20260919
-NOVELTY_POOL_N_PAIRS = 512
-NOVELTY_POOL_LENGTHS = (4, 5, 6, 7, 8)
+# to every admitted model's. The loop takes it from its task, a fixed sample of
+# the design's stimulus space (``TaskSpec.novelty_pool``: for the coin-flip
+# task 512 same-length H/T pairs at lengths 4–8), so two mechanisms are
+# compared across the stimulus space rather than on the few dozen training
+# stimuli the design happened to select. It is deliberately NOT the recovery
+# harness's eval pool (``holdout_eval.build_eval_stimuli``, seeded from the
+# holdout config's ``eval_pool``): the loop must not select models on the
+# stimuli it is later scored against. The orchestrator writes the pool to the
+# run tree as ``novelty_pool.json`` so what the gate saw is auditable.
 NOVELTY_POOL_FILENAME = "novelty_pool.json"
 
 
-def novelty_pool_rows(
-    *,
-    seed: int = NOVELTY_POOL_SEED,
-    n_pairs: int = NOVELTY_POOL_N_PAIRS,
-    lengths: Sequence[int] = NOVELTY_POOL_LENGTHS,
-) -> List[Dict[str, str]]:
-    """The loop's own stimulus pool for the novelty gate (see the constants above).
-
-    Raw ``sequence_a``/``sequence_b`` rows: each model computes its own
-    features from them, exactly as it does for the responses CSV.
-    """
-    # Lazy, like the design stage's import of the same module (``eig.py``):
-    # the pipeline's coupling to the research library stays thin and explicit.
-    from src.subjective_randomness.stimulus_design import generate_candidate_pool
-
-    return generate_candidate_pool(n_pairs, lengths=tuple(lengths), seed=seed)
+def novelty_pool_rows(responses_path: Path) -> List[Dict[str, str]]:
+    """The novelty pool of the task ``responses_path`` holds responses for:
+    raw stimulus rows, from which each model computes its own features
+    exactly as it does for the responses CSV."""
+    return task_of_file(responses_path).novelty_pool()
 
 
 def _clustered_dse(comparison: Dict[str, Dict[str, Any]], name: str) -> float:
@@ -1312,8 +1303,8 @@ def _admit_candidate_with_reason(
     (``prefit_candidates``), and this function loads them.
 
     The novelty gate compares the candidate's posterior-mean ``p_left`` with
-    every admitted model's on ``novelty_pool`` (``None`` ⇒ the loop's default
-    pool, ``novelty_pool_rows()``; the orchestrator passes the pool it recorded
+    every admitted model's on ``novelty_pool`` (``None`` ⇒ the task's pool,
+    ``novelty_pool_rows(responses_path)``; the orchestrator passes the pool it recorded
     in the run tree so every candidate of a run is gated on the same stimuli).
     ``novelty_predictions`` is the loop's dict of saved pool predictions, so
     each model is predicted once per loop (``_min_prediction_rmse``); ``None``
@@ -1432,7 +1423,9 @@ def _admit_candidate_with_reason(
     # the training stimuli. Uses the cached fits from the gates above and prior
     # scoring, so this adds no MCMC.
     if novelty_rmse_threshold > 0:
-        pool = list(novelty_pool) if novelty_pool is not None else novelty_pool_rows()
+        pool = list(novelty_pool) if novelty_pool is not None else novelty_pool_rows(responses_path)
+        task = task_present_in(pool[0], "stimulus_columns")
+        stimulus = " and ".join(task.stimulus_columns)
         try:
             nearest, rmse = _min_prediction_rmse(
                 model_name,
@@ -1449,32 +1442,33 @@ def _admit_candidate_with_reason(
                 f"model binds {list(e.missing)} — response-row bookkeeping a bare "
                 "stimulus never carries — so it cannot be evaluated on a stimulus "
                 "pool (the novelty gate now, the held-out evaluation later); "
-                "compute everything from sequence_a and sequence_b."
+                f"compute everything from {stimulus}."
             )
         except NoveltyPoolUndefined as e:
             staged.unlink(missing_ok=True)
             return reject(
-                f"p_left is undefined (NaN or outside [0, 1]) on {e.n_invalid} of "
+                f"{task.prediction_var} is undefined (NaN or outside [0, 1]) on {e.n_invalid} of "
                 f"the {e.n_pool} novelty-pool stimuli (e.g. {', '.join(e.examples)}). "
-                "p_left must be a probability for every same-length pair, "
-                "including pairs unlike the training stimuli: guard the "
+                f"{task.prediction_var} must be a probability for every stimulus the "
+                "design can show, including stimuli unlike the training ones: guard the "
                 "computation (no log(0), no division by zero, no overflow; keep "
-                "p_left inside [0, 1])."
+                f"{task.prediction_var} inside [0, 1])."
             )
         except NoveltyPoolFailed as e:
             staged.unlink(missing_ok=True)
             return reject(
-                f"p_left could not be predicted on the {len(pool)}-stimulus novelty "
-                f"pool of same-length pairs ({e.error}). The model must define "
-                "p_left (a pm.Deterministic named 'p_left') with one value per "
-                "stimulus row, and its compute_features or prepare_observed must "
-                "work for every same-length H/T pair, including all-H and all-T "
-                "sequences and pairs unlike the training stimuli."
+                f"{task.prediction_var} could not be predicted on the {len(pool)}-stimulus "
+                f"novelty pool ({e.error}). The model must define "
+                f"{task.prediction_var} (a pm.Deterministic named '{task.prediction_var}') "
+                "with one value per stimulus row, and its compute_features or "
+                "prepare_observed must work for every stimulus the design can show "
+                "(e.g. " + ", ".join(task.stimulus_label(r) for r in pool[:3]) + "), "
+                "including stimuli unlike the training ones."
             )
         if nearest is not None and rmse < novelty_rmse_threshold:
             staged.unlink(missing_ok=True)
             return reject(
-                f"predicts like existing model {nearest!r} (p_left RMSE "
+                f"predicts like existing model {nearest!r} ({task.prediction_var} RMSE "
                 f"{rmse:.5f} < {novelty_rmse_threshold} on the {len(pool)}-stimulus "
                 f"novelty pool) — a near-duplicate of {nearest}, not a new "
                 "hypothesis."

@@ -18,7 +18,7 @@ import yaml
 from src.pipelines.outer_loop import collect
 from src.pipelines.outer_loop import model_loop_runner as mlr
 from src.pipelines.outer_loop import orchestrator
-from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 
 PROJECT = "subjective_randomness"
 PROLIFIC_ID = "5f8a1b2c3d4e5f6a7b8c9d0e"
@@ -108,7 +108,7 @@ def test_agents_see_only_raw_columns_and_no_prolific_id(tmp_path, monkeypatch):
             assert column not in text.splitlines()[0].split(","), (path, column)
     for name in ("data/responses.csv", "model_loop/responses.csv"):
         header = (exp_dir / name).read_text(encoding="utf-8").splitlines()[0]
-        assert header.split(",") == list(RAW_RESPONSE_COLUMNS)
+        assert header.split(",") == list(SUBJECTIVE_RANDOMNESS.raw_columns)
     assert (exp_dir / "model_loop" / "responses.csv").read_text(encoding="utf-8").count(
         "\n"
     ) == 5
@@ -135,4 +135,4 @@ def test_pooling_keeps_only_raw_columns_from_an_older_wide_file(tmp_path, monkey
     )
 
     rows = mlr._pooled_response_rows(exp_dir)
-    assert [list(row) for row in rows] == [list(RAW_RESPONSE_COLUMNS)] * 4
+    assert [list(row) for row in rows] == [list(SUBJECTIVE_RANDOMNESS.raw_columns)] * 4

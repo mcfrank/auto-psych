@@ -59,3 +59,11 @@ def load_script_module(path: Path, name: Optional[str] = None) -> ModuleType:
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def sr_pairs(*lengths: int) -> list:
+    """The coin-flip design pool restricted to ``lengths``: tests score a
+    small part of it rather than all ~43k pairs."""
+    from src.subjective_randomness.stimulus_design import enumerate_all_pairs
+
+    return enumerate_all_pairs(list(lengths), same_length_only=True)

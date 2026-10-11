@@ -44,7 +44,6 @@ from src.pipelines.inner_loop.hypothesis_ledger import (
     HypothesisLedger,
 )
 from src.pipelines.inner_loop.candidate_agent import (
-    DEFAULT_CANDIDATE_HINTS,
     _repair_note,
     _retry_note,
     _spawn_candidate_agent,
@@ -77,6 +76,7 @@ from src.pipelines.inner_loop.model_zoo import (
     reserved_names,
     slot_roles,
 )
+from src.tasks import task_of_file
 
 from src.pipelines.inner_loop.critique_round import (
     CRITIQUE_N_PROPOSALS,
@@ -240,7 +240,7 @@ def run_pymc_inner_loop(
         forming each statistic's null distribution.
     candidate_hints
         Exploration lenses cycled across a round's exploratory slots (``None``
-        ⇒ ``DEFAULT_CANDIDATE_HINTS``). With no more exploratory slots than
+        ⇒ the task's ``candidate_hints``, ``src.tasks``). With no more exploratory slots than
         lenses, every exploratory slot in a round works a distinct lens.
     novelty_rmse_threshold
         Reject a candidate whose posterior-mean ``p_left`` is within this RMSE
@@ -314,7 +314,7 @@ def run_pymc_inner_loop(
     # stimuli and what the gate saw is auditable. None when the gate is off.
     novelty_pool: Optional[List[Dict[str, str]]] = None
     if novelty_rmse_threshold > 0:
-        novelty_pool = novelty_pool_rows()
+        novelty_pool = novelty_pool_rows(responses_path)
         (results_dir / NOVELTY_POOL_FILENAME).write_text(
             json.dumps(novelty_pool), encoding="utf-8"
         )
@@ -322,11 +322,10 @@ def run_pymc_inner_loop(
     # whole loop, not at every admission: the data and every fit are fixed
     # within it (_min_prediction_rmse says why this matters).
     novelty_predictions: Dict[tuple, Any] = {}
-    n_lenses = (
-        len(candidate_hints)
-        if candidate_hints is not None
-        else len(DEFAULT_CANDIDATE_HINTS)
-    )
+    # Without lenses of its own, the loop walks its task's battery.
+    if candidate_hints is None:
+        candidate_hints = list(task_of_file(responses_path).candidate_hints)
+    n_lenses = len(candidate_hints)
     if max_iterations > 0 and n_lenses < 1:
         raise ValueError(
             "The lens battery is empty — pass at least one exploration lens "

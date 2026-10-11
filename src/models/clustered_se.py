@@ -11,31 +11,34 @@ stimuli treats a stimulus as one observation — the nonparametric
 
 from __future__ import annotations
 
-from typing import Any, Dict, Mapping, Sequence, Tuple
+from typing import Any, Dict, Mapping, Sequence
 
 import numpy as np
 
-STIMULUS_COLUMNS = ("sequence_a", "sequence_b")
-
-
 def stimulus_clusters(rows: Sequence[Mapping[str, Any]]) -> np.ndarray:
-    """One integer per row; rows showing the same pair share it.
+    """One integer per row; rows showing the same stimulus share it.
 
-    A stimulus is the unordered pair: left/right is counterbalanced, so both
-    presentations of a pair are one stimulus. Ids are numbered in order of
-    first appearance. Raises ``KeyError`` naming a missing stimulus column.
+    A stimulus is the task's ``stimulus_key`` (``src.tasks``; the task is the
+    one whose stimulus columns the rows carry): for the coin-flip task the
+    unordered pair, since left/right is counterbalanced, for the number game
+    the (set, target) cell. Ids are numbered in order of first appearance.
+    Raises naming the missing stimulus columns.
     """
-    ids: Dict[Tuple[str, str], int] = {}
+    from src.tasks import task_present_in
+
+    if not rows:
+        return np.empty(0, dtype=np.int64)
+    task = task_present_in(rows[0], "stimulus_columns")
+    ids: Dict[Any, int] = {}
     out = np.empty(len(rows), dtype=np.int64)
     for i, row in enumerate(rows):
-        for column in STIMULUS_COLUMNS:
-            if column not in row:
-                raise KeyError(
-                    f"responses row {i} lacks the stimulus column {column!r}; "
-                    f"stimulus clustering needs {STIMULUS_COLUMNS}."
-                )
-        key = tuple(sorted((str(row["sequence_a"]), str(row["sequence_b"]))))
-        out[i] = ids.setdefault(key, len(ids))
+        missing = [c for c in task.stimulus_columns if c not in row]
+        if missing:
+            raise KeyError(
+                f"responses row {i} lacks the stimulus column(s) {missing}; "
+                f"stimulus clustering needs {task.stimulus_columns}."
+            )
+        out[i] = ids.setdefault(task.stimulus_key(row), len(ids))
     return out
 
 
