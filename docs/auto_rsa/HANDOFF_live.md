@@ -157,10 +157,21 @@ Notes:
 - **Held submissions:** check Prolific's dashboard for submissions held for review while
   each study recruits.
 
-**4. After experiment 1 (report, then PI go-ahead).** Resubmit the same command with
-`N_EXPERIMENTS=3`:
+**4. After experiment 1 (report, then PI go-ahead).** Resubmit with `N_EXPERIMENTS=3`
+(and `CHAINS_TO_RUN=0` for chain 0 alone). For chain 0 after its experiment 1, the code moved
+by the logged bug fixes #54–57 (`CAMPAIGN_LOG.md`), so pull, then give the reason:
+
+```bash
+cd ~/auto-psych && git fetch origin && git checkout auto-rsa && git merge --ff-only origin/auto-rsa
+RESTAGE_REASON="campaign log #54-57: launcher cost print, catch trials not modelled, copy check, re-stage" \
+PROLIFIC_MODE=live N_EXPERIMENTS=3 CHAINS_TO_RUN=0 WORK_ROOT=$SCRATCH/auto-psych/rsa_campaign CONFIG=<the copy> \
+  bash scripts/rsa/live/launch.sh
+```
+
+Then check `$WORK_ROOT/code_history`: it should hold one line, `b162c960… -> <new> <reason>`.
 - each chain continues in place, and experiment 1's stages are kept;
-- the staging step refuses to run on code other than the frozen commit;
+- the staging step refuses to run on code other than the staged commit, except by such a recorded
+  re-stage;
 - experiments 2–3 cost about $800.
 
 **Bring back** (into `data/rsa/live/<cell>/`):

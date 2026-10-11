@@ -118,6 +118,10 @@ games, and support two claims:
 | 51 | 10-11 | **A candidate whose hypothesis repeats an existing model's word for word is rejected** (with the reason; the usual repair follows) | rehearsal 3's round-1 winner copied its parent's hypothesis, so the ledger, the briefs and the next critique described it without its new mechanism | RSA only | `RSALoop._same_hypothesis` |
 | 52 | 10-11 | **The campaign runs experiment by experiment:** experiment 1 of all three chains first, reviewed, then the chains are resumed in place for experiments 2–3 (the experiment count is operational; finished stages are kept) | catch real-data surprises before spending the rest | RSA only | `OuterRun.run`, `HANDOFF_live.md` §4 |
 | 53 | 10-11 | **Code freeze** for the campaign (the commit in §4): after it, only bug fixes, each logged here. The staging step refuses to resume a campaign on other code | claim 2 is a prospective test: the method is fixed before the data | same (main's sweeps run on one code) | `stage_code.sh` |
+| 54 | 10-11 | **Bug fix:** the launcher's launch-cost print was a Python SyntaxError, so every `N_EXPERIMENTS` launch exited before its prompt (chain 0's experiment 1 was submitted by hand). The print moved into `src.rsa.live.config` | a bug | — | `63d9b0bd` |
+| 55 | 10-11 | **Bug fix: catch trials are checked, not modelled.** Each experiment's `data/modelled.csv` is its responses without catch trials; the next design's data, the inner loop and the prospective score read it. Chain 0's experiment 1 (already run) fitted and critiqued its 370 catch trials | after exclusion they are all correct by construction: in the fits they pushed lapse rates down; the critic's catch-accuracy statistics measured the exclusion rule (z +2.2 to +3.4) | RSA only | `0ebe8de2`, `OuterRun.modelled` |
+| 56 | 10-11 | **Bug fix:** the copy check (#51) also rejects a hypothesis wholly contained in an admitted model's | a refinement wrote only its parent's first sentence and reached chain 0's exported live set (`limited_attention_listener_2`) | RSA only | `8cafee80` |
+| 57 | 10-11 | **Logged bug fixes reach a frozen work root only by a recorded re-stage:** `RESTAGE_REASON=<entry>` re-stages from a clean checkout and appends old → new and the reason to `$WORK_ROOT/code_history`; without it, other code is refused as before | the freeze pinned an exact commit, so no fix could be applied at all | same aim as main's runbook (rsync fixed code, record the commit) | `80a1c1df`, `stage_code.sh` |
 
 ## 3. How this differs from main, at a glance
 
@@ -172,18 +176,19 @@ games, and support two claims:
 | 10-10 | **Rehearsal 3** (critique) | Sherlock 47283774, 5 h 18 min, completed | chain 0, 1 experiment, 2 rounds × 6, rehearsal 2's ground truth | both rounds critiqued (8/8 statistics significant, none broken); 10 of 16 hypotheses cite a discrepancy; quotas met, power 0.933 vs 0.931 free; per-display KL 0.0168 → 0.0020; critique 15% of time and 17% of spend ($4.04 of $23.78) | **driver's call:** the critic scores all 51,530 trials (live 4.4%; 3 of 9 statistics pragmods-only) while selection ranks on live trials; 15/16 p at the floor (rank by z?); an incumbent with a stale hypothesis | `REHEARSAL3_REPORT.md`, `data/rsa/rehearsal3/` |
 | 10-11 | Pre-campaign changes and **code freeze at `b162c960`** (later commits until the campaign ends change docs only, or are logged bug fixes) | cloud | the critic on live trials (#7); duplicate-hypothesis rejection (#51); 13 + 2 trials, 52 displays, $0.50 at 3 min (#24, 25, 43); resume with more experiments (#52) | fast suite 2,000 passed; slow end-to-end (two-experiment outer loop with the critique on live trials; loop with the critique on and off) passed | the campaign | this log, `HANDOFF_live.md` §4 |
 | 10-11 | **Campaign, chain 0, experiment 1** | Sherlock 47331282_0, code b162c960, `$SCRATCH/auto-psych/rsa_campaign` | launched as 3 chains × 1 experiment (§4). **PI changed the plan:** his "experiment" is our chain and his "round" is our experiment. So it is chain 0 alone through experiments 1–3 (~$400), then chains 1 and 2 (~$800) if it works. Tasks 1 and 2 were cancelled in their design step, with no study created. Chain 0 runs experiment 1 (1 study, ~$133) and stops for review | | **`launch.sh` line 30 is a SyntaxError** (`\"` inside bash single quotes) whenever `N_EXPERIMENTS` is set, so the launcher exits before its prompt. Submitted with the launcher's own submit command by hand (`$WORK_ROOT/launch_campaign_e1.sh`). Fix before the next launch | `HANDOFF_live.md` §4 |
-| next | Chain 0, experiments 2–3 (~$266), then chains 1 and 2 × 3 experiments (~$800) | Sherlock + Prolific | PI go-ahead after the review; resubmit chain 0 with `N_EXPERIMENTS=3` (continues in place) | | | |
+| 10-11 | **Campaign, chain 0, experiment 1: done** | Sherlock 47331282_0, 12 h 12 min; Prolific `6acb1fc4…` | 200 recruited, 185 kept (15 failed a catch trial); median 144 s at 15 choices; 24 held for review (56–89 s); quotas met, power 0.937 vs 0.942 free; inner loop 5 rounds, the best model changed every round; critic on live trials, 8/8 critiqued rounds, 31 of 34 hypotheses cite it | **best `candidate_load_codability_listener` +82.8 ± 22.0 nats on the live trials vs the starting incumbent** (and +101 / +87 / +60 / −5 / −8 on the existing sources); every starting model pruned by the guard; `live_vs` best seed +44.8 ± 54.9; agents $51, Prolific ~$133 | bug fixes #54–57 | `CAMPAIGN_C0_E1_REPORT.md`, `data/rsa/live/live_rsa_c0/` |
+| next | Chain 0, experiments 2–3 (~$266; claim 2's committed-model test starts in experiment 2), then chains 1 and 2 × 3 experiments (~$800) | Sherlock + Prolific | PI go-ahead; resubmit chain 0 with `N_EXPERIMENTS=3 CHAINS_TO_RUN=0` and `RESTAGE_REASON` (#57) | | | `HANDOFF_live.md` §4 |
 
 ## 5. Open
 
 - **Rehearsal 3's questions,** decided 10-11: the critic scores the live trials (#7); a copied
   hypothesis is rejected (#51). Ranking by z instead of FDR survival is not needed: on the live
   trials alone the p-values carry information again (main's wording is kept).
-- **`scripts/rsa/live/launch.sh` line 30:** the cost print fails, so every `N_EXPERIMENTS` launch
-  exits before its prompt. Fix it before chain 0's experiments 2–3.
-- **After chain 0's experiment 1 (before its experiments 2–3):** completion times at 15 choices against
-  the 3-min listing, exclusions and held submissions, the critic's statistics on real
-  live trials, and the agents' use of them.
+- **Chain 0's experiment 1 was fitted with its catch trials** (before #55). Its export and
+  `live_vs` stand as run; from experiment 2 on, no fit sees catch trials. To report.
+- **Held submissions:** Prolific held 24 of 200 for being fast (56–89 s), but only 1 of them
+  failed a catch trial; 14 of the 15 excluded were auto-approved. Someone must clear the held
+  ones during each study.
 - **Carry cap and families:** rehearsal 2 kept six close relatives and dropped two distinct
   models over the cap. One option is to fill the cap across families first. No change made.
 - **A recovery test with an unfamiliar, pre-fixed ground truth:** optional, for the paper. It is
