@@ -47,6 +47,7 @@ FIREBASE_PROJECT="$(cfg firebase_project)"
 SERIES="$(cfg series_label)"
 PARTICIPANTS="${PARTICIPANTS:-$(cfg participants)}"
 DISPLAYS="${DISPLAYS:-$(cfg displays)}"
+TRIALS="${TRIALS:-$(cfg trials)}"
 N_EXPERIMENTS="${N_EXPERIMENTS:-$(cfg experiments)}"
 CONFIRM_FLAG=()
 if [[ "$PROLIFIC_MODE" == "live" ]]; then
@@ -136,7 +137,7 @@ env ${UNSET_ARGS[@]+"${UNSET_ARGS[@]}"} PATH="$RUN_REPO/.agent_bin:$PATH" \
     --collection live --prolific-mode "$PROLIFIC_MODE" ${CONFIRM_FLAG[@]+"${CONFIRM_FLAG[@]}"} \
     ${PILOT_FLAG[@]+"${PILOT_FLAG[@]}"} --firebase-project "$FIREBASE_PROJECT" --run-label "c$CHAIN${PILOT:+pilot}" \
     --repo-root "$DEPLOY_REPO" --n-experiments "$N_EXPERIMENTS" --participants "$PARTICIPANTS" \
-    --trials 10 --displays "$DISPLAYS" --seed "$SEED" \
+    --trials "$TRIALS" --displays "$DISPLAYS" --seed "$SEED" \
     --agent-root "$RUN_REPO" --agent-model "$AGENT_MODEL" --agent-timeout-sec "$AGENT_TIMEOUT_SEC"
 
 # --- outputs: the run without fit caches; private/ stays on Sherlock (Prolific ids) ---

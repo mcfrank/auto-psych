@@ -15,7 +15,9 @@ phenomena). Shared with main, unchanged:
 What is RSA's own:
 
 - **The frame** (`critique_frame`): the loop's trials (included forced-choice
-  rows), only the design columns plus ``choice`` (`CRITIQUE_COLUMNS`). The table's
+  rows; with ``source``, only that source's: the live loop critiques the trials
+  it selects on, as main's critic sees its experiments' data), only the design
+  columns plus ``choice`` (`CRITIQUE_COLUMNS`). The table's
   other outcome columns (``response``, the click's ``display_order``) are left
   out: a replicate redraws only ``choice``, so a statistic reading them would
   compare the data with themselves. ``choice`` is the chosen *class* (identical
@@ -121,7 +123,7 @@ class ReplicateFrames:
 
 def context_md(*, critique_dir: Path, incumbent: str, incumbent_file: Path, hypothesis: str,
                responses_path: Path, observed: pd.DataFrame, n_proposals: int, alpha: float,
-               n_replicates: int, scope_note: str = "") -> str:
+               n_replicates: int, scope_note: str = "", rows_note: str = "") -> str:
     from src.critique.ppc import _TEST_STAT_BUDGET_SEC, _TEST_STAT_CALL_TIMEOUT_SEC
 
     n_displays = observed[["objects", "utterance"]].astype(str).drop_duplicates().shape[0]
@@ -135,7 +137,7 @@ def context_md(*, critique_dir: Path, incumbent: str, incumbent_file: Path, hypo
 **The data your statistics receive:** {len(observed)} trials (rows) over {n_displays}
 distinct displays (`objects` × `utterance`), from {sources}. The responses CSV
 (`{responses_path}`) holds more columns and rows; your statistic receives only
-the included forced-choice trials and these columns: `{", ".join(observed.columns)}`.
+the included forced-choice trials{rows_note} and these columns: `{", ".join(observed.columns)}`.
 - `objects`: a JSON list of 0/1 feature lists, one per object.
 - `query`: `utterance` or `prior` (a mumble trial: no word heard, `utterance` is NaN).
 - `utterance`: the index of the heard feature.
@@ -198,7 +200,7 @@ def run_critique(round_dir: Path, *, spawn: SpawnFn, incumbent: str, model: RSAM
                  hypothesis: str, incumbent_file: Path, frame: pd.DataFrame, contexts: Sequence[Context],
                  choices: Sequence[int], responses_path: Path, n_proposals: int = CRITIQUE_N_PROPOSALS,
                  alpha: float = CRITIQUE_SIGNIFICANCE_ALPHA, n_replicates: int = CRITIQUE_PPC_REPLICATES,
-                 seed: int = 0, scope_note: str = "") -> CritiqueOutcome:
+                 seed: int = 0, scope_note: str = "", source: Optional[str] = None) -> CritiqueOutcome:
     """Critique the incumbent before a candidate round (main's rules: one retry;
     a round whose statistics all fail, or none are written, has no critique,
     recorded). The first attempt is ``round_dir/critique``, a retry
@@ -206,6 +208,23 @@ def run_critique(round_dir: Path, *, spawn: SpawnFn, incumbent: str, model: RSAM
     from src.critique.ppc import score_statistics
     from src.pipelines.inner_loop.critique_round import _format_critiques_md, _usable_test_statistics
 
+    rows_note = ""
+    if source is not None:
+        # The trials the loop selects on, as main's critic sees its experiments'
+        # data (PI 2026-10-11). Rehearsal 3's critic, on all 51.5k trials (4.4%
+        # live), wrote statistics about literature experiments the live designs
+        # cannot show, and every p sat at the replicate floor.
+        keep = (frame["source"].astype(str) == source).to_numpy() if "source" in frame.columns \
+            else np.zeros(len(frame), dtype=bool)
+        if not keep.any():
+            raise ValueError(f"no {source!r} trials to critique")
+        idx = np.flatnonzero(keep)
+        frame = frame.iloc[idx]
+        contexts = [contexts[i] for i in idx]
+        choices = [choices[i] for i in idx]
+        rows_note = (f" from `source == \"{source}\"`: the trials the loop selects models on (the live "
+                     "experiments'). The published experiments' trials are in the CSV too, but are not "
+                     "critiqued here")
     observed = critique_frame(frame, contexts, choices)
     broken: Dict[str, str] = {}
     usable: List[Path] = []
@@ -217,7 +236,8 @@ def run_critique(round_dir: Path, *, spawn: SpawnFn, incumbent: str, model: RSAM
         cdir.mkdir(parents=True, exist_ok=True)
         text = context_md(critique_dir=cdir, incumbent=incumbent, incumbent_file=incumbent_file,
                           hypothesis=hypothesis, responses_path=responses_path, observed=observed,
-                          n_proposals=n_proposals, alpha=alpha, n_replicates=n_replicates, scope_note=scope_note)
+                          n_proposals=n_proposals, alpha=alpha, n_replicates=n_replicates, scope_note=scope_note,
+                          rows_note=rows_note)
         (cdir / "CRITIQUE_CONTEXT.md").write_text(text, encoding="utf-8")
         spawn(cdir, build_prompt(cdir, text, attempt=attempt, broken=broken))
         usable, broken = _usable_test_statistics(cdir / "test_stats", observed, n_replicates=n_replicates)

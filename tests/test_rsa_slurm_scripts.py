@@ -533,6 +533,26 @@ def test_the_live_config_checks_and_costs_the_campaign():
     c = cost(cfg)
     assert c["participants"] == len(cfg["chains"]) * cfg["experiments"] * cfg["participants"]
     assert c["total_cents"] < 400_000  # the PI's ceiling ($2-4k)
+    # PI 2026-10-11, after the pilot: 13 designed + 2 catch, 52 displays (50 responses each), 50 cents, 3 min.
+    assert (cfg["trials"], cfg["displays"], cfg["participants"] * cfg["trials"] // cfg["displays"]) == (13, 52, 50)
+    assert (c["reward_cents"], cfg["prolific"]["estimated_completion_time"]) == (50, 3)
+    assert "About 3 minutes" in cfg["prolific"]["description"]
+    live = (SLURM / "outer_live.sbatch").read_text()
+    assert '--trials "$TRIALS"' in live and "--trials 10" not in live
+
+
+def test_the_live_config_refuses_a_fractional_estimate_and_uneven_lists(tmp_path):
+    import yaml
+
+    from src.rsa.live.config import load
+
+    base = yaml.safe_load((SLURM.parent / "live" / "rsa_live.yaml").read_text())
+    for change, match in [({"prolific": {**base["prolific"], "estimated_completion_time": 2.5}}, "whole minutes"),
+                          ({"trials": 12}, "spread evenly")]:
+        path = tmp_path / "c.yaml"
+        path.write_text(yaml.safe_dump({**base, **change}))
+        with pytest.raises(ValueError, match=match):
+            load(path)
 
 
 def test_staging_never_copies_a_secrets_file_or_its_backup():

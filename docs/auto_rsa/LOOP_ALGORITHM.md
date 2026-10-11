@@ -68,10 +68,10 @@ target acceptance 0.9, seed 0.
    every pool display.
 3. **Prior over the design set:** 0.5 spread evenly over M_n, 0.5 spread evenly over the
    bar models that stayed in.
-4. **Pick 40 displays by greedy joint EIG, within quotas.** Each display gets 50
-   responses (200 people × 10 / 40).
-   - **Quotas** (PI 2026-10-10): at least 6 two-object displays, 10 three-object, 8
-     mumble trials and 20 with a word. Each pick is the best display among those that
+4. **Pick 52 displays by greedy joint EIG, within quotas.** Each display gets 50
+   responses (200 people × 13 / 52; 40 displays and 10 trials until 2026-10-11).
+   - **Quotas** (PI 2026-10-10), as shares of the design: at least 15% two-object
+     displays, 25% three-object, 20% mumble trials and 50% with a word (at 52: 8, 13, 10, 26). Each pick is the best display among those that
      keep every quota reachable with the picks left, so EIG chooses freely until a quota
      must be met, then within the kinds still short.
    - **The free design** (no quotas) is selected too, in a second process, and recorded
@@ -82,7 +82,7 @@ target acceptance 0.9, seed 0.
      generated it.
    - **Stopping:** greedy picks stop at the noise floor; the remaining slots are filled
      by single-response EIG.
-5. **Trial lists:** 200, one per participant. Each list is 10 designed displays (a
+5. **Trial lists:** 200, one per participant. Each list is 13 designed displays (a
    balanced subset: each display is seen by 50 people), plus 2 catch trials and 1
    practice trial.
    - Every trial gets a random item (faces, sundaes, …), random words and a random
@@ -135,8 +135,9 @@ target acceptance 0.9, seed 0.
 **Rounds** r = 1 … 5, each with 6 agent slots:
 
 - **First, the critique** (main's CriticAL, `src/rsa/loop/critique.py`; PI 2026-10-10):
-  1. A critique agent writes 8 test statistics `test_statistic(df)` on the trials (design
-     columns plus the chosen class).
+  1. A critique agent writes 8 test statistics `test_statistic(df)` on **the live trials**
+     L_1 ∪ … ∪ L_n, the rows selection ranks on (design columns plus the chosen class; PI
+     2026-10-11, as main's critic sees its experiments' data).
   2. Each is scored on the data and on 1,000 datasets simulated from the incumbent's
      posterior, one draw each: a two-sided empirical p, with a Benjamini–Hochberg q.
   3. The statistics with p ≤ 0.05 go into every slot's brief as `critiques.md`, with main's
@@ -196,7 +197,7 @@ target acceptance 0.9, seed 0.
 - **Before:** M_n fitted on D_n. **After:** the inner loop's live set fitted on C_n.
 - **For each model:**
   - `kl_pool`: the mean KL(ground truth ‖ model) over the 794 pool displays;
-  - `kl_design`: the same over this experiment's 40 displays;
+  - `kl_design`: the same over this experiment's designed displays;
   - `rmse_pool`.
 - **Also reported:** the exported model's distances, and the closest model before and
   after.
@@ -240,13 +241,13 @@ target acceptance 0.9, seed 0.
 | | Value |
 |---|---|
 | experiments per run | 3 live (2 in rehearsal 2) |
-| participants per experiment / designed displays | 200 / 40 (10 per person, plus 2 catch) |
+| participants per experiment / designed displays | 200 / 52 (13 per person, plus 2 catch; 50 responses a display; 40 and 10 until 10-11) |
 | rounds / slots per round / stale-round stop | 5 / 6 / 2 |
 | selection | guarded: rank on live rows; eligible within 4 dse on existing rows |
 | prune / live cap / carried cap | 2 dse on live rows / 12 / 8 |
 | novelty (in loop) / same-hypothesis (carry, design) | 0.002 RMSE, both on the plain-display pool (rechecked on the 1,597-display pool: twins 0.0002, `rsa_l1` vs `rsa_l2` 0.0086) |
 | design prior | 0.5 carried, 0.5 bar |
-| design quotas | of 40: ≥ 6 two-object, ≥ 10 three-object, ≥ 8 mumble, ≥ 20 with a word (`OuterConfig.quotas`) |
+| design quotas | shares of D: ≥ 15% two-object, ≥ 25% three-object, ≥ 20% mumble, ≥ 50% with a word (at 52: 8, 13, 10, 26; `OuterConfig.quotas`) |
 | sampler | dense mass, 4 × (1,000 + 1,000), target 0.9 (refit 0.95) |
 | candidate fit limit | 30 min (models in play: none) |
 | catch exclusion | any miss |

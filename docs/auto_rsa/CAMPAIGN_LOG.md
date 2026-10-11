@@ -41,7 +41,7 @@ games, and support two claims:
 | 4 | 10-07 | Agents: Gemini 3.8 Flash via opencode, 2,400 s per agent, sandboxed (bubblewrap) | credits; smoke tests | same sandbox; different model | `SMOKE_RESULTS_2.md` |
 | 5 | 10-08 | **Agents have no network** | in run 1 the agents read the pragmods GitHub repository (70 API calls), OSF and papers | **differs:** main's agents can browse (their URLs are reported) | `SHERLOCK_RUN1_RESULTS.md` |
 | 6 | 10-06 | Agents never see held-out data, provenance or a simulated run's ground truth | validity | same | `HANDOFF_rehearsal2.md` |
-| 7 | 10-06 → 10-10 | **The critique step (main's CriticAL) runs before every inner-loop round in the live phase:** 8 agent-written test statistics scored against 1,000 posterior-predictive replicates of the incumbent; the significant discrepancies go into every candidate's brief. Deferred on 10-06, so runs 1–2 and rehearsals 1–2 ran without it | one framework across phenomena: the paper plays up the critique loop (PI) | **same** as main from the live phase on (main's code and settings; RSA's own data frame and replicates) | `src/rsa/loop/critique.py`, `PLAN.md` "Critique step" |
+| 7 | 10-06 → 10-11 | **The critique step (main's CriticAL) runs before every inner-loop round in the live phase:** 8 agent-written test statistics scored against 1,000 posterior-predictive replicates of the incumbent; the significant discrepancies go into every candidate's brief. **The critic scores the live trials only** (the rows selection ranks on; PI 10-11). Deferred on 10-06, so runs 1–2 and rehearsals 1–2 ran without it | one framework across phenomena: the paper plays up the critique loop (PI). Live trials only: rehearsal 3's critic, on all 51.5k trials (4.4% live), wrote 3 of 9 statistics about pragmods experiments the live displays can't show, every p sat at the floor, and half of round 2 chased a literature misfit that guarded selection then rejected | **same** as main from the live phase on (main's code and settings; RSA's own data frame and replicates) | `src/rsa/loop/critique.py`, `PLAN.md` "Critique step" |
 | 8 | 10-06 | Slot roles (exploratory lenses, refine the incumbent, refine a model of the agent's choice), the ledger of tried hypotheses, starting models not protected | reused from main | same | `src/rsa/loop/` |
 
 ### 2.2 Data
@@ -78,8 +78,8 @@ games, and support two claims:
 
 | # | Date | Decision | Why | vs main | Where |
 |---|---|---|---|---|---|
-| 24 | 10-06 | **Many trials per person:** 10 designed displays + 2 catch + 1 practice, each person a balanced subset of the design | pragmods is 1 critical trial per person; 5–10× more data per dollar | **differs:** in main everyone answers every stimulus | `PLAN.md` 10-06, 10-08 |
-| 25 | 10-09 | **200 people, 40 displays, 50 responses per display** per experiment | power is flat in N and D (0.76–0.79); more displays help downstream: CV folds, clustered SEs, agents' conditions | **differs:** main uses 64 stimuli × N | `PLAN.md` 10-08 |
+| 24 | 10-06 → 10-11 | **Many trials per person:** 13 designed displays + 2 catch + 1 practice (PI 10-11, after the pilot; was 10 + 2), each person a balanced subset of the design | pragmods is 1 critical trial per person; 5–10× more data per dollar; the pilot's median was 2.0 min for 12 choices | **differs:** in main everyone answers every stimulus | `rsa_live.yaml` `trials` |
+| 25 | 10-09 → 10-11 | **200 people, 52 displays, 50 responses per display** per experiment (40 displays until 10-11) | power is flat in N and D (0.76–0.79); more displays help downstream: CV folds, clustered SEs, agents' conditions | **differs:** main uses 64 stimuli × N | `rsa_live.yaml` |
 | 26 | 10-08 | **Plain displays only** (no valence, familiarization or greyscale); the existing trials on such displays (1,313, about 2.6%) are left out of live-phase fits | valence/familiarization models cannot be told apart on plain displays; the live displays vary none of it | RSA only (scope) | `PLAN.md` 10-10 |
 | 27 | 10-10 | **The design aims at the carried models and the bar**: half the prior on each, duplicates merged, a simulated ground truth withheld unnamed | in rehearsal 1 the displays tested only the carried models, never the bar that claim 2 is scored against | **differs:** main designs over the carried set under a uniform prior | `LOOP_ALGORITHM.md` §2.2 |
 | 28 | 10-10 | **Quotas, with EIG choosing inside them:** of 40, at least 6 two-object, 10 three-object, 8 mumble, 20 with a word; the free design is recorded beside it | free EIG put 31–38 of 40 on 4×4 (and 37 of 40 on mumble trials in one experiment); cognitive load likely differs by size (PI). Measured cost: power 0.760 vs 0.767 free (±0.007) | **differs:** main's EIG is unconstrained | `PLAN.md` "Design mixture" |
@@ -107,7 +107,7 @@ games, and support two claims:
 | # | Date | Decision | Why | vs main | Where |
 |---|---|---|---|---|---|
 | 42 | 10-07 | IRB: the subjective-randomness protocol covers this; the repo's consent text, shown by the deployment's consent gate | | same | `HANDOFF_live.md` |
-| 43 | 10-09 | $12/h for an estimated 4 min ($0.80, about $1.06 with Prolific's fee); about **$1,915** for 3 chains × 3 experiments × 200; a pilot of about 20 people (about $21) measures the real time | | same rate | `rsa_live.yaml` |
+| 43 | 10-09 → 10-11 | **$0.50 a person, listed at 3 min** ($10/h; whole minutes, as Prolific takes them); about **$1,200** for 3 chains × 3 experiments × 200, $399 for experiment 1. The pilot (20 people) measured a 2.0-min median for 12 choices; the welcome screen says about 3 minutes | PI after the pilot (was $0.80 for an estimated 4 min) | | `rsa_live.yaml`, `PILOT_REPORT.md` §6 |
 | 44 | 10-10 | **Exclude only earlier RSA participants** | subjective randomness is a different enough task (PI) | **differs:** main excludes every earlier auto-psych study | `exclude_earlier_participants_from: project` |
 | 45 | 10-10 | Prolific ids only in each cell's `private/`, never copied off Sherlock; trial data stay on Sherlock until de-identified sharing is decided | privacy | same principle | `HANDOFF_live.md` |
 | 46 | 10-10 | Live recruitment double-gated (config + flag) plus a typed "yes"; stages: test deploy → pilot → campaign, each with PI go-ahead | real money | same | `HANDOFF_live.md` |
@@ -115,6 +115,9 @@ games, and support two claims:
 | 48 | 10-09 | **One core per process** (fits, agents, the harness) and `OPENBLAS_NUM_THREADS=1` | Research Computing flagged 140–160 threads per process | same aim as main's BLAS pinning; RSA also covers JAX | `src/rsa/cpus.py`, `HANDOFF_threads.md` |
 | 49 | 10-09 | **Dense mass matrix** in NUTS for the live loop, and JAX's persistent compile cache | same posteriors, 2.5–9× fewer sampling steps (494 s → 149 s on the slowest model); repeated compiles read back | RSA only | `PLAN.md` "Compute" |
 | 50 | 10-10 | Agent spend recorded per inner loop and per run | rehearsal 1 recorded none | same | `token_usage_summary.json` |
+| 51 | 10-11 | **A candidate whose hypothesis repeats an existing model's word for word is rejected** (with the reason; the usual repair follows) | rehearsal 3's round-1 winner copied its parent's hypothesis, so the ledger, the briefs and the next critique described it without its new mechanism | RSA only | `RSALoop._same_hypothesis` |
+| 52 | 10-11 | **The campaign runs experiment by experiment:** experiment 1 of all three chains first, reviewed, then the chains are resumed in place for experiments 2–3 (the experiment count is operational; finished stages are kept) | catch real-data surprises before spending the rest | RSA only | `OuterRun.run`, `HANDOFF_live.md` §4 |
+| 53 | 10-11 | **Code freeze** for the campaign (the commit in §4): after it, only bug fixes, each logged here. The staging step refuses to resume a campaign on other code | claim 2 is a prospective test: the method is fixed before the data | same (main's sweeps run on one code) | `stage_code.sh` |
 
 ## 3. How this differs from main, at a glance
 
@@ -167,16 +170,17 @@ games, and support two claims:
 | 10-10 | **Live stage 1 re-run: passed** | Sherlock 47272640, 49 min | chain 0's design with quotas, deployed; Prolific draft `6acaaa90…` | quotas met (6 two-object, 10 three-object, 13 mumble, 27 word); power 0.932 vs 0.931 free; page works end to end (consent → redirect; word, mumble and two-object displays; a list per id, the same on reload); data saved as one JSON string | the pilot can go (PI) | `STAGE1_FINDINGS.md` §9 |
 | 10-10 | **Pilot** (live, 20 people) | Sherlock 47283766 + Prolific `6acabe15…`, 1 h 21 min | chain 0's experiment-1 design at N=20, $0.80 each | 20/20; median 119 s (80–670); 0 catch exclusions; every display exactly 5 responses; 1 timed out; Prolific held the 10 fastest for review (PI approved them) | **PI: $0.50 a person, estimate 2.5 min (Prolific takes whole minutes: see the report §6), welcome screen stays at 3 min; campaign about $1,200** | `PILOT_REPORT.md` |
 | 10-10 | **Rehearsal 3** (critique) | Sherlock 47283774, 5 h 18 min, completed | chain 0, 1 experiment, 2 rounds × 6, rehearsal 2's ground truth | both rounds critiqued (8/8 statistics significant, none broken); 10 of 16 hypotheses cite a discrepancy; quotas met, power 0.933 vs 0.931 free; per-display KL 0.0168 → 0.0020; critique 15% of time and 17% of spend ($4.04 of $23.78) | **driver's call:** the critic scores all 51,530 trials (live 4.4%; 3 of 9 statistics pragmods-only) while selection ranks on live trials; 15/16 p at the floor (rank by z?); an incumbent with a stale hypothesis | `REHEARSAL3_REPORT.md`, `data/rsa/rehearsal3/` |
-| next | Campaign (3 chains × 3 experiments × 200, about $1,200 at $0.50) | Sherlock + Prolific | PI go-ahead after the pilot | | | `HANDOFF_live.md` §4 |
+| 10-11 | Pre-campaign changes and **code freeze** | cloud | the critic on live trials (#7); duplicate-hypothesis rejection (#51); 13 + 2 trials, 52 displays, $0.50 at 3 min (#24, 25, 43); resume with more experiments (#52) | tests pass | the campaign | this log, `HANDOFF_live.md` §4 |
+| next | **Campaign, experiment 1** (3 chains × 200, about $399) | Sherlock + Prolific | `N_EXPERIMENTS=1`, frozen code | | review, then experiments 2–3 | `HANDOFF_live.md` §4 |
 
 ## 5. Open
 
-- **Rehearsal 3's three questions** (`REHEARSAL3_REPORT.md` §2–4):
-  - what data the critic scores;
-  - whether to rank discrepancies by z;
-  - whether to require a hypothesis that differs from the parent's.
-- **Pay and estimate:** set in `rsa_live.yaml` per `PILOT_REPORT.md` §6 (whole minutes), and
-  change the Prolific description to "About 3 minutes".
+- **Rehearsal 3's questions,** decided 10-11: the critic scores the live trials (#7); a copied
+  hypothesis is rejected (#51). Ranking by z instead of FDR survival is not needed: on the live
+  trials alone the p-values carry information again (main's wording is kept).
+- **After experiment 1 (before experiments 2–3):** completion times at 15 choices against
+  the 3-min listing, exclusions and held submissions, the critic's statistics on real
+  live trials, and the agents' use of them.
 - **Carry cap and families:** rehearsal 2 kept six close relatives and dropped two distinct
   models over the cap. One option is to fill the cap across families first. No change made.
 - **A recovery test with an unfamiliar, pre-fixed ground truth:** optional, for the paper. It is

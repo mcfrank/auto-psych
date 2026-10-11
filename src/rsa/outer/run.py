@@ -515,8 +515,10 @@ class OuterRun:
         record = self.private / "outer_config.json"
         cfg = {k: str(v) if isinstance(v, Path) else v for k, v in asdict(self.cfg).items()}
         # How a live run recruits may change between its test deployment and its
-        # live one, and on a resume; what it studies may not.
-        operational = ("prolific_mode", "confirm_live_recruitment", "max_wait_sec", "repo_root")
+        # live one, and on a resume; what it studies may not. Nor may how far it
+        # goes: a campaign launched for experiment 1 alone is continued in place
+        # with more experiments (PI 2026-10-11); every finished stage is kept.
+        operational = ("prolific_mode", "confirm_live_recruitment", "max_wait_sec", "repo_root", "n_experiments")
         same = lambda a, b: {k: v for k, v in a.items() if k not in operational} == {  # noqa: E731
             k: v for k, v in b.items() if k not in operational}
         if record.exists() and not same(json.loads(record.read_text()), cfg):

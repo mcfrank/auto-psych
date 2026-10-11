@@ -154,3 +154,19 @@ def test_the_recovery_kl_is_a_mean_per_display_of_flattened_class_probabilities(
     first = 0.5 * np.log(0.5 / 0.25) + 0.5 * np.log(0.5 / 0.75)
     assert mean_kl(truth, model, 2) == pytest.approx(first / 2)
     assert mean_kl(truth, truth, 2) == 0.0
+
+
+def test_a_run_launched_for_one_experiment_continues_in_place_with_more(tmp_path, monkeypatch):
+    """PI 2026-10-11: the campaign runs experiment 1 first, then is resumed with
+    n_experiments 3. How far a run goes is operational; what it studies is not."""
+    done = []
+    for stage in ("design", "collect", "prospective", "model_loop", "recovery"):
+        monkeypatch.setattr(OuterRun, stage, lambda self, n, _s=stage: done.append((_s, n)))
+    base = dict(run_dir=tmp_path / "run", seeds=tmp_path, existing_data=tmp_path / "e.csv", collection="live")
+    OuterRun(OuterConfig(**base, n_experiments=1), lambda *a: None).run()
+    assert {n for _, n in done} == {1}
+    done.clear()
+    OuterRun(OuterConfig(**base, n_experiments=3), lambda *a: None).run()
+    assert [n for s, n in done if s == "design"] == [1, 2, 3]  # experiment 1's stages are kept, by their files
+    with pytest.raises(ValueError, match="another configuration"):
+        OuterRun(OuterConfig(**base, n_experiments=3, participants=100), lambda *a: None).run()

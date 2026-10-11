@@ -36,9 +36,9 @@ shows an error and does not redirect.
   Sherlock.
 
 **Config** (`scripts/rsa/live/rsa_live.yaml`):
-- 3 chains × 3 experiments × 200 people, 40 displays;
-- $12/h for an estimated 4 minutes: $0.80 reward, about $1.06 with Prolific's fee;
-- campaign total about **$1,915**;
+- 3 chains × 3 experiments × 200 people; 15 trials each (13 designed + 2 catch) over 52 displays;
+- $0.50 listed at 3 minutes ($10/h; PI 2026-10-11, after the pilot's 2.0-min median);
+- campaign total about **$1,200**, experiment 1 of the three chains about $399;
 - Hosting sites `auto-psych-2c5da-rsa-c0/1/2`.
 
 `confirm_live_recruitment` is committed as `false`.
@@ -116,19 +116,52 @@ data are in. **Report:**
   `condition`);
 - any participant complaints or returns.
 
-## 4. Stage 3: the campaign (about $1,915; PI go-ahead after the pilot)
+## 4. Stage 3: the campaign, experiment 1 first (PI go-ahead, 2026-10-11)
+
+**What changed since the pilot** (`CAMPAIGN_LOG.md` #7, 24, 25, 43, 51–53):
+- **Trials:** 15 a person (13 designed + 2 catch), over 52 designed displays (50 responses each).
+- **Pay:** $0.50, listed at 3 min. Prolific's description now says "About 3 minutes".
+- **The critic** scores the live trials only.
+- **Admission** rejects a candidate whose hypothesis repeats a model's word for word.
+
+**The code is frozen** at the commit you pull for this launch. Record it in the report.
+
+**1. Pull, and use a fresh work root.** `rsa_live` was staged from older code.
 
 ```bash
-PROLIFIC_MODE=live bash scripts/rsa/live/launch.sh
+cd ~/auto-psych && git fetch origin && git merge --ff-only origin/auto-rsa && git log --oneline -1
+export WORK_ROOT=$SCRATCH/auto-psych/rsa_campaign
 ```
 
-Three array tasks, one per chain, each 3 experiments. Each experiment is: a design
-(about 1.5 h), recruitment (up to 3 h; the study is paused if short), the prospective
-score, then the inner loop (about 7 h).
+**2. Confirm, locally and uncommitted.** Set `confirm_live_recruitment: true` in a copy of
+`scripts/rsa/live/rsa_live.yaml`, passed as `CONFIG`, as for the pilot.
+
+**3. Launch experiment 1 of every chain.**
+
+```bash
+PROLIFIC_MODE=live N_EXPERIMENTS=1 WORK_ROOT=$WORK_ROOT CONFIG=<the copy> bash scripts/rsa/live/launch.sh
+```
+
+The launcher prints "this launch: … 3 studies, ~$399" before the typed yes. There are three
+array tasks, one per chain. Each chain's experiment 1 is:
+- a design, about 1.5 h (52 displays);
+- recruitment, up to 3 h (the study is paused if short);
+- the prospective score;
+- the inner loop: 5 rounds × 6 slots with a critique before each, about 7–9 h.
+
+Notes:
 - **Owners overflow:** add `-p mcfrank,owners --requeue` only if the node is full. A
   requeued task resumes and never republishes.
-- **To stop:** `scancel` stops the job but **not** a published study. Pause it in Prolific's
-  dashboard.
+- **To stop:** `scancel` stops the job but **not** a published study. Pause the study in
+  Prolific's dashboard.
+- **Held submissions:** check Prolific's dashboard for submissions held for review while
+  each study recruits.
+
+**4. After experiment 1 (report, then PI go-ahead).** Resubmit the same command with
+`N_EXPERIMENTS=3`:
+- each chain continues in place, and experiment 1's stages are kept;
+- the staging step refuses to run on code other than the frozen commit;
+- experiments 2–3 cost about $800.
 
 **Bring back** (into `data/rsa/live/<cell>/`):
 - `outputs/` **without** the trial-level CSVs (`experiment*/data/*.csv`,
@@ -139,8 +172,12 @@ score, then the inner loop (about 7 h).
 
 The trial data stay on Sherlock until we decide on de-identified sharing.
 
-**Report per chain and experiment:**
-- `prospective.json` `committed_vs` (claim 2);
+**Report per chain and experiment** (after experiment 1, before the go-ahead for 2–3):
+- the frozen commit (`$WORK_ROOT/code_commit`);
+- completion times against the 3-min listing, exclusions, held submissions, and complaints or returns;
+- the critic's statistics per round (now on the live trials): which were significant, and how
+  many candidates cite them;
+- `prospective.json` `live_vs` in experiment 1; `committed_vs` from experiment 2 on (claim 2);
 - `carry.json`;
 - the design's power;
 - the inner loop's best model;

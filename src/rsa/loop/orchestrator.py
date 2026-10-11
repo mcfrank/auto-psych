@@ -485,6 +485,13 @@ class RSALoop:
     def _try_admit(self, cdir: Path, name: str, context: str) -> tuple[bool, str]:
         hyp_file = cdir / "hypothesis.md"
         hypothesis = hyp_file.read_text(encoding="utf-8") if hyp_file.exists() else ""
+        same = self._same_hypothesis(hypothesis)
+        if same is not None:
+            reason = (f"hypothesis.md is word for word {same}'s hypothesis. State this candidate's own "
+                      "mechanism, including what it changes from the model it refines: the ledger, the "
+                      "briefs and the critique describe every model by its hypothesis.")
+            self._ledger(name, "rejected", reason, hypothesis, context)
+            return False, reason
         out = admit(cdir, name, cfg=self.gate_cfg, training=self.trials.contexts, pool=self.pool,
                     admitted_preds={n: m.pool_preds for n, m in self.live.items()})
         if out.admitted:
@@ -496,6 +503,21 @@ class RSALoop:
         else:
             self._ledger(name, "rejected", out.reason, hypothesis, context)
         return out.admitted, out.reason
+
+    def _same_hypothesis(self, hypothesis: str) -> Optional[str]:
+        """The model (live, or admitted earlier in the run's ledger) whose hypothesis
+        this one repeats verbatim, ignoring whitespace and case; None if it is new.
+        Rehearsal 3's round-1 winner copied its parent's hypothesis, so the ledger,
+        every brief and the next critique described it without its new mechanism."""
+        key = collapse_whitespace(hypothesis).strip().lower()
+        if not key:
+            return None
+        texts = [(m.name, m.hypothesis) for m in self.live.values()]
+        texts += [(e.name, e.hypothesis) for e in self.ledger.entries() if e.outcome == "admitted"]
+        for name, text in texts:
+            if collapse_whitespace(text).strip().lower() == key:
+                return name
+        return None
 
     def run_round(self, round_index: int) -> dict:
         standing = self.standing()
@@ -593,7 +615,8 @@ class RSALoop:
                 frame=self.trials.frame, contexts=self.trials.contexts, choices=self.trials.choices,
                 responses_path=self.responses, n_proposals=self.cfg.n_critique_proposals,
                 alpha=self.cfg.critique_alpha, n_replicates=self.cfg.n_critique_replicates,
-                seed=self.cfg.settings.seed + self.step, scope_note=self.cfg.brief_note)
+                seed=self.cfg.settings.seed + self.step, scope_note=self.cfg.brief_note,
+                source=self.cfg.selection_source)
         except (AgentPermissionDenied, AgentInfrastructureError):
             raise
         except Exception as exc:  # recorded, never swallowed silently

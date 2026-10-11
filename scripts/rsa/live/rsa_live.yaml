@@ -8,17 +8,18 @@ confirm_live_recruitment: false   # set to true, deliberately, for a live (paid)
 firebase_project: auto-psych-2c5da
 series_label: rsa                  # Hosting sites <firebase_project>-<series_label>-c<k> (<= 30 characters)
 chains: [0, 1, 2]                  # data/rsa/live_seeds/chains/chain_<k>
-experiments: 3                     # per chain
-participants: 200                  # per experiment: 10 of 40 designed displays each (+ 2 catch)
-displays: 40
+experiments: 3                     # per chain (launch experiment 1 first: N_EXPERIMENTS=1; PI 2026-10-11)
+participants: 200                  # per experiment
+trials: 13                         # designed displays a person answers (+ 2 catch = 15; PI 2026-10-11)
+displays: 52                       # 200 x 13 / 52 = 50 responses a display
 
 prolific:
-  reward_per_hour: 1200            # cents/hour ($12/hr)
-  estimated_completion_time: 4     # minutes: consent, instructions, a practice screen, 12 choices
+  reward: 50                       # cents (PI 2026-10-11): $10/h at the 3-min listing; the pilot's median was 2.0 min for 12 choices
+  estimated_completion_time: 3     # whole minutes (Prolific's unit): consent, instructions, a practice screen, 15 choices
   name: "Who is Bob talking about?"
   description: >-
     You will see a few pictures and hear one word from a speaker, and choose the picture you
-    think the speaker means. About 4 minutes.
+    think the speaker means. About 3 minutes.
   device_compatibility: [desktop]
   completion_code: AUTO_PSYCH_COMPLETE_RSA
   completion_code_action: AUTOMATICALLY_APPROVE

@@ -159,3 +159,34 @@ def test_the_settings_are_mains():
     cfg = LoopConfig(responses_path=Path("r"), seed_models_dir=Path("s"), results_dir=Path("o"))
     assert (cfg.n_critique_proposals, cfg.critique_alpha, cfg.n_critique_replicates) == (
         main.CRITIQUE_N_PROPOSALS, main.CRITIQUE_SIGNIFICANCE_ALPHA, main.CRITIQUE_PPC_REPLICATES)
+
+
+def test_with_a_source_the_critic_sees_only_that_sources_trials(tmp_path, twins, model):
+    """The live loop critiques the trials it selects on, as main's critic sees
+    its experiments' data (PI 2026-10-11): the other sources' rows never reach
+    a statistic, observed or simulated."""
+    frame = twins.frame.copy()
+    n_live = len(frame) // 3
+    frame["source"] = ["auto_psych"] * n_live + ["pragmods"] * (len(frame) - n_live)
+    seen = []
+
+    def agent(cdir, prompt):
+        seen.append(prompt)
+        (cdir / "test_stats").mkdir(parents=True, exist_ok=True)
+        (cdir / "test_stats" / "rows.py").write_text(
+            "# name: rows\n# description: Live rows.\n"
+            "def test_statistic(df):\n    assert set(df['source']) == {'auto_psych'}\n    return float(len(df))\n")
+        return True
+
+    out = run_critique(tmp_path / "round_1", spawn=agent, incumbent="rsa_l1", model=model, fitted=StubFit(),
+                       hypothesis="", incumbent_file=SEEDS / "rsa_l1.py", frame=frame, contexts=twins.contexts,
+                       choices=twins.choices, responses_path=tmp_path / "r.csv", n_replicates=20,
+                       source="auto_psych")
+    assert out.status["status"] == "critiqued" and out.status["n_evaluated"] == 1
+    result = json.loads((tmp_path / "round_1" / "critique" / "ppc_results.json").read_text())
+    assert result["results"][0]["t_observed"] == n_live
+    assert f"{n_live} trials" in seen[0] and 'source == "auto_psych"' in seen[0]
+    with pytest.raises(ValueError, match="no 'live' trials"):
+        run_critique(tmp_path / "round_2", spawn=agent, incumbent="rsa_l1", model=model, fitted=StubFit(),
+                     hypothesis="", incumbent_file=SEEDS / "rsa_l1.py", frame=frame, contexts=twins.contexts,
+                     choices=twins.choices, responses_path=tmp_path / "r.csv", n_replicates=20, source="live")

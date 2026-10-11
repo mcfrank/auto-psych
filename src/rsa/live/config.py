@@ -26,7 +26,8 @@ from src.rsa.live.collect import PROJECT_ID
 from src.runtime.prolific import prolific_config_path
 
 PROLIFIC_SERVICE_FEE = 0.33  # main's estimate (scripts/outer_loop_live/_pilot_config.py); check the account's rate
-REQUIRED = ("firebase_project", "series_label", "chains", "experiments", "participants", "displays", "prolific")
+REQUIRED = ("firebase_project", "series_label", "chains", "experiments", "participants", "trials", "displays",
+            "prolific")
 
 
 @dataclass
@@ -50,6 +51,16 @@ def load(path: Path) -> dict:
         if len(site) > 30 or not re.fullmatch(r"[a-z0-9-]+", site):
             raise ValueError(f"Hosting site id {site!r} must be <= 30 characters of [a-z0-9-]")
     build_eligibility_filters(cfg["prolific"])  # raises on a bad approval rate
+    minutes = cfg["prolific"].get("estimated_completion_time")
+    if not isinstance(minutes, int) or minutes < 1:
+        # Prolific takes whole minutes, and main's deploy truncates (int(2.5) = 2): the pilot's
+        # report caught a 2.5 that would have been listed as 2 (PILOT_REPORT.md §6).
+        raise ValueError(f"estimated_completion_time must be whole minutes, not {minutes!r}")
+    trials, displays = cfg["trials"], cfg["displays"]
+    if not (isinstance(trials, int) and isinstance(displays, int) and 1 <= trials <= displays):
+        raise ValueError(f"trials ({trials!r}) must be whole and between 1 and displays ({displays!r})")
+    if (cfg["participants"] * trials) % displays:
+        raise ValueError(f"{cfg['participants']} people x {trials} trials do not spread evenly over {displays} displays")
     return cfg
 
 
@@ -80,7 +91,8 @@ def summary(cfg: dict) -> List[str]:
     return [
         f"study name     : {cfg['prolific']['name']}",
         f"chains         : {cfg['chains']}  (sites {', '.join(hosting_site(cfg, k) for k in cfg['chains'])})",
-        f"per experiment : {cfg['participants']} people x {cfg['prolific']['estimated_completion_time']} min, "
+        f"per experiment : {cfg['participants']} people x {cfg['trials']} of {cfg['displays']} displays "
+        f"(+ catch), {cfg['prolific']['estimated_completion_time']} min, "
         f"reward ${c['reward_cents'] / 100:.2f} each; ${c['per_study_cents'] / 100:,.2f} with the fee",
         f"campaign       : {c['studies']} studies, {c['participants']} people, ~${c['total_cents'] / 100:,.2f}",
         f"confirmed      : {cfg.get('confirm_live_recruitment', False)}",
