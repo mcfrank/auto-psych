@@ -572,3 +572,21 @@ def test_every_rsa_job_shares_run_2s_venv_and_node_24(tmp_path):
     out = _run(["bash", "-c", f'source "{SLURM / "_cells.sh"}"; rsa_default_venv /scratch/x/rsa_live'], env=env)
     assert out.stdout.strip() == "/g/venvs/auto-psych_rsa_run2"
     assert 'NODEJS_MODULE:-nodejs/24.13.0' in (SLURM / "_env.sh").read_text()
+
+
+def test_the_launcher_states_a_launchs_cost_through_the_config_module():
+    """Chain 0's campaign launch found launch.sh's inline cost print a Python
+    SyntaxError (a \\" inside bash single quotes), so every N_EXPERIMENTS launch
+    exited before its prompt. The print now lives in src.rsa.live.config."""
+    from src.rsa.live.config import array_tasks, launch_summary, load
+
+    launch = (SLURM.parent / "live" / "launch.sh").read_text()
+    assert '--launch-experiments "$N_EXPERIMENTS" --array "$ARRAY"' in launch
+    for script in [*SLURM.glob("*.sh"), *SLURM.glob("*.sbatch"), SLURM.parent / "live" / "launch.sh"]:
+        for inline in re.findall(r"-c '([^']*)'", script.read_text()):
+            assert '\\"' not in inline, f"{script.name}: a \\\" in single quotes reaches Python as is"
+    assert array_tasks("0-2") == [0, 1, 2] and array_tasks("0") == [0] and array_tasks("0,2") == [0, 2]
+    with pytest.raises(ValueError):
+        array_tasks("a-b")
+    cfg = load(SLURM.parent / "live" / "rsa_live.yaml")
+    assert "experiments 1-3 of 1 chain(s): up to 3 studies, ~$399.00" in launch_summary(cfg, 3, "0")

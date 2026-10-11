@@ -24,11 +24,7 @@ echo "mode: $PROLIFIC_MODE${PILOT:+ (pilot: stops once experiment 1 data are in)
 if [[ -n "${N_EXPERIMENTS:-}" ]]; then
   # A campaign run experiment by experiment (PI 2026-10-11): resubmitting with a
   # larger N_EXPERIMENTS continues each chain in place.
-  "$VENV_PY" -c 'import sys
-from src.rsa.live.config import cost, load
-c = cost(load(sys.argv[1])); chains = len(sys.argv[3].replace("-", ",").split(",")) if "-" not in sys.argv[3] else int(sys.argv[3].split("-")[1]) - int(sys.argv[3].split("-")[0]) + 1
-print(f"this launch    : experiments 1-{sys.argv[2]} of each chain, {chains} chain(s): up to {chains * int(sys.argv[2])} studies, ~${chains * int(sys.argv[2]) * c[\"per_study_cents\"] / 100:,.2f} (finished experiments are not rerun)", file=sys.stderr)' \
-    "$CONFIG" "$N_EXPERIMENTS" "$ARRAY"
+  "$VENV_PY" -m src.rsa.live.config --config "$CONFIG" --launch-experiments "$N_EXPERIMENTS" --array "$ARRAY"
 fi
 EXTRA_ENV=()
 if [[ "$PROLIFIC_MODE" == "live" ]]; then

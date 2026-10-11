@@ -35,6 +35,10 @@ class Args:
     config: Path
     check: bool = False
     render: bool = False
+    launch_experiments: int = 0
+    """With ``array``: print what a launch of experiments 1..N on those array tasks publishes."""
+    array: str = ""
+    """Slurm array spec of the launch (e.g. "0-2", "0", "0,2")."""
 
 
 def load(path: Path) -> dict:
@@ -99,10 +103,32 @@ def summary(cfg: dict) -> List[str]:
     ]
 
 
+def array_tasks(spec: str) -> List[int]:
+    """Slurm array indices: "0-2" -> [0, 1, 2], "0,2" -> [0, 2]."""
+    tasks: List[int] = []
+    for part in spec.split(","):
+        lo, _, hi = part.strip().partition("-")
+        if not lo.isdigit() or (hi and not hi.isdigit()):
+            raise ValueError(f"array spec {spec!r} is not like 0-2 or 0,2")
+        tasks += list(range(int(lo), int(hi or lo) + 1))
+    return sorted(set(tasks))
+
+
+def launch_summary(cfg: dict, n_experiments: int, array: str) -> str:
+    """What a launch of experiments 1..n_experiments on ``array``'s chains publishes
+    at most (finished experiments are not rerun: a resumed chain publishes fewer)."""
+    chains = len(array_tasks(array))
+    studies = chains * n_experiments
+    return (f"this launch    : experiments 1-{n_experiments} of {chains} chain(s): up to {studies} studies, "
+            f"~${studies * cost(cfg)['per_study_cents'] / 100:,.2f} (finished experiments are not rerun)")
+
+
 def main(args: Args) -> None:
     cfg = load(args.config)
     if args.check:
         print("\n".join(summary(cfg)), file=sys.stderr)
+    if args.launch_experiments:
+        print(launch_summary(cfg, args.launch_experiments, args.array), file=sys.stderr)
     if args.render:
         print(f"[render] wrote {render(cfg)}", file=sys.stderr)
 
