@@ -1,0 +1,275 @@
+{
+ "experiment": 1,
+ "n_trials": 2256,
+ "n_displays": 41,
+ "committed": null,
+ "best_seed": "seed:rsa_l2",
+ "best_promoted": "promoted:rsa_l2_singleton_feat_color_familiar_l0",
+ "committed_vs": null,
+ "best_live": "rsa_l2_singleton_feat_color_valence_l0",
+ "live_vs": {
+  "best_seed": {
+   "diff": 115.60261672824481,
+   "se": 55.12842624381517
+  },
+  "best_promoted": {
+   "diff": -0.4851927944951058,
+   "se": 0.18940566923678434
+  }
+ },
+ "models": {
+  "promoted:rsa_l2_singleton_feat_color_familiar_l0": {
+   "lpd": -1350.7945397527935,
+   "vs_best_seed": {
+    "diff": 116.08780952273992,
+    "se": 55.06181808230554
+   },
+   "vs_best_promoted": {
+    "diff": 0.0,
+    "se": 0.0
+   }
+  },
+  "rsa_l2_singleton_feat_color_valence_l0": {
+   "lpd": -1351.2797325472886,
+   "vs_best_seed": {
+    "diff": 115.60261672824481,
+    "se": 55.12842624381517
+   },
+   "vs_best_promoted": {
+    "diff": -0.4851927944951058,
+    "se": 0.18940566923678434
+   }
+  },
+  "promoted:rsa_l2_singleton_feat_color_valence_l0": {
+   "lpd": -1351.2797325472886,
+   "vs_best_seed": {
+    "diff": 115.60261672824481,
+    "se": 55.12842624381517
+   },
+   "vs_best_promoted": {
+    "diff": -0.4851927944951058,
+    "se": 0.18940566923678434
+   }
+  },
+  "promoted:rsa_l2_singleton_distinct_feat_color_l0": {
+   "lpd": -1351.3189132354964,
+   "vs_best_seed": {
+    "diff": 115.563436040037,
+    "se": 55.13322811198699
+   },
+   "vs_best_promoted": {
+    "diff": -0.524373482702913,
+    "se": 0.17794889790270105
+   }
+  },
+  "competitor_confusion_speaker": {
+   "lpd": -1408.7116719833102,
+   "vs_best_seed": {
+    "diff": 58.17067729222322,
+    "se": 25.751830803581065
+   },
+   "vs_best_promoted": {
+    "diff": -57.9171322305167,
+    "se": 49.23991835051964
+   }
+  },
+  "promoted:competitor_confusion_speaker": {
+   "lpd": -1408.7116719833102,
+   "vs_best_seed": {
+    "diff": 58.17067729222322,
+    "se": 25.751830803581065
+   },
+   "vs_best_promoted": {
+    "diff": -57.9171322305167,
+    "se": 49.23991835051964
+   }
+  },
+  "oddity_heuristic_listener": {
+   "lpd": -1455.056859166783,
+   "vs_best_seed": {
+    "diff": 11.8254901087505,
+    "se": 60.74194469773515
+   },
+   "vs_best_promoted": {
+    "diff": -104.26231941398942,
+    "se": 47.045199939028144
+   }
+  },
+  "promoted:oddity_heuristic_listener": {
+   "lpd": -1455.056859166783,
+   "vs_best_seed": {
+    "diff": 11.8254901087505,
+    "se": 60.74194469773515
+   },
+   "vs_best_promoted": {
+    "diff": -104.26231941398942,
+    "se": 47.045199939028144
+   }
+  },
+  "rsa_l2": {
+   "lpd": -1466.8823492755334,
+   "vs_best_seed": {
+    "diff": 0.0,
+    "se": 0.0
+   },
+   "vs_best_promoted": {
+    "diff": -116.08780952273992,
+    "se": 55.06181808230554
+   }
+  },
+  "seed:rsa_l2": {
+   "lpd": -1466.8823492755334,
+   "vs_best_seed": {
+    "diff": 0.0,
+    "se": 0.0
+   },
+   "vs_best_promoted": {
+    "diff": -116.08780952273992,
+    "se": 55.06181808230554
+   }
+  },
+  "promoted:rsa_l2": {
+   "lpd": -1466.8823492755334,
+   "vs_best_seed": {
+    "diff": 0.0,
+    "se": 0.0
+   },
+   "vs_best_promoted": {
+    "diff": -116.08780952273992,
+    "se": 55.06181808230554
+   }
+  },
+  "promoted:evaluative_prominence_l2": {
+   "lpd": -1469.6977531321927,
+   "vs_best_seed": {
+    "diff": -2.815403856659259,
+    "se": 14.517919674955117
+   },
+   "vs_best_promoted": {
+    "diff": -118.90321337939918,
+    "se": 50.40909512566913
+   }
+  },
+  "rsa_l1": {
+   "lpd": -1476.3369122072224,
+   "vs_best_seed": {
+    "diff": -9.454562931688997,
+    "se": 12.834761286082827
+   },
+   "vs_best_promoted": {
+    "diff": -125.54237245442891,
+    "se": 60.12715240771623
+   }
+  },
+  "seed:rsa_l1": {
+   "lpd": -1476.3369122072224,
+   "vs_best_seed": {
+    "diff": -9.454562931688997,
+    "se": 12.834761286082827
+   },
+   "vs_best_promoted": {
+    "diff": -125.54237245442891,
+    "se": 60.12715240771623
+   }
+  },
+  "promoted:rsa_l1": {
+   "lpd": -1476.3369122072224,
+   "vs_best_seed": {
+    "diff": -9.454562931688997,
+    "se": 12.834761286082827
+   },
+   "vs_best_promoted": {
+    "diff": -125.54237245442891,
+    "se": 60.12715240771623
+   }
+  },
+  "seed:rsa_l1_salience": {
+   "lpd": -1478.3189074628222,
+   "vs_best_seed": {
+    "diff": -11.43655818728871,
+    "se": 19.23147338208686
+   },
+   "vs_best_promoted": {
+    "diff": -127.52436771002863,
+    "se": 53.11359289050938
+   }
+  },
+  "seed:rsa_l1_shared_prior": {
+   "lpd": -1480.0291393153498,
+   "vs_best_seed": {
+    "diff": -13.146790039816324,
+    "se": 22.924433512827296
+   },
+   "vs_best_promoted": {
+    "diff": -129.23459956255624,
+    "se": 51.223327115138154
+   }
+  },
+  "promoted:familiar_isolated_graded_costly_l2": {
+   "lpd": -1503.837540862296,
+   "vs_best_seed": {
+    "diff": -36.95519158676257,
+    "se": 75.0963699651784
+   },
+   "vs_best_promoted": {
+    "diff": -153.04300110950248,
+    "se": 61.34605396128758
+   }
+  },
+  "isolated_graded_costly_l3": {
+   "lpd": -1590.3171222997753,
+   "vs_best_seed": {
+    "diff": -123.43477302424185,
+    "se": 91.07363995184751
+   },
+   "vs_best_promoted": {
+    "diff": -239.52258254698177,
+    "se": 76.83942160718124
+   }
+  },
+  "promoted:isolated_graded_costly_l3": {
+   "lpd": -1590.3171222997753,
+   "vs_best_seed": {
+    "diff": -123.43477302424185,
+    "se": 91.07363995184751
+   },
+   "vs_best_promoted": {
+    "diff": -239.52258254698177,
+    "se": 76.83942160718124
+   }
+  },
+  "seed:literal_listener": {
+   "lpd": -1660.1518534226443,
+   "vs_best_seed": {
+    "diff": -193.26950414711087,
+    "se": 60.93140188053458
+   },
+   "vs_best_promoted": {
+    "diff": -309.3573136698508,
+    "se": 76.8160354450466
+   }
+  },
+  "promoted:lexical_preemption_heuristic": {
+   "lpd": -1668.5122968719274,
+   "vs_best_seed": {
+    "diff": -201.629947596394,
+    "se": 65.3776955804036
+   },
+   "vs_best_promoted": {
+    "diff": -317.7177571191339,
+    "se": 93.1440730080058
+   }
+  },
+  "promoted:softmax_surprisal_isolated_costly_l4": {
+   "lpd": -1679.8611089698068,
+   "vs_best_seed": {
+    "diff": -212.97875969427332,
+    "se": 80.6996712293786
+   },
+   "vs_best_promoted": {
+    "diff": -329.06656921701324,
+    "se": 67.16476925182546
+   }
+  }
+ }
+}

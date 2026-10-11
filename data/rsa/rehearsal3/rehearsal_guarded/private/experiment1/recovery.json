@@ -1,0 +1,73 @@
+{
+ "experiment": 1,
+ "ground_truth": "crowd_discrim_confusion_chromatic_l2",
+ "selection_scope": "guarded",
+ "measure": "kl_pool: mean KL(ground truth || model) over the design pool's displays (nats); kl_design: the same over this experiment's designed displays; rmse_pool: RMSE on the pool",
+ "exported": "costly_extension_confusion_rsa_l2",
+ "exported_distance": {
+  "kl_pool": 0.001978996046071128,
+  "kl_design": 0.004081806080165123,
+  "rmse_pool": 0.019088222549757644
+ },
+ "closest_after": "costly_extension_confusion_rsa_l2",
+ "closest_after_distance": {
+  "kl_pool": 0.001978996046071128,
+  "kl_design": 0.004081806080165123,
+  "rmse_pool": 0.019088222549757644
+ },
+ "closest_before": "rsa_l2_singleton_feat_color_valence_l0",
+ "closest_before_distance": {
+  "kl_pool": 0.016796624661865267,
+  "kl_design": 0.047470967519917376,
+  "rmse_pool": 0.056005255928662956
+ },
+ "before": {
+  "rsa_l2_singleton_feat_color_valence_l0": {
+   "kl_pool": 0.016796624661865267,
+   "kl_design": 0.047470967519917376,
+   "rmse_pool": 0.056005255928662956
+  },
+  "competitor_confusion_speaker": {
+   "kl_pool": 0.03866516247423686,
+   "kl_design": 0.08725348854256136,
+   "rmse_pool": 0.08796540584759736
+  },
+  "oddity_heuristic_listener": {
+   "kl_pool": 0.049697069474485295,
+   "kl_design": 0.10633175985556709,
+   "rmse_pool": 0.10264444147931895
+  },
+  "isolated_graded_costly_l3": {
+   "kl_pool": 0.05127847720276485,
+   "kl_design": 0.18601048708702703,
+   "rmse_pool": 0.0867902583926563
+  },
+  "rsa_l2": {
+   "kl_pool": 0.06096932826188011,
+   "kl_design": 0.12934691651251345,
+   "rmse_pool": 0.11185109182909492
+  },
+  "rsa_l1": {
+   "kl_pool": 0.06147683395434579,
+   "kl_design": 0.1349309640697872,
+   "rmse_pool": 0.11311545457915093
+  }
+ },
+ "after": {
+  "costly_extension_confusion_rsa_l2": {
+   "kl_pool": 0.001978996046071128,
+   "kl_design": 0.004081806080165123,
+   "rmse_pool": 0.019088222549757644
+  },
+  "r1_c4": {
+   "kl_pool": 0.002162093002469994,
+   "kl_design": 0.004595424675920326,
+   "rmse_pool": 0.02000783824479255
+  },
+  "isolated_graded_costly_singleton_l3": {
+   "kl_pool": 0.007576398546812062,
+   "kl_design": 0.018341239664182073,
+   "rmse_pool": 0.03777874980112476
+  }
+ }
+}

@@ -1,0 +1,88 @@
+{
+ "total": {
+  "n_calls": 18,
+  "n_calls_missing_usage": 0,
+  "input_tokens": 8332656,
+  "output_tokens": 365239,
+  "reasoning_tokens": 830718,
+  "cache_read_tokens": 173968738,
+  "cache_write_tokens": 0,
+  "total_tokens": 183497351,
+  "cost_usd": 23.7819861,
+  "n_usage_limit_hits": 0,
+  "usage_limit_wait_sec": 0.0,
+  "by_source": {
+   "rsa:candidate": {
+    "n_calls": 16,
+    "n_calls_missing_usage": 0,
+    "input_tokens": 6816183,
+    "output_tokens": 289323,
+    "reasoning_tokens": 750298,
+    "cache_read_tokens": 143102777,
+    "cache_write_tokens": 0,
+    "total_tokens": 150958581,
+    "cost_usd": 19.743424275,
+    "n_usage_limit_hits": 0,
+    "usage_limit_wait_sec": 0.0
+   },
+   "rsa:critique": {
+    "n_calls": 2,
+    "n_calls_missing_usage": 0,
+    "input_tokens": 1516473,
+    "output_tokens": 75916,
+    "reasoning_tokens": 80420,
+    "cache_read_tokens": 30865961,
+    "cache_write_tokens": 0,
+    "total_tokens": 32538770,
+    "cost_usd": 4.038561825,
+    "n_usage_limit_hits": 0,
+    "usage_limit_wait_sec": 0.0
+   }
+  },
+  "claude_auth": []
+ },
+ "experiments": {
+  "experiment1": {
+   "n_calls": 18,
+   "n_calls_missing_usage": 0,
+   "input_tokens": 8332656,
+   "output_tokens": 365239,
+   "reasoning_tokens": 830718,
+   "cache_read_tokens": 173968738,
+   "cache_write_tokens": 0,
+   "total_tokens": 183497351,
+   "cost_usd": 23.7819861,
+   "n_usage_limit_hits": 0,
+   "usage_limit_wait_sec": 0.0,
+   "by_source": {
+    "rsa:candidate": {
+     "n_calls": 16,
+     "n_calls_missing_usage": 0,
+     "input_tokens": 6816183,
+     "output_tokens": 289323,
+     "reasoning_tokens": 750298,
+     "cache_read_tokens": 143102777,
+     "cache_write_tokens": 0,
+     "total_tokens": 150958581,
+     "cost_usd": 19.743424275,
+     "n_usage_limit_hits": 0,
+     "usage_limit_wait_sec": 0.0
+    },
+    "rsa:critique": {
+     "n_calls": 2,
+     "n_calls_missing_usage": 0,
+     "input_tokens": 1516473,
+     "output_tokens": 75916,
+     "reasoning_tokens": 80420,
+     "cache_read_tokens": 30865961,
+     "cache_write_tokens": 0,
+     "total_tokens": 32538770,
+     "cost_usd": 4.038561825,
+     "n_usage_limit_hits": 0,
+     "usage_limit_wait_sec": 0.0
+    }
+   },
+   "claude_auth": []
+  }
+ }
+}
