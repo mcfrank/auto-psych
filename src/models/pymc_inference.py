@@ -645,6 +645,24 @@ class FittedModel:
             stim_data, var_name=var_name, seed=seed, max_draws=max_draws
         ).mean(axis=0)
 
+    def heldout_lpd(self, stim_data: Dict[str, np.ndarray]) -> np.ndarray:
+        """Log posterior predictive density of each observed response in
+        ``stim_data`` (rows this fit did not see, observed responses included):
+        log of the posterior-mean likelihood, ``logsumexp_s log p(y_i | theta_s)
+        - log S``. The pointwise score of grouped cross-validation."""
+        from scipy.special import logsumexp
+
+        pm = _import_pymc()
+        observed = self.model.observed_RVs[0].name
+        with self.model:
+            pm.set_data(stim_data)
+            ll = pm.compute_log_likelihood(
+                self.idata, var_names=[observed], extend_inferencedata=False, progressbar=False
+            )
+        draws = np.asarray(ll[observed].values)  # the log_likelihood group itself
+        draws = draws.reshape(-1, draws.shape[-1])
+        return logsumexp(draws, axis=0) - np.log(draws.shape[0])
+
     def loo_diagnostics(self) -> LooDiagnostics:
         """PSIS-LOO of this fit with its reliability verdict, computed once.
 

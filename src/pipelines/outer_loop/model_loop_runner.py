@@ -32,6 +32,7 @@ from src.pipelines.outer_loop.columns import (
     raw_response_rows,
     write_responses_csv,
 )
+from src.model_comparison.cv import Selection
 from src.tasks import all_tasks, task_present_in
 from src.pipelines.outer_loop.orchestrator_validators import (
     EXPORT_RECORD_FILENAME,
@@ -370,6 +371,7 @@ def run_inner_model_loop_programmatic(
     n_critique_proposals: Optional[int] = None,
     critique_alpha: Optional[float] = None,
     candidate_hints: Optional[List[str]] = None,
+    selection: Optional[Selection] = None,
     novelty_rmse_threshold: Optional[float] = None,
     prune_dse_multiplier: Optional[float] = None,
     candidate_parallelism: Optional[int] = None,
@@ -429,6 +431,8 @@ def run_inner_model_loop_programmatic(
     # None ⇒ inherit run_pymc_inner_loop's defaults for the exploration knobs.
     if candidate_hints is not None:
         extra["candidate_hints"] = list(candidate_hints)
+    if selection is not None:
+        extra["selection"] = selection
     if novelty_rmse_threshold is not None:
         extra["novelty_rmse_threshold"] = novelty_rmse_threshold
     if prune_dse_multiplier is not None:

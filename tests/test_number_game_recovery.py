@@ -58,7 +58,13 @@ def test_number_game_recovery_cell_end_to_end(tmp_path, monkeypatch):
         "n_participants": 2,
         "seed": 3,
         "design": {"n_eig": 6},
-        "inner_loop": {"max_iterations": 1, "candidate_count": 1, "n_critique_proposals": 1},
+        "inner_loop": {
+            "max_iterations": 1,
+            "candidate_count": 1,
+            "n_critique_proposals": 1,
+            # Models are compared on whole held-out example sets.
+            "selection": {"criterion": "grouped_cv", "cv_group": ["number_set"], "cv_folds": 3},
+        },
         "agent": {"timeout_sec": 60, "backend": None, "model": "scripted"},
         "eval_pool": {"min_remaining": 100, "predict_max_draws": 20},
         "fit": {"draws": 200, "tune": 200, "chains": 2},
@@ -75,6 +81,13 @@ def test_number_game_recovery_cell_end_to_end(tmp_path, monkeypatch):
 
     run_root = tmp_path / "runs" / "cell_1"
     [gt_run] = result["gt_runs"]
+
+    # Selection was by grouped CV over example sets, as configured.
+    assert result["inner_loop"]["selection"]["criterion"] == "grouped_cv"
+    for exp in (1, 2):
+        posterior = json.loads((run_root / f"experiment{exp}" / "model_loop" / "model_posterior.json").read_text())
+        assert posterior["criterion"] == "grouped_cv"
+        assert {row["criterion"] for row in posterior["comparison"].values()} == {"grouped_cv"}
 
     # The loop starts from the other seed only.
     assert gt_run["experiments"][0]["manifest_models"][:1] == [START]

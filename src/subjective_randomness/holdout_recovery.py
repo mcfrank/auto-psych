@@ -59,6 +59,7 @@ from src.runtime.agent_sandbox import require_claude_auth
 from src.runtime.coding_agent import select_backend
 from src.runtime.config import REPO_ROOT
 from src.runtime.token_usage import start_usage_log, write_usage_report
+from src.model_comparison.cv import LOO, Selection
 from src.subjective_randomness.config import resolve_path
 from src.tasks import task_for_project
 
@@ -167,6 +168,7 @@ def run_holdout_experiments(
     agent_root: Optional[Path] = None,
     novelty_rmse_threshold: Optional[float] = None,
     n_critique_proposals: int = CRITIQUE_N_PROPOSALS,
+    selection: Selection = LOO,
 ) -> List[Path]:
     """Run the full agentic pipeline for ``n_experiments`` with a held-out GT.
 
@@ -315,6 +317,7 @@ def run_holdout_experiments(
                 agent_root=agent_root,
                 novelty_rmse_threshold=novelty_rmse_threshold,
                 n_critique_proposals=n_critique_proposals,
+                selection=selection,
             )
             finish_model_loop_stage(exp_dir)
             if not history_path.exists():
@@ -413,7 +416,10 @@ def run_holdout_recovery_from_config(
                            default; 0 disables the novelty gate),
                            n_critique_proposals (test statistics the critique
                            agent proposes per round; absent -> the inner
-                           loop's default)}
+                           loop's default),
+                           selection {criterion: loo | grouped_cv, cv_group:
+                           stimulus | [columns], cv_folds, cv_seed} (absent ->
+                           trial-level PSIS-LOO; src.model_comparison.cv)}
         agent             {timeout_sec, backend, model, claude_auth}; a
                           ``claude`` backend needs claude_auth (``subscription``
                           or ``api``, else CLAUDE_AUTH) and its credential,
@@ -500,6 +506,8 @@ def run_holdout_recovery_from_config(
             "inner_loop.n_critique_proposals must be >= 1 (the critique agent "
             f"proposes that many test statistics per round); got {n_critique_proposals}."
         )
+    # How the inner loop compares models (absent -> trial-level PSIS-LOO).
+    selection = Selection.from_config(inner_cfg.get("selection", {}))
     # Design split: n_eig stimuli chosen by EIG + n_random for coverage. The
     # random half is a single fixed sample per experiment (shown to every
     # participant); ablations set n_eig=0 (all random) or n_random=0 (all EIG).
@@ -560,6 +568,7 @@ def run_holdout_recovery_from_config(
             candidate_count=candidate_count,
             novelty_rmse_threshold=novelty_rmse_threshold,
             n_critique_proposals=n_critique_proposals,
+            selection=selection,
             fit_kwargs=fit_kwargs,
             eval_pool=eval_pool,
             seed=seed,
@@ -621,6 +630,7 @@ def _run_holdout_recovery_resolved(
     candidate_count: int,
     novelty_rmse_threshold: float,
     n_critique_proposals: int,
+    selection: Selection,
     fit_kwargs: Dict[str, Any],
     eval_pool: Dict[str, Any],
     seed: int,
@@ -696,6 +706,7 @@ def _run_holdout_recovery_resolved(
             agent_root=agent_root,
             novelty_rmse_threshold=novelty_rmse_threshold,
             n_critique_proposals=n_critique_proposals,
+            selection=selection,
         )
 
         eval_info = build_eval_stimuli(
@@ -827,6 +838,7 @@ def _run_holdout_recovery_resolved(
             "candidate_count": candidate_count,
             "novelty_rmse_threshold": novelty_rmse_threshold,
             "n_critique_proposals": n_critique_proposals,
+            "selection": selection.as_record(),
             "starting_models_prunable": _one_condition(gt_runs),
         },
         "fit_kwargs": fit_kwargs,

@@ -31,6 +31,7 @@ from src.models.mcmc_defaults import (
 )
 from src.models.model_contract import model_contract_violation
 from src.models.model_manifest import manifest_path, read_manifest_entries
+from src.model_comparison.cv import LOO, Selection
 from src.tasks import task_of_file, task_present_in
 from src.models.data_binding import MissingStimulusColumns, make_stim_data
 from src.models.model_loading import load_pymc_model, pm_data_inputs
@@ -845,6 +846,7 @@ def _prune_losers(
     *,
     cache_dir: Optional[Path],
     fit_kwargs: Optional[Dict[str, Any]],
+    selection: Selection = LOO,
     dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
@@ -876,7 +878,7 @@ def _prune_losers(
     if len(names) < 2:
         return []
     comparison = compare_table(
-        responses_path, models_dir, cache_dir=cache_dir, **(fit_kwargs or {})
+        responses_path, models_dir, cache_dir=cache_dir, selection=selection, **(fit_kwargs or {})
     )
     if not comparison:
         return []
@@ -914,6 +916,7 @@ def _prune_losers(
             models_dir,
             cache_dir=cache_dir,
             names=trusted,
+            selection=selection,
             **(fit_kwargs or {}),
         )
     baseline = min(comparison, key=lambda name: comparison[name]["rank"])
@@ -964,6 +967,7 @@ def _cap_live_set(
     *,
     cache_dir: Optional[Path],
     fit_kwargs: Optional[Dict[str, Any]],
+    selection: Selection = LOO,
     cap: int = MAX_LIVE_MODELS,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
@@ -985,7 +989,7 @@ def _cap_live_set(
     if excess <= 0:
         return []
     comparison = compare_table(
-        responses_path, models_dir, cache_dir=cache_dir, **(fit_kwargs or {})
+        responses_path, models_dir, cache_dir=cache_dir, selection=selection, **(fit_kwargs or {})
     )
     # Untrusted first, then worst rank first.
     order = sorted(

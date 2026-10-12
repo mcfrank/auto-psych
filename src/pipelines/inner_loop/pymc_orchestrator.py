@@ -76,6 +76,7 @@ from src.pipelines.inner_loop.model_zoo import (
     reserved_names,
     slot_roles,
 )
+from src.model_comparison.cv import LOO, Selection
 from src.tasks import task_of_file
 
 from src.pipelines.inner_loop.critique_round import (
@@ -179,6 +180,7 @@ def run_pymc_inner_loop(
     critique_significance_alpha: float = CRITIQUE_SIGNIFICANCE_ALPHA,
     n_critique_replicates: int = CRITIQUE_PPC_REPLICATES,
     candidate_hints: Optional[List[str]] = None,
+    selection: Selection = LOO,
     novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD,
     prune_dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER,
     candidate_parallelism: Optional[int] = None,
@@ -238,6 +240,10 @@ def run_pymc_inner_loop(
         Test statistics the critique agent proposes per round, the raw p-value
         threshold for a significant discrepancy, and the posterior-predictive replicates
         forming each statistic's null distribution.
+    selection
+        How models are compared at every scoring step, in pruning and in the
+        export (``src.model_comparison.cv.Selection``): trial-level PSIS-LOO
+        (the default) or grouped cross-validation over whole units.
     candidate_hints
         Exploration lenses cycled across a round's exploratory slots (``None``
         ⇒ the task's ``candidate_hints``, ``src.tasks``). With no more exploratory slots than
@@ -333,11 +339,11 @@ def run_pymc_inner_loop(
         )
 
     posterior = _score(
-        responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
+        responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs, selection
     )
     # The comparison table (ELPD rank + PSIS-LOO reliability) is what selects
     # the best model at every step; it reuses the fits _score just made.
-    comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs)
+    comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs, selection)
     history: List[Dict[str, Any]] = []
     _record_history_step(history, results_dir, posterior, comparison, iteration=None)
 
@@ -645,9 +651,9 @@ def run_pymc_inner_loop(
             continue
 
         posterior = _score(
-            responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
+            responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs, selection
         )
-        comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs)
+        comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs, selection)
         _record_history_step(
             history,
             results_dir,
@@ -679,6 +685,7 @@ def run_pymc_inner_loop(
         responses_path,
         cache_dir=cache_dir,
         fit_kwargs=fit_kwargs,
+        selection=selection,
         dse_multiplier=prune_dse_multiplier,
         ledger=ledger,
         ledger_context=end_context,
@@ -688,14 +695,15 @@ def run_pymc_inner_loop(
         responses_path,
         cache_dir=cache_dir,
         fit_kwargs=fit_kwargs,
+        selection=selection,
         ledger=ledger,
         ledger_context=end_context,
     )
     if retired:
         posterior = _score(
-            responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
+            responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs, selection
         )
-        comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs)
+        comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs, selection)
         _record_end_of_experiment_retirements(history, results_dir, retired)
 
     result = _export(results_dir, models_dir, posterior, comparison)
