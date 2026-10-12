@@ -169,6 +169,7 @@ def run_holdout_experiments(
     novelty_rmse_threshold: Optional[float] = None,
     n_critique_proposals: int = CRITIQUE_N_PROPOSALS,
     selection: Selection = LOO,
+    hide_participant_id: bool = False,
 ) -> List[Path]:
     """Run the full agentic pipeline for ``n_experiments`` with a held-out GT.
 
@@ -289,6 +290,8 @@ def run_holdout_experiments(
                 participant_id_offset=(exp_num - 1) * n_participants,
             )
             agent_rows = strip_generating_model(rows)
+            if hide_participant_id:
+                agent_rows = [{k: v for k, v in row.items() if k != "participant_id"} for row in agent_rows]
             write_responses_csv(agent_rows, exp_dir / "data" / "responses.csv")
             _require_valid("4_collect", exp_dir)
         # Checked on every path (fresh or resumed): a responses file that names
@@ -411,6 +414,10 @@ def run_holdout_recovery_from_config(
         gt_models         null | [names] | {name: params|null}; null params ->
                           the family's DEFAULT_PARAMS
         n_experiments, n_participants, seed
+        hide_participant_id
+                          true -> the responses agents and models see carry
+                          no participant_id (population-level models only);
+                          default false
         inner_loop        {max_iterations, candidate_count,
                            novelty_rmse_threshold (absent -> the inner loop's
                            default; 0 disables the novelty gate),
@@ -508,6 +515,9 @@ def run_holdout_recovery_from_config(
         )
     # How the inner loop compares models (absent -> trial-level PSIS-LOO).
     selection = Selection.from_config(inner_cfg.get("selection", {}))
+    hide_participant_id = config.get("hide_participant_id", False)
+    if not isinstance(hide_participant_id, bool):
+        raise ValueError(f"hide_participant_id must be true or false, not {hide_participant_id!r}")
     # Design split: n_eig stimuli chosen by EIG + n_random for coverage. The
     # random half is a single fixed sample per experiment (shown to every
     # participant); ablations set n_eig=0 (all random) or n_random=0 (all EIG).
@@ -569,6 +579,7 @@ def run_holdout_recovery_from_config(
             novelty_rmse_threshold=novelty_rmse_threshold,
             n_critique_proposals=n_critique_proposals,
             selection=selection,
+            hide_participant_id=hide_participant_id,
             fit_kwargs=fit_kwargs,
             eval_pool=eval_pool,
             seed=seed,
@@ -631,6 +642,7 @@ def _run_holdout_recovery_resolved(
     novelty_rmse_threshold: float,
     n_critique_proposals: int,
     selection: Selection,
+    hide_participant_id: bool,
     fit_kwargs: Dict[str, Any],
     eval_pool: Dict[str, Any],
     seed: int,
@@ -707,6 +719,7 @@ def _run_holdout_recovery_resolved(
             novelty_rmse_threshold=novelty_rmse_threshold,
             n_critique_proposals=n_critique_proposals,
             selection=selection,
+            hide_participant_id=hide_participant_id,
         )
 
         eval_info = build_eval_stimuli(
@@ -833,6 +846,7 @@ def _run_holdout_recovery_resolved(
         "seed_models_dir": str(seed_models_dir),
         "n_experiments": n_experiments,
         "n_participants": n_participants,
+        "hide_participant_id": hide_participant_id,
         "inner_loop": {
             "max_iterations": inner_loop_iterations,
             "candidate_count": candidate_count,

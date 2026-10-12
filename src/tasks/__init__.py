@@ -11,6 +11,10 @@ and are imported lazily, so the pipeline's coupling to them stays thin.
 Found by project id where the caller knows its project, or by a response
 file's columns where only the file is at hand: a response file carries exactly
 its task's raw columns, so the columns name the task.
+
+``participant_id`` is the one optional raw column: a run that hides it
+(``hide_participant_id`` in a holdout config) writes response files without
+it, so every model is population-level.
 """
 
 from __future__ import annotations
@@ -23,6 +27,9 @@ from typing import Any, Callable, Dict, Hashable, List, Mapping, Sequence, Tuple
 import numpy as np
 
 Row = Dict[str, Any]
+
+# Raw columns a response file may leave out (on every row).
+OPTIONAL_COLUMNS = frozenset({"participant_id"})
 
 
 @dataclass(frozen=True)
@@ -52,6 +59,14 @@ class TaskSpec:
     # The candidate and critique agents' instructions (markdown files).
     theory_prompt: Path
     critique_prompt: Path
+
+    @property
+    def required_columns(self) -> Tuple[str, ...]:
+        return tuple(c for c in self.raw_columns if c not in OPTIONAL_COLUMNS)
+
+    def columns_of(self, row: Mapping[str, Any]) -> Tuple[str, ...]:
+        """The raw columns a response row carries, in the task's order."""
+        return tuple(c for c in self.raw_columns if c in row or c not in OPTIONAL_COLUMNS)
 
     def load_stimuli(self, path) -> List[Row]:
         """A design's ``stimuli.json``, keeping each stimulus's own columns."""
@@ -87,8 +102,9 @@ def task_for_project(project_id: str) -> TaskSpec:
 
 
 def task_for_columns(columns: Sequence[str]) -> TaskSpec:
-    """The task whose raw columns are exactly ``columns`` (in any order)."""
-    matches = [t for t in _tasks().values() if set(t.raw_columns) == set(columns)]
+    """The task whose raw columns are exactly ``columns`` (in any order),
+    optional ones included or not."""
+    matches = [t for t in _tasks().values() if set(t.columns_of(set(columns))) == set(columns)]
     if len(matches) != 1:
         raise ValueError(f"no task has exactly the columns {sorted(columns)}")
     return matches[0]
@@ -106,9 +122,10 @@ def task_of_file(path) -> TaskSpec:
 
 
 def task_present_in(columns: Sequence[str], field: str = "raw_columns") -> TaskSpec:
-    """The one task whose ``field`` columns (``raw_columns`` or
-    ``stimulus_columns``) are all among ``columns``; other columns may be
-    present too (a design's stimuli carry their EIG, say)."""
+    """The one task whose ``field`` columns (``raw_columns``, the optional ones
+    aside, or ``stimulus_columns``) are all among ``columns``; other columns
+    may be present too (a design's stimuli carry their EIG, say)."""
+    field = "required_columns" if field == "raw_columns" else field
     matches = [t for t in _tasks().values() if set(getattr(t, field)) <= set(columns)]
     if len(matches) != 1:
         raise ValueError(f"no task's {field.replace('_', ' ')} are all among {sorted(columns)}")

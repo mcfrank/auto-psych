@@ -17,7 +17,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
 import yaml
 
@@ -33,7 +33,7 @@ from src.pipelines.outer_loop.columns import (
     write_responses_csv,
 )
 from src.model_comparison.cv import Selection
-from src.tasks import all_tasks, task_present_in
+from src.tasks import OPTIONAL_COLUMNS, all_tasks, task_present_in
 from src.pipelines.outer_loop.orchestrator_validators import (
     EXPORT_RECORD_FILENAME,
     _ZOO_NAME_RE,
@@ -56,7 +56,8 @@ def _pooled_response_rows(exp_dir: Path) -> list[dict[str, str]]:
     """Concatenate response rows from experiment 1 through ``exp_dir``, keeping
     only the raw columns of the task the files are from (a run collected
     before collection dropped the others still has them in its
-    ``data/responses.csv``)."""
+    ``data/responses.csv``). Every file must carry the same raw columns (a run
+    hides ``participant_id`` in all its experiments or in none)."""
     project_dir = exp_dir.parent
     current_num = int(exp_dir.name.removeprefix("experiment"))
     rows: list[dict] = []
@@ -64,16 +65,17 @@ def _pooled_response_rows(exp_dir: Path) -> list[dict[str, str]]:
         path = project_dir / f"experiment{exp_num}" / "data" / "responses.csv"
         if path.exists():
             with path.open(encoding="utf-8") as f:
-                reader = csv.DictReader(f)
-                rows.extend(raw_response_rows(reader, task_present_in(reader.fieldnames or [])))
-    return rows
+                rows.extend(csv.DictReader(f))
+    return raw_response_rows(rows, task_present_in(rows[0])) if rows else []
 
 
-def write_task_description(project_id: str, loop_dir: Path) -> Path:
+def write_task_description(project_id: str, loop_dir: Path, columns: Sequence[str]) -> Path:
     """Copy the project's task description next to the inner loop's responses.
 
     Candidate and critique agents are told the task from it
-    (``inner_loop.task_description``). Fails loudly if the project has none.
+    (``inner_loop.task_description``). Its column table keeps the rows of the
+    ``columns`` the responses carry (a run that hides ``participant_id``
+    drops that row). Fails loudly if the project has none.
     """
     from src.pipelines.outer_loop.orchestrator import outer_project_dir
 
@@ -83,8 +85,15 @@ def write_task_description(project_id: str, loop_dir: Path) -> Path:
             f"Project {project_id!r} has no {TASK_DESCRIPTION_NAME} at {source}; "
             "inner-loop agents must be told the task."
         )
+    absent = OPTIONAL_COLUMNS - set(columns)
+    lines = [
+        line for line in source.read_text(encoding="utf-8").splitlines(keepends=True)
+        if not any(line.startswith(f"| `{column}`") for column in absent)
+    ]
     Path(loop_dir).mkdir(parents=True, exist_ok=True)
-    return Path(shutil.copyfile(source, Path(loop_dir) / TASK_DESCRIPTION_NAME))
+    out = Path(loop_dir) / TASK_DESCRIPTION_NAME
+    out.write_text("".join(lines), encoding="utf-8")
+    return out
 
 
 def agent_notes_dir(exp_dir: Path) -> Path:
@@ -412,7 +421,7 @@ def run_inner_model_loop_programmatic(
     loop_dir = exp_dir / "model_loop"
     loop_dir.mkdir(parents=True, exist_ok=True)
     responses_path = write_responses_csv(rows, loop_dir / "responses.csv")
-    write_task_description(project_id or exp_dir.parent.name, loop_dir)
+    write_task_description(project_id or exp_dir.parent.name, loop_dir, list(rows[0]))
 
     seed_models_dir = exp_dir / "cognitive_models"
     # Names no candidate may take: the run's starting models, carried or not.

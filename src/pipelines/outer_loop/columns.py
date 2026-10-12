@@ -21,16 +21,26 @@ def raw_response_rows(rows: Iterable[Mapping[str, Any]], task: TaskSpec) -> List
     Everything agents can read carries only these. Collection returns more:
     ``/results`` adds ``participant_id_str`` (the Prolific ID), ``chose_right``
     and ``model``, and the simulated collectors ``chose_right`` and ``model``
-    (the generating model). Fails loudly if a row lacks a raw column.
+    (the generating model). An optional raw column (``participant_id``) is
+    kept when the first row carries it, and then every row must. Fails loudly
+    if a row lacks a raw column.
     """
-    raw_rows = []
+    raw_rows: List[Dict[str, Any]] = []
+    columns: Sequence[str] = ()
     for index, row in enumerate(rows):
-        missing = [column for column in task.raw_columns if column not in row]
+        if index == 0:
+            columns = task.columns_of(row)
+        elif task.columns_of(row) != columns:
+            raise ValueError(
+                f"response row {index} carries raw columns {list(task.columns_of(row))}, "
+                f"row 0 {list(columns)}: an optional column is on every row or on none"
+            )
+        missing = [column for column in columns if column not in row]
         if missing:
             raise ValueError(
                 f"response row {index} lacks raw column(s) {missing}; got {sorted(row)}"
             )
-        raw_rows.append({column: row[column] for column in task.raw_columns})
+        raw_rows.append({column: row[column] for column in columns})
     return raw_rows
 
 

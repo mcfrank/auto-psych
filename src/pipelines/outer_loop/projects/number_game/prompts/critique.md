@@ -36,7 +36,8 @@ the context names — use the absolute path) of exactly this form:
 def test_statistic(df):
     # df: one row per trial, with the columns CRITIQUE_CONTEXT.md lists: the raw
     # number_set (the example numbers, comma-separated, in the order shown) and
-    # target, participant_id, trial_index and the response rating (1 = yes).
+    # target, trial_index (and participant_id, when listed) and the response
+    # rating (1 = yes).
     # There are no feature columns: compute any stimulus property from them
     # (e.g. df["number_set"].str.count(",") + 1 examples; df["target"].astype(int)).
     # np, pd and math are already in scope.

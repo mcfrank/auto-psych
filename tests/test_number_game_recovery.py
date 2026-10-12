@@ -57,6 +57,8 @@ def test_number_game_recovery_cell_end_to_end(tmp_path, monkeypatch):
         "n_experiments": 2,
         "n_participants": 2,
         "seed": 3,
+        # Population-level models only: agents never see who answered.
+        "hide_participant_id": True,
         "design": {"n_eig": 6},
         "inner_loop": {
             "max_iterations": 1,
@@ -93,12 +95,17 @@ def test_number_game_recovery_cell_end_to_end(tmp_path, monkeypatch):
     assert gt_run["experiments"][0]["manifest_models"][:1] == [START]
     assert GT not in (run_root / "experiment1" / "cognitive_models" / "models_manifest.yaml").read_text()
 
-    # The agents see only the raw number-game columns, never the generator.
+    # The agents see only the raw number-game columns, never the generator,
+    # and (hide_participant_id) not who answered.
+    assert result["hide_participant_id"] is True
     with (run_root / "experiment1" / "data" / "responses.csv").open() as f:
         reader = csv.DictReader(f)
         rows = list(reader)
-    assert reader.fieldnames == ["number_set", "target", "participant_id", "trial_index", "rating"]
+    assert reader.fieldnames == ["number_set", "target", "trial_index", "rating"]
     assert len(rows) == 6 * 2 and {r["rating"] for r in rows} <= {"0", "1"}
+    loop_dir = run_root / "experiment2" / "model_loop"
+    assert (loop_dir / "responses.csv").read_text().splitlines()[0] == "number_set,target,trial_index,rating"
+    assert "participant_id" not in (loop_dir / "task_description.md").read_text()
 
     # The scripted candidate (the ground truth's own code) is admitted...
     ledger = [
