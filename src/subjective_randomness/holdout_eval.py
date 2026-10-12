@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 import numpy as np
 
+from src.model_comparison.cv import LOO, Selection, cv_pointwise
 from src.models.data_binding import make_stim_data
 from src.models.model_loading import model_source_file, pm_data_inputs
 from src.models.pymc_inference import InvalidPredictions, fit_model, is_model_failure
@@ -386,6 +387,7 @@ def _fitted_seed_baseline(
     eval_stimuli: Optional[Sequence[Mapping[str, str]]] = None,
     exclusions_log: Optional[Path] = None,
     exclusion_record: Optional[Mapping[str, Any]] = None,
+    selection: Selection = LOO,
 ) -> Dict[str, Any]:
     """Fit each seed model (its file in ``models_dir``, or its ``pruned/``) on
     ``responses_path`` and correlate with GT.
@@ -393,9 +395,11 @@ def _fitted_seed_baseline(
     Predicts held-out ``p_left`` for each seed model and correlates with the
     ground truth: the recovery from *fitting the existing starting models*,
     with no agent-discovered structure. Per model it records Pearson r, RMSE,
-    ELPD-LOO and whether the fit can be trusted (reliable PSIS-LOO and a
-    converged fit). The headline baseline is the ELPD-best trusted seed —
-    chosen on the training data, as the loop chooses its own winner
+    ELPD under the loop's ``selection`` criterion (in ``elpd_loo``, as in the
+    loop's comparison table) and whether the fit can be trusted (a converged
+    fit, and under LOO a reliable PSIS-LOO). The headline baseline is the
+    ELPD-best trusted seed — chosen on the training data, as the loop chooses
+    its own winner
     (``elpd_best_model`` / ``elpd_best_r`` / ``elpd_best_rmse``; ``None`` with
     ``elpd_best_reason`` when no seed can be trusted). The mean over seeds is
     kept as a reference field.
@@ -442,12 +446,20 @@ def _fitted_seed_baseline(
                     **(exclusion_record or {}),
                 },
             )
-        loo = fitted.loo_diagnostics()
+        if selection.criterion == "grouped_cv":
+            lpd, _ = cv_pointwise(
+                [name], _seed_file_dir(models_dir, name), responses_path, selection,
+                cache_dir=cache_dir, **dict(fit_kwargs),
+            )
+            elpd, reliable = float(np.sum(lpd[name])), True
+        else:
+            loo = fitted.loo_diagnostics()
+            elpd, reliable = float(loo.elpd_loo), not loo.unreliable
         per_model[name] = {
             "pearson_r": pearson_r(gt_p[valid].tolist(), pred[valid].tolist()),
             "rmse": float(np.sqrt(np.mean((gt_p[valid] - pred[valid]) ** 2))),
-            "elpd_loo": float(loo.elpd_loo),
-            "trusted": not loo.unreliable and not fitted.convergence_problems(),
+            "elpd_loo": elpd,
+            "trusted": reliable and not fitted.convergence_problems(),
             "n_eval_excluded": int((~valid).sum()),
         }
     # The two reference means cover different seeds when a seed predicts a
@@ -465,6 +477,7 @@ def _fitted_seed_baseline(
         "mean_r_models": r_models,
         "mean_rmse_models": list(per_model),
         "per_model": per_model,
+        "criterion": selection.criterion,
         "elpd_best_model": best,
         "elpd_best_r": per_model[best]["pearson_r"] if best else None,
         "elpd_best_rmse": per_model[best]["rmse"] if best else None,
@@ -790,6 +803,7 @@ def fitted_seed_baseline_correlation(
     predict_max_draws: Optional[int] = None,
     exclusions_log: Optional[Path] = None,
     exclusion_record: Optional[Mapping[str, Any]] = None,
+    selection: Selection = LOO,
 ) -> Dict[str, Any]:
     """Fitted-seed baseline: other seed models fit on *all* collected data.
 
@@ -835,6 +849,7 @@ def fitted_seed_baseline_correlation(
         eval_stimuli=eval_stimuli,
         exclusions_log=exclusions_log,
         exclusion_record=exclusion_record,
+        selection=selection,
     )
     if baseline["pearson_r"] is None:
         raise ValueError(
@@ -930,6 +945,8 @@ def reevaluate_trajectories(
     gt_models_dir = Path(gt_models_dir) if gt_models_dir is not None else None
     n_experiments = int(result["n_experiments"])
     fit_kwargs = dict(result.get("fit_kwargs", {}))
+    # The criterion the loop selected on (a result before grouped CV: LOO).
+    selection = Selection.from_config(result.get("inner_loop", {}).get("selection", {}))
 
     eval_pool = (
         dict(eval_pool_override)
@@ -1005,6 +1022,7 @@ def reevaluate_trajectories(
             fit_kwargs=fit_kwargs,
             gt_models_dir=gt_models_dir,
             predict_max_draws=predict_max_draws,
+            selection=selection,
         )
         fitted_baseline = final_fitted_baseline(fitted_by_experiment)
         # The incumbent record is recomputed from the on-disk histories exactly

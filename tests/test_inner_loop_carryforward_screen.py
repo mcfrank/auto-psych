@@ -61,7 +61,7 @@ def test_drops_carried_model_with_nonfinite_elpd_keeps_finite(
 ):
     models_dir = _models_dir(tmp_path, ["seed_good", "carried_nan"])
     elpd = {"seed_good": -100.0, "carried_nan": math.nan}
-    monkeypatch.setattr(model_zoo, "log_likelihood", lambda m, *a, **k: elpd[m])
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", lambda m, *a, **k: elpd[m])
 
     pymc_orchestrator._drop_nonfinite_elpd_models(
         models_dir, tmp_path / "responses.csv"
@@ -77,7 +77,7 @@ def test_drops_carried_model_with_nonfinite_elpd_keeps_finite(
 def test_drops_each_kind_of_nonfinite_elpd(tmp_path, monkeypatch, bad):
     models_dir = _models_dir(tmp_path, ["seed_good", "bad"])
     elpd = {"seed_good": -100.0, "bad": bad}
-    monkeypatch.setattr(model_zoo, "log_likelihood", lambda m, *a, **k: elpd[m])
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", lambda m, *a, **k: elpd[m])
 
     pymc_orchestrator._drop_nonfinite_elpd_models(
         models_dir, tmp_path / "responses.csv"
@@ -96,7 +96,7 @@ def test_drops_model_whose_elpd_computation_raises(tmp_path, monkeypatch):
             raise RuntimeError("PSIS-LOO blew up")
         return -100.0
 
-    monkeypatch.setattr(model_zoo, "log_likelihood", ll)
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", ll)
 
     pymc_orchestrator._drop_nonfinite_elpd_models(
         models_dir, tmp_path / "responses.csv"
@@ -107,9 +107,9 @@ def test_drops_model_whose_elpd_computation_raises(tmp_path, monkeypatch):
 
 def test_raises_when_no_model_survives(tmp_path, monkeypatch):
     models_dir = _models_dir(tmp_path, ["a", "b"])
-    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: math.nan)
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", lambda *a, **k: math.nan)
 
-    with pytest.raises(ValueError, match="finite ELPD"):
+    with pytest.raises(ValueError, match="finite log-likelihood"):
         pymc_orchestrator._drop_nonfinite_elpd_models(
             models_dir, tmp_path / "responses.csv"
         )
@@ -117,7 +117,7 @@ def test_raises_when_no_model_survives(tmp_path, monkeypatch):
 
 def test_all_finite_keeps_every_model(tmp_path, monkeypatch):
     models_dir = _models_dir(tmp_path, ["a", "b", "c"])
-    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -50.0)
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", lambda *a, **k: -50.0)
 
     pymc_orchestrator._drop_nonfinite_elpd_models(
         models_dir, tmp_path / "responses.csv"
@@ -146,7 +146,7 @@ def test_screen_fits_the_whole_set_in_one_batch_before_scoring(tmp_path, monkeyp
     monkeypatch.setattr(model_zoo, "fit_models_to_cache", fake_batch)
     scored = []
     monkeypatch.setattr(
-        model_zoo, "log_likelihood", lambda m, *a, **k: scored.append(m) or -50.0
+        model_zoo, "mean_log_likelihood", lambda m, *a, **k: scored.append(m) or -50.0
     )
 
     pymc_orchestrator._drop_nonfinite_elpd_models(
@@ -172,7 +172,7 @@ def test_a_model_whose_batch_fit_failed_is_dropped_without_a_second_fit(
     )
     scored = []
     monkeypatch.setattr(
-        model_zoo, "log_likelihood", lambda m, *a, **k: scored.append(m) or -100.0
+        model_zoo, "mean_log_likelihood", lambda m, *a, **k: scored.append(m) or -100.0
     )
     ledger = model_zoo.HypothesisLedger.create(
         tmp_path / "ledger.jsonl", inherit_from=None
@@ -207,7 +207,7 @@ def test_an_infrastructure_error_while_scoring_raises_instead_of_dropping(
             raise OSError(122, "Disk quota exceeded")
         return -10.0
 
-    monkeypatch.setattr(model_zoo, "log_likelihood", elpd)
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", elpd)
     ledger = model_zoo.HypothesisLedger.create(
         tmp_path / "ledger.jsonl", inherit_from=None
     )

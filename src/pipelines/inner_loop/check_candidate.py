@@ -7,7 +7,7 @@ the import allowlist, a loadable module-level ``model: pm.Model``, a finite
 log-probability on the real responses, the data contract (observed data =
 ``chose_left`` in row order, a per-trial ``p_left`` that is the likelihood's
 probability; ``src/models/model_contract.py``), a short MCMC fit and a finite
-ELPD-LOO — with the small ``CANDIDATE_CHECK_*`` sampler settings from
+log-likelihood — with the small ``CANDIDATE_CHECK_*`` sampler settings from
 ``src/models/mcmc_defaults.py``. It is a smoke fit, not a production fit: it
 never writes to the pipeline's fit cache, and it does not run the novelty
 gate (that needs the other models' fits).
@@ -31,7 +31,7 @@ from typing import Any, Dict
 
 import tyro
 
-from src.model_comparison.likelihood import log_likelihood
+from src.model_comparison.likelihood import mean_log_likelihood
 from src.models.mcmc_defaults import (
     CANDIDATE_CHECK_CHAINS,
     CANDIDATE_CHECK_DRAWS,
@@ -133,21 +133,21 @@ def run_candidate_check(candidate_dir: Path, responses_path: Path) -> str:
 
     # Same sampler settings ⇒ same in-process cache key ⇒ no second fit.
     try:
-        elpd = log_likelihood(
+        loglik = mean_log_likelihood(
             CANDIDATE_MODULE,
             responses_path,
             candidate_dir,
             cache_dir=None,
             **CHECK_FIT_KWARGS,
         )
-    except Exception as e:  # noqa: BLE001 — any LOO failure is the reason
+    except Exception as e:  # noqa: BLE001 — any failure here is the reason
         raise CandidateCheckFailed(
-            f"ELPD-LOO computation failed ({type(e).__name__}: {e})"
+            f"log-likelihood computation failed ({type(e).__name__}: {e})"
         ) from e
-    if not math.isfinite(elpd):
+    if not math.isfinite(loglik):
         raise CandidateCheckFailed(
-            f"non-finite ELPD-LOO ({elpd}); a model that assigns ~0 probability "
-            "to an observed outcome would corrupt the posterior"
+            f"non-finite log-likelihood ({loglik}); a model that assigns ~0 "
+            "probability to an observed outcome would corrupt the posterior"
         )
 
     return (
@@ -155,7 +155,7 @@ def run_candidate_check(candidate_dir: Path, responses_path: Path) -> str:
         f"log-probability on {responses_path}, honours the data contract "
         f"(observed = chose_left, p_left = the likelihood's probability), completed a "
         f"{CANDIDATE_CHECK_DRAWS}-draw / {CANDIDATE_CHECK_TUNE}-tune smoke fit "
-        f"({CANDIDATE_CHECK_CHAINS} chain) and has a finite ELPD-LOO ({elpd:.1f} "
+        f"({CANDIDATE_CHECK_CHAINS} chain) and has a finite log-likelihood ({loglik:.1f} "
         f"on this smoke fit). Not checked here: novelty against the other models."
     )
 

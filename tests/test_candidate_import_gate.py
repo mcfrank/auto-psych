@@ -170,7 +170,7 @@ class TestAdmitCandidateImportGate:
                 return_value=[],
             ),
             patch(
-                "src.pipelines.inner_loop.model_zoo.log_likelihood",
+                "src.pipelines.inner_loop.model_zoo.mean_log_likelihood",
                 return_value=-10.0,
             ),
             patch(

@@ -31,7 +31,7 @@ from src.models.mcmc_defaults import (
 )
 from src.models.model_contract import model_contract_violation
 from src.models.model_manifest import manifest_path, read_manifest_entries
-from src.model_comparison.cv import LOO, Selection
+from src.model_comparison.cv import LOO, Selection, cv_pointwise, fold_training_files
 from src.tasks import task_of_file, task_present_in
 from src.models.data_binding import MissingStimulusColumns, make_stim_data
 from src.models.model_loading import load_pymc_model, pm_data_inputs
@@ -52,7 +52,7 @@ from src.models.pymc_inference import (
     model_logp_is_finite,
     resolve_fit_settings,
 )
-from src.model_comparison.likelihood import log_likelihood
+from src.model_comparison.likelihood import mean_log_likelihood
 from src.model_comparison.posterior import compare_table
 from src.pipelines.inner_loop.hypothesis_ledger import (
     HypothesisLedger,
@@ -426,7 +426,7 @@ def _drop_nonfinite_elpd_models(
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
 ) -> None:
-    """Remove from the manifest any model whose ELPD-LOO is non-finite on the data.
+    """Remove from the manifest any model whose log-likelihood is non-finite on the data.
 
     ``_drop_unfittable_models`` screens only the *initial-point logp*, and
     ``_admit_candidate`` screens a *fresh candidate*'s ELPD. Neither covers a
@@ -435,8 +435,8 @@ def _drop_nonfinite_elpd_models(
     experiment's *different* responses (e.g. it now assigns ~0 probability to a
     newly observed outcome). Such a model slips past the logp gate and crashes
     ``model_posterior`` (which refuses to softmax a non-finite ELPD), aborting the
-    whole run. Compute each model's ELPD-LOO now and drop the non-finite ones
-    with a loud warning. Fails loudly only if **no** model survives.
+    whole run. Check each model's posterior-mean log-likelihood now (no PSIS)
+    and drop the non-finite ones with a loud warning. Fails loudly only if **no** model survives.
 
     This is also the experiment's first MCMC pass: every model in the set meets
     this experiment's responses here for the first time, so the whole set is
@@ -483,32 +483,31 @@ def _drop_nonfinite_elpd_models(
             )
             continue
         try:
-            elpd = log_likelihood(
+            loglik = mean_log_likelihood(
                 name, responses_path, models_dir, cache_dir=cache_dir, **fit_kwargs
             )
         except INFRASTRUCTURE_ERRORS:
             raise
-        except Exception as e:  # noqa: BLE001 — any fit/LOO failure means unscorable
+        except Exception as e:  # noqa: BLE001 — any failure here means unscorable
             drop(
                 entry,
-                f"ELPD-LOO computation failed ({type(e).__name__}: {e}) — cannot "
-                "score it",
-                f"ELPD-LOO computation failed ({type(e).__name__}: {e})",
+                f"log-likelihood computation failed ({type(e).__name__}: {e}) — "
+                "cannot score it",
+                f"log-likelihood computation failed ({type(e).__name__}: {e})",
             )
             continue
-        if math.isfinite(elpd):
+        if math.isfinite(loglik):
             keep.append(entry)
         else:
             drop(
                 entry,
-                f"non-finite ELPD-LOO ({elpd}) on the data — would corrupt the "
-                "posterior",
-                f"non-finite ELPD-LOO ({elpd}) on this experiment's data",
+                f"non-finite log-likelihood ({loglik}) on the data — would corrupt "
+                "the posterior",
+                f"non-finite log-likelihood ({loglik}) on this experiment's data",
             )
     if not keep:
         raise ValueError(
-            f"No model in {models_dir} has a finite ELPD-LOO on the data — every "
-            "model's PSIS-LOO was non-finite."
+            f"No model in {models_dir} has a finite log-likelihood on the data."
         )
     _write_manifest(models_dir, keep)
 
@@ -573,6 +572,77 @@ class NoveltyPoolFailed(ValueError):
             f"model {model_name!r} cannot predict on the novelty pool ({self.error})"
         )
 
+
+def _drop_unscorable_cv_models(
+    models_dir: Path,
+    responses_path: Path,
+    selection: Selection,
+    *,
+    limited: Iterable[str] = (),
+    time_limit_sec: float = CANDIDATE_FIT_TIME_LIMIT_SEC,
+    cache_dir: Optional[Path] = None,
+    fit_kwargs: Optional[Dict[str, Any]] = None,
+    ledger: Optional[HypothesisLedger] = None,
+    ledger_context: str = "",
+) -> None:
+    """Under grouped CV, fit every model on every fold and drop the ones whose
+    ELPD-CV cannot be computed, with a ledger line each: a fold fit that fails,
+    or, for the ``limited`` models (those admitted in this loop; starting and
+    carried models are never limited, as in admission), one still sampling at
+    ``time_limit_sec``, or a non-finite score (a held-out answer given zero
+    probability). Scoring then finds every fold fit in the cache and a finite
+    score, where a single non-finite one would crash ``model_posterior``.
+    A no-op under trial-level LOO. Fails loudly only if no model survives.
+    """
+    if selection.criterion != "grouped_cv":
+        return
+    fit_kwargs = fit_kwargs or {}
+    limited = set(limited)
+    entries = _manifest_entries(models_dir)
+    names = [entry["name"] for entry in entries]
+    _, _, fold_paths = fold_training_files(responses_path, selection)
+    failures: Dict[str, str] = {}
+    for fold, path in enumerate(fold_paths):
+        timed = [n for n in names if n in limited and n not in failures]
+        if timed and cache_dir is not None:
+            fit_time_limited_concurrently(
+                timed, models_dir, path, cache_dir=cache_dir, fit_kwargs=fit_kwargs, time_limit_sec=time_limit_sec
+            )
+        for name in timed:
+            try:
+                fit_model(name, models_dir, path, cache_dir=cache_dir, time_limit_sec=time_limit_sec, **fit_kwargs)
+            except INFRASTRUCTURE_ERRORS:
+                raise
+            except FitTimeLimitExceeded as e:
+                failures[name] = f"fold {fold} {_too_slow_reason(e)}"
+            except Exception as e:  # noqa: BLE001 — the model's own failure (infrastructure re-raised above)
+                failures[name] = f"MCMC fit failed on CV fold {fold} ({_describe_failure(e)})"
+        free = [n for n in names if n not in limited and n not in failures]
+        for name, why in fit_models_to_cache(free, models_dir, path, cache_dir=cache_dir, **fit_kwargs).items():
+            failures[name] = f"MCMC fit failed on CV fold {fold} ({why})"
+    scorable = [n for n in names if n not in failures]
+    lpd, _ = cv_pointwise(scorable, models_dir, responses_path, selection, cache_dir=cache_dir, **fit_kwargs)
+    for name in scorable:
+        total = float(np.sum(lpd[name]))
+        if not math.isfinite(total):
+            failures[name] = f"non-finite ELPD-CV ({total}): a held-out answer has zero probability"
+    if not failures:
+        return
+    keep = [entry for entry in entries if entry["name"] not in failures]
+    if not keep:
+        raise ValueError(f"No model in {models_dir} has a computable ELPD-CV: {failures}")
+    for entry in entries:
+        if entry["name"] in failures:
+            print(f"  [drop] model {entry['name']!r}: {failures[entry['name']]}; dropping.", flush=True)
+            _record(
+                ledger,
+                name=entry["name"],
+                outcome="dropped",
+                detail=failures[entry["name"]],
+                hypothesis=entry.get("rationale") or "",
+                context=ledger_context,
+            )
+    _write_manifest(models_dir, keep)
 
 def _pair_labels(pool_rows: Sequence[Mapping[str, str]], mask: np.ndarray) -> List[str]:
     """The task's labels (``"HHT vs THT"``, ``"{16,8} -> 4"``) for the pool
@@ -1391,13 +1461,13 @@ def _admit_candidate_with_reason(
             "thresholds or discontinuities in the likelihood."
         )
 
-    # ELPD-LOO gate: a model can sample cleanly yet still assign ~0 probability to
-    # an observed outcome at some posterior draws, giving a non-finite PSIS-LOO.
-    # That NaN/inf would later crash model_posterior (which refuses to build a
-    # posterior a non-finite ELPD would corrupt). Compute it now from the cached
-    # fit (no extra sampling) and drop the candidate here instead.
+    # Finite-likelihood gate: a model can sample cleanly yet still assign ~0
+    # probability to an observed outcome at some posterior draws, and the NaN/inf
+    # would later crash model_posterior (which refuses to build a posterior a
+    # non-finite ELPD would corrupt). Checked on the cached fit's own
+    # log-likelihood (no sampling, no PSIS), under every selection criterion.
     try:
-        elpd = log_likelihood(
+        loglik = mean_log_likelihood(
             model_name,
             responses_path,
             models_dir,
@@ -1410,14 +1480,15 @@ def _admit_candidate_with_reason(
     except Exception as e:
         staged.unlink(missing_ok=True)
         return reject(
-            f"ELPD-LOO computation failed ({type(e).__name__}: {e}); dropping it "
-            "so it cannot abort scoring."
+            f"log-likelihood computation failed ({type(e).__name__}: {e}); "
+            "dropping it so it cannot abort scoring."
         )
-    if not math.isfinite(elpd):
+    if not math.isfinite(loglik):
         staged.unlink(missing_ok=True)
         return reject(
-            f"non-finite ELPD-LOO ({elpd}); a model that assigns ~0 probability "
-            "to an observed outcome would corrupt the posterior — dropping it."
+            f"non-finite log-likelihood ({loglik}); a model that assigns ~0 "
+            "probability to an observed outcome would corrupt the posterior — "
+            "dropping it."
         )
 
     # Novelty gate: a candidate that predicts like an existing model is a

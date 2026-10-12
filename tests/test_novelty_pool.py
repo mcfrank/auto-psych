@@ -125,7 +125,7 @@ def _stub_admission_gates(monkeypatch):
     monkeypatch.setattr(model_zoo, "load_pymc_model", lambda name, models_dir: object())
     monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
     monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
-    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -10.0)
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", lambda *a, **k: -10.0)
 
 
 def _models_dir(tmp_path, names):
@@ -485,7 +485,7 @@ def _patch_scoring(monkeypatch):
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     # The experiment-start screen samples the whole set in one batch; no MCMC here.
     monkeypatch.setattr(model_zoo, "fit_models_to_cache", lambda names, *a, **k: {})
-    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", lambda *a, **k: -100.0)
     monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: None)
     monkeypatch.setattr(model_zoo, "load_pymc_model", lambda name, models_dir: object())
 

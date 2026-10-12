@@ -61,6 +61,7 @@ from src.pipelines.inner_loop.model_zoo import (
     _NO_FILE_DETAIL,
     _admit_candidate_with_reason,
     _drop_nonfinite_elpd_models,
+    _drop_unscorable_cv_models,
     _drop_unfittable_models,
     _is_all_no_file_round,
     _lens_index,
@@ -315,6 +316,20 @@ def run_pymc_inner_loop(
         ledger=ledger,
         ledger_context=ledger_context,
     )
+    # Under grouped CV, every model is fitted on every fold now and one whose
+    # ELPD-CV cannot be computed is dropped (no time limit: these are the
+    # starting and carried models). Models admitted later are screened after
+    # their round, their fold fits under the admission time limit.
+    _drop_unscorable_cv_models(
+        models_dir,
+        responses_path,
+        selection,
+        cache_dir=cache_dir,
+        fit_kwargs=fit_kwargs,
+        ledger=ledger,
+        ledger_context=ledger_context,
+    )
+    loop_start_models = set(_manifest_names(models_dir))
     # The novelty pool: generated once from the loop's own seed and recorded in
     # the run tree, so every candidate this run gates is compared on the same
     # stimuli and what the gate saw is auditable. None when the gate is off.
@@ -650,6 +665,16 @@ def run_pymc_inner_loop(
             )
             continue
 
+        _drop_unscorable_cv_models(
+            models_dir,
+            responses_path,
+            selection,
+            limited=set(_manifest_names(models_dir)) - loop_start_models,
+            cache_dir=cache_dir,
+            fit_kwargs=fit_kwargs,
+            ledger=ledger,
+            ledger_context=round_context,
+        )
         posterior = _score(
             responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs, selection
         )

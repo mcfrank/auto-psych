@@ -108,7 +108,7 @@ def _read_rows(responses_path: Path) -> Tuple[List[str], List[Dict[str, str]]]:
         return list(reader.fieldnames or []), list(reader)
 
 
-def _fold_training_files(responses_path: Path, selection: Selection) -> Tuple[List[Dict[str, str]], np.ndarray, List[Path]]:
+def fold_training_files(responses_path: Path, selection: Selection) -> Tuple[List[Dict[str, str]], np.ndarray, List[Path]]:
     """The rows, their folds, and one training file per fold (every other fold's
     rows), written once beside the responses under a content-addressed name."""
     header, rows = _read_rows(responses_path)
@@ -144,7 +144,7 @@ def cv_pointwise(
     from src.models.data_binding import make_stim_data
     from src.models.pymc_inference import fit_models_cached
 
-    rows, folds, paths = _fold_training_files(responses_path, selection)
+    rows, folds, paths = fold_training_files(responses_path, selection)
     lpd = {name: np.full(len(rows), np.nan) for name in model_names}
     for f, train_path in enumerate(paths):
         held = np.flatnonzero(folds == f)

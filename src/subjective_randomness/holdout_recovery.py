@@ -811,6 +811,7 @@ def _run_holdout_recovery_resolved(
             gt_models_dir=gt_models_dir,
             predict_max_draws=eval_pool["predict_max_draws"],
             exclusions_log=exclusions_log,
+            selection=selection,
         )
         fitted_baseline = final_fitted_baseline(fitted_by_experiment)
 

@@ -117,7 +117,7 @@ def _stub_admission_gates(monkeypatch):
     # The stub fit is not a real trace: pass the convergence gate.
     monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
-    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -10.0)
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", lambda *a, **k: -10.0)
 
 
 def _candidate(tmp_path):

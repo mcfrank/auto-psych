@@ -247,7 +247,7 @@ def test_a_starting_model_whose_fit_fails_or_elpd_is_nonfinite_is_dropped(
     )
     monkeypatch.setattr(
         model_zoo,
-        "log_likelihood",
+        "mean_log_likelihood",
         lambda name, *a, **k: math.nan if name == "seed_c" else -100.0,
     )
     ledger = _ledger(tmp_path)
@@ -270,7 +270,7 @@ def test_an_infrastructure_failure_on_a_starting_model_still_raises(
     def broken(name, *a, **k):
         raise OSError("disk quota exceeded")
 
-    monkeypatch.setattr(model_zoo, "log_likelihood", broken)
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", broken)
     with pytest.raises(OSError, match="disk quota"):
         _drop_nonfinite_elpd_models(models_dir, tmp_path / "r.csv")
     assert model_zoo._manifest_names(models_dir) == ["seed_a", "seed_b"]

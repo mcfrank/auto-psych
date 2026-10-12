@@ -47,7 +47,7 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
     # The experiment-start screen samples the whole set in one batch; no MCMC here.
     monkeypatch.setattr(model_zoo, "fit_models_to_cache", lambda names, *a, **k: {})
     # Admission also gates on a finite ELPD-LOO; stub it finite for stub candidates.
-    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", lambda *a, **k: -100.0)
     # Novelty gate is covered by test_novelty_gate.py; neutralize it here.
     monkeypatch.setattr(
         model_zoo,

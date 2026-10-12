@@ -223,7 +223,7 @@ def _stub_fit_and_scoring(monkeypatch):
 
     monkeypatch.setattr(model_zoo, "fit_model", fit)
     monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
-    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -2.0)
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", lambda *a, **k: -2.0)
 
 
 @pytest.mark.parametrize(

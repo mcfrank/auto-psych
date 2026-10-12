@@ -485,7 +485,7 @@ def _write_candidate_context(
         "trial and is the probability the Bernoulli likelihood uses), a "
         f"short MCMC fit ({CANDIDATE_CHECK_DRAWS} draws, {CANDIDATE_CHECK_TUNE} "
         f"tune, {CANDIDATE_CHECK_CHAINS} chain: a smoke test, not a full "
-        "production fit) and a finite ELPD-LOO — and prints `OK` or the exact "
+        "production fit) and a finite log-likelihood — and prints `OK` or the exact "
         "reason admission would reject the file. Fix anything it reports. It "
         "does not check novelty against the other models, nor convergence, nor "
         "speed: admission's full fit must have almost no divergent transitions, "

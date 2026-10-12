@@ -663,6 +663,14 @@ class FittedModel:
         draws = draws.reshape(-1, draws.shape[-1])
         return logsumexp(draws, axis=0) - np.log(draws.shape[0])
 
+    def mean_log_likelihood(self) -> float:
+        """The training responses' log-likelihood averaged over the posterior
+        draws: -inf or NaN when any draw gives an observed response zero (or
+        undefined) probability. The admission sanity gate, under every
+        selection criterion; no PSIS."""
+        ll = self.idata.log_likelihood[self.model.observed_RVs[0].name].values
+        return float(np.asarray(ll).reshape(-1, ll.shape[-1]).mean(axis=0).sum())
+
     def loo_diagnostics(self) -> LooDiagnostics:
         """PSIS-LOO of this fit with its reliability verdict, computed once.
 

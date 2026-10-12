@@ -133,7 +133,7 @@ def test_check_fits_with_the_small_settings_and_no_cache(tmp_path, monkeypatch):
         check_candidate, "model_contract_violation", lambda *a, **k: None
     )
     monkeypatch.setattr(check_candidate, "fit_model", fake_fit_model)
-    monkeypatch.setattr(check_candidate, "log_likelihood", fake_log_likelihood)
+    monkeypatch.setattr(check_candidate, "mean_log_likelihood", fake_log_likelihood)
 
     report = run_candidate_check(
         candidate_dir, PYMC_MODEL_FIXTURES_DIR / "responses.csv"
@@ -147,7 +147,7 @@ def test_check_fits_with_the_small_settings_and_no_cache(tmp_path, monkeypatch):
     assert fit_kwargs["cores"] == 1
     assert fit_kwargs.get("cache_dir") is None
     assert calls["elpd"][2]["draws"] == CANDIDATE_CHECK_DRAWS
-    assert "-12.5" in report and "ELPD-LOO" in report
+    assert "-12.5" in report and "log-likelihood" in report
 
 
 def test_check_reports_a_non_finite_logp(tmp_path, monkeypatch):
@@ -181,8 +181,8 @@ def test_check_reports_a_non_finite_elpd(tmp_path, monkeypatch):
         check_candidate, "model_contract_violation", lambda *a, **k: None
     )
     monkeypatch.setattr(check_candidate, "fit_model", lambda *a, **k: object())
-    monkeypatch.setattr(check_candidate, "log_likelihood", lambda *a, **k: float("nan"))
-    with pytest.raises(CandidateCheckFailed, match="non-finite ELPD-LOO"):
+    monkeypatch.setattr(check_candidate, "mean_log_likelihood", lambda *a, **k: float("nan"))
+    with pytest.raises(CandidateCheckFailed, match="non-finite log-likelihood"):
         run_candidate_check(candidate_dir, PYMC_MODEL_FIXTURES_DIR / "responses.csv")
 
 
@@ -224,4 +224,4 @@ def test_check_passes_a_real_model_end_to_end(tmp_path):
         timeout=600,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "OK" in proc.stdout and "ELPD-LOO" in proc.stdout
+    assert "OK" in proc.stdout and "log-likelihood" in proc.stdout
