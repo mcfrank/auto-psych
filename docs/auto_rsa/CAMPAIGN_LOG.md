@@ -181,6 +181,7 @@ games, and support two claims:
 | 10-12 | **Chain 0, experiment 3: publish failed, recovered** | 47396066_0 FAILED 07:57 | the design finished (power 0.705); Prolific refused to publish: **account balance $125.33 < study cost $133.33**. A resumed run never publishes a recorded draft (the one-study guard), so after the PI topped up, the draft `6accf48f…` was published by hand (`src.runtime.prolific.publish_study`) and chain 0 resubmitted (47514554_0, same code, no re-stage); it collected from the recorded study | **Suggestion:** the launcher, or the deploy before creating a draft, should check that the balance covers the study | |
 | 10-12 | **Chains 1 and 2 launched** (PI: chain 0's experiments 1–2 are enough to go on) | chain 1 47518520_1, e5fb029 | **staggered:** chain 2 goes in once chain 1's experiment-1 study has published, so chain 2's study (created after its ~1 h design) blocklists chain 1's participants. Launched together, both would publish at once and neither would exclude the other's. The chain 1 and 2 cells held only a seeded, undesigned experiment 1 from the tasks cancelled on 10-10; they resume in place | **Note:** chain 0's experiment 1 ran on b162c960 (catch trials modelled); chains 1 and 2 run wholly on e5fb029 | |
 | 10-12 | **Chain 2's site flagged; chains 1–2 timing** | chain 2 → 47575675_2; chain 1 continuation 47575694_1 | chain 2's experiment-1 study was paused by Prolific at 196/200 after a participant's "malware warning": Google Safe Browsing flags `auto-psych-2c5da-rsa-c2.web.app` as deceptive (c0, c1 clean). The PI filed a false-positive report and a Search Console review (verification file deployed to the c2 site only). **Chain 2 runs experiment 1 only** (`N_EXPERIMENTS=1`) until the site is cleared or moved. **Rounds take 2–3.5 h**, so chains 1 and 2 need about 55 h for 3 experiments, over the 48 h limit. Chain 1 has a queued continuation (`--time=7-00:00:00 --dependency=afternotok:47518520_1`); the inner loop resumes from its last scored step | `SAFE_BROWSING_C2.md`. **For the driver:** move chain 2 to a new site, or wait for the review; `outer_live.sbatch`'s `--time=48:00:00` is too short for 3 experiments | |
+| 10-13 | **Chain 0 complete** (experiments 1–3) | Sherlock 47514554_0 (experiment 3), e5fb029; Prolific `6accf48f…` | experiment 3: 201 recruited, 185 kept; median 135 s; power 0.705; 25 admitted, 15 rejected (**5 at the 30-min fit limit**, 8 not novel, 2 unconverged); best `boundary_avoidable_ambiguity_listener` (17 parameters) +47.5 ± 13.4 over the committed model on the cumulative live trials | **Claim 2, both tests:** the committed model vs best seed **+126.9 ± 37.4** (exp 2) and **+120.2 ± 28.0** (exp 3); vs best promoted seed +32.2 ± 23.3 and **+43.6 ± 14.4**; it beats all 17 bar models in both. Chain 0 cost $177 in agents + ~$400 Prolific | | `CAMPAIGN_C0_REPORT.md`, `data/rsa/live/live_rsa_c0/` |
 
 ## 5. Open
 
@@ -198,6 +199,19 @@ games, and support two claims:
   simulated, so it can run alongside the live campaign.
 - **The consent overlay** (main's deployment gate) is not in the page's accessibility tree:
   its "I agree" button is pointer-only (stage 1 re-run note).
+- **The fit time limit filters complexity as the data grow** (chain 0, experiment 3: 5 of 15
+  rejections at the 30-min admission limit; the winner has 17 parameters). Kept as frozen for
+  chains 1–2, so the chains stay comparable; to report.
+- **Design power falls across a chain** (0.94 → 0.75 → 0.71 in chain 0) as the carried models
+  become close relatives: partly the loop converging, partly the carry-cap question above.
+- **Wall time:** a chain of 3 experiments needs about 55 h, more than `outer_live.sbatch`'s 48 h.
+  Handled without a code change: a continuation submitted with `--time` on the command line
+  (Sherlock, chain 1). The script's default is left frozen.
+- **Chain 2's Hosting site** is flagged by Google Safe Browsing (`SAFE_BROWSING_C2.md`); chain 2
+  holds after experiment 1 until the review clears it or it moves to a new site.
+- **Main's statistic timeout** (SIGALRM in `src/critique/ppc.py`) can fire inside a garbage-
+  collector callback, where Python discards it (once in chain 0, experiment 3; the critique
+  completed). An upstream issue in main's code; harmless here.
 - **Known limits to report:**
   - simulated people are less noisy than real ones;
   - pruning on the live rows is weak;
