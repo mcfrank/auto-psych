@@ -1,5 +1,5 @@
 """The number game: would a hidden program that produced a set of example
-numbers also produce the target? (Bigelow & Piantadosi's 2016 dataset.)"""
+numbers also produce the target?"""
 
 from __future__ import annotations
 

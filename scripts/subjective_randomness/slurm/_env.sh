@@ -6,7 +6,16 @@
 #   REPO        - path to the auto-psych checkout
 #   WORK_ROOT   - where all run output / caches / venv live (must NOT be $HOME)
 #   UV_PROJECT_ENVIRONMENT - shared venv location
+#   CLUSTER     - sherlock (default) or coco (the SC cluster's cocoflops nodes)
 set -euo pipefail
+export CLUSTER="${CLUSTER:-sherlock}"
+[[ "$CLUSTER" == sherlock || "$CLUSTER" == coco ]] || { echo "FATAL: CLUSTER must be sherlock or coco, not $CLUSTER" >&2; exit 1; }
+# On coco /scr/$USER (node-local; jobs run on cocoflops1) plays both of
+# Sherlock's scratch roles: $SCRATCH (runs, caches, agent trees) and
+# $L_SCRATCH (compile dirs).
+if [[ "$CLUSTER" == coco ]]; then
+  export SCRATCH="${SCRATCH:-/scr/$USER}" L_SCRATCH="${L_SCRATCH:-/scr/$USER}"
+fi
 
 # --- repo + work locations -------------------------------------------------
 export REPO="${REPO:-$HOME/auto-psych}"
@@ -15,7 +24,15 @@ export REPO="${REPO:-$HOME/auto-psych}"
 export WORK_ROOT="${WORK_ROOT:-${SCRATCH:-$GROUP_SCRATCH}/auto-psych/holdout_test_retest}"
 mkdir -p "$WORK_ROOT"
 
-# --- modules ---------------------------------------------------------------
+# --- tools -----------------------------------------------------------------
+if [[ "$CLUSTER" == coco ]]; then
+  # No module system: uv from the user's miniconda, bubblewrap from its
+  # conda-forge env (unprivileged user namespaces are enabled), the system gcc
+  # (13.3) for PyTensor, and the agent CLIs from the AFS home.
+  export PATH="/scr/$USER/miniconda3/envs/bwrap/bin:/scr/$USER/miniconda3/bin:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
+  command -v bwrap >/dev/null || { echo "FATAL: bwrap not on PATH (conda create -p /scr/$USER/miniconda3/envs/bwrap -c conda-forge bubblewrap)" >&2; exit 1; }
+  command -v uv >/dev/null || { echo "FATAL: uv not on PATH" >&2; exit 1; }
+else
 # uv drives the Python env; opencode is the coding-agent backend.
 ml purge
 ml load devel
@@ -29,6 +46,7 @@ ml load opencode 2>/dev/null || true
 # Loop agents run inside a bubblewrap filesystem sandbox (src/runtime/agent_sandbox.py).
 ml load system bubblewrap
 command -v bwrap >/dev/null || { echo "FATAL: bwrap not on PATH after ml load system bubblewrap" >&2; exit 1; }
+fi
 # The codex backend ships as its own module (needs `devel`, loaded above) and
 # authenticates from ~/.codex/auth.json (ChatGPT subscription, no API key).
 # Load it only when it is the selected backend, and fail loudly if it is
@@ -66,7 +84,13 @@ fi
 # greenlet) builds from source on el7, which is slow and fails (no compiler /
 # freetype download). 3.12 has full manylinux2014 (glibc 2.17) wheel coverage,
 # so the sync is all wheels and fast.
-export UV_PYTHON="${UV_PYTHON:-3.12}"
+# On coco (Ubuntu 24.04) the setup job syncs the project lock itself, on the
+# repo's Python (.python-version).
+if [[ "$CLUSTER" == coco ]]; then
+  export UV_PYTHON="${UV_PYTHON:-3.11}"
+else
+  export UV_PYTHON="${UV_PYTHON:-3.12}"
+fi
 
 # --- caches off $HOME ------------------------------------------------------
 # Per-run venv under $WORK_ROOT (not a shared dir): a single shared venv couples

@@ -85,7 +85,8 @@ SEED_MODELS_REL="${SEED_MODELS_REL:-src/subjective_randomness/pymc_model_familie
 POOL_MODELS_REL="${POOL_MODELS_REL:-src/pipelines/outer_loop/projects/subjective_randomness/seed_models}"
 CONFIG="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml}"
 GT_MODELS_SRC="${GT_MODELS_SRC:-$WORK_ROOT/gt_models_src}"  # pristine GT snapshot
-GT_FAMILY_REL="${GT_FAMILY_REL:-src/subjective_randomness/model_families}"
+# Empty: the project's ground truths have no pure-Python twins (number game).
+GT_FAMILY_REL="${GT_FAMILY_REL-src/subjective_randomness/model_families}"
 GT_FAMILY_SRC="${GT_FAMILY_SRC:-$WORK_ROOT/gt_family_src}"  # pristine family snapshot
 
 TASK="${SLURM_ARRAY_TASK_ID:-1}"
@@ -213,9 +214,9 @@ echo "[task $TASK] removed held-out GT from copy: $SEED_MODELS_REL/${GT}.py + $P
 # imports every twin, so the file must stay importable, but the parent reads the
 # real DEFAULT_PARAMS from the pristine $GT_FAMILY_SRC via --gt-family-dir (by
 # parsing, not importing). Opencode denies below remain as defence in depth.
-[[ -f "$GT_FAMILY_SRC/${GT}.py" ]] || { echo "ERROR: pristine family snapshot missing $GT_FAMILY_SRC/${GT}.py (setup job didn't stage it?)" >&2; exit 1; }
+[[ -z "$GT_FAMILY_REL" || -f "$GT_FAMILY_SRC/${GT}.py" ]] || { echo "ERROR: pristine family snapshot missing $GT_FAMILY_SRC/${GT}.py (setup job didn't stage it?)" >&2; exit 1; }
 GT_FAMILY_COPY="$RUN_REPO/$GT_FAMILY_REL/${GT}.py"
-if [[ -f "$GT_FAMILY_COPY" ]]; then
+if [[ -n "$GT_FAMILY_REL" && -f "$GT_FAMILY_COPY" ]]; then
   cat > "$GT_FAMILY_COPY" <<'STUB'
 """Held-out ground truth. Its real DEFAULT_PARAMS and generative form live in
 the pristine gt_family snapshot, off every agent's disk. This importable stub
@@ -411,7 +412,7 @@ env "${UNSET_ARGS[@]}" "$AGENT_DIR/venv/bin/python" scripts/subjective_randomnes
   --config "$CONFIG" \
   --gt-model "$GT" \
   --gt-models-dir "$GT_MODELS_SRC" \
-  --gt-family-dir "$GT_FAMILY_SRC" \
+  ${GT_FAMILY_REL:+--gt-family-dir "$GT_FAMILY_SRC"} \
   --seed "$SEED" \
   --backend "${AGENT_BACKEND:-opencode}" \
   ${CLAUDE_AUTH:+--claude-auth "$CLAUDE_AUTH"} \
