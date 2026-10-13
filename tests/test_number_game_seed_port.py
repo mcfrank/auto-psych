@@ -1,4 +1,7 @@
-"""The number-game PyMC seeds are faithful ports of Eric Bigelow's numpyro models.
+"""The number-game PyMC seeds are faithful ports of Eric Bigelow's numpyro models:
+`bigelow_piantadosi_independent` of `prior_type='basic'` and
+`bigelow_piantadosi_interval` of `prior_type='interval'` (with the reference's
+interval-midpoint index corrected, `check_pymc_port.corrected_midpoint_grid`).
 
 `scripts/number_game/check_pymc_port.py` evaluates the numpyro reference
 (`scripts/number_game/numpyro_reference/`, run under `uv run --with numpyro
@@ -32,7 +35,8 @@ from src.runtime.config import REPO_ROOT
 from tests.paths import FIXTURES_DIR
 
 SEEDS_DIR = REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects" / "number_game" / "seed_models"
-GOLDEN = FIXTURES_DIR / "number_game" / "numpyro_basic_golden.json"
+# seed -> the reference's prior type (its golden file).
+PORTS = {"bigelow_piantadosi_independent": "basic", "bigelow_piantadosi_interval": "interval"}
 
 
 def _rows(cells):
@@ -50,23 +54,22 @@ def _rows(cells):
     return rows
 
 
-@pytest.fixture(scope="module")
-def golden():
-    return json.loads(GOLDEN.read_text())
-
-
-@pytest.fixture(scope="module")
-def bound_model(golden):
-    model = load_pymc_model("bigelow_piantadosi_independent", SEEDS_DIR)
+@pytest.fixture(scope="module", params=list(PORTS))
+def port(request):
+    """(golden, the seed bound to the golden cells)."""
+    golden = json.loads((FIXTURES_DIR / "number_game" / f"numpyro_{PORTS[request.param]}_golden.json").read_text())
+    model = load_pymc_model(request.param, SEEDS_DIR)
     with model:
         pm.set_data(make_stim_data(model, _rows(golden["cells"])))
-    return model
+    return golden, model
 
 
 def _value_point(model, point):
     """Transformed-space values for the reference's constrained parameters."""
     raw = np.asarray(point["p_rules"])
     constrained = {"p_mix": np.float64(point["p_mix"]), "rule_weights": raw / raw.sum()}
+    if "p_mean_hyper" in point:
+        constrained["midpoint_shape"] = np.asarray(point["p_mean_hyper"])
     values = {}
     for rv in model.free_RVs:
         value_var = model.rvs_to_values[rv]
@@ -76,7 +79,8 @@ def _value_point(model, point):
     return values
 
 
-def test_log_density_matches_numpyro(golden, bound_model):
+def test_log_density_matches_numpyro(port):
+    golden, bound_model = port
     logp = bound_model.compile_logp(jacobian=False)
     for point in golden["points"]:
         raw = np.asarray(point["p_rules"])
@@ -86,7 +90,8 @@ def test_log_density_matches_numpyro(golden, bound_model):
         assert logp(_value_point(bound_model, point)) == pytest.approx(expected, rel=1e-9, abs=1e-6)
 
 
-def test_predictions_match_numpyro_per_response(golden, bound_model):
+def test_predictions_match_numpyro_per_response(port):
+    golden, bound_model = port
     [p_yes_graph] = bound_model.replace_rvs_by_values([bound_model["p_yes"]])
     p_yes = bound_model.compile_fn(p_yes_graph, inputs=bound_model.value_vars, on_unused_input="ignore")
     n_per_cell = [yes + no for _, _, yes, no in golden["cells"]]

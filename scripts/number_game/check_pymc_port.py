@@ -5,11 +5,15 @@
     uv run python -m scripts.number_game.sample_pymc_seed
     uv run --with numpyro --with jax python -m scripts.number_game.check_pymc_port compare
 
-`golden` evaluates the reference (`numpyro_reference/`, `prior_type='basic'`)
-in 64-bit at parameter points drawn from its prior, on every cell of a spread
-of sets, and writes the joint log density and the predictive per cell to
-`tests/fixtures/number_game/numpyro_basic_golden.json`, which
-`tests/test_number_game_seed_port.py` checks the PyMC seed against.
+`golden` evaluates the reference (`numpyro_reference/`, `--prior-type basic`
+or `interval`) in 64-bit at parameter points drawn from its prior, on every
+cell of a spread of sets, and writes the joint log density and the predictive
+per cell to `tests/fixtures/number_game/numpyro_<prior type>_golden.json`,
+which `tests/test_number_game_seed_port.py` checks the PyMC seeds
+(`bigelow_piantadosi_independent`, `bigelow_piantadosi_interval`) against.
+For `interval` the reference's midpoint grid is replaced by the port's
+(`corrected_midpoint_grid`): the reference reads grid point m + n + 1 of 200
+for interval [m, n], off by three from its midpoint.
 
 `sample` runs the reference's NUTS on the whole dataset's cell counts and
 saves the draws of p_mix and p_rules; `sample_pymc_seed.py` does the same for
@@ -49,7 +53,16 @@ from src.number_game.metrics import binned_mean_r2  # noqa: E402
 from src.runtime.config import REPO_ROOT  # noqa: E402
 
 DATA_CSV = REPO_ROOT / "data" / "number-game" / "human experiment" / "numbergame_data.csv"
-GOLDEN = REPO_ROOT / "tests" / "fixtures" / "number_game" / "numpyro_basic_golden.json"
+GOLDEN_DIR = REPO_ROOT / "tests" / "fixtures" / "number_game"
+PRIORS = {"basic": infer.prior_eb_numbergame, "interval": infer.prior_eb_numbergame_interval}
+
+
+def corrected_midpoint_grid() -> None:
+    """Set the reference's lazily built interval grid (module globals) to the
+    true midpoints: grid point m + n - 2 of 199 for interval [m, n]."""
+    infer.interval_bounds = [(i, j) for i in range(1, 101) for j in range(1, 101) if i <= j]
+    infer.interval_means = jnp.array([i + j - 2 for i, j in infer.interval_bounds], dtype=jnp.int16)
+    infer.mean_range = (jnp.arange(199) / 198).clip(min=1e-5, max=1 - 1e-5)
 SEEDS_DIR = REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects" / "number_game" / "seed_models"
 SEED = "bigelow_piantadosi_independent"
 
@@ -73,6 +86,7 @@ def reference_inputs(cells):
 @dataclass
 class Args:
     command: tyro.conf.Positional[Literal["golden", "sample", "compare"]]
+    prior_type: Literal["basic", "interval"] = "basic"
     n_sets: int = 12
     n_points: int = 3
     draws: int = 1000
@@ -80,11 +94,12 @@ class Args:
     chains: int = 4
     n_predictive_draws: int = 200
     seed: int = 0
-    out: Path = GOLDEN
     out_dir: Path = REPO_ROOT / "data" / "number-game" / "port_check"
 
 
 def golden(args: Args) -> None:
+    if args.prior_type == "interval":
+        corrected_midpoint_grid()
     all_cells = ng_data.cell_counts(ng_data.load_responses(DATA_CSV))
     every_set = list(dict.fromkeys(all_cells["set"]))
     chosen = set(every_set[:: len(every_set) // args.n_sets][: args.n_sets])
@@ -95,27 +110,27 @@ def golden(args: Args) -> None:
 
     points = []
     for key in jax.random.split(jax.random.PRNGKey(args.seed), args.n_points):
-        prior = numpyro.handlers.trace(numpyro.handlers.seed(infer.prior_eb_numbergame, key)).get_trace()
-        params = {"p_mix": prior["p_mix"]["value"], "p_rules": prior["p_rules"]["value"]}
-        joint, trace = log_density(infer.number_bpl_model, (), kwargs, params)
+        prior = numpyro.handlers.trace(numpyro.handlers.seed(PRIORS[args.prior_type], key)).get_trace()
+        params = {name: site["value"] for name, site in prior.items() if site["type"] == "sample"}
+        joint, trace = log_density(infer.number_bpl_model, (), {**kwargs, "prior_type": args.prior_type}, params)
         predictive = np.asarray(trace["y"]["fn"].base_dist.probs).reshape(len(sets), 100)
         points.append({
-            "p_mix": float(params["p_mix"]),
-            "p_rules": np.asarray(params["p_rules"]).tolist(),
+            **{name: np.asarray(value).tolist() for name, value in params.items()},
             "log_density": float(joint),
             "post_predictive": predictive[rows, cols].tolist(),
         })
 
     yes, n = cells["yes"].to_numpy(), cells["n"].to_numpy()
     out = {
-        "source": "scripts/number_game/numpyro_reference, prior_type='basic', jax x64",
+        "source": f"scripts/number_game/numpyro_reference, prior_type={args.prior_type!r}, jax x64",
         "cells": [[",".join(map(str, s)), int(t), int(y), int(m - y)] for s, t, y, m in zip(cells["set"], cells["target"], yes, n)],
         "log_binomial_coefficients": float((gammaln(n + 1) - gammaln(yes + 1) - gammaln(n - yes + 1)).sum()),
         "points": points,
     }
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(out))
-    print(f"wrote {args.out}: {len(cells)} cells over {len(sets)} sets, {len(points)} points")
+    path = GOLDEN_DIR / f"numpyro_{args.prior_type}_golden.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(out))
+    print(f"wrote {path}: {len(cells)} cells over {len(sets)} sets, {len(points)} points")
 
 
 def _sample_numpyro(args: Args, cells):
