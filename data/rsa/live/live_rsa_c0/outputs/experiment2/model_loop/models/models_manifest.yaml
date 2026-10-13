@@ -1,0 +1,231 @@
+models:
+- name: inhibitory_codability_listener
+  rationale: "Pragmatic listener at depth 2 under capacity-limited executive inhibitory\
+    \ control with a referential codability prior. Refining inhibitory_load_listener\
+    \ by incorporating the referential codability component from candidate_load_codability_listener:\
+    \ listeners expect speakers to refer to objects with high referential codability,\
+    \ evaluating each referent by its communicative affordance\u2014the total discriminative\
+    \ capacity of the available expressions that describe it. This communicative affordance\
+    \ prior tempers overly aggressive scalar implicatures on two-object displays,\
+    \ elevates selections of feature-rich competitors and maximal-feature objects,\
+    \ and moderates singleton choice rates on mumble trials, directly closing the\
+    \ discrepancies identified in the posterior-predictive critique. Differences from\
+    \ inhibitory_load_listener: - Recursion depth remains depth 2 (choice_probs calls\
+    \ L_inhibitory, which inverts a speaker simulating depth-1 listener L1). - Added\
+    \ parameter: w_codable (prior dist.Normal(0.0, 1.0)). - No parameters removed\
+    \ (retains alpha, logit_p_base, w_load, w_popout, w_candidate, w_inhibit_leak,\
+    \ w_singleton, w_distinct, w_features, w_valence, w_color, w_confusion, and lapse).\
+    \ - Other terms: In choice_probs, added compute_codability(ctx) computing referent\
+    \ communicative affordance as the sum of inverse utterance extensions (real_lex\
+    \ / k_u) across true features, adding params[\"w_codable\"] * codability to the\
+    \ salience prior logits passed to softmax_prior."
+- name: inhibitory_codability_cost_listener
+  rationale: 'Pragmatic listener at depth 2 under capacity-limited executive inhibitory
+    control with a referential codability prior and utterance specificity costs. Refining
+    inhibitory_codability_listener by incorporating utterance specificity costs from
+    candidate_load_cost_attention: speakers weigh communicative informativeness against
+    a cognitive specificity cost for producing narrow, highly distinguishing referring
+    expressions, frequently choosing broader shared words even when referring to feature-rich
+    entities. Pragmatic listeners invert this cost-sensitive, confusion-averse speaker
+    under capacity-limited attention, recognizing that hearing a shared word does
+    not rule out feature-rich competitors whose unique distinguishing words carry
+    higher production costs. This directly moderates overly aggressive scalar implicatures
+    on two-object displays and elevates choices of competitors possessing alternative
+    distinguishing words, directly addressing the key discrepancies in the posterior-predictive
+    critique. Differences from inhibitory_codability_listener: - Recursion depth remains
+    depth 2 (choice_probs calls L_inhibitory, which inverts a speaker simulating depth-1
+    listener L1). - Added parameter: c_spec (prior dist.Normal(0.0, 1.0)). - No parameters
+    removed (retains alpha, logit_p_base, w_load, w_popout, w_candidate, w_inhibit_leak,
+    w_codable, w_singleton, w_distinct, w_features, w_valence, w_color, w_confusion,
+    and lapse). - Speaker utility in both S1 and S2: added utterance specificity cost
+    term - vec(cost, u) inside communicative utility, evaluating as alpha * (L - vec(cost,
+    u)) - w_confusion * at(confusion, u, r). - In choice_probs: computed utterance
+    extension and specificity cost vector cost = params["c_spec"] * (1.0 - extension)
+    * (1.0 - ctx.is_sink), passing cost to L_inhibitory.'
+- name: inhibitory_codability_bounded_listener
+  rationale: 'Pragmatic listener at depth 2 under capacity-limited executive inhibitory
+    control with a referential codability prior and bounded speaker consideration.
+    Refining inhibitory_codability_listener by incorporating bounded speaker consideration
+    from bounded_consideration_speaker: speakers evaluate communicative alternatives
+    probabilistically rather than exhaustively, retrieving distinguishing alternative
+    expressions with a bounded consideration rate and otherwise producing an unconsidered
+    true feature without communicative comparison. Pragmatic listeners invert this
+    bounded-consideration speaker under capacity-limited executive inhibitory control,
+    recognizing that hearing an ambiguous word does not rule out feature-rich competitors
+    whose unique distinguishing words failed to enter the speaker''s consideration
+    set. This directly moderates overly aggressive scalar implicatures on two-object
+    displays, elevates selections of competitors possessing alternative distinguishing
+    words, and elevates maximal-feature candidate choices under multi-match expressions,
+    directly addressing the key discrepancies identified in the posterior-predictive
+    critique. Differences from inhibitory_codability_listener: - Recursion depth remains
+    depth 2 (choice_probs calls L_inhibitory, which inverts a speaker simulating depth-1
+    listener L1). - Added parameter: logit_p_consider (prior dist.Normal(1.0, 1.0)).
+    - No parameters removed (retains alpha, logit_p_base, w_load, w_popout, w_candidate,
+    w_inhibit_leak, w_codable, w_singleton, w_distinct, w_features, w_valence, w_color,
+    w_confusion, and lapse). - Speaker utility in both S1 and S2: added an alternative
+    consideration mode choice (speaker: chooses(mode in MODES, wpp=p_consider if mode
+    == 1 else (1.0 - p_consider))) where communicative utility exp(alpha * L - w_confusion
+    * at(confusion, u, r)) is evaluated when mode == 1, while mode == 0 selects true
+    utterances uniformly with weight 1.0. - In choice_probs: computed p_consider =
+    jax.nn.sigmoid(params["logit_p_consider"]) and passed p_consider to L_inhibitory.'
+- name: prototype_typicality_bounded_listener
+  rationale: 'Pragmatic listener at depth 2 under capacity-limited executive inhibitory
+    control with contextual category typicality and bounded speaker consideration.
+    Refining prototype_typicality_listener by incorporating bounded speaker consideration
+    from bounded_consideration_speaker: speakers evaluate communicative alternatives
+    probabilistically rather than exhaustively, retrieving distinguishing alternative
+    expressions with a bounded consideration rate and otherwise producing an unconsidered
+    true feature without communicative comparison. Pragmatic listeners invert this
+    bounded-consideration speaker under capacity-limited executive inhibitory control,
+    recognizing that hearing an ambiguous word does not rule out feature-rich competitors
+    whose unique distinguishing words failed to enter the speaker''s consideration
+    set. This directly moderates overly aggressive scalar exclusion, elevates choices
+    of maximal-feature candidates under ubiquitous and multi-match expressions (all_match_max_feature_choice_rate
+    and four_object_three_candidate_max_feature_rate), elevates selections of duplicated
+    candidates under shared words (duplicate_matching_candidate_choice_rate), and
+    calibrates pragmatic target rates against all-feature competitors (four_object_target_vs_all_feature_rate).
+    Differences from prototype_typicality_listener: - Recursion depth remains depth
+    2 (choice_probs calls L_typical, which inverts a speaker simulating depth-1 listener
+    L1). - Added parameter: logit_p_consider (prior dist.Normal(1.0, 1.0)). - No parameters
+    removed (retains alpha, logit_p_base, w_load, w_popout, w_candidate, w_inhibit_leak,
+    w_typical, w_singleton, w_distinct, w_features, w_valence, w_color, w_confusion,
+    and lapse). - Speaker utility in both S1 and S2: added an alternative consideration
+    mode choice (speaker: chooses(mode in MODES, wpp=p_consider if mode == 1 else
+    (1.0 - p_consider))) where communicative utility exp(alpha * L - w_confusion *
+    at(confusion, u, r)) is evaluated when mode == 1, while mode == 0 selects true
+    utterances uniformly with weight 1.0. - In choice_probs: computed p_consider =
+    jax.nn.sigmoid(params["logit_p_consider"]) and passed p_consider to L_typical.'
+- name: exemplar_typicality_listener
+  rationale: 'Listeners interpret referring expressions with an a priori expectation
+    that speakers refer to contextually typical objects, evaluating category typicality
+    through exemplar-based psychological similarity across the visual scene rather
+    than additive feature overlap. Before hearing an informative word and during referent
+    selection, each object''s contextual typicality is computed as its average exponential-decay
+    similarity to all other scene exemplars under the Generalized Context Model. This
+    exemplar similarity formulation properly rewards central exemplars and identical
+    candidates without artificially scaling with total feature count, directly mitigating
+    excessive singleton bias on uninformative trials and elevating choices of duplicated
+    candidates and central referents. Differences from prototype_typicality_listener:
+    - Recursion depth: Unchanged at depth 2 (choice_probs calls L_typical, which inverts
+    a speaker simulating depth-1 listener L1). - Parameters added: None. - Parameters
+    removed: None (retains alpha, logit_p_base, w_load, w_popout, w_candidate, w_inhibit_leak,
+    w_typical, w_singleton, w_distinct, w_features, w_valence, w_color, w_confusion,
+    and lapse with identical priors). - Other terms: In choice_probs, replaced compute_typicality(ctx)
+    with an exemplar-based similarity formulation computing an object''s typicality
+    as its mean pairwise psychological similarity to all other scene objects (sum
+    of exp(-dist) to other objects divided by N_obj - 1) instead of the unnormalized
+    sum of shared feature fractions.'
+- name: bounded_consideration_cost_listener
+  rationale: 'Pragmatic listener at depth 2 under capacity-limited executive inhibitory
+    control with a referential codability prior, bounded speaker consideration, and
+    utterance specificity costs. Refining inhibitory_codability_bounded_listener by
+    incorporating utterance specificity costs from inhibitory_codability_cost_listener:
+    speakers evaluate communicative alternatives probabilistically with bounded consideration,
+    and when deliberating among alternative expressions, they weigh communicative
+    informativeness against a cognitive specificity cost for producing narrow, highly
+    distinguishing referring expressions, frequently favoring broader shared words.
+    Pragmatic listeners invert this cost-sensitive, bounded-consideration speaker
+    under capacity-limited executive inhibitory control, recognizing that hearing
+    an ambiguous word does not rule out feature-rich competitors whose unique distinguishing
+    words either failed to enter the speaker''s consideration set or carried higher
+    production costs. Differences from inhibitory_codability_bounded_listener: - Recursion
+    depth remains depth 2 (choice_probs calls L_inhibitory, which inverts a speaker
+    simulating depth-1 listener L1). - Added parameter: c_spec (prior dist.Normal(0.0,
+    1.0)). - No parameters removed (retains alpha, logit_p_consider, logit_p_base,
+    w_load, w_popout, w_candidate, w_inhibit_leak, w_codable, w_singleton, w_distinct,
+    w_features, w_valence, w_color, w_confusion, and lapse). - Speaker utility in
+    both S1 and S2: added utterance specificity cost term - vec(cost, u) inside communicative
+    utility when mode == 1, evaluating as alpha * (L - vec(cost, u)) - w_confusion
+    * at(confusion, u, r). - In choice_probs: computed utterance extension and specificity
+    cost vector cost = params["c_spec"] * (1.0 - extension) * (1.0 - ctx.is_sink),
+    passing cost to L1 and L_inhibitory.'
+- name: pragmatic_literal_population_listener
+  rationale: 'Listeners in reference games belong to a heterogeneous population composed
+    of distinct cognitive types: literal listeners who choose among semantically valid
+    referents based on contextual category typicality and visual feature complexity
+    without computing speaker intentionality, and pragmatic listeners who invert an
+    informative speaker to derive scalar implicatures. The overall communicative choice
+    distribution reflects this population mixture over listener types under capacity-limited
+    executive inhibitory control, naturally moderating population-level scalar implicatures
+    on minimal displays and elevating choices of feature-rich objects under ambiguous
+    expressions while maintaining robust pragmatic target identification across complex
+    visual displays.'
+- name: prototype_typicality_outlier_listener
+  rationale: 'Pragmatic listener at depth 2 under capacity-limited executive inhibitory
+    control with contextual category typicality and contrastive outlier pop-out. Refining
+    prototype_typicality_listener by incorporating the contrastive outlier pop-out
+    component from candidate_load_outlier_listener: when a referring expression is
+    true of all objects in a scene except exactly one, the shared feature creates
+    a contrastive perceptual background that isolates the solitary non-matching object
+    as a visual outlier, occasionally capturing listener choices despite the lack
+    of semantic fit. This contrastive pop-out mechanism directly rectifies the observed
+    distractor intrusion rate where solitary non-matching foils in three-object displays
+    are chosen significantly more often than standard pragmatic suppression predicts
+    (three_object_distractor_intrusion_rate), while fully preserving category typicality
+    reasoning and literal precision on unambiguous displays. Differences from prototype_typicality_listener:
+    - Recursion depth remains depth 2 (choice_probs calls L_typical, which inverts
+    a speaker simulating depth-1 listener L1). - Added parameter: logit_p_outlier
+    (prior dist.Normal(-2.5, 1.0)). - No parameters removed (retains alpha, logit_p_base,
+    w_load, w_popout, w_candidate, w_inhibit_leak, w_typical, w_singleton, w_distinct,
+    w_features, w_valence, w_color, w_confusion, and lapse). - In choice_probs, added
+    compute_solitary_foil(ctx) to identify solitary non-matching foil objects in displays
+    of at least three objects where the heard word is true of all objects except one,
+    computed outlier probability p_outlier = jax.nn.sigmoid(params["logit_p_outlier"])
+    * has_foil, and blended heard choice probabilities as heard_with_popout = (1.0
+    - p_outlier) * heard + p_outlier * solitary_foil_vec.'
+- name: speaker_ambiguity_cost_listener
+  rationale: 'Speakers in reference games adhere to Gricean clarity by incurring a
+    cognitive ambiguity cost when producing referentially ambiguous expressions, penalizing
+    words in proportion to the number of unintended context objects they describe.
+    When describing an object, speakers strongly favor unambiguous or distinguishing
+    expressions over ambiguous shared words, producing shared words only when communicating
+    referents that lack distinguishing alternatives. Pragmatic listeners invert this
+    ambiguity-averse speaker under capacity-limited executive attention: hearing an
+    ambiguous word provides strong evidence for referents that lacked clean alternatives,
+    elevating choices of multi-feature pragmatic targets over all-feature competitors.'
+- name: communicative_resolvability_listener
+  rationale: "Listeners interpret referring expressions with an a priori expectation\
+    \ that speakers select communicative targets based on referential resolvability:\
+    \ the degree to which an intended referent can be successfully singled out from\
+    \ the visual context given a single-word budget. Before hearing an informative\
+    \ word and during referent selection, listeners evaluate each referent by its\
+    \ communicative resolvability\u2014the maximum recovery precision attainable across\
+    \ its true descriptive features\u2014anticipating that speakers avoid intending\
+    \ referents that cannot be cleanly identified in context. Pragmatic listeners\
+    \ invert this resolvability-guided speaker, preventing feature-rich competitors\
+    \ from overpowering minimal pragmatic targets under shared words and properly\
+    \ calibrating choices of full duplicates on uninformative trials."
+- name: focal_candidate_attention_listener
+  rationale: Listeners interpret referring expressions under capacity-limited visual
+    attention that restricts counterfactual communicative mentalizing to the active
+    focal set of candidate referents matching the heard word. When evaluating what
+    a speaker would have said, listeners mentally simulate alternative expressions
+    only with respect to distinguishing candidates within this attended contrast set,
+    rather than tracking distractors already ruled out by the literal word. Consequently,
+    distinguishing features that isolate a competitor within the focal candidate set
+    strongly preempt that competitor, elevating choices of minimal pragmatic targets
+    in multi-candidate displays.
+- name: bounded_typicality_outlier_listener
+  rationale: 'Pragmatic listener at depth 2 under capacity-limited executive inhibitory
+    control with contextual category typicality, bounded speaker consideration, and
+    contrastive outlier pop-out. Refining prototype_typicality_bounded_listener by
+    incorporating the contrastive outlier pop-out component from prototype_typicality_outlier_listener:
+    when a referring expression is true of all objects in a visual scene except exactly
+    one, the shared feature creates a contrastive perceptual background that isolates
+    the solitary non-matching object as a visual outlier, occasionally capturing listener
+    choices despite the absence of semantic fit. This contrastive pop-out mechanism
+    directly rectifies the observed distractor intrusion rate where solitary non-matching
+    foils in three-object displays are chosen significantly more often than standard
+    pragmatic suppression predicts (three_object_distractor_intrusion_rate), while
+    fully preserving bounded speaker consideration and contextual category typicality
+    reasoning. Differences from prototype_typicality_bounded_listener: - Recursion
+    depth remains depth 2 (choice_probs calls L_typical, which inverts a speaker simulating
+    depth-1 listener L1). - Added parameter: logit_p_outlier (prior dist.Normal(-2.5,
+    1.0)). - No parameters removed (retains alpha, logit_p_consider, logit_p_base,
+    w_load, w_popout, w_candidate, w_inhibit_leak, w_typical, w_singleton, w_distinct,
+    w_features, w_valence, w_color, w_confusion, and lapse). - In choice_probs, added
+    compute_solitary_foil(ctx) to identify solitary non-matching foil objects in displays
+    of at least three objects where the heard word is true of all objects except one,
+    computed outlier probability p_outlier = jax.nn.sigmoid(params["logit_p_outlier"])
+    * has_foil, and blended heard choice probabilities as heard_with_popout = (1.0
+    - p_outlier) * heard + p_outlier * solitary_foil_vec.'

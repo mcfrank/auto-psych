@@ -1,0 +1,7 @@
+Pragmatic listener at depth 2 under capacity-limited executive inhibitory control with a referential codability prior. Refining inhibitory_load_listener by incorporating the referential codability component from candidate_load_codability_listener: listeners expect speakers to refer to objects with high referential codability, evaluating each referent by its communicative affordance—the total discriminative capacity of the available expressions that describe it. This communicative affordance prior tempers overly aggressive scalar implicatures on two-object displays, elevates selections of feature-rich competitors and maximal-feature objects, and moderates singleton choice rates on mumble trials, directly closing the discrepancies identified in the posterior-predictive critique.
+
+Differences from inhibitory_load_listener:
+- Recursion depth remains depth 2 (choice_probs calls L_inhibitory, which inverts a speaker simulating depth-1 listener L1).
+- Added parameter: w_codable (prior dist.Normal(0.0, 1.0)).
+- No parameters removed (retains alpha, logit_p_base, w_load, w_popout, w_candidate, w_inhibit_leak, w_singleton, w_distinct, w_features, w_valence, w_color, w_confusion, and lapse).
+- Other terms: In choice_probs, added compute_codability(ctx) computing referent communicative affordance as the sum of inverse utterance extensions (real_lex / k_u) across true features, adding params["w_codable"] * codability to the salience prior logits passed to softmax_prior.

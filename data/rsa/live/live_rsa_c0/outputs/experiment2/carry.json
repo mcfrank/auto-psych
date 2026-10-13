@@ -1,0 +1,38 @@
+{
+ "rule": "best first by the loop's final standing; a model within 0.002 (RMSE of posterior-mean choice-class probabilities over the design pool) of one kept is the same hypothesis for the live phase; at most 8",
+ "order": [
+  "candidate_load_codability_listener",
+  "inhibitory_load_listener",
+  "candidate_load_cost_attention",
+  "candidate_load_attention_listener",
+  "ambiguity_attention_listener",
+  "success_confusion_cost_attention",
+  "expected_success_confusion_attention",
+  "limited_attention_listener_2",
+  "candidate_load_outlier_listener",
+  "literal_pragmatic_mixture_listener"
+ ],
+ "kept": [
+  "candidate_load_codability_listener",
+  "inhibitory_load_listener",
+  "candidate_load_cost_attention",
+  "candidate_load_attention_listener",
+  "ambiguity_attention_listener",
+  "success_confusion_cost_attention",
+  "expected_success_confusion_attention",
+  "limited_attention_listener_2"
+ ],
+ "merged": [],
+ "over_cap": [
+  {
+   "name": "candidate_load_outlier_listener",
+   "nearest": "inhibitory_load_listener",
+   "rmse": 0.007172928180921869
+  },
+  {
+   "name": "literal_pragmatic_mixture_listener",
+   "nearest": "limited_attention_listener_2",
+   "rmse": 0.0039324160317541395
+  }
+ ]
+}

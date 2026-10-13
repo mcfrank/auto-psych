@@ -1,0 +1,376 @@
+{
+ "experiment": 3,
+ "n_trials": 2405,
+ "n_displays": 52,
+ "committed": "prototype_typicality_bounded_listener",
+ "best_seed": "seed:rsa_l1_shared_prior",
+ "best_promoted": "promoted:rsa_l2_singleton_feat_color_valence_l0",
+ "committed_vs": {
+  "best_seed": {
+   "diff": 120.20293688762195,
+   "se": 27.9734916318477
+  },
+  "best_promoted": {
+   "diff": 43.58629518585076,
+   "se": 14.368765556930832
+  },
+  "each_bar_model": {
+   "seed:literal_listener": {
+    "diff": 301.2335200734028,
+    "se": 46.60933677311519
+   },
+   "seed:rsa_l1": {
+    "diff": 132.674913013386,
+    "se": 32.89047523012857
+   },
+   "seed:rsa_l2": {
+    "diff": 148.27854004262326,
+    "se": 33.76876141607274
+   },
+   "seed:rsa_l1_salience": {
+    "diff": 121.09608932895662,
+    "se": 27.342875887371594
+   },
+   "seed:rsa_l1_shared_prior": {
+    "diff": 120.20293688762195,
+    "se": 27.9734916318477
+   },
+   "promoted:isolated_graded_costly_l3": {
+    "diff": 94.18679873260157,
+    "se": 23.76448625724891
+   },
+   "promoted:familiar_isolated_graded_costly_l2": {
+    "diff": 92.0787270626845,
+    "se": 23.456876695963416
+   },
+   "promoted:rsa_l2_singleton_distinct_feat_color_l0": {
+    "diff": 43.62209568789535,
+    "se": 14.37700898507893
+   },
+   "promoted:evaluative_prominence_l2": {
+    "diff": 130.95031860070026,
+    "se": 27.868026388613178
+   },
+   "promoted:lexical_preemption_heuristic": {
+    "diff": 261.7650138247236,
+    "se": 44.314757627753
+   },
+   "promoted:rsa_l2_singleton_feat_color_familiar_l0": {
+    "diff": 43.719327136057245,
+    "se": 14.375249228068041
+   },
+   "promoted:rsa_l2_singleton_feat_color_valence_l0": {
+    "diff": 43.58629518585076,
+    "se": 14.368765556930832
+   },
+   "promoted:competitor_confusion_speaker": {
+    "diff": 120.85241788864778,
+    "se": 32.42474989389677
+   },
+   "promoted:softmax_surprisal_isolated_costly_l4": {
+    "diff": 100.37605449377838,
+    "se": 26.77320208438235
+   },
+   "promoted:oddity_heuristic_listener": {
+    "diff": 309.09482883080227,
+    "se": 41.73928433073953
+   },
+   "promoted:rsa_l2": {
+    "diff": 148.27854004262326,
+    "se": 33.76876141607274
+   },
+   "promoted:rsa_l1": {
+    "diff": 132.674913013386,
+    "se": 32.89047523012857
+   }
+  }
+ },
+ "best_live": "focal_candidate_attention_listener",
+ "live_vs": {
+  "best_seed": {
+   "diff": 120.9565159485187,
+   "se": 27.72650819537426
+  },
+  "best_promoted": {
+   "diff": 44.33987424674751,
+   "se": 13.591229305293265
+  }
+ },
+ "models": {
+  "focal_candidate_attention_listener": {
+   "lpd": -1854.9872920128519,
+   "vs_best_seed": {
+    "diff": 120.9565159485187,
+    "se": 27.72650819537426
+   },
+   "vs_best_promoted": {
+    "diff": 44.33987424674751,
+    "se": 13.591229305293265
+   }
+  },
+  "prototype_typicality_bounded_listener": {
+   "lpd": -1855.7408710737486,
+   "vs_best_seed": {
+    "diff": 120.20293688762195,
+    "se": 27.9734916318477
+   },
+   "vs_best_promoted": {
+    "diff": 43.58629518585076,
+    "se": 14.368765556930832
+   }
+  },
+  "pragmatic_literal_population_listener": {
+   "lpd": -1857.9608857746566,
+   "vs_best_seed": {
+    "diff": 117.98292218671395,
+    "se": 27.965987739165424
+   },
+   "vs_best_promoted": {
+    "diff": 41.36628048494276,
+    "se": 15.29683438932211
+   }
+  },
+  "inhibitory_codability_bounded_listener": {
+   "lpd": -1858.5157098650693,
+   "vs_best_seed": {
+    "diff": 117.42809809630126,
+    "se": 27.57006579907107
+   },
+   "vs_best_promoted": {
+    "diff": 40.81145639453007,
+    "se": 14.482378830934119
+   }
+  },
+  "bounded_typicality_outlier_listener": {
+   "lpd": -1859.1154963908289,
+   "vs_best_seed": {
+    "diff": 116.8283115705417,
+    "se": 28.106267814947895
+   },
+   "vs_best_promoted": {
+    "diff": 40.211669868770514,
+    "se": 14.791717045885088
+   }
+  },
+  "speaker_ambiguity_cost_listener": {
+   "lpd": -1859.364210839933,
+   "vs_best_seed": {
+    "diff": 116.57959712143747,
+    "se": 27.932520913891803
+   },
+   "vs_best_promoted": {
+    "diff": 39.96295541966629,
+    "se": 13.967128417679467
+   }
+  },
+  "bounded_consideration_cost_listener": {
+   "lpd": -1859.7235883275134,
+   "vs_best_seed": {
+    "diff": 116.22021963385714,
+    "se": 27.714530394280796
+   },
+   "vs_best_promoted": {
+    "diff": 39.603577932085955,
+    "se": 14.497433105366238
+   }
+  },
+  "prototype_typicality_outlier_listener": {
+   "lpd": -1860.35954382268,
+   "vs_best_seed": {
+    "diff": 115.58426413869051,
+    "se": 27.81974018121536
+   },
+   "vs_best_promoted": {
+    "diff": 38.96762243691933,
+    "se": 14.825502078281907
+   }
+  },
+  "promoted:rsa_l2_singleton_feat_color_valence_l0": {
+   "lpd": -1899.3271662595994,
+   "vs_best_seed": {
+    "diff": 76.61664170177119,
+    "se": 26.20116446473585
+   },
+   "vs_best_promoted": {
+    "diff": 0.0,
+    "se": 0.0
+   }
+  },
+  "promoted:rsa_l2_singleton_distinct_feat_color_l0": {
+   "lpd": -1899.362966761644,
+   "vs_best_seed": {
+    "diff": 76.58084119972659,
+    "se": 26.19736160399468
+   },
+   "vs_best_promoted": {
+    "diff": -0.035800502044594396,
+    "se": 0.049479899928670586
+   }
+  },
+  "promoted:rsa_l2_singleton_feat_color_familiar_l0": {
+   "lpd": -1899.4601982098059,
+   "vs_best_seed": {
+    "diff": 76.4836097515647,
+    "se": 26.198329518480474
+   },
+   "vs_best_promoted": {
+    "diff": -0.13303195020648673,
+    "se": 0.060467022019946116
+   }
+  },
+  "promoted:familiar_isolated_graded_costly_l2": {
+   "lpd": -1947.8195981364331,
+   "vs_best_seed": {
+    "diff": 28.124209824937452,
+    "se": 22.90901934570932
+   },
+   "vs_best_promoted": {
+    "diff": -48.492431876833734,
+    "se": 21.762348946705323
+   }
+  },
+  "promoted:isolated_graded_costly_l3": {
+   "lpd": -1949.9276698063502,
+   "vs_best_seed": {
+    "diff": 26.01613815502037,
+    "se": 23.080585853363857
+   },
+   "vs_best_promoted": {
+    "diff": -50.600503546750815,
+    "se": 22.097005566744418
+   }
+  },
+  "promoted:softmax_surprisal_isolated_costly_l4": {
+   "lpd": -1956.116925567527,
+   "vs_best_seed": {
+    "diff": 19.82688239384356,
+    "se": 29.23936324245329
+   },
+   "vs_best_promoted": {
+    "diff": -56.789759307927625,
+    "se": 22.21165589101681
+   }
+  },
+  "seed:rsa_l1_shared_prior": {
+   "lpd": -1975.9438079613706,
+   "vs_best_seed": {
+    "diff": 0.0,
+    "se": 0.0
+   },
+   "vs_best_promoted": {
+    "diff": -76.61664170177119,
+    "se": 26.20116446473585
+   }
+  },
+  "promoted:competitor_confusion_speaker": {
+   "lpd": -1976.5932889623964,
+   "vs_best_seed": {
+    "diff": -0.6494810010258334,
+    "se": 28.70862956513944
+   },
+   "vs_best_promoted": {
+    "diff": -77.26612270279702,
+    "se": 35.3983295085738
+   }
+  },
+  "seed:rsa_l1_salience": {
+   "lpd": -1976.8369604027052,
+   "vs_best_seed": {
+    "diff": -0.8931524413346779,
+    "se": 3.4163328494492267
+   },
+   "vs_best_promoted": {
+    "diff": -77.50979414310586,
+    "se": 25.53913279137654
+   }
+  },
+  "promoted:evaluative_prominence_l2": {
+   "lpd": -1986.6911896744489,
+   "vs_best_seed": {
+    "diff": -10.747381713078312,
+    "se": 7.649667067687014
+   },
+   "vs_best_promoted": {
+    "diff": -87.3640234148495,
+    "se": 25.863964051732072
+   }
+  },
+  "seed:rsa_l1": {
+   "lpd": -1988.4157840871346,
+   "vs_best_seed": {
+    "diff": -12.471976125764058,
+    "se": 10.308544759039172
+   },
+   "vs_best_promoted": {
+    "diff": -89.08861782753524,
+    "se": 31.49416548596213
+   }
+  },
+  "promoted:rsa_l1": {
+   "lpd": -1988.4157840871346,
+   "vs_best_seed": {
+    "diff": -12.471976125764058,
+    "se": 10.308544759039172
+   },
+   "vs_best_promoted": {
+    "diff": -89.08861782753524,
+    "se": 31.49416548596213
+   }
+  },
+  "seed:rsa_l2": {
+   "lpd": -2004.0194111163719,
+   "vs_best_seed": {
+    "diff": -28.075603155001318,
+    "se": 13.051272585720284
+   },
+   "vs_best_promoted": {
+    "diff": -104.6922448567725,
+    "se": 32.23811578451738
+   }
+  },
+  "promoted:rsa_l2": {
+   "lpd": -2004.0194111163719,
+   "vs_best_seed": {
+    "diff": -28.075603155001318,
+    "se": 13.051272585720284
+   },
+   "vs_best_promoted": {
+    "diff": -104.6922448567725,
+    "se": 32.23811578451738
+   }
+  },
+  "promoted:lexical_preemption_heuristic": {
+   "lpd": -2117.5058848984722,
+   "vs_best_seed": {
+    "diff": -141.56207693710166,
+    "se": 33.248541214722884
+   },
+   "vs_best_promoted": {
+    "diff": -218.17871863887285,
+    "se": 42.21049225064681
+   }
+  },
+  "seed:literal_listener": {
+   "lpd": -2156.9743911471514,
+   "vs_best_seed": {
+    "diff": -181.03058318578087,
+    "se": 42.38434765434217
+   },
+   "vs_best_promoted": {
+    "diff": -257.64722488755206,
+    "se": 43.44833752517342
+   }
+  },
+  "promoted:oddity_heuristic_listener": {
+   "lpd": -2164.835699904551,
+   "vs_best_seed": {
+    "diff": -188.89189194318033,
+    "se": 47.435211062281034
+   },
+   "vs_best_promoted": {
+    "diff": -265.5085336449515,
+    "se": 39.36483624543599
+   }
+  }
+ }
+}

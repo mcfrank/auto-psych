@@ -1,0 +1,142 @@
+models:
+- name: candidate_load_codability_listener
+  rationale: "Pragmatic listener at depth 2 with referential candidate load attentional\
+    \ capture, referential codability prior, expected communicative success, competitor\
+    \ confusion avoidance, and visual salience prior. Refining candidate_load_attention_listener\
+    \ by incorporating the referential codability component from referential_codability_listener:\
+    \ listeners expect speakers to refer to objects with high referential codability\u2014\
+    objects possessing distinguishing descriptive features that make them viable communicative\
+    \ targets in the scene context. Before hearing an informative word, listeners\
+    \ evaluate each referent by its communicative affordance, defined as the total\
+    \ discriminative capacity of the available expressions that describe it, elevating\
+    \ a priori expectations for distinguishable entities. This communicative affordance\
+    \ prior directly moderates overly aggressive scalar implicatures on two-object\
+    \ displays, suppresses choices of intermediate feature-count competitors on multi-match\
+    \ displays, and elevates choices of feature-rich objects on ubiquitous utterance\
+    \ and mumble displays. Differences from candidate_load_attention_listener: - Recursion\
+    \ depth remains depth 2 (choice_probs calls L_attention, which inverts a speaker\
+    \ simulating depth-1 listener L1). - Added parameter: w_codable (prior dist.Normal(0.0,\
+    \ 1.0)). - No parameters removed (retains alpha, logit_p_base, w_load, w_popout,\
+    \ w_candidate, w_singleton, w_distinct, w_features, w_valence, w_color, w_confusion,\
+    \ and lapse). - In choice_probs, added compute_codability(ctx) to compute contextual\
+    \ communicative affordance as the sum of inverse utterance extensions (real_lex\
+    \ / k_u) across true features, adding params[\"w_codable\"] * codability to the\
+    \ prior logits passed to softmax_prior."
+- name: inhibitory_load_listener
+  rationale: "Listeners interpret referring expressions under capacity-limited executive\
+    \ inhibitory control, balancing goal-directed pragmatic inference against distractor\
+    \ interference. When an utterance is referentially ambiguous, the cognitive load\
+    \ of resolving competing candidates depletes executive control, causing inhibitory\
+    \ suppression of non-matching contextual distractors to degrade proportionally\
+    \ to candidate competition. Visually salient distractors\u2014especially solitary\
+    \ contrastive foils\u2014escape inhibition and capture choices under high candidate\
+    \ load, whereas unambiguous pop-out expressions preserve near-perfect target identification."
+- name: candidate_load_cost_attention
+  rationale: 'Pragmatic listener at depth 2 with capacity-limited attention, expected
+    communicative success, competitor confusion avoidance, utterance specificity costs,
+    and referential candidate load attentional modulation. Refining success_confusion_cost_attention
+    by modulating capacity-limited visual attention by referential candidate load:
+    when an utterance applies to multiple candidate referents in the visual scene,
+    the cognitive burden of evaluating competing referents dilutes top-down attentional
+    control, increasing the probability of bottom-up visual attentional capture by
+    salient contextual objects without communicative verification, whereas unambiguous
+    pop-out expressions ensure near-perfect target identification. This attenuates
+    top-down attentional engagement under referential competition, interacting with
+    speaker specificity costs to moderate scalar implicatures on two-object displays
+    and elevate choices of feature-rich objects on ubiquitous utterance displays.
+    Differences from success_confusion_cost_attention: - Recursion depth remains depth
+    2 (choice_probs calls L_attention, which inverts a speaker simulating depth-1
+    listener L1). - Added parameter: w_candidate (prior dist.Normal(0.5, 0.5)). -
+    No parameters removed (retains alpha, c_spec, logit_p_base, w_load, w_popout,
+    w_singleton, w_distinct, w_features, w_valence, w_color, w_confusion, and lapse).
+    - In choice_probs, computed referential candidate load candidate_load = jnp.maximum(0.0,
+    matching_count - 1.0) and modulated attentional engagement by subtracting params["w_candidate"]
+    * candidate_load in logit_p_attend.'
+- name: candidate_load_attention_listener
+  rationale: 'Pragmatic listener at depth 2 with referential candidate load attentional
+    capture, expected communicative success, competitor confusion avoidance, and visual
+    salience prior. Refining expected_success_confusion_attention by modulating capacity-limited
+    visual attention by referential candidate load: when an utterance is referentially
+    ambiguous and applies to multiple candidate objects in the scene, the cognitive
+    burden of evaluating competing candidates disperses top-down attention, increasing
+    the probability of bottom-up visual attentional capture by salient contextual
+    objects without communicative verification, whereas unambiguous pop-out expressions
+    ensure near-perfect target identification. This elevated attentional dispersion
+    under referential candidate competition naturally accounts for selections of solitary
+    non-matching foils, elevates choices of feature-rich objects on ubiquitous utterance
+    displays, and moderates excessive scalar implicatures on two-object displays.
+    Differences from expected_success_confusion_attention: - Recursion depth remains
+    depth 2 (choice_probs calls L_attention, which inverts a speaker simulating depth-1
+    listener L1). - Added parameter: w_candidate (prior dist.Normal(0.5, 0.5)). -
+    No parameters removed (retains alpha, logit_p_base, w_load, w_popout, w_singleton,
+    w_distinct, w_features, w_valence, w_color, w_confusion, and lapse). - In choice_probs,
+    computed referential candidate load candidate_load = jnp.maximum(0.0, matching_count
+    - 1.0) and modulated attentional engagement by subtracting params["w_candidate"]
+    * candidate_load in logit_p_attend.'
+- name: ambiguity_attention_listener
+  rationale: 'Listeners interpret referring expressions under capacity-limited visual
+    attention where attentional engagement is modulated by referential ambiguity,
+    balancing top-down pragmatic reasoning against bottom-up visual capture. Refining
+    limited_attention_listener_2: while unambiguous expressions elicit focused top-down
+    pragmatic verification, expressions that apply to multiple candidate referents
+    dilute top-down attentional control, increasing the probability of bottom-up visual
+    attentional capture by salient objects in the scene. This heightened capture under
+    ambiguity increases selections of visually prominent non-matching foils and feature-rich
+    objects on multi-match and ubiquitous displays. Differences from limited_attention_listener_2:
+    - Recursion depth: Unchanged at depth 2 (choice_probs calls L_attention, which
+    inverts a speaker simulating depth-1 listener L1). - Added parameter: w_ambiguity
+    (prior dist.Normal(0.0, 1.0)). - No parameters removed (retains alpha, w_confusion,
+    logit_p_base, w_load, w_popout, w_singleton, w_distinct, w_features, and lapse
+    with identical priors). - Other terms: In choice_probs, computed referential ambiguity
+    penalty term - w_ambiguity * ambiguity in logit_p_attend, where ambiguity is the
+    number of competing matching referents beyond the target (matching_count - 1.0).'
+- name: success_confusion_cost_attention
+  rationale: 'Pragmatic listener at depth 2 with capacity-limited attention, expected
+    communicative success, competitor confusion avoidance, and utterance specificity
+    costs. Refining expected_success_confusion_attention by incorporating the utterance
+    specificity cost component from specificity_cost_speaker: speakers weigh communicative
+    success against a cognitive specificity cost for producing highly distinguishing
+    referring expressions, frequently choosing broader or ubiquitous words even when
+    describing feature-rich objects. Under capacity-limited visual attention, pragmatic
+    listeners invert this cost-sensitive, confusion-averse speaker, moderating overly
+    aggressive scalar exclusion and elevating choices of feature-rich referents on
+    ubiquitous utterance and two-object scalar displays. Differences from expected_success_confusion_attention:
+    - Recursion depth remains depth 2 (choice_probs calls L_attention, which inverts
+    a speaker simulating depth-1 listener L1). - Added parameter: c_spec (prior dist.Normal(0.0,
+    1.0)). - No parameters removed (retains alpha, logit_p_base, w_load, w_popout,
+    w_singleton, w_distinct, w_features, w_valence, w_color, w_confusion, and lapse).
+    - Speaker utility in both S1 and S2: added utterance specificity cost term - vec(cost,
+    u) inside communicative utility, evaluating as alpha * (L - vec(cost, u)) - w_confusion
+    * at(confusion, u, r). - In choice_probs, computed utterance extension and specificity
+    cost vector cost = params["c_spec"] * (1.0 - extension) * (1.0 - ctx.is_sink),
+    passing cost to L1 and L_attention.'
+- name: expected_success_confusion_attention
+  rationale: 'Pragmatic listener at depth 2 with bounded attentional capture, expected
+    communicative success, competitor confusion avoidance, and visual salience prior.
+    Refining expected_success_confusion_speaker by incorporating the capacity-limited
+    attentional capture component from limited_attention_listener: listeners interpret
+    referring expressions under capacity-limited visual attention, balancing top-down
+    pragmatic reasoning against bottom-up visual attentional capture. Under higher
+    visual load in larger displays, attentional dispersion occasionally causes bottom-up
+    attentional capture by salient objects without full communicative verification,
+    whereas unambiguous pop-out displays ensure near-perfect target identification;
+    in the attentive mode, listeners invert a depth-2 speaker maximizing linear expected
+    communicative success while penalizing competitor confusion. This resolves excessive
+    scalar exclusion and elevates choices of feature-rich objects on ubiquitous and
+    scalar displays while naturally capturing foil selections under visual load. Differences
+    from expected_success_confusion_speaker: - Recursion depth remains depth 2 (choice_probs
+    calls L_attention, which inverts a speaker simulating depth-1 listener L1). -
+    Added parameters: logit_p_base (prior dist.Normal(2.0, 1.0)), w_load (prior dist.Normal(0.5,
+    0.5)), and w_popout (prior dist.Normal(1.0, 0.5)). - No parameters removed (retains
+    alpha, w_singleton, w_distinct, w_features, w_valence, w_color, w_confusion, and
+    lapse). - Replaced depth-2 listener L2 with L_attention, adding global domain
+    MODES = jnp.arange(2), an attentional mode choice (listener: chooses(mode in MODES,
+    wpp=p_attend if mode == 1 else (1.0 - p_attend))), and referent choice conditioned
+    on mode (listener: chooses(r in OBJ, wpp=Pr[speaker.r == r] if mode == 1 else
+    vec(prior, r))). - In choice_probs, computed is_popout and display-size-modulated
+    attention probability p_attend = jax.nn.sigmoid(logit_p_base + w_popout * is_popout
+    - w_load * (n_obj - 2.0)), passing p_attend to L_attention.'
+- name: limited_attention_listener_2
+  rationale: Listeners interpret referring expressions under capacity-limited visual
+    attention across the display, balancing top-down pragmatic reasoning against bottom-up
+    visual attentional capture.

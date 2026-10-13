@@ -14,7 +14,7 @@
  "max_wait_sec": 10800,
  "stop_after_collect": false,
  "ground_truth": null,
- "n_experiments": 1,
+ "n_experiments": 3,
  "participants": 200,
  "trials": 13,
  "displays": 52,

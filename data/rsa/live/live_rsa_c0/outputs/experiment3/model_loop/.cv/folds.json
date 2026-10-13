@@ -1,0 +1,13 @@
+{
+ "k": 5,
+ "seed": 0,
+ "n_trials": 56593,
+ "fold_sizes": [
+  11623,
+  11342,
+  11217,
+  11173,
+  11238
+ ],
+ "responses": "/scratch/users/mcfrank/auto-psych/agent_trees/63cfc8f3a326e982/repo/_runs/outer/experiment3/model_loop/responses.csv"
+}

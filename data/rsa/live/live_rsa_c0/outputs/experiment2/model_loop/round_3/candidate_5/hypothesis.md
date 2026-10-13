@@ -1,0 +1,7 @@
+Listeners interpret referring expressions with an a priori expectation that speakers refer to contextually typical objects, evaluating category typicality through exemplar-based psychological similarity across the visual scene rather than additive feature overlap. Before hearing an informative word and during referent selection, each object's contextual typicality is computed as its average exponential-decay similarity to all other scene exemplars under the Generalized Context Model. This exemplar similarity formulation properly rewards central exemplars and identical candidates without artificially scaling with total feature count, directly mitigating excessive singleton bias on uninformative trials and elevating choices of duplicated candidates and central referents.
+
+Differences from prototype_typicality_listener:
+- Recursion depth: Unchanged at depth 2 (choice_probs calls L_typical, which inverts a speaker simulating depth-1 listener L1).
+- Parameters added: None.
+- Parameters removed: None (retains alpha, logit_p_base, w_load, w_popout, w_candidate, w_inhibit_leak, w_typical, w_singleton, w_distinct, w_features, w_valence, w_color, w_confusion, and lapse with identical priors).
+- Other terms: In choice_probs, replaced compute_typicality(ctx) with an exemplar-based similarity formulation computing an object's typicality as its mean pairwise psychological similarity to all other scene objects (sum of exp(-dist) to other objects divided by N_obj - 1) instead of the unnormalized sum of shared feature fractions.

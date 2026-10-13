@@ -1,0 +1,50 @@
+{
+ "rule": "best first by the loop's final standing; a model within 0.002 (RMSE of posterior-mean choice-class probabilities over the design pool) of one kept is the same hypothesis for the live phase; at most 8",
+ "order": [
+  "prototype_typicality_bounded_listener",
+  "speaker_ambiguity_cost_listener",
+  "bounded_typicality_outlier_listener",
+  "focal_candidate_attention_listener",
+  "prototype_typicality_outlier_listener",
+  "pragmatic_literal_population_listener",
+  "inhibitory_codability_bounded_listener",
+  "bounded_consideration_cost_listener",
+  "inhibitory_codability_listener",
+  "inhibitory_codability_cost_listener",
+  "exemplar_typicality_listener",
+  "communicative_resolvability_listener"
+ ],
+ "kept": [
+  "prototype_typicality_bounded_listener",
+  "speaker_ambiguity_cost_listener",
+  "bounded_typicality_outlier_listener",
+  "focal_candidate_attention_listener",
+  "prototype_typicality_outlier_listener",
+  "pragmatic_literal_population_listener",
+  "inhibitory_codability_bounded_listener",
+  "bounded_consideration_cost_listener"
+ ],
+ "merged": [],
+ "over_cap": [
+  {
+   "name": "inhibitory_codability_listener",
+   "nearest": "inhibitory_codability_bounded_listener",
+   "rmse": 0.0026964352028091138
+  },
+  {
+   "name": "inhibitory_codability_cost_listener",
+   "nearest": "bounded_consideration_cost_listener",
+   "rmse": 0.0030543543473767272
+  },
+  {
+   "name": "exemplar_typicality_listener",
+   "nearest": "prototype_typicality_outlier_listener",
+   "rmse": 0.01341028415955958
+  },
+  {
+   "name": "communicative_resolvability_listener",
+   "nearest": "inhibitory_codability_bounded_listener",
+   "rmse": 0.009755030733863645
+  }
+ ]
+}

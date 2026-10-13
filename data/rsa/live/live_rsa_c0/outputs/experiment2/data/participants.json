@@ -1,0 +1,20 @@
+{
+ "n_included": 193,
+ "excluded": [
+  "auto_psych:live207",
+  "auto_psych:live240",
+  "auto_psych:live244",
+  "auto_psych:live269",
+  "auto_psych:live349",
+  "auto_psych:live361",
+  "auto_psych:live362",
+  "auto_psych:live384"
+ ],
+ "max_catch_errors": 0,
+ "n_recruited": 201,
+ "n_target": 200,
+ "collection": "live",
+ "n_responses": 201,
+ "other_study": 0,
+ "without_trials": []
+}
