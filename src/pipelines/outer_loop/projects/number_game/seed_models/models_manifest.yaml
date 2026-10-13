@@ -1,5 +1,5 @@
-# The number game's literature seeds. In a recovery cell one of the first two
-# is the held-out ground truth and the loop starts from the others.
+# The number game's literature seeds. In a recovery cell one of them is the
+# held-out ground truth and the loop starts from the other two.
 models:
   - name: tenenbaum_rules_similarity
     rationale: |

@@ -1,10 +1,8 @@
 # Number-game holdout recovery: one seed is the held-out ground truth, which
 # simulates every participant's answers at its parameters fitted to the whole
 # Bigelow & Piantadosi dataset (scripts/number_game/fit_ground_truth_params.py),
-# and the loop starts from the other seeds. Ground truths (the submit script's
-# GT_MODELS): tenenbaum_rules_similarity and bigelow_piantadosi_independent;
-# bigelow_piantadosi_interval is a starting model only, here for the
-# no-learning baseline's parameters.
+# and the loop starts from the other two. Every seed is a ground truth (the
+# submit script's GT_MODELS).
 project_id: number_game
 seed_models_dir: src/pipelines/outer_loop/projects/number_game/seed_models
 # Posterior means on the whole dataset (fit_ground_truth_params.py, 2026-10-12).
