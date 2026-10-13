@@ -19,6 +19,7 @@ import numpy as np
 import pytest
 
 from src.runtime import coding_agent
+from src.tasks import number_game
 from src.runtime.config import REPO_ROOT
 from src.subjective_randomness.holdout_recovery import run_holdout_recovery_from_config
 
@@ -26,6 +27,7 @@ SEEDS_DIR = REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects" / "numbe
 GT = "bigelow_piantadosi_independent"
 START = "tenenbaum_rules_similarity"
 INTERVAL = "bigelow_piantadosi_interval"
+N_SETS = 20
 GT_PARAMS = {
     GT: {"p_mix": 0.47, "rule_weights": list(np.full(42, 1 / 42))},
     START: {"lambda_rules": 0.5, "sigma": 10.0},
@@ -52,6 +54,10 @@ def _scripted_agent(calls):
 def test_number_game_recovery_cell_end_to_end(tmp_path, monkeypatch):
     calls = []
     monkeypatch.setattr(coding_agent, "run_coding_agent", _scripted_agent(calls))
+    # 20 of the 255 example sets: the design, novelty and evaluation pools are
+    # 2,000 cells instead of 25,500 (binding and predicting them dominated).
+    sets = number_game.number_sets()[:N_SETS]
+    monkeypatch.setattr(number_game, "number_sets", lambda: sets)
     config = {
         "project_id": "number_game",
         "seed_models_dir": str(SEEDS_DIR),
@@ -67,7 +73,7 @@ def test_number_game_recovery_cell_end_to_end(tmp_path, monkeypatch):
             "candidate_count": 1,
             "n_critique_proposals": 1,
             # Models are compared on whole held-out example sets.
-            "selection": {"criterion": "grouped_cv", "cv_group": ["number_set"], "cv_folds": 3},
+            "selection": {"criterion": "grouped_cv", "cv_group": ["number_set"], "cv_folds": 2},
         },
         "agent": {"timeout_sec": 60, "backend": None, "model": "scripted"},
         "eval_pool": {"min_remaining": 100, "predict_max_draws": 20},
@@ -127,7 +133,7 @@ def test_number_game_recovery_cell_end_to_end(tmp_path, monkeypatch):
     assert fits and {az.from_netcdf(f).posterior.attrs.get("fit_method") for f in fits} == {"warm_start_nuts"}
 
     # Recovery is scored on every (set, target) cell the loop never trained on.
-    n_cells = 255 * 100
+    n_cells = N_SETS * 100
     assert gt_run["n_eval_stimuli"] + gt_run["n_eval_dropped"] == n_cells
     assert gt_run["n_eval_dropped"] <= 2 * 6
     trajectory = gt_run["trajectory"]

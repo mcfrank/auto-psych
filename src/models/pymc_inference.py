@@ -1031,16 +1031,21 @@ def _warm_start_sample(model: Any, settings: Dict[str, Any]) -> Any:
     pins down) has no metric: the fit fails, as the model's own failure.
     """
     from pymc.blocking import DictToArrayBijection, RaveledVars
+    from pymc.step_methods.hmc.integration import CpuLeapfrogIntegrator
     from pymc.step_methods.hmc.quadpotential import QuadPotentialFull
     from scipy.optimize import minimize
 
     pm = _import_pymc()
+    with model:
+        step = pm.NUTS(target_accept=settings["target_accept"], max_treedepth=settings["max_treedepth"])
+    # The step's own compiled log density and gradient (Jacobians in), on the
+    # raveled continuous parameters: no second compile for the optimizer.
+    logp_dlogp = step._logp_dlogp_func
+    logp_dlogp.set_extra_values({})
     start = model.initial_point(random_seed=settings["random_seed"])
-    x0 = DictToArrayBijection.map({v.name: start[v.name] for v in model.continuous_value_vars})
-    point = lambda x: {**start, **DictToArrayBijection.rmap(RaveledVars(x, x0.point_map_info))}  # noqa: E731
-    logp, dlogp = model.compile_logp(jacobian=True), model.compile_dlogp(jacobian=True)
-    grad = lambda x: np.asarray(dlogp(point(x)), dtype=float)  # noqa: E731
-    mode = minimize(lambda x: -float(logp(point(x))), x0.data, jac=lambda x: -grad(x), method="L-BFGS-B").x
+    x0 = DictToArrayBijection.map({v.name: start[v.name] for v in step.vars})
+    grad = lambda x: np.asarray(logp_dlogp(x)[1], dtype=float)  # noqa: E731
+    mode = minimize(lambda x: -float(logp_dlogp(x)[0]), x0.data, jac=lambda x: -grad(x), method="L-BFGS-B").x
     h = 1e-5
     hessian = np.array([(grad(mode + h * e) - grad(mode - h * e)) / (2 * h) for e in np.eye(mode.size)])
     precision = -(hessian + hessian.T) / 2
@@ -1051,16 +1056,18 @@ def _warm_start_sample(model: Any, settings: Dict[str, Any]) -> Any:
             "warm-start NUTS: the Hessian at the posterior mode is not positive definite (some "
             "parameter direction is pinned down by neither the data nor the prior)"
         ) from None
+    # The integrator holds the potential it was built with.
+    step.potential = QuadPotentialFull(np.linalg.inv(precision))
+    step.integrator = CpuLeapfrogIntegrator(step.potential, logp_dlogp)
     rng = np.random.default_rng(settings["random_seed"])
     starts = mode + np.linalg.solve(chol.T, rng.standard_normal((settings["chains"], mode.size)).T).T
     free = [v for v in model.unobserved_value_vars if v.name in {rv.name for rv in model.free_RVs}]
     free_values = model.compile_fn(inputs=model.value_vars, outs=free)
+
+    def point(x: np.ndarray) -> Dict[str, np.ndarray]:
+        return {**start, **DictToArrayBijection.rmap(RaveledVars(x, x0.point_map_info))}
+
     with model:
-        step = pm.NUTS(
-            potential=QuadPotentialFull(np.linalg.inv(precision)),
-            target_accept=settings["target_accept"],
-            max_treedepth=settings["max_treedepth"],
-        )
         idata = pm.sample(
             draws=settings["draws"], tune=settings["tune"], chains=settings["chains"], cores=settings["cores"],
             step=step, initvals=[dict(zip([v.name for v in free], free_values(point(x)))) for x in starts],

@@ -123,6 +123,8 @@ def _zoo(tmp_path, names):
 
     models = tmp_path / "models"
     models.mkdir()
+    for n in names:
+        (models / f"{n}.py").write_text("")
     (models / "models_manifest.yaml").write_text(
         yaml.safe_dump({"models": [{"name": n, "rationale": f"mechanism {n}"} for n in names]})
     )

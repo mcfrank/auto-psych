@@ -11,6 +11,7 @@ import csv
 import hashlib
 import json
 import math
+from concurrent.futures import ThreadPoolExecutor
 import re
 import shutil
 import sys
@@ -47,6 +48,9 @@ from src.models.pymc_inference import (
     fit_model,
     fit_models_to_cache,
     fit_time_limited_concurrently,
+    _fit_cpus,
+    allocated_cpus,
+    default_fit_workers,
     is_model_failure,
     is_near_miss,
     model_logp_is_finite,
@@ -601,12 +605,18 @@ def _drop_unscorable_cv_models(
     entries = _manifest_entries(models_dir)
     names = [entry["name"] for entry in entries]
     _, _, fold_paths = fold_training_files(responses_path, selection)
-    failures: Dict[str, str] = {}
-    for fold, path in enumerate(fold_paths):
-        timed = [n for n in names if n in limited and n not in failures]
+    # The folds are fitted concurrently, each with its share of the CPUs.
+    workers = max(1, default_fit_workers(
+        allocated_cpus(), [_fit_cpus(resolve_fit_settings(n, models_dir, fit_kwargs)) for n in names]
+    ) // len(fold_paths))
+
+    def fit_fold(fold: int, path: Path) -> Dict[str, str]:
+        failed: Dict[str, str] = {}
+        timed = [n for n in names if n in limited]
         if timed and cache_dir is not None:
             fit_time_limited_concurrently(
-                timed, models_dir, path, cache_dir=cache_dir, fit_kwargs=fit_kwargs, time_limit_sec=time_limit_sec
+                timed, models_dir, path, cache_dir=cache_dir, fit_kwargs=fit_kwargs,
+                time_limit_sec=time_limit_sec, workers=workers,
             )
         for name in timed:
             try:
@@ -614,12 +624,20 @@ def _drop_unscorable_cv_models(
             except INFRASTRUCTURE_ERRORS:
                 raise
             except FitTimeLimitExceeded as e:
-                failures[name] = f"fold {fold} {_too_slow_reason(e)}"
+                failed[name] = f"fold {fold} {_too_slow_reason(e)}"
             except Exception as e:  # noqa: BLE001 — the model's own failure (infrastructure re-raised above)
-                failures[name] = f"MCMC fit failed on CV fold {fold} ({_describe_failure(e)})"
-        free = [n for n in names if n not in limited and n not in failures]
-        for name, why in fit_models_to_cache(free, models_dir, path, cache_dir=cache_dir, **fit_kwargs).items():
-            failures[name] = f"MCMC fit failed on CV fold {fold} ({why})"
+                failed[name] = f"MCMC fit failed on CV fold {fold} ({_describe_failure(e)})"
+        free = [n for n in names if n not in limited]
+        for name, why in fit_models_to_cache(
+            free, models_dir, path, cache_dir=cache_dir, fit_workers=workers, **fit_kwargs
+        ).items():
+            failed[name] = f"MCMC fit failed on CV fold {fold} ({why})"
+        return failed
+
+    failures: Dict[str, str] = {}
+    with ThreadPoolExecutor(max_workers=len(fold_paths)) as pool:
+        for failed in pool.map(fit_fold, range(len(fold_paths)), fold_paths):
+            failures = {**failed, **failures}  # a model's first failing fold
     scorable = [n for n in names if n not in failures]
     lpd, _ = cv_pointwise(scorable, models_dir, responses_path, selection, cache_dir=cache_dir, **fit_kwargs)
     for name in scorable:

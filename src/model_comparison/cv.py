@@ -68,6 +68,10 @@ class Selection:
 
 LOO = Selection()
 
+# Held-out log densities by (fold fit, fold training file): a fold's are
+# computed once per process, not at every comparison of the loop.
+_HELDOUT_LPD: Dict[Tuple[str, str], np.ndarray] = {}
+
 
 def cv_units(rows: Sequence[Mapping[str, Any]], cv_group: Union[str, Tuple[str, ...]]) -> List[Hashable]:
     """The unit each row belongs to."""
@@ -154,5 +158,8 @@ def cv_pointwise(
         held_rows = [rows[i] for i in held]
         for name in model_names:
             fitted = fits[name]
-            lpd[name][held] = fitted.heldout_lpd(make_stim_data(fitted.model, held_rows))
+            key = (fitted.fingerprint, str(train_path))
+            if key not in _HELDOUT_LPD:
+                _HELDOUT_LPD[key] = fitted.heldout_lpd(make_stim_data(fitted.model, held_rows))
+            lpd[name][held] = _HELDOUT_LPD[key]
     return lpd, rows
