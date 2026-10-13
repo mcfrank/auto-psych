@@ -238,6 +238,7 @@ def _posterior_p_left_draws(
     fit_draws: Optional[int] = None,
     fit_tune: Optional[int] = None,
     fit_chains: Optional[int] = None,
+    fit_method: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Per-draw posterior-predictive prediction (the task's probability) over ``rows`` for each model.
 
@@ -270,6 +271,7 @@ def _posterior_p_left_draws(
             target_accept=model_sampler_settings(name, models_dir).get(
                 "target_accept", DESIGN_TWIN_TARGET_ACCEPT
             ),
+            method=fit_method,
         )
         stim_data = make_stim_data(fitted.model, rows)
         return fitted.predict_p_left_draws(
@@ -419,6 +421,7 @@ def design_exhaustive(
     fit_draws: Optional[int] = None,
     fit_tune: Optional[int] = None,
     fit_chains: Optional[int] = None,
+    fit_method: Optional[str] = None,
     n_responses: int,
     lazy: bool = DESIGN_LAZY_SEARCH,
     scoring_dtype: str = DESIGN_SCORING_DTYPE,
@@ -523,6 +526,7 @@ def design_exhaustive(
                 fit_draws=fit_draws,
                 fit_tune=fit_tune,
                 fit_chains=fit_chains,
+                fit_method=fit_method,
             )
         screened_out += invalid
         if screened_out_path is not None:

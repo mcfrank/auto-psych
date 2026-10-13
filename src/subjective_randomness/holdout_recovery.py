@@ -270,6 +270,8 @@ def run_holdout_experiments(
                 n_random=design_n_random,
                 n_responses=n_participants,  # every participant answers every stimulus
                 seed=derive_seed(seed, gt_model, exp_num, "design"),
+                # The loop's fit method (fit.method); the design's own draws.
+                fit_method=fit_kwargs.get("method"),
             )
             _require_valid("2_design", exp_dir)
 
@@ -432,7 +434,8 @@ def run_holdout_recovery_from_config(
                           or ``api``, else CLAUDE_AUTH) and its credential,
                           checked before anything runs
         eval_pool         {n_pairs, lengths, seed, min_remaining}
-        fit               MCMC kwargs (draws/tune/chains/...)
+        fit               MCMC kwargs (draws/tune/chains/...; method: nuts (default)
+                          or warm_start_nuts, NUTS started from the posterior mode)
 
     ``gt_models_dir`` (default: ``seed_models_dir``) is where the ground-truth
     models live; the impossible-theory variant points it at a separate directory

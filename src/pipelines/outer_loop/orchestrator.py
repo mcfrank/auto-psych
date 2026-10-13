@@ -554,6 +554,7 @@ def run_design_programmatic(
     n_responses: int,
     seed: int = 42,
     pool: Optional[Sequence[Dict[str, Any]]] = None,
+    fit_method: Optional[str] = None,
 ) -> None:
     """Select the design's stimuli by exhaustive enumeration (no design agent).
 
@@ -610,6 +611,7 @@ def run_design_programmatic(
             random_seed=seed,
             responses_csv=prev_exp_dir / "model_loop" / "responses.csv",
             fit_cache_dir=exp_dir / "design" / "_fit_cache",
+            fit_method=fit_method,
             n_responses=n_responses,
         )
         basis = f"posterior after experiments 1..{exp_num - 1} (model weights + parameter posteriors)"

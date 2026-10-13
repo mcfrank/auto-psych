@@ -1,7 +1,7 @@
 """A number-game holdout recovery cell runs end to end.
 
 One seed is the ground truth: it simulates every participant's ratings at
-fixed parameters, and the agentic loop starts from the other seed. Everything
+fixed parameters, and the agentic loop starts from the other seeds. Everything
 runs for real at toy size (the EIG design, the simulator, the inner loop's
 admission gates, MCMC, ELPD-LOO, the recovery scoring), except the coding
 agents: the candidate agent is scripted to write the ground truth's own model,
@@ -25,9 +25,11 @@ from src.subjective_randomness.holdout_recovery import run_holdout_recovery_from
 SEEDS_DIR = REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects" / "number_game" / "seed_models"
 GT = "bigelow_piantadosi_independent"
 START = "tenenbaum_rules_similarity"
+INTERVAL = "bigelow_piantadosi_interval"
 GT_PARAMS = {
     GT: {"p_mix": 0.47, "rule_weights": list(np.full(42, 1 / 42))},
     START: {"lambda_rules": 0.5, "sigma": 10.0},
+    INTERVAL: {"p_mix": 0.5, "rule_weights": list(np.full(42, 1 / 42)), "midpoint_shape": [2.0, 2.0]},
 }
 
 
@@ -69,7 +71,8 @@ def test_number_game_recovery_cell_end_to_end(tmp_path, monkeypatch):
         },
         "agent": {"timeout_sec": 60, "backend": None, "model": "scripted"},
         "eval_pool": {"min_remaining": 100, "predict_max_draws": 20},
-        "fit": {"draws": 200, "tune": 200, "chains": 2},
+        # NUTS started from each posterior mode, design fits included.
+        "fit": {"draws": 200, "tune": 200, "chains": 2, "method": "warm_start_nuts"},
     }
 
     result = run_holdout_recovery_from_config(
@@ -91,8 +94,9 @@ def test_number_game_recovery_cell_end_to_end(tmp_path, monkeypatch):
         assert posterior["criterion"] == "grouped_cv"
         assert {row["criterion"] for row in posterior["comparison"].values()} == {"grouped_cv"}
 
-    # The loop starts from the other seed only.
-    assert gt_run["experiments"][0]["manifest_models"][:1] == [START]
+    # The loop starts from the other seeds only.
+    starting = json.loads((run_root / "starting_models.json").read_text())["starting_models"]
+    assert sorted(starting) == sorted([START, INTERVAL])
     assert GT not in (run_root / "experiment1" / "cognitive_models" / "models_manifest.yaml").read_text()
 
     # The agents see only the raw number-game columns, never the generator,
@@ -116,6 +120,12 @@ def test_number_game_recovery_cell_end_to_end(tmp_path, monkeypatch):
     # ...and the leakage audit sees that it is a copy of the ground truth.
     assert gt_run["leakage"]["any_identical"] is True
 
+    # Every fit (loop, CV folds, design, baselines) started from its mode.
+    import arviz as az
+
+    fits = list(tmp_path.rglob("*.nc"))
+    assert fits and {az.from_netcdf(f).posterior.attrs.get("fit_method") for f in fits} == {"warm_start_nuts"}
+
     # Recovery is scored on every (set, target) cell the loop never trained on.
     n_cells = 255 * 100
     assert gt_run["n_eval_stimuli"] + gt_run["n_eval_dropped"] == n_cells
@@ -124,4 +134,4 @@ def test_number_game_recovery_cell_end_to_end(tmp_path, monkeypatch):
     assert [row["experiment"] for row in trajectory][:1] == [1] and trajectory[-1]["experiment"] == 2
     for row in trajectory:
         assert np.isfinite(row["rmse"]) and np.isfinite(row["kl_regret"]) and -1 <= row["pearson_r"] <= 1
-    assert set(gt_run["fitted_baseline"]["per_model"]) == {START}
+    assert set(gt_run["fitted_baseline"]["per_model"]) == {START, INTERVAL}

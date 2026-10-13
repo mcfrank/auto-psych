@@ -410,6 +410,12 @@ _FIT_DEFAULTS = {
     "max_treedepth": 10,
 }
 
+# How a fit samples (``fit.method``): production NUTS, or NUTS started from the
+# posterior mode (``src.models.warm_start``). Chosen by the caller only, never
+# by a model file. Not in _FIT_DEFAULTS, so the default's cache signature (and
+# every fit cached before the method existed) is unchanged.
+FIT_METHODS = ("nuts", "warm_start_nuts")
+
 # Name of the optional module-level dict a model `.py` may declare to request
 # sampler settings suited to *its own* posterior geometry.
 SAMPLER_SETTINGS_NAME = "SAMPLER_SETTINGS"
@@ -489,6 +495,9 @@ def resolve_fit_settings(
     disagree about which settings a stored fit was sampled under.
     """
     given = {k: v for k, v in (explicit or {}).items() if v is not None}
+    method = given.pop("method", "nuts")
+    if method not in FIT_METHODS:
+        raise ValueError(f"Unknown fit method {method!r} for model {name!r}; known: {list(FIT_METHODS)}.")
     unknown = sorted(set(given) - set(_FIT_DEFAULTS))
     if unknown:
         raise ValueError(
@@ -496,7 +505,7 @@ def resolve_fit_settings(
             f"Valid settings: {sorted(_FIT_DEFAULTS)}."
         )
     declared = model_sampler_settings(name, models_dir)
-    settings = {**_FIT_DEFAULTS, **declared, **given}
+    settings = {**_FIT_DEFAULTS, **declared, **given, "method": method}
     # A model's declared target_accept is a floor: the loop passes one
     # explicitly, which used to override a model that needs smaller steps
     # (a model declaring 0.9 ran at the sweep's 0.8), and declaring a higher value
@@ -511,7 +520,9 @@ def resolve_fit_settings(
 def _sampler_signature(fit_kwargs: Dict[str, Any]) -> str:
     """Stable string of the resolved sampler settings, for cache keying."""
     merged = {**_FIT_DEFAULTS, **fit_kwargs}
-    return ";".join(f"{k}={merged[k]}" for k in sorted(_FIT_DEFAULTS))
+    signature = ";".join(f"{k}={merged[k]}" for k in sorted(_FIT_DEFAULTS))
+    method = fit_kwargs.get("method", "nuts")
+    return signature if method == "nuts" else f"{signature};method={method}"
 
 
 def _thin_posterior(idata: Any, max_draws: int) -> Any:
@@ -811,6 +822,7 @@ def fit_model(
     random_seed: Optional[int] = None,
     target_accept: Optional[float] = None,
     max_treedepth: Optional[int] = None,
+    method: Optional[str] = None,
     time_limit_sec: Optional[float] = None,
 ) -> FittedModel:
     """Load the named PyMC model, fit it on `responses_path`, return a FittedModel.
@@ -853,6 +865,7 @@ def fit_model(
             "random_seed": random_seed,
             "target_accept": target_accept,
             "max_treedepth": max_treedepth,
+            "method": method,
         },
     )
 
@@ -981,17 +994,21 @@ def _fit_once(
     observed = extract_observed(responses_path, model)
     with model:
         pm.set_data(observed)
-        idata = pm.sample(
-            draws=settings["draws"],
-            tune=settings["tune"],
-            chains=settings["chains"],
-            cores=settings["cores"],
-            target_accept=settings["target_accept"],
-            max_treedepth=settings["max_treedepth"],
-            progressbar=False,
-            random_seed=settings["random_seed"],
-            idata_kwargs={"log_likelihood": True},
-        )
+    if settings["method"] == "warm_start_nuts":
+        idata = _warm_start_sample(model, settings)
+    else:
+        with model:
+            idata = pm.sample(
+                draws=settings["draws"],
+                tune=settings["tune"],
+                chains=settings["chains"],
+                cores=settings["cores"],
+                target_accept=settings["target_accept"],
+                max_treedepth=settings["max_treedepth"],
+                progressbar=False,
+                random_seed=settings["random_seed"],
+                idata_kwargs={"log_likelihood": True},
+            )
 
     _warn_sampling_diagnostics(name, idata)
 
@@ -999,6 +1016,58 @@ def _fit_once(
         write_fit_file(idata, nc_path)
 
     return FittedModel(name=name, model=model, idata=idata, fingerprint=fp)
+
+
+def _warm_start_sample(model: Any, settings: Dict[str, Any]) -> Any:
+    """NUTS started from the posterior mode (``fit.method: warm_start_nuts``).
+
+    The mode of the unconstrained log density (Jacobians in) by L-BFGS-B, the
+    Hessian there by central differences of the gradient, then NUTS with the
+    inverse Hessian as a fixed dense mass matrix and each chain started at a
+    draw of N(mode, H^-1); tuning adapts only the step size. The draws are NUTS
+    draws, judged by the same gate as any fit. On the number game's seeds a fit
+    took ~30 s at tune 200 / draws 250 where production NUTS took ~25 min. A
+    Hessian that is not positive definite (a direction neither data nor prior
+    pins down) has no metric: the fit fails, as the model's own failure.
+    """
+    from pymc.blocking import DictToArrayBijection, RaveledVars
+    from pymc.step_methods.hmc.quadpotential import QuadPotentialFull
+    from scipy.optimize import minimize
+
+    pm = _import_pymc()
+    start = model.initial_point(random_seed=settings["random_seed"])
+    x0 = DictToArrayBijection.map({v.name: start[v.name] for v in model.continuous_value_vars})
+    point = lambda x: {**start, **DictToArrayBijection.rmap(RaveledVars(x, x0.point_map_info))}  # noqa: E731
+    logp, dlogp = model.compile_logp(jacobian=True), model.compile_dlogp(jacobian=True)
+    grad = lambda x: np.asarray(dlogp(point(x)), dtype=float)  # noqa: E731
+    mode = minimize(lambda x: -float(logp(point(x))), x0.data, jac=lambda x: -grad(x), method="L-BFGS-B").x
+    h = 1e-5
+    hessian = np.array([(grad(mode + h * e) - grad(mode - h * e)) / (2 * h) for e in np.eye(mode.size)])
+    precision = -(hessian + hessian.T) / 2
+    try:
+        chol = np.linalg.cholesky(precision)
+    except np.linalg.LinAlgError:
+        raise RuntimeError(
+            "warm-start NUTS: the Hessian at the posterior mode is not positive definite (some "
+            "parameter direction is pinned down by neither the data nor the prior)"
+        ) from None
+    rng = np.random.default_rng(settings["random_seed"])
+    starts = mode + np.linalg.solve(chol.T, rng.standard_normal((settings["chains"], mode.size)).T).T
+    free = [v for v in model.unobserved_value_vars if v.name in {rv.name for rv in model.free_RVs}]
+    free_values = model.compile_fn(inputs=model.value_vars, outs=free)
+    with model:
+        step = pm.NUTS(
+            potential=QuadPotentialFull(np.linalg.inv(precision)),
+            target_accept=settings["target_accept"],
+            max_treedepth=settings["max_treedepth"],
+        )
+        idata = pm.sample(
+            draws=settings["draws"], tune=settings["tune"], chains=settings["chains"], cores=settings["cores"],
+            step=step, initvals=[dict(zip([v.name for v in free], free_values(point(x)))) for x in starts],
+            progressbar=False, random_seed=settings["random_seed"], idata_kwargs={"log_likelihood": True},
+        )
+    idata.posterior.attrs["fit_method"] = "warm_start_nuts"
+    return idata
 
 
 def write_fit_file(idata: Any, nc_path: Path) -> None:
