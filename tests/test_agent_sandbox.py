@@ -427,3 +427,13 @@ def test_an_agent_gets_its_own_login_and_no_other_secret(
 def test_an_unknown_backend_has_no_environment_allowlist():
     with pytest.raises(ValueError, match="allowlist"):
         agent_sandbox.agent_environment({"PATH": "/usr/bin"}, "mystery")
+
+
+@needs_bwrap
+def test_the_resolver_configuration_is_readable_inside(tmp_path):
+    """On systemd hosts (Ubuntu: the SC cluster) /etc/resolv.conf links into
+    /run, which the sandbox did not mount: every agent's DNS lookup failed
+    (EAI_AGAIN) and no agent reached its API (pilot, 2026-10-13)."""
+    result, _, _, _ = _run(tmp_path, "cat /etc/resolv.conf")
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == Path("/etc/resolv.conf").read_text()

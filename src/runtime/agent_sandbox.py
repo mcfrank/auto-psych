@@ -270,6 +270,11 @@ def sandbox_command(
         args += ["--ro-bind-try", directory, directory]
     for link, target in SYSTEM_LINKS.items():
         args += ["--symlink", target, link]
+    # On systemd hosts /etc/resolv.conf links into /run (Ubuntu's stub
+    # resolver): without the link's target there is no DNS inside.
+    resolver = Path("/etc/resolv.conf").resolve()
+    if _outside_system_dirs(resolver):
+        args += ["--ro-bind-try", str(resolver.parent), str(resolver.parent)]
 
     # Home and /tmp first: a working tree that itself lives under $HOME or /tmp
     # is then mounted on top of them rather than hidden by them.
