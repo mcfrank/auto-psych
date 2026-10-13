@@ -212,6 +212,18 @@ games, and support two claims:
 - **Main's statistic timeout** (SIGALRM in `src/critique/ppc.py`) can fire inside a garbage-
   collector callback, where Python discards it (once in chain 0, experiment 3; the critique
   completed). An upstream issue in main's code; harmless here.
+- **Planned final experiment (PI 2026-10-13, after chain 0):** one pre-registered, prospective
+  test of the three chains' final models, run after chains 1–2 finish:
+  - **H1:** each final beats the best starting model and the best promoted seed on new people;
+  - **H2:** each final needs every mechanism it accrued, tested by mechanically defined lesions
+    (each mechanism's parameters fixed at their "off" value, the rest refitted).
+  - **Fits:** all models fitted to all data so far, pooled across chains, frozen, then scored
+    with no refit.
+  - **Displays:** half stratified-random from the pool (generalization), half EIG over full vs
+    lesioned models (power for H2).
+  - **Size:** set by simulation.
+  - **Scope:** the critic and agents play no part.
+  - The draft pre-registration is to be written while chains 1–2 run.
 - **Known limits to report:**
   - simulated people are less noisy than real ones;
   - pruning on the live rows is weak;
