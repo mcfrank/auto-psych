@@ -1,0 +1,7 @@
+Pragmatic listeners reason at depth 1 about an attentive speaker who incurs a cognitive retrieval cost for narrow, discriminating descriptors in the scene. Refining attentive_display_listener by incorporating the utterance specificity cost component from utterance_specificity_cost_l2: foundational literal interpretation remains biased toward visually prominent objects, but speakers find scene-specific discriminating features harder to access and produce, leading them to frequently favor accessible shared descriptors even when describing complex referents. Anticipating this specificity cost, listeners do not aggressively rule out multi-feature or duplicated competitor objects upon hearing an ambiguous shared label.
+
+Differences from source (attentive_display_listener):
+- Recursion depth: depth 1 (choice_probs calls L1, unchanged from source).
+- Parameters added: c_specificity (prior: dist.TruncatedNormal(0.0, 0.5, low=0.0)), scaling the cognitive retrieval cost of narrow descriptors.
+- Parameters removed: none.
+- Other terms: A per-utterance specificity cost vector is computed as `cost = c_specificity * (1.0 - ext) * (1.0 - ctx.is_sink)` where `ext` is the utterance's visual extension across objects in the display. In the simulated speaker at level L1, the speaker subtracts this specificity cost from the attentive literal listener utility: `wpp=at(lex, u, r) * exp(alpha * (log(L0[u, r](lex, attention) + {EPS}) - vec(cost, u)))`.

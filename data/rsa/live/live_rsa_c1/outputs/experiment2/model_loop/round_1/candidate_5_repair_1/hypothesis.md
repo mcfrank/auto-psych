@@ -1,0 +1,7 @@
+In communicative reference, listeners invert a similarity-contrast speaker whose intended message selection accounts for perceptual confusability across visual feature distance, but whose actual feature articulation is subject to stochastic execution noise over applicable descriptors. Refining contrastive_similarity_speaker by incorporating the stochastic transmission noise component from noisy_channel_speaker_l1: communicative speakers evaluate message informativeness through perceptual confusability decaying with visual feature distance, but occasionally articulate an alternative true descriptor by mistake. This transmission noise cushions extreme likelihood ratios on ambiguous shared descriptors, preventing listeners from over-penalizing multi-featured competitors, while preserving contrastive reasoning over competitor visual distance and perceptual prior expectations on uninformative mumble trials.
+
+Differences from source (contrastive_similarity_speaker):
+- Recursion depth: depth 1 (choice_probs calls L1, unchanged from source).
+- Parameters added: epsilon (prior: dist.Beta(1.0, 5.0)), representing the probability of stochastic execution noise over true features.
+- Parameters removed: none.
+- Other terms: In the simulated speaker at level L1, the speaker chooses an intended communicative feature m according to similarity-contrastive informativeness utility, but articulates an applicable feature u with stochastic execution noise epsilon.

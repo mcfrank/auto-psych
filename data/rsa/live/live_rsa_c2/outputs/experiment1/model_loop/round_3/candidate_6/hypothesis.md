@@ -1,0 +1,8 @@
+We refine feature_redundancy_empty_salience_l2 by incorporating bounded information-processing capacity from bounded_capacity_listener_l2 into pragmatic listener inference. Pragmatic listeners are resource-limited reasoners subject to finite information-processing capacity who update their beliefs conservatively by scaling communicative likelihood evidence by bounded precision kappa, dampening recursive preemption penalties across candidate referents. Combined with speakers who discount redundant communicative alternatives via contextual feature overlap, this bounded pragmatic inference directly resolves systematic discrepancies where competitors with redundant alternative features are under-selected and non-redundant competitors over-selected under standard unconstrained Bayesian updating.
+
+Differences from feature_redundancy_empty_salience_l2:
+- Recursion depth: Unchanged; choice_probs calls L2.
+- Parameters added: kappa (prior: dist.LogNormal(0.0, 1.0)).
+- Parameters removed: None.
+- Pragmatic listener inference: In L1 and L2, candidate referent probabilities are updated under bounded information-processing capacity by scaling speaker likelihood evidence by kappa (exp(kappa * log(speaker_prob + EPS))) rather than unscaled Bayesian conditioning.
+- All other terms: Contextual feature redundancy discounting on speaker alternatives (w_redundancy via pairwise Jaccard overlap), shared visual referent prior (w_singleton, w_distinct, w_features, w_empty, w_color), unbiased literal semantics at L0, depth-2 RSA recursion, and uniform lapse mixing remain identical to feature_redundancy_empty_salience_l2.

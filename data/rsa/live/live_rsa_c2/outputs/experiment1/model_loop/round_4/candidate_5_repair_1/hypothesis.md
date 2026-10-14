@@ -1,0 +1,8 @@
+We refine bounded_capacity_redundancy_l2 by incorporating satisficing speaker informativeness from satisficing_speaker_rsa into communicative utterance choices. Rather than seeking communicative perfection, boundedly rational speakers evaluate candidate utterances against an aspiration threshold: once a referring expression is sufficiently informative, further uniqueness yields diminishing returns, allowing shared or redundant labels to be chosen for complex objects. Capacity-limited listeners invert this satisficing, redundancy-discounted speaker, which directly softens recursive preemption against competitor referents with redundant features or duplicate copies while curbing the overprediction of minimal targets.
+
+Differences from bounded_capacity_redundancy_l2:
+- Recursion depth: Unchanged; choice_probs calls L2.
+- Parameters added: theta (prior: dist.Beta(2.0, 2.0)).
+- Parameters removed: None.
+- Speaker utterance informativeness / utility: In S1 and S2, linear communicative informativeness log(L + EPS) is replaced with bounded satisficing utility log((L / (L + theta)) + EPS) from satisficing_speaker_rsa, introducing diminishing marginal returns for utterance uniqueness beyond aspiration threshold theta.
+- All other terms: Capacity-limited inferential precision exponentiation (kappa) at L1 and L2, contextual feature redundancy discounting (w_redundancy via pairwise Jaccard overlap) in S1 and S2, shared perceptual referent prior (w_singleton, w_distinct, w_features, w_empty, w_color), truth-conditional literal semantics at L0, depth-2 RSA recursion, and uniform lapse mixing remain identical to bounded_capacity_redundancy_l2.

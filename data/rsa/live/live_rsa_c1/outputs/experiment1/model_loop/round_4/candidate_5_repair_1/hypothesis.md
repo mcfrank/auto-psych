@@ -1,0 +1,7 @@
+Pragmatic listeners evaluate candidate referents through a bounded-precision softmax decision rule over beliefs, but reason about a communicative speaker whose feature articulation is subject to stochastic execution noise over applicable descriptors. Refining softmax_belief_listener by incorporating the stochastic transmission noise component from noisy_channel_speaker_l1: communicative speakers select an intended message rationally according to literal informativeness, but occasionally articulate an alternative true descriptor by mistake. This transmission noise prevents pragmatic likelihood ratios from becoming arbitrarily extreme when competitor objects possess multiple additional features, directly correcting the incumbent model's severe overprediction of minimal-feature targets in displays with large feature gaps and duplicated competitors, while the downstream softmax decision rule maps these cushioned posterior beliefs onto bounded, probabilistic click probabilities.
+
+Differences from source (softmax_belief_listener):
+- Recursion depth: depth 1 (choice_probs calls L1, unchanged from source).
+- Parameters added: epsilon (prior: dist.Beta(1.0, 5.0)), representing the probability of stochastic execution noise over true features.
+- Parameters removed: none.
+- Other terms: In the simulated speaker at level L1, the speaker chooses an intended communicative feature m according to literal informativeness over L0, but articulates an applicable feature u with stochastic execution noise epsilon.

@@ -1,0 +1,30 @@
+{
+ "n_included": 178,
+ "excluded": [
+  "auto_psych:live101",
+  "auto_psych:live104",
+  "auto_psych:live112",
+  "auto_psych:live122",
+  "auto_psych:live124",
+  "auto_psych:live126",
+  "auto_psych:live128",
+  "auto_psych:live135",
+  "auto_psych:live137",
+  "auto_psych:live139",
+  "auto_psych:live148",
+  "auto_psych:live157",
+  "auto_psych:live172",
+  "auto_psych:live187",
+  "auto_psych:live194",
+  "auto_psych:live52",
+  "auto_psych:live66",
+  "auto_psych:live9"
+ ],
+ "max_catch_errors": 0,
+ "n_recruited": 196,
+ "n_target": 200,
+ "collection": "live",
+ "n_responses": 196,
+ "other_study": 0,
+ "without_trials": []
+}

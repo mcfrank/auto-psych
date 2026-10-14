@@ -1,0 +1,8 @@
+We refine bounded_capacity_redundancy_l2 by incorporating contextual feature prevalence from feature_prevalence_speaker_l2 into the speaker's utterance choices. In reference games, speakers exhibit an accessibility bias favoring labels that describe more objects in the visual scene over rare or exclusive attributes. Capacity-limited pragmatic listeners invert this prevalence-biased, redundancy-discounting speaker at depth 2, expecting speakers to use prevalent labels even when describing competitor objects with exclusive alternatives, which softens preemption penalties against duplicated competitors while contextual redundancy discounting prevents correlated features from compounding penalties.
+
+Differences from bounded_capacity_redundancy_l2:
+- Recursion depth: Unchanged; choice_probs calls L2.
+- Parameters added: w_prevalence (prior: dist.Normal(0.0, 1.0)).
+- Parameters removed: None.
+- Speaker utterance utility / probability: In S1 and S2, the speaker's candidate utterances are weighted by contextual feature prevalence accessibility (vec(accessibility, u)), where accessibility scales with feature occurrence frequency across context objects (jnp.exp(w_prevalence * jnp.log(jnp.maximum(freq, 1.0)))), in addition to contextual feature redundancy discounting (vec(alt_weight, u)).
+- All other terms: Bounded capacity likelihood exponentiation (kappa) in L1 and L2, referent prior (singleton salience w_singleton, contextual distinctiveness w_distinct, feature count w_features, featureless baseline salience w_empty, and color contrast w_color), literal semantics at L0, depth-2 RSA recursion, and uniform lapse mixing remain identical to bounded_capacity_redundancy_l2.

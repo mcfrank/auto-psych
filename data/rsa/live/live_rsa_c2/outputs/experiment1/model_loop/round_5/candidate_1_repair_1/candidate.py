@@ -1,0 +1,127 @@
+"""RSA depth-2 pragmatic listener reasoning about an unnameable-referent fallback speaker.
+
+When communicating about an object that cannot be uniquely identified in context because
+all applicable words are ambiguous or duplicated across objects, speakers cannot achieve
+unique reference anyway and therefore fall back to choosing among true expressions with
+dampened communicative informativeness rather than aggressively avoiding shared labels.
+Pragmatic listeners invert this fallback speaker at depth 2, recognizing that hearing an
+ambiguous word does not rule out unidentifiable or duplicated competitors. On uninformative
+trials with no informative word, choices follow visual referent salience.
+"""
+
+import jax
+import jax.numpy as jnp
+import numpyro.distributions as dist
+from memo import memo
+
+from src.rsa.memo_kit import EPS, at, softmax_prior, vec, with_lapse
+
+PARAMS = {
+    "alpha": dist.LogNormal(0.0, 1.0),
+    "w_fallback": dist.Normal(0.0, 1.0),
+    "w_singleton": dist.Normal(0.0, 1.0),
+    "w_distinct": dist.Normal(0.0, 1.0),
+    "w_features": dist.Normal(0.0, 1.0),
+    "w_empty": dist.Normal(0.0, 1.0),
+    "w_color": dist.Normal(0.0, 1.0),
+    "lapse": dist.Beta(1.0, 9.0),
+}
+
+
+def compute_nameability(lex: jnp.ndarray, is_sink: jnp.ndarray) -> jnp.ndarray:
+    """Identify whether each object in context possesses any uniquely distinguishing label."""
+    real_lex = lex * (1.0 - is_sink)[:, None]
+    utt_obj_count = jnp.sum(real_lex, axis=1)
+    is_unique_utt = jnp.where(utt_obj_count == 1, 1.0, 0.0)
+    has_unique = jnp.where(
+        jnp.sum(real_lex * is_unique_utt[:, None], axis=0) > 0, 1.0, 0.0
+    )
+    return has_unique
+
+
+@memo
+def L0[u: UTT, r: OBJ](lex: ...):
+    listener: knows(u)
+    listener: chooses(r in OBJ, wpp=at(lex, u, r))
+    return Pr[listener.r == r]
+
+
+@memo
+def S1[u: UTT, r: OBJ](alpha, lex: ..., prec: ...):
+    speaker: knows(r)
+    speaker: chooses(
+        u in UTT,
+        wpp=at(lex, u, r)
+        * exp(alpha * vec(prec, r) * log(L0[u, r](lex) + {EPS})),
+    )
+    return Pr[speaker.u == u]
+
+
+@memo
+def L1[u: UTT, r: OBJ](lex: ..., prior: ..., s1: ...):
+    listener: knows(u)
+    listener: chooses(
+        r in OBJ,
+        wpp=at(lex, u, r) * vec(prior, r) * at(s1, u, r),
+    )
+    return Pr[listener.r == r]
+
+
+@memo
+def S2[u: UTT, r: OBJ](alpha, lex: ..., l1: ..., prec: ...):
+    speaker: knows(r)
+    speaker: chooses(
+        u in UTT,
+        wpp=at(lex, u, r)
+        * exp(alpha * vec(prec, r) * log(at(l1, u, r) + {EPS})),
+    )
+    return Pr[speaker.u == u]
+
+
+@memo
+def L2[u: UTT, r: OBJ](lex: ..., prior: ..., s2: ...):
+    listener: knows(u)
+    listener: chooses(
+        r in OBJ,
+        wpp=at(lex, u, r) * vec(prior, r) * at(s2, u, r),
+    )
+    return Pr[listener.r == r]
+
+
+def choice_probs(params, ctx):
+    diffs = jnp.abs(ctx.lex[:, :, None] - ctx.lex[:, None, :])
+    pair_dist = jnp.sum(diffs * (1.0 - ctx.is_sink[:, None, None]), axis=0)
+    gray_diff = jnp.abs(ctx.grayscale[:, None] - ctx.grayscale[None, :])
+    fam_diff = jnp.abs(
+        ctx.familiarization[:, None] - ctx.familiarization[None, :]
+    )
+    total_dist = pair_dist + gray_diff + fam_diff
+    duplicate_count = jnp.sum(total_dist == 0, axis=1)
+    is_singleton = jnp.where(duplicate_count == 1, 1.0, 0.0)
+
+    real_lex = ctx.lex * (1.0 - ctx.is_sink[:, None])
+    diff = jnp.abs(real_lex[:, :, None] - real_lex[:, None, :])
+    distinct = jnp.sum(diff, axis=(0, 2))
+
+    is_empty = jnp.where(ctx.feature_count == 0, 1.0, 0.0)
+
+    prior = softmax_prior(
+        params["w_singleton"] * is_singleton
+        + params["w_distinct"] * distinct
+        + params["w_features"] * ctx.feature_count
+        + params["w_empty"] * is_empty
+        + params["w_color"] * (1.0 - ctx.grayscale)
+    )
+
+    has_unique = compute_nameability(ctx.lex, ctx.is_sink)
+    gamma = jax.nn.sigmoid(params["w_fallback"])
+    prec = has_unique + (1.0 - has_unique) * gamma
+
+    s1 = S1(params["alpha"], ctx.lex, prec)
+    l1 = L1(ctx.lex, prior, s1)
+    s2 = S2(params["alpha"], ctx.lex, l1, prec)
+    heard = L2(ctx.lex, prior, s2)[ctx.utterance]
+
+    return with_lapse(
+        jnp.where(ctx.is_prior > 0, prior, heard), params["lapse"]
+    )

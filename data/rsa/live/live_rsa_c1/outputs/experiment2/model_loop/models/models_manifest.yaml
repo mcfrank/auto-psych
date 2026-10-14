@@ -1,0 +1,189 @@
+models:
+- name: softmax_belief_listener
+  rationale: Listeners evaluate candidate referents through pragmatic counterfactual
+    reasoning, but rather than strictly matching choice probabilities to posterior
+    beliefs, they select their click via a bounded-precision softmax decision rule
+    over beliefs. When choosing among semantically valid referents, response sensitivity
+    determines how strongly differences in subjective belief translate into click
+    probabilities, softening extreme pragmatic inferences and generating bounded,
+    probabilistic choice. On uninformative trials, choices likewise reflect this bounded
+    softmax response rule applied over prior perceptual and contextual expectations.
+- name: speaker_aspect_goal_listener
+  rationale: Listeners understand that speakers are not always trying to uniquely
+    identify an individual object in the display, but frequently communicate with
+    the goal of highlighting or conveying an aspect of the referent (a feature-oriented
+    question under discussion). Under an aspect-descriptive goal, speakers freely
+    choose among the referent's true features without penalizing descriptors that
+    are shared across other objects. A pragmatic listener maintains uncertainty over
+    whether the speaker aims for referent identification or aspect description, preventing
+    extreme elimination of multi-feature and duplicated competitor objects when hearing
+    an ambiguous word.
+- name: attentive_noisy_channel_listener
+  rationale: 'Pragmatic listeners reason at depth 1 about an attentive literal listener,
+    but account for stochastic execution noise in the speaker''s feature articulation.
+    Refining attentive_display_listener by incorporating the stochastic transmission
+    noise component from noisy_channel_speaker_l1: foundational literal interpretation
+    remains biased toward visually salient and distinctive objects, and communicative
+    speakers anticipate this attentive gaze, but speakers occasionally articulate
+    an alternative applicable descriptor by mistake. This transmission noise cushions
+    extreme likelihood ratios, directly correcting the incumbent model''s severe overprediction
+    of minimal-feature targets when competitors have duplicate copies or large feature
+    gaps, while preserving visual attention biases on uninformative mumble trials.
+    Differences from source (attentive_display_listener): - Recursion depth: depth
+    1 (choice_probs calls L1, unchanged from source). - Parameters added: epsilon
+    (prior: dist.Beta(1.0, 5.0)), representing the probability of stochastic execution
+    noise over true features. - Parameters removed: none. - Other terms: In the simulated
+    speaker at level L1, the speaker chooses an intended communicative feature m according
+    to informativeness over attentive L0, but articulates an applicable feature u
+    with stochastic execution noise epsilon.'
+- name: contrastive_similarity_speaker
+  rationale: 'In communicative reference, speakers evaluate potential utterances not
+    against an undifferentiated background of all scene objects, but through perceptual
+    confusability: communicative interference decays with visual feature distance,
+    so sharing a descriptor with a distant, visually distinct competitor incurs minimal
+    penalty compared to sharing it with an adjacent neighbor. A rational pragmatic
+    listener inverts this similarity-contrast speaker, recognizing that a speaker
+    describing a multi-featured referent freely uses a shared descriptor when the
+    competing matching object is distant in feature space. This mechanism disagrees
+    most sharply with standard RSA on displays with large feature gaps between a minimal
+    target and a multi-featured competitor (such as hearing a shared feature for a
+    one-feature object competing against a four-feature object), preventing listeners
+    from overwhelmingly eliminating the complex competitor.'
+- name: noisy_channel_speaker_l1
+  rationale: 'Pragmatic listeners reason at depth 1 about a speaker whose intended
+    message selection is rational but whose actual feature articulation is subject
+    to stochastic execution noise over applicable descriptors. Refining rsa_l1_singleton_feat_color_familiar
+    by incorporating the stochastic transmission noise component from noisy_channel_speaker_l2:
+    listeners perform first-order pragmatic inversion of a speaker who balances literal
+    informativeness against a rich perceptual and experiential referent prior, but
+    occasionally articulates any applicable descriptor by mistake. This transmission
+    noise cushions likelihood ratios, directly mitigating the model''s overprediction
+    of minimal-feature targets when competitors have duplicate copies or large feature
+    gaps, while preserving depth-1 calibrated reasoning and perceptual prior expectations
+    on uninformative mumble trials. Differences from source (rsa_l1_singleton_feat_color_familiar):
+    - Recursion depth: depth 1 (choice_probs calls L1, unchanged from source). - Parameters
+    added: epsilon (prior: dist.Beta(1.0, 5.0)), representing the probability of stochastic
+    execution noise over true features. - Parameters removed: none. - Other terms:
+    In the simulated speaker at level L1, the speaker chooses an intended communicative
+    feature m according to literal informativeness but articulates an applicable feature
+    u with execution noise epsilon.'
+- name: pragmatic_preemption_listener
+  rationale: 'Listeners interpret utterances through pragmatic preemption: they recognize
+    that speakers prioritize unambiguous descriptors that uniquely pick out an intended
+    referent, so the presence of an unambiguous distinguishing feature preempts the
+    speaker from using an ambiguous shared descriptor. When hearing a shared descriptor,
+    listeners infer that the speaker intended a referent lacking a unique distinguishing
+    label rather than a competitor for which a uniquely identifying descriptor was
+    available. Across displays with redundant features and large feature gaps, this
+    preemption mechanism prevents the artificial dilution of pragmatic inferences
+    while maintaining calibrated expectations for candidate referents.'
+- name: contrastive_noisy_channel_speaker
+  rationale: 'In communicative reference, listeners invert a similarity-contrast speaker
+    whose intended message selection accounts for perceptual confusability across
+    visual feature distance, but whose actual feature articulation is subject to stochastic
+    execution noise over applicable descriptors. Refining contrastive_similarity_speaker
+    by incorporating the stochastic transmission noise component from noisy_channel_speaker_l1:
+    communicative speakers evaluate message informativeness through perceptual confusability
+    decaying with visual feature distance, but occasionally articulate an alternative
+    true descriptor by mistake. This transmission noise cushions extreme likelihood
+    ratios on ambiguous shared descriptors, preventing listeners from over-penalizing
+    multi-featured competitors, while preserving contrastive reasoning over competitor
+    visual distance and perceptual prior expectations on uninformative mumble trials.
+    Differences from source (contrastive_similarity_speaker): - Recursion depth: depth
+    1 (choice_probs calls L1, unchanged from source). - Parameters added: epsilon
+    (prior: dist.Beta(1.0, 5.0)), representing the probability of stochastic execution
+    noise over true features. - Parameters removed: none. - Other terms: In the simulated
+    speaker at level L1, the speaker chooses an intended communicative feature m according
+    to similarity-contrastive informativeness utility, but articulates an applicable
+    feature u with stochastic execution noise epsilon.'
+- name: contrastive_extremity_noisy_speaker
+  rationale: 'Pragmatic listeners reason at depth 1 about a similarity-contrast speaker
+    under common knowledge of visual endpoint extremity, but account for stochastic
+    execution noise in the speaker''s feature articulation. Refining contrastive_extremity_speaker
+    by incorporating the stochastic transmission noise component from noisy_channel_speaker_l1:
+    speakers evaluate message informativeness through perceptual confusability decaying
+    with visual feature distance and anchor referent expectations at the scene''s
+    complexity extremes, but occasionally slip when articulating true features. This
+    transmission noise cushions extreme likelihood ratios and directly addresses residual
+    over-penalization of competitors in larger displays and feature gaps, while preserving
+    contrastive similarity reasoning and endpoint salience. Differences from source
+    (contrastive_extremity_speaker): - Recursion depth: depth 1 (choice_probs calls
+    L1, unchanged from source). - Parameters added: epsilon (prior: dist.Beta(1.0,
+    5.0)), representing the probability of stochastic execution noise over applicable
+    features. - Parameters removed: none. - Other terms: In the simulated speaker
+    at level L1, the speaker chooses an intended communicative feature m according
+    to contrastive similarity utility, but articulates an applicable feature u with
+    stochastic execution noise epsilon.'
+- name: contrastive_mumble_extremity_speaker
+  rationale: 'Pragmatic listeners reason at depth 1 about a noisy-channel similarity-contrast
+    speaker under foundational perceptual scene expectations, but anchor referent
+    expectations at complexity extremes specifically when no communicative utterance
+    is provided. Refining contrastive_extremity_noisy_speaker by decoupling visual
+    endpoint extremity salience from the speaker''s communicative referent prior:
+    speakers choose messages based on perceptual confusability decaying with feature
+    distance under a baseline perceptual prior, while listeners use visual endpoint
+    extremity to anchor attention between bare contrasts and maximal exemplars on
+    uninformative mumble trials. This decoupling prevents endpoint salience from conflicting
+    with scalar informativeness on utterance trials, resolving the incumbent model''s
+    overprediction of intermediate objects on mumble trials while preserving robust
+    contrastive reasoning. Differences from source (contrastive_extremity_noisy_speaker):
+    - Recursion depth: depth 1 (choice_probs calls L1, unchanged from source). - Parameters
+    added: none. - Parameters removed: none. - Other terms: In choice_probs, visual
+    endpoint extremity salience (w_extremity * extremity) is decoupled from the communicative
+    speaker''s referent prior and applied specifically to choices on uninformative
+    mumble trials (mumble_prior). The simulated speaker in L1 evaluates referents
+    according to the perceptual base prior (speaker_prior), ensuring endpoint extremity
+    salience anchors visual attention when no word is heard without interfering with
+    speaker utility and pragmatic inference on utterance trials.'
+- name: contrastive_featured_noisy_speaker_2
+  rationale: 'Perceptual pop-out from uniqueness in a visual scene requires distinguishing
+    features; an unadorned, empty object does not capture pre-attentive attention
+    merely because it lacks identical copies. Pragmatic listeners invert a similarity-contrast
+    speaker with stochastic transmission noise under a referent prior where visual
+    singleton salience applies only to unique objects possessing at least one visual
+    feature. This feature-gated singleton salience directly corrects the overprediction
+    of empty singleton choices when competing against duplicated full objects on uninformative
+    trials, while contrastive similarity reasoning and transmission noise cushion
+    pragmatic inferences on utterance trials. Refining contrastive_noisy_channel_speaker
+    by incorporating feature-gated singleton salience: - Recursion depth: depth 1
+    (choice_probs calls L1, unchanged from source). - Parameters added: none. - Parameters
+    removed: none. - Other terms: In choice_probs, discrete visual singleton salience
+    is gated by the presence of visual features (`featured_singleton = is_singleton
+    * (ctx.feature_count > 0.0)`), replacing unadorned singleton indicator in the
+    referent prior so that empty objects lacking visual features receive no singleton
+    pop-out boost. The prior on speaker rationality alpha is tightened to LogNormal(2.2,
+    0.4) to match communicative scale and prevent unconstrained drift into divergent
+    high-rationality regimes.'
+- name: residual_ambiguity_speaker
+  rationale: In communicative reference, sharing an applicable descriptor with a competitor
+    always incurs an irreducible baseline semantic interference that cannot be fully
+    eliminated by perceptual feature distance. Communicative speakers evaluate message
+    informativeness through perceptual confusability decaying with visual feature
+    distance, but anchor competitor interference at a non-zero semantic baseline reflecting
+    literal multiplicity in the visual scene. A rational pragmatic listener inverts
+    this speaker, preventing the over-attribution of ambiguous shared descriptors
+    to complex competitor objects across large visual feature gaps.
+- name: contrastive_preemption_noisy_speaker_4
+  rationale: 'Speakers prioritize uniquely identifying descriptors that single out
+    an intended referent, which pragmatically preempts the use of an ambiguous shared
+    descriptor whenever a distinguishing feature is available. Pragmatic listeners
+    invert this preemption-sensitive speaker under perceptual similarity-contrast
+    and endpoint extremity, recognizing that hearing an ambiguous descriptor strongly
+    implies the speaker intended a referent lacking any unique alternative label rather
+    than a competitor for which a distinguishing feature could have been produced.
+    This preemption mechanism directly resolves the incumbent model''s underprediction
+    of minimal-feature targets on redundant-feature trials and overprediction of complex
+    competitors across large feature gaps, while preserving similarity-contrast reasoning
+    and stochastic transmission noise. Refining contrastive_extremity_noisy_speaker
+    by incorporating the pragmatic preemption component from pragmatic_preemption_listener:
+    - Recursion depth: depth 1 (choice_probs calls L1, unchanged from source). - Parameters
+    added: p_preempt (prior: dist.Beta(1.0, 2.0)), representing the probability that
+    the presence of an unambiguous distinguishing feature preempts the speaker from
+    choosing an ambiguous shared descriptor. - Parameters removed: none. - Other terms:
+    In choice_probs, a preemption factor matrix of shape (N_UTT, N_OBJ) is computed:
+    when an utterance is shared across multiple objects and an intended referent possesses
+    at least one uniquely identifying descriptor in the visual scene, the speaker''s
+    choice weight for that shared utterance is discounted by (1.0 - p_preempt). In
+    the simulated speaker at level L1, the speaker chooses an intended communicative
+    feature m with weight proportional to at(lex, m, r) * at(factor, m, r) * exp(alpha
+    * at(util, m, r)) before stochastic articulation noise is applied.'

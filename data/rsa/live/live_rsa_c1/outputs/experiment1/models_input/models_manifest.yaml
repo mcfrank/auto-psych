@@ -1,0 +1,58 @@
+models:
+- name: evaluative_prominence_l2
+  rationale: 'Pragmatic listener at depth 2 with evaluative stance and visual prominence.
+    Speakers select referents according to evaluative prominence: the alignment between
+    an object''s sensory visual prominence (chromatic vibrancy and visual feature
+    elaboration) and the speaker''s evaluative stance. Under positive framing (''favorite''),
+    speakers seek objects of high visual prominence; under negative framing (''least
+    favorite''), this evaluative stance inverts toward minimal, unadorned objects;
+    and under neutral framing, choices follow a baseline positive orientation toward
+    visual features and chromatic pop-out. Listeners reason at depth 2, inverting
+    a speaker who anticipates a pragmatic listener. On uninformative prior trials,
+    choices directly follow the evaluative prominence distribution. A lapse parameter
+    mixes in uniform guessing.'
+  source: real_rep2/pruned/evaluative_prominence_l2
+  group: 3
+- name: rsa_l2_singleton_feat_color_familiar_l0
+  rationale: 'RSA pragmatic listener at depth 2 with singleton salience, contextual
+    distinctiveness, visual feature complexity, visual color contrast, familiarization
+    base rates, and literal L0. Refining rsa_l2_singleton_distinct_feat_color_l0 with
+    the familiarization base-rate component from rsa_l2_singleton_features_familiar_l0:
+    speakers and listeners reason at depth 2 (inverting a speaker who simulates a
+    depth-1 pragmatic listener) with common knowledge of an object prior combining
+    discrete visual singleton salience (favoring unique objects with no duplicates
+    in the scene), continuous contextual distinctiveness (favoring objects with greater
+    feature contrast relative to the rest of the display), visual feature complexity
+    (weighting objects by total feature count), visual color contrast (favoring fully
+    colored objects over desaturated grayscale distractors), and experiential exposure
+    frequency (favoring objects seen more frequently during familiarization). Crucially,
+    the foundational simulated literal listener L0 operates purely on truth-conditional
+    semantics without perceptual or experiential bias, preventing redundant prior
+    compounding across reasoning tiers. On prior trials with no informative word,
+    choices are governed directly by the combined perceptual and experiential prior.
+    A lapse parameter mixes in uniform guessing.'
+  source: real_rep1/pruned/rsa_l2_singleton_feat_color_familiar_l0
+  group: 5
+- name: softmax_surprisal_isolated_costly_l4
+  rationale: Pragmatic listener at depth 4 with perceptual isolation, feature surprisal
+    prior, graded semantics, utterance extension costs, and softmax belief choice
+    rule.
+  source: real_rep2/live/softmax_surprisal_isolated_costly_l4
+  group: 8
+- name: rsa_l2
+  rationale: 'RSA pragmatic listener at depth 2, uniform prior over objects. One more
+    level of recursion than the vanilla model: a speaker S2 chooses words by how well
+    the depth-1 pragmatic listener L1 would recover the object (exp(alpha * log L1)),
+    and the listener L2 inverts S2. Depth-2 reasoning is what the pragmods "complex"
+    game needs to single out the object described by the twice-implicated word. One
+    rationality alpha at every level; uniform choice with no informative word; a lapse
+    parameter mixes in uniform guessing.'
+  source: starting model (reference)
+- name: rsa_l1
+  rationale: Vanilla RSA pragmatic listener (depth 1), uniform prior over objects.
+    The listener reasons about a speaker who chooses a true word with probability
+    proportional to exp(alpha * log L0(object | word)), where L0 is the literal listener;
+    the listener inverts that speaker with a uniform prior over objects (Frank & Goodman,
+    2012). With no informative word the choice is uniform. A lapse parameter mixes
+    in uniform guessing.
+  source: starting model (reference)

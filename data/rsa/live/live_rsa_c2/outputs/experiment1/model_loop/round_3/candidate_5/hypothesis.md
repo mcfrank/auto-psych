@@ -1,0 +1,8 @@
+Refining bounded_capacity_listener_l2, we incorporate contextual feature redundancy discounting from feature_redundancy_discounted_l2 into the speaker's utterance choices. When deciding what to say, speakers do not treat co-extensive or heavily overlapping features as independent communicative alternatives that multiply the preemption penalty against shared labels, but instead discount redundant alternatives according to their contextual overlap. Capacity-limited pragmatic listeners invert this redundancy-discounted speaker, appropriately softening preemption specifically when competitor objects possess redundant distinguishing features and resolving the source model's systematic underprediction of redundant competitor choices.
+
+Differences from bounded_capacity_listener_l2:
+- Recursion depth: Unchanged; choice_probs calls L2.
+- Parameters added: w_redundancy (prior: dist.Normal(0.0, 1.0)).
+- Parameters removed: None.
+- Speaker utterance alternatives / utility: In S1 and S2, candidate utterances are weighted by a contextual feature redundancy discount (vec(alt_weight, u)), where alt_weight scales inversely with utterance redundancy computed via pairwise Jaccard overlap of real utterances across context objects (jnp.exp(-w_redundancy * jnp.log(jnp.maximum(redundancy, 1.0)))).
+- All other terms: Capacity-limited likelihood updating via inferential precision exponentiation (kappa) at L1 and L2, shared visual referent prior (w_singleton, w_distinct, w_features, w_empty, w_color), truth-conditional literal semantics at L0, depth-2 RSA recursion, and uniform lapse mixing remain identical to bounded_capacity_listener_l2.

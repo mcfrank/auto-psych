@@ -1,0 +1,8 @@
+Refining bounded_capacity_redundancy_l2, we incorporate a salience-capture attentional lapse mechanism from salience_capture_lapse_l2 into reference resolution. When listeners experience an attentional slip or execute an impulsive choice, their responses are not uniform random noise across the visual display; instead, lapses are captured by bottom-up visual salience, drawing inattentive clicks toward visually prominent candidate objects according to the perceptual prior. This structured lapse directly resolves the empirical rate of literal semantic violations (false-feature choices) while elevating choices for feature-rich and duplicated competitor objects in scalar reference contexts.
+
+Differences from bounded_capacity_redundancy_l2:
+- Recursion depth: Unchanged; choice_probs calls L2.
+- Parameters added: None.
+- Parameters removed: None.
+- Response / lapse process: In choice_probs on utterance trials, uniform lapse mixing (with_lapse) is replaced with salience-capture lapse mixing ((1.0 - lapse) * heard + lapse * prior), where attentional lapses are captured by bottom-up visual salience (the shared perceptual prior) rather than uniform random noise.
+- All other terms: Capacity-limited pragmatic likelihood exponentiation (kappa) in L1 and L2, contextual feature redundancy discounting on speaker alternatives (w_redundancy via pairwise Jaccard overlap) in S1 and S2, shared perceptual referent prior (w_singleton, w_distinct, w_features, w_empty, and w_color), truth-conditional literal semantics at L0, depth-2 RSA recursion, and unprompted prior choices (ctx.is_prior > 0) remain identical to bounded_capacity_redundancy_l2.

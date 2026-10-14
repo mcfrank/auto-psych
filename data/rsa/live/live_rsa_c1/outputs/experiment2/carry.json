@@ -1,0 +1,50 @@
+{
+ "rule": "best first by the loop's final standing; a model within 0.002 (RMSE of posterior-mean choice-class probabilities over the design pool) of one kept is the same hypothesis for the live phase; at most 8",
+ "order": [
+  "softmax_belief_listener",
+  "speaker_aspect_goal_listener",
+  "attentive_noisy_channel_listener",
+  "contrastive_similarity_speaker",
+  "attentive_display_listener",
+  "noisy_channel_speaker_l1",
+  "bounded_capacity_listener",
+  "rsa_l1_singleton_feat_color_familiar",
+  "aspect_goal_featured_singleton_listener",
+  "literal_pragmatic_mixture_listener",
+  "noisy_channel_speaker_l2",
+  "noisy_channel_featured_singleton_l1"
+ ],
+ "kept": [
+  "softmax_belief_listener",
+  "speaker_aspect_goal_listener",
+  "attentive_noisy_channel_listener",
+  "contrastive_similarity_speaker",
+  "attentive_display_listener",
+  "noisy_channel_speaker_l1",
+  "bounded_capacity_listener",
+  "rsa_l1_singleton_feat_color_familiar"
+ ],
+ "merged": [],
+ "over_cap": [
+  {
+   "name": "aspect_goal_featured_singleton_listener",
+   "nearest": "speaker_aspect_goal_listener",
+   "rmse": 0.01794491402700041
+  },
+  {
+   "name": "literal_pragmatic_mixture_listener",
+   "nearest": "attentive_display_listener",
+   "rmse": 0.02184812299959107
+  },
+  {
+   "name": "noisy_channel_speaker_l2",
+   "nearest": "attentive_noisy_channel_listener",
+   "rmse": 0.021532066049110676
+  },
+  {
+   "name": "noisy_channel_featured_singleton_l1",
+   "nearest": "noisy_channel_speaker_l1",
+   "rmse": 0.017911417661559795
+  }
+ ]
+}

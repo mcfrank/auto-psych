@@ -1,0 +1,8 @@
+Pragmatic listeners reason about speakers who alternate between uniquely identifying a referent and simply describing an aspect of it, translating their posterior beliefs into choices via a bounded-precision softmax decision rule. Refining softmax_belief_listener by incorporating the speaker aspect-descriptive goal component from speaker_aspect_goal_listener: listeners maintain uncertainty over whether the speaker aims for referent identification or aspect description, preventing extreme elimination of competitor objects with multiple features or duplicate copies. This cushions likelihood ratios and directly resolves the incumbent model's overprediction of minimal-feature targets in large feature gaps and two-object displays, while bounded softmax sensitivity governs the mapping from subjective beliefs to behavioral clicks.
+
+Differences from source (softmax_belief_listener):
+- Recursion depth: depth 1 (choice_probs calls L1, unchanged from source).
+- Parameters added: p_aspect (prior: dist.Beta(1.0, 5.0)), representing the prior probability that the speaker communicates under an aspect-descriptive goal rather than a referent-identification goal.
+- Parameters removed: none.
+- Parameter priors changed: alpha prior is dist.LogNormal(0.0, 0.5), tightened from dist.LogNormal(0.0, 1.0) to match the aspect-goal speaker formulation.
+- Other terms: In the simulated speaker at level L1, the speaker samples a communicative goal g in (0, 1) with probability p_aspect of an aspect-descriptive goal, selecting an utterance with informativeness utility when g = 0 and selecting uniformly among the referent's true features when g = 1.

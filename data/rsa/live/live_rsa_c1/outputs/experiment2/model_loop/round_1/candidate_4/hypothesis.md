@@ -1,0 +1,7 @@
+In communicative reference, listeners invert a similarity-contrast speaker whose message informativeness accounts for perceptual confusability across visual feature distance, but whose referent expectations are anchored by the extreme endpoints of the visual scene's complexity continuum. Refining contrastive_similarity_speaker by incorporating the endpoint extremity salience component from endpoint_salience_listener: visual attention and referential expectations favor the baseline contrast (minimal features) and the maximally elaborated exemplar, while intermediate-complexity objects suffer perceptual compression. This endpoint extremity mechanism directly corrects the incumbent model's severe overprediction of intermediate-complexity objects on uninformative mumble trials and ambiguous utterance trials, while preserving contrastive similarity reasoning over communicative interference.
+
+Differences from source (contrastive_similarity_speaker):
+- Recursion depth: depth 1 (choice_probs calls L1, unchanged from source).
+- Parameters added: w_extremity (prior: dist.Normal(0.0, 1.0)), representing the visual attention weight on complexity continuum endpoints.
+- Parameters removed: none.
+- Other terms: In choice_probs, display-level complexity bounds min_count and max_count define midpoint = 0.5 * (min_count + max_count) and visual feature extremity = jnp.abs(ctx.feature_count - midpoint), which is added to the referent prior log-weights scaled by w_extremity.

@@ -1,0 +1,7 @@
+Pragmatic listeners select referents via a bounded-precision softmax decision rule over beliefs, inverting a communicative speaker whose informative utility is governed by perceptual confusability across visual feature distance. Under this contrastive similarity speaker, communicative interference from sharing a descriptor with a competitor decays exponentially with visual feature distance, so speakers freely use shared descriptors when describing multi-featured objects that compete against visually distant targets. This similarity-contrast utility directly mitigates the incumbent model's severe overprediction of minimal-feature targets in displays with large feature gaps and two-object contexts, while bounded softmax sensitivity maps subjective beliefs onto behavioral clicks.
+
+Differences from source (softmax_belief_listener):
+- Recursion depth: depth 1 (choice_probs calls L1, unchanged from source).
+- Parameters added: lambda_sim (prior: dist.LogNormal(0.0, 1.0)), governing the exponential decay rate of perceptual confusability with visual feature distance.
+- Parameters removed: none.
+- Other terms: In choice_probs, a pairwise visual distance matrix total_dist is computed across objects, from which an exponential similarity matrix sim and utterance-referent confusability conf are derived to compute contrastive utility util. In the simulated speaker at level L1, the speaker chooses an utterance with informativeness utility at(util, u, r) rather than evaluating a uniform literal listener log(L0[u, r](lex) + {EPS}).

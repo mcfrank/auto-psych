@@ -1,0 +1,8 @@
+We refine bounded_capacity_redundancy_l2 by incorporating contextual endpoint salience from endpoint_salience_l2 into the shared referent prior. In visual displays with varying feature complexity, perceptual attention spontaneously anchors at the boundaries of the scene's feature distribution (the minimal baseline object and the maximal exemplar), while intermediate objects that fall strictly between these poles are disfavored as unremarkable non-targets. Capacity-limited pragmatic listeners and speakers reason with common knowledge of this bipolar extremity prior alongside contextual feature redundancy discounting, directly rectifying the systematic overprediction of intermediate-feature objects on unprompted mumble trials and dampening intermediate competitor choices during reference resolution.
+
+Differences from bounded_capacity_redundancy_l2:
+- Recursion depth: Unchanged; choice_probs calls L2.
+- Parameters added: w_endpoint (prior: dist.Normal(0.0, 1.0)).
+- Parameters removed: None.
+- Referent prior: In choice_probs, incorporates contextual endpoint anchor salience (params["w_endpoint"] * is_endpoint) from endpoint_salience_l2 into the shared referent prior, where is_endpoint (1.0 - is_inter) distinguishes contextual extreme-complexity objects from strictly intermediate items (is_inter).
+- All other terms: Capacity-limited inferential precision exponentiation (kappa) at L1 and L2, contextual feature redundancy discounting on speaker alternatives (w_redundancy via pairwise Jaccard overlap) in S1 and S2, literal truth-conditional semantics at L0, baseline prior components (w_singleton, w_distinct, w_features, w_empty, w_color), depth-2 RSA recursion, and uniform lapse mixing remain identical to bounded_capacity_redundancy_l2.
