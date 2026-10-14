@@ -239,6 +239,22 @@ games, and support two claims:
   - **Caveat:** the same LLM writes every chain's models, so cross-chain convergence mixes the data
     with the agents' own priors. The final experiment's lesions, organised by shared mechanism,
     test it.
+  - **Pooled refit** (all three on the same data: existing plain + 8 live experiments, catch
+    removed; `data/rsa/live/finals_pool_preds.json`, a8c8ee31):
+    - **They are distinct hypotheses:** pool RMSE c0–c1 0.026, c0–c2 0.040, c1–c2 0.033, 3–5× the
+      `rsa_l1`/`rsa_l2` gap.
+    - **Where they disagree most:** a word fitting 3+ objects of graded feature richness. Chain 0
+      puts 0.6–0.75 on the sparsest match and suppresses the intermediate object (its interior
+      term); chain 2 spreads about a third onto the intermediate; chain 1 is in between. Chain 2
+      also differs on mumble trials (its U-shaped prior).
+    - **In-sample, chain 0's model fits every chain's live data best:**
+      - chain 0's data: c1 −119, c2 −116 nats;
+      - chain 1's: −15, −25;
+      - chain 2's: −34, −27.
+
+      This includes the data each chain selected its own model on. But it is in-sample, chain 0's
+      model has about 5 more effective parameters and one more experiment of development, and
+      chains 1–2 are unfinished. The final experiment decides it prospectively.
 - **Known limits to report:**
   - simulated people are less noisy than real ones;
   - pruning on the live rows is weak;
