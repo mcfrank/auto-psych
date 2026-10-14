@@ -1,0 +1,8 @@
+Visual scene expectations and communicative topic focus are anchored asymmetrically by the maximally elaborated focal exemplar, rather than distributed symmetrically across complexity extremes. Refining feature_aspect_qud_listener by incorporating focal exemplar salience from contrastive_graded_focal_speaker: while intermediate objects suffer perceptual compression relative to complexity boundaries, human visual search and communicative topic focus exhibit feature-positive asymmetry, favoring the most feature-rich exemplar over bare baseline contrasts. A pragmatic listener jointly inverts the speaker across candidate referents and dual communicative goals (referent identification versus feature aspect characterization) under this focal-anchored prior, directly correcting the model's severe overprediction of intermediate objects on mumble trials (prior_intermediate_features_rate) and underprediction of maximal-feature objects (prior_max_feature_rate_all_singletons and prior_dup_full_rate_with_empty_singleton), while suppressing intermediate competitors on ambiguous utterance trials.
+
+Differences from source (feature_aspect_qud_listener):
+- Recursion depth: depth 1 (choice_probs calls L1, unchanged from source).
+- Parameters added: w_max_feat (prior: dist.Normal(0.0, 1.0)), representing the visual salience of the maximal-feature focal exemplar.
+- Parameters removed: none.
+- Parameter priors changed: none.
+- Other terms: In choice_probs, the presence of maximal visual elaboration in the display is computed as `is_max_feat = jnp.where((ctx.feature_count == max_count) & (ctx.feature_count > 0.0), 1.0, 0.0)` and included in the referent prior linear predictor with weight w_max_feat.

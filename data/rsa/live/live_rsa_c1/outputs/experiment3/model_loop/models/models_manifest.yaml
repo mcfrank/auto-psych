@@ -1,0 +1,209 @@
+models:
+- name: contrastive_extremity_noisy_speaker
+  rationale: 'Pragmatic listeners reason at depth 1 about a similarity-contrast speaker
+    under common knowledge of visual endpoint extremity, but account for stochastic
+    execution noise in the speaker''s feature articulation. Refining contrastive_extremity_speaker
+    by incorporating the stochastic transmission noise component from noisy_channel_speaker_l1:
+    speakers evaluate message informativeness through perceptual confusability decaying
+    with visual feature distance and anchor referent expectations at the scene''s
+    complexity extremes, but occasionally slip when articulating true features. This
+    transmission noise cushions extreme likelihood ratios and directly addresses residual
+    over-penalization of competitors in larger displays and feature gaps, while preserving
+    contrastive similarity reasoning and endpoint salience. Differences from source
+    (contrastive_extremity_speaker): - Recursion depth: depth 1 (choice_probs calls
+    L1, unchanged from source). - Parameters added: epsilon (prior: dist.Beta(1.0,
+    5.0)), representing the probability of stochastic execution noise over applicable
+    features. - Parameters removed: none. - Other terms: In the simulated speaker
+    at level L1, the speaker chooses an intended communicative feature m according
+    to contrastive similarity utility, but articulates an applicable feature u with
+    stochastic execution noise epsilon.'
+- name: contrastive_focal_extremity_speaker
+  rationale: 'Visual scene expectations and communicative attention are anchored asymmetrically
+    by the maximally elaborated focal exemplar, rather than distributed symmetrically
+    across complexity extremes. Refining contrastive_extremity_noisy_speaker by incorporating
+    focal exemplar salience: while intermediate objects suffer perceptual compression
+    relative to complexity boundaries, human visual search and communicative topic
+    focus exhibit strong feature-positive asymmetry, favoring the most feature-rich
+    exemplar over bare baseline contrasts. This focal exemplar boost directly resolves
+    the incumbent model''s underprediction of maximal-feature objects and overprediction
+    of intermediate objects on uninformative mumble trials, while curbing overprediction
+    of intermediate competitors on ambiguous utterance trials. Differences from source
+    (contrastive_extremity_noisy_speaker): - Recursion depth: depth 1 (choice_probs
+    calls L1, unchanged from source). - Parameters added: w_max_feat (prior: dist.Normal(0.0,
+    1.0)), representing the visual salience of the maximal-feature focal exemplar.
+    - Parameters removed: none. - Other terms: In choice_probs, the presence of maximal
+    visual elaboration is computed as `is_max_feat = jnp.where((ctx.feature_count
+    == max_count) & (ctx.feature_count > 0.0), 1.0, 0.0)` and included in the referent
+    prior linear predictor with weight w_max_feat.'
+- name: contrastive_graded_noisy_speaker
+  rationale: 'In communicative reference, a descriptor''s truth-conditional applicability
+    diminishes with an object''s excess unmentioned visual features relative to the
+    visual scene''s minimal matching exemplar. Refining contrastive_extremity_noisy_speaker
+    by incorporating the graded semantic applicability component from graded_applicability_listener:
+    communicative speakers evaluate message informativeness through perceptual confusability
+    decaying with visual feature distance and anchor referent expectations at scene
+    complexity extremes, but operate over a graded lexicon where an utterance''s applicability
+    decays exponentially with an object''s excess features relative to the scene''s
+    minimal matching exemplar. A pragmatic listener inverts this graded similarity-contrast
+    speaker with stochastic execution noise, directly suppressing intermediate competitor
+    choices on ambiguous trials, boosting minimal-feature target selection on redundant-feature
+    trials, and improving target choice scaling across display sizes, while preserving
+    visual endpoint extremity and contrastive similarity reasoning. Differences from
+    source (contrastive_extremity_noisy_speaker): - Recursion depth: depth 1 (choice_probs
+    calls L1, unchanged from source). - Parameters added: gamma (prior: dist.LogNormal(0.0,
+    1.0)), governing the exponential decay rate of semantic applicability with excess
+    visual features. - Parameters removed: none. - Parameter priors changed: The prior
+    on speaker rationality alpha is tightened to dist.LogNormal(2.2, 0.4) (from dist.LogNormal(0.0,
+    1.0)) following residual_extremity_noisy_speaker to match communicative scale
+    and prevent unconstrained drift into divergent regimes. - Other terms: In choice_probs,
+    excess visual features for each descriptor relative to the minimal matching exemplar
+    are computed as `counts = jnp.where(ctx.lex > 0.0, ctx.feature_count[None, :],
+    999.0)`, `min_counts = jnp.min(counts, axis=1, keepdims=True)`, and `excess =
+    jnp.maximum(ctx.feature_count[None, :] - min_counts, 0.0)`. Contextual graded
+    semantic applicability is computed as `real_graded = ctx.lex * jnp.exp(-params["gamma"]
+    * excess)` and `graded_lex = jnp.where(ctx.is_sink[:, None] > 0.0, ctx.lex, real_graded)`.
+    Communicative confusability `conf = jnp.einsum("uc, cr -> ur", graded_lex, sim)`
+    and speaker utility `util = jnp.log(graded_lex / (conf + EPS) + EPS)` are computed
+    over `graded_lex`, and `graded_lex` is passed as `lex` to `L1`.'
+- name: feature_aspect_qud_listener
+  rationale: 'Speakers communicate under dual communicative goals: either to uniquely
+    identify an individual referent in the visual scene, or to be informative about
+    the referent''s visual feature aspect. Under the feature aspect goal, single-word
+    descriptors are evaluated by how exhaustively they describe the referent''s visual
+    features without omission, penalizing objects with excess unmentioned visual features
+    relative to the minimal matching exemplar. A pragmatic listener maintains uncertainty
+    over the speaker''s communicative goal and jointly inverts the speaker across
+    both referents and goals, naturally elevating minimal-feature targets on redundant-feature
+    trials and suppressing intermediate competitors.'
+- name: contrastive_graded_deficit_speaker
+  rationale: 'In communicative reference, speakers incur a discriminative opportunity
+    cost when choosing an ambiguous or under-informative descriptor if a more discriminating
+    descriptor is available for that referent in the visual scene. Pragmatic listeners
+    invert this efficiency-seeking speaker operating over a graded lexicon, inferring
+    that hearing an ambiguous descriptor strongly points toward a candidate referent
+    that lacked more discriminative descriptive alternatives. This discriminative
+    deficit mechanism directly boosts minimal-feature target selection on redundant-feature
+    trials and across display sizes, while curbing the choice of intermediate-feature
+    competitors. Refining contrastive_graded_noisy_speaker by incorporating the discriminative
+    deficit component from contrastive_deficit_noisy_speaker: communicative speakers
+    evaluate message informativeness through perceptual confusability decaying with
+    visual feature distance and anchor referent expectations at scene complexity extremes
+    over a graded lexicon, but penalize descriptors that rule out fewer scene competitors
+    than the referent''s most discriminative available descriptor. A pragmatic listener
+    inverts this graded similarity-contrast speaker with stochastic execution noise,
+    directly resolving the model''s severe underprediction of minimal-feature targets
+    on redundant-feature trials (target_rate_redundant_feature_utterance), curbing
+    overprediction of intermediate competitors (intermediate_matching_competitor_rate),
+    and improving target choice scaling across display sizes (target_rate_scaling_4obj_vs_2obj),
+    while preserving graded semantic applicability, visual endpoint extremity, and
+    contrastive similarity reasoning. Differences from source (contrastive_graded_noisy_speaker):
+    - Recursion depth: depth 1 (choice_probs calls L1, unchanged from source). - Parameters
+    added: c_deficit (prior: dist.LogNormal(0.0, 1.0)), representing the speaker''s
+    opportunity cost for choosing an under-discriminative descriptor relative to the
+    referent''s most discriminative available option. - Parameters removed: none.
+    - Parameter priors changed: none. - Other terms: In choice_probs, discriminative
+    deficit is computed from the scene''s truth values and object count as `ext =
+    jnp.sum(real_lex, axis=1)`, `disc = 1.0 - ext / n_obj`, `masked_disc = jnp.where(real_lex
+    > 0, disc[:, None], -1.0)`, `disc_max = jnp.maximum(jnp.max(masked_disc, axis=0),
+    0.0)`, and `deficit = jnp.maximum(disc_max[None, :] - disc[:, None], 0.0) * real_lex`.
+    In the simulated speaker at level L1, the speaker chooses an intended communicative
+    feature m with weight proportional to `at(lex, m, r) * (exp(alpha * at(util, m,
+    r) - c_deficit * at(deficit, m, r)) + {EPS})` before stochastic execution noise
+    epsilon is applied, passing deficit as an array parameter to L1.'
+- name: contrastive_graded_focal_speaker
+  rationale: 'In visual reference games, human referential attention exhibits strong
+    feature-positive asymmetry, favoring the maximally elaborated focal exemplar over
+    unadorned baseline objects rather than treating complexity endpoints symmetrically.
+    Refining contrastive_graded_noisy_speaker by incorporating focal exemplar salience
+    from contrastive_focal_extremity_speaker: communicative speakers reason over a
+    graded lexicon with perceptual confusability decaying with feature distance, but
+    anchor candidate expectations preferentially on the visual scene''s most feature-rich
+    object. A pragmatic listener inverts this graded similarity-contrast speaker with
+    stochastic execution noise, directly boosting choices of maximal-feature referents
+    and suppressing intermediate competitors on both uninformative mumble trials and
+    ambiguous utterance trials. Differences from source (contrastive_graded_noisy_speaker):
+    - Recursion depth: depth 1 (choice_probs calls L1, unchanged from source). - Parameters
+    added: w_max_feat (prior: dist.Normal(0.0, 1.0)), representing the visual salience
+    of the maximal-feature focal exemplar. - Parameters removed: none. - Parameter
+    priors changed: none. - Other terms: In choice_probs, the presence of maximal
+    visual elaboration in the display is computed as `is_max_feat = jnp.where((ctx.feature_count
+    == max_count) & (ctx.feature_count > 0.0), 1.0, 0.0)` and included in the referent
+    prior linear predictor with weight w_max_feat.'
+- name: mutual_validity_listener
+  rationale: "Speakers and listeners communicate by evaluating referring expressions\
+    \ through mutual validity\u2014the joint product of cue validity (how specifically\
+    \ a descriptor isolates the referent amidst perceptual confusability from scene\
+    \ competitors) and category validity (how exhaustively the descriptor characterizes\
+    \ the referent's visual profile without omitting defining visual features). Pragmatic\
+    \ listeners invert this mutual-validity speaker under stochastic articulation\
+    \ noise, naturally favoring minimal-feature targets that maximize category validity,\
+    \ penalizing intermediate competitors whose extraneous features dilute descriptive\
+    \ exhaustivity, and scaling referential choices across display sizes."
+- name: contrastive_graded_residual_speaker
+  rationale: 'In communicative reference, sharing an applicable descriptor with a
+    competitor always incurs an irreducible baseline semantic interference that cannot
+    be fully eliminated by perceptual feature distance. Refining contrastive_graded_noisy_speaker
+    by incorporating the residual semantic interference baseline component from residual_extremity_noisy_speaker:
+    communicative speakers evaluate message informativeness through perceptual confusability
+    decaying with visual feature distance over a graded lexicon, but anchor competitor
+    interference at a non-zero semantic baseline reflecting literal multiplicity in
+    the visual scene. A pragmatic listener inverts this graded residual-interference
+    speaker with stochastic execution noise, directly resolving the model''s underprediction
+    of minimal-feature targets on redundant-feature trials (target_rate_redundant_feature_utterance),
+    curbing overprediction of intermediate competitors (intermediate_matching_competitor_rate),
+    and improving target choice scaling across display sizes (target_rate_scaling_4obj_vs_2obj),
+    while preserving graded semantic applicability, visual endpoint extremity, and
+    contrastive similarity reasoning. Differences from source (contrastive_graded_noisy_speaker):
+    - Recursion depth: depth 1 (choice_probs calls L1, unchanged from source). - Parameters
+    added: omega (prior: dist.Beta(1.0, 9.0)), representing the irreducible baseline
+    semantic interference for competing objects sharing an applicable descriptor.
+    - Parameters removed: none. - Parameter priors changed: none. - Other terms: In
+    choice_probs, object-to-object interference incorporates an irreducible baseline
+    floor omega as `interf = eye + (1.0 - eye) * ((1.0 - params["omega"]) * sim +
+    params["omega"])` before computing communicative confusability `conf = jnp.einsum("uc,
+    cr -> ur", graded_lex, interf)`, replacing pure exponential similarity decay `sim`.'
+- name: feature_coverage_listener_2
+  rationale: "In communicative reference, foundational literal interpretation evaluates\
+    \ candidate referents through proportional feature coverage: the applicability\
+    \ of a single-word descriptor scales with the fraction of the referent's total\
+    \ visual features that the word accounts for, treating minimal-feature objects\
+    \ as prototypical exemplars while penalizing multi-featured objects in proportion\
+    \ to their descriptive dilution. A pragmatic listener inverts a communicative\
+    \ speaker who anticipates this coverage-weighted interpretation, which sharply\
+    \ elevates minimal-feature target selection on redundant-feature trials and curtails\
+    \ intermediate competitor choices across display sizes. This mechanism disagrees\
+    \ most sharply with the incumbent model on ambiguous displays containing large\
+    \ feature discrepancies\u2014such as a shared descriptor matching a two-feature\
+    \ target competing against a four-feature object\u2014where proportional feature\
+    \ coverage decisively favors the two-feature target over the four-feature competitor."
+- name: contrastive_elimination_speaker
+  rationale: 'In communicative reference games, speakers evaluate referring expressions
+    through contrastive competitor elimination: choosing an ambiguous descriptor incurs
+    an opportunity cost whenever the speaker could have chosen an alternative descriptor
+    that eliminated a confusable scene competitor. Pragmatic listeners invert this
+    elimination-seeking speaker under stochastic articulation noise and visual scene
+    expectations, inferring that hearing an ambiguous descriptor strongly points toward
+    a candidate referent that lacked any alternative descriptor capable of eliminating
+    its competitors. This contrastive elimination mechanism naturally suppresses intermediate-feature
+    competitors, elevates minimal-feature target selection on redundant-feature trials,
+    and properly scales pragmatic target choices from two-object to four-object scenes.'
+- name: feature_surprisal_ensemble_listener
+  rationale: Visual scene expectations and communicative topic focus are governed
+    by information-theoretic feature surprisal and Gestalt type-token ensemble grouping.
+    Human visual attention and communicative expectations prioritize candidate referents
+    according to the contextual surprisal of their present visual features, while
+    identical objects form perceptual ensembles whose collective attention is partitioned
+    equally among individual members. The unadorned baseline object serves as the
+    contrastive ground of the visual scene while the maximally elaborated focal exemplar
+    anchors topical prominence, compressing intermediate-complexity items and preventing
+    empty singletons from dominating feature-rich duplicate objects.
+- name: display_load_attention_listener
+  rationale: Listeners interpret referring expressions under capacity-limited display
+    attention, where visual processing load scales with the number of objects in the
+    scene. In crowded four-object displays where visual working memory reaches capacity,
+    attentional filtering concentrates sharply on the uncluttered, minimal-feature
+    target, penalizing extraneous unmentioned features in direct proportion to scene
+    clutter, while imperfect distractor suppression elevates non-matching foil selections.
+    Pragmatic listeners invert a communicative speaker who anticipates this load-sensitive
+    attentional bottleneck, naturally boosting minimal-target choices across display
+    sizes and suppressing intermediate competitors.

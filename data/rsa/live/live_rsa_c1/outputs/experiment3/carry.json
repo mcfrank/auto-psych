@@ -1,0 +1,50 @@
+{
+ "rule": "best first by the loop's final standing; a model within 0.002 (RMSE of posterior-mean choice-class probabilities over the design pool) of one kept is the same hypothesis for the live phase; at most 8",
+ "order": [
+  "contrastive_extremity_noisy_speaker",
+  "contrastive_similarity_speaker",
+  "residual_ambiguity_speaker",
+  "attentive_noisy_channel_listener",
+  "noisy_channel_speaker_l1",
+  "contrastive_featured_noisy_speaker_2",
+  "speaker_aspect_goal_listener",
+  "softmax_belief_listener",
+  "contrastive_mumble_extremity_speaker",
+  "contrastive_preemption_noisy_speaker_4",
+  "contrastive_noisy_channel_speaker",
+  "pragmatic_preemption_listener"
+ ],
+ "kept": [
+  "contrastive_extremity_noisy_speaker",
+  "contrastive_similarity_speaker",
+  "residual_ambiguity_speaker",
+  "attentive_noisy_channel_listener",
+  "noisy_channel_speaker_l1",
+  "contrastive_featured_noisy_speaker_2",
+  "speaker_aspect_goal_listener",
+  "softmax_belief_listener"
+ ],
+ "merged": [],
+ "over_cap": [
+  {
+   "name": "contrastive_mumble_extremity_speaker",
+   "nearest": "contrastive_extremity_noisy_speaker",
+   "rmse": 0.019155907986414342
+  },
+  {
+   "name": "contrastive_preemption_noisy_speaker_4",
+   "nearest": "contrastive_extremity_noisy_speaker",
+   "rmse": 0.005745318091139007
+  },
+  {
+   "name": "contrastive_noisy_channel_speaker",
+   "nearest": "contrastive_similarity_speaker",
+   "rmse": 0.00754510323491052
+  },
+  {
+   "name": "pragmatic_preemption_listener",
+   "nearest": "softmax_belief_listener",
+   "rmse": 0.030909684137900992
+  }
+ ]
+}

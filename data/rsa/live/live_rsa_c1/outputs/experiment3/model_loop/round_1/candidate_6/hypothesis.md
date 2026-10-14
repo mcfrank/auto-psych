@@ -1,0 +1,7 @@
+Pragmatic listeners invert a similarity-contrast speaker under residual semantic ambiguity, but account for stochastic execution noise in the speaker's feature articulation. Refining residual_ambiguity_speaker by incorporating the stochastic transmission noise component from noisy_channel_speaker_l1: speakers evaluate message informativeness through perceptual confusability decaying with visual feature distance anchored by baseline semantic interference, but occasionally slip when articulating true features. This transmission noise cushions extreme likelihood ratios on ambiguous descriptors and directly addresses competitor over-penalization in multi-object displays and redundant-feature contexts, while preserving semantic baseline interference and contrastive similarity reasoning.
+
+Differences from source (residual_ambiguity_speaker):
+- Recursion depth: depth 1 (choice_probs calls L1, unchanged from source).
+- Parameters added: epsilon (prior: dist.Beta(1.0, 5.0)), representing the probability of stochastic execution noise over applicable descriptors.
+- Parameters removed: none.
+- Other terms: In the simulated speaker at level L1, the speaker chooses an intended communicative feature m according to residual-ambiguity similarity utility, but articulates an applicable feature u with stochastic execution noise epsilon (wpp = at(lex, u, r) * ((1.0 - epsilon) * (u == m) + epsilon)).
