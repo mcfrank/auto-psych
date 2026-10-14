@@ -224,6 +224,21 @@ games, and support two claims:
   - **Size:** set by simulation.
   - **Scope:** the critic and agents play no part.
   - The draft pre-registration is to be written while chains 1–2 run.
+- **Interim comparison of the chains' best models** (10-14; chain 0 after experiment 3, chain 1 after
+  experiment 2, chain 2 after experiment 1):
+  - **The prior is shared, but by ancestry:** singleton bonus 0.9–1.1, feature-count bonus
+    0.16–0.34. Every chain was seeded with one of the singleton-prior models.
+  - **Found independently in all three:** extremes of the feature range are favoured. Chain 0
+    suppresses interior objects in the speaker; chain 1 has an extremity prior; chain 2 has an
+    empty-object bonus that makes the prior U-shaped. No chain's seeds contain it.
+  - **Two chains:** similarity-based confusion avoidance (chain 0 inherited it; chain 1 rebuilt it).
+  - **Chain 2 only:** a redundancy discount (synonyms count as k^-0.64 alternatives).
+  - **They differ in how people fail:** inattention that grows with display size (chain 0), word
+    noise with a sharp speaker (chain 1), lapse only (chain 2).
+  - **All three miss** duplicates (E9 twins) and Sikos 2021 experiment 3.
+  - **Caveat:** the same LLM writes every chain's models, so cross-chain convergence mixes the data
+    with the agents' own priors. The final experiment's lesions, organised by shared mechanism,
+    test it.
 - **Known limits to report:**
   - simulated people are less noisy than real ones;
   - pruning on the live rows is weak;
