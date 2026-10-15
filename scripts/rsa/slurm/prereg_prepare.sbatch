@@ -34,7 +34,10 @@ STAGE="${STAGE:?set STAGE=fit_bar, power or design}"
 mkdir -p "$WORK_ROOT"
 CODE_ROOT="$WORK_ROOT/code_$STAGE"
 mkdir -p "$CODE_ROOT"
-WORK_ROOT="$CODE_ROOT" bash "$REPO/scripts/rsa/slurm/stage_code.sh"
+# _env.sh exported HARNESS_REPO and AGENT_SRC under the prereg root, and stage_code.sh
+# keeps them when set: name the stage's own (job 47895766 staged into $WORK_ROOT/harness_repo).
+WORK_ROOT="$CODE_ROOT" HARNESS_REPO="$CODE_ROOT/harness_repo" AGENT_SRC="$CODE_ROOT/agent_src" \
+  bash "$REPO/scripts/rsa/slurm/stage_code.sh"
 POOL="$WORK_ROOT/pool"
 if [[ ! -f "$POOL/pooled.csv" ]]; then
   mkdir -p "$POOL.tmp"

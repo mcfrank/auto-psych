@@ -660,3 +660,6 @@ def test_the_prereg_preparation_reuses_the_finals_pooled_data_and_fits():
     assert "finals_pool/pooled.csv" in text and "finals_pool/.fit_cache/" in text
     assert '--models "seed:$STARTING" "promoted:$PROMOTED"' in text
     assert "a design is made once" in text
+    # each stage stages into its own code root, not the live job's $WORK_ROOT/harness_repo
+    # (_env.sh exports HARNESS_REPO / AGENT_SRC, which stage_code.sh keeps when set)
+    assert 'HARNESS_REPO="$CODE_ROOT/harness_repo" AGENT_SRC="$CODE_ROOT/agent_src"' in text
