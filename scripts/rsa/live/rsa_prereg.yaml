@@ -17,13 +17,13 @@ participants: 1224                 # PI 2026-10-15 (PREREG_FINAL.md §7): 51 cyc
 trials: 13                         # as the campaign: 13 designed displays + 2 catch
 displays: 312                      # PI 2026-10-15: 156 EIG + 156 random (the most the quotas allow)
 
-design_sha256: ""                  # filled in at the freeze (prereg_design.json)
+design_sha256: "bc7d60e5b84f0e09b1578da54e2ae73975b67e8f05f97a10cea75df6f8ceee02"   # frozen 2026-10-15
 osf_registration: ""               # the approved OSF registration's URL (docs/auto_rsa/OSF_PREREG.md); live refuses without it
 predictions:                       # the frozen predictions, with their sha256 (filled in at the freeze)
   - path: data/rsa/live/finals_pool_preds_final.json
-    sha256: ""
+    sha256: "6a0a476f24e21166dd5af9d3f6538addd39db011b62d96a1adcd505a1d94f4bf"
   - path: data/rsa/live/bar_pool_preds.json
-    sha256: ""
+    sha256: "704575376be1305a92506f7270c27c67524f26ffeb0391687d4178d5974de269"
 
 prolific:                          # unchanged from the campaign (rsa_live.yaml)
   reward: 50

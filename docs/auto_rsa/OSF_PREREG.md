@@ -28,8 +28,9 @@ record that nobody on the project can edit or withdraw (PI 2026-10-15; `CAMPAIGN
       before the study is published on Prolific.
    5. Submit, then approve the registration from the confirmation email. **OSF makes it final
       only after that approval, or after 48 hours.**
-4. **Record it** (driver): put the registration's URL and date in `PREREG_FINAL.md` §8 and the
-   campaign log.
+4. **Record it** (driver): put the registration's URL, its approval date and the bundle's sha256 in
+   `PREREG_FINAL.md` as Addendum A, in the campaign log, and as `osf_registration` in
+   `rsa_prereg.yaml`.
    - **The live launch (handoff step 7) waits for this.**
    - The test deploy (step 6) does not: it publishes nothing.
 

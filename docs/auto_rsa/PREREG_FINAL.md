@@ -1,11 +1,9 @@
 # Pre-registration: do the campaign's final models predict new people better than the bar?
 
-**Status: DRAFT.** Frozen in two steps, before any participant is recruited:
-1. §8's blanks are filled and the freeze commit is pushed to `auto-rsa`;
-2. this plan, with the frozen files, is **registered on OSF** (`OSF_PREREG.md`; PI 2026-10-15).
-
-After the freeze, this file changes only by dated addenda at the end. The frozen version is the
-commit named in §8, as registered.
+**Status: FROZEN 2026-10-15** (§8), to be **registered publicly on OSF** before any participant is
+recruited (`OSF_PREREG.md`; PI 2026-10-15). After the freeze, this file changes only by dated
+addenda at the end. The first records the OSF registration and the registered bundle's hash,
+which cannot be in the files they register.
 
 - **Authors:** Michael C. Frank (PI), with the auto-psych pipeline.
 - **Drafted:** 2026-10-15.
@@ -256,20 +254,20 @@ at the campaign's 7.8% exclusion rate, about $816.
 
 **Chosen (PI 2026-10-15): G = 312, N = 1,224.**
 
-## 8. Frozen values (filled at the freeze)
+## 8. Frozen values (2026-10-15)
 
 | item | value |
 |---|---|
-| code commit of the freeze | |
-| G (displays), N (participants), m (responses a display) | |
-| `design_sha256` (`prereg_design.json`) | |
-| `trial_lists.json` sha256 | |
-| `finals_pool_preds_final.json` sha256 | |
-| `bar_pool_preds.json` sha256 | |
-| pooled data sha256 | |
-| simulated power of the frozen design, per final (δ = 0.0078) | |
-| OSF registration (URL, date approved) | |
-| `prereg_final_osf.zip` sha256 (`src.rsa.prereg.bundle`) | |
+| code | `src/` and `scripts/` as at `507b5b9b`, the commit the design job (Sherlock 47967799) staged; the freeze commit changes only documents and the launch config. The registered bundle holds a copy of `src/rsa/prereg/` with hashes |
+| G (displays), N (participants), m (responses a display) | 312 (156 EIG + 156 random), 1,224 (51 cycles of 24 lists; 51 lists per display), m = 47 at the campaign's 7.8% exclusion rate |
+| `design_sha256` (`prereg_design.json`) | `bc7d60e5b84f0e09b1578da54e2ae73975b67e8f05f97a10cea75df6f8ceee02` |
+| `trial_lists.json` sha256 | `a11b6cc6aeac1b70b8ba47174099bc1e264db722cea25ce44d17dfbb54a12672` |
+| `finals_pool_preds_final.json` sha256 | `6a0a476f24e21166dd5af9d3f6538addd39db011b62d96a1adcd505a1d94f4bf` |
+| `bar_pool_preds.json` sha256 | `704575376be1305a92506f7270c27c67524f26ffeb0391687d4178d5974de269` |
+| pooled data sha256 (the bar fits' and the design's) | `19af0f544ed5c0e0cf902fdce55c259ad2fbaf697ccef6a21f9617375f114f23` |
+| simulated power of the frozen design, per final (δ = 0.0078) | chain 0 0.995, chain 1 1.000, chain 2 1.000 (δ = 0.0058: 0.905, 0.997, 1.000; `design_power.json`) |
+| quotas met, per half (EIG / random; minimum) | two-object 23 / 23 (23); three-object 39 / 39 (39); mumble 46 / 31 (31); word 110 / 125 (78) |
+| design merges (EIG prior only; §4.1) | no final merged or screened out; 17 bar entries → 12 distinct |
 
 ## Addenda
 
