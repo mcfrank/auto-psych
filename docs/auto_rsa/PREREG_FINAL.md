@@ -243,6 +243,8 @@ under the 15% quota need 62. `src.rsa.prereg.design` refuses it before selecting
 **(b) decides it:** G = 312 and m ≥ 47. That is N = 1,224 (51 cycles of the 24 lists), m = 47
 at the campaign's 7.8% exclusion rate, about $816.
 
+**Chosen (PI 2026-10-15): G = 312, N = 1,224.**
+
 ## 8. Frozen values (filled at the freeze)
 
 | item | value |

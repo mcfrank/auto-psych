@@ -13,9 +13,9 @@ firebase_project: auto-psych-2c5da
 series_label: prereg               # Hosting site auto-psych-2c5da-prereg-c0 (one study: "chain" 0)
 chains: [0]
 experiments: 1
-participants: 1200                 # PROVISIONAL until the power simulation (a multiple of displays / 13)
+participants: 1224                 # PI 2026-10-15 (PREREG_FINAL.md §7): 51 cycles of the 24 lists, m = 47
 trials: 13                         # as the campaign: 13 designed displays + 2 catch
-displays: 208                      # PROVISIONAL: half EIG, half random
+displays: 312                      # PI 2026-10-15: 156 EIG + 156 random (the most the quotas allow)
 
 design_sha256: ""                  # filled in at the freeze (prereg_design.json)
 osf_registration: ""               # the approved OSF registration's URL (docs/auto_rsa/OSF_PREREG.md); live refuses without it

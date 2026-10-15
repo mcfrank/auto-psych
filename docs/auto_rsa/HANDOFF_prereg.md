@@ -49,7 +49,7 @@ STAGE=fit_bar sbatch scripts/rsa/slurm/prereg_prepare.sbatch
 models (every fit cached), then the random half, then the design's own power.
 
 ```bash
-STAGE=design DISPLAYS=<G> PARTICIPANTS=<N> sbatch --time=36:00:00 scripts/rsa/slurm/prereg_prepare.sbatch
+STAGE=design DISPLAYS=312 PARTICIPANTS=1224 sbatch --time=36:00:00 scripts/rsa/slurm/prereg_prepare.sbatch
 ```
 
 - **Expected time:** EIG selection of G/2 picks takes about 2–6 h at G = 312.

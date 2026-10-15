@@ -132,6 +132,7 @@ games, and support two claims:
 | 60 | 10-15 | **No secondary hypothesis** (chain 0's final beating the other two was dropped) | PI | — | `PREREG_FINAL.md` §2 |
 | 61 | 10-15 | **Sized by power, no price cap:** frozen predictions from one pooled fit of all 20 models; displays half by the campaign's design rule (finals carried, bar at half the prior, quotas) and half random within the quotas; G and N from simulation (calibrated to claim 2's weakest experiment-3 advantage) and from the empirical √G scaling of claim 2's tests | "happy to go up in price here, so let's see what turns out" (PI) | RSA only | `src.rsa.prereg.power`, `PREREG_FINAL.md` §7 |
 | 62 | 10-15 | **The pre-registration is frozen on OSF** as well as by the git freeze commit: the plan and the frozen files (`src.rsa.prereg.bundle`, hash-checked) registered **publicly** (no embargo) with OSF's Preregistration template before the study is published; the live launch waits for the approved registration | a public, timestamped record nobody on the project can edit (PI) | RSA only | `OSF_PREREG.md`; the live job refuses to publish without `osf_registration` |
+| 63 | 10-15 | **G = 312 displays, N = 1,224 people** (~$816): the power rule's answer. The simulation is satisfied from G = 104; claim 2's empirical √G scaling (chain 2, experiment 3) needs G = 312 at ≥ 47 responses a display. G = 416 is impossible under the quotas (54 two-object displays) | PI, from `PREREG_FINAL.md` §7.3 | RSA only | `data/rsa/prereg/power.json`, `rsa_prereg.yaml` |
 
 ## 3. How this differs from main, at a glance
 
