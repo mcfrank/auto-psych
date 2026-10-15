@@ -24,9 +24,8 @@ record that nobody on the project can edit or withdraw (PI 2026-10-15; `CAMPAIGN
    2. Upload `prereg_final_osf.zip` to its OSF Storage, and unzip it there (or upload the folder).
    3. Choose **Registrations → New registration → "OSF Preregistration"**, and paste the answers
       below. Where a field takes files, attach `PREREG_FINAL.md`.
-   4. **Choose public or embargoed.** An embargo of up to 4 years keeps it private, but it is
-      still timestamped and frozen. Either way, it must be submitted before the study is
-      published on Prolific.
+   4. **Make it public** (PI 2026-10-15), not embargoed. It must be submitted, and approved,
+      before the study is published on Prolific.
    5. Submit, then approve the registration from the confirmation email. **OSF makes it final
       only after that approval, or after 48 hours.**
 4. **Record it** (driver): put the registration's URL and date in `PREREG_FINAL.md` §8 and the
