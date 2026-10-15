@@ -1,0 +1,167 @@
+models:
+- name: bounded_endpoint_prev_redundancy_l2
+  rationale: 'We refine bounded_prevalence_redundancy_l2 by incorporating contextual
+    end-point salience from endpoint_salience_l2 into the shared visual referent prior.
+    In visual reference games, listeners structure their default expectations around
+    contextual end-point salience: perceptual attention spontaneously anchors at the
+    boundaries of the scene''s feature complexity distribution (the minimal baseline
+    object and the maximal exemplar), while intermediate objects that fall strictly
+    between these poles are disfavored as unremarkable non-targets. This extremity
+    prior directly rectifies the systematic overprediction of intermediate-feature
+    objects on unprompted mumble trials and boosts maximal competitor exemplars during
+    reference resolution. Differences from bounded_prevalence_redundancy_l2: - Recursion
+    depth: Unchanged; choice_probs calls L2. - Parameters added: w_endpoint (prior:
+    dist.Normal(0.0, 1.0)). - Parameters removed: None. - Shared visual referent prior:
+    Adds contextual endpoint salience (w_endpoint * is_endpoint) to the perceptual
+    prior, where is_endpoint flags objects possessing either the minimum or maximum
+    feature count in the display, disfavoring strictly intermediate objects. - All
+    other terms: Bounded capacity likelihood exponentiation (kappa) in L1 and L2,
+    speaker contextual feature prevalence accessibility (w_prevalence) and contextual
+    feature redundancy discounting (w_redundancy) on speaker alternatives in S1 and
+    S2, literal truth-conditional semantics at L0, depth-2 RSA recursion, and uniform
+    lapse mixing remain identical to bounded_prevalence_redundancy_l2.'
+- name: bounded_capacity_redundancy_l2
+  rationale: 'Refining bounded_capacity_listener_l2, we incorporate contextual feature
+    redundancy discounting on speaker alternatives from feature_redundancy_discounted_l2
+    into the communicative likelihood. When interpreting referring expressions, capacity-limited
+    listeners reason about speakers who discount the availability of redundant alternative
+    utterances based on their contextual feature overlap across the scene, preventing
+    synonymous or co-occurring attributes from repeatedly compounding the preemption
+    penalty against shared labels. This directly resolves the source model''s severe
+    underprediction of competitor choices when competitor referents possess redundant
+    distinguishing features. Differences from bounded_capacity_listener_l2: - Recursion
+    depth: Unchanged; choice_probs calls L2. - Parameters added: w_redundancy (prior:
+    dist.Normal(0.0, 1.0)). - Parameters removed: None. - Speaker utterance utility
+    / probability: In S1 and S2, the speaker''s candidate utterances are weighted
+    by contextual feature redundancy discounting (vec(alt_weight, u)), where alt_weight
+    scales with contextual pairwise Jaccard feature overlap (jnp.exp(-w_redundancy
+    * jnp.log(jnp.maximum(redundancy, 1.0)))). - All other terms: Bounded capacity
+    likelihood exponentiation (kappa) in L1 and L2, referent prior (singleton salience
+    w_singleton, contextual distinctiveness w_distinct, feature count w_features,
+    featureless baseline salience w_empty, and color contrast w_color), literal semantics
+    at L0, depth-2 RSA recursion, and uniform lapse mixing remain identical to bounded_capacity_listener_l2.'
+- name: bounded_prevalence_redundancy_l2
+  rationale: 'We refine bounded_capacity_redundancy_l2 by incorporating contextual
+    feature prevalence from feature_prevalence_speaker_l2 into the speaker''s utterance
+    choices. In reference games, speakers exhibit an accessibility bias favoring labels
+    that describe more objects in the visual scene over rare or exclusive attributes.
+    Capacity-limited pragmatic listeners invert this prevalence-biased, redundancy-discounting
+    speaker at depth 2, expecting speakers to use prevalent labels even when describing
+    competitor objects with exclusive alternatives, which softens preemption penalties
+    against duplicated competitors while contextual redundancy discounting prevents
+    correlated features from compounding penalties. Differences from bounded_capacity_redundancy_l2:
+    - Recursion depth: Unchanged; choice_probs calls L2. - Parameters added: w_prevalence
+    (prior: dist.Normal(0.0, 1.0)). - Parameters removed: None. - Speaker utterance
+    utility / probability: In S1 and S2, the speaker''s candidate utterances are weighted
+    by contextual feature prevalence accessibility (vec(accessibility, u)), where
+    accessibility scales with feature occurrence frequency across context objects
+    (jnp.exp(w_prevalence * jnp.log(jnp.maximum(freq, 1.0)))), in addition to contextual
+    feature redundancy discounting (vec(alt_weight, u)). - All other terms: Bounded
+    capacity likelihood exponentiation (kappa) in L1 and L2, referent prior (singleton
+    salience w_singleton, contextual distinctiveness w_distinct, feature count w_features,
+    featureless baseline salience w_empty, and color contrast w_color), literal semantics
+    at L0, depth-2 RSA recursion, and uniform lapse mixing remain identical to bounded_capacity_redundancy_l2.'
+- name: bounded_endpoint_redundancy_l2
+  rationale: 'We refine bounded_capacity_redundancy_l2 by incorporating contextual
+    endpoint salience from endpoint_salience_l2 into the shared referent prior. In
+    visual displays with varying feature complexity, perceptual attention spontaneously
+    anchors at the boundaries of the scene''s feature distribution (the minimal baseline
+    object and the maximal exemplar), while intermediate objects that fall strictly
+    between these poles are disfavored as unremarkable non-targets. Capacity-limited
+    pragmatic listeners and speakers reason with common knowledge of this bipolar
+    extremity prior alongside contextual feature redundancy discounting, directly
+    rectifying the systematic overprediction of intermediate-feature objects on unprompted
+    mumble trials and dampening intermediate competitor choices during reference resolution.
+    Differences from bounded_capacity_redundancy_l2: - Recursion depth: Unchanged;
+    choice_probs calls L2. - Parameters added: w_endpoint (prior: dist.Normal(0.0,
+    1.0)). - Parameters removed: None. - Referent prior: In choice_probs, incorporates
+    contextual endpoint anchor salience (params["w_endpoint"] * is_endpoint) from
+    endpoint_salience_l2 into the shared referent prior, where is_endpoint (1.0 -
+    is_inter) distinguishes contextual extreme-complexity objects from strictly intermediate
+    items (is_inter). - All other terms: Capacity-limited inferential precision exponentiation
+    (kappa) at L1 and L2, contextual feature redundancy discounting on speaker alternatives
+    (w_redundancy via pairwise Jaccard overlap) in S1 and S2, literal truth-conditional
+    semantics at L0, baseline prior components (w_singleton, w_distinct, w_features,
+    w_empty, w_color), depth-2 RSA recursion, and uniform lapse mixing remain identical
+    to bounded_capacity_redundancy_l2.'
+- name: bounded_capacity_prevalence_l2
+  rationale: 'Refining bounded_capacity_listener_l2, we incorporate contextual feature
+    prevalence from feature_prevalence_speaker_l2 into the speaker''s utterance choices.
+    When communicating about an object, speakers exhibit a contextual accessibility
+    bias that favors words describing more objects in the visual scene over rare or
+    specific distinguishing features. Capacity-limited pragmatic listeners invert
+    this prevalence-biased speaker under finite information-processing capacity, naturally
+    expecting speakers to use prevalent labels even for objects that possess unique
+    alternatives and appropriately softening preemption penalties against competitor
+    referents in scalar reference games. Differences from bounded_capacity_listener_l2:
+    - Recursion depth: Unchanged; choice_probs calls L2. - Parameters added: w_prevalence
+    (prior: dist.Normal(0.0, 1.0)). - Parameters removed: None. - Speaker utterance
+    utility / probability: In S1 and S2, candidate utterances are weighted by contextual
+    feature prevalence accessibility (vec(accessibility, u)), where accessibility
+    scales with feature occurrence frequency across context objects (jnp.exp(w_prevalence
+    * jnp.log(freq))). - All other terms: Capacity-limited likelihood updating via
+    inferential precision exponentiation (kappa) at L1 and L2, shared visual referent
+    prior (w_singleton, w_distinct, w_features, w_empty, w_color), truth-conditional
+    literal semantics at L0, depth-2 RSA recursion, and uniform lapse mixing remain
+    identical to bounded_capacity_listener_l2.'
+- name: perceptual_load_redundancy_l2
+  rationale: 'Refining bounded_capacity_redundancy_l2, we incorporate perceptual load-constrained
+    inferential capacity from perceptual_load_listener_l2 into pragmatic reference
+    resolution. Visual attention is a strictly finite cognitive resource: in simple
+    displays with few items, low perceptual load leaves ample attentional bandwidth
+    for counterfactual reasoning, producing sharp pragmatic preemption; in visually
+    crowded scenes with more items and feature conjunctions, high perceptual load
+    divides visual attention, systematically attenuating pragmatic inferential precision
+    and softening preemption penalties against competitor referents. Bounded pragmatic
+    listeners invert redundancy-discounting speakers under load-dependent inferential
+    precision, reconciling sharp preemption in sparse scalar displays with elevated
+    competitor choices in complex, feature-rich scenes. Differences from bounded_capacity_redundancy_l2:
+    - Recursion depth: Unchanged; choice_probs calls L2. - Parameters added: kappa_base
+    (prior: dist.LogNormal(0.0, 1.0)), w_load (prior: dist.Normal(0.0, 1.0)). - Parameters
+    removed: kappa. - Pragmatic listener inferential precision: Replaces fixed inferential
+    capacity kappa with scene-dependent perceptual load scaling (kappa = params["kappa_base"]
+    * jnp.exp(-params["w_load"] * load)), where load scales with total display items
+    and visual features (jnp.log(n_obj * (total_features + 1.0) / 18.0)) from perceptual_load_listener_l2.
+    - All other terms: Speaker contextual feature redundancy discounting (w_redundancy
+    via pairwise Jaccard overlap) in S1 and S2, shared perceptual referent prior (w_singleton,
+    w_distinct, w_features, w_empty, w_color), truth-conditional literal semantics
+    at L0, depth-2 RSA recursion (L1, L2), and uniform lapse mixing remain identical
+    to bounded_capacity_redundancy_l2.'
+- name: bounded_salience_lapse_redundancy_l2
+  rationale: 'We refine bounded_capacity_redundancy_l2 by incorporating salience-captured
+    attentional lapses from salience_capture_lapse_l2 into listener response choice.
+    When interpreting referring expressions under cognitive load, inattentive or impulsive
+    responses are not distributed uniformly across candidate objects, but are captured
+    by visual salience toward prominent exemplars according to the perceptual prior.
+    This structured lapse mechanism directly resolves the severe underprediction of
+    literal semantic violations (false-feature choices) while directing inattentive
+    choices toward feature-rich competitors. Differences from bounded_capacity_redundancy_l2:
+    - Recursion depth: Unchanged; choice_probs calls L2. - Parameters added: None.
+    - Parameters removed: None. - Response choice lapse mechanism: Replaces uniform
+    lapse mixing (with_lapse) on utterance trials with salience-captured lapse mixing
+    ((1.0 - lapse) * heard + lapse * prior) from salience_capture_lapse_l2. - All
+    other terms: Capacity-limited likelihood updating via inferential precision exponentiation
+    (kappa) at L1 and L2, speaker contextual feature redundancy discounting (w_redundancy
+    via pairwise Jaccard overlap), shared perceptual referent prior (w_singleton,
+    w_distinct, w_features, w_empty, w_color), truth-conditional literal semantics
+    at L0, depth-2 RSA recursion, and unprompted prior choice remain identical to
+    bounded_capacity_redundancy_l2.'
+- name: salience_lapse_prev_redundancy_l2
+  rationale: 'We refine bounded_prevalence_redundancy_l2 by incorporating salience-captured
+    attentional lapse from salience_capture_lapse_l2 into listener choice. When listeners
+    experience an attentional lapse or execute an impulsive response during reference
+    resolution, choices are not uniform random noise across the visual scene, but
+    are instead captured by bottom-up visual salience according to the perceptual
+    referent prior. This structured lapse directly resolves the systematic underprediction
+    of literal semantic violations (false-feature choices) and elevates choices for
+    feature-rich competitors while preserving bounded-capacity pragmatic inference,
+    contextual feature prevalence, and redundancy discounting. Differences from bounded_prevalence_redundancy_l2:
+    - Recursion depth: Unchanged; choice_probs calls L2. - Parameters added: None.
+    - Parameters removed: None. - Response selection / lapse mechanism: Replaces uniform
+    random lapse mixing (with_lapse) with salience-captured attentional lapse from
+    salience_capture_lapse_l2 (p_choice = (1.0 - lapse) * heard + lapse * prior, returning
+    prior on uninformative prior trials). - All other terms: Capacity-limited inferential
+    updating (kappa) at L1 and L2, contextual feature prevalence accessibility (w_prevalence)
+    and contextual feature redundancy discounting (w_redundancy) on speaker alternatives
+    in S1 and S2, literal semantics at L0, and shared referent prior (w_singleton,
+    w_distinct, w_features, w_empty, w_color) remain identical to bounded_prevalence_redundancy_l2.'

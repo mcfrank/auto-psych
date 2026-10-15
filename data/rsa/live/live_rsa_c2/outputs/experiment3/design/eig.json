@@ -1,0 +1,3910 @@
+{
+ "models": [
+  "competition_endpoint_binding_l2",
+  "egocentric_endpoint_binding_l2",
+  "endpoint_binding_uncertainty_lapse_l2",
+  "feature_binding_salience_lapse_l2",
+  "endpoint_feature_binding_l2",
+  "feature_binding_listener_l2",
+  "contextual_feature_uncertainty_l2",
+  "contrast_salience_lapse_prev_l2",
+  "bar:literal_listener",
+  "bar:rsa_l1",
+  "bar:rsa_l2",
+  "bar:rsa_l1_salience",
+  "bar:rsa_l1_shared_prior",
+  "bar:isolated_graded_costly_l3",
+  "bar:rsa_l2_singleton_distinct_feat_color_l0",
+  "bar:evaluative_prominence_l2",
+  "bar:lexical_preemption_heuristic",
+  "bar:competitor_confusion_speaker",
+  "bar:softmax_surprisal_isolated_costly_l4",
+  "bar:oddity_heuristic_listener"
+ ],
+ "model_groups": [
+  "carried",
+  "carried",
+  "carried",
+  "carried",
+  "carried",
+  "carried",
+  "carried",
+  "carried",
+  "bar",
+  "bar",
+  "bar",
+  "bar",
+  "bar",
+  "bar",
+  "bar",
+  "bar",
+  "bar",
+  "bar",
+  "bar",
+  "bar"
+ ],
+ "prior": [
+  0.0625,
+  0.0625,
+  0.0625,
+  0.0625,
+  0.0625,
+  0.0625,
+  0.0625,
+  0.0625,
+  0.041666666666666664,
+  0.041666666666666664,
+  0.041666666666666664,
+  0.041666666666666664,
+  0.041666666666666664,
+  0.041666666666666664,
+  0.041666666666666664,
+  0.041666666666666664,
+  0.041666666666666664,
+  0.041666666666666664,
+  0.041666666666666664,
+  0.041666666666666664
+ ],
+ "merged": [
+  {
+   "model": "bar:familiar_isolated_graded_costly_l2",
+   "same_as": "bar:isolated_graded_costly_l3",
+   "rmse": 0.0009808783628986047,
+   "reason": "the same hypothesis on the design pool (RMSE < 0.002)"
+  },
+  {
+   "model": "bar:rsa_l2_singleton_feat_color_familiar_l0",
+   "same_as": "bar:rsa_l2_singleton_distinct_feat_color_l0",
+   "rmse": 0.0004001373148484702,
+   "reason": "the same hypothesis on the design pool (RMSE < 0.002)"
+  },
+  {
+   "model": "bar:rsa_l2_singleton_feat_color_valence_l0",
+   "same_as": "bar:rsa_l2_singleton_distinct_feat_color_l0",
+   "rmse": 0.0002095122282123755,
+   "reason": "the same hypothesis on the design pool (RMSE < 0.002)"
+  },
+  {
+   "model": "bar:rsa_l2",
+   "same_as": "bar:rsa_l2",
+   "reason": "the same model file"
+  },
+  {
+   "model": "bar:rsa_l1",
+   "same_as": "bar:rsa_l1",
+   "reason": "the same model file"
+  }
+ ],
+ "n_withheld": 0,
+ "screened_out": [],
+ "trials_per_participant": 13,
+ "participants": 200,
+ "quotas": [
+  "objects=2:0.15",
+  "objects=3:0.25",
+  "query=prior:0.2",
+  "query=word:0.5"
+ ],
+ "pool_size": 1597,
+ "pool_digest": "c85ca229b3343f52",
+ "n_draws": 200,
+ "n_scenarios": 2000,
+ "seed": 3,
+ "fit_settings": {
+  "num_warmup": 1000,
+  "num_samples": 1000,
+  "num_chains": 4,
+  "target_accept": 0.9,
+  "seed": 0,
+  "dense_mass": true
+ },
+ "data_sha256": "a601abc41cd2118852e626b7b20c24fd65b59f616bf032663686d5024c699223",
+ "designs": [
+  {
+   "displays": 52,
+   "responses_per_display": 50,
+   "design_sha256": "4fdeb739b883b9d87a0eb7dd913f6c4d17978e3931682d345d44821be70553ed",
+   "n_eig_picks": 52,
+   "kinds": {
+    "2x2 prior": 1,
+    "2x3 prior": 1,
+    "2x3 word": 1,
+    "2x4 prior": 1,
+    "2x4 word": 4,
+    "3x3 prior": 1,
+    "3x4 prior": 3,
+    "3x4 word": 9,
+    "4x4 prior": 6,
+    "4x4 word": 25
+   },
+   "quotas": [
+    {
+     "kind": "objects=2",
+     "minimum": 8,
+     "count": 8
+    },
+    {
+     "kind": "objects=3",
+     "minimum": 13,
+     "count": 13
+    },
+    {
+     "kind": "query=prior",
+     "minimum": 10,
+     "count": 13
+    },
+    {
+     "kind": "query=word",
+     "minimum": 26,
+     "count": 39
+    }
+   ],
+   "picks": [
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        0,
+        1,
+        1
+       ],
+       [
+        0,
+        0,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        0,
+        1
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 1.562229329730577,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": null,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 2.078435631998092,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 2.3535279428552394,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": null,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 2.500098391498056,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 2.6269513258247947,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 0,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 2.7191537007050055,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 2.801456275398352,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 0,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 2.8631828308087255,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 2.919353235935909,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 0,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 2.969606199551151,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": null,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.0130265956979816,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        0
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 0,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.055448121454585,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 1,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.094325423401093,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 0,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.128730517713242,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 0,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.1635937210984224,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": null,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.1933517473525965,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        1,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 0,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.220048495254966,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": null,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.246136639775066,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.2705124450909713,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": null,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.2941186774831768,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        0
+       ],
+       [
+        0,
+        1,
+        1,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 0,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.315843920187354,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.3364878995831733,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        1,
+        1
+       ],
+       [
+        0,
+        1,
+        0,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 0,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.3563439388228167,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        0,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        0,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 2,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.373822777896178,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        0
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        0
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.3907112793248153,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        0
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.4067032331829568,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0
+       ],
+       [
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": null,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.421305643552476,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        0,
+        1,
+        1
+       ]
+      ],
+      "utterance": 0,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.436098614738211,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.4501147575164763,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": null,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.4628330815942223,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        1,
+        1
+       ],
+       [
+        0,
+        1,
+        0,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 0,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.474688833824929,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": null,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.4865010215702084,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 0,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.498400945552026,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        1,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 2,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.5098268561847195,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.5207601052600506,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        0
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.5303795725527696,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        0,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        0,
+        0
+       ]
+      ],
+      "utterance": 0,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.539583764867165,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": null,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.5482715407105756,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.556140378367575,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.562994626524539,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        1,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 0,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.5700621326032222,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.5768119642514167,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        0,
+        1
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.583710651015908,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        0,
+        0,
+        0,
+        0
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": null,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.5895947128868646,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        0,
+        1,
+        1
+       ]
+      ],
+      "utterance": 1,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.595348190549774,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0
+       ],
+       [
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": null,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.5999525854023218,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 0,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.6045572243048847,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 2,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.608684867288597,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        1,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 1,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.612454321185446,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 3,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.6164071840746996,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        1
+       ]
+      ],
+      "utterance": null,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.619708815227294,
+     "source": "eig"
+    },
+    {
+     "display": {
+      "objects": [
+       [
+        0,
+        1,
+        1
+       ],
+       [
+        1,
+        1,
+        1
+       ]
+      ],
+      "utterance": 1,
+      "valence": 0,
+      "familiarization": null,
+      "grayscale": null
+     },
+     "joint_eig_bits": 3.622484882449239,
+     "source": "eig"
+    }
+   ],
+   "power": [
+    {
+     "n_responses": 50,
+     "joint_eig_bits": 3.570873625539738,
+     "max_bits": 4.292481250360578,
+     "p_correct": 0.7675,
+     "p_correct_se": 0.009448095482906968,
+     "mean_posterior_on_truth": 0.7143385473279374,
+     "by_model": {
+      "competition_endpoint_binding_l2": {
+       "p_correct": 0.6017699115044248,
+       "mean_posterior_on_truth": 0.4651455173663296,
+       "n_scenarios": 113
+      },
+      "egocentric_endpoint_binding_l2": {
+       "p_correct": 0.36879432624113473,
+       "mean_posterior_on_truth": 0.3519534196496736,
+       "n_scenarios": 141
+      },
+      "endpoint_binding_uncertainty_lapse_l2": {
+       "p_correct": 0.48854961832061067,
+       "mean_posterior_on_truth": 0.39291806512718713,
+       "n_scenarios": 131
+      },
+      "feature_binding_salience_lapse_l2": {
+       "p_correct": 0.8661971830985915,
+       "mean_posterior_on_truth": 0.6898455694586944,
+       "n_scenarios": 142
+      },
+      "endpoint_feature_binding_l2": {
+       "p_correct": 0.44537815126050423,
+       "mean_posterior_on_truth": 0.4452420437276951,
+       "n_scenarios": 119
+      },
+      "feature_binding_listener_l2": {
+       "p_correct": 0.5175438596491229,
+       "mean_posterior_on_truth": 0.4458453097298559,
+       "n_scenarios": 114
+      },
+      "contextual_feature_uncertainty_l2": {
+       "p_correct": 0.9243697478991597,
+       "mean_posterior_on_truth": 0.8822278500875126,
+       "n_scenarios": 119
+      },
+      "contrast_salience_lapse_prev_l2": {
+       "p_correct": 0.984,
+       "mean_posterior_on_truth": 0.9845265337606686,
+       "n_scenarios": 125
+      },
+      "bar:literal_listener": {
+       "p_correct": 1.0,
+       "mean_posterior_on_truth": 1.0,
+       "n_scenarios": 75
+      },
+      "bar:rsa_l1": {
+       "p_correct": 0.7752808988764045,
+       "mean_posterior_on_truth": 0.7206020826114279,
+       "n_scenarios": 89
+      },
+      "bar:rsa_l2": {
+       "p_correct": 0.8589743589743589,
+       "mean_posterior_on_truth": 0.8265804195843072,
+       "n_scenarios": 78
+      },
+      "bar:rsa_l1_salience": {
+       "p_correct": 0.6022727272727273,
+       "mean_posterior_on_truth": 0.4864443916380121,
+       "n_scenarios": 88
+      },
+      "bar:rsa_l1_shared_prior": {
+       "p_correct": 0.6923076923076923,
+       "mean_posterior_on_truth": 0.5302972583500292,
+       "n_scenarios": 78
+      },
+      "bar:isolated_graded_costly_l3": {
+       "p_correct": 1.0,
+       "mean_posterior_on_truth": 0.9999937075031822,
+       "n_scenarios": 86
+      },
+      "bar:rsa_l2_singleton_distinct_feat_color_l0": {
+       "p_correct": 1.0,
+       "mean_posterior_on_truth": 0.9999154835223627,
+       "n_scenarios": 79
+      },
+      "bar:evaluative_prominence_l2": {
+       "p_correct": 0.7294117647058823,
+       "mean_posterior_on_truth": 0.6403398053115642,
+       "n_scenarios": 85
+      },
+      "bar:lexical_preemption_heuristic": {
+       "p_correct": 1.0,
+       "mean_posterior_on_truth": 1.0,
+       "n_scenarios": 90
+      },
+      "bar:competitor_confusion_speaker": {
+       "p_correct": 1.0,
+       "mean_posterior_on_truth": 1.0,
+       "n_scenarios": 97
+      },
+      "bar:softmax_surprisal_isolated_costly_l4": {
+       "p_correct": 1.0,
+       "mean_posterior_on_truth": 0.9999995472575873,
+       "n_scenarios": 75
+      },
+      "bar:oddity_heuristic_listener": {
+       "p_correct": 1.0,
+       "mean_posterior_on_truth": 1.0,
+       "n_scenarios": 76
+      }
+     },
+     "participants": 200
+    }
+   ],
+   "free": {
+    "n_eig_picks": 52,
+    "kinds": {
+     "2x4 prior": 1,
+     "3x3 prior": 1,
+     "3x4 prior": 2,
+     "3x4 word": 4,
+     "4x3 word": 1,
+     "4x4 prior": 6,
+     "4x4 word": 37
+    },
+    "quota_counts": {
+     "objects=2": 1,
+     "objects=3": 7,
+     "query=prior": 10,
+     "query=word": 42
+    },
+    "picks": [
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         0,
+         1
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 1.562229329730577,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": null,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 2.078435631998092,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 2.3535279428552394,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": null,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 2.500098391498056,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 2.6269513258247947,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 0,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 2.7191537007050055,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 2.801456275398352,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 0,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 2.8631828308087255,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 2.919353235935909,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 0,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 2.969606199551151,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": null,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.0130265956979816,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         0
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 0,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.055448121454585,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 1,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.094325423401093,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 0,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.128730517713242,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 0,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.1635937210984224,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": null,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.1933517473525965,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 0,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.220048495254966,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": null,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.246136639775066,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.2705124450909713,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": null,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.2941186774831768,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         0
+        ],
+        [
+         0,
+         1,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 0,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.315843920187354,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.3364878995831733,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         0,
+         1,
+         0,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 0,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.3563439388228167,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         0,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 2,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.373822777896178,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         0
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.3907112793248153,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.4067032331829568,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": null,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.421305643552476,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         0,
+         1,
+         1
+        ]
+       ],
+       "utterance": 0,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.436098614738211,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.4501147575164763,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": null,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.4628330815942223,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         0,
+         1,
+         0,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 0,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.474688833824929,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": null,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.4865010215702084,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 0,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.498400945552026,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 2,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.5098268561847195,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.5207601052600506,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.5303795725527696,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         0,
+         0
+        ]
+       ],
+       "utterance": 0,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.539583764867165,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         0,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         0,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ]
+       ],
+       "utterance": 2,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.548283845337822,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.557151962730337,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": null,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.5658257835508245,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         0,
+         1,
+         0
+        ],
+        [
+         0,
+         1,
+         0,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 0,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.5746226911285217,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.5830326430363546,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         0
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ]
+       ],
+       "utterance": 1,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.5908536342963733,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         0
+        ],
+        [
+         1,
+         0,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 1,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.5980009515657296,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.6053967408322514,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         0,
+         1,
+         1
+        ]
+       ],
+       "utterance": 2,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.6123511801662325,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 2,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.6193121583875376,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.6261507946931113,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 0,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.632988080914271,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.639169784381883,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         0,
+         1,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         1
+        ]
+       ],
+       "utterance": 2,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.6459282795324013,
+      "source": "eig"
+     },
+     {
+      "display": {
+       "objects": [
+        [
+         0,
+         0,
+         0,
+         1
+        ],
+        [
+         0,
+         0,
+         1,
+         1
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ],
+        [
+         1,
+         1,
+         1,
+         0
+        ]
+       ],
+       "utterance": 3,
+       "valence": 0,
+       "familiarization": null,
+       "grayscale": null
+      },
+      "joint_eig_bits": 3.6526840281163073,
+      "source": "eig"
+     }
+    ],
+    "power": [
+     {
+      "n_responses": 50,
+      "joint_eig_bits": 3.589468917336931,
+      "max_bits": 4.292481250360578,
+      "p_correct": 0.782,
+      "p_correct_se": 0.009234751773608215,
+      "mean_posterior_on_truth": 0.7239674221998811,
+      "by_model": {
+       "competition_endpoint_binding_l2": {
+        "p_correct": 0.6460176991150443,
+        "mean_posterior_on_truth": 0.5062530397127933,
+        "n_scenarios": 113
+       },
+       "egocentric_endpoint_binding_l2": {
+        "p_correct": 0.36879432624113473,
+        "mean_posterior_on_truth": 0.35880052874643076,
+        "n_scenarios": 141
+       },
+       "endpoint_binding_uncertainty_lapse_l2": {
+        "p_correct": 0.5267175572519084,
+        "mean_posterior_on_truth": 0.4035404082376691,
+        "n_scenarios": 131
+       },
+       "feature_binding_salience_lapse_l2": {
+        "p_correct": 0.8309859154929577,
+        "mean_posterior_on_truth": 0.6687282241100773,
+        "n_scenarios": 142
+       },
+       "endpoint_feature_binding_l2": {
+        "p_correct": 0.48739495798319327,
+        "mean_posterior_on_truth": 0.445333261416512,
+        "n_scenarios": 119
+       },
+       "feature_binding_listener_l2": {
+        "p_correct": 0.5263157894736842,
+        "mean_posterior_on_truth": 0.44486857294991916,
+        "n_scenarios": 114
+       },
+       "contextual_feature_uncertainty_l2": {
+        "p_correct": 0.957983193277311,
+        "mean_posterior_on_truth": 0.906578030849485,
+        "n_scenarios": 119
+       },
+       "contrast_salience_lapse_prev_l2": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 0.9965030440340329,
+        "n_scenarios": 125
+       },
+       "bar:literal_listener": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 1.0,
+        "n_scenarios": 75
+       },
+       "bar:rsa_l1": {
+        "p_correct": 0.7865168539325843,
+        "mean_posterior_on_truth": 0.7353174717287749,
+        "n_scenarios": 89
+       },
+       "bar:rsa_l2": {
+        "p_correct": 0.8974358974358975,
+        "mean_posterior_on_truth": 0.8644076207526314,
+        "n_scenarios": 78
+       },
+       "bar:rsa_l1_salience": {
+        "p_correct": 0.5909090909090909,
+        "mean_posterior_on_truth": 0.49994150047510383,
+        "n_scenarios": 88
+       },
+       "bar:rsa_l1_shared_prior": {
+        "p_correct": 0.7051282051282052,
+        "mean_posterior_on_truth": 0.5353400779121775,
+        "n_scenarios": 78
+       },
+       "bar:isolated_graded_costly_l3": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 0.9999999926771814,
+        "n_scenarios": 86
+       },
+       "bar:rsa_l2_singleton_distinct_feat_color_l0": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 0.9995197186797031,
+        "n_scenarios": 79
+       },
+       "bar:evaluative_prominence_l2": {
+        "p_correct": 0.8235294117647058,
+        "mean_posterior_on_truth": 0.7009217504754351,
+        "n_scenarios": 85
+       },
+       "bar:lexical_preemption_heuristic": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 0.9999999999999997,
+        "n_scenarios": 90
+       },
+       "bar:competitor_confusion_speaker": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 1.0,
+        "n_scenarios": 97
+       },
+       "bar:softmax_surprisal_isolated_costly_l4": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 0.9999999999751248,
+        "n_scenarios": 75
+       },
+       "bar:oddity_heuristic_listener": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 1.0,
+        "n_scenarios": 76
+       }
+      },
+      "participants": 200
+     }
+    ]
+   }
+  }
+ ]
+}

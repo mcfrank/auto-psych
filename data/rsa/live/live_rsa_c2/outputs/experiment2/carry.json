@@ -1,0 +1,50 @@
+{
+ "rule": "best first by the loop's final standing; a model within 0.002 (RMSE of posterior-mean choice-class probabilities over the design pool) of one kept is the same hypothesis for the live phase; at most 8",
+ "order": [
+  "bounded_endpoint_prev_redundancy_l2",
+  "bounded_capacity_redundancy_l2",
+  "bounded_prevalence_redundancy_l2",
+  "bounded_endpoint_redundancy_l2",
+  "bounded_capacity_prevalence_l2",
+  "perceptual_load_redundancy_l2",
+  "bounded_salience_lapse_redundancy_l2",
+  "salience_lapse_prev_redundancy_l2",
+  "bounded_satisficing_redundancy_l2",
+  "bounded_capacity_listener_l2",
+  "literal_pragmatic_mixture_l2",
+  "perceptual_load_listener_l2"
+ ],
+ "kept": [
+  "bounded_endpoint_prev_redundancy_l2",
+  "bounded_capacity_redundancy_l2",
+  "bounded_prevalence_redundancy_l2",
+  "bounded_endpoint_redundancy_l2",
+  "bounded_capacity_prevalence_l2",
+  "perceptual_load_redundancy_l2",
+  "bounded_salience_lapse_redundancy_l2",
+  "salience_lapse_prev_redundancy_l2"
+ ],
+ "merged": [],
+ "over_cap": [
+  {
+   "name": "bounded_satisficing_redundancy_l2",
+   "nearest": "bounded_capacity_redundancy_l2",
+   "rmse": 0.00841176135091255
+  },
+  {
+   "name": "bounded_capacity_listener_l2",
+   "nearest": "bounded_capacity_prevalence_l2",
+   "rmse": 0.009436992421352323
+  },
+  {
+   "name": "literal_pragmatic_mixture_l2",
+   "nearest": "salience_lapse_prev_redundancy_l2",
+   "rmse": 0.027449202085277943
+  },
+  {
+   "name": "perceptual_load_listener_l2",
+   "nearest": "perceptual_load_redundancy_l2",
+   "rmse": 0.009485208119089268
+  }
+ ]
+}
