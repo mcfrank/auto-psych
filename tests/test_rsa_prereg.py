@@ -299,3 +299,11 @@ def test_the_osf_bundle_refuses_an_unfrozen_or_altered_plan(tmp_path, break_it, 
     break_it(tmp_path)
     with pytest.raises(ValueError, match=match):
         bundle.frozen_files(tmp_path)
+
+
+def test_a_design_the_pool_cannot_fill_twice_is_refused_before_any_selection(pool):
+    from src.rsa.prereg.design import check_room
+
+    check_room(pool, DESIGN_QUOTAS, 156)  # G = 312: 46 of the 54 two-object displays
+    with pytest.raises(ValueError, match="objects=2"):
+        check_room(pool, DESIGN_QUOTAS, 208)  # G = 416 needs 62

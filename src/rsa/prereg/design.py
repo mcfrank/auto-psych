@@ -72,13 +72,24 @@ class Args:
     """The pooled fits' settings (as the frozen predictions': the cached fits are reused)."""
 
 
+def check_room(pool, quotas, half: int) -> None:
+    """Both halves meet every quota from disjoint displays: raise before hours of
+    EIG selection when the pool cannot (it has 54 two-object displays, so with
+    the campaign's 15% the largest design is G = 312)."""
+    for q in design_run.parse_quotas(quotas, pool, half):
+        if int(q.members.sum()) < 2 * q.minimum:
+            raise ValueError(f"two halves of {half} need {2 * q.minimum} {q.name} displays; the pool has "
+                             f"{int(q.members.sum())}")
+
+
 def main(args: Args) -> dict:
     g, n = args.displays, args.participants
     if g % 2 or n % 2:
         raise ValueError(f"displays ({g}) and participants ({n}) must be even: the design is two halves")
+    half = g // 2
+    check_room(design_run.design_pool(), args.quotas, half)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    half = g // 2
     record = design_run.main(design_run.Args(
         models_dir=args.finals, data=args.data, cache=args.cache, out=out / "eig_half",
         bar_models_dirs=[args.starting, args.promoted], carried_share=args.carried_share, quotas=list(args.quotas),
