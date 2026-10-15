@@ -246,3 +246,56 @@ def test_pool_fit_writes_predictions_the_analysis_reads(tmp_path):
     assert sorted(preds.names) == sorted(f"seed:{n}" for n in ("literal_listener", "rsa_l1", "rsa_l2",
                                                                "rsa_l1_salience", "rsa_l1_shared_prior"))
     assert json.loads((tmp_path / "bar.json").read_text())["data"]["sha256"]
+
+
+def _frozen_tree(root):
+    """A repository tree with every registered file, frozen consistently."""
+    import hashlib
+
+    import yaml
+
+    from src.rsa.prereg import bundle
+
+    for f in bundle.PLAN_FILES + bundle.DESIGN_FILES:
+        (root / f).parent.mkdir(parents=True, exist_ok=True)
+        (root / f).write_text(f"contents of {f}\n")
+    (root / bundle.CODE_DIR).mkdir(parents=True, exist_ok=True)
+    (root / bundle.CODE_DIR / "analysis.py").write_text("x = 1\n")
+    lists = root / bundle.DESIGN_DIR / "trial_lists.json"
+    sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()  # noqa: E731
+    (root / bundle.DESIGN_DIR / "prereg_design.json").write_text(json.dumps(dict(
+        design_sha256="d" * 64, trial_lists_sha256=sha(lists), participants=1248, displays=312)))
+    preds = []
+    for name in ("finals.json", "bar.json"):
+        p = root / "data" / name
+        p.write_text(name)
+        preds.append(dict(path=f"data/{name}", sha256=sha(p)))
+    (root / bundle.CONFIG).write_text(yaml.safe_dump(dict(design_sha256="d" * 64, participants=1248, displays=312,
+                                                          predictions=preds)))
+    (root / "docs/auto_rsa/PREREG_FINAL.md").write_text("§8 " + "d" * 64 + " " + " ".join(p["sha256"] for p in preds))
+    return preds
+
+
+def test_the_osf_bundle_lists_every_frozen_file_with_its_hash(tmp_path):
+    from src.rsa.prereg import bundle
+
+    preds = _frozen_tree(tmp_path)
+    files = dict(bundle.frozen_files(tmp_path))
+    assert {p["path"] for p in preds} <= {str(f) for f in files}
+    assert set(bundle.PLAN_FILES + bundle.DESIGN_FILES) <= set(files)
+    assert files[__import__("pathlib").Path("data/finals.json")] == preds[0]["sha256"]
+
+
+@pytest.mark.parametrize("break_it, match", [
+    (lambda r: (r / "data/bar.json").write_text("changed"), "does not match the file"),
+    (lambda r: (r / "docs/auto_rsa/PREREG_FINAL.md").write_text("§8 blank"), "§8 does not record"),
+    (lambda r: (r / "data/rsa/prereg/design/trial_lists.json").write_text("other"), "recorded trial lists"),
+    (lambda r: (r / "scripts/rsa/live/rsa_prereg.yaml").write_text("design_sha256: ''\n"), "not frozen yet"),
+])
+def test_the_osf_bundle_refuses_an_unfrozen_or_altered_plan(tmp_path, break_it, match):
+    from src.rsa.prereg import bundle
+
+    _frozen_tree(tmp_path)
+    break_it(tmp_path)
+    with pytest.raises(ValueError, match=match):
+        bundle.frozen_files(tmp_path)

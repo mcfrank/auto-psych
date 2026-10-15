@@ -636,6 +636,8 @@ def test_the_prereg_launch_is_double_gated_and_runs_only_the_frozen_design_and_p
     # The run is handed the pre-registered hashes and refuses other files.
     assert '--design-sha256 "$DESIGN_SHA"' in live and '--predictions-sha256 "${PRED_SHAS[@]}"' in live
     assert "has no design_sha256" in live and '--private-dir "$CELL_DIR/private"' in live
+    # Publishing also waits for the OSF registration (PI 2026-10-15).
+    assert 'cfg osf_registration' in live and "live needs the OSF registration" in live
 
 
 def test_the_prereg_config_checks_like_the_campaigns_and_keeps_its_page():

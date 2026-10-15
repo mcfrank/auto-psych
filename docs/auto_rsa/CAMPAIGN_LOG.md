@@ -131,6 +131,7 @@ games, and support two claims:
 | 59 | 10-15 | **The bar is the best promoted seed** (chosen on the new data, after the fact, as in claim 2); one one-sided test per final, Holm across the three; the best starting model and every bar model reported beside it | PI | RSA only | `src.rsa.prereg.analysis` |
 | 60 | 10-15 | **No secondary hypothesis** (chain 0's final beating the other two was dropped) | PI | — | `PREREG_FINAL.md` §2 |
 | 61 | 10-15 | **Sized by power, no price cap:** frozen predictions from one pooled fit of all 20 models; displays half by the campaign's design rule (finals carried, bar at half the prior, quotas) and half random within the quotas; G and N from simulation (calibrated to claim 2's weakest experiment-3 advantage) and from the empirical √G scaling of claim 2's tests | "happy to go up in price here, so let's see what turns out" (PI) | RSA only | `src.rsa.prereg.power`, `PREREG_FINAL.md` §7 |
+| 62 | 10-15 | **The pre-registration is frozen on OSF** as well as by the git freeze commit: the plan and the frozen files (`src.rsa.prereg.bundle`, hash-checked) registered with OSF's Preregistration template before the study is published; the live launch waits for the approved registration | a public, timestamped record nobody on the project can edit (PI) | RSA only | `OSF_PREREG.md`; the live job refuses to publish without `osf_registration` |
 
 ## 3. How this differs from main, at a glance
 
@@ -230,7 +231,7 @@ games, and support two claims:
   - **In-sample on all 21,567 live responses,** chain 0's final fits best (chain 1's −160,
     chain 2's −189), and on each chain's own data. Its lead is on 4-object word trials; chain 1's
     prior is best on 3–4-object mumble trials.
-- **Final experiment (PI 2026-10-15, #58–61): pre-registration drafted** (`PREREG_FINAL.md`,
+- **Final experiment (PI 2026-10-15, #58–62): pre-registration drafted, to be registered on OSF** (`PREREG_FINAL.md`,
   code `src/rsa/prereg/`, Sherlock steps `HANDOFF_prereg.md`). Each final vs the best promoted
   seed on new people, frozen predictions, display-clustered SE, one-sided, Holm across 3; no
   secondary hypothesis, no lesions. Next: the 17 bar models' pooled fits (Sherlock), the power

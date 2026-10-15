@@ -1,8 +1,11 @@
 # Pre-registration: do the campaign's final models predict new people better than the bar?
 
-**Status: DRAFT.** Frozen when §8's blanks are filled and the freeze commit is pushed to `auto-rsa`,
-before any participant is recruited. After the freeze, this file changes only by dated addenda
-at the end; the frozen version is the commit named in §8.
+**Status: DRAFT.** Frozen in two steps, before any participant is recruited:
+1. §8's blanks are filled and the freeze commit is pushed to `auto-rsa`;
+2. this plan, with the frozen files, is **registered on OSF** (`OSF_PREREG.md`; PI 2026-10-15).
+
+After the freeze, this file changes only by dated addenda at the end. The frozen version is the
+commit named in §8, as registered.
 
 - **Authors:** Michael C. Frank (PI), with the auto-psych pipeline.
 - **Drafted:** 2026-10-15.
@@ -237,6 +240,8 @@ The PI set no price cap. The chosen G and N, and the frozen design's own simulat
 | `bar_pool_preds.json` sha256 | |
 | pooled data sha256 | |
 | simulated power of the frozen design, per final (δ = 0.0078) | |
+| OSF registration (URL, date approved) | |
+| `prereg_final_osf.zip` sha256 (`src.rsa.prereg.bundle`) | |
 
 ## Addenda
 

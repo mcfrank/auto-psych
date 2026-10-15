@@ -18,6 +18,7 @@ trials: 13                         # as the campaign: 13 designed displays + 2 c
 displays: 208                      # PROVISIONAL: half EIG, half random
 
 design_sha256: ""                  # filled in at the freeze (prereg_design.json)
+osf_registration: ""               # the approved OSF registration's URL (docs/auto_rsa/OSF_PREREG.md); live refuses without it
 predictions:                       # the frozen predictions, with their sha256 (filled in at the freeze)
   - path: data/rsa/live/finals_pool_preds_final.json
     sha256: ""

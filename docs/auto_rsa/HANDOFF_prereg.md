@@ -63,7 +63,9 @@ STAGE=design DISPLAYS=<G> PARTICIPANTS=<N> sbatch --time=36:00:00 scripts/rsa/sl
 **5. The freeze is the driver's step,** then the PI's:
 - the driver fills `PREREG_FINAL.md` §8 and `rsa_prereg.yaml` (`participants`, `displays`,
   `design_sha256`, both predictions' `sha256`), and pushes the freeze commit;
-- the PI approves it.
+- the PI approves it and **registers it on OSF** (`OSF_PREREG.md`: the driver builds the bundle
+  with `python -m src.rsa.prereg.bundle`; the PI uploads it and submits the registration);
+- the driver records the registration's URL in §8.
 - **Pull it.**
 
 **6. Test deploy:** the page and a Prolific draft. Nothing is published. This stages the frozen
@@ -82,7 +84,8 @@ PROLIFIC_MODE=test bash scripts/rsa/live/prereg_launch.sh
 - **Check the balance:** the Prolific account covers N × $0.50 × 1.33. Chain 0's experiment 3
   failed to publish on the balance.
 
-**7. Live,** only on the PI's go-ahead:
+**7. Live,** only on the PI's go-ahead, and only once the OSF registration is submitted and
+approved (its URL is in `PREREG_FINAL.md` §8):
 - set `confirm_live_recruitment: true` in a copy of `scripts/rsa/live/rsa_prereg.yaml` outside
   the checkout (an edited tracked file makes the checkout dirty, and staging refuses it);
 - run `PROLIFIC_MODE=live CONFIG=<the copy> bash scripts/rsa/live/prereg_launch.sh` and type

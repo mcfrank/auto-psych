@@ -41,6 +41,7 @@ CONFIRM_FLAG=()
 if [[ "$PROLIFIC_MODE" == "live" ]]; then
   [[ "$(cfg confirm_live_recruitment)" == "True" ]] || { echo "FATAL: live needs confirm_live_recruitment: true in $CONFIG" >&2; exit 1; }
   [[ "${CONFIRM_LIVE_RECRUITMENT:-}" == "1" ]] || { echo "FATAL: live needs CONFIRM_LIVE_RECRUITMENT=1" >&2; exit 1; }
+  [[ -n "$(cfg osf_registration)" ]] || { echo "FATAL: live needs the OSF registration's URL (osf_registration in $CONFIG; docs/auto_rsa/OSF_PREREG.md)" >&2; exit 1; }
   CONFIRM_FLAG=(--confirm-live-recruitment)
 elif [[ "$PROLIFIC_MODE" != "test" ]]; then
   echo "FATAL: PROLIFIC_MODE must be test or live, not $PROLIFIC_MODE" >&2; exit 1
