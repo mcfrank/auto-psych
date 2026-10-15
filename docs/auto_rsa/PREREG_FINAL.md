@@ -102,8 +102,19 @@ The run refuses any predictions files but the two whose sha256 are in §8.
 
 **The EIG half: G/2 displays, chosen by the campaign's own design rule** (`src.rsa.design.run`,
 unchanged):
-- the models: the three finals as the models going in (prior mass 0.5), and the 17 bar models
-  sharing the other 0.5;
+- the models: the three finals as the models going in (prior mass 0.5), and the bar models
+  sharing the other 0.5. As in every campaign design, a bar model that is the same file as one
+  already in, or the same hypothesis on the pool (RMSE < 0.002), is merged into it. Here that
+  leaves 12 distinct bar models (`prereg_design.json` `merged`):
+  - the starting and promoted copies of `rsa_l1` and `rsa_l2` (the same files);
+  - `rsa_l2_singleton_feat_color_familiar_l0` and `…_valence_l0` into
+    `rsa_l2_singleton_distinct_feat_color_l0`;
+  - `familiar_isolated_graded_costly_l2` into `isolated_graded_costly_l3`.
+
+  The merge affects only how EIG divides its prior. The merged twins differ from the kept model
+  by at most 0.0013 in probability on the design's displays (0.0061 for the costly pair). Each
+  final's expected advantage over all three `l0` variants is the same to four decimals. The
+  analysis (§6) scores all 17 bar models, merged or not;
 - each model's posterior draws from the pooled fit;
 - joint EIG, greedy;
 - each display's responses as in the whole design.
