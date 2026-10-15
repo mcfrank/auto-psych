@@ -271,4 +271,18 @@ at the campaign's 7.8% exclusion rate, about $816.
 
 ## Addenda
 
-(none)
+### Addendum A (2026-10-15): the OSF registration
+
+- **Registration:** https://osf.io/s48jv, "OSF Preregistration" template, public (no embargo),
+  registered 2026-10-15 22:44 UTC and approved by the PI the same day, before any participant was
+  recruited.
+- **What it links:** the tag `rsa-prereg-final` of https://github.com/mcfrank/auto-psych, at
+  commit `dbb38535649d52bbf58de6edf7727803a06ca4d0` (checked 2026-10-15). That commit holds this
+  plan as frozen in §8 (frozen in `38b585df`; `dbb38535` changed only the OSF instructions, this
+  file's status line and the campaign log).
+- **Two answers were registered incomplete:**
+  - the "Other" answer, meant to quote the commit SHA and the frozen files' sha256, is empty;
+  - the sample-size and design answers say "N" and "G" instead of 1,224 and 312.
+
+  Both values are in this plan's §8 at the linked commit. They are added on OSF by a registration
+  update before recruitment (Addendum B records it). Nothing in the plan changes.
