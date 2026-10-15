@@ -218,15 +218,30 @@ The scaling holds only at m ≥ 47 responses a display.
 
 ### 7.2 The rule
 
-Take the smallest (G, N) on the grid, G ∈ {104, 208, 312, 416}, at which both:
+Take G from the grid {104, 208, 312}, and N as the smallest multiple of G/13 (so that the lists
+balance), such that both:
 - (a) every final's simulated power is ≥ 0.90 under δ = 0.0078, on random designs;
 - (b) the empirical scaling gives ≥ 0.90 at α = 0.05, with m ≥ 47.
 
-**What (b) alone implies:** G = 312 and N ≈ 1,250, about $830 at $0.50 a person plus Prolific's
-fee.
+**G = 416 is not possible.** The pool has 54 two-object displays, and two disjoint halves of 208
+under the 15% quota need 62. `src.rsa.prereg.design` refuses it before selecting.
 
-The PI set no price cap. The chosen G and N, and the frozen design's own simulated power, go in
-§8.
+### 7.3 Results (`data/rsa/prereg/power.json`, 2,000 simulated experiments per cell)
+
+**(a) holds at every grid point from G = 104, N = 768.**
+- The weakest final, chain 0's, has power 0.98–1.00 under δ = 0.0078; the other two have
+  0.99–1.00.
+- The simulation is optimistic. Its only noise is response sampling, so it lacks the display-
+  to-display misfit that real data have (claim 2's SEs were several times larger).
+- For chains 1 and 2, λ is capped at 1: even if the final were exactly right, its expected
+  advantage over the nearest promoted seed is below δ. Averaged over the whole pool, it is 0.0069
+  (chain 1, nearest `rsa_l2_singleton_feat_color_familiar_l0`) and 0.0053 nats a trial (chain 2,
+  nearest `rsa_l2_singleton_feat_color_valence_l0`).
+- On their 156 most diagnostic displays, it is 0.034 and 0.020. Those are the displays the EIG
+  half aims at.
+
+**(b) decides it:** G = 312 and m ≥ 47. That is N = 1,224 (51 cycles of the 24 lists), m = 47
+at the campaign's 7.8% exclusion rate, about $816.
 
 ## 8. Frozen values (filled at the freeze)
 
