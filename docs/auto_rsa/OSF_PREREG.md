@@ -2,7 +2,13 @@
 
 The plan is `PREREG_FINAL.md`. This file is how it is frozen on OSF: the steps, and the answers
 for OSF's **"OSF Preregistration"** template, section by section. Each answer is short and points
-to the plan, which is attached in full.
+to the plan, which is linked in full.
+
+**OSF no longer takes uploaded files** (its platform change, 2026-10). So the registration links a
+**tagged commit** of the public repository: `rsa-prereg-final`, https://github.com/mcfrank/auto-psych/tree/rsa-prereg-final.
+- The registration text quotes the tag's **full commit SHA**. A tag can be moved or deleted, but a
+  commit SHA is fixed by the content of every file in that commit, so the link stays verifiable.
+- It also quotes the key files' sha256 (the "Other" answer), so the fingerprints are on OSF itself.
 
 **Why OSF:** the git freeze commit fixes the code. The OSF registration adds a public, timestamped
 record that nobody on the project can edit or withdraw (PI 2026-10-15; `CAMPAIGN_LOG.md` #62).
@@ -13,22 +19,23 @@ record that nobody on the project can edit or withdraw (PI 2026-10-15; `CAMPAIGN
    - fill `PREREG_FINAL.md` §8 and `scripts/rsa/live/rsa_prereg.yaml`;
    - commit the design files to `data/rsa/prereg/`;
    - push.
-2. **The bundle** (driver):
-   - run `uv run python -m src.rsa.prereg.bundle --out <dir>`;
-   - this checks every hash against the config and the plan, and refuses an unfrozen plan;
-   - it writes `prereg_final_osf.zip` with `SHA256SUMS.txt`, about 1 MB. The predictions files are
-     the bulk: model outputs, not participant data.
+2. **The tag** (driver):
+   - check the freeze: `uv run python -m src.rsa.prereg.bundle --out <scratch dir>` verifies every
+     hash against the config and the plan, and refuses an unfrozen plan (its zip is not needed);
+   - tag the commit that holds the freeze and these instructions, `rsa-prereg-final` (annotated), and push the
+     tag;
+   - fill in its full commit SHA in the "Other" answer below (a copy for pasting; the tagged file
+     cannot hold its own commit's SHA).
 3. **The registration** (PI, on osf.io: the account, and a registration cannot be withdrawn):
    1. Create a project, "auto-psych: RSA final experiment" (or a component of an existing
       auto-psych project).
-   2. Upload `prereg_final_osf.zip` to its OSF Storage, and unzip it there (or upload the folder).
-   3. Choose **Registrations → New registration → "OSF Preregistration"**, and paste the answers
-      below. Where a field takes files, attach `PREREG_FINAL.md`.
-   4. **Make it public** (PI 2026-10-15), not embargoed. It must be submitted, and approved,
+   2. Choose **Registrations → New registration → "OSF Preregistration"**, and paste the answers
+      below.
+   3. **Make it public** (PI 2026-10-15), not embargoed. It must be submitted, and approved,
       before the study is published on Prolific.
-   5. Submit, then approve the registration from the confirmation email. **OSF makes it final
+   4. Submit, then approve the registration from the confirmation email. **OSF makes it final
       only after that approval, or after 48 hours.**
-4. **Record it** (driver): put the registration's URL, its approval date and the bundle's sha256 in
+4. **Record it** (driver): put the registration's URL, its approval date and the tag's commit SHA in
    `PREREG_FINAL.md` as Addendum A, in the campaign log, and as `osf_registration` in
    `rsa_prereg.yaml`.
    - **The live launch (handoff step 7) waits for this.**
@@ -53,8 +60,9 @@ the models they started from? A pre-registered prospective test.
 - **This study:** it tests, on new participants and with predictions frozen in advance, whether
   each final predicts choices better than the strongest of the models the campaign started from.
   Those are the 12 promoted seeds, the best models of an earlier phase fitted to published data.
-- **The record:** the full plan, frozen predictions, design and analysis code are attached
-  (`PREREG_FINAL.md`; `SHA256SUMS.txt` lists every file's hash).
+- **The record:** the full plan, frozen predictions, design and analysis code are in the tagged
+  commit `rsa-prereg-final` of the public repository (https://github.com/mcfrank/auto-psych/tree/rsa-prereg-final): the plan is
+  `docs/auto_rsa/PREREG_FINAL.md`, and the hashes are under "Other".
 
 **Hypotheses:**
 - **H1_f, for each final model f:** on new participants, f's summed log predictive density
@@ -167,4 +175,14 @@ mumble trial) varies within participants, by design.
 **Deviations:** any deviation is reported with its reason, in a dated addendum to
 `PREREG_FINAL.md` and in the paper.
 
-**Code:** the code freeze is the git commit named in `PREREG_FINAL.md` §8.
+**The frozen materials:** the git tag `rsa-prereg-final` of https://github.com/mcfrank/auto-psych, commit
+`<full SHA, filled in at registration>`.
+
+| file (in that commit) | sha256 |
+|---|---|
+| `data/rsa/prereg/design/design.json` (design sha256, `Design.sha256`) | `bc7d60e5b84f0e09b1578da54e2ae73975b67e8f05f97a10cea75df6f8ceee02` |
+| `data/rsa/prereg/design/trial_lists.json` | `a11b6cc6aeac1b70b8ba47174099bc1e264db722cea25ce44d17dfbb54a12672` |
+| `data/rsa/live/finals_pool_preds_final.json` (the finals' frozen predictions) | `6a0a476f24e21166dd5af9d3f6538addd39db011b62d96a1adcd505a1d94f4bf` |
+| `data/rsa/live/bar_pool_preds.json` (the bar's frozen predictions) | `704575376be1305a92506f7270c27c67524f26ffeb0391687d4178d5974de269` |
+| `src/rsa/prereg/analysis.py` (the analysis) | `981bb8c0a01de84265ba6491a20a0768bc25bb7a79ff3b901ee5479c97ef910a` |
+| the pooled data the models were fitted to (not public: trial-level) | `19af0f544ed5c0e0cf902fdce55c259ad2fbaf697ccef6a21f9617375f114f23` |

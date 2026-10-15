@@ -2,8 +2,8 @@
 
 **Status: FROZEN 2026-10-15** (§8), to be **registered publicly on OSF** before any participant is
 recruited (`OSF_PREREG.md`; PI 2026-10-15). After the freeze, this file changes only by dated
-addenda at the end. The first records the OSF registration and the registered bundle's hash,
-which cannot be in the files they register.
+addenda at the end. The first records the OSF registration and the commit SHA of the git tag
+`rsa-prereg-final` it links (OSF no longer takes files), which cannot be in the files they register.
 
 - **Authors:** Michael C. Frank (PI), with the auto-psych pipeline.
 - **Drafted:** 2026-10-15.
