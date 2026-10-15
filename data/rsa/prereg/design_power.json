@@ -1,0 +1,183 @@
+{
+ "predictions_sha256": {
+  "/home/users/mcfrank/auto-psych/data/rsa/live/finals_pool_preds_final.json": "6a0a476f24e21166dd5af9d3f6538addd39db011b62d96a1adcd505a1d94f4bf",
+  "/home/users/mcfrank/auto-psych/data/rsa/live/bar_pool_preds.json": "704575376be1305a92506f7270c27c67524f26ffeb0391687d4178d5974de269"
+ },
+ "finals": [
+  "boundary_avoidable_ambiguity_listener",
+  "feature_surprisal_ensemble_listener",
+  "competition_endpoint_binding_lapse_l2"
+ ],
+ "design": "/scratch/users/mcfrank/auto-psych/rsa_prereg/design/design.json",
+ "quotas": [
+  "objects=2:0.15",
+  "objects=3:0.25",
+  "query=prior:0.2",
+  "query=word:0.5"
+ ],
+ "trials": 13,
+ "exclusion": 0.078,
+ "alpha": 0.05,
+ "seed": 0,
+ "grid": [
+  {
+   "displays": 312,
+   "participants": 1224,
+   "responses_per_display": 47,
+   "truth": "calibrated:0.0058",
+   "cost_usd": 816,
+   "min_power": 0.9055,
+   "finals": {
+    "boundary_avoidable_ambiguity_listener": {
+     "power": 0.9055,
+     "n_sims": 2000,
+     "z_mean": 3.371742821095756,
+     "lam": 0.6545460524324236,
+     "capped": 0,
+     "nearest_promoted": [
+      "promoted:rsa_l2_singleton_distinct_feat_color_l0"
+     ]
+    },
+    "feature_surprisal_ensemble_listener": {
+     "power": 0.997,
+     "n_sims": 2000,
+     "z_mean": 4.6423040028873315,
+     "lam": 0.804673451833244,
+     "capped": 0,
+     "nearest_promoted": [
+      "promoted:rsa_l2_singleton_feat_color_familiar_l0"
+     ]
+    },
+    "competition_endpoint_binding_lapse_l2": {
+     "power": 1.0,
+     "n_sims": 2000,
+     "z_mean": 5.738543592308793,
+     "lam": 0.9476624990167476,
+     "capped": 0,
+     "nearest_promoted": [
+      "promoted:rsa_l2_singleton_feat_color_valence_l0"
+     ]
+    }
+   }
+  },
+  {
+   "displays": 312,
+   "participants": 1224,
+   "responses_per_display": 47,
+   "truth": "calibrated:0.0078",
+   "cost_usd": 816,
+   "min_power": 0.9945,
+   "finals": {
+    "boundary_avoidable_ambiguity_listener": {
+     "power": 0.9945,
+     "n_sims": 2000,
+     "z_mean": 4.405134133918036,
+     "lam": 0.7068778611628773,
+     "capped": 0,
+     "nearest_promoted": [
+      "promoted:rsa_l2_singleton_distinct_feat_color_l0"
+     ]
+    },
+    "feature_surprisal_ensemble_listener": {
+     "power": 1.0,
+     "n_sims": 2000,
+     "z_mean": 5.883270771165081,
+     "lam": 0.9063430091134461,
+     "capped": 0,
+     "nearest_promoted": [
+      "promoted:rsa_l2_singleton_feat_color_familiar_l0"
+     ]
+    },
+    "competition_endpoint_binding_lapse_l2": {
+     "power": 1.0,
+     "n_sims": 2000,
+     "z_mean": 6.328625651214339,
+     "lam": 1.0,
+     "capped": 1,
+     "nearest_promoted": [
+      "promoted:rsa_l2_singleton_feat_color_valence_l0"
+     ]
+    }
+   }
+  },
+  {
+   "displays": 312,
+   "participants": 1224,
+   "responses_per_display": 47,
+   "truth": "model",
+   "cost_usd": 816,
+   "min_power": 1.0,
+   "finals": {
+    "boundary_avoidable_ambiguity_listener": {
+     "power": 1.0,
+     "n_sims": 2000,
+     "z_mean": 8.322688636330236,
+     "lam": 1.0,
+     "capped": 0,
+     "nearest_promoted": [
+      "promoted:rsa_l2_singleton_distinct_feat_color_l0"
+     ]
+    },
+    "feature_surprisal_ensemble_listener": {
+     "power": 1.0,
+     "n_sims": 2000,
+     "z_mean": 6.8426000078755225,
+     "lam": 1.0,
+     "capped": 0,
+     "nearest_promoted": [
+      "promoted:rsa_l2_singleton_feat_color_familiar_l0"
+     ]
+    },
+    "competition_endpoint_binding_lapse_l2": {
+     "power": 1.0,
+     "n_sims": 2000,
+     "z_mean": 6.347652828264748,
+     "lam": 1.0,
+     "capped": 0,
+     "nearest_promoted": [
+      "promoted:rsa_l2_singleton_feat_color_valence_l0"
+     ]
+    }
+   }
+  }
+ ],
+ "empirical_scaling": {
+  "note": "claim 2's z (committed model vs best promoted seed, 52 displays, ~47 responses a display) grown as sqrt(G); valid at >= ~47 responses per display",
+  "claim2_z": {
+   "c0e2": 1.3819742489270388,
+   "c0e3": 3.0277777777777777,
+   "c1e2": 2.6999999999999997,
+   "c1e3": 3.122905027932961,
+   "c2e2": 0.5,
+   "c2e3": 1.271523178807947
+  },
+  "power": {
+   "312": {
+    "c0e2": {
+     "at_alpha": 0.959094903008146,
+     "at_alpha_over_3": 0.895638844897183
+    },
+    "c0e3": {
+     "at_alpha": 0.999999996075211,
+     "at_alpha_over_3": 0.9999999383265845
+    },
+    "c1e2": {
+     "at_alpha": 0.9999996631030427,
+     "at_alpha_over_3": 0.999996364157257
+    },
+    "c1e3": {
+     "at_alpha": 0.999999999041394,
+     "at_alpha_over_3": 0.9999999831920618
+    },
+    "c2e2": {
+     "at_alpha": 0.33720300340909937,
+     "at_alpha_over_3": 0.18318325202592578
+    },
+    "c2e3": {
+     "at_alpha": 0.929182465800674,
+     "at_alpha_over_3": 0.8380653499100579
+    }
+   }
+  }
+ }
+}

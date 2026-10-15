@@ -1,0 +1,209 @@
+{
+ "displays": 312,
+ "participants": 1224,
+ "trials": 13,
+ "n_catch": 2,
+ "seed": 2026,
+ "quotas": [
+  "objects=2:0.15",
+  "objects=3:0.25",
+  "query=prior:0.2",
+  "query=word:0.5"
+ ],
+ "pool_size": 1597,
+ "pool_digest": "c85ca229b3343f52",
+ "design_sha256": "bc7d60e5b84f0e09b1578da54e2ae73975b67e8f05f97a10cea75df6f8ceee02",
+ "trial_lists_sha256": "a11b6cc6aeac1b70b8ba47174099bc1e264db722cea25ce44d17dfbb54a12672",
+ "data_sha256": "19af0f544ed5c0e0cf902fdce55c259ad2fbaf697ccef6a21f9617375f114f23",
+ "models": [
+  "boundary_avoidable_ambiguity_listener",
+  "feature_surprisal_ensemble_listener",
+  "competition_endpoint_binding_lapse_l2",
+  "bar:literal_listener",
+  "bar:rsa_l1",
+  "bar:rsa_l2",
+  "bar:rsa_l1_salience",
+  "bar:rsa_l1_shared_prior",
+  "bar:isolated_graded_costly_l3",
+  "bar:rsa_l2_singleton_distinct_feat_color_l0",
+  "bar:evaluative_prominence_l2",
+  "bar:lexical_preemption_heuristic",
+  "bar:competitor_confusion_speaker",
+  "bar:softmax_surprisal_isolated_costly_l4",
+  "bar:oddity_heuristic_listener"
+ ],
+ "merged": [
+  {
+   "model": "bar:familiar_isolated_graded_costly_l2",
+   "same_as": "bar:isolated_graded_costly_l3",
+   "rmse": 0.000599979130637598,
+   "reason": "the same hypothesis on the design pool (RMSE < 0.002)"
+  },
+  {
+   "model": "bar:rsa_l2_singleton_feat_color_familiar_l0",
+   "same_as": "bar:rsa_l2_singleton_distinct_feat_color_l0",
+   "rmse": 0.00028917806648522126,
+   "reason": "the same hypothesis on the design pool (RMSE < 0.002)"
+  },
+  {
+   "model": "bar:rsa_l2_singleton_feat_color_valence_l0",
+   "same_as": "bar:rsa_l2_singleton_distinct_feat_color_l0",
+   "rmse": 0.00010321585275709343,
+   "reason": "the same hypothesis on the design pool (RMSE < 0.002)"
+  },
+  {
+   "model": "bar:rsa_l2",
+   "same_as": "bar:rsa_l2",
+   "reason": "the same model file"
+  },
+  {
+   "model": "bar:rsa_l1",
+   "same_as": "bar:rsa_l1",
+   "reason": "the same model file"
+  }
+ ],
+ "screened_out": [],
+ "eig": {
+  "kinds": {
+   "2x2 prior": 2,
+   "2x2 word": 4,
+   "2x3 prior": 4,
+   "2x3 word": 3,
+   "2x4 prior": 4,
+   "2x4 word": 6,
+   "3x2 prior": 1,
+   "3x2 word": 2,
+   "3x3 prior": 2,
+   "3x3 word": 5,
+   "3x4 prior": 11,
+   "3x4 word": 18,
+   "4x2 prior": 3,
+   "4x2 word": 2,
+   "4x3 prior": 3,
+   "4x3 word": 2,
+   "4x4 prior": 16,
+   "4x4 word": 68
+  },
+  "quota_counts": {
+   "objects=2": 23,
+   "objects=3": 39,
+   "query=prior": 46,
+   "query=word": 110
+  },
+  "n_eig_picks": 53,
+  "power": [
+   {
+    "n_responses": 51,
+    "joint_eig_bits": 3.438830334179424,
+    "max_bits": 3.584962500721157,
+    "p_correct": 0.958,
+    "p_correct_se": 0.004486431101891124,
+    "mean_posterior_on_truth": 0.9400086459016772,
+    "by_model": {
+     "boundary_avoidable_ambiguity_listener": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 1.0,
+      "n_scenarios": 329
+     },
+     "feature_surprisal_ensemble_listener": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 1.0,
+      "n_scenarios": 312
+     },
+     "competition_endpoint_binding_lapse_l2": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 1.0,
+      "n_scenarios": 355
+     },
+     "bar:literal_listener": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 1.0,
+      "n_scenarios": 92
+     },
+     "bar:rsa_l1": {
+      "p_correct": 0.891566265060241,
+      "mean_posterior_on_truth": 0.8479238588177461,
+      "n_scenarios": 83
+     },
+     "bar:rsa_l2": {
+      "p_correct": 0.9512195121951219,
+      "mean_posterior_on_truth": 0.8325967036021273,
+      "n_scenarios": 82
+     },
+     "bar:rsa_l1_salience": {
+      "p_correct": 0.5930232558139535,
+      "mean_posterior_on_truth": 0.5056809253370411,
+      "n_scenarios": 86
+     },
+     "bar:rsa_l1_shared_prior": {
+      "p_correct": 0.6630434782608695,
+      "mean_posterior_on_truth": 0.560480163138181,
+      "n_scenarios": 92
+     },
+     "bar:isolated_graded_costly_l3": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 1.0,
+      "n_scenarios": 74
+     },
+     "bar:rsa_l2_singleton_distinct_feat_color_l0": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 0.9999999999999427,
+      "n_scenarios": 73
+     },
+     "bar:evaluative_prominence_l2": {
+      "p_correct": 0.9342105263157895,
+      "mean_posterior_on_truth": 0.8593940426107044,
+      "n_scenarios": 76
+     },
+     "bar:lexical_preemption_heuristic": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 1.0,
+      "n_scenarios": 93
+     },
+     "bar:competitor_confusion_speaker": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 1.0,
+      "n_scenarios": 82
+     },
+     "bar:softmax_surprisal_isolated_costly_l4": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 0.9999999999999968,
+      "n_scenarios": 83
+     },
+     "bar:oddity_heuristic_listener": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 1.0,
+      "n_scenarios": 88
+     }
+    },
+    "participants": 612
+   }
+  ]
+ },
+ "random": {
+  "kinds": {
+   "2x2 prior": 1,
+   "2x2 word": 1,
+   "2x3 prior": 2,
+   "2x3 word": 7,
+   "2x4 prior": 3,
+   "2x4 word": 9,
+   "3x2 prior": 1,
+   "3x2 word": 1,
+   "3x3 prior": 2,
+   "3x3 word": 9,
+   "3x4 prior": 4,
+   "3x4 word": 22,
+   "4x3 prior": 6,
+   "4x3 word": 13,
+   "4x4 prior": 12,
+   "4x4 word": 63
+  },
+  "quota_counts": {
+   "objects=2": 23,
+   "objects=3": 39,
+   "query=prior": 31,
+   "query=word": 125
+  }
+ }
+}

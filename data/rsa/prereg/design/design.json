@@ -1,0 +1,8685 @@
+{
+ "name": "prereg_final_d312_n1224",
+ "trials": [
+  {
+   "label": "eig_00",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_01",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_02",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_03",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_04",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_05",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_06",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_07",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_08",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_09",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_10",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_11",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_12",
+   "objects": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_13",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_14",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_15",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_16",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_17",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_18",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_19",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_20",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_21",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_22",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_23",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_24",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_25",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_26",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_27",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_28",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_29",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_30",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_31",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_32",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_33",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_34",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_35",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_36",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_37",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_38",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_39",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_40",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_41",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_42",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_43",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_44",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_45",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_46",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_47",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_48",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_49",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_50",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_51",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_52",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_53",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_54",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_55",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_56",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_57",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_58",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_59",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_60",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_61",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_62",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_63",
+   "objects": [
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_64",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_65",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     0
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_66",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_67",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_68",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_69",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_70",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_71",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_72",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_73",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_74",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_75",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_76",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_77",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_78",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_79",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_80",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_81",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_82",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_83",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_84",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_85",
+   "objects": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_86",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_87",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_88",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_89",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_90",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_91",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_92",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_93",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_94",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_95",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_96",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_97",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_98",
+   "objects": [
+    [
+     0,
+     1
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_99",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_100",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_101",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_102",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_103",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_104",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_105",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_106",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_107",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_108",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_109",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_110",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_111",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_112",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_113",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_114",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_115",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_116",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_117",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_118",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_119",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_120",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_121",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_122",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_123",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_124",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_125",
+   "objects": [
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_126",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_127",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_128",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_129",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_130",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_131",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_132",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_133",
+   "objects": [
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     0
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_134",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_135",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_136",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_137",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_138",
+   "objects": [
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_139",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_140",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_141",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_142",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_143",
+   "objects": [
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_144",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_145",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_146",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_147",
+   "objects": [
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_148",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_149",
+   "objects": [
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     0
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_150",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_151",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_152",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_153",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_154",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "eig_155",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_00",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_01",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_02",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_03",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_04",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_05",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_06",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_07",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_08",
+   "objects": [
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_09",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_10",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_11",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_12",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_13",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_14",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_15",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_16",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_17",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_18",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_19",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_20",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_21",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_22",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_23",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_24",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_25",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_26",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_27",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_28",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_29",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_30",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_31",
+   "objects": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_32",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_33",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_34",
+   "objects": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_35",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_36",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_37",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_38",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_39",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_40",
+   "objects": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_41",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_42",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_43",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_44",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_45",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_46",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_47",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_48",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_49",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_50",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_51",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_52",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_53",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_54",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_55",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_56",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_57",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_58",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_59",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_60",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_61",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_62",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_63",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_64",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_65",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_66",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_67",
+   "objects": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_68",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_69",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_70",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_71",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_72",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_73",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_74",
+   "objects": [
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     0
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_75",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_76",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_77",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_78",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_79",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_80",
+   "objects": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_81",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_82",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_83",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_84",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_85",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_86",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_87",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_88",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_89",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_90",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_91",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_92",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_93",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_94",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_95",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_96",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_97",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_98",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_99",
+   "objects": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_100",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_101",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_102",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_103",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_104",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_105",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_106",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     0
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_107",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_108",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_109",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_110",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_111",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_112",
+   "objects": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_113",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_114",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_115",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_116",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_117",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_118",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_119",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_120",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_121",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_122",
+   "objects": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_123",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_124",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_125",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_126",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_127",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_128",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_129",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_130",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_131",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_132",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_133",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "utterance": 3,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_134",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_135",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_136",
+   "objects": [
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     0
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_137",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_138",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_139",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_140",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 1,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_141",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_142",
+   "objects": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_143",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_144",
+   "objects": [
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_145",
+   "objects": [
+    [
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_146",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_147",
+   "objects": [
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_148",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_149",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_150",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_151",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     1
+    ]
+   ],
+   "utterance": 2,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_152",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_153",
+   "objects": [
+    [
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": 0,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_154",
+   "objects": [
+    [
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  },
+  {
+   "label": "rand_155",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0,
+     1
+    ]
+   ],
+   "utterance": null,
+   "roles": null,
+   "messages": null
+  }
+ ]
+}
