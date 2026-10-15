@@ -1,0 +1,73 @@
+models:
+- name: boundary_avoidable_ambiguity_listener
+  rationale: "Listeners interpret referring expressions through boundary polarization with avoidable ambiguity\
+    \ avoidance: when a referring expression matches multiple candidate referents that vary in feature\
+    \ complexity, evaluative attention anchors on the range extrema\u2014the minimal pragmatic target\
+    \ and the maximal category prototype\u2014while candidates located in the interior of the feature\
+    \ range suffer cognitive suppression due to lack of boundary contrast. When evaluating alternative\
+    \ referring expressions, listeners expect that speakers adhere to Gricean clarity by penalizing ambiguous\
+    \ expressions specifically when the ambiguity is avoidable\u2014that is, when the intended referent\
+    \ possessed an alternative distinguishing expression that would have uniquely identified it in context.\
+    \ Consequently, competitors that possessed uniquely distinguishing alternatives are decisively precluded\
+    \ under shared expressions, while minimal pragmatic targets and multi-feature candidates lacking distinguishing\
+    \ options are strongly favored. Refining boundary_polarization_listener by incorporating the avoidable\
+    \ ambiguity avoidance component from avoidable_ambiguity_speaker: speakers in reference games adhere\
+    \ to Gricean clarity by penalizing referentially ambiguous expressions specifically when the ambiguity\
+    \ is avoidable\u2014that is, when the intended referent possessed an alternative distinguishing expression\
+    \ that would have uniquely identified it in context. Pragmatic listeners invert this avoidable-ambiguity-sensitive\
+    \ speaker under boundary polarization, recognizing that hearing an ambiguous word provides strong\
+    \ evidence for referents that lacked distinguishing alternatives. This directly rectifies the observed\
+    \ under-selection of multi-feature pragmatic targets over all-feature competitors in four-object displays\
+    \ (four_object_multifeature_target_vs_all_feature_rate and four_object_two_feature_target_vs_three_feature_competitor_rate),\
+    \ the under-selection of pragmatic targets possessing unique alternative features (unique_alternative_target_choice_rate),\
+    \ and the over-selection of single-feature targets over three-feature competitors in two-object displays\
+    \ (two_object_one_feature_target_vs_three_feature_competitor_rate), while fully preserving range-frequency\
+    \ boundary polarization, capacity-limited executive attention, competitor confusion avoidance, and\
+    \ contrastive outlier pop-out. Differences from boundary_polarization_listener: - Recursion depth\
+    \ remains depth 2 (choice_probs calls L2, which inverts a speaker simulating depth-1 listener L1).\
+    \ - Added parameter: c_avoid (prior dist.Normal(0.0, 1.0)). - Removed parameters: None (retains alpha,\
+    \ w_interior, logit_p_base, w_load, w_popout, w_candidate, logit_p_outlier, w_inhibit_leak, w_typical,\
+    \ w_singleton, w_distinct, w_features, w_valence, w_color, w_confusion, and lapse with identical priors).\
+    \ - In choice_probs: added compute_avoidable(ctx) computing the contextual avoidable ambiguity matrix\
+    \ as avoidable = real_lex * ambiguity[:, None] * has_unique[None, :] where ambiguity = (k_u - 1.0)\
+    \ / jnp.maximum(1.0, n_obj - 1.0) * (1.0 - ctx.is_sink) and has_unique indicates whether the referent\
+    \ possesses any unique word with k_u == 1, scaled by params[\"c_avoid\"] as avoidable = params[\"\
+    c_avoid\"] * compute_avoidable(ctx), and passed avoidable to L2. - Speaker utility in both L1 and\
+    \ L2: added avoidable ambiguity penalty term - at(avoidable, u, r) inside communicative utility, evaluating\
+    \ as alpha * (L - w_interior * at(interior, u, r) - at(avoidable, u, r)) - w_confusion * at(confusion,\
+    \ u, r) (where L is L0 in L1 and L1 in L2)."
+  source: chain 0, experiment3 export (data/rsa/live/live_rsa_c0/outputs/experiment3/model_loop/models)
+- name: feature_surprisal_ensemble_listener
+  rationale: Visual scene expectations and communicative topic focus are governed by information-theoretic
+    feature surprisal and Gestalt type-token ensemble grouping. Human visual attention and communicative
+    expectations prioritize candidate referents according to the contextual surprisal of their present
+    visual features, while identical objects form perceptual ensembles whose collective attention is partitioned
+    equally among individual members. The unadorned baseline object serves as the contrastive ground of
+    the visual scene while the maximally elaborated focal exemplar anchors topical prominence, compressing
+    intermediate-complexity items and preventing empty singletons from dominating feature-rich duplicate
+    objects.
+  source: chain 1, experiment3 export (data/rsa/live/live_rsa_c1/outputs/experiment3/model_loop/models)
+- name: competition_endpoint_binding_lapse_l2
+  rationale: 'We refine endpoint_binding_salience_lapse_l2 by incorporating lexical competition in speaker
+    utterance production from lexical_competition_speaker_l2 into communicative inference. When communicating
+    about an object with multiple visual features, candidate labels compete for lexical retrieval and
+    selection in the speaker''s lexicon, attenuating the speaker''s communicative precision and increasing
+    the production of shared or redundant expressions. Pragmatic listeners invert this competition-bounded
+    speaker via recursive Theory of Mind at depth 2, which softens recursive preemption penalties against
+    multi-featured competitor referents, directly resolving the incumbent model''s overprediction of pragmatic
+    targets in two-object subset displays (two_object_subset_target_rate) and elevating simpler matching
+    referents in cross-cutting displays (non_nested_fewer_features_rate) while preserving contextual endpoint
+    salience, perceptual feature binding, and salience-captured attentional lapses. Differences from endpoint_binding_salience_lapse_l2:
+    - Recursion depth: Unchanged; choice_probs calls L2. - Parameters added: w_competition (prior: dist.LogNormal(-1.0,
+    1.0)). - Parameters removed: None. - Speaker utterance production / lexical competition: In S1 and
+    S2, the speaker''s communicative precision varies by referent feature complexity (alpha = params["alpha"]
+    / (1.0 + params["w_competition"] * jnp.maximum(ctx.feature_count - 1.0, 0.0))) from lexical_competition_speaker_l2,
+    replacing uniform rationality with competition-attenuated precision across candidate referents (passed
+    as vector alpha: ... and indexed via vec(alpha, r)). - All other terms: Contextual end-point salience
+    (w_endpoint) in the shared visual referent prior (alongside w_singleton, w_distinct, w_features, w_empty,
+    and w_color), perceptual feature-binding noise on non-matching distractors (w_binding), capacity-limited
+    inferential updating (kappa) at L1 and L2, contextual feature prevalence accessibility (w_prevalence)
+    and referential equivalence class size redundancy discounting (w_redundancy via compute_equivalence_class)
+    on speaker alternatives in S1 and S2, literal truth-conditional semantics at L0, depth-2 RSA recursion,
+    and salience-captured attentional lapse mixing remain identical to endpoint_binding_salience_lapse_l2.'
+  source: chain 2, experiment3 export (data/rsa/live/live_rsa_c2/outputs/experiment3/model_loop/models)

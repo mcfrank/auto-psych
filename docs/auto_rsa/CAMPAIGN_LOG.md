@@ -123,6 +123,15 @@ games, and support two claims:
 | 56 | 10-11 | **Bug fix:** the copy check (#51) also rejects a hypothesis wholly contained in an admitted model's | a refinement wrote only its parent's first sentence and reached chain 0's exported live set (`limited_attention_listener_2`) | RSA only | `8cafee80` |
 | 57 | 10-11 | **Logged bug fixes reach a frozen work root only by a recorded re-stage:** `RESTAGE_REASON=<entry>` re-stages from a clean checkout and appends old → new and the reason to `$WORK_ROOT/code_history`; without it, other code is refused as before | the freeze pinned an exact commit, so no fix could be applied at all | same aim as main's runbook (rsync fixed code, record the commit) | `80a1c1df`, `9c4a9b37` (a re-stage compares contents: same-size files written within one second were skipped), `stage_code.sh` |
 
+### 2.8 The final experiment (pre-registered)
+
+| # | Date | Decision | Why | vs main | Where |
+|---|---|---|---|---|---|
+| 58 | 10-15 | **One pre-registered prospective test of the three finals; no lesions** | the primary goal is to tell the finals apart from the seeds and the other candidates; lesion tests of every accrued mechanism were too much (PI) | RSA only | `PREREG_FINAL.md` |
+| 59 | 10-15 | **The bar is the best promoted seed** (chosen on the new data, after the fact, as in claim 2); one one-sided test per final, Holm across the three; the best starting model and every bar model reported beside it | PI | RSA only | `src.rsa.prereg.analysis` |
+| 60 | 10-15 | **No secondary hypothesis** (chain 0's final beating the other two was dropped) | PI | — | `PREREG_FINAL.md` §2 |
+| 61 | 10-15 | **Sized by power, no price cap:** frozen predictions from one pooled fit of all 20 models; displays half by the campaign's design rule (finals carried, bar at half the prior, quotas) and half random within the quotas; G and N from simulation (calibrated to claim 2's weakest experiment-3 advantage) and from the empirical √G scaling of claim 2's tests | "happy to go up in price here, so let's see what turns out" (PI) | RSA only | `src.rsa.prereg.power`, `PREREG_FINAL.md` §7 |
+
 ## 3. How this differs from main, at a glance
 
 - **Stack:** Python 3.12 + memo/JAX/numpyro instead of 3.11 + PyMC, in a parallel loop.
@@ -221,14 +230,12 @@ games, and support two claims:
   - **In-sample on all 21,567 live responses,** chain 0's final fits best (chain 1's −160,
     chain 2's −189), and on each chain's own data. Its lead is on 4-object word trials; chain 1's
     prior is best on 3–4-object mumble trials.
-- **Final experiment, simplified (PI 2026-10-15): no lesions.** The primary goal is to tell the
-  finals apart from the seeds and the other candidates. Proposed policy:
-  - **Models:** the 3 finals + the 17-model bar, all fitted once to the pooled data and frozen.
-  - **Displays:** half from the campaign's own design rule (finals as carried, half the prior
-    each, quotas), half stratified-random.
-  - **Primary test:** each final vs the best promoted seed, one-sided, Holm across 3.
-  - **Secondary:** chain 0's final beats the other two.
-  - **Size:** set by simulation (about 400?).
+- **Final experiment (PI 2026-10-15, #58–61): pre-registration drafted** (`PREREG_FINAL.md`,
+  code `src/rsa/prereg/`, Sherlock steps `HANDOFF_prereg.md`). Each final vs the best promoted
+  seed on new people, frozen predictions, display-clustered SE, one-sided, Holm across 3; no
+  secondary hypothesis, no lesions. Next: the 17 bar models' pooled fits (Sherlock), the power
+  grid (driver), the PI's choice of G and N (the empirical scaling alone points to G = 312,
+  N ≈ 1,250, ~$830), the design, the freeze, a test deploy, then live.
 
   Earlier plan, superseded: one pre-registered, prospective
   test of the three chains' final models, run after chains 1–2 finish:

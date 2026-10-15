@@ -1,0 +1,39 @@
+# The pre-registered final experiment (docs/auto_rsa/PREREG_FINAL.md). Read by
+# `python -m src.rsa.live.config` (check / render: the same checks and Prolific
+# settings as the campaign) and by scripts/rsa/slurm/prereg_live.sbatch.
+# Live recruitment spends real money: confirm_live_recruitment: true here AND
+# CONFIRM_LIVE_RECRUITMENT=1 at submit, and the launcher asks for a typed "yes".
+#
+# participants and displays are set from the power simulation (PREREG_FINAL.md,
+# "Sample size") before the design is made; design_sha256 and predictions are
+# filled in when the design is frozen, and the run refuses anything else.
+
+confirm_live_recruitment: false
+firebase_project: auto-psych-2c5da
+series_label: prereg               # Hosting site auto-psych-2c5da-prereg-c0 (one study: "chain" 0)
+chains: [0]
+experiments: 1
+participants: 1200                 # PROVISIONAL until the power simulation (a multiple of displays / 13)
+trials: 13                         # as the campaign: 13 designed displays + 2 catch
+displays: 208                      # PROVISIONAL: half EIG, half random
+
+design_sha256: ""                  # filled in at the freeze (prereg_design.json)
+predictions:                       # the frozen predictions, with their sha256 (filled in at the freeze)
+  - path: data/rsa/live/finals_pool_preds_final.json
+    sha256: ""
+  - path: data/rsa/live/bar_pool_preds.json
+    sha256: ""
+
+prolific:                          # unchanged from the campaign (rsa_live.yaml)
+  reward: 50
+  estimated_completion_time: 3
+  name: "Who is Bob talking about?"
+  description: >-
+    You will see a few pictures and hear one word from a speaker, and choose the picture you
+    think the speaker means. About 3 minutes.
+  device_compatibility: [desktop]
+  completion_code: AUTO_PSYCH_COMPLETE_RSA
+  completion_code_action: AUTOMATICALLY_APPROVE
+  min_approval_rate: 98
+  exclude_earlier_participants: true
+  exclude_earlier_participants_from: project   # every earlier RSA study: the campaign's 1,800 people are excluded

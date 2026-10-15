@@ -623,3 +623,38 @@ def test_a_frozen_campaign_takes_other_code_only_by_a_recorded_restage(tmp_path)
     (repo / "src" / "loop.py").write_text("V = 3\n")  # uncommitted: never staged into a campaign
     dirty = stage(RESTAGE_REASON="x")
     assert dirty.returncode != 0 and "clean checkout" in dirty.stderr
+
+
+def test_the_prereg_launch_is_double_gated_and_runs_only_the_frozen_design_and_predictions():
+    live = (SLURM / "prereg_live.sbatch").read_text()
+    launch = (SLURM.parent / "live" / "prereg_launch.sh").read_text()
+    assert _run(["bash", "-n", str(SLURM.parent / "live" / "prereg_launch.sh")]).returncode == 0
+    assert 'confirm_live_recruitment)" == "True"' in live and 'CONFIRM_LIVE_RECRUITMENT:-}" == "1"' in live
+    assert 'read -r -p \'Type "yes" to launch: \'' in launch and "CONFIRM_LIVE_RECRUITMENT=1" in launch
+    for v in ("PROLIFIC_API_TOKEN", "AUTO_PSYCH_RESULTS_TOKEN", "FIREBASE_TOKEN"):
+        assert v in live
+    # The run is handed the pre-registered hashes and refuses other files.
+    assert '--design-sha256 "$DESIGN_SHA"' in live and '--predictions-sha256 "${PRED_SHAS[@]}"' in live
+    assert "has no design_sha256" in live and '--private-dir "$CELL_DIR/private"' in live
+
+
+def test_the_prereg_config_checks_like_the_campaigns_and_keeps_its_page():
+    import yaml
+
+    from src.rsa.live.config import cost, hosting_site, load
+
+    cfg = load(SLURM.parent / "live" / "rsa_prereg.yaml")
+    campaign = yaml.safe_load((SLURM.parent / "live" / "rsa_live.yaml").read_text())
+    assert cfg["confirm_live_recruitment"] is False and cfg["experiments"] == 1 and cfg["chains"] == [0]
+    assert len(hosting_site(cfg, 0)) <= 30 and cfg["trials"] == campaign["trials"]
+    assert cfg["prolific"] == campaign["prolific"]  # the same page, pay and exclusions as the campaign
+    assert cost(cfg)["studies"] == 1
+    assert [p["path"] for p in cfg["predictions"]] == ["data/rsa/live/finals_pool_preds_final.json",
+                                                       "data/rsa/live/bar_pool_preds.json"]
+
+
+def test_the_prereg_preparation_reuses_the_finals_pooled_data_and_fits():
+    text = (SLURM / "prereg_prepare.sbatch").read_text()
+    assert "finals_pool/pooled.csv" in text and "finals_pool/.fit_cache/" in text
+    assert '--models "seed:$STARTING" "promoted:$PROMOTED"' in text
+    assert "a design is made once" in text
