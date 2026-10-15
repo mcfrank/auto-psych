@@ -212,7 +212,25 @@ games, and support two claims:
 - **Main's statistic timeout** (SIGALRM in `src/critique/ppc.py`) can fire inside a garbage-
   collector callback, where Python discards it (once in chain 0, experiment 3; the critique
   completed). An upstream issue in main's code; harmless here.
-- **Planned final experiment (PI 2026-10-13, after chain 0):** one pre-registered, prospective
+- **The campaign's finals** (pooled refit 8b34863c, `finals_pool_preds_final.json`):
+  - **Shared by all three:** duplicates are less likely referents; a U-shaped prior over feature
+    richness; a small rate of choosing objects the word doesn't fit.
+  - **Two of three:** a preference for the sparsest matching object on word trials (chain 0's
+    interior suppression; chain 1's "aspect" speaker goal).
+  - **Chain 2 only:** a redundancy discount (0.50).
+  - **In-sample on all 21,567 live responses,** chain 0's final fits best (chain 1's −160,
+    chain 2's −189), and on each chain's own data. Its lead is on 4-object word trials; chain 1's
+    prior is best on 3–4-object mumble trials.
+- **Final experiment, simplified (PI 2026-10-15): no lesions.** The primary goal is to tell the
+  finals apart from the seeds and the other candidates. Proposed policy:
+  - **Models:** the 3 finals + the 17-model bar, all fitted once to the pooled data and frozen.
+  - **Displays:** half from the campaign's own design rule (finals as carried, half the prior
+    each, quotas), half stratified-random.
+  - **Primary test:** each final vs the best promoted seed, one-sided, Holm across 3.
+  - **Secondary:** chain 0's final beats the other two.
+  - **Size:** set by simulation (about 400?).
+
+  Earlier plan, superseded: one pre-registered, prospective
   test of the three chains' final models, run after chains 1–2 finish:
   - **H1:** each final beats the best starting model and the best promoted seed on new people;
   - **H2:** each final needs every mechanism it accrued, tested by mechanically defined lesions
