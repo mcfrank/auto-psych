@@ -145,3 +145,35 @@ def test_elimination_and_scoring_run_end_to_end_on_a_small_dataset(tmp_path):
                                 models=[f"lean={lean}", f"l1={SEEDS / 'rsa_l1.py'}"], reference="l1",
                                 out=tmp_path / "score.json", workers=2, **fit))
     assert set(out["models"]) == {"lean", "l1"} and "vs_reference" in out["models"]["lean"]
+
+
+EXTREME = {"alpha": 0.637, "lapse": 0.006, "w_dup": 0.196, "w_features": -1.887, "w_extreme": -1.223, "w_empty": 0.548,
+           "w_surprisal": -1.301, "w_redundancy": 0.275, "p_aspect": 0.433, "w_interior": -1.103, "c_avoid": -0.474,
+           "w_competition": 2.533, "lambda_sim": 1.068, "w_binding": 0.045, "logit_p_attend": 1.105, "w_load": -0.098}
+"""A prior draw with a peaked prior over objects: the listener's normalisation once lost
+3e-3 of probability here (sum + 1e-10 on a joint of ~1e-9; found by the memo twin)."""
+
+
+def test_choice_probabilities_sum_to_one_under_a_peaked_prior():
+    groups = group_by_shape(plain_pool())
+    _, fn = make(MECHANISMS)
+    for p in (EXTREME, dict(EXTREME, w_features=-3.0, w_surprisal=-3.0, w_extreme=-3.0, alpha=4.0)):
+        for shape, total in ((s, v.sum(-1)) for s, v in probs(fn, p, groups).items()):
+            assert np.allclose(total, 1.0, atol=1e-5), (shape, float(np.abs(total - 1).max()))
+
+
+@pytest.mark.parametrize("mechanisms", [(), ("depth2",), MECHANISMS], ids=["core", "depth2", "full"])
+def test_the_memo_twin_gives_the_jax_superset_s_probabilities(mechanisms, sample, tmp_path):
+    """The memo twin (memo_twin.py) is the same model: within float32 rounding of
+    the JAX superset on sampled pool displays, at prior draws and the peaked one."""
+    from src.rsa.model_file import prior_draws
+
+    jn, jp = write_variant(mechanisms, tmp_path)
+    mn, mp = write_variant(mechanisms, tmp_path, engine="memo")
+    assert mn == jn + "_memo" and "@memo" in mp.read_text()
+    jax_model, memo_model = RSAModel(jp, name=jn), RSAModel(mp, name=mn)
+    draws = list(prior_draws(jax_model.params, 3, 7)) + [{k: EXTREME[k] for k in jax_model.params}]
+    for draw in draws:
+        for shape, g in sample.items():
+            a, b = np.asarray(jax_model.group_probs(draw, g)), np.asarray(memo_model.group_probs(draw, g))
+            assert np.abs(a - b).max() < 1e-4, (shape, {k: float(v) for k, v in draw.items()})

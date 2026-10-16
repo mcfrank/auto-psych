@@ -66,6 +66,10 @@ OFF = {
     "lambda_sim": 0.0, "w_binding": 0.0, "logit_p_attend": 0.0, "w_load": 0.0,
 }
 NO_WORD = -1e30  # a speaker's log weight for a word false of the object
+# Normalisations divide by max(sum, TINY), never sum + EPS: with a peaked prior a word true only
+# of improbable objects has a joint of ~1e-9, and + 1e-10 left its listener row summing to 0.9
+# (found 2026-10-16 by the memo twin, which normalises exactly).
+TINY = 1e-30
 
 
 def make(mechanisms):
@@ -158,7 +162,7 @@ def _choice(p, ctx, on):
 
     def listener(s):
         joint = prior[None, :] * s
-        return joint / (jnp.sum(joint, axis=1, keepdims=True) + EPS)
+        return joint / jnp.maximum(jnp.sum(joint, axis=1, keepdims=True), TINY)
 
     heard_all = listener(speaker(jnp.log(l0 + EPS)))
     if "depth2" in on:
@@ -170,7 +174,7 @@ def _choice(p, ctx, on):
     bind = false_of * (fc / jnp.maximum(hi, 1.0)) * prior
     bind_total = jnp.sum(bind)
     w_bind = q["w_binding"] * (bind_total > 0)
-    heard = (1.0 - w_bind) * heard + w_bind * bind / jnp.maximum(bind_total, EPS)
+    heard = (1.0 - w_bind) * heard + w_bind * bind / jnp.maximum(bind_total, TINY)
 
     # Inattention growing with display size, captured by the prior over matching objects (chain 0).
     if "attention" in on:

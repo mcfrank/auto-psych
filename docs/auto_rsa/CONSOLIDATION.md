@@ -35,10 +35,26 @@ With nothing switched on, it is the starting model `rsa_l1`; a test checks this 
 - nuisance terms specific to one chain: chain 2's listener exponent and word prevalence, chain
   0's typicality, solitary foil and inhibition leak.
 
+**The memo twin** (`src/rsa/consolidate/memo_twin.py`; `write_variant(..., engine="memo")`): the
+same model with its speaker and listener written in memo. The utilities are computed in JAX
+exactly as the superset does, then passed to a memo speaker (a goal, then a true word) and a memo
+listener that inverts it. The winning model therefore translates to memo with no change in its
+predictions, and its fit can be reused as is.
+
 **Tests** (`tests/test_rsa_consolidate.py`):
+- the twins agree within float32 rounding (< 1e-4; typically 2e-7) for the core, the depth-2
+  core and the full model, at prior draws and at a peaked-prior draw;
 - every mechanism at its "off" value reproduces the model without it;
 - every mechanism, switched on, changes some display's prediction;
 - every variant meets the model contract.
+
+**A bug the memo twin found (fixed 2026-10-16, before any result).** The JAX listener normalised
+with `joint / (sum + 1e-10)`. Under a peaked prior, a word true only of improbable objects has a
+joint around 1e-9, so that listener row summed to about 0.9 instead of 1: off by 0.0033 at one
+prior draw. memo normalises exactly. Both twins now divide by `max(sum, 1e-30)`, and a test checks
+that probabilities sum to 1 under a peaked prior. The first elimination job (48051947) ran the
+unfixed code, so it is cancelled and restarted from scratch on the fix (§4). No result of it was
+read.
 
 ## 2. The rule (fixed 2026-10-16, before any fit)
 
@@ -90,7 +106,9 @@ half of the design.
    - **Expected size:** greedy backward elimination, not all subsets. Round 1 scores 14 models
      × 5 folds (70 fits), each later round one model fewer, and it stops at the first costly
      removal (at most 455 fits). About 20 fits run at once, so roughly 13–33 h in all.
-   - Submitted as job 48051947 (2026-10-16).
+   - Job 48051947 (2026-10-16) ran the superset before the normalisation fix (§1). It is
+     cancelled, and its `eliminate/` and `code_eliminate/` are removed (variant files and saved
+     CVs from the old code must not be reused). Resubmit on the fixed code.
 3. Run `STAGE=score sbatch scripts/rsa/slurm/consolidate.sbatch`.
    - It fits and scores the lean model and the comparison models on the pre-registered data
      (`rsa_prereg/cells/prereg/run/experiment1/data/modelled.csv`).
