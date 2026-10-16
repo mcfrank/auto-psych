@@ -674,3 +674,11 @@ def test_the_consolidation_job_reads_the_preregistered_data_only_when_scoring():
     # each stage stages into its own code root (_env.sh exports HARNESS_REPO / AGENT_SRC)
     assert 'WORK_ROOT="$CODE_ROOT" HARNESS_REPO="$CODE_ROOT/harness_repo" AGENT_SRC="$CODE_ROOT/agent_src"' in text
     assert "--cpus-per-task=24" in text  # the mcfrank node's cores
+
+
+def test_the_consolidation_array_chains_rounds_and_stops_on_a_stuck_round():
+    text = (SLURM / "consolidate_array.sbatch").read_text()
+    assert "--mode plan" in text and "--mode worker --task" in text
+    assert '--partition="$WORKER_PARTITION" --requeue' in text and 'WORKER_PARTITION="${WORKER_PARTITION:-mcfrank,owners}"' in text
+    assert '--dependency="afterany:$ARRAY"' in text and "MAX_ATTEMPTS" in text
+    assert "modelled.csv" not in text  # the pre-registered data are read only when scoring

@@ -194,3 +194,65 @@ def test_the_full_model_has_finite_gradients_across_the_pool_including_a_peaked_
             return jnp.sum(jnp.log(jax.vmap(lambda c: fn(p, c))(g.arrays) + 1e-12))
         grads = jax.grad(loss)({k: jnp.asarray(v) for k, v in EXTREME.items()})
         assert all(np.isfinite(np.asarray(v)).all() for v in grads.values()), shape
+
+
+def _small_data(tmp_path):
+    from src.rsa.dataset import DEFAULT_TRIALS_CSV
+
+    df = pd.read_csv(DEFAULT_TRIALS_CSV)
+    data = tmp_path / "pooled.csv"
+    df[df.experiment.isin(["E8_levels", "E9_twins"])].assign(source="pragmods").to_csv(data, index=False)
+    return data
+
+
+def test_plan_replays_the_rule_round_by_round_over_saved_cvs(tmp_path):
+    """No fits: each plan lists the round's unsaved models; fabricated CVs answer them
+    (aspect worth 400 nats, the rest nothing) until the plan writes the result."""
+    data = _small_data(tmp_path)
+    args = elim.Args(data=data, out=tmp_path / "e", cache=tmp_path / "c", mode="plan",
+                     start=["dup", "aspect", "confusion"], folds=2)
+    rng = np.random.default_rng(0)
+    rounds = 0
+    while True:
+        doc = elim.main(args)
+        if doc["status"] == "done":
+            break
+        rounds += 1
+        assert doc["attempt"] == 1 and len(doc["names"]) == len(doc["sets"])
+        n = len(elim.read_folds(data, tmp_path / "e" / "folds", 2, 0).fold)
+        for ms, name in zip(doc["sets"], doc["names"]):
+            total = -1000.0 + (400.0 if "aspect" in ms else 0.0)
+            noise = rng.normal(0, 0.1, n)
+            np.savez(tmp_path / "e" / "cv" / f"{name}.npz", pointwise=np.full(n, total / n) + noise - noise.mean(),
+                     converged=True)
+    assert rounds == 3 and doc["lean"]["mechanisms"] == ["aspect"]
+    record = json.loads((tmp_path / "e" / "elimination.json").read_text())
+    assert [r["decision"].split(":")[0] for r in record["rounds"]] == ["drop dup", "drop confusion", "stop"] or \
+        [r["decision"].split(":")[0] for r in record["rounds"]] == ["drop confusion", "drop dup", "stop"]
+    assert (tmp_path / "e" / "lean" / "cons_asp.py").exists()
+
+
+def test_a_round_still_missing_after_an_array_counts_its_attempts(tmp_path):
+    data = _small_data(tmp_path)
+    args = elim.Args(data=data, out=tmp_path / "e", cache=tmp_path / "c", mode="plan", start=["dup"], folds=2)
+    assert elim.main(args)["attempt"] == 1
+    assert elim.main(args)["attempt"] == 2  # the array produced nothing: the driver stops past MAX_ATTEMPTS
+    with pytest.raises(ValueError, match="not one of"):
+        elim.main(elim.Args(data=data, out=tmp_path / "e", cache=tmp_path / "c", mode="worker", task=7, folds=2))
+
+
+@pytest.mark.slow  # runs NUTS
+def test_plan_and_workers_reach_the_single_process_result(tmp_path):
+    data = _small_data(tmp_path)
+    fit = dict(num_warmup=100, num_samples=100, num_chains=2, folds=2, start=["dup", "depth2"])
+    one = elim.main(elim.Args(data=data, out=tmp_path / "run", cache=tmp_path / "c1", workers=4, **fit))
+    while True:
+        doc = elim.main(elim.Args(data=data, out=tmp_path / "arr", cache=tmp_path / "c2", mode="plan", **fit))
+        if doc["status"] == "done":
+            break
+        for i in range(len(doc["sets"])):  # the array's tasks, one after another here
+            elim.main(elim.Args(data=data, out=tmp_path / "arr", cache=tmp_path / "c2", mode="worker", task=i,
+                                workers=2, **fit))
+    arr = json.loads((tmp_path / "arr" / "elimination.json").read_text())
+    assert arr["lean"] == one["lean"]
+    assert [r["elpd_cv"] for r in arr["rounds"]] == pytest.approx([r["elpd_cv"] for r in one["rounds"]], abs=1e-6)

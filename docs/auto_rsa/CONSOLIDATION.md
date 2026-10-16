@@ -107,17 +107,29 @@ half of the design.
 ## 4. Running it on Sherlock
 
 1. Pull `auto-rsa`.
-2. Run `STAGE=eliminate sbatch scripts/rsa/slurm/consolidate.sbatch`.
-   - Work root: `$SCRATCH/auto-psych/rsa_consolidate`.
-   - It copies `rsa_prereg/pool/{pooled.csv,.fit_cache}` once.
-   - 24 cores (all of the mcfrank node), 7-day limit. A resubmit resumes: every model's CV is
-     saved. Each stage stages its own copy of the code (`code_<stage>/`; fix 393f3f2c).
-   - **Expected size:** greedy backward elimination, not all subsets. Round 1 scores 14 models
-     × 5 folds (70 fits), each later round one model fewer, and it stops at the first costly
-     removal (at most 455 fits). About 20 fits run at once, so roughly 13–33 h in all.
-   - Job 48051947 (2026-10-16) ran the superset before the normalisation fix (§1). It is
+2. **The elimination, spread over mcfrank and owners (PI 2026-10-16):**
+   `sbatch scripts/rsa/slurm/consolidate_array.sbatch`.
+   - **How it chains:** a driver job (1 core) replays the rule over the saved CVs
+     (`eliminate --mode plan`). It submits the round's missing models as one array (one model's
+     5-fold CV per task, 5 cores, `-p mcfrank,owners --requeue`) and queues the next driver after
+     it.
+   - **When it ends:** when nothing is missing, the driver writes `elimination.json` and
+     `lean/`.
+   - **The same rule, folds, data and settings** as the single-node job, and the same files
+     (`$WORK_ROOT/eliminate`), so fits the single-node job already made are reused.
+   - **Code:** staged once in `code_array/`. A driver refuses to run if the checkout has moved
+     on, so every round runs on one code.
+   - **A stuck round** (models still missing after 2 arrays) stops with an error; see
+     `logs/rsa_cons_worker_*`.
+   - **Expected time:** a round takes about one model's CV when owners has room. Round 1 is 14
+     tasks × 5 cores = 70 cores at once, so perhaps 4–8 h in all, against 13–33 h on mcfrank
+     alone.
+   - **Single node instead:** `STAGE=eliminate sbatch scripts/rsa/slurm/consolidate.sbatch` still
+     runs the whole elimination on the mcfrank node (24 cores). Never run both on one work root
+     at once.
+   - **Job 48051947** (2026-10-16) ran the superset before the normalisation fix (§1). It is
      cancelled, and its `eliminate/` and `code_eliminate/` are removed (variant files and saved
-     CVs from the old code must not be reused). Resubmit on the fixed code.
+     CVs from the old code must not be reused).
 3. Run `STAGE=score sbatch scripts/rsa/slurm/consolidate.sbatch`.
    - It fits and scores the lean model and the comparison models on the pre-registered data
      (`rsa_prereg/cells/prereg/run/experiment1/data/modelled.csv`).
