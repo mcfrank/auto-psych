@@ -1,0 +1,11 @@
+[stage] RE-STAGING 38b585dfb7f4b4749d528d955e45f2b500f2b17e -> 3b931f93b1265fa6c5312f1e6ac793c9a68c382d: prereg freeze and OSF records: docs and config only (campaign log #64-66)
+[stage] staging harness repo -> /scratch/users/mcfrank/auto-psych/rsa_prereg/harness_repo
+[stage] staging agent source -> /scratch/users/mcfrank/auto-psych/rsa_prereg/agent_src
+[stage] staged code 3b931f93b1265fa6c5312f1e6ac793c9a68c382d
+[provenance] recorded /home/users/mcfrank/auto-psych's commit in /scratch/users/mcfrank/auto-psych/rsa_prereg/cells/prereg/deploy_repo/code_provenance.json
+[prereg] live: 1224 people, design bc7d60e5b84f, site auto-psych-2c5da-prereg-c0
+[prereg] design bc7d60e5b84f
+[prereg] collect (live, 1224 people)
+  [deploy] Functions live: /results refuses reads without the token
+[prereg] best promoted seed: promoted:rsa_l2_singleton_distinct_feat_color_l0
+[prereg] done: /scratch/users/mcfrank/auto-psych/rsa_prereg/cells/prereg/run (private/: raw responses with Prolific ids, never copied off Sherlock)
