@@ -160,3 +160,34 @@ def test_a_compile_directory_reached_through_a_symlink_is_its_own(tmp_path):
     )
     done = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, cwd=REPO_ROOT)
     assert done.returncode == 0, done.stderr
+
+
+def test_persistent_slots_are_claimed_across_processes_and_kept(tmp_path, monkeypatch):
+    """With AUTO_PSYCH_COMPILE_SLOTS set (the coco cells), slots live under that
+    root across jobs, so a new job starts on warm compiled code (a cold slot
+    cost a fit ~80 s), and one held by another process (a file lock) is
+    skipped, so no two processes ever share a compile lock."""
+    import subprocess
+    import sys
+
+    root = tmp_path / "slots"
+    root.mkdir()
+    monkeypatch.setenv(pi.COMPILE_SLOTS_ENV, str(root))
+    monkeypatch.setattr(pi, "_COMPILE_SLOTS_ROOT", None)
+    holder = subprocess.Popen(
+        [sys.executable, "-c", (
+            "import fcntl, sys, time; f = open(sys.argv[1], 'w'); "
+            "fcntl.flock(f, fcntl.LOCK_EX); print('held', flush=True); time.sleep(60)"
+        ), str(root / "slot-0.lock")],
+        stdout=subprocess.PIPE, text=True,
+    )
+    try:
+        assert holder.stdout.readline().strip() == "held"
+        with pi._compile_dirs(1) as [directory]:
+            assert Path(directory) == root / "slot-1"
+    finally:
+        holder.kill()
+        holder.wait()
+    with pi._compile_dirs(1) as [directory]:
+        assert Path(directory) == root / "slot-0"
+    assert (root / "slot-0").is_dir() and (root / "slot-1").is_dir()  # kept for the next job

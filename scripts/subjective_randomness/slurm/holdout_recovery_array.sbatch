@@ -172,6 +172,19 @@ mkdir -p "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME"
 # The cell's fit processes each compile in a slot of their own below this
 # (_compile_dirs in src/models/pymc_inference.py).
 PYTENSOR_BASE="${L_SCRATCH:-$AGENT_DIR/.cache}/pytensor/job_${SLURM_JOB_ID}"
+# With persistent compile slots (coco), the harness process compiles in a
+# kept directory of its own too, claimed for the job's lifetime by a lock this
+# shell holds open: parent-<k>, apart from the fit processes' slot-<k>.
+if [[ -n "${AUTO_PSYCH_COMPILE_SLOTS:-}" ]]; then
+  mkdir -p "$AUTO_PSYCH_COMPILE_SLOTS"
+  for k in $(seq 0 63); do
+    exec {PARENT_SLOT_FD}>"$AUTO_PSYCH_COMPILE_SLOTS/parent-$k.lock"
+    flock -n "$PARENT_SLOT_FD" && break
+    exec {PARENT_SLOT_FD}>&-
+    [[ $k == 63 ]] && { echo "ERROR: no free parent compile slot in $AUTO_PSYCH_COMPILE_SLOTS" >&2; exit 1; }
+  done
+  PYTENSOR_BASE="$AUTO_PSYCH_COMPILE_SLOTS/parent-$k"
+fi
 mkdir -p "$PYTENSOR_BASE"
 export PYTENSOR_FLAGS="base_compiledir=$PYTENSOR_BASE"
 

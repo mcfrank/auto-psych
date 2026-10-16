@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import atexit
 import contextlib
+import fcntl
 import hashlib
 import math
 import multiprocessing
@@ -1449,6 +1450,12 @@ def _use_own_cache_dir(cache_root: str) -> None:
 # numbered *slot* under this process's own root, held while the fit process
 # runs and handed to the next one after it, so compiled code is reused within
 # a cell (a cold compile costs about 50 s a fit, a warm one a few).
+#
+# With ``COMPILE_SLOTS_ENV`` set (the coco cells), the slots live under that
+# root instead, kept across processes and jobs so a new job starts on warm
+# compiled code, and a process claims a slot with a file lock (``flock``) as
+# well, so no two processes on the node ever compile in one.
+COMPILE_SLOTS_ENV = "AUTO_PSYCH_COMPILE_SLOTS"
 _COMPILE_SLOTS_LOCK = threading.Lock()
 _COMPILE_SLOTS_IN_USE: set = set()
 _COMPILE_SLOTS_ROOT: Optional[Path] = None
@@ -1458,6 +1465,9 @@ def _compile_slots_root() -> Path:
     """This process's root of fit-process compile directories: a new directory
     under its own PyTensor ``base_compiledir``, removed when it exits."""
     global _COMPILE_SLOTS_ROOT
+    if _COMPILE_SLOTS_ROOT is None and os.environ.get(COMPILE_SLOTS_ENV):
+        _COMPILE_SLOTS_ROOT = Path(os.environ[COMPILE_SLOTS_ENV])
+        _COMPILE_SLOTS_ROOT.mkdir(parents=True, exist_ok=True)
     if _COMPILE_SLOTS_ROOT is None:
         from pytensor import config as pytensor_config
 
@@ -1478,11 +1488,22 @@ def _compile_dirs(n: int) -> Iterator[List[str]]:
     """``n`` compile directories that no other fit process of this process
     uses until the block ends (see ``_COMPILE_SLOTS_LOCK``)."""
     root = _compile_slots_root()
+    shared = bool(os.environ.get(COMPILE_SLOTS_ENV))
+    held = []  # the slots' lock files, open (and flocked) while the block runs
     with _COMPILE_SLOTS_LOCK:
         slots = []
         slot = 0
         while len(slots) < n:
             if slot not in _COMPILE_SLOTS_IN_USE:
+                if shared:
+                    lock = open(root / f"slot-{slot}.lock", "w")
+                    try:
+                        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    except BlockingIOError:  # another process holds it
+                        lock.close()
+                        slot += 1
+                        continue
+                    held.append(lock)
                 slots.append(slot)
             slot += 1
         _COMPILE_SLOTS_IN_USE.update(slots)
@@ -1494,6 +1515,8 @@ def _compile_dirs(n: int) -> Iterator[List[str]]:
     finally:
         with _COMPILE_SLOTS_LOCK:
             _COMPILE_SLOTS_IN_USE.difference_update(slots)
+            for lock in held:
+                lock.close()
 
 
 def _use_own_compile_dir(compile_dir: str) -> None:

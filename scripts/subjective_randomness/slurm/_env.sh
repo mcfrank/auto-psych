@@ -15,6 +15,9 @@ export CLUSTER="${CLUSTER:-sherlock}"
 # $L_SCRATCH (compile dirs).
 if [[ "$CLUSTER" == coco ]]; then
   export SCRATCH="${SCRATCH:-/scr/$USER}" L_SCRATCH="${L_SCRATCH:-/scr/$USER}"
+  # PyTensor compile dirs kept across jobs, each claimed by one process at a
+  # time (pymc_inference._compile_dirs): new jobs start on warm compiled code.
+  export AUTO_PSYCH_COMPILE_SLOTS="${AUTO_PSYCH_COMPILE_SLOTS:-/scr/$USER/auto-psych/pytensor_slots}"
 fi
 
 # --- repo + work locations -------------------------------------------------
