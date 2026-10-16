@@ -13,6 +13,8 @@ from typing import Iterable, Tuple
 from src.rsa.consolidate.superset import MECHANISMS
 
 SOURCE = Path(__file__).with_name("superset.py")
+MEMO_TWIN = Path(__file__).with_name("memo_twin.py")
+ENGINES = ("jax", "memo")
 SHORT = {"depth2": "d2", "dup": "dup", "richness": "rich", "empty": "emp", "surprisal": "sur",
          "redundancy": "red", "aspect": "asp", "interior": "int", "avoidable": "avo", "competition": "comp",
          "confusion": "conf", "binding": "bind", "attention": "att"}
@@ -27,16 +29,21 @@ def canonical(mechanisms: Iterable[str]) -> Tuple[str, ...]:
     return tuple(m for m in MECHANISMS if m in ms)
 
 
-def variant_name(mechanisms: Iterable[str]) -> str:
+def variant_name(mechanisms: Iterable[str], engine: str = "jax") -> str:
     ms = canonical(mechanisms)
-    return "cons_" + ("_".join(SHORT[m] for m in ms) if ms else "core")
+    if engine not in ENGINES:
+        raise ValueError(f"engine {engine!r} is not one of {ENGINES}")
+    return "cons_" + ("_".join(SHORT[m] for m in ms) if ms else "core") + ("_memo" if engine == "memo" else "")
 
 
-def write_variant(mechanisms: Iterable[str], out_dir: Path) -> Tuple[str, Path]:
-    """Write (or reuse) the variant's model file; returns its name and path."""
+def write_variant(mechanisms: Iterable[str], out_dir: Path, engine: str = "jax") -> Tuple[str, Path]:
+    """Write (or reuse) the variant's model file; returns its name and path. The
+    "memo" engine appends the memo twin (`memo_twin.py`): the same model, its
+    speaker and listener written in memo."""
     ms = canonical(mechanisms)
-    name = variant_name(ms)
-    text = (SOURCE.read_text() + "\n\n# --- this variant (src.rsa.consolidate.variants) ---\n"
+    name = variant_name(ms, engine)
+    body = SOURCE.read_text() + ("\n\n" + MEMO_TWIN.read_text() if engine == "memo" else "")
+    text = (body + "\n\n# --- this variant (src.rsa.consolidate.variants) ---\n"
             f"MECHANISMS_ON = {ms!r}\nPARAMS, choice_probs = make(MECHANISMS_ON)\n")
     path = Path(out_dir) / f"{name}.py"
     path.parent.mkdir(parents=True, exist_ok=True)
