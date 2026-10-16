@@ -298,6 +298,9 @@ def sandbox_command(
     args += _login(backend, env, user_home, private_home, claude_auth)
 
     env["TMPDIR"] = "/tmp"
+    # `python` and `python3` are the harness's venv (mounted above), whose
+    # interpreter the cells run by path: the system's has no pandas or PyMC.
+    env["PATH"] = f"{Path(sys.prefix) / 'bin'}:{env.get('PATH', '')}"
     # Caches go to the private home, removed when the agent exits, so scratch/
     # holds only the agent's own files. Sherlock exports PYTHONPYCACHEPREFIX=/tmp
     # for every user, which put a .pyc for every import into scratch/ (about

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import sys
 import subprocess
 from pathlib import Path
 
@@ -367,7 +368,7 @@ def test_the_agents_environment_carries_no_slurm_variables(tmp_path, monkeypatch
         env={"SLURM_ARRAY_TASK_ID": "2", "SLURM_JOB_ID": "1", "PATH": "/usr/bin"},
     )
     assert not any(key.startswith("SLURM_") for key in env)
-    assert env["PATH"] == "/usr/bin"
+    assert env["PATH"] == f"{Path(sys.prefix) / 'bin'}:/usr/bin"  # the venv first
 
 
 # The environment is an allowlist. The harness's holds every .secrets key and
@@ -437,3 +438,21 @@ def test_the_resolver_configuration_is_readable_inside(tmp_path):
     result, _, _, _ = _run(tmp_path, "cat /etc/resolv.conf")
     assert result.returncode == 0, result.stderr
     assert result.stdout == Path("/etc/resolv.conf").read_text()
+
+
+@needs_bwrap
+def test_python_inside_is_the_harness_venv(tmp_path):
+    """An agent's `python`/`python3` is the harness's venv (pandas, PyMC), not
+    the system's: the critique agent's own command, `python3 -m
+    src.critique.ppc`, found no pandas on the SC cluster (2026-10-15)."""
+    # The cells run the venv's interpreter by path: its bin/ is not on PATH.
+    tree, agent_dir, _ = _layout(tmp_path)
+    venv_bin = str(Path(sys.prefix) / "bin")
+    env = {**os.environ, "PATH": ":".join(p for p in os.environ["PATH"].split(":") if p != venv_bin)}
+    cmd, env = sandbox_command(
+        ["bash", "-c", "python3 -c 'import sys, pandas; print(sys.prefix)'"],
+        backend="opencode", cwd=tree, writable_dirs=[agent_dir], agent_dir=agent_dir, env=env,
+    )
+    result = subprocess.run(cmd, env=env, cwd=tree, capture_output=True, text=True, timeout=120)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == sys.prefix
