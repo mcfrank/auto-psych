@@ -138,6 +138,8 @@ cfg = yaml.safe_load(pathlib.Path(os.environ["SRC_CONFIG"]).read_text())
 # Every ground truth needs its parameters in the config; the config may also
 # give other seeds' (the no-learning baseline scores every seed at its own).
 cfg_gts = sorted((cfg.get("gt_models") or {}).keys())
+if cfg.get("data_source") == "dataset":
+    cfg_gts = ["dataset"]  # a dataset run's one cell holds out no model
 env_gts = sorted(os.environ.get("GT_MODELS", "").split())
 if not env_gts or not set(env_gts) <= set(cfg_gts):
     sys.exit(f"GT_MODELS env {env_gts} are not all among config gt_models {cfg_gts} — "
@@ -148,7 +150,7 @@ if seed_rel and seed_rel != rel:
     sys.exit(f"SEED_MODELS_REL env {seed_rel!r} != config seed_models_dir {rel!r}.")
 
 src = pathlib.Path(os.environ["GT_MODELS_SRC"])
-missing = [g for g in env_gts if not (src / f"{g}.py").is_file()]
+missing = [g for g in env_gts if g != "dataset" and not (src / f"{g}.py").is_file()]
 if missing:
     sys.exit(f"GT snapshot {src} is missing model files: {missing}")
 print(f"[setup] validated GT_MODELS={env_gts}; GT source={src}")
