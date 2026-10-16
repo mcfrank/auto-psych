@@ -577,7 +577,8 @@ class NoveltyPoolFailed(ValueError):
         )
 
 
-def _drop_unscorable_cv_models(
+def fit_cv_folds(
+    names: Sequence[str],
     models_dir: Path,
     responses_path: Path,
     selection: Selection,
@@ -586,24 +587,14 @@ def _drop_unscorable_cv_models(
     time_limit_sec: float = CANDIDATE_FIT_TIME_LIMIT_SEC,
     cache_dir: Optional[Path] = None,
     fit_kwargs: Optional[Dict[str, Any]] = None,
-    ledger: Optional[HypothesisLedger] = None,
-    ledger_context: str = "",
-) -> None:
-    """Under grouped CV, fit every model on every fold and drop the ones whose
-    ELPD-CV cannot be computed, with a ledger line each: a fold fit that fails,
-    or, for the ``limited`` models (those admitted in this loop; starting and
-    carried models are never limited, as in admission), one still sampling at
-    ``time_limit_sec``, or a non-finite score (a held-out answer given zero
-    probability). Scoring then finds every fold fit in the cache and a finite
-    score, where a single non-finite one would crash ``model_posterior``.
-    A no-op under trial-level LOO. Fails loudly only if no model survives.
-    """
-    if selection.criterion != "grouped_cv":
-        return
+) -> Dict[str, str]:
+    """Fit ``names`` on every CV fold, into ``cache_dir``; the ``limited`` ones
+    under ``time_limit_sec``. Returns why each model that could not be fitted
+    failed, by name (its first failing fold). Changes no model set, so the loop
+    also runs it in the background, for the models a wave admitted, while the
+    next wave's agents work."""
     fit_kwargs = fit_kwargs or {}
     limited = set(limited)
-    entries = _manifest_entries(models_dir)
-    names = [entry["name"] for entry in entries]
     _, _, fold_paths = fold_training_files(responses_path, selection)
     # The folds are fitted concurrently, each with its share of the CPUs,
     # rounded up: 6 fits' worth over 4 folds is 2 each (8 at once, a third
@@ -640,6 +631,40 @@ def _drop_unscorable_cv_models(
     with ThreadPoolExecutor(max_workers=len(fold_paths)) as pool:
         for failed in pool.map(fit_fold, range(len(fold_paths)), fold_paths):
             failures = {**failed, **failures}  # a model's first failing fold
+    return failures
+
+
+def _drop_unscorable_cv_models(
+    models_dir: Path,
+    responses_path: Path,
+    selection: Selection,
+    *,
+    limited: Iterable[str] = (),
+    time_limit_sec: float = CANDIDATE_FIT_TIME_LIMIT_SEC,
+    cache_dir: Optional[Path] = None,
+    fit_kwargs: Optional[Dict[str, Any]] = None,
+    ledger: Optional[HypothesisLedger] = None,
+    ledger_context: str = "",
+) -> None:
+    """Under grouped CV, fit every model on every fold and drop the ones whose
+    ELPD-CV cannot be computed, with a ledger line each: a fold fit that fails,
+    or, for the ``limited`` models (those admitted in this loop; starting and
+    carried models are never limited, as in admission), one still sampling at
+    ``time_limit_sec``, or a non-finite score (a held-out answer given zero
+    probability). Scoring then finds every fold fit in the cache and a finite
+    score, where a single non-finite one would crash ``model_posterior``.
+    A no-op under trial-level LOO. Fails loudly only if no model survives.
+    """
+    if selection.criterion != "grouped_cv":
+        return
+    fit_kwargs = fit_kwargs or {}
+    limited = set(limited)
+    entries = _manifest_entries(models_dir)
+    names = [entry["name"] for entry in entries]
+    failures = fit_cv_folds(
+        names, models_dir, responses_path, selection, limited=limited,
+        time_limit_sec=time_limit_sec, cache_dir=cache_dir, fit_kwargs=fit_kwargs,
+    )
     scorable = [n for n in names if n not in failures]
     lpd, _ = cv_pointwise(scorable, models_dir, responses_path, selection, cache_dir=cache_dir, **fit_kwargs)
     for name in scorable:

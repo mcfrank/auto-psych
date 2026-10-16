@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -62,6 +63,7 @@ from src.pipelines.inner_loop.model_zoo import (
     _admit_candidate_with_reason,
     _drop_nonfinite_elpd_models,
     _drop_unscorable_cv_models,
+    fit_cv_folds,
     _drop_unfittable_models,
     _is_all_no_file_round,
     _lens_index,
@@ -581,32 +583,37 @@ def run_pymc_inner_loop(
                 _copy_rejected_attempt(previous_dir, slot.directory)
                 return True
 
-            def prefit(wave: List[_Slot]) -> None:
-                """Fit the wave's candidates concurrently before admission.
+            claims_lock = threading.Lock()  # a wave's prefits run concurrently
 
-                Names are predicted in slot order as admission will resolve
-                them (a name claimed earlier in the wave is uniquified). The
-                fits land in the cache; admission, below, is unchanged.
+            def prefit(wave: List[_Slot], claimed_in_wave: List[str]) -> None:
+                """Fit candidates before admission, into the cache admission reads.
+
+                Names are predicted as admission will resolve them: a name the
+                wave's candidates fitted before claimed is uniquified. (Two
+                candidates of a wave naming themselves alike and finishing out of
+                slot order get mispredicted names; admission then fits the second
+                itself.) Admission, below, is unchanged.
                 """
                 if cache_dir is None:
                     return  # nowhere to hand the fits over; admission fits one at a time
-                claimed: List[str] = sorted(
-                    reserved_names(models_dir, ledger, starting_models)
-                )
-                candidates = []
-                for slot in wave:
-                    candidate_file = slot.directory / "candidate.py"
-                    if not candidate_file.exists():
-                        continue
-                    name = _resolve_candidate_name(
-                        slot.directory,
-                        models_dir,
-                        fallback=f"iter{iteration}_candidate{slot.idx}",
-                        taken=claimed,
-                        announce=False,
-                    )
-                    claimed.append(name)
-                    candidates.append((candidate_file, name))
+                with claims_lock:
+                    claimed = sorted(reserved_names(models_dir, ledger, starting_models))
+                    claimed += claimed_in_wave
+                    candidates = []
+                    for slot in wave:
+                        candidate_file = slot.directory / "candidate.py"
+                        if not candidate_file.exists():
+                            continue
+                        name = _resolve_candidate_name(
+                            slot.directory,
+                            models_dir,
+                            fallback=f"iter{iteration}_candidate{slot.idx}",
+                            taken=claimed,
+                            announce=False,
+                        )
+                        claimed.append(name)
+                        claimed_in_wave.append(name)
+                        candidates.append((candidate_file, name))
                 prefit_candidates(
                     candidates,
                     responses_path,
@@ -614,26 +621,50 @@ def run_pymc_inner_loop(
                     fit_kwargs=fit_kwargs,
                 )
 
-            # Each wave spawns its attempts concurrently, fits their candidates
-            # concurrently, then settles them sequentially in slot order
-            # (admission mutates the manifest and runs the novelty gate, so
-            # order keeps runs deterministic; the fits it needs are cached by
-            # then). A settled slot that earned a retry or repair joins the
-            # next wave.
+            # Each wave runs its attempts concurrently, each slot's agent and
+            # then at once its candidate's fit, so a finished candidate is
+            # fitted while the wave's slower agents still work; then it settles
+            # them sequentially in slot order (admission mutates the manifest
+            # and runs the novelty gate, so order keeps runs deterministic; the
+            # fits it needs are cached by then). A settled slot that earned a
+            # retry or repair joins the next wave. Under grouped CV the models a
+            # wave admitted are fitted on every fold in the background while the
+            # next wave's agents work (the round's CV screen then finds the fits).
             workers = min(candidate_parallelism or candidate_count, candidate_count)
             pending = list(slots)
-            while pending:
-                if workers > 1 and len(pending) > 1:
-                    with ThreadPoolExecutor(
-                        max_workers=min(workers, len(pending))
-                    ) as pool:
-                        spawn_ok = list(pool.map(spawn, pending))
-                else:
-                    spawn_ok = [spawn(slot) for slot in pending]
-                prefit(pending)
-                pending = [
-                    slot for slot, ok in zip(pending, spawn_ok) if settle(slot, ok)
-                ]
+            fold_fitted: set = set()
+            with ThreadPoolExecutor(max_workers=1) as background:
+                fold_fits = []
+                while pending:
+                    claimed_in_wave: List[str] = []
+
+                    def spawn_and_prefit(slot: _Slot) -> bool:
+                        spawned_ok = spawn(slot)
+                        prefit([slot], claimed_in_wave)
+                        return spawned_ok
+
+                    if workers > 1 and len(pending) > 1:
+                        with ThreadPoolExecutor(
+                            max_workers=min(workers, len(pending))
+                        ) as pool:
+                            spawn_ok = list(pool.map(spawn_and_prefit, pending))
+                    else:
+                        spawn_ok = [spawn_and_prefit(slot) for slot in pending]
+                    pending = [
+                        slot for slot, ok in zip(pending, spawn_ok) if settle(slot, ok)
+                    ]
+                    admitted = [
+                        n for n in _manifest_names(models_dir)
+                        if n not in loop_start_models and n not in fold_fitted
+                    ]
+                    if pending and admitted and cache_dir is not None and selection.criterion == "grouped_cv":
+                        fold_fitted.update(admitted)
+                        fold_fits.append(background.submit(
+                            fit_cv_folds, admitted, models_dir, responses_path, selection,
+                            limited=admitted, cache_dir=cache_dir, fit_kwargs=fit_kwargs,
+                        ))
+                for fold_fit in fold_fits:
+                    fold_fit.result()  # an infrastructure failure raises here
 
             round_results = [slot.result for slot in slots if slot.result is not None]
             if len(round_results) != len(slots):
