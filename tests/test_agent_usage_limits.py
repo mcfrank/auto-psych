@@ -416,3 +416,26 @@ def test_claude_limit_is_read_only_from_the_start_of_the_result_text():
         detect_usage_limit(coding_agent._cli_messages("claude", Stream(), events))
         is None
     )
+
+
+def test_a_sandboxed_agent_compiles_in_a_claimed_cell_dir(tmp_path, monkeypatch, agent):
+    """With the cell's pool set (AUTO_PSYCH_AGENT_COMPILE_SLOTS, by the job
+    script), the agent is handed a claimed dir under it, held while it runs."""
+    from src.runtime.agent_sandbox import AGENT_COMPILE_SLOTS_ENV
+
+    root = tmp_path / "agent_pytensor"
+    monkeypatch.setenv(AGENT_COMPILE_SLOTS_ENV, str(root))
+    given = []
+
+    def fake_sandbox_command(cmd, *, agent_dir, env, compile_dir=None, **kwargs):
+        given.append(compile_dir)
+        (agent_dir / "scratch").mkdir(exist_ok=True)
+        return [sys.executable, str(agent["stub"]), str(agent["calls"]), str(agent_dir), "0", "opencode", ""], dict(env)
+
+    monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
+    coding_agent.run_coding_agent(
+        "p", cwd=tmp_path, log_path=agent["dir"] / "agent.jsonl", backend="opencode",
+        allowed_dirs=[agent["dir"]], writable_dirs=[agent["dir"]], sandbox=True,
+        on_summary=None, timeout_secs=60, usage_label="inner:candidate",
+    )
+    assert given == [root / "slot-0"]

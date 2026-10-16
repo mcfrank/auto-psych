@@ -456,3 +456,32 @@ def test_python_inside_is_the_harness_venv(tmp_path):
     result = subprocess.run(cmd, env=env, cwd=tree, capture_output=True, text=True, timeout=120)
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == sys.prefix
+
+
+def test_concurrent_agents_claim_distinct_kept_compile_dirs(tmp_path):
+    """Agents compiled in their private homes, removed on exit: every agent
+    compiled every model from scratch (~70 s a graph). A cell's agents now each
+    claim a kept compile dir (flock), never one another holds."""
+    from src.runtime.agent_sandbox import claimed_compile_dir
+
+    root = tmp_path / "agent_pytensor"
+    with claimed_compile_dir(root) as first, claimed_compile_dir(root) as second:
+        assert first != second and first.is_dir() and second.is_dir()
+    with claimed_compile_dir(root) as again:
+        assert again == first  # warm: the next agent reuses it
+
+
+@needs_bwrap
+def test_an_agent_compiles_in_the_dir_it_was_given(tmp_path):
+    tree, agent_dir, _ = _layout(tmp_path)
+    compile_dir = tmp_path / "agent_pytensor" / "slot-0"
+    compile_dir.mkdir(parents=True)
+    cmd, env = sandbox_command(
+        ["bash", "-c", 'echo "$PYTENSOR_FLAGS"; touch "${PYTENSOR_FLAGS#base_compiledir=}/compiled"'],
+        backend="opencode", cwd=tree, writable_dirs=[agent_dir], agent_dir=agent_dir,
+        env=dict(os.environ), compile_dir=compile_dir,
+    )
+    result = subprocess.run(cmd, env=env, cwd=tree, capture_output=True, text=True, timeout=120)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == f"base_compiledir={compile_dir}"
+    assert (compile_dir / "compiled").exists()  # kept after the agent

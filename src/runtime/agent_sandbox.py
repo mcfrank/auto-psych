@@ -33,13 +33,16 @@ caps network namespaces at 0 anyway.
 from __future__ import annotations
 
 import errno
+import fcntl
+import itertools
 import json
 import os
 import shutil
 import sys
 import time
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, List, Mapping, Sequence, Tuple
+from typing import Dict, Iterator, List, Mapping, Optional, Sequence, Tuple
 
 SYSTEM_DIRS = ("/usr", "/etc", "/share/software")
 # On merged-/usr systems (Sherlock's el7 included) these are links into /usr.
@@ -184,6 +187,33 @@ def require_claude_auth(
     return mode
 
 
+# A cell's pool of agent compile dirs (the job script sets it per cell: compiled
+# code shows a model's structure, so cells must not share it).
+AGENT_COMPILE_SLOTS_ENV = "AUTO_PSYCH_AGENT_COMPILE_SLOTS"
+
+
+@contextmanager
+def claimed_compile_dir(root: Path) -> Iterator[Path]:
+    """A compile dir under ``root`` no other agent uses while the block runs,
+    kept for the next: ``slot-<k>``, claimed with ``flock`` (PyTensor compiles
+    under one lock per dir, and gives up after 120 s)."""
+    root.mkdir(parents=True, exist_ok=True)
+    for k in itertools.count():
+        lock = open(root / f"slot-{k}.lock", "w")
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            lock.close()
+            continue
+        try:
+            directory = root / f"slot-{k}"
+            directory.mkdir(exist_ok=True)
+            yield directory
+        finally:
+            lock.close()
+        return
+
+
 def claude_login_environment(env: Dict[str, str], mode: str | None) -> None:
     """Give a Claude agent's environment ``mode``'s credential and no other.
 
@@ -241,8 +271,13 @@ def sandbox_command(
     agent_dir: Path,
     env: Mapping[str, str],
     readable_dirs: Sequence[Path] = (),
+    compile_dir: Optional[Path] = None,
 ) -> Tuple[List[str], Dict[str, str]]:
     """``cmd`` wrapped in a bubblewrap sandbox, and the environment to run it with.
+
+    ``compile_dir`` (``claimed_compile_dir``): a kept PyTensor compile dir the
+    agent compiles in, mounted read-write; without one it compiles in its
+    private home, removed when it exits.
 
     ``cwd`` (the agent's tree) and ``readable_dirs`` are mounted read-only;
     ``writable_dirs`` and ``agent_dir`` (the agent's own directory, the one
@@ -306,7 +341,9 @@ def sandbox_command(
     # for every user, which put a .pyc for every import into scratch/ (about
     # 2,300 files per agent). The harness's pytensor compile dir is not mounted.
     env["PYTHONPYCACHEPREFIX"] = str(user_home / ".cache" / "pycache")
-    env["PYTENSOR_FLAGS"] = f"base_compiledir={user_home / '.cache' / 'pytensor'}"
+    env["PYTENSOR_FLAGS"] = f"base_compiledir={compile_dir or user_home / '.cache' / 'pytensor'}"
+    if compile_dir is not None:
+        args += ["--bind", str(compile_dir), str(compile_dir)]
     for var, default in (
         ("XDG_CACHE_HOME", ".cache"),
         ("XDG_STATE_HOME", ".local/state"),

@@ -187,6 +187,10 @@ if [[ -n "${AUTO_PSYCH_COMPILE_SLOTS:-}" ]]; then
 fi
 mkdir -p "$PYTENSOR_BASE"
 export PYTENSOR_FLAGS="base_compiledir=$PYTENSOR_BASE"
+# The cell's agents compile in kept dirs of their own, one per running agent
+# (agent_sandbox.claimed_compile_dir), beside the agent tree: per cell, since
+# compiled code shows a model's structure.
+export AUTO_PSYCH_AGENT_COMPILE_SLOTS="$AGENT_DIR/agent_pytensor"
 
 echo "[task $TASK] repeat=$REPEAT gt=$GT seed=$SEED -> $RUN_DIR"
 [[ -f "$GT_MODELS_SRC/${GT}.py" ]] || { echo "ERROR: GT snapshot missing $GT_MODELS_SRC/${GT}.py (setup job didn't run?)" >&2; exit 1; }

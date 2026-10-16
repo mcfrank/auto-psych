@@ -47,6 +47,7 @@ limit lifts and runs the agent again (:func:`run_coding_agent`).
 from __future__ import annotations
 
 import json
+import contextlib
 import os
 import re
 import shutil
@@ -61,8 +62,10 @@ from typing import Any, Callable, Dict, Optional, Sequence
 
 from src.runtime import token_usage
 from src.runtime.agent_sandbox import (
+    AGENT_COMPILE_SLOTS_ENV,
     CLAUDE_AUTH_ENV,
     HOME_NAME,
+    claimed_compile_dir,
     remove_private_home,
     sandbox_command,
 )
@@ -758,7 +761,7 @@ def run_coding_agent(
             "write (the rest of its tree is read-only)."
         )
 
-    def launch() -> tuple[list[str], Dict[str, str]]:
+    def launch(compile_dir: Optional[Path]) -> tuple[list[str], Dict[str, str]]:
         """The command and environment of one run (the sandbox is set up
         afresh for each: a run's private home is removed after it)."""
         if not sandbox:
@@ -771,9 +774,16 @@ def run_coding_agent(
             writable_dirs=[*writable_dirs, *([memory_dir] if memory_dir else [])],
             agent_dir=log_path.parent,
             env=child_env,
+            compile_dir=compile_dir,
         )
 
-    run_cmd, run_env = launch()
+    # With the cell's pool set (the job script), the agent compiles in a kept
+    # dir of it, claimed for all its runs: in its private home it compiled
+    # every model from scratch.
+    compile_slots = os.environ.get(AGENT_COMPILE_SLOTS_ENV)
+    compile_claim = (
+        claimed_compile_dir(Path(compile_slots)) if sandbox and compile_slots else contextlib.nullcontext()
+    )
     if backend == "opencode":
         granted = ensure_opencode_external_grants(cwd, list(allowed_dirs or []))
         if granted and on_summary:
@@ -791,7 +801,8 @@ def run_coding_agent(
     kept = [log_path, log_path.parent / HOME_NAME, agent_data_home(log_path)]
     kept += [memory_dir] if memory_dir else []
     waited_sec = 0.0
-    with _OwnDirsSnapshot(own_dirs, kept=kept) as snapshot:
+    with _OwnDirsSnapshot(own_dirs, kept=kept) as snapshot, compile_claim as compile_dir:
+        run_cmd, run_env = launch(compile_dir)
         log_mode = "w"
         while True:
             stream, raw_output, timed_out, returncode = _run_agent_with_lock_retries(
@@ -854,7 +865,7 @@ def run_coding_agent(
             _announce_usage_limit_wait(limit, delay, usage_label, log_path, on_summary)
             _wait(delay)
             waited_sec += delay
-            run_cmd, run_env = launch()
+            run_cmd, run_env = launch(compile_dir)
 
     token_usage.record_usage(
         source=usage_label,
