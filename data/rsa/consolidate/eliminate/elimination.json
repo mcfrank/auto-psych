@@ -1,0 +1,819 @@
+{
+ "rule": {
+  "threshold_dse": 2.0,
+  "start": [
+   "depth2",
+   "dup",
+   "richness",
+   "empty",
+   "surprisal",
+   "redundancy",
+   "aspect",
+   "interior",
+   "avoidable",
+   "competition",
+   "confusion",
+   "binding",
+   "attention"
+  ]
+ },
+ "rounds": [
+  {
+   "model": "cons_d2_dup_rich_emp_sur_red_asp_int_avo_comp_conf_bind_att",
+   "mechanisms": [
+    "depth2",
+    "dup",
+    "richness",
+    "empty",
+    "surprisal",
+    "redundancy",
+    "aspect",
+    "interior",
+    "avoidable",
+    "competition",
+    "confusion",
+    "binding",
+    "attention"
+   ],
+   "elpd_cv": -35714.66625795485,
+   "converged": false,
+   "candidates": [
+    {
+     "mechanism": "depth2",
+     "model": "cons_dup_rich_emp_sur_red_asp_int_avo_comp_conf_bind_att",
+     "elpd_cv": -35700.655486777825,
+     "cost": -14.010771177025163,
+     "se": 14.959462209695552,
+     "cost_in_se": -0.9365825442537953,
+     "converged": false
+    },
+    {
+     "mechanism": "confusion",
+     "model": "cons_d2_dup_rich_emp_sur_red_asp_int_avo_comp_bind_att",
+     "elpd_cv": -35706.63289350555,
+     "cost": -8.03336444930028,
+     "se": 5.989391920706789,
+     "cost_in_se": -1.3412654499243868,
+     "converged": false
+    },
+    {
+     "mechanism": "richness",
+     "model": "cons_d2_dup_emp_sur_red_asp_int_avo_comp_conf_bind_att",
+     "elpd_cv": -35718.302393725106,
+     "cost": 3.6361357702553505,
+     "se": 7.571160726472843,
+     "cost_in_se": 0.48026133661929377,
+     "converged": false
+    },
+    {
+     "mechanism": "avoidable",
+     "model": "cons_d2_dup_rich_emp_sur_red_asp_int_comp_conf_bind_att",
+     "elpd_cv": -35729.69118411451,
+     "cost": 15.024926159661845,
+     "se": 8.050727701916365,
+     "cost_in_se": 1.866281746938897,
+     "converged": true
+    },
+    {
+     "mechanism": "attention",
+     "model": "cons_d2_dup_rich_emp_sur_red_asp_int_avo_comp_conf_bind",
+     "elpd_cv": -35732.55927277875,
+     "cost": 17.893014823901467,
+     "se": 12.07153885955705,
+     "cost_in_se": 1.4822480407902219,
+     "converged": true
+    },
+    {
+     "mechanism": "empty",
+     "model": "cons_d2_dup_rich_sur_red_asp_int_avo_comp_conf_bind_att",
+     "elpd_cv": -35740.67885721201,
+     "cost": 26.012599257162947,
+     "se": 12.275812615357548,
+     "cost_in_se": 2.119012408565125,
+     "converged": false
+    },
+    {
+     "mechanism": "competition",
+     "model": "cons_d2_dup_rich_emp_sur_red_asp_int_avo_conf_bind_att",
+     "elpd_cv": -35743.84510650252,
+     "cost": 29.178848547671805,
+     "se": 15.379465432275197,
+     "cost_in_se": 1.897260257592397,
+     "converged": false
+    },
+    {
+     "mechanism": "interior",
+     "model": "cons_d2_dup_rich_emp_sur_red_asp_avo_comp_conf_bind_att",
+     "elpd_cv": -35754.534055885444,
+     "cost": 39.86779793059395,
+     "se": 16.55407436780265,
+     "cost_in_se": 2.4083374911095023,
+     "converged": true
+    },
+    {
+     "mechanism": "aspect",
+     "model": "cons_d2_dup_rich_emp_sur_red_int_avo_comp_conf_bind_att",
+     "elpd_cv": -35763.40608400685,
+     "cost": 48.739826051998534,
+     "se": 19.61441426914509,
+     "cost_in_se": 2.484898370310749,
+     "converged": true
+    },
+    {
+     "mechanism": "redundancy",
+     "model": "cons_d2_dup_rich_emp_sur_asp_int_avo_comp_conf_bind_att",
+     "elpd_cv": -35781.20166080212,
+     "cost": 66.53540284727205,
+     "se": 18.521142649759987,
+     "cost_in_se": 3.592402699200326,
+     "converged": false
+    },
+    {
+     "mechanism": "surprisal",
+     "model": "cons_d2_dup_rich_emp_red_asp_int_avo_comp_conf_bind_att",
+     "elpd_cv": -35787.8991023966,
+     "cost": 73.23284444175079,
+     "se": 19.881356519923408,
+     "cost_in_se": 3.683493345555322,
+     "converged": false
+    },
+    {
+     "mechanism": "binding",
+     "model": "cons_d2_dup_rich_emp_sur_red_asp_int_avo_comp_conf_att",
+     "elpd_cv": -35800.637362590955,
+     "cost": 85.97110463610443,
+     "se": 22.590672769659967,
+     "cost_in_se": 3.8056017858647624,
+     "converged": false
+    },
+    {
+     "mechanism": "dup",
+     "model": "cons_d2_rich_emp_sur_red_asp_int_avo_comp_conf_bind_att",
+     "elpd_cv": -35912.44708382318,
+     "cost": 197.78082586832898,
+     "se": 45.186997441338384,
+     "cost_in_se": 4.376941090743801,
+     "converged": true
+    }
+   ],
+   "decision": "drop avoidable"
+  },
+  {
+   "model": "cons_d2_dup_rich_emp_sur_red_asp_int_comp_conf_bind_att",
+   "mechanisms": [
+    "depth2",
+    "dup",
+    "richness",
+    "empty",
+    "surprisal",
+    "redundancy",
+    "aspect",
+    "interior",
+    "competition",
+    "confusion",
+    "binding",
+    "attention"
+   ],
+   "elpd_cv": -35729.69118411451,
+   "converged": true,
+   "candidates": [
+    {
+     "mechanism": "depth2",
+     "model": "cons_dup_rich_emp_sur_red_asp_int_comp_conf_bind_att",
+     "elpd_cv": -35718.17097434558,
+     "cost": -11.520209768932546,
+     "se": 16.523043672735763,
+     "cost_in_se": -0.697220802480946,
+     "converged": true
+    },
+    {
+     "mechanism": "richness",
+     "model": "cons_d2_dup_emp_sur_red_asp_int_comp_conf_bind_att",
+     "elpd_cv": -35726.69069079153,
+     "cost": -3.0004933229793096,
+     "se": 5.400045074438509,
+     "cost_in_se": -0.5556422736510764,
+     "converged": true
+    },
+    {
+     "mechanism": "confusion",
+     "model": "cons_d2_dup_rich_emp_sur_red_asp_int_comp_bind_att",
+     "elpd_cv": -35728.11613435357,
+     "cost": -1.5750497609406011,
+     "se": 3.9902782405765382,
+     "cost_in_se": -0.39472178780019834,
+     "converged": true
+    },
+    {
+     "mechanism": "competition",
+     "model": "cons_d2_dup_rich_emp_sur_red_asp_int_conf_bind_att",
+     "elpd_cv": -35741.220613204714,
+     "cost": 11.52942909020203,
+     "se": 10.786152717450513,
+     "cost_in_se": 1.0689102400292365,
+     "converged": true
+    },
+    {
+     "mechanism": "empty",
+     "model": "cons_d2_dup_rich_sur_red_asp_int_comp_conf_bind_att",
+     "elpd_cv": -35742.40409753841,
+     "cost": 12.712913423900318,
+     "se": 9.127549369938839,
+     "cost_in_se": 1.3928068650901753,
+     "converged": true
+    },
+    {
+     "mechanism": "attention",
+     "model": "cons_d2_dup_rich_emp_sur_red_asp_int_comp_conf_bind",
+     "elpd_cv": -35743.51904732824,
+     "cost": 13.82786321372987,
+     "se": 7.30147999658843,
+     "cost_in_se": 1.8938438809927371,
+     "converged": true
+    },
+    {
+     "mechanism": "aspect",
+     "model": "cons_d2_dup_rich_emp_sur_red_int_comp_conf_bind_att",
+     "elpd_cv": -35770.36742146345,
+     "cost": 40.67623734894005,
+     "se": 14.065249934515894,
+     "cost_in_se": 2.8919669069741327,
+     "converged": true
+    },
+    {
+     "mechanism": "interior",
+     "model": "cons_d2_dup_rich_emp_sur_red_asp_comp_conf_bind_att",
+     "elpd_cv": -35774.413372114934,
+     "cost": 44.72218800042174,
+     "se": 20.54470920551225,
+     "cost_in_se": 2.1768226336551186,
+     "converged": true
+    },
+    {
+     "mechanism": "surprisal",
+     "model": "cons_d2_dup_rich_emp_red_asp_int_comp_conf_bind_att",
+     "elpd_cv": -35789.71146658002,
+     "cost": 60.02028246550617,
+     "se": 22.83355708678953,
+     "cost_in_se": 2.6285997506814742,
+     "converged": false
+    },
+    {
+     "mechanism": "redundancy",
+     "model": "cons_d2_dup_rich_emp_sur_asp_int_comp_conf_bind_att",
+     "elpd_cv": -35817.26838686165,
+     "cost": 87.57720274713938,
+     "se": 24.5367422284652,
+     "cost_in_se": 3.569226995649839,
+     "converged": true
+    },
+    {
+     "mechanism": "binding",
+     "model": "cons_d2_dup_rich_emp_sur_red_asp_int_comp_conf_att",
+     "elpd_cv": -35820.081947785715,
+     "cost": 90.39076367120288,
+     "se": 22.137008842813625,
+     "cost_in_se": 4.083241973341244,
+     "converged": true
+    },
+    {
+     "mechanism": "dup",
+     "model": "cons_d2_rich_emp_sur_red_asp_int_comp_conf_bind_att",
+     "elpd_cv": -35944.31618554495,
+     "cost": 214.62500143043872,
+     "se": 47.470058077548615,
+     "cost_in_se": 4.521271094293173,
+     "converged": false
+    }
+   ],
+   "decision": "drop depth2"
+  },
+  {
+   "model": "cons_dup_rich_emp_sur_red_asp_int_comp_conf_bind_att",
+   "mechanisms": [
+    "dup",
+    "richness",
+    "empty",
+    "surprisal",
+    "redundancy",
+    "aspect",
+    "interior",
+    "competition",
+    "confusion",
+    "binding",
+    "attention"
+   ],
+   "elpd_cv": -35718.17097434558,
+   "converged": true,
+   "candidates": [
+    {
+     "mechanism": "richness",
+     "model": "cons_dup_emp_sur_red_asp_int_comp_conf_bind_att",
+     "elpd_cv": -35714.48875605266,
+     "cost": -3.6822182929172413,
+     "se": 5.348196661541033,
+     "cost_in_se": -0.6884971750190361,
+     "converged": true
+    },
+    {
+     "mechanism": "confusion",
+     "model": "cons_dup_rich_emp_sur_red_asp_int_comp_bind_att",
+     "elpd_cv": -35719.6862188183,
+     "cost": 1.5152444727209513,
+     "se": 6.4114811464326324,
+     "cost_in_se": 0.23633298423782123,
+     "converged": true
+    },
+    {
+     "mechanism": "attention",
+     "model": "cons_dup_rich_emp_sur_red_asp_int_comp_conf_bind",
+     "elpd_cv": -35728.174967550076,
+     "cost": 10.00399320449651,
+     "se": 6.53750746193243,
+     "cost_in_se": 1.5302457798708833,
+     "converged": true
+    },
+    {
+     "mechanism": "competition",
+     "model": "cons_dup_rich_emp_sur_red_asp_int_conf_bind_att",
+     "elpd_cv": -35733.14467020035,
+     "cost": 14.973695854772814,
+     "se": 11.825499669727824,
+     "cost_in_se": 1.2662209862560039,
+     "converged": true
+    },
+    {
+     "mechanism": "empty",
+     "model": "cons_dup_rich_sur_red_asp_int_comp_conf_bind_att",
+     "elpd_cv": -35734.02425875546,
+     "cost": 15.853284409880871,
+     "se": 8.553475219783559,
+     "cost_in_se": 1.8534319680044655,
+     "converged": true
+    },
+    {
+     "mechanism": "redundancy",
+     "model": "cons_dup_rich_emp_sur_asp_int_comp_conf_bind_att",
+     "elpd_cv": -35740.567331807295,
+     "cost": 22.396357461715525,
+     "se": 7.061260009071931,
+     "cost_in_se": 3.171722530106791,
+     "converged": true
+    },
+    {
+     "mechanism": "surprisal",
+     "model": "cons_dup_rich_emp_red_asp_int_comp_conf_bind_att",
+     "elpd_cv": -35759.75679388669,
+     "cost": 41.58581954111287,
+     "se": 16.656670962016104,
+     "cost_in_se": 2.4966465169387826,
+     "converged": true
+    },
+    {
+     "mechanism": "interior",
+     "model": "cons_dup_rich_emp_sur_red_asp_comp_conf_bind_att",
+     "elpd_cv": -35764.071565669095,
+     "cost": 45.90059132351598,
+     "se": 13.668559778362113,
+     "cost_in_se": 3.358114685658286,
+     "converged": true
+    },
+    {
+     "mechanism": "binding",
+     "model": "cons_dup_rich_emp_sur_red_asp_int_comp_conf_att",
+     "elpd_cv": -35805.867205595736,
+     "cost": 87.69623125015642,
+     "se": 21.796488316521252,
+     "cost_in_se": 4.023411018172346,
+     "converged": true
+    },
+    {
+     "mechanism": "aspect",
+     "model": "cons_dup_rich_emp_sur_red_int_comp_conf_bind_att",
+     "elpd_cv": -35831.876647425226,
+     "cost": 113.70567307964666,
+     "se": 22.606642693219793,
+     "cost_in_se": 5.029746107047968,
+     "converged": true
+    },
+    {
+     "mechanism": "dup",
+     "model": "cons_rich_emp_sur_red_asp_int_comp_conf_bind_att",
+     "elpd_cv": -35942.302356058586,
+     "cost": 224.1313817130067,
+     "se": 45.32718875619153,
+     "cost_in_se": 4.94474481791883,
+     "converged": false
+    }
+   ],
+   "decision": "drop richness"
+  },
+  {
+   "model": "cons_dup_emp_sur_red_asp_int_comp_conf_bind_att",
+   "mechanisms": [
+    "dup",
+    "empty",
+    "surprisal",
+    "redundancy",
+    "aspect",
+    "interior",
+    "competition",
+    "confusion",
+    "binding",
+    "attention"
+   ],
+   "elpd_cv": -35714.48875605266,
+   "converged": true,
+   "candidates": [
+    {
+     "mechanism": "confusion",
+     "model": "cons_dup_emp_sur_red_asp_int_comp_bind_att",
+     "elpd_cv": -35712.63463279166,
+     "cost": -1.8541232610004954,
+     "se": 5.694358596506021,
+     "cost_in_se": -0.32560704240476873,
+     "converged": true
+    },
+    {
+     "mechanism": "empty",
+     "model": "cons_dup_sur_red_asp_int_comp_conf_bind_att",
+     "elpd_cv": -35724.61388191122,
+     "cost": 10.125125858554384,
+     "se": 8.38249213971419,
+     "cost_in_se": 1.2078896931598686,
+     "converged": true
+    },
+    {
+     "mechanism": "attention",
+     "model": "cons_dup_emp_sur_red_asp_int_comp_conf_bind",
+     "elpd_cv": -35728.93158572553,
+     "cost": 14.442829672865628,
+     "se": 8.499004262788795,
+     "cost_in_se": 1.6993555040442436,
+     "converged": true
+    },
+    {
+     "mechanism": "redundancy",
+     "model": "cons_dup_emp_sur_asp_int_comp_conf_bind_att",
+     "elpd_cv": -35729.52609617187,
+     "cost": 15.0373401192046,
+     "se": 7.133844567490434,
+     "cost_in_se": 2.1078872656871583,
+     "converged": true
+    },
+    {
+     "mechanism": "competition",
+     "model": "cons_dup_emp_sur_red_asp_int_conf_bind_att",
+     "elpd_cv": -35737.868357779065,
+     "cost": 23.379601726403052,
+     "se": 13.539117463176112,
+     "cost_in_se": 1.726818737631255,
+     "converged": false
+    },
+    {
+     "mechanism": "interior",
+     "model": "cons_dup_emp_sur_red_asp_comp_conf_bind_att",
+     "elpd_cv": -35761.650761016106,
+     "cost": 47.162004963443906,
+     "se": 13.424878682077022,
+     "cost_in_se": 3.513030253778596,
+     "converged": true
+    },
+    {
+     "mechanism": "binding",
+     "model": "cons_dup_emp_sur_red_asp_int_comp_conf_att",
+     "elpd_cv": -35801.926062173654,
+     "cost": 87.4373061209917,
+     "se": 21.711618823703407,
+     "cost_in_se": 4.027212656549269,
+     "converged": true
+    },
+    {
+     "mechanism": "aspect",
+     "model": "cons_dup_emp_sur_red_int_comp_conf_bind_att",
+     "elpd_cv": -35816.282970813445,
+     "cost": 101.79421476078278,
+     "se": 21.786584612965843,
+     "cost_in_se": 4.672334676092462,
+     "converged": true
+    },
+    {
+     "mechanism": "surprisal",
+     "model": "cons_dup_emp_red_asp_int_comp_conf_bind_att",
+     "elpd_cv": -35966.70435896792,
+     "cost": 252.21560291526112,
+     "se": 45.32323787411961,
+     "cost_in_se": 5.564818727553461,
+     "converged": true
+    },
+    {
+     "mechanism": "dup",
+     "model": "cons_emp_sur_red_asp_int_comp_conf_bind_att",
+     "elpd_cv": -36096.32492738481,
+     "cost": 381.8361713321501,
+     "se": 63.2756387631641,
+     "cost_in_se": 6.034489399013952,
+     "converged": true
+    }
+   ],
+   "decision": "drop confusion"
+  },
+  {
+   "model": "cons_dup_emp_sur_red_asp_int_comp_bind_att",
+   "mechanisms": [
+    "dup",
+    "empty",
+    "surprisal",
+    "redundancy",
+    "aspect",
+    "interior",
+    "competition",
+    "binding",
+    "attention"
+   ],
+   "elpd_cv": -35712.63463279166,
+   "converged": true,
+   "candidates": [
+    {
+     "mechanism": "empty",
+     "model": "cons_dup_sur_red_asp_int_comp_bind_att",
+     "elpd_cv": -35725.10637010769,
+     "cost": 12.471737316031067,
+     "se": 9.372053834366206,
+     "cost_in_se": 1.3307368412992562,
+     "converged": true
+    },
+    {
+     "mechanism": "attention",
+     "model": "cons_dup_emp_sur_red_asp_int_comp_bind",
+     "elpd_cv": -35732.156645909454,
+     "cost": 19.522013117792085,
+     "se": 9.531236563684864,
+     "cost_in_se": 2.048214099750001,
+     "converged": true
+    },
+    {
+     "mechanism": "redundancy",
+     "model": "cons_dup_emp_sur_asp_int_comp_bind_att",
+     "elpd_cv": -35739.97702320761,
+     "cost": 27.34239041594992,
+     "se": 11.639496530095052,
+     "cost_in_se": 2.3491042198649668,
+     "converged": true
+    },
+    {
+     "mechanism": "interior",
+     "model": "cons_dup_emp_sur_red_asp_comp_bind_att",
+     "elpd_cv": -35759.92626950897,
+     "cost": 47.2916367173093,
+     "se": 12.637825905827215,
+     "cost_in_se": 3.7420705958216636,
+     "converged": true
+    },
+    {
+     "mechanism": "competition",
+     "model": "cons_dup_emp_sur_red_asp_int_bind_att",
+     "elpd_cv": -35767.45460214368,
+     "cost": 54.81996935202187,
+     "se": 21.044519055358418,
+     "cost_in_se": 2.6049523492466533,
+     "converged": true
+    },
+    {
+     "mechanism": "binding",
+     "model": "cons_dup_emp_sur_red_asp_int_comp_att",
+     "elpd_cv": -35799.56284105775,
+     "cost": 86.92820826608659,
+     "se": 21.85197501112738,
+     "cost_in_se": 3.978048127083311,
+     "converged": true
+    },
+    {
+     "mechanism": "aspect",
+     "model": "cons_dup_emp_sur_red_int_comp_bind_att",
+     "elpd_cv": -35942.55158153041,
+     "cost": 229.91694873874803,
+     "se": 41.3444924679869,
+     "cost_in_se": 5.561005469271948,
+     "converged": true
+    },
+    {
+     "mechanism": "surprisal",
+     "model": "cons_dup_emp_red_asp_int_comp_bind_att",
+     "elpd_cv": -35999.39237101785,
+     "cost": 286.75773822618794,
+     "se": 47.4744873613842,
+     "cost_in_se": 6.040249282595456,
+     "converged": true
+    },
+    {
+     "mechanism": "dup",
+     "model": "cons_emp_sur_red_asp_int_comp_bind_att",
+     "elpd_cv": -36092.01814213816,
+     "cost": 379.383509346495,
+     "se": 63.90756962106974,
+     "cost_in_se": 5.936440887925985,
+     "converged": true
+    }
+   ],
+   "decision": "drop empty"
+  },
+  {
+   "model": "cons_dup_sur_red_asp_int_comp_bind_att",
+   "mechanisms": [
+    "dup",
+    "surprisal",
+    "redundancy",
+    "aspect",
+    "interior",
+    "competition",
+    "binding",
+    "attention"
+   ],
+   "elpd_cv": -35725.10637010769,
+   "converged": true,
+   "candidates": [
+    {
+     "mechanism": "attention",
+     "model": "cons_dup_sur_red_asp_int_comp_bind",
+     "elpd_cv": -35742.15373091319,
+     "cost": 17.047360805496282,
+     "se": 8.869204688201892,
+     "cost_in_se": 1.9220844940215713,
+     "converged": true
+    },
+    {
+     "mechanism": "redundancy",
+     "model": "cons_dup_sur_asp_int_comp_bind_att",
+     "elpd_cv": -35759.12038361839,
+     "cost": 34.01401351069944,
+     "se": 12.033742533011448,
+     "cost_in_se": 2.8265532038258945,
+     "converged": true
+    },
+    {
+     "mechanism": "interior",
+     "model": "cons_dup_sur_red_asp_comp_bind_att",
+     "elpd_cv": -35774.442473543946,
+     "cost": 49.336103436253325,
+     "se": 12.742981091687183,
+     "cost_in_se": 3.8716296509642847,
+     "converged": true
+    },
+    {
+     "mechanism": "competition",
+     "model": "cons_dup_sur_red_asp_int_bind_att",
+     "elpd_cv": -35780.105816643685,
+     "cost": 54.99944653599232,
+     "se": 20.56207877587364,
+     "cost_in_se": 2.6747999137385614,
+     "converged": true
+    },
+    {
+     "mechanism": "binding",
+     "model": "cons_dup_sur_red_asp_int_comp_att",
+     "elpd_cv": -35811.60586081949,
+     "cost": 86.49949071179435,
+     "se": 21.788481024312894,
+     "cost_in_se": 3.9699642492412863,
+     "converged": true
+    },
+    {
+     "mechanism": "aspect",
+     "model": "cons_dup_sur_red_int_comp_bind_att",
+     "elpd_cv": -35941.25425376995,
+     "cost": 216.14788366225548,
+     "se": 39.92670419423945,
+     "cost_in_se": 5.4136169770166225,
+     "converged": true
+    },
+    {
+     "mechanism": "surprisal",
+     "model": "cons_dup_red_asp_int_comp_bind_att",
+     "elpd_cv": -36128.44667688698,
+     "cost": 403.3403067792897,
+     "se": 49.23259274916319,
+     "cost_in_se": 8.19254652775006,
+     "converged": true
+    },
+    {
+     "mechanism": "dup",
+     "model": "cons_sur_red_asp_int_comp_bind_att",
+     "elpd_cv": -36208.27255435698,
+     "cost": 483.1661842492904,
+     "se": 73.74560943304722,
+     "cost_in_se": 6.551795936922201,
+     "converged": true
+    }
+   ],
+   "decision": "drop attention"
+  },
+  {
+   "model": "cons_dup_sur_red_asp_int_comp_bind",
+   "mechanisms": [
+    "dup",
+    "surprisal",
+    "redundancy",
+    "aspect",
+    "interior",
+    "competition",
+    "binding"
+   ],
+   "elpd_cv": -35742.15373091319,
+   "converged": true,
+   "candidates": [
+    {
+     "mechanism": "competition",
+     "model": "cons_dup_sur_red_asp_int_bind",
+     "elpd_cv": -35793.39079986738,
+     "cost": 51.23706895419309,
+     "se": 19.688789053228064,
+     "cost_in_se": 2.602347397581191,
+     "converged": true
+    },
+    {
+     "mechanism": "redundancy",
+     "model": "cons_dup_sur_asp_int_comp_bind",
+     "elpd_cv": -35815.846661442985,
+     "cost": 73.69293052979629,
+     "se": 17.339307549580106,
+     "cost_in_se": 4.250050373642566,
+     "converged": true
+    },
+    {
+     "mechanism": "interior",
+     "model": "cons_dup_sur_red_asp_comp_bind",
+     "elpd_cv": -35817.72149362632,
+     "cost": 75.56776271312992,
+     "se": 16.41799863362097,
+     "cost_in_se": 4.602739006104031,
+     "converged": true
+    },
+    {
+     "mechanism": "binding",
+     "model": "cons_dup_sur_red_asp_int_comp",
+     "elpd_cv": -35824.94131143339,
+     "cost": 82.78758052019839,
+     "se": 21.2652114529845,
+     "cost_in_se": 3.893099332834494,
+     "converged": true
+    },
+    {
+     "mechanism": "aspect",
+     "model": "cons_dup_sur_red_int_comp_bind",
+     "elpd_cv": -35938.408897897134,
+     "cost": 196.25516698394495,
+     "se": 39.17739091598978,
+     "cost_in_se": 5.009398594326652,
+     "converged": true
+    },
+    {
+     "mechanism": "surprisal",
+     "model": "cons_dup_red_asp_int_comp_bind",
+     "elpd_cv": -36135.81236339263,
+     "cost": 393.6586324794407,
+     "se": 49.60848856725182,
+     "cost_in_se": 7.935307925089813,
+     "converged": true
+    },
+    {
+     "mechanism": "dup",
+     "model": "cons_sur_red_asp_int_comp_bind",
+     "elpd_cv": -36372.63709652702,
+     "cost": 630.4833656138289,
+     "se": 80.44503917654642,
+     "cost_in_se": 7.8374424584486375,
+     "converged": true
+    }
+   ],
+   "decision": "stop: the cheapest removal (competition) costs 51.2 nats, 2.60 SE >= 2.0"
+  }
+ ],
+ "lean": {
+  "model": "cons_dup_sur_red_asp_int_comp_bind",
+  "mechanisms": [
+   "dup",
+   "surprisal",
+   "redundancy",
+   "aspect",
+   "interior",
+   "competition",
+   "binding"
+  ]
+ },
+ "data": "/scratch/users/mcfrank/auto-psych/rsa_consolidate/pool/pooled.csv",
+ "data_sha256": "19af0f544ed5c0e0cf902fdce55c259ad2fbaf697ccef6a21f9617375f114f23",
+ "folds": {
+  "k": 5,
+  "seed": 0
+ },
+ "fit_settings": {
+  "num_warmup": 1000,
+  "num_samples": 1000,
+  "num_chains": 4,
+  "target_accept": 0.9,
+  "seed": 0,
+  "dense_mass": true
+ },
+ "lean_file_sha256": "3148d949a944888db21028e6dc321ebac8ea161e6337683de8af15434b7252b5"
+}

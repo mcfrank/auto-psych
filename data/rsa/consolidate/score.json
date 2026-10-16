@@ -1,0 +1,163 @@
+{
+ "reference": "c0",
+ "n_trials": 14404,
+ "n_displays": 312,
+ "train_sha256": "19af0f544ed5c0e0cf902fdce55c259ad2fbaf697ccef6a21f9617375f114f23",
+ "test_sha256": "d43d9afe65cc6461ad3c2fb3ea027e2633edf06b3ac0dac4592143a87c29ce9f",
+ "models": {
+  "c0": {
+   "model": "boundary_avoidable_ambiguity_listener",
+   "n_params": 17,
+   "fit": {
+    "name": "boundary_avoidable_ambiguity_listener",
+    "converged": true,
+    "problems": []
+   },
+   "sha256": "a80185358d52967bdec8e7e77e6a984ff3d2d262ac54f6e113a591b40bb66245",
+   "lpd": -9950.284892870457
+  },
+  "lean": {
+   "model": "cons_dup_sur_red_asp_int_comp_bind",
+   "n_params": 9,
+   "fit": {
+    "name": "cons_dup_sur_red_asp_int_comp_bind",
+    "converged": true,
+    "problems": []
+   },
+   "sha256": "3148d949a944888db21028e6dc321ebac8ea161e6337683de8af15434b7252b5",
+   "lpd": -10031.360366178269,
+   "vs_reference": {
+    "diff": -81.07547330781199,
+    "se": 27.248596553442752,
+    "z": -2.9753999678037886
+   },
+   "vs_reference_by_half": {
+    "eig": {
+     "diff": -63.98776284144242,
+     "se": 21.349936345604032,
+     "z": -2.997093846353202
+    },
+    "random": {
+     "diff": -17.087710466369572,
+     "se": 16.721727912317,
+     "z": -1.0218866468807326
+    }
+   }
+  },
+  "full": {
+   "model": "cons_d2_dup_rich_emp_sur_red_asp_int_avo_comp_conf_bind_att",
+   "n_params": 16,
+   "fit": {
+    "name": "cons_d2_dup_rich_emp_sur_red_asp_int_avo_comp_conf_bind_att",
+    "converged": false,
+    "problems": [
+     "max R-hat 1.736 > 1.05",
+     "min bulk ESS 6 < 100"
+    ]
+   },
+   "sha256": "3e2d276be73b53f7aaf0043cb5df35abfeac802b23f57f909813242e188f9a48",
+   "lpd": -10050.925528657026,
+   "vs_reference": {
+    "diff": -100.64063578656896,
+    "se": 27.65872631452405,
+    "z": -3.638657638899334
+   },
+   "vs_reference_by_half": {
+    "eig": {
+     "diff": -80.5418097903239,
+     "se": 21.39921791458985,
+     "z": -3.76377352255528
+    },
+    "random": {
+     "diff": -20.098825996245978,
+     "se": 17.18630690717634,
+     "z": -1.1694674198942345
+    }
+   }
+  },
+  "c2": {
+   "model": "competition_endpoint_binding_lapse_l2",
+   "n_params": 13,
+   "fit": {
+    "name": "competition_endpoint_binding_lapse_l2",
+    "converged": true,
+    "problems": []
+   },
+   "sha256": "0a83187b7398171ae20ff00a253331d3d6025738e4e62a875f722ec8682e4abb",
+   "lpd": -10087.616324375525,
+   "vs_reference": {
+    "diff": -137.3314315050684,
+    "se": 32.58823938694288,
+    "z": -4.214140870712179
+   },
+   "vs_reference_by_half": {
+    "eig": {
+     "diff": -113.44537414186925,
+     "se": 26.497002586627502,
+     "z": -4.28144178840526
+    },
+    "random": {
+     "diff": -23.886057363200052,
+     "se": 18.280981365398834,
+     "z": -1.3066069531918114
+    }
+   }
+  },
+  "c1": {
+   "model": "feature_surprisal_ensemble_listener",
+   "n_params": 9,
+   "fit": {
+    "name": "feature_surprisal_ensemble_listener",
+    "converged": true,
+    "problems": []
+   },
+   "sha256": "d1d15e00bf421c586f010031f6e5f6ac3f17d53f679a92dc9070c4eec2980976",
+   "lpd": -10142.336173004282,
+   "vs_reference": {
+    "diff": -192.05128013382455,
+    "se": 36.862579202357175,
+    "z": -5.2099251948584175
+   },
+   "vs_reference_by_half": {
+    "eig": {
+     "diff": -116.86373346785422,
+     "se": 25.318964690806403,
+     "z": -4.615660035668391
+    },
+    "random": {
+     "diff": -75.18754666596851,
+     "se": 26.687689496931846,
+     "z": -2.817311954810193
+    }
+   }
+  },
+  "promoted": {
+   "model": "rsa_l2_singleton_distinct_feat_color_l0",
+   "n_params": 6,
+   "fit": {
+    "name": "rsa_l2_singleton_distinct_feat_color_l0",
+    "converged": true,
+    "problems": []
+   },
+   "sha256": "beec1298adef13d3dd1e97dc34ceea4256dd7623e7ca411c6ba7cc00ee9f93b6",
+   "lpd": -10148.88502247753,
+   "vs_reference": {
+    "diff": -198.60012960707354,
+    "se": 35.1879363715046,
+    "z": -5.643983424043619
+   },
+   "vs_reference_by_half": {
+    "eig": {
+     "diff": -142.67239357851486,
+     "se": 26.748573166936453,
+     "z": -5.333831927710831
+    },
+    "random": {
+     "diff": -55.927736028558684,
+     "se": 22.329068000704684,
+     "z": -2.504705347612075
+    }
+   }
+  }
+ }
+}
