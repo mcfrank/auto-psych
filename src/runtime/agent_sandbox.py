@@ -39,7 +39,6 @@ import json
 import os
 import shutil
 import sys
-import threading
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -144,18 +143,24 @@ CLAUDE_AUTH_CREDENTIAL = {
     "subscription": "CLAUDE_CODE_OAUTH_TOKEN",  # `claude setup-token`
     "api": "ANTHROPIC_API_KEY",
 }
-# A stated fallback, not a guess: agents start on the subscription and, from
-# the first subscription usage limit on, the run's agents use the API key
-# (coding_agent switches it, ON_API_KEY); every usage record names the one used.
+# A stated fallback, not a guess: agents start on the subscription and, from a
+# subscription usage limit until its stated reset, the run's agents use the API
+# key (coding_agent switches it, use_api_key_for); every usage record names the
+# one used.
 CLAUDE_AUTH_FALLBACK = "subscription_then_api"
-ON_API_KEY = threading.Event()
+_api_key_until = 0.0  # time.time() until which a fallback run's agents use the API key
+
+
+def use_api_key_for(seconds: float) -> None:
+    global _api_key_until
+    _api_key_until = time.time() + seconds
 
 
 def effective_claude_auth(mode: str | None) -> str | None:
     """The credential a ``mode`` agent launched now uses: ``subscription`` or ``api``."""
     if mode != CLAUDE_AUTH_FALLBACK:
         return mode
-    return "api" if ON_API_KEY.is_set() else "subscription"
+    return "api" if time.time() < _api_key_until else "subscription"
 
 
 def _claude_auth_mode(mode: str | None) -> str:

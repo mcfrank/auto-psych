@@ -449,16 +449,18 @@ def fallback_mode(monkeypatch):
     monkeypatch.setenv("CLAUDE_AUTH", "subscription_then_api")
     monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "oat")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "key")
-    agent_sandbox.ON_API_KEY.clear()
-    yield
-    agent_sandbox.ON_API_KEY.clear()
+    monkeypatch.setattr(agent_sandbox, "_api_key_until", 0.0)
 
 
 def test_the_fallback_switches_to_the_api_key_at_the_first_limit_without_waiting(
     tmp_path, monkeypatch, agent, fallback_mode
 ):
     """subscription_then_api: the first subscription limit moves the run's agents
-    onto the API key, and this one runs again at once instead of waiting."""
+    onto the API key until the limit's stated reset, and this one runs again at
+    once instead of waiting."""
+    import time
+
+    from src.runtime import agent_sandbox
     from src.runtime.agent_sandbox import effective_claude_auth
 
     success, _ = run_stub(
@@ -468,12 +470,15 @@ def test_the_fallback_switches_to_the_api_key_at_the_first_limit_without_waiting
     assert agent["waits"] == []
     assert [r.claude_auth for r in token_usage.records_since(0)] == ["subscription", "api"]
     assert effective_claude_auth("subscription_then_api") == "api"  # later agents too
+    assert agent_sandbox._api_key_until == pytest.approx(time.time() + 3 * 3600, abs=600)
+    monkeypatch.setattr(agent_sandbox, "_api_key_until", time.time() - 1)  # the reset passed
+    assert effective_claude_auth("subscription_then_api") == "subscription"
 
 
 def test_a_limit_on_the_api_key_is_waited_out_as_before(tmp_path, monkeypatch, agent, fallback_mode):
     from src.runtime import agent_sandbox
 
-    agent_sandbox.ON_API_KEY.set()
+    agent_sandbox.use_api_key_for(3600)
     success, _ = run_stub(
         tmp_path, monkeypatch, agent, backend="claude", n_limited=1, message=claude_limit_message(hours_ahead=1)
     )

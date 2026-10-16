@@ -65,7 +65,7 @@ from src.runtime.agent_sandbox import (
     AGENT_COMPILE_SLOTS_ENV,
     CLAUDE_AUTH_ENV,
     CLAUDE_AUTH_FALLBACK,
-    ON_API_KEY,
+    use_api_key_for,
     effective_claude_auth,
     HOME_NAME,
     claimed_compile_dir,
@@ -830,8 +830,8 @@ def run_coding_agent(
                 break
             claude_auth = effective_claude_auth(claude_mode)
             if login_failure is None and claude_mode == CLAUDE_AUTH_FALLBACK and claude_auth == "subscription":
-                # subscription_then_api: from this limit on, the run's agents
-                # use the API key, this one again at once.
+                # subscription_then_api: until this limit's reset, the run's
+                # agents use the API key, this one again at once.
                 token_usage.record_usage(
                     source=usage_label, backend=backend, model=model, **usage,
                     claude_auth=claude_auth, usage_limit=limit.message, usage_limit_wait_sec=0.0,
@@ -839,10 +839,16 @@ def run_coding_agent(
                 if sandbox:
                     remove_private_home(log_path.parent)
                 snapshot.restore()
-                ON_API_KEY.set()
+                api_sec = seconds_until_retry(
+                    limit,
+                    datetime.now().astimezone(),
+                    margin_sec=AGENT_USAGE_LIMIT_RESET_MARGIN_SEC,
+                    fallback_sec=AGENT_USAGE_LIMIT_FALLBACK_WAIT_SEC,
+                )
+                use_api_key_for(api_sec)
                 if on_summary:
                     on_summary(f"  [USAGE LIMIT] {usage_label}: subscription limit ({limit.message!r}); "
-                               "this run's Claude agents now use the API key")
+                               f"this run's Claude agents use the API key for {api_sec / 3600:.1f} h")
                 run_cmd, run_env = launch(compile_dir)
                 continue
             delay = 0.0
