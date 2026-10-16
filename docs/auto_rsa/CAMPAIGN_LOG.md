@@ -136,6 +136,7 @@ games, and support two claims:
 | 64 | 10-15 | **The pre-registration is frozen** (PI's go-ahead): design `bc7d60e5…` (156 EIG + 156 random, quotas met in both halves, 51 lists per display), predictions `6a0a476f…` (finals) and `704575376…` (bar), pooled data `19af0f54…`, code as at `507b5b9b`; simulated power of the frozen design ≥ 0.995 per final at δ = 0.0078. Next: the public OSF registration (PI), recorded as Addendum A | PI | RSA only | `PREREG_FINAL.md` §8, `rsa_prereg.yaml` |
 | 65 | 10-15 | **The OSF registration links a tagged commit** (`rsa-prereg-final`, public repository) and quotes its full commit SHA and the frozen files' sha256, instead of uploaded files | OSF no longer takes files (its platform change; PI) | RSA only | `OSF_PREREG.md` |
 | 66 | 10-15 | **Registered on OSF:** https://osf.io/s48jv (public, approved 10-15), linking tag `rsa-prereg-final` = `dbb38535…`. Its "Other" answer (commit SHA, file hashes) was left empty and the sample-size answer says "N": to be added by an OSF registration update before recruitment | PI | RSA only | `PREREG_FINAL.md` Addendum A, `rsa_prereg.yaml` `osf_registration` |
+| 67 | 10-15 | **The pre-registered result** (OSF s48jv, updated and approved before launch; Prolific `6ad15ad5…`; 1,225 recruited, 1,108 kept, 14,404 trials): vs the best promoted seed `rsa_l2_singleton_distinct_feat_color_l0`, Holm at 0.05: chain 0's final **+197.9 ± 35.1 (z 5.64)** and chain 2's **+60.8 ± 22.9 (z 2.66)** reject; chain 1's +8.1 ± 24.1 (z 0.34) does not. All three beat the best starting model (z 8.0–10.3) and every bar model in point estimate. No deviation from the plan | the test | RSA only | `PREREG_RESULT_REPORT.md`, `PREREG_FINAL.md` Addendum B |
 
 ## 3. How this differs from main, at a glance
 
@@ -235,7 +236,7 @@ games, and support two claims:
   - **In-sample on all 21,567 live responses,** chain 0's final fits best (chain 1's −160,
     chain 2's −189), and on each chain's own data. Its lead is on 4-object word trials; chain 1's
     prior is best on 3–4-object mumble trials.
-- **Final experiment (PI 2026-10-15, #58–62): pre-registration drafted, to be registered on OSF** (`PREREG_FINAL.md`,
+- **Final experiment: DONE (#58–67).** Registered as OSF s48jv; 2 of 3 finals beat the best promoted seed on new people (chain 0 z 5.64, chain 2 z 2.66; chain 1 z 0.34). Earlier note: (`PREREG_FINAL.md`,
   code `src/rsa/prereg/`, Sherlock steps `HANDOFF_prereg.md`). Each final vs the best promoted
   seed on new people, frozen predictions, display-clustered SE, one-sided, Holm across 3; no
   secondary hypothesis, no lesions. Next: the 17 bar models' pooled fits (Sherlock), the power

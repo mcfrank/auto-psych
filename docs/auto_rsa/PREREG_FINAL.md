@@ -286,3 +286,24 @@ at the campaign's 7.8% exclusion rate, about $816.
 
   Both values are in this plan's §8 at the linked commit. They are added on OSF by a registration
   update before recruitment (Addendum B records it). Nothing in the plan changes.
+
+### Addendum B (2026-10-16): the OSF update, and the run against the plan
+
+- **The OSF update:** created 22:49 and approved 22:51 UTC on 2026-10-15, before the study was
+  published (about 23:00 UTC). It is the registration's approved revision, with the justification
+  "minor edits to add documentation and sample size". The registered answers now quote the commit
+  SHA `dbb38535…`, the six sha256 of Addendum A's list, N = 1,224 and G = 312. Nothing in the plan
+  changed.
+- **Code at launch:** the live job re-staged 38b585df → 3b931f93 ("docs and config only",
+  `code_history`). `src/` is identical to the tag; the change was documents and
+  `osf_registration`.
+- **The run against the plan:** the analysis is §6's script on §8's frozen design and predictions;
+  the hashes in `prereg_analysis.json` match.
+  - Prolific returned 1,225 submissions for 1,224 places. All were analysed under §5's rule, as
+    the campaign's studies were.
+  - Catch exclusions were 117 of 1,225 (9.6%, against the 7.8% assumed in §7), leaving 1,108
+    people and 14,404 modelled trials: 46.2 responses a display, not 47. That is a sizing
+    assumption, not a rule, and nothing was changed for it.
+  - No deviation from §§5–6. Results: `PREREG_RESULT_REPORT.md`,
+    `data/rsa/prereg/run/prereg_analysis.json`.
+
