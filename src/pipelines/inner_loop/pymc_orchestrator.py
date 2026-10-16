@@ -439,6 +439,7 @@ def run_pymc_inner_loop(
                     ),
                     role=slot.role,
                     incumbent=incumbent,
+                    fit_method=(fit_kwargs or {}).get("method"),
                 )
                 slot.ledger_context = (
                     f"{round_context} {_slot_context(slot, incumbent)}{context_suffix}"

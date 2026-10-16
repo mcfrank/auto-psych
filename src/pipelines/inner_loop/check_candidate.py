@@ -27,7 +27,7 @@ import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import tyro
 
@@ -63,21 +63,27 @@ class CandidateCheckFailed(RuntimeError):
     """The candidate would be rejected at admission, for the stated reason."""
 
 
-def check_candidate_command(candidate_dir: Path, responses_path: Path) -> str:
+def check_candidate_command(
+    candidate_dir: Path, responses_path: Path, method: Optional[str] = None
+) -> str:
     """The exact shell command CONTEXT.md documents for this candidate.
 
     Uses this process's interpreter — the pipeline's own — so the agent runs
     the check with the PyMC stack the admission gates use, not whatever
-    ``python3`` is on its PATH.
+    ``python3`` is on its PATH; and the run's fit ``method``, so the smoke fit
+    fails where admission's would.
     """
-    return (
+    command = (
         f"{sys.executable} -m src.pipelines.inner_loop.check_candidate \\\n"
         f"    --candidate-dir {candidate_dir} \\\n"
         f"    --responses {responses_path}"
     )
+    return command if method in (None, "nuts") else f"{command} \\\n    --method {method}"
 
 
-def run_candidate_check(candidate_dir: Path, responses_path: Path) -> str:
+def run_candidate_check(
+    candidate_dir: Path, responses_path: Path, method: Optional[str] = None
+) -> str:
     """Run the admission gates on ``candidate_dir/candidate.py``; return the OK report.
 
     Raises ``CandidateCheckFailed`` with the same wording admission would use
@@ -125,6 +131,7 @@ def run_candidate_check(candidate_dir: Path, responses_path: Path) -> str:
             responses_path,
             cache_dir=None,
             **CHECK_FIT_KWARGS,
+            method=method,
         )
     except Exception as e:  # noqa: BLE001 — any sampling failure is the reason
         raise CandidateCheckFailed(
@@ -139,6 +146,7 @@ def run_candidate_check(candidate_dir: Path, responses_path: Path) -> str:
             candidate_dir,
             cache_dir=None,
             **CHECK_FIT_KWARGS,
+            method=method,
         )
     except Exception as e:  # noqa: BLE001 — any failure here is the reason
         raise CandidateCheckFailed(
@@ -168,10 +176,13 @@ class Args:
     responses: Path
     """The responses CSV named in CONTEXT.md."""
 
+    method: Optional[str] = None
+    """The run's fit method (fit.method), as CONTEXT.md's command passes it."""
+
 
 def main(args: Args) -> None:
     try:
-        report = run_candidate_check(args.candidate_dir, args.responses)
+        report = run_candidate_check(args.candidate_dir, args.responses, args.method)
     except CandidateCheckFailed as e:
         print(
             f"CHECK FAILED — admission would reject this candidate:\n  {e}",

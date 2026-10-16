@@ -377,6 +377,7 @@ def _write_candidate_context(
     omit_from_attempted: Iterable[str] = (),
     role: str = SLOT_EXPLORE,
     incumbent: Optional[str] = None,
+    fit_method: Optional[str] = None,
 ) -> Dict[str, Optional[str]]:
     """Write the candidate's context documents and return their text.
 
@@ -501,7 +502,7 @@ def _write_candidate_context(
         "and a likelihood vectorised over trials.",
         "",
         "```bash",
-        check_candidate_command(candidate_dir, responses_path),
+        check_candidate_command(candidate_dir, responses_path, fit_method),
         "```",
         "",
     ]
