@@ -439,3 +439,42 @@ def test_a_sandboxed_agent_compiles_in_a_claimed_cell_dir(tmp_path, monkeypatch,
         on_summary=None, timeout_secs=60, usage_label="inner:candidate",
     )
     assert given == [root / "slot-0"]
+
+
+@pytest.fixture
+def fallback_mode(monkeypatch):
+    """A run billed subscription_then_api, with both credentials, starting on the subscription."""
+    from src.runtime import agent_sandbox
+
+    monkeypatch.setenv("CLAUDE_AUTH", "subscription_then_api")
+    monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "oat")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "key")
+    agent_sandbox.ON_API_KEY.clear()
+    yield
+    agent_sandbox.ON_API_KEY.clear()
+
+
+def test_the_fallback_switches_to_the_api_key_at_the_first_limit_without_waiting(
+    tmp_path, monkeypatch, agent, fallback_mode
+):
+    """subscription_then_api: the first subscription limit moves the run's agents
+    onto the API key, and this one runs again at once instead of waiting."""
+    from src.runtime.agent_sandbox import effective_claude_auth
+
+    success, _ = run_stub(
+        tmp_path, monkeypatch, agent, backend="claude", n_limited=1, message=claude_limit_message(hours_ahead=3)
+    )
+    assert success and int(agent["calls"].read_text()) == 2
+    assert agent["waits"] == []
+    assert [r.claude_auth for r in token_usage.records_since(0)] == ["subscription", "api"]
+    assert effective_claude_auth("subscription_then_api") == "api"  # later agents too
+
+
+def test_a_limit_on_the_api_key_is_waited_out_as_before(tmp_path, monkeypatch, agent, fallback_mode):
+    from src.runtime import agent_sandbox
+
+    agent_sandbox.ON_API_KEY.set()
+    success, _ = run_stub(
+        tmp_path, monkeypatch, agent, backend="claude", n_limited=1, message=claude_limit_message(hours_ahead=1)
+    )
+    assert success and len(agent["waits"]) == 1

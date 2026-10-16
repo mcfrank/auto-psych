@@ -39,6 +39,7 @@ import json
 import os
 import shutil
 import sys
+import threading
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -143,6 +144,18 @@ CLAUDE_AUTH_CREDENTIAL = {
     "subscription": "CLAUDE_CODE_OAUTH_TOKEN",  # `claude setup-token`
     "api": "ANTHROPIC_API_KEY",
 }
+# A stated fallback, not a guess: agents start on the subscription and, from
+# the first subscription usage limit on, the run's agents use the API key
+# (coding_agent switches it, ON_API_KEY); every usage record names the one used.
+CLAUDE_AUTH_FALLBACK = "subscription_then_api"
+ON_API_KEY = threading.Event()
+
+
+def effective_claude_auth(mode: str | None) -> str | None:
+    """The credential a ``mode`` agent launched now uses: ``subscription`` or ``api``."""
+    if mode != CLAUDE_AUTH_FALLBACK:
+        return mode
+    return "api" if ON_API_KEY.is_set() else "subscription"
 
 
 def _claude_auth_mode(mode: str | None) -> str:
@@ -152,10 +165,10 @@ def _claude_auth_mode(mode: str | None) -> str:
             "config, pass --claude-auth, or export CLAUDE_AUTH for the job scripts "
             f"(one of {sorted(CLAUDE_AUTH_CREDENTIAL)})."
         )
-    if mode not in CLAUDE_AUTH_CREDENTIAL:
+    if mode not in (*CLAUDE_AUTH_CREDENTIAL, CLAUDE_AUTH_FALLBACK):
         raise ValueError(
             f"unknown Claude billing mode {mode!r} (expected one of "
-            f"{sorted(CLAUDE_AUTH_CREDENTIAL)})."
+            f"{sorted(CLAUDE_AUTH_CREDENTIAL) + [CLAUDE_AUTH_FALLBACK]})."
         )
     return mode
 
@@ -177,12 +190,13 @@ def require_claude_auth(
             _claude_auth_mode(mode)
         return None
     mode = _claude_auth_mode(mode or env.get(CLAUDE_AUTH_ENV))
-    credential = CLAUDE_AUTH_CREDENTIAL[mode]
-    if not env.get(credential):
-        raise RuntimeError(
-            f"Claude agents are billed by {mode!r} but {credential} is not set; add it "
-            "to .secrets (the job scripts export every key there)."
-        )
+    needed = CLAUDE_AUTH_CREDENTIAL.values() if mode == CLAUDE_AUTH_FALLBACK else [CLAUDE_AUTH_CREDENTIAL[mode]]
+    for credential in needed:
+        if not env.get(credential):
+            raise RuntimeError(
+                f"Claude agents are billed by {mode!r} but {credential} is not set; add it "
+                "to .secrets (the job scripts export every key there)."
+            )
     env[CLAUDE_AUTH_ENV] = mode
     return mode
 
@@ -222,7 +236,7 @@ def claude_login_environment(env: Dict[str, str], mode: str | None) -> None:
     ANTHROPIC_API_KEY and no OAuth token. Raises when the mode is missing or
     its credential is not in ``env``.
     """
-    mode = _claude_auth_mode(mode)
+    mode = effective_claude_auth(_claude_auth_mode(mode))
     credential = CLAUDE_AUTH_CREDENTIAL[mode]
     if not env.get(credential):
         raise RuntimeError(

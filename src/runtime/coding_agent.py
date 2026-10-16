@@ -64,6 +64,9 @@ from src.runtime import token_usage
 from src.runtime.agent_sandbox import (
     AGENT_COMPILE_SLOTS_ENV,
     CLAUDE_AUTH_ENV,
+    CLAUDE_AUTH_FALLBACK,
+    ON_API_KEY,
+    effective_claude_auth,
     HOME_NAME,
     claimed_compile_dir,
     remove_private_home,
@@ -794,7 +797,7 @@ def run_coding_agent(
 
     stdin_text = prompt if prompt_via_stdin(backend, prompt) else None
     # How a Claude agent is billed (agent_sandbox.require_claude_auth), for the record.
-    claude_auth = child_env.get(CLAUDE_AUTH_ENV) if backend == "claude" else None
+    claude_mode = child_env.get(CLAUDE_AUTH_ENV) if backend == "claude" else None
     own_dirs = (
         [*writable_dirs, log_path.parent] if sandbox and wait_out_usage_limits else []
     )
@@ -825,6 +828,23 @@ def run_coding_agent(
             )
             if limit is None and login_failure is None:
                 break
+            claude_auth = effective_claude_auth(claude_mode)
+            if login_failure is None and claude_mode == CLAUDE_AUTH_FALLBACK and claude_auth == "subscription":
+                # subscription_then_api: from this limit on, the run's agents
+                # use the API key, this one again at once.
+                token_usage.record_usage(
+                    source=usage_label, backend=backend, model=model, **usage,
+                    claude_auth=claude_auth, usage_limit=limit.message, usage_limit_wait_sec=0.0,
+                )
+                if sandbox:
+                    remove_private_home(log_path.parent)
+                snapshot.restore()
+                ON_API_KEY.set()
+                if on_summary:
+                    on_summary(f"  [USAGE LIMIT] {usage_label}: subscription limit ({limit.message!r}); "
+                               "this run's Claude agents now use the API key")
+                run_cmd, run_env = launch(compile_dir)
+                continue
             delay = 0.0
             if login_failure is None:
                 delay = seconds_until_retry(
@@ -842,7 +862,7 @@ def run_coding_agent(
                 backend=backend,
                 model=model,
                 **usage,
-                claude_auth=claude_auth,
+                claude_auth=effective_claude_auth(claude_mode),
                 usage_limit=login_failure or limit.message,
                 usage_limit_wait_sec=0.0 if give_up else delay,
             )
@@ -872,7 +892,7 @@ def run_coding_agent(
         backend=backend,
         model=model,
         **usage,
-        claude_auth=claude_auth,
+        claude_auth=effective_claude_auth(claude_mode),
     )
     if usage.get("usage_missing") and on_summary:
         on_summary(

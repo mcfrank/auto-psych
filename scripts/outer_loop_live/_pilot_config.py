@@ -34,7 +34,7 @@ from src.pipelines.outer_loop.deployment.prolific import (  # noqa: E402
 
 PROLIFIC_SERVICE_FEE = 0.33  # ~33%; verify the current rate in your Prolific account
 VALID_CODING_AGENTS = {"opencode", "claude"}
-VALID_CLAUDE_AUTH = {"subscription", "api"}
+VALID_CLAUDE_AUTH = {"subscription", "api", "subscription_then_api"}
 VALID_PROLIFIC_MODES = {"test", "live", "none"}
 
 

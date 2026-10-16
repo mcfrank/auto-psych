@@ -90,7 +90,9 @@ is_retry=""
 [[ -n "${AGENT_BACKEND:-}" ]] && export AGENT_BACKEND
 [[ -n "${AGENT_MODEL:-}"   ]] && export AGENT_MODEL
 # How claude agents are billed: CLAUDE_AUTH=subscription (CLAUDE_CODE_OAUTH_TOKEN)
-# or CLAUDE_AUTH=api (ANTHROPIC_API_KEY), passed to --claude-auth. No default:
+# or CLAUDE_AUTH=api (ANTHROPIC_API_KEY), or CLAUDE_AUTH=subscription_then_api
+# (both: the API key from the first subscription limit on), passed to
+# --claude-auth. No default:
 # with AGENT_BACKEND=claude a sweep that does not say is refused here, before
 # anything is queued (and again by the harness, before any agent starts).
 [[ -n "${CLAUDE_AUTH:-}" ]] && export CLAUDE_AUTH
