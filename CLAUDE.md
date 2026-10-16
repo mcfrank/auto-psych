@@ -509,6 +509,18 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   experiment 1 pruned: `_seed_file_dir`), not from the registry, so a run
   is re-scored with the seeds it ran with.
 
+### The number game (branch `number-game`)
+
+Project `projects/number_game/`, task spec `src/tasks/number_game.py`; three
+seeds (Tenenbaum 2000 and two ports of Bigelow's numpyro models, checked by
+`tests/test_number_game_seed_port.py`); the dataset (`data/number-game/`,
+gitignored) is read by `src/number_game/`, kept out of agent trees. Recovery:
+`scripts/number_game/configs/holdout_recovery.yaml`, submitted with
+`scripts/number_game/slurm/submit_recovery.sh`; `data_source: dataset` draws
+experiments from the dataset instead of a ground truth (`src/number_game/dataset.py`).
+General settings these runs introduced: `fit.method: warm_start_nuts`,
+`inner_loop.selection` (grouped CV; no PSIS-LOO then), `hide_participant_id`.
+
 ### Inspecting results
 
 - `src/viewer/` — Flask + static SPA explorer over finished runs on disk
@@ -520,6 +532,8 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
 
 ## Cluster & live runs
 
+- **SC cluster:** `CLUSTER=coco` runs the Slurm scripts on `cocoflops1`
+  (see `scripts/subjective_randomness/slurm/README.md`).
 - Holdout sweeps resume their own failed cells: after each array a retry job
   (`holdout_retry.sbatch`, via `cell_status.py`) resubmits timeouts, crashes
   and out-of-memory tasks (the latter with `--mem=128G` on their array only)
