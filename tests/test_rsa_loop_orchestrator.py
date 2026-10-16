@@ -18,8 +18,11 @@ SEEDS = PROJECT_ASSETS_DIR / "rsa_reference" / "seed_models"
 
 
 def write(cdir, source, hypothesis, name=None):
+    """The round goes into the hypothesis: a later round's agent restating an
+    earlier round's hypothesis word for word is rejected as a copy before its
+    code is tried (`RSALoop._same_hypothesis`)."""
     (cdir / "candidate.py").write_text(source)
-    (cdir / "hypothesis.md").write_text(hypothesis)
+    (cdir / "hypothesis.md").write_text(f"{hypothesis} (as proposed in {cdir.parent.name}.)")
     if name:
         (cdir / "model_name.txt").write_text(name + "\n")
 
