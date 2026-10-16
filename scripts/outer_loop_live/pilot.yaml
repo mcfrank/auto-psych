@@ -32,7 +32,7 @@ prolific_mode: test                # test = deploy, then create a DRAFT study (N
 firebase_project: auto-psych-2c5da
 walltime: "1-00:00:00"             # Slurm walltime D-HH:MM:SS. A live experiment can wait up to 3h
                                    # for recruiting, plus its model stage; budget ~N_experiments x that.
-qos: ""                            # "" normal (<=2 days) | "long" for up to 7 days
+qos: ""                            # leave empty: mcfrank allows up to 7 days ("long" is not on this account)
 
 # --- the Prolific study (defines who is recruited and what they're paid) ---
 # Rendered to projects/<project>/prolific_config.yaml on launch.

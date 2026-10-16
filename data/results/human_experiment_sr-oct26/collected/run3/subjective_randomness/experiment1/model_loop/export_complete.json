@@ -1,0 +1,13 @@
+{
+  "models": [
+    "mismatch_noise_paired_comparison",
+    "bayesian_chance_vs_repeating_motif",
+    "bayesian_chance_vs_repeating_motif_2",
+    "gist_tail_probability_test",
+    "length_normalised_chance_vs_motif",
+    "mismatch_noise_repeating_motif",
+    "bayesian_chance_vs_motif_beta_trick_coin",
+    "hot_hand_only_suspicion"
+  ],
+  "ledger_sha256": "e30ec794a2289b2b7ddadc675c8a5121ff6560c481afd2c130157a3adfa74581"
+}

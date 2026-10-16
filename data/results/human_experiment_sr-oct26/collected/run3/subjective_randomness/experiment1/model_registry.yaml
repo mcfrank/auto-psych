@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  bayesian_chance_vs_motif_beta_trick_coin: 0.125
+  bayesian_chance_vs_repeating_motif: 0.125
+  bayesian_chance_vs_repeating_motif_2: 0.125
+  gist_tail_probability_test: 0.125
+  hot_hand_only_suspicion: 0.125
+  length_normalised_chance_vs_motif: 0.125
+  mismatch_noise_paired_comparison: 0.125
+  mismatch_noise_repeating_motif: 0.125

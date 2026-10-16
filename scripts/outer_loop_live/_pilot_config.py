@@ -104,6 +104,13 @@ def main() -> None:
     firebase_project = str(cfg.get("firebase_project") or "")
     walltime = str(cfg.get("walltime") or "1-00:00:00")
     qos = str(cfg.get("qos") or "")
+    if qos == "long":
+        die(
+            "`qos: long` is not available on this Sherlock account (\"Invalid qos "
+            "specification\", 2026-10-07). For more than 48 h submit to the lab's "
+            "partition, which allows up to 7 days: the job scripts default to "
+            "`--partition=mcfrank`; leave `qos` empty."
+        )
 
     pro = cfg.get("prolific") or {}
     if not isinstance(pro, dict):

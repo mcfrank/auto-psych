@@ -21,9 +21,9 @@ prolific_mode: live                # REAL recruiting + payment
 
 # --- where / how it runs (Slurm + Firebase) --------------------------------
 firebase_project: auto-psych-2c5da
-walltime: "1-23:00:00"             # 47h — under the 2-day normal-QoS cap, so NO --qos=long needed
+walltime: "1-23:00:00"             # 47h; the mcfrank partition allows up to 7 days
                                    # (the run only needs ~12-15h; this is generous headroom).
-qos: ""                            # "" = default normal QoS
+qos: ""                            # leave empty ("long" is not on this account)
 
 # --- the Prolific study (per experiment) -----------------------------------
 prolific:

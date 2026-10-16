@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=outer_live
-#SBATCH --partition=normal
+#SBATCH --partition=mcfrank
 #SBATCH --time=1-00:00:00
 #SBATCH --cpus-per-task=16        # as the recovery cells: four 4-chain fits at once
 #SBATCH --mem=128GB               # inner-loop MCMC over many models on pooled
@@ -19,8 +19,8 @@
 # inner model loop.
 #
 # No GPU: the coding agents are remote, participants are real humans, and only
-# the inner-loop MCMC runs locally (CPU). For sequences longer than ~2 days add
-# `--qos=long` (up to 7 days) when submitting.
+# the inner-loop MCMC runs locally (CPU). The mcfrank partition (the lab's
+# owner node) allows up to 7 days; --qos=long is not on this account.
 #
 # MUST run from a PER-RUN copy of the repo (RUN_WORKTREE): the coding agents —
 # opencode especially — keep per-project state and must not share a working dir

@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=outer_live_setup
-#SBATCH --partition=normal
+#SBATCH --partition=mcfrank
 #SBATCH --time=00:40:00
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16GB

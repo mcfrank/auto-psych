@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=impossible_holdout_recovery
-#SBATCH --partition=normal
+#SBATCH --partition=mcfrank
 #SBATCH --time=1-00:00:00
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64GB

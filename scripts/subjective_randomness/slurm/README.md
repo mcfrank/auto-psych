@@ -83,7 +83,8 @@ WORK_ROOT=$SCRATCH/auto-psych/tr_run2 \
 ```
 
 Watch: `squeue --me`. A full 3-model repeat takes hours; the array requests
-1 day on `normal` (raise `--time` / add `--qos=long` for up to 7 days if needed).
+1 day on the lab's `mcfrank` partition (raise `--time`, up to 7 days, if needed;
+`--qos=long` is not on this account).
 
 ## Output
 

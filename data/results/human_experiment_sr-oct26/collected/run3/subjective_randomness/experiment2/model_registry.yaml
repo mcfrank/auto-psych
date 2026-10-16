@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  chance_face_bias_motif_suspicion: 0.125
+  face_bias_motif_side_habit: 0.125
+  face_biased_second_order_motif: 0.125
+  face_specific_streak_chance_coin: 0.125
+  gamblers_run_second_order_side_habit: 0.125
+  heads_rigged_second_order_side_habit: 0.125
+  second_order_chance_motif_suspicion: 0.125
+  second_order_motif_side_habit: 0.125

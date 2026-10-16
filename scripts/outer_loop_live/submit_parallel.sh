@@ -33,12 +33,14 @@ export N_PARTICIPANTS="${N_PARTICIPANTS:-1}"
 export FIREBASE_PROJECT="${FIREBASE_PROJECT:-auto-psych-2c5da}"
 export CODING_AGENT="${CODING_AGENT:-opencode}"
 
-# Optional Slurm overrides (else use run_live.sbatch's directives). For a long
-# multi-experiment live run: WALLTIME=2-00:00:00 QOS=long.
+# Optional Slurm overrides (else use run_live.sbatch's directives). A long
+# multi-experiment live run needs no QOS: run_live.sbatch's mcfrank partition
+# allows up to 7 days (QOS=long is not on this account).
 WALLTIME="${WALLTIME:-}"
 QOS="${QOS:-}"
 EXTRA_SBATCH=()
 [[ -n "$WALLTIME" ]] && EXTRA_SBATCH+=(--time="$WALLTIME")
+[[ "$QOS" == long ]] && { echo "ERROR: QOS=long is not on this account; the mcfrank partition allows up to 7 days" >&2; exit 1; }
 [[ -n "$QOS" ]] && EXTRA_SBATCH+=(--qos="$QOS")
 
 LOGDIR="$WORK_ROOT/slurm_logs"; mkdir -p "$LOGDIR"

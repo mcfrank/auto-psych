@@ -69,11 +69,22 @@ fi
 export UV_PYTHON="${UV_PYTHON:-3.12}"
 
 # --- caches off $HOME ------------------------------------------------------
-# Per-run venv under $WORK_ROOT (not a shared dir): a single shared venv couples
-# independent runs — one run's `uv pip install` can corrupt the packages another
-# run is importing. One venv per WORK_ROOT keeps them isolated. It's all wheels,
-# so rebuilding is ~25s; override UV_PROJECT_ENVIRONMENT to reuse one elsewhere.
+# Per-run venv (not a shared dir): a single shared venv couples independent
+# runs — one run's `uv pip install` can corrupt the packages another run is
+# importing. One venv per WORK_ROOT keeps them isolated. It's all wheels, so
+# rebuilding is ~25s; override UV_PROJECT_ENVIRONMENT to reuse one elsewhere.
+# Sherlock's rule puts Python environments in $GROUP_HOME, not on $SCRATCH:
+# $GROUP_HOME/venvs/auto-psych_<WORK_ROOT's name> when GROUP_HOME is set.
+if [[ -z "${UV_PROJECT_ENVIRONMENT:-}" && -n "${GROUP_HOME:-}" ]]; then
+  export UV_PROJECT_ENVIRONMENT="$GROUP_HOME/venvs/auto-psych_$(basename "$WORK_ROOT")"
+fi
 export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-$WORK_ROOT/venv}"
+# uv's standalone Python looks for /etc/ssl/cert.pem, which el7 lacks: every
+# HTTPS fetch failed with CERTIFICATE_VERIFY_FAILED (RSA Sherlock run 1).
+# Verification stays on; only the bundle's path is given.
+if [[ -z "${SSL_CERT_FILE:-}" && -f /etc/pki/tls/certs/ca-bundle.crt ]]; then
+  export SSL_CERT_FILE=/etc/pki/tls/certs/ca-bundle.crt
+fi
 # Jobs run the venv's interpreter directly (the env is built with `uv pip`, not
 # `uv sync`, so there's no project lock for `uv run` to reconcile).
 export VENV_PY="$UV_PROJECT_ENVIRONMENT/bin/python"

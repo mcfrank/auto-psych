@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=holdout_retry
-#SBATCH --partition=normal
+#SBATCH --partition=mcfrank
 #SBATCH --time=00:15:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=2GB
