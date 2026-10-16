@@ -85,9 +85,12 @@ half of the design.
 2. Run `STAGE=eliminate sbatch scripts/rsa/slurm/consolidate.sbatch`.
    - Work root: `$SCRATCH/auto-psych/rsa_consolidate`.
    - It copies `rsa_prereg/pool/{pooled.csv,.fit_cache}` once.
-   - 32 cores, 7-day limit. A resubmit resumes: every model's CV is saved.
-   - **Expected size:** each round scores up to 14 models × 5 folds. Rounds stop early once a
-     removal is costly, so perhaps 10–25 h in all.
+   - 24 cores (all of the mcfrank node), 7-day limit. A resubmit resumes: every model's CV is
+     saved. Each stage stages its own copy of the code (`code_<stage>/`; fix 393f3f2c).
+   - **Expected size:** greedy backward elimination, not all subsets. Round 1 scores 14 models
+     × 5 folds (70 fits), each later round one model fewer, and it stops at the first costly
+     removal (at most 455 fits). About 20 fits run at once, so roughly 13–33 h in all.
+   - Submitted as job 48051947 (2026-10-16).
 3. Run `STAGE=score sbatch scripts/rsa/slurm/consolidate.sbatch`.
    - It fits and scores the lean model and the comparison models on the pre-registered data
      (`rsa_prereg/cells/prereg/run/experiment1/data/modelled.csv`).
