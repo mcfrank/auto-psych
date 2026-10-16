@@ -3,8 +3,7 @@
 # instead of participants: 280 designed cells x 9 of each cell's real responses
 # (~2,500 responses, as the subjective-randomness and RSA live experiments),
 # none reused. No ground truth: the loop starts from every seed. Submit with
-#   CONFIG=scripts/number_game/configs/dataset_run.yaml GT_MODELS=dataset \
-#     bash scripts/number_game/slurm/submit_recovery.sh
+#   bash scripts/number_game/slurm/submit_dataset_run.sh
 project_id: number_game
 seed_models_dir: src/pipelines/outer_loop/projects/number_game/seed_models
 data_source: dataset
