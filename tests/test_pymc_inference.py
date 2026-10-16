@@ -550,3 +550,25 @@ def test_disk_cache_hits_rerun_sampling_diagnostics(tmp_path, monkeypatch):
 
     assert fitted.idata is idata
     assert checked == [("m", idata)]
+
+
+def test_in_process_cache_hits_repeat_the_warning_without_recomputing_it(tmp_path, monkeypatch, capsys):
+    # R-hat over a trace with a per-trial deterministic takes seconds, and a
+    # round's scoring looks every fit up dozens of times.
+    models_dir = tmp_path / "models"
+    models_dir.mkdir()
+    (models_dir / "m.py").write_text("# model\n", encoding="utf-8")
+    responses = tmp_path / "responses.csv"
+    responses.write_text("chose_left\n1\n", encoding="utf-8")
+    stats = _FakeSampleStats({"diverging": _FakeDataArray(np.zeros(10))})
+    cached = pi.FittedModel(name="m", model=object(), idata=_FakeIdata(stats), fingerprint="fp")
+    pi._FIT_CACHE[pi._cache_key("m", models_dir, responses, {})] = cached
+    computed = []
+    monkeypatch.setattr(pi, "_max_rhat", lambda idata: computed.append(idata) or 1.05)
+
+    for _ in range(3):
+        assert pi.fit_models_cached(["m"], models_dir, responses) == {"m": cached}
+
+    assert len(computed) == 1
+    assert capsys.readouterr().err.count("max R-hat=1.050") == 3
+    pi.clear_fit_cache()
