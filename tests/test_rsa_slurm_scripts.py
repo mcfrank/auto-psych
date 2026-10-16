@@ -663,3 +663,11 @@ def test_the_prereg_preparation_reuses_the_finals_pooled_data_and_fits():
     # each stage stages into its own code root, not the live job's $WORK_ROOT/harness_repo
     # (_env.sh exports HARNESS_REPO / AGENT_SRC, which stage_code.sh keeps when set)
     assert 'HARNESS_REPO="$CODE_ROOT/harness_repo" AGENT_SRC="$CODE_ROOT/agent_src"' in text
+
+
+def test_the_consolidation_job_reads_the_preregistered_data_only_when_scoring():
+    text = (SLURM / "consolidate.sbatch").read_text()
+    assert "src.rsa.consolidate.eliminate --data \"$POOL/pooled.csv\"" in text
+    eliminate_block = text.split("eliminate)")[1].split(";;")[0]
+    assert "modelled.csv" not in eliminate_block and "TEST" not in eliminate_block
+    assert "--reference c0" in text and 'WORK_ROOT="$CODE_ROOT" bash' in text
