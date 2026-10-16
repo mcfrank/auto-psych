@@ -66,10 +66,11 @@ OFF = {
     "lambda_sim": 0.0, "w_binding": 0.0, "logit_p_attend": 0.0, "w_load": 0.0,
 }
 NO_WORD = -1e30  # a speaker's log weight for a word false of the object
-# Normalisations divide by max(sum, TINY), never sum + EPS: with a peaked prior a word true only
-# of improbable objects has a joint of ~1e-9, and + 1e-10 left its listener row summing to 0.9
-# (found 2026-10-16 by the memo twin, which normalises exactly).
-TINY = 1e-30
+# The listener normalises in log space. As joint / (sum + 1e-10), a word true only of improbable
+# objects (a joint of ~1e-9 under a peaked prior) left its row summing to 0.9; found 2026-10-16 by
+# the memo twin, which normalises exactly. Floored as max(sum, 1e-30), the gradient was NaN on a
+# row the speaker never uses (1e-30 squared is 0 in float32).
+BIND_FLOOR = 1e-15  # below this prior mass on its targets, binding is off (a safe division)
 
 
 def make(mechanisms):
@@ -137,12 +138,13 @@ def _choice(p, ctx, on):
     x = (fc - lo) / jnp.maximum(span, 1.0)
     extremity = jnp.where(span > 0, 1.0 - 4.0 * x * (1.0 - x), 0.0)
     surprisal = jnp.sum(real * -jnp.log(jnp.mean(real, axis=1, keepdims=True) + 1e-4), axis=0)
-    prior = softmax_prior(
+    log_prior = jax.nn.log_softmax(
         -q["w_dup"] * jnp.log(copies)
         + q["w_features"] * fc + q["w_extreme"] * extremity
         + q["w_empty"] * (fc == 0)
         + q["w_surprisal"] * surprisal
     )
+    prior = jnp.exp(log_prior)
 
     # The literal listener; with confusion, similar objects share a word's mass.
     sim = jnp.exp(-q["lambda_sim"] * total)
@@ -154,27 +156,31 @@ def _choice(p, ctx, on):
     alpha = q["alpha"] / (1.0 + q["w_competition"] * (jnp.maximum(fc, 1.0) - 1.0))
     sparsest = jnp.min(jnp.where(lex > 0, fc[None, :], 999.0), axis=1, keepdims=True)
     aspect_util = -jnp.log(1.0 + jnp.maximum(fc[None, :] - sparsest, 0.0))
-    aspect = jax.nn.softmax(jnp.where(lex > 0, alpha[None, :] * aspect_util, NO_WORD), axis=0)
+    log_aspect = jax.nn.log_softmax(jnp.where(lex > 0, alpha[None, :] * aspect_util, NO_WORD), axis=0)
 
-    def speaker(utility):
-        ident = jax.nn.softmax(jnp.where(lex > 0, alt[:, None] + alpha[None, :] * (utility - cost), NO_WORD), axis=0)
-        return (1.0 - q["p_aspect"]) * ident + q["p_aspect"] * aspect
+    # Speaker and listener in log space: exact normalisation with finite gradients
+    # (a ratio joint / sum lost mass under a peaked prior, and floored, NaN'd its gradient).
+    def log_speaker(utility):
+        ident = jax.nn.log_softmax(jnp.where(lex > 0, alt[:, None] + alpha[None, :] * (utility - cost), NO_WORD), axis=0)
+        if "aspect" not in on:
+            return ident
+        return jnp.logaddexp(jnp.log1p(-q["p_aspect"]) + ident, jnp.log(q["p_aspect"]) + log_aspect)
 
-    def listener(s):
-        joint = prior[None, :] * s
-        return joint / jnp.maximum(jnp.sum(joint, axis=1, keepdims=True), TINY)
+    def listener(log_s):
+        return jnp.exp(jax.nn.log_softmax(log_prior[None, :] + log_s, axis=1))
 
-    heard_all = listener(speaker(jnp.log(l0 + EPS)))
+    heard_all = listener(log_speaker(jnp.log(l0 + EPS)))
     if "depth2" in on:
-        heard_all = listener(speaker(jnp.log(heard_all + EPS)))
+        heard_all = listener(log_speaker(jnp.log(heard_all + EPS)))
     heard = heard_all[ctx.utterance]
 
     # Illusory binding onto objects the word is false of (chain 2).
     false_of = (1.0 - sink[ctx.utterance]) * (1.0 - lex[ctx.utterance])
     bind = false_of * (fc / jnp.maximum(hi, 1.0)) * prior
     bind_total = jnp.sum(bind)
-    w_bind = q["w_binding"] * (bind_total > 0)
-    heard = (1.0 - w_bind) * heard + w_bind * bind / jnp.maximum(bind_total, TINY)
+    binds = bind_total > BIND_FLOOR  # binding needs targets with some prior mass
+    w_bind = q["w_binding"] * binds
+    heard = (1.0 - w_bind) * heard + w_bind * bind / jnp.where(binds, bind_total, 1.0)
 
     # Inattention growing with display size, captured by the prior over matching objects (chain 0).
     if "attention" in on:

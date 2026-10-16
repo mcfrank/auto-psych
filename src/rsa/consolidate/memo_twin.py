@@ -76,8 +76,9 @@ def _choice(p, ctx, on):  # superset.py's, with the memo speaker and listener
     false_of = (1.0 - sink[ctx.utterance]) * (1.0 - lex[ctx.utterance])
     bind = false_of * (fc / jnp.maximum(hi, 1.0)) * prior
     bind_total = jnp.sum(bind)
-    w_bind = q["w_binding"] * (bind_total > 0)
-    heard = (1.0 - w_bind) * heard + w_bind * bind / jnp.maximum(bind_total, TINY)
+    binds = bind_total > BIND_FLOOR
+    w_bind = q["w_binding"] * binds
+    heard = (1.0 - w_bind) * heard + w_bind * bind / jnp.where(binds, bind_total, 1.0)
 
     if "attention" in on:
         attend = jax.nn.sigmoid(q["logit_p_attend"] - q["w_load"] * (n_obj - 2.0))

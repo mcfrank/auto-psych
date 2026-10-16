@@ -177,3 +177,20 @@ def test_the_memo_twin_gives_the_jax_superset_s_probabilities(mechanisms, sample
         for shape, g in sample.items():
             a, b = np.asarray(jax_model.group_probs(draw, g)), np.asarray(memo_model.group_probs(draw, g))
             assert np.abs(a - b).max() < 1e-4, (shape, {k: float(v) for k, v in draw.items()})
+
+
+def test_the_full_model_has_finite_gradients_across_the_pool_including_a_peaked_prior(tmp_path):
+    """What NUTS needs. A floor of max(sum, 1e-30) once made the gradient NaN on a listener
+    row the speaker never uses (1e-30 squared is 0 in float32): the contract caught it."""
+    import jax
+
+    name, path = write_variant(MECHANISMS, tmp_path)
+    model = RSAModel(path, name=name)
+    groups = group_by_shape(plain_pool())
+    check_contract(model, groups, n_draws=12, seed=3)
+    _, fn = make(MECHANISMS)
+    for shape, g in groups.items():
+        def loss(p):
+            return jnp.sum(jnp.log(jax.vmap(lambda c: fn(p, c))(g.arrays) + 1e-12))
+        grads = jax.grad(loss)({k: jnp.asarray(v) for k, v in EXTREME.items()})
+        assert all(np.isfinite(np.asarray(v)).all() for v in grads.values()), shape

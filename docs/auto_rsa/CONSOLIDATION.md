@@ -51,10 +51,19 @@ predictions, and its fit can be reused as is.
 **A bug the memo twin found (fixed 2026-10-16, before any result).** The JAX listener normalised
 with `joint / (sum + 1e-10)`. Under a peaked prior, a word true only of improbable objects has a
 joint around 1e-9, so that listener row summed to about 0.9 instead of 1: off by 0.0033 at one
-prior draw. memo normalises exactly. Both twins now divide by `max(sum, 1e-30)`, and a test checks
-that probabilities sum to 1 under a peaked prior. The first elimination job (48051947) ran the
-unfixed code, so it is cancelled and restarted from scratch on the fix (§4). No result of it was
-read.
+prior draw. memo normalises exactly.
+- **A first fix, `max(sum, 1e-30)` (6c4dd826), is unusable:** on a listener row the speaker never
+  uses, its gradient is NaN, because 1e-30 squared is 0 in float32. The model contract caught it.
+- **The fix:** the speaker and listener are computed in log space (log-softmax), which normalises
+  exactly with finite gradients. Binding divides safely and applies only when its targets carry
+  some prior mass (> 1e-15).
+- **Tests:**
+  - probabilities sum to 1 under a peaked prior;
+  - the twins agree;
+  - the full model's gradients are finite over the whole pool at 12 prior draws and the
+    peaked draw.
+- **The restart:** the first elimination job (48051947) ran the unfixed code, so it is cancelled
+  and restarted from scratch (§4). No result of it was read.
 
 ## 2. The rule (fixed 2026-10-16, before any fit)
 
