@@ -40,6 +40,7 @@ FINALS = {"c0": "boundary_avoidable_ambiguity_listener", "c1": "feature_surprisa
 BEST_PROMOTED = "promoted:rsa_l2_singleton_distinct_feat_color_l0"
 BEST_STARTING = "seed:rsa_l1_shared_prior"
 DATASET_COLORS = {"literature": BLUE, "campaign": ORANGE, "prereg": AQUA}
+ROW_LABELS = {"literature": "published", "campaign": "campaign", "prereg": "pre-registered"}
 DATASET_LABELS = {"literature": "published studies", "campaign": "campaign (9 live experiments)",
                   "prereg": "pre-registered experiment"}
 
@@ -362,6 +363,45 @@ def fig_model_vs_data(out: Path, panels_path: Path) -> Path:
     return save(fig, out, "fig5_model_vs_data")
 
 
+def fig_model_vs_data_by_dataset(out: Path, panels_path: Path) -> Optional[Path]:
+    """Figure 5 split into one row per dataset (needs the Sherlock export)."""
+    if not panels_path.exists():
+        return None
+    data = json.loads(panels_path.read_text())
+    models = [("c0", "chain 0's final"), ("promoted", "best promoted seed"), ("starting", "best starting model")]
+    datasets = ["literature", "campaign", "prereg"]
+    fig, axes = plt.subplots(3, 3, figsize=(10, 10.4), sharex=True, sharey=True)
+    for row, d in enumerate(datasets):
+        panels = [p for p in data["panels"] if (p["dataset"].startswith("campaign") and d == "campaign")
+                  or p["dataset"] == d]
+        for col, (label, title) in enumerate(models):
+            ax = axes[row, col]
+            ax.plot([0, 1], [0, 1], color=INK2, lw=1, ls=(0, (4, 3)), zorder=1)
+            pts = [(c["preds"][label], c["count"] / p["n"], p["n"]) for p in panels for c in p["classes"] if p["n"] > 0]
+            x, y, n = (np.asarray(v) for v in zip(*pts))
+            ax.scatter(x, y, s=3 + 1.4 * np.sqrt(n), color=DATASET_COLORS[d], alpha=0.55, lw=0.4, edgecolor=SURFACE,
+                       zorder=2)
+            r = np.corrcoef(x, y)[0, 1]
+            rmse = np.sqrt(np.average((x - y) ** 2, weights=n))
+            head = f"{ROW_LABELS[d]}, {len(panels)} displays\n" if col == 0 else ""
+            ax.text(0.03, 0.97, f"{head}r = {r:.3f}\nRMSE = {rmse:.3f}", transform=ax.transAxes, va="top",
+                    fontsize=8.5, color=INK)
+            ax.set_xlim(-0.02, 1.02)
+            ax.set_ylim(-0.02, 1.02)
+            ax.set_aspect("equal")
+            if row == 0:
+                ax.set_title(title, fontsize=10)
+            if row == 2:
+                ax.set_xlabel("predicted probability")
+            if col == 0:
+                ax.set_ylabel("observed proportion")
+    fig.suptitle("Model vs data, one row per dataset", x=0.01, ha="left", fontsize=12, fontweight="bold")
+    fig.text(0.01, 0.945, "models fitted to the published and campaign data; the pre-registered row is "
+             "out of sample", fontsize=8.5, color=INK2)
+    fig.tight_layout(rect=(0, 0, 1, 0.95))
+    return save(fig, out, "fig5b_model_vs_data_by_dataset")
+
+
 # ---------------------------------------------------------------- figure 6: consolidation
 
 def fig_consolidation(out: Path) -> Path:
@@ -440,7 +480,8 @@ def main(args: Args) -> List[Path]:
     style()
     args.out.mkdir(parents=True, exist_ok=True)
     return [fig_existing_data(args.out), fig_trajectories(args.out), fig_prospective(args.out),
-            fig_prereg_ranking(args.out), fig_model_vs_data(args.out, args.panels), fig_consolidation(args.out)]
+            fig_prereg_ranking(args.out), fig_model_vs_data(args.out, args.panels),
+            *filter(None, [fig_model_vs_data_by_dataset(args.out, args.panels)]), fig_consolidation(args.out)]
 
 
 if __name__ == "__main__":

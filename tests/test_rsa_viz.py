@@ -59,3 +59,16 @@ def test_interim_panels_hold_no_prereg_data_and_valid_probabilities():
         assert sum(c["count"] for c in p["classes"]) == p["n"]
         for label in ("c0", "promoted", "starting"):
             assert abs(sum(c["preds"][label] for c in p["classes"]) - 1) < 1e-4
+
+
+def test_the_full_scatter_and_its_per_dataset_version_come_from_the_export(tmp_path):
+    from src.rsa.viz import figures
+
+    panels = figures.here() / "data/rsa/viz/panels.json"
+    figures.style()
+    assert figures.fig_model_vs_data_by_dataset(tmp_path, panels).exists()
+    data = json.loads(panels.read_text())
+    assert {p["dataset"] for p in data["panels"]} == {"literature", "prereg", "campaign c0", "campaign c1",
+                                                      "campaign c2"}
+    assert sum(p["n"] for p in data["panels"] if p["dataset"] == "prereg") == 14404
+    assert "participant" not in panels.read_text()
