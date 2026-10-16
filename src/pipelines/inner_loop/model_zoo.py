@@ -605,8 +605,10 @@ def _drop_unscorable_cv_models(
     entries = _manifest_entries(models_dir)
     names = [entry["name"] for entry in entries]
     _, _, fold_paths = fold_training_files(responses_path, selection)
-    # The folds are fitted concurrently, each with its share of the CPUs.
-    workers = max(1, default_fit_workers(
+    # The folds are fitted concurrently, each with its share of the CPUs,
+    # rounded up: 6 fits' worth over 4 folds is 2 each (8 at once, a third
+    # over the allocation), not 1 each (fold by fold within each fold).
+    workers = -(-default_fit_workers(
         allocated_cpus(), [_fit_cpus(resolve_fit_settings(n, models_dir, fit_kwargs)) for n in names]
     ) // len(fold_paths))
 
