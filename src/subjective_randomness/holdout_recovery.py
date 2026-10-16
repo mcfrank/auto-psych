@@ -59,6 +59,7 @@ from src.runtime.agent_sandbox import require_claude_auth
 from src.runtime.coding_agent import select_backend
 from src.runtime.config import REPO_ROOT
 from src.runtime.token_usage import start_usage_log, write_usage_report
+from src.number_game.dataset import DatasetCollection
 from src.model_comparison.cv import LOO, Selection
 from src.subjective_randomness.config import resolve_path
 from src.tasks import task_for_project
@@ -170,6 +171,7 @@ def run_holdout_experiments(
     n_critique_proposals: int = CRITIQUE_N_PROPOSALS,
     selection: Selection = LOO,
     hide_participant_id: bool = False,
+    dataset: Optional[DatasetCollection] = None,
 ) -> List[Path]:
     """Run the full agentic pipeline for ``n_experiments`` with a held-out GT.
 
@@ -260,6 +262,13 @@ def run_holdout_experiments(
         # Design: the SAME programmatic exhaustive EIG selection as the live
         # pipeline (no design agent). Experiments >= 2 design from the posterior
         # after all data so far (registry weights over the carried models).
+        # A dataset run's design may pick only the cells with n_participants
+        # responses left after the earlier experiments' draws.
+        drawn = (
+            DatasetCollection.drawn([run_root / f"experiment{k}" / "data" / "responses.csv" for k in range(1, exp_num)])
+            if dataset is not None
+            else None
+        )
         if not (resume and _stage_done("2_design", exp_dir)):
             run_design_programmatic(
                 exp_dir,
@@ -272,6 +281,7 @@ def run_holdout_experiments(
                 seed=derive_seed(seed, gt_model, exp_num, "design"),
                 # The loop's fit method (fit.method); the design's own draws.
                 fit_method=fit_kwargs.get("method"),
+                pool=dataset.available(task.design_pool(), drawn) if dataset is not None else None,
             )
             _require_valid("2_design", exp_dir)
 
@@ -279,7 +289,7 @@ def run_holdout_experiments(
         # seed of its own per cell and experiment (repeated stimuli get fresh draws).
         if not (resume and _stage_done("4_collect", exp_dir)):
             stimuli = task.load_stimuli(exp_dir / "design" / "stimuli.json")
-            rows = generate_responses(
+            rows = dataset.draw(stimuli, drawn) if dataset is not None else generate_responses(
                 gt_model,
                 gt_models_dir,
                 stimuli,
@@ -454,7 +464,17 @@ def run_holdout_recovery_from_config(
         Path(gt_models_dir) if gt_models_dir is not None else seed_models_dir
     )
 
-    if gt_params_by_model_override is not None:
+    # data_source: dataset (number game) collects every experiment from the
+    # dataset in place of a ground truth: one cell per run, named "dataset",
+    # starting from every seed, with nothing scored against a ground truth.
+    data_source = config.get("data_source", "simulation")
+    if data_source not in ("simulation", "dataset"):
+        raise ValueError(f"data_source must be simulation or dataset, not {data_source!r}")
+    if data_source == "dataset":
+        if config.get("gt_models"):
+            raise ValueError("A dataset run has no ground truth: drop gt_models from the config.")
+        gt_params_by_model = {DATASET: {}}
+    elif gt_params_by_model_override is not None:
         gt_params_by_model = {
             name: dict(params) for name, params in gt_params_by_model_override.items()
         }
@@ -583,6 +603,8 @@ def run_holdout_recovery_from_config(
             n_critique_proposals=n_critique_proposals,
             selection=selection,
             hide_participant_id=hide_participant_id,
+            # Responses per designed cell are the run's n_participants.
+            dataset=DatasetCollection(n_participants, seed) if data_source == "dataset" else None,
             fit_kwargs=fit_kwargs,
             eval_pool=eval_pool,
             seed=seed,
@@ -604,6 +626,39 @@ def run_holdout_recovery_from_config(
         return result
     finally:
         write_usage_report(results_root, usage_marker, heading="holdout recovery")
+
+
+DATASET = "dataset"  # a dataset run's single cell, in place of a ground truth's name
+
+
+def _dataset_run_record(run_root: Path, exp_dirs: Sequence[Path], record_path: Path) -> Dict[str, Any]:
+    """What a dataset run concluded: per inner-loop step, its best model (and
+    whether that changed and is a discovered model), and each experiment's
+    exported set. No ground truth, so no recovery metric."""
+    steps = []
+    for exp_num, exp_dir in enumerate(exp_dirs, start=1):
+        history = json.loads((exp_dir / "model_loop" / "history.json").read_text(encoding="utf-8"))
+        for entry in history:
+            steps.append({
+                "experiment": exp_num, "step": entry["step"], "global_step": len(steps),
+                "best_model": entry["best_model"],
+            })
+    starting = starting_models_of_run(run_root)
+    trajectory = annotate_incumbents(steps, starting)
+    record = {
+        "gt_model": DATASET,
+        "run_root": str(run_root),
+        "trajectory": trajectory,
+        "incumbent": summarise_incumbents(trajectory, starting),
+        "starting_models_prunable": starting_models_prunable(run_root),
+        "experiments": [
+            {"experiment": exp_num, "manifest_models": _manifest_model_names(exp_dir)}
+            for exp_num, exp_dir in enumerate(exp_dirs, start=1)
+        ],
+    }
+    record_path.parent.mkdir(parents=True, exist_ok=True)
+    record_path.write_text(json.dumps(record, indent=2), encoding="utf-8")
+    return record
 
 
 def _one_condition(gt_runs: Iterable[Mapping[str, Any]]) -> bool:
@@ -646,6 +701,7 @@ def _run_holdout_recovery_resolved(
     n_critique_proposals: int,
     selection: Selection,
     hide_participant_id: bool,
+    dataset: Optional[DatasetCollection],
     fit_kwargs: Dict[str, Any],
     eval_pool: Dict[str, Any],
     seed: int,
@@ -723,7 +779,11 @@ def _run_holdout_recovery_resolved(
             n_critique_proposals=n_critique_proposals,
             selection=selection,
             hide_participant_id=hide_participant_id,
+            dataset=dataset,
         )
+        if dataset is not None:
+            gt_runs.append(_dataset_run_record(run_root, exp_dirs, trajectory_path))
+            continue
 
         eval_info = build_eval_stimuli(
             run_root,
@@ -847,6 +907,7 @@ def _run_holdout_recovery_resolved(
 
     return {
         "project_id": project_id,
+        "data_source": "dataset" if dataset is not None else "simulation",
         "seed_models_dir": str(seed_models_dir),
         "n_experiments": n_experiments,
         "n_participants": n_participants,
