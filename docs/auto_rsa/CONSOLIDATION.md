@@ -139,3 +139,49 @@ half of the design.
    - `score.json`.
 
    These are sums only; no trial data.
+
+## 5. Result (2026-10-17)
+
+**The elimination** (`data/rsa/consolidate/eliminate/elimination.json`): 7 rounds, run as Slurm
+arrays on mcfrank and owners. In order, it dropped `avoidable`, `depth2`, `richness`,
+`confusion`, `empty` and `attention`, and stopped at the cheapest removal still costing more than
+2 SE (`competition`, 51.2 nats, 2.6 SE).
+
+**The lean model:** `cons_dup_sur_red_asp_int_comp_bind`. Seven mechanisms, 9 parameters:
+- `dup`, `surprisal` (the prior);
+- `redundancy`, `aspect`, `interior`, `competition` (the speaker);
+- `binding` (noise).
+
+It is depth 1. Depth 2 and the U-shaped richness prior were dropped as no better than free.
+
+**The prospective score** (`data/rsa/consolidate/score.json`): every model fitted on the pooled
+data, scored on the pre-registered experiment's 14,404 trials, against chain 0's final.
+
+| model | parameters | lpd | vs chain 0's final | EIG half | random half |
+|---|---|---|---|---|---|
+| chain 0's final | 17 | −9,950.3 | — | — | — |
+| **lean** | **9** | **−10,031.4** | **−81.1 ± 27.2 (z −3.0)** | −64.0 | −17.1 |
+| full superset (unconverged: R-hat 1.74; not interpretable) | 16 | −10,050.9 | −100.6 ± 27.7 | −80.5 | −20.1 |
+| chain 2's final | 13 | −10,087.6 | −137.3 ± 32.6 | −113.4 | −23.9 |
+| chain 1's final | 9 | −10,142.3 | −192.1 ± 36.9 | −116.9 | −75.2 |
+| best promoted seed | 6 | −10,148.9 | −198.6 ± 35.2 | −142.7 | −55.9 |
+
+**By §3's stated reading, the lean model falls short:** it is 3.0 SE worse than chain 0's final.
+- **It ranks second of the six.** It beats chains 1 and 2's finals and the best promoted seed
+  with as few parameters as any of them.
+- **The shortfall is mostly on the EIG half** (−64.0), the displays chosen to separate the finals
+  from the bar. On the random half it is within noise (−17.1).
+- So something in chain 0's final that the superset lacks, or dropped, matters on exactly the
+  discriminating displays.
+
+**Caveats:**
+- **Round 1's baseline did not converge** (the full superset). §2's rule requires the one-off
+  candidate to converge, not the current model, so the first drop (`avoidable`, 1.87 SE) was
+  costed against an unconverged fit. The rule was followed as written; this is a gap in it.
+- **Two drops were close to the threshold:** `avoidable` (1.87 SE) and `attention` (1.92 SE). The
+  latter is chain 0's display-size inattention, simplified.
+- **Left out of the superset from the start** (§1): chain 0's typicality, solitary-foil outlier,
+  pop-out and candidate-load attention, and inhibition leak.
+- **The pre-registered data are now spent for this exercise.** Any revision of the superset or the
+  rule is chosen after seeing them, so it must be judged on the pooled CV or on new data, never on
+  these 14,404 trials again.
