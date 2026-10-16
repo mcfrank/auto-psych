@@ -52,6 +52,32 @@ Active development is organized around two explicit loops:
   `cognitive_models/`, and the next experiment's design uses a uniform model
   prior over it.
 
+## The RSA reference-game domain (`src/rsa/`)
+
+A second domain, built on branch `auto-rsa`: the same loop applied to
+rational-speech-act models of how people interpret a word in a reference game
+(the pragmods paradigm). Agents write models in
+[memo](https://github.com/kach/memo), which are fitted with numpyro, and they
+select by grouped cross-validation. The campaign ran three chains of three live
+experiments (1,799 people) and then a pre-registered test of the three final
+models on new people (1,225 recruited, 1,108 kept; [OSF s48jv](https://osf.io/s48jv), tag
+`rsa-prereg-final`). Two of the three finals beat the strongest model the
+campaign started from.
+
+- **Start at [`docs/auto_rsa/CAMPAIGN_LOG.md`](docs/auto_rsa/CAMPAIGN_LOG.md)**:
+  every decision, how the domain differs from the loop above (§3), and every
+  run with its result.
+- **Results:** [`PREREG_RESULT_REPORT.md`](docs/auto_rsa/PREREG_RESULT_REPORT.md),
+  [`CONSOLIDATION.md`](docs/auto_rsa/CONSOLIDATION.md), the figures in
+  [`docs/auto_rsa/figures/`](docs/auto_rsa/figures/README.md); run records in
+  [`data/rsa/`](data/rsa/README.md).
+- **Entry points** (each a `tyro` CLI, `--help` lists the knobs):
+  `python -m src.rsa.loop.run` (inner loop), `python -m src.rsa.outer.run`
+  (design → collect → loop, per experiment), `python -m src.rsa.prereg.analysis`
+  (the registered analysis), `python -m src.rsa.viz.figures` (the campaign
+  figures). Cluster jobs are in `scripts/rsa/slurm/` and live launchers in
+  `scripts/rsa/live/`, double-gated like the main pipeline's.
+
 ## Setup
 
 ```bash
@@ -367,6 +393,8 @@ src/
     project/                 # ground_truth.py
   subjective_randomness/     # research library: model families, recovery harnesses, stimulus pair pools
                              # (pymc_model_families/ = the frozen recovery registry — see its README)
+  rsa/                       # RSA reference games (memo + numpyro): loop/ outer/ design/ experiment/ live/
+                             # prereg/ consolidate/ viz/ ingest/ — see docs/auto_rsa/CAMPAIGN_LOG.md
   runtime/
     coding_agent.py          # backend-agnostic Claude Code / opencode subprocess launcher
     config.py console.py observability.py prolific.py

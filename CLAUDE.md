@@ -4,22 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-An automated cognitive-science discovery pipeline. Coding agents conjecture PyMC
-models of human judgment (currently *subjective randomness*), design maximally
-informative experiments, run them on real (Prolific + Firebase) or simulated
-participants, and let Bayesian model comparison decide which hypothesis survives.
-`README.md` is the authoritative user-facing guide; this file captures the
-architecture and workflow facts that require reading multiple files.
+An automated cognitive-science discovery pipeline. Coding agents conjecture
+models of human judgment, design maximally informative experiments, run them on
+real (Prolific + Firebase) or simulated participants, and let Bayesian model
+comparison decide which hypothesis survives. Two domains: *subjective
+randomness* (PyMC models; everything below until **RSA reference games**) and
+*RSA reference games* (memo models fitted with numpyro, `src/rsa/`; that
+section). `README.md` is the authoritative user-facing guide; this file captures
+the architecture and workflow facts that require reading multiple files.
 
 ## Environment & commands
 
-`uv` drives everything. The default sync installs the `dev` **and** `pymc`
-groups (see `pyproject.toml` `default-groups`) — the test suite and inner loop
-need the PyMC stack, so a plain `uv sync` is enough; `open-models` (torch/
-transformers) is heavy and opt-in.
+`uv` drives everything. The default sync installs the `dev`, `pymc` **and**
+`rsa` groups (see `pyproject.toml` `default-groups`) — the test suite and inner
+loop need the PyMC stack, and the RSA domain needs memo/JAX/numpyro, so a plain
+`uv sync` is enough; `open-models` (torch/transformers) is heavy and opt-in.
 
 ```bash
-uv sync                      # dev + pymc (everything the tests need)
+uv sync                      # dev + pymc + rsa (everything the tests need)
 uv run pytest -q             # full suite incl. real-MCMC tests (~2 min)
 uv run pytest -q -m "not slow"          # fast suite (~30 s), skips NUTS sampling
 uv run pytest tests/test_eig_selection.py::test_name   # single test
@@ -27,15 +29,21 @@ uv run pytest tests/test_eig_selection.py::test_name   # single test
 ./scripts/test_fast          # wrapper: fast suite (run after each change)
 ```
 
-- The `slow` marker means "runs PyMC NUTS". Deselect it for fast iteration.
+- The `slow` marker means "runs NUTS" (PyMC, or numpyro for the RSA models).
+  Deselect it for fast iteration.
 - CI (`.github/workflows/tests.yml`) runs `uv sync --locked`, then
   `tests/test_python_sources_compile.py` (byte-compiles every `.py`), then the
   fast suite. There is **no committed linter/formatter config** (the `.ruff_cache`
   is from ad-hoc runs); match surrounding style.
-- **Do not move off Python 3.11** (`.python-version`). 3.12+ resolves arviz 1.x /
-  pymc 6.x, whose API rename breaks the model-comparison code. The numpy/scipy/
-  pandas version caps in `pyproject.toml` exist so wheels resolve on Sherlock's
-  glibc 2.17 nodes — don't drop them unless you only target glibc ≥ 2.28.
+- **Python 3.12** (`.python-version`; the Sherlock jobs already ran 3.12 via
+  `UV_PYTHON`). memo, the RSA models' language, requires ≥ 3.12. **Keep the
+  `arviz<1` / `pymc<6` caps** in `pyproject.toml`: without them 3.12 resolves
+  arviz 1.x / pymc 6.x, whose API rename breaks the model-comparison code. The
+  `rsa` group's `python_version >= '3.12'` markers keep a 3.11 environment
+  resolvable. jax/jaxlib are pinned to 0.7.0 (the last manylinux2014 wheels)
+  and numpyro to 0.19.0, and the numpy/scipy/pandas caps exist, so wheels
+  resolve on Sherlock's glibc 2.17 nodes — don't move them unless you only
+  target glibc ≥ 2.28.
 
 ## Conventions (from the user's global instructions — they apply here)
 
@@ -547,6 +555,61 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
 - `src/monitor/` — live dashboard for an in-progress human study (Firestore +
   Prolific), discovered from `deployment_manifest.json` files. Its first job is
   catching degenerate data (participants answering one side every trial).
+
+## RSA reference games — `src/rsa/` (developed on branch `auto-rsa`)
+
+The same discovery idea applied to rational-speech-act models of reference
+games (Frank & Goodman, 2012; the pragmods paradigm). It is a **parallel
+stack**, not a project plugged into the outer loop above: the loop, design,
+collection and scoring are RSA-specific modules that reuse the shared runtime
+(`src/runtime/` agent launcher and sandbox, Prolific, the Firebase functions,
+`src/critique/ppc.py`). **Start at `docs/auto_rsa/CAMPAIGN_LOG.md`**: every
+decision with its reason, how it differs from main (§3), and every run in order.
+`docs/auto_rsa/LOOP_ALGORITHM.md` spells out the live loop step by step.
+
+- **Models** are self-contained memo files (`src/rsa/model_file.py`: `PARAMS`
+  of numpyro priors and `choice_probs(params, ctx)` for one display), fitted
+  with numpyro NUTS (`src/rsa/fit.py`; the likelihood is the harness's, a
+  Categorical over classes of identical objects, evaluated once per distinct
+  display). Fits are cached like main's (model file, data file, settings).
+- **Data**: the canonical trial schema and every coding decision are in
+  `src/pipelines/outer_loop/projects/rsa_reference/data/README.md`; licences
+  in `docs/auto_rsa/DATASETS.md`. CC-BY sources and pragmods are committed
+  there; sources without a licence are fetched by `src.rsa.ingest` into the
+  gitignored `data/rsa/external/`, with only their pin files committed. Never
+  commit trial-level data from an unlicensed or NC-ND source (aggregates are
+  fine).
+- **Inner loop** (`src/rsa/loop/`): candidate agents write memo files under
+  the import gate's RSA allowlist and with **no network**
+  (`src/rsa/loop/no_network.py`); selection is by **grouped cross-validation**
+  (whole displays/conditions per fold), not ELPD-LOO; a loop stops after 2
+  stale rounds. `python -m src.rsa.loop.check_candidate` is the agents'
+  self-check.
+- **Outer loop** (`src/rsa/outer/`, `src/rsa/design/`, `src/rsa/live/`,
+  `src/rsa/experiment/`): EIG design over the carried models and the "bar"
+  (starting + promoted seeds), with display-type quotas, on a 1,597-display
+  plain pool (`src.rsa.loop.novelty.plain_pool`); a jsPsych page; live
+  collection; carry-forward of at most 8 distinct models; a committed model
+  scored prospectively on the next experiment (claim 2).
+- **The pre-registered final experiment** (`src/rsa/prereg/`,
+  `docs/auto_rsa/PREREG_FINAL.md`, OSF https://osf.io/s48jv, git tag
+  `rsa-prereg-final`): frozen pool predictions, a fixed analysis script, and
+  hash checks at launch. **Never change the frozen files**
+  (`data/rsa/prereg/design/`, `data/rsa/live/finals_pool_preds_final.json`,
+  `data/rsa/live/bar_pool_preds.json`, `src/rsa/prereg/analysis.py`); their
+  sha256s are on OSF. Its data are spent: nothing chosen after seeing them may
+  be judged on them again (`docs/auto_rsa/CONSOLIDATION.md` §5).
+- **Post-hoc** (`src/rsa/consolidate/`: a superset model, backward elimination,
+  memo twin; `src/rsa/viz/`: the campaign figures in `docs/auto_rsa/figures/`).
+- **`data/rsa/`** holds the runs' records, brought back from Sherlock:
+  aggregates, model files, agent transcripts, never Prolific participant ids
+  or trial-level live data (`data/rsa/README.md`). Run directories named
+  `private/` there hold only scores (`prospective.json`, `recovery.json`) and
+  configs, not the cluster's private files.
+- **Cluster**: `scripts/rsa/slurm/` (each job stages its code once and records
+  `code_commit`), `scripts/rsa/live/` (live launchers, double-gated like
+  main's). Cloud sessions drive the work through handoff docs
+  (`docs/auto_rsa/HANDOFF_*.md`) that a local session runs on Sherlock.
 
 ## Cluster & live runs
 
