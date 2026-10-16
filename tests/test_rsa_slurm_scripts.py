@@ -670,4 +670,7 @@ def test_the_consolidation_job_reads_the_preregistered_data_only_when_scoring():
     assert "src.rsa.consolidate.eliminate --data \"$POOL/pooled.csv\"" in text
     eliminate_block = text.split("eliminate)")[1].split(";;")[0]
     assert "modelled.csv" not in eliminate_block and "TEST" not in eliminate_block
-    assert "--reference c0" in text and 'WORK_ROOT="$CODE_ROOT" bash' in text
+    assert "--reference c0" in text
+    # each stage stages into its own code root (_env.sh exports HARNESS_REPO / AGENT_SRC)
+    assert 'WORK_ROOT="$CODE_ROOT" HARNESS_REPO="$CODE_ROOT/harness_repo" AGENT_SRC="$CODE_ROOT/agent_src"' in text
+    assert "--cpus-per-task=24" in text  # the mcfrank node's cores

@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=rsa_consolidate
 #SBATCH --partition=mcfrank
-#SBATCH --cpus-per-task=32
+#SBATCH --cpus-per-task=24      # the mcfrank node has 24 cores (CPUTot=24); 32 can never be scheduled there
 #SBATCH --mem=128GB
 #SBATCH --time=7-00:00:00
 #SBATCH --output=%x_%j.out
@@ -28,7 +28,10 @@ STAGE="${STAGE:?set STAGE=eliminate or score}"
 mkdir -p "$WORK_ROOT"
 CODE_ROOT="$WORK_ROOT/code_$STAGE"
 mkdir -p "$CODE_ROOT"
-WORK_ROOT="$CODE_ROOT" bash "$REPO/scripts/rsa/slurm/stage_code.sh"
+# _env.sh exported HARNESS_REPO and AGENT_SRC under the consolidation root, and stage_code.sh
+# keeps them when set: name the stage's own (as prereg_prepare.sbatch, 88fa9360).
+WORK_ROOT="$CODE_ROOT" HARNESS_REPO="$CODE_ROOT/harness_repo" AGENT_SRC="$CODE_ROOT/agent_src" \
+  bash "$REPO/scripts/rsa/slurm/stage_code.sh"
 POOL="$WORK_ROOT/pool"
 if [[ ! -f "$POOL/pooled.csv" ]]; then
   mkdir -p "$POOL.tmp"
