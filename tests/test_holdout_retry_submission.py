@@ -495,3 +495,12 @@ def test_the_retry_job_needs_to_be_told_which_sweep_it_retries(tmp_path):
         timeout=60,
     )
     assert result.returncode != 0 and "RETRY_SUBMIT_SCRIPT" in result.stderr
+
+
+def test_a_dataset_run_chains_no_test_retest_analysis(tmp_path):
+    # The analysis summarises ground-truth recovery; a dataset run has none.
+    result = _run_submit(tmp_path, script="../../number_game/slurm/submit_dataset_run.sh", USER="me")
+    assert result.returncode == 0, result.stderr
+    calls = _submissions(tmp_path / "sbatch_calls")
+    assert len(_by_script(calls, "holdout_recovery_array.sbatch")) == 1
+    assert _by_script(calls, "holdout_analysis.sbatch") == []

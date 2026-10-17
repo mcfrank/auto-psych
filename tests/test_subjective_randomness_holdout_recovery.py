@@ -2417,7 +2417,7 @@ def test_holdout_cli_forwards_novelty_threshold_as_an_inner_loop_override(
 
     def fake_run(config, config_path, results_root, **kwargs):
         captured.update(kwargs)
-        return {"gt_runs": []}
+        return {"data_source": "simulation", "gt_runs": []}
 
     monkeypatch.setattr(mod, "run_holdout_recovery_from_config", fake_run)
     monkeypatch.setattr(mod, "load_config", lambda path: {})
@@ -3034,7 +3034,7 @@ def test_holdout_cli_forwards_n_critique_proposals_as_an_inner_loop_override(
 
     def fake_run(config, config_path, results_root, **kwargs):
         captured.update(kwargs)
-        return {"gt_runs": []}
+        return {"data_source": "simulation", "gt_runs": []}
 
     monkeypatch.setattr(mod, "run_holdout_recovery_from_config", fake_run)
     monkeypatch.setattr(mod, "load_config", lambda path: {})

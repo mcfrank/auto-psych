@@ -88,3 +88,27 @@ def test_a_dataset_run_collects_real_responses_once_and_records_the_loops_conclu
     assert [row["experiment"] for row in run["trajectory"]][:1] == [1]
     assert {row["best_model"] for row in run["trajectory"]} <= set(SEEDS) | {"weighted_rules"}
     assert "incumbent" in run
+
+
+def test_the_cli_summarises_a_dataset_run_by_its_best_models(tmp_path, monkeypatch, capsys):
+    # The CLI's summary used to read a ground truth's recovery metrics
+    # (leakage, pearson_r), which a dataset run has none of.
+    import importlib.util
+    import sys
+
+    path = REPO_ROOT / "scripts" / "subjective_randomness" / "holdout_recovery.py"
+    spec = importlib.util.spec_from_file_location("_holdout_recovery_cli", path)
+    cli = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = cli
+    spec.loader.exec_module(cli)
+    trajectory = [{"experiment": 1, "step": 0, "best_model": "a"}, {"experiment": 1, "step": 1, "best_model": "b"}]
+    result = {"data_source": "dataset", "gt_runs": [{"gt_model": "dataset", "trajectory": trajectory}]}
+    monkeypatch.setattr(cli, "load_config", lambda path: {})
+    monkeypatch.setattr(cli, "run_holdout_recovery_from_config", lambda *a, **k: result)
+
+    out = tmp_path / "holdout.json"
+    cli.main(cli.Args(config=tmp_path / "c.yaml", out=out, tidy_csv=tmp_path / "h.csv", figure=tmp_path / "h.png"))
+
+    assert json.loads(out.read_text()) == result
+    assert "dataset: 2 steps, final best model b" in capsys.readouterr().out
+    assert not (tmp_path / "h.csv").exists() and not (tmp_path / "h.png").exists()

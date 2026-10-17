@@ -154,10 +154,13 @@ fi
 # afterany: summarise once every task has finished, regardless of per-task
 # success — the analysis uses whatever repeats produced a tidy CSV (agent runs
 # are flaky over many hours). Use afterok to instead require all tasks to pass.
-analysis_id=$(sbatch --parsable "${CLUSTER_FLAGS[@]}" --dependency=afterany:"$array_id" --export=ALL \
-  --output="$LOGDIR/%x_%j.out" --error="$LOGDIR/%x_%j.out" \
-  holdout_analysis.sbatch)
-echo "submitted analysis job: $analysis_id"
+# TEST_RETEST_ANALYSIS=0 skips it (a dataset run has no recovery to summarise).
+if [[ "${TEST_RETEST_ANALYSIS:-1}" == 1 ]]; then
+  analysis_id=$(sbatch --parsable "${CLUSTER_FLAGS[@]}" --dependency=afterany:"$array_id" --export=ALL \
+    --output="$LOGDIR/%x_%j.out" --error="$LOGDIR/%x_%j.out" \
+    holdout_analysis.sbatch)
+  echo "submitted analysis job: $analysis_id"
+fi
 
 echo
 echo "watch with:  squeue --me"
