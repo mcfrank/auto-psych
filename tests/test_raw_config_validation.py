@@ -13,12 +13,12 @@ from pathlib import Path
 import pytest
 import yaml
 
-from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 
 
 # ─── helpers ───
 
-_RAW_ROW = {c: "0" for c in RAW_RESPONSE_COLUMNS}
+_RAW_ROW = {c: "0" for c in SUBJECTIVE_RANDOMNESS.raw_columns}
 
 # A model that reads a precomputed column the raw CSV does not carry.
 _FEATURIZED_MODEL_CODE = """\
@@ -88,7 +88,7 @@ def test_featurized_model_in_raw_pool_raises_naming_model_and_columns(tmp_path):
     _write_model_dir(pool, {"bad_model": _FEATURIZED_MODEL_CODE})
 
     with pytest.raises(ValueError, match="bad_model") as exc_info:
-        validate_raw_pool_models(pool)
+        validate_raw_pool_models(pool, task=SUBJECTIVE_RANDOMNESS)
     assert "n_a" in str(exc_info.value)
 
 
@@ -99,7 +99,7 @@ def test_raw_model_with_compute_features_passes(tmp_path):
 
     pool = tmp_path / "pool"
     _write_model_dir(pool, {"good_model": _RAW_MODEL_CODE})
-    validate_raw_pool_models(pool)
+    validate_raw_pool_models(pool, task=SUBJECTIVE_RANDOMNESS)
 
 
 def test_raw_model_with_prepare_observed_passes(tmp_path):
@@ -109,7 +109,7 @@ def test_raw_model_with_prepare_observed_passes(tmp_path):
 
     pool = tmp_path / "pool"
     _write_model_dir(pool, {"good_model": _RAW_PREP_MODEL_CODE})
-    validate_raw_pool_models(pool)
+    validate_raw_pool_models(pool, task=SUBJECTIVE_RANDOMNESS)
 
 
 def test_actual_seed_dirs_pass():
@@ -130,8 +130,8 @@ def test_actual_seed_dirs_pass():
         / "seed_models"
     )
 
-    validate_raw_pool_models(registry)
-    validate_raw_pool_models(pool)
+    validate_raw_pool_models(registry, task=SUBJECTIVE_RANDOMNESS)
+    validate_raw_pool_models(pool, task=SUBJECTIVE_RANDOMNESS)
 
 
 def test_pool_validation_catches_featurized_model(tmp_path):
@@ -144,4 +144,4 @@ def test_pool_validation_catches_featurized_model(tmp_path):
     _write_model_dir(pool, {"featurized_model": _FEATURIZED_MODEL_CODE})
 
     with pytest.raises(ValueError, match="featurized_model"):
-        validate_raw_pool_models(pool)
+        validate_raw_pool_models(pool, task=SUBJECTIVE_RANDOMNESS)

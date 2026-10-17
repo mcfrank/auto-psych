@@ -416,3 +416,70 @@ def test_claude_limit_is_read_only_from_the_start_of_the_result_text():
         detect_usage_limit(coding_agent._cli_messages("claude", Stream(), events))
         is None
     )
+
+
+def test_a_sandboxed_agent_compiles_in_a_claimed_cell_dir(tmp_path, monkeypatch, agent):
+    """With the cell's pool set (AUTO_PSYCH_AGENT_COMPILE_SLOTS, by the job
+    script), the agent is handed a claimed dir under it, held while it runs."""
+    from src.runtime.agent_sandbox import AGENT_COMPILE_SLOTS_ENV
+
+    root = tmp_path / "agent_pytensor"
+    monkeypatch.setenv(AGENT_COMPILE_SLOTS_ENV, str(root))
+    given = []
+
+    def fake_sandbox_command(cmd, *, agent_dir, env, compile_dir=None, **kwargs):
+        given.append(compile_dir)
+        (agent_dir / "scratch").mkdir(exist_ok=True)
+        return [sys.executable, str(agent["stub"]), str(agent["calls"]), str(agent_dir), "0", "opencode", ""], dict(env)
+
+    monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
+    coding_agent.run_coding_agent(
+        "p", cwd=tmp_path, log_path=agent["dir"] / "agent.jsonl", backend="opencode",
+        allowed_dirs=[agent["dir"]], writable_dirs=[agent["dir"]], sandbox=True,
+        on_summary=None, timeout_secs=60, usage_label="inner:candidate",
+    )
+    assert given == [root / "slot-0"]
+
+
+@pytest.fixture
+def fallback_mode(monkeypatch):
+    """A run billed subscription_then_api, with both credentials, starting on the subscription."""
+    from src.runtime import agent_sandbox
+
+    monkeypatch.setenv("CLAUDE_AUTH", "subscription_then_api")
+    monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "oat")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "key")
+    monkeypatch.setattr(agent_sandbox, "_api_key_until", 0.0)
+
+
+def test_the_fallback_switches_to_the_api_key_at_the_first_limit_without_waiting(
+    tmp_path, monkeypatch, agent, fallback_mode
+):
+    """subscription_then_api: the first subscription limit moves the run's agents
+    onto the API key until the limit's stated reset, and this one runs again at
+    once instead of waiting."""
+    import time
+
+    from src.runtime import agent_sandbox
+    from src.runtime.agent_sandbox import effective_claude_auth
+
+    success, _ = run_stub(
+        tmp_path, monkeypatch, agent, backend="claude", n_limited=1, message=claude_limit_message(hours_ahead=3)
+    )
+    assert success and int(agent["calls"].read_text()) == 2
+    assert agent["waits"] == []
+    assert [r.claude_auth for r in token_usage.records_since(0)] == ["subscription", "api"]
+    assert effective_claude_auth("subscription_then_api") == "api"  # later agents too
+    assert agent_sandbox._api_key_until == pytest.approx(time.time() + 3 * 3600, abs=600)
+    monkeypatch.setattr(agent_sandbox, "_api_key_until", time.time() - 1)  # the reset passed
+    assert effective_claude_auth("subscription_then_api") == "subscription"
+
+
+def test_a_limit_on_the_api_key_is_waited_out_as_before(tmp_path, monkeypatch, agent, fallback_mode):
+    from src.runtime import agent_sandbox
+
+    agent_sandbox.use_api_key_for(3600)
+    success, _ = run_stub(
+        tmp_path, monkeypatch, agent, backend="claude", n_limited=1, message=claude_limit_message(hours_ahead=1)
+    )
+    assert success and len(agent["waits"]) == 1

@@ -1,7 +1,9 @@
 """Response generation and data preparation for holdout recovery.
 
 Helpers that generate ground-truth responses from seed models with fixed
-parameters, strip identity columns, and validate raw-column contracts.
+parameters, strip identity columns, and validate raw-column contracts. What
+is task-specific (the columns, the prediction's name, how a participant is
+simulated) comes from the project's ``TaskSpec`` (``src.tasks``).
 These are the data-preparation building blocks consumed by the experiment
 orchestrator and trajectory evaluator.
 """
@@ -16,7 +18,7 @@ import numpy as np
 from src.models.model_manifest import read_manifest_names
 from src.models.data_binding import make_stim_data
 from src.models.model_loading import load_pymc_model
-from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS
+from src.tasks import TaskSpec
 
 PROJECT_ID = "subjective_randomness"
 
@@ -110,7 +112,7 @@ def resolve_generating_params(
 
 
 def _raw_eval_rows(
-    stimuli: Sequence[Mapping[str, str]],
+    stimuli: Sequence[Mapping[str, Any]], task: TaskSpec
 ) -> List[Dict[str, Any]]:
     """Build raw stimulus rows for evaluation (no featurization).
 
@@ -119,14 +121,7 @@ def _raw_eval_rows(
     """
     if not stimuli:
         raise ValueError("No stimuli provided.")
-    return [
-        {
-            "sequence_a": stim["sequence_a"],
-            "sequence_b": stim["sequence_b"],
-            "chose_left": 0,
-        }
-        for stim in stimuli
-    ]
+    return task.stimulus_rows(stimuli)
 
 
 def _require_exact_params(model: Any, params: Mapping[str, float]) -> None:
@@ -145,12 +140,14 @@ def _require_exact_params(model: Any, params: Mapping[str, float]) -> None:
 def p_left_fixed_params(
     model_name: str,
     models_dir: Path,
-    stimuli: Sequence[Mapping[str, str]],
-    params: Mapping[str, float],
+    stimuli: Sequence[Mapping[str, Any]],
+    params: Mapping[str, Any],
     *,
+    task: TaskSpec,
     seed: int = 0,
 ) -> np.ndarray:
-    """Deterministic ``p_left`` per stimulus for a seed model with fixed params.
+    """Deterministic prediction (the task's ``prediction_var``, ``p_left`` for
+    the coin-flip task) per stimulus for a seed model with fixed params.
 
     Uses raw stimulus rows; the model computes its own features through its
     ``compute_features`` or ``prepare_observed`` hook.
@@ -159,71 +156,50 @@ def p_left_fixed_params(
 
     model = load_pymc_model(model_name, models_dir)
     _require_exact_params(model, params)
-    rows = _raw_eval_rows(stimuli)
+    rows = _raw_eval_rows(stimuli, task)
     stim_data = make_stim_data(model, rows)
 
     with model:
         pm.set_data(stim_data)
-    fixed = pm.do(model, dict(params))
+    fixed = pm.do(model, {name: np.asarray(value) for name, value in params.items()})
     with fixed:
         prior = pm.sample_prior_predictive(
-            draws=1, var_names=["p_left"], random_seed=seed
+            draws=1, var_names=[task.prediction_var], random_seed=seed
         )
-    return np.asarray(prior.prior["p_left"].values).reshape(-1)
+    return np.asarray(prior.prior[task.prediction_var].values).reshape(-1)
 
 
 def generate_responses(
     model_name: str,
     models_dir: Path,
-    stimuli: Sequence[Mapping[str, str]],
-    params: Mapping[str, float],
+    stimuli: Sequence[Mapping[str, Any]],
+    params: Mapping[str, Any],
     n_participants: int,
     *,
+    task: TaskSpec,
     seed: int = 0,
     participant_id_offset: int,
 ) -> List[Dict[str, Any]]:
     """Generate synthetic responses from a seed model with fixed parameters.
 
-    Left/right is counterbalanced as in the human experiments: each
-    participant sees each pair in a random order (a fair coin per trial), the
-    row records the pair as displayed, and ``chose_left`` is drawn from the
-    model's ``p_left`` for that displayed order. Participant ids run from
+    The task simulates its participants (``TaskSpec.simulate``): for the
+    coin-flip task each sees each pair in a random left/right order, for the
+    number game each answers each (set, target) cell. Participant ids run from
     ``participant_id_offset``, so that ids stay unique when several
     experiments' responses are pooled.
 
-    Returns rows with only raw columns (sequence_a, sequence_b, participant_id,
-    trial_index, chose_left) plus generating_model.
+    Returns rows with only the task's raw columns, plus generating_model.
     """
     if n_participants < 1:
         raise ValueError(f"n_participants must be >= 1, got {n_participants}.")
 
-    swapped_stimuli = [
-        {"sequence_a": s["sequence_b"], "sequence_b": s["sequence_a"]} for s in stimuli
-    ]
-    p_left = p_left_fixed_params(model_name, models_dir, stimuli, params, seed=seed)
-    p_left_swapped = p_left_fixed_params(
-        model_name, models_dir, swapped_stimuli, params, seed=seed
-    )
-    rng = np.random.default_rng(seed)
+    def predict(rows: List[Dict[str, Any]]) -> np.ndarray:
+        return p_left_fixed_params(model_name, models_dir, rows, params, task=task, seed=seed)
 
-    rows: List[Dict[str, Any]] = []
-    for participant in range(n_participants):
-        swap = rng.random(len(stimuli)) < 0.5
-        p_shown = np.where(swap, p_left_swapped, p_left)
-        chose_left = rng.random(len(stimuli)) < p_shown
-        for trial_index, stim in enumerate(stimuli):
-            shown = swapped_stimuli[trial_index] if swap[trial_index] else stim
-            rows.append(
-                {
-                    "sequence_a": shown["sequence_a"],
-                    "sequence_b": shown["sequence_b"],
-                    "participant_id": participant_id_offset + participant,
-                    "trial_index": trial_index,
-                    "chose_left": int(chose_left[trial_index]),
-                    "generating_model": model_name,
-                }
-            )
-    return rows
+    rows = task.simulate(
+        predict, list(stimuli), n_participants, np.random.default_rng(seed), participant_id_offset
+    )
+    return [{**row, GENERATING_MODEL_COLUMN: model_name} for row in rows]
 
 
 def strip_generating_model(
@@ -242,9 +218,9 @@ def strip_generating_model(
 
 
 def strip_to_raw_columns(
-    rows: Sequence[Mapping[str, Any]],
+    rows: Sequence[Mapping[str, Any]], task: TaskSpec
 ) -> List[Dict[str, Any]]:
-    """Copy ``rows`` keeping only :data:`RAW_RESPONSE_COLUMNS`.
+    """Copy ``rows`` keeping only the task's raw columns.
 
     Fails loudly if a row lacks one of them: a raw CSV missing a sequence
     column would leave every model unable to compute anything, and the useful
@@ -252,15 +228,15 @@ def strip_to_raw_columns(
     """
     rows = list(rows)
     if rows:
-        missing = [c for c in RAW_RESPONSE_COLUMNS if c not in rows[0]]
+        missing = [c for c in task.raw_columns if c not in rows[0]]
         if missing:
             raise ValueError(
                 f"generated rows lack raw columns {missing}; got {sorted(rows[0])}"
             )
-    return [{c: row[c] for c in RAW_RESPONSE_COLUMNS} for row in rows]
+    return [{c: row[c] for c in task.raw_columns} for row in rows]
 
 
-def validate_raw_pool_models(pool_dir: Path) -> None:
+def validate_raw_pool_models(pool_dir: Path, task: TaskSpec) -> None:
     """Raise if any model in ``pool_dir`` cannot bind a raw stimulus row.
 
     Every model must compute its own features via ``compute_features`` or
@@ -271,9 +247,7 @@ def validate_raw_pool_models(pool_dir: Path) -> None:
     from src.models.data_binding import MissingStimulusColumns, make_stim_data
     from src.models.model_loading import load_pymc_model
 
-    raw_row = {c: "0" for c in RAW_RESPONSE_COLUMNS}
-    raw_row["sequence_a"] = "HHT"
-    raw_row["sequence_b"] = "THT"
+    raw_row = dict(task.probe_row)
     for name in read_manifest_names(pool_dir):
         try:
             model = load_pymc_model(name, pool_dir)

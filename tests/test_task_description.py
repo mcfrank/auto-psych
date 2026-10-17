@@ -76,14 +76,15 @@ def test_a_missing_task_description_fails_loudly(tmp_path):
 
 
 def test_the_outer_loop_copies_the_projects_task_description(tmp_path):
-    written = write_task_description("subjective_randomness", tmp_path)
+    columns = ["sequence_a", "sequence_b", "participant_id", "trial_index", "chose_left"]
+    written = write_task_description("subjective_randomness", tmp_path, columns)
     assert written == tmp_path / "task_description.md"
     assert "chose_left" in written.read_text(encoding="utf-8")
 
 
 def test_a_project_without_one_fails_loudly(tmp_path):
     with pytest.raises(FileNotFoundError, match="task_description.md"):
-        write_task_description("no_such_project", tmp_path)
+        write_task_description("no_such_project", tmp_path, ["chose_left"])
 
 
 def test_the_shipped_description_names_no_ground_truth_or_mechanism():

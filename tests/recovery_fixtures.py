@@ -26,7 +26,7 @@ class CannedPredictionFit:
 
     model = None
 
-    def predict_p_left(self, stim_data):
+    def predict_p_left(self, stim_data, var_name="p_left"):
         return np.linspace(0.1, 0.9, stim_data["n"])
 
     def loo_diagnostics(self):

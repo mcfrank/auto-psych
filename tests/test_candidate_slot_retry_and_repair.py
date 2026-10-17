@@ -24,6 +24,7 @@ import json
 
 import yaml
 
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
 import src.pipelines.inner_loop.scoring as scoring
@@ -82,7 +83,7 @@ def _patch_scoring(monkeypatch, *, near_duplicate_names=()):
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     # The experiment-start screen samples the whole set in one batch; no MCMC here.
     monkeypatch.setattr(model_zoo, "fit_models_to_cache", lambda names, *a, **k: {})
-    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", lambda *a, **k: -100.0)
     monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: None)
     monkeypatch.setattr(model_zoo, "load_pymc_model", lambda name, models_dir: object())
     monkeypatch.setattr(model_zoo, "_min_prediction_rmse", fake_min_rmse)
@@ -512,10 +513,10 @@ def test_prompt_places_the_attempt_note_before_the_context_documents(tmp_path):
         "critiques": None,
         "attempt_note": "NOTE: this is a repair attempt. Reason: predicts like X.",
     }
-    prompt = _build_candidate_prompt(tmp_path / "candidate_0_repair_1", docs)
+    prompt = _build_candidate_prompt(tmp_path / "candidate_0_repair_1", docs, theory_prompt=SUBJECTIVE_RANDOMNESS.theory_prompt)
     note_at = prompt.index(docs["attempt_note"])
     assert prompt.index("Your working directory for this candidate") < note_at
     assert note_at < prompt.index("## CONTEXT.md")
 
     docs["attempt_note"] = None
-    assert "NOTE:" not in _build_candidate_prompt(tmp_path / "candidate_0", docs)
+    assert "NOTE:" not in _build_candidate_prompt(tmp_path / "candidate_0", docs, theory_prompt=SUBJECTIVE_RANDOMNESS.theory_prompt)

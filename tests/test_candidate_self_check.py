@@ -133,7 +133,7 @@ def test_check_fits_with_the_small_settings_and_no_cache(tmp_path, monkeypatch):
         check_candidate, "model_contract_violation", lambda *a, **k: None
     )
     monkeypatch.setattr(check_candidate, "fit_model", fake_fit_model)
-    monkeypatch.setattr(check_candidate, "log_likelihood", fake_log_likelihood)
+    monkeypatch.setattr(check_candidate, "mean_log_likelihood", fake_log_likelihood)
 
     report = run_candidate_check(
         candidate_dir, PYMC_MODEL_FIXTURES_DIR / "responses.csv"
@@ -147,7 +147,7 @@ def test_check_fits_with_the_small_settings_and_no_cache(tmp_path, monkeypatch):
     assert fit_kwargs["cores"] == 1
     assert fit_kwargs.get("cache_dir") is None
     assert calls["elpd"][2]["draws"] == CANDIDATE_CHECK_DRAWS
-    assert "-12.5" in report and "ELPD-LOO" in report
+    assert "-12.5" in report and "log-likelihood" in report
 
 
 def test_check_reports_a_non_finite_logp(tmp_path, monkeypatch):
@@ -181,8 +181,8 @@ def test_check_reports_a_non_finite_elpd(tmp_path, monkeypatch):
         check_candidate, "model_contract_violation", lambda *a, **k: None
     )
     monkeypatch.setattr(check_candidate, "fit_model", lambda *a, **k: object())
-    monkeypatch.setattr(check_candidate, "log_likelihood", lambda *a, **k: float("nan"))
-    with pytest.raises(CandidateCheckFailed, match="non-finite ELPD-LOO"):
+    monkeypatch.setattr(check_candidate, "mean_log_likelihood", lambda *a, **k: float("nan"))
+    with pytest.raises(CandidateCheckFailed, match="non-finite log-likelihood"):
         run_candidate_check(candidate_dir, PYMC_MODEL_FIXTURES_DIR / "responses.csv")
 
 
@@ -224,4 +224,35 @@ def test_check_passes_a_real_model_end_to_end(tmp_path):
         timeout=600,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "OK" in proc.stdout and "ELPD-LOO" in proc.stdout
+    assert "OK" in proc.stdout and "log-likelihood" in proc.stdout
+
+
+def test_the_check_fits_with_the_runs_fit_method(tmp_path, monkeypatch):
+    """The self-check's smoke fit mirrors admission's: a run fitting with
+    warm-start NUTS documents a command that fits with it too (a model whose
+    Hessian is not positive definite at its mode then fails the check, not
+    only admission). A default run's command is unchanged."""
+    models_dir = _write_models_dir(tmp_path)
+    responses = tmp_path / "responses.csv"
+    responses.write_text("sequence_a,sequence_b,chose_left\nHHT,HTH,1\n", encoding="utf-8")
+    write_task_description_beside(responses)
+    candidate_dir = tmp_path / "iter_0" / "candidate_0"
+    _write_candidate_context(
+        candidate_dir, responses, models_dir, 0, 0, 3, current_posterior=None, fit_method="warm_start_nuts"
+    )
+    command = check_candidate_command(candidate_dir, responses, "warm_start_nuts")
+    assert command in (candidate_dir / "CONTEXT.md").read_text(encoding="utf-8")
+    assert "--method warm_start_nuts" in command
+    assert "--method" not in check_candidate_command(candidate_dir, responses)
+    args = tyro.cli(Args, args=["--candidate-dir", str(candidate_dir), "--responses", str(responses), "--method", "warm_start_nuts"])
+    assert args.method == "warm_start_nuts"
+
+    shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / "bayesian_fair_coin.py", candidate_dir / "candidate.py")
+    calls = {}
+    monkeypatch.setattr(check_candidate, "model_logp_is_finite", lambda *a, **k: (True, ""))
+    monkeypatch.setattr(check_candidate, "model_contract_violation", lambda *a, **k: None)
+    monkeypatch.setattr(check_candidate, "fit_model", lambda *a, **k: calls.setdefault("fit", k))
+    monkeypatch.setattr(check_candidate, "mean_log_likelihood", lambda *a, **k: calls.setdefault("ll", k) and -1.0)
+    run_candidate_check(candidate_dir, PYMC_MODEL_FIXTURES_DIR / "responses.csv", method="warm_start_nuts")
+    assert calls["fit"]["method"] == calls["ll"]["method"] == "warm_start_nuts"
+    assert calls["fit"]["draws"] == CANDIDATE_CHECK_DRAWS

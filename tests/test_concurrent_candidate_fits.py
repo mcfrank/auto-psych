@@ -101,7 +101,7 @@ def test_only_candidates_that_pass_the_cheap_gates_are_fitted(tmp_path, monkeypa
     assert list(models_dir.iterdir()) == []  # the zoo is untouched
 
 
-def test_a_wave_is_prefitted_under_its_admission_names_before_any_admission(
+def test_a_waves_candidates_are_prefitted_under_their_admission_names_before_any_admission(
     tmp_path, monkeypatch
 ):
     _patch_loop_internals(monkeypatch)
@@ -142,9 +142,13 @@ def test_a_wave_is_prefitted_under_its_admission_names_before_any_admission(
         cache_dir=tmp_path / "cache",
     )
 
+    # Each slot is prefitted when its agent finishes (in whatever order they
+    # finish), all before the wave's admissions, which go in slot order.
     predicted = ["same_idea", "iter0_candidate1", "same_idea_2"]
-    assert events[0] == ("prefit", predicted, tmp_path / "cache")
-    assert events[1:] == [("admit", name) for name in predicted]
+    prefits = [e for e in events if e[0] == "prefit"]
+    assert sorted(name for _, names, _ in prefits for name in names) == sorted(predicted)
+    assert all(cache == tmp_path / "cache" for _, _, cache in prefits)
+    assert events[len(prefits):] == [("admit", name) for name in predicted]
 
 
 def test_without_a_fit_cache_there_is_no_prefit(tmp_path, monkeypatch):
@@ -362,3 +366,90 @@ def test_concurrent_and_sequential_admission_give_identical_verdicts(tmp_path):
     assert (
         "even at target_accept 0.95" in verdicts["rep_e"][1]
     )  # a near-miss refit, prefitted
+
+
+def test_a_candidate_is_fitted_as_soon_as_its_agent_finishes(tmp_path, monkeypatch):
+    """A slow agent no longer holds up the others' fits: slot 1's agent waits
+    for slot 0's candidate to be prefitted, which used to come only after
+    every agent of the wave had finished (a deadlock here)."""
+    import threading
+
+    _patch_loop_internals(monkeypatch)
+    slot0_fitted = threading.Event()
+
+    def spawn(candidate_dir, docs, **kwargs):
+        (candidate_dir / "candidate.py").write_text("# candidate\n", encoding="utf-8")
+        (candidate_dir / "hypothesis.md").write_text("People use H.\n", encoding="utf-8")
+        if candidate_dir.name == "candidate_1":
+            assert slot0_fitted.wait(timeout=20), "slot 0 was not prefitted while slot 1 worked"
+        return True
+
+    def fake_prefit(candidates, responses_path, *, cache_dir, fit_kwargs):
+        if any(name == "iter0_candidate0" for _, name in candidates):
+            slot0_fitted.set()
+        return [name for _, name in candidates]
+
+    monkeypatch.setattr(pymc_orchestrator, "_spawn_candidate_agent", spawn)
+    monkeypatch.setattr(pymc_orchestrator, "prefit_candidates", fake_prefit)
+    pymc_orchestrator.run_pymc_inner_loop(
+        responses_path=write_responses(tmp_path),
+        results_dir=tmp_path / "model_loop",
+        seed_models_dir=write_seed_models(tmp_path, ["model_a"]),
+        max_iterations=1,
+        candidate_count=2,
+        enable_critique=False,
+        fit_kwargs={},
+        cache_dir=tmp_path / "cache",
+    )
+    assert slot0_fitted.is_set()
+
+
+def test_admitted_models_fit_their_folds_while_the_repairs_work(tmp_path, monkeypatch):
+    """Under grouped CV, the models a wave admitted are fitted on every CV fold
+    in the background while the next wave's (repair) agents work, not after
+    them: the repair agent here waits for that fit to start."""
+    import threading
+
+    from src.model_comparison.cv import Selection
+    from src.pipelines.inner_loop.model_zoo import Admission
+
+    _patch_loop_internals(monkeypatch)
+    folds_started = threading.Event()
+    fold_fitted = []
+
+    def spawn(candidate_dir, docs, **kwargs):
+        (candidate_dir / "candidate.py").write_text("# candidate\n", encoding="utf-8")
+        (candidate_dir / "hypothesis.md").write_text("People use H.\n", encoding="utf-8")
+        if candidate_dir.name == "candidate_1_repair_1":
+            assert folds_started.wait(timeout=20), "no fold fits ran while the repair worked"
+        return True
+
+    real_admit = pymc_orchestrator._admit_candidate_with_reason
+
+    def admit(candidate_file, models_dir, model_name, *a, **k):
+        if candidate_file.parent.name == "candidate_1":
+            return Admission(admitted=False, reason="a near-duplicate")
+        return real_admit(candidate_file, models_dir, model_name, *a, **k)
+
+    def fit_cv_folds(names, *a, **k):
+        fold_fitted.append(list(names))
+        folds_started.set()
+        return {}
+
+    monkeypatch.setattr(pymc_orchestrator, "_spawn_candidate_agent", spawn)
+    monkeypatch.setattr(pymc_orchestrator, "prefit_candidates", lambda c, *a, **k: [n for _, n in c])
+    monkeypatch.setattr(pymc_orchestrator, "_admit_candidate_with_reason", admit)
+    monkeypatch.setattr(pymc_orchestrator, "fit_cv_folds", fit_cv_folds)
+    monkeypatch.setattr(pymc_orchestrator, "_drop_unscorable_cv_models", lambda *a, **k: None)
+    pymc_orchestrator.run_pymc_inner_loop(
+        responses_path=write_responses(tmp_path),
+        results_dir=tmp_path / "model_loop",
+        seed_models_dir=write_seed_models(tmp_path, ["model_a"]),
+        max_iterations=1,
+        candidate_count=2,
+        enable_critique=False,
+        fit_kwargs={},
+        cache_dir=tmp_path / "cache",
+        selection=Selection(criterion="grouped_cv", cv_group="stimulus", cv_folds=2),
+    )
+    assert fold_fitted == [["iter0_candidate0"]]

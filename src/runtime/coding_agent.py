@@ -47,6 +47,7 @@ limit lifts and runs the agent again (:func:`run_coding_agent`).
 from __future__ import annotations
 
 import json
+import contextlib
 import os
 import re
 import shutil
@@ -61,8 +62,13 @@ from typing import Any, Callable, Dict, Optional, Sequence
 
 from src.runtime import token_usage
 from src.runtime.agent_sandbox import (
+    AGENT_COMPILE_SLOTS_ENV,
     CLAUDE_AUTH_ENV,
+    CLAUDE_AUTH_FALLBACK,
+    use_api_key_for,
+    effective_claude_auth,
     HOME_NAME,
+    claimed_compile_dir,
     remove_private_home,
     sandbox_command,
 )
@@ -766,7 +772,7 @@ def run_coding_agent(
             "write (the rest of its tree is read-only)."
         )
 
-    def launch() -> tuple[list[str], Dict[str, str]]:
+    def launch(compile_dir: Optional[Path]) -> tuple[list[str], Dict[str, str]]:
         """The command and environment of one run (the sandbox is set up
         afresh for each: a run's private home is removed after it)."""
         if not sandbox:
@@ -779,9 +785,16 @@ def run_coding_agent(
             writable_dirs=[*writable_dirs, *([memory_dir] if memory_dir else [])],
             agent_dir=log_path.parent,
             env=child_env,
+            compile_dir=compile_dir,
         )
 
-    run_cmd, run_env = launch()
+    # With the cell's pool set (the job script), the agent compiles in a kept
+    # dir of it, claimed for all its runs: in its private home it compiled
+    # every model from scratch.
+    compile_slots = os.environ.get(AGENT_COMPILE_SLOTS_ENV)
+    compile_claim = (
+        claimed_compile_dir(Path(compile_slots)) if sandbox and compile_slots else contextlib.nullcontext()
+    )
     if backend == "opencode":
         granted = ensure_opencode_external_grants(cwd, list(allowed_dirs or []))
         if granted and on_summary:
@@ -792,14 +805,15 @@ def run_coding_agent(
 
     stdin_text = prompt if prompt_via_stdin(backend, prompt) else None
     # How a Claude agent is billed (agent_sandbox.require_claude_auth), for the record.
-    claude_auth = child_env.get(CLAUDE_AUTH_ENV) if backend == "claude" else None
+    claude_mode = child_env.get(CLAUDE_AUTH_ENV) if backend == "claude" else None
     own_dirs = (
         [*writable_dirs, log_path.parent] if sandbox and wait_out_usage_limits else []
     )
     kept = [log_path, log_path.parent / HOME_NAME, agent_data_home(log_path)]
     kept += [memory_dir] if memory_dir else []
     waited_sec = 0.0
-    with _OwnDirsSnapshot(own_dirs, kept=kept) as snapshot:
+    with _OwnDirsSnapshot(own_dirs, kept=kept) as snapshot, compile_claim as compile_dir:
+        run_cmd, run_env = launch(compile_dir)
         log_mode = "w"
         while True:
             stream, raw_output, timed_out, returncode = _run_agent_with_lock_retries(
@@ -822,6 +836,29 @@ def run_coding_agent(
             )
             if limit is None and login_failure is None:
                 break
+            claude_auth = effective_claude_auth(claude_mode)
+            if login_failure is None and claude_mode == CLAUDE_AUTH_FALLBACK and claude_auth == "subscription":
+                # subscription_then_api: until this limit's reset, the run's
+                # agents use the API key, this one again at once.
+                token_usage.record_usage(
+                    source=usage_label, backend=backend, model=model, **usage,
+                    claude_auth=claude_auth, usage_limit=limit.message, usage_limit_wait_sec=0.0,
+                )
+                if sandbox:
+                    remove_private_home(log_path.parent)
+                snapshot.restore()
+                api_sec = seconds_until_retry(
+                    limit,
+                    datetime.now().astimezone(),
+                    margin_sec=AGENT_USAGE_LIMIT_RESET_MARGIN_SEC,
+                    fallback_sec=AGENT_USAGE_LIMIT_FALLBACK_WAIT_SEC,
+                )
+                use_api_key_for(api_sec)
+                if on_summary:
+                    on_summary(f"  [USAGE LIMIT] {usage_label}: subscription limit ({limit.message!r}); "
+                               f"this run's Claude agents use the API key for {api_sec / 3600:.1f} h")
+                run_cmd, run_env = launch(compile_dir)
+                continue
             delay = 0.0
             if login_failure is None:
                 delay = seconds_until_retry(
@@ -839,7 +876,7 @@ def run_coding_agent(
                 backend=backend,
                 model=model,
                 **usage,
-                claude_auth=claude_auth,
+                claude_auth=effective_claude_auth(claude_mode),
                 usage_limit=login_failure or limit.message,
                 usage_limit_wait_sec=0.0 if give_up else delay,
             )
@@ -862,14 +899,14 @@ def run_coding_agent(
             _announce_usage_limit_wait(limit, delay, usage_label, log_path, on_summary)
             _wait(delay)
             waited_sec += delay
-            run_cmd, run_env = launch()
+            run_cmd, run_env = launch(compile_dir)
 
     token_usage.record_usage(
         source=usage_label,
         backend=backend,
         model=model,
         **usage,
-        claude_auth=claude_auth,
+        claude_auth=effective_claude_auth(claude_mode),
     )
     if usage.get("usage_missing") and on_summary:
         on_summary(

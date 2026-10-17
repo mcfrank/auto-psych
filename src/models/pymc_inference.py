@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import atexit
 import contextlib
+import fcntl
 import hashlib
 import math
 import multiprocessing
@@ -410,6 +411,12 @@ _FIT_DEFAULTS = {
     "max_treedepth": 10,
 }
 
+# How a fit samples (``fit.method``): production NUTS, or NUTS started from the
+# posterior mode (``src.models.warm_start``). Chosen by the caller only, never
+# by a model file. Not in _FIT_DEFAULTS, so the default's cache signature (and
+# every fit cached before the method existed) is unchanged.
+FIT_METHODS = ("nuts", "warm_start_nuts")
+
 # Name of the optional module-level dict a model `.py` may declare to request
 # sampler settings suited to *its own* posterior geometry.
 SAMPLER_SETTINGS_NAME = "SAMPLER_SETTINGS"
@@ -489,6 +496,9 @@ def resolve_fit_settings(
     disagree about which settings a stored fit was sampled under.
     """
     given = {k: v for k, v in (explicit or {}).items() if v is not None}
+    method = given.pop("method", "nuts")
+    if method not in FIT_METHODS:
+        raise ValueError(f"Unknown fit method {method!r} for model {name!r}; known: {list(FIT_METHODS)}.")
     unknown = sorted(set(given) - set(_FIT_DEFAULTS))
     if unknown:
         raise ValueError(
@@ -496,7 +506,7 @@ def resolve_fit_settings(
             f"Valid settings: {sorted(_FIT_DEFAULTS)}."
         )
     declared = model_sampler_settings(name, models_dir)
-    settings = {**_FIT_DEFAULTS, **declared, **given}
+    settings = {**_FIT_DEFAULTS, **declared, **given, "method": method}
     # A model's declared target_accept is a floor: the loop passes one
     # explicitly, which used to override a model that needs smaller steps
     # (a model declaring 0.9 ran at the sweep's 0.8), and declaring a higher value
@@ -511,7 +521,9 @@ def resolve_fit_settings(
 def _sampler_signature(fit_kwargs: Dict[str, Any]) -> str:
     """Stable string of the resolved sampler settings, for cache keying."""
     merged = {**_FIT_DEFAULTS, **fit_kwargs}
-    return ";".join(f"{k}={merged[k]}" for k in sorted(_FIT_DEFAULTS))
+    signature = ";".join(f"{k}={merged[k]}" for k in sorted(_FIT_DEFAULTS))
+    method = fit_kwargs.get("method", "nuts")
+    return signature if method == "nuts" else f"{signature};method={method}"
 
 
 def _thin_posterior(idata: Any, max_draws: int) -> Any:
@@ -644,6 +656,32 @@ class FittedModel:
         return self.predict_p_left_draws(
             stim_data, var_name=var_name, seed=seed, max_draws=max_draws
         ).mean(axis=0)
+
+    def heldout_lpd(self, stim_data: Dict[str, np.ndarray]) -> np.ndarray:
+        """Log posterior predictive density of each observed response in
+        ``stim_data`` (rows this fit did not see, observed responses included):
+        log of the posterior-mean likelihood, ``logsumexp_s log p(y_i | theta_s)
+        - log S``. The pointwise score of grouped cross-validation."""
+        from scipy.special import logsumexp
+
+        pm = _import_pymc()
+        observed = self.model.observed_RVs[0].name
+        with self.model:
+            pm.set_data(stim_data)
+            ll = pm.compute_log_likelihood(
+                self.idata, var_names=[observed], extend_inferencedata=False, progressbar=False
+            )
+        draws = np.asarray(ll[observed].values)  # the log_likelihood group itself
+        draws = draws.reshape(-1, draws.shape[-1])
+        return logsumexp(draws, axis=0) - np.log(draws.shape[0])
+
+    def mean_log_likelihood(self) -> float:
+        """The training responses' log-likelihood averaged over the posterior
+        draws: -inf or NaN when any draw gives an observed response zero (or
+        undefined) probability. The admission sanity gate, under every
+        selection criterion; no PSIS."""
+        ll = self.idata.log_likelihood[self.model.observed_RVs[0].name].values
+        return float(np.asarray(ll).reshape(-1, ll.shape[-1]).mean(axis=0).sum())
 
     def loo_diagnostics(self) -> LooDiagnostics:
         """PSIS-LOO of this fit with its reliability verdict, computed once.
@@ -785,6 +823,7 @@ def fit_model(
     random_seed: Optional[int] = None,
     target_accept: Optional[float] = None,
     max_treedepth: Optional[int] = None,
+    method: Optional[str] = None,
     time_limit_sec: Optional[float] = None,
 ) -> FittedModel:
     """Load the named PyMC model, fit it on `responses_path`, return a FittedModel.
@@ -827,6 +866,7 @@ def fit_model(
             "random_seed": random_seed,
             "target_accept": target_accept,
             "max_treedepth": max_treedepth,
+            "method": method,
         },
     )
 
@@ -949,30 +989,93 @@ def _fit_once(
                 f"atomically?), not a property of the model {name!r}; delete it "
                 "to refit."
             ) from e
-        _warn_sampling_diagnostics(name, idata)
+        _warn_sampling_diagnostics(name, idata, model)
         return FittedModel(name=name, model=model, idata=idata, fingerprint=fp)
 
     observed = extract_observed(responses_path, model)
     with model:
         pm.set_data(observed)
-        idata = pm.sample(
-            draws=settings["draws"],
-            tune=settings["tune"],
-            chains=settings["chains"],
-            cores=settings["cores"],
-            target_accept=settings["target_accept"],
-            max_treedepth=settings["max_treedepth"],
-            progressbar=False,
-            random_seed=settings["random_seed"],
-            idata_kwargs={"log_likelihood": True},
-        )
+    if settings["method"] == "warm_start_nuts":
+        idata = _warm_start_sample(model, settings)
+    else:
+        with model:
+            idata = pm.sample(
+                draws=settings["draws"],
+                tune=settings["tune"],
+                chains=settings["chains"],
+                cores=settings["cores"],
+                target_accept=settings["target_accept"],
+                max_treedepth=settings["max_treedepth"],
+                progressbar=False,
+                random_seed=settings["random_seed"],
+                idata_kwargs={"log_likelihood": True},
+            )
 
-    _warn_sampling_diagnostics(name, idata)
+    _warn_sampling_diagnostics(name, idata, model)
 
     if nc_path is not None:
         write_fit_file(idata, nc_path)
 
     return FittedModel(name=name, model=model, idata=idata, fingerprint=fp)
+
+
+def _warm_start_sample(model: Any, settings: Dict[str, Any]) -> Any:
+    """NUTS started from the posterior mode (``fit.method: warm_start_nuts``).
+
+    The mode of the unconstrained log density (Jacobians in) by L-BFGS-B, the
+    Hessian there by central differences of the gradient, then NUTS with the
+    inverse Hessian as a fixed dense mass matrix and each chain started at a
+    draw of N(mode, H^-1); tuning adapts only the step size. The draws are NUTS
+    draws, judged by the same gate as any fit. On the number game's seeds a fit
+    took ~30 s at tune 200 / draws 250 where production NUTS took ~25 min. A
+    Hessian that is not positive definite (a direction neither data nor prior
+    pins down) has no metric: the fit fails, as the model's own failure.
+    """
+    from pymc.blocking import DictToArrayBijection, RaveledVars
+    from pymc.step_methods.hmc.integration import CpuLeapfrogIntegrator
+    from pymc.step_methods.hmc.quadpotential import QuadPotentialFull
+    from scipy.optimize import minimize
+
+    pm = _import_pymc()
+    with model:
+        step = pm.NUTS(target_accept=settings["target_accept"], max_treedepth=settings["max_treedepth"])
+    # The step's own compiled log density and gradient (Jacobians in), on the
+    # raveled continuous parameters: no second compile for the optimizer.
+    logp_dlogp = step._logp_dlogp_func
+    logp_dlogp.set_extra_values({})
+    start = model.initial_point(random_seed=settings["random_seed"])
+    x0 = DictToArrayBijection.map({v.name: start[v.name] for v in step.vars})
+    grad = lambda x: np.asarray(logp_dlogp(x)[1], dtype=float)  # noqa: E731
+    mode = minimize(lambda x: -float(logp_dlogp(x)[0]), x0.data, jac=lambda x: -grad(x), method="L-BFGS-B").x
+    h = 1e-5
+    hessian = np.array([(grad(mode + h * e) - grad(mode - h * e)) / (2 * h) for e in np.eye(mode.size)])
+    precision = -(hessian + hessian.T) / 2
+    try:
+        chol = np.linalg.cholesky(precision)
+    except np.linalg.LinAlgError:
+        raise RuntimeError(
+            "warm-start NUTS: the Hessian at the posterior mode is not positive definite (some "
+            "parameter direction is pinned down by neither the data nor the prior)"
+        ) from None
+    # The integrator holds the potential it was built with.
+    step.potential = QuadPotentialFull(np.linalg.inv(precision))
+    step.integrator = CpuLeapfrogIntegrator(step.potential, logp_dlogp)
+    rng = np.random.default_rng(settings["random_seed"])
+    starts = mode + np.linalg.solve(chol.T, rng.standard_normal((settings["chains"], mode.size)).T).T
+    free = [v for v in model.unobserved_value_vars if v.name in {rv.name for rv in model.free_RVs}]
+    free_values = model.compile_fn(inputs=model.value_vars, outs=free)
+
+    def point(x: np.ndarray) -> Dict[str, np.ndarray]:
+        return {**start, **DictToArrayBijection.rmap(RaveledVars(x, x0.point_map_info))}
+
+    with model:
+        idata = pm.sample(
+            draws=settings["draws"], tune=settings["tune"], chains=settings["chains"], cores=settings["cores"],
+            step=step, initvals=[dict(zip([v.name for v in free], free_values(point(x)))) for x in starts],
+            progressbar=False, random_seed=settings["random_seed"], idata_kwargs={"log_likelihood": True},
+        )
+    idata.posterior.attrs["fit_method"] = "warm_start_nuts"
+    return idata
 
 
 def write_fit_file(idata: Any, nc_path: Path) -> None:
@@ -1011,14 +1114,18 @@ def _divergence_count(idata: Any) -> Optional[int]:
     return int(sample_stats["diverging"].values.sum())
 
 
-def _max_rhat(idata: Any) -> float:
-    """Largest R-hat across variables; NaN when ArviZ cannot compute one.
+def _max_rhat(idata: Any, var_names: Sequence[str]) -> float:
+    """Largest R-hat over the free parameters ``var_names``; NaN when ArviZ
+    cannot compute one (or there are none).
 
     ArviZ returns NaN (not an error) for a single-chain trace, where R-hat is
     undefined. That NaN is reported as "unverified", never as "converged".
+    Deterministics are left out: they are functions of the parameters, and a
+    per-trial one made R-hat cost seconds per fit.
     """
-    az = _import_arviz()
-    rhat = az.rhat(idata)
+    if not var_names:
+        return float("nan")
+    rhat = _import_arviz().rhat(idata.posterior[list(var_names)])
     values = [float(rhat[v].max()) for v in rhat.data_vars]
     # A NaN anywhere means "unverified": Python's max() over NaNs depends on
     # their order, so it could have hidden one.
@@ -1056,13 +1163,8 @@ def convergence_diagnostics(
     n_draws = int(idata.posterior.sizes["chain"] * idata.posterior.sizes["draw"])
     max_r_hat = min_bulk_ess = float("nan")
     if var_names:
-        posterior = idata.posterior[list(var_names)]
-        rhat = az.rhat(posterior)
-        worst_rhat = [float(rhat[v].max()) for v in rhat.data_vars]
-        max_r_hat = (
-            float("nan") if any(math.isnan(v) for v in worst_rhat) else max(worst_rhat)
-        )
-        ess = az.ess(posterior, method="bulk")
+        max_r_hat = _max_rhat(idata, var_names)
+        ess = az.ess(idata.posterior[list(var_names)], method="bulk")
         min_bulk_ess = min(float(ess[v].min()) for v in ess.data_vars)
     return ConvergenceDiagnostics(
         n_divergent=_divergence_count(idata),
@@ -1101,8 +1203,7 @@ def convergence_problems(idata: Any, var_names: Sequence[str]) -> List[str]:
 
 def convergence_problems_of(fitted: "FittedModel") -> List[str]:
     """``convergence_problems`` over a fitted model's free parameters."""
-    free = [rv.name for rv in fitted.model.free_RVs]
-    return convergence_problems(fitted.idata, free)
+    return convergence_problems(fitted.idata, _free_names(fitted.model))
 
 
 def is_near_miss(diag: ConvergenceDiagnostics) -> bool:
@@ -1121,7 +1222,7 @@ def is_near_miss(diag: ConvergenceDiagnostics) -> bool:
 def convergence_diagnostics_of(fitted: "FittedModel") -> ConvergenceDiagnostics:
     """``convergence_diagnostics`` over a fitted model's free parameters."""
     return convergence_diagnostics(
-        fitted.idata, [rv.name for rv in fitted.model.free_RVs]
+        fitted.idata, _free_names(fitted.model)
     )
 
 
@@ -1151,8 +1252,9 @@ def _refit_decision(name: str, fitted: "FittedModel", settings: Dict[str, Any]) 
     return False
 
 
-def _warn_sampling_diagnostics(name: str, idata: Any) -> None:
-    """Loudly surface NUTS trouble (divergences, poor R-hat) for a fit.
+def _warn_sampling_diagnostics(name: str, idata: Any, model: Any) -> None:
+    """Loudly surface NUTS trouble (divergences, poor R-hat over the model's
+    free parameters) for a fit.
 
     These are advisory, not fatal -- ArviZ still returns usable arrays -- but a fit
     with divergences or R-hat > 1.01 is suspect, and accepting its ELPD at face
@@ -1181,7 +1283,7 @@ def _warn_sampling_diagnostics(name: str, idata: Any) -> None:
             file=sys.stderr,
             flush=True,
         )
-    max_rhat = _max_rhat(idata)
+    max_rhat = _max_rhat(idata, _free_names(model))
     if not math.isfinite(max_rhat):
         print(
             f"  [warn] {name}: R-hat is unavailable (got {max_rhat}); convergence "
@@ -1196,6 +1298,10 @@ def _warn_sampling_diagnostics(name: str, idata: Any) -> None:
             file=sys.stderr,
             flush=True,
         )
+
+
+def _free_names(model: Any) -> List[str]:
+    return [rv.name for rv in model.free_RVs]
 
 
 # ---------------------------------------------------------------------------
@@ -1347,6 +1453,12 @@ def _use_own_cache_dir(cache_root: str) -> None:
 # numbered *slot* under this process's own root, held while the fit process
 # runs and handed to the next one after it, so compiled code is reused within
 # a cell (a cold compile costs about 50 s a fit, a warm one a few).
+#
+# With ``COMPILE_SLOTS_ENV`` set (the coco cells), the slots live under that
+# root instead, kept across processes and jobs so a new job starts on warm
+# compiled code, and a process claims a slot with a file lock (``flock``) as
+# well, so no two processes on the node ever compile in one.
+COMPILE_SLOTS_ENV = "AUTO_PSYCH_COMPILE_SLOTS"
 _COMPILE_SLOTS_LOCK = threading.Lock()
 _COMPILE_SLOTS_IN_USE: set = set()
 _COMPILE_SLOTS_ROOT: Optional[Path] = None
@@ -1356,6 +1468,9 @@ def _compile_slots_root() -> Path:
     """This process's root of fit-process compile directories: a new directory
     under its own PyTensor ``base_compiledir``, removed when it exits."""
     global _COMPILE_SLOTS_ROOT
+    if _COMPILE_SLOTS_ROOT is None and os.environ.get(COMPILE_SLOTS_ENV):
+        _COMPILE_SLOTS_ROOT = Path(os.environ[COMPILE_SLOTS_ENV])
+        _COMPILE_SLOTS_ROOT.mkdir(parents=True, exist_ok=True)
     if _COMPILE_SLOTS_ROOT is None:
         from pytensor import config as pytensor_config
 
@@ -1376,11 +1491,22 @@ def _compile_dirs(n: int) -> Iterator[List[str]]:
     """``n`` compile directories that no other fit process of this process
     uses until the block ends (see ``_COMPILE_SLOTS_LOCK``)."""
     root = _compile_slots_root()
+    shared = bool(os.environ.get(COMPILE_SLOTS_ENV))
+    held = []  # the slots' lock files, open (and flocked) while the block runs
     with _COMPILE_SLOTS_LOCK:
         slots = []
         slot = 0
         while len(slots) < n:
             if slot not in _COMPILE_SLOTS_IN_USE:
+                if shared:
+                    lock = open(root / f"slot-{slot}.lock", "w")
+                    try:
+                        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    except BlockingIOError:  # another process holds it
+                        lock.close()
+                        slot += 1
+                        continue
+                    held.append(lock)
                 slots.append(slot)
             slot += 1
         _COMPILE_SLOTS_IN_USE.update(slots)
@@ -1392,6 +1518,8 @@ def _compile_dirs(n: int) -> Iterator[List[str]]:
     finally:
         with _COMPILE_SLOTS_LOCK:
             _COMPILE_SLOTS_IN_USE.difference_update(slots)
+            for lock in held:
+                lock.close()
 
 
 def _use_own_compile_dir(compile_dir: str) -> None:
@@ -1407,7 +1535,8 @@ def _use_own_compile_dir(compile_dir: str) -> None:
     )
     from pytensor import config as pytensor_config
 
-    if not Path(pytensor_config.compiledir).is_relative_to(compile_dir):
+    # Resolved: a home reached through a symlink names one directory two ways.
+    if not Path(pytensor_config.compiledir).resolve().is_relative_to(Path(compile_dir).resolve()):
         raise RuntimeError(
             f"this fit process compiles in {pytensor_config.compiledir}, not under its "
             f"own {compile_dir} (a .pytensorrc setting compiledir?)."
@@ -1940,7 +2069,7 @@ def _fit_outcomes(
             continue
         cached = _FIT_CACHE.get(key)
         if cached is not None:
-            _warn_sampling_diagnostics(name, cached.idata)
+            _warn_sampling_diagnostics(name, cached.idata, cached.model)
             outcomes[name] = cached
         else:
             pending.append(name)

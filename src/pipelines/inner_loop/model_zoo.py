@@ -11,6 +11,7 @@ import csv
 import hashlib
 import json
 import math
+from concurrent.futures import ThreadPoolExecutor
 import re
 import shutil
 import sys
@@ -31,6 +32,8 @@ from src.models.mcmc_defaults import (
 )
 from src.models.model_contract import model_contract_violation
 from src.models.model_manifest import manifest_path, read_manifest_entries
+from src.model_comparison.cv import LOO, Selection, cv_pointwise, fold_training_files
+from src.tasks import task_of_file, task_present_in
 from src.models.data_binding import MissingStimulusColumns, make_stim_data
 from src.models.model_loading import load_pymc_model, pm_data_inputs
 from src.models.pymc_inference import (
@@ -45,12 +48,15 @@ from src.models.pymc_inference import (
     fit_model,
     fit_models_to_cache,
     fit_time_limited_concurrently,
+    _fit_cpus,
+    allocated_cpus,
+    default_fit_workers,
     is_model_failure,
     is_near_miss,
     model_logp_is_finite,
     resolve_fit_settings,
 )
-from src.model_comparison.likelihood import log_likelihood
+from src.model_comparison.likelihood import mean_log_likelihood
 from src.model_comparison.posterior import compare_table
 from src.pipelines.inner_loop.hypothesis_ledger import (
     HypothesisLedger,
@@ -424,7 +430,7 @@ def _drop_nonfinite_elpd_models(
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
 ) -> None:
-    """Remove from the manifest any model whose ELPD-LOO is non-finite on the data.
+    """Remove from the manifest any model whose log-likelihood is non-finite on the data.
 
     ``_drop_unfittable_models`` screens only the *initial-point logp*, and
     ``_admit_candidate`` screens a *fresh candidate*'s ELPD. Neither covers a
@@ -433,8 +439,8 @@ def _drop_nonfinite_elpd_models(
     experiment's *different* responses (e.g. it now assigns ~0 probability to a
     newly observed outcome). Such a model slips past the logp gate and crashes
     ``model_posterior`` (which refuses to softmax a non-finite ELPD), aborting the
-    whole run. Compute each model's ELPD-LOO now and drop the non-finite ones
-    with a loud warning. Fails loudly only if **no** model survives.
+    whole run. Check each model's posterior-mean log-likelihood now (no PSIS)
+    and drop the non-finite ones with a loud warning. Fails loudly only if **no** model survives.
 
     This is also the experiment's first MCMC pass: every model in the set meets
     this experiment's responses here for the first time, so the whole set is
@@ -481,32 +487,31 @@ def _drop_nonfinite_elpd_models(
             )
             continue
         try:
-            elpd = log_likelihood(
+            loglik = mean_log_likelihood(
                 name, responses_path, models_dir, cache_dir=cache_dir, **fit_kwargs
             )
         except INFRASTRUCTURE_ERRORS:
             raise
-        except Exception as e:  # noqa: BLE001 — any fit/LOO failure means unscorable
+        except Exception as e:  # noqa: BLE001 — any failure here means unscorable
             drop(
                 entry,
-                f"ELPD-LOO computation failed ({type(e).__name__}: {e}) — cannot "
-                "score it",
-                f"ELPD-LOO computation failed ({type(e).__name__}: {e})",
+                f"log-likelihood computation failed ({type(e).__name__}: {e}) — "
+                "cannot score it",
+                f"log-likelihood computation failed ({type(e).__name__}: {e})",
             )
             continue
-        if math.isfinite(elpd):
+        if math.isfinite(loglik):
             keep.append(entry)
         else:
             drop(
                 entry,
-                f"non-finite ELPD-LOO ({elpd}) on the data — would corrupt the "
-                "posterior",
-                f"non-finite ELPD-LOO ({elpd}) on this experiment's data",
+                f"non-finite log-likelihood ({loglik}) on the data — would corrupt "
+                "the posterior",
+                f"non-finite log-likelihood ({loglik}) on this experiment's data",
             )
     if not keep:
         raise ValueError(
-            f"No model in {models_dir} has a finite ELPD-LOO on the data — every "
-            "model's PSIS-LOO was non-finite."
+            f"No model in {models_dir} has a finite log-likelihood on the data."
         )
     _write_manifest(models_dir, keep)
 
@@ -549,7 +554,7 @@ class NoveltyPoolUndefined(ValueError):
         self.n_invalid = n_invalid
         self.n_pool = n_pool
         super().__init__(
-            f"model {model_name!r} has an undefined p_left on {n_invalid} of the "
+            f"model {model_name!r} has an undefined prediction on {n_invalid} of the "
             f"{n_pool} novelty-pool stimuli"
         )
 
@@ -568,16 +573,127 @@ class NoveltyPoolFailed(ValueError):
         self.model_name = model_name
         self.error = f"{type(error).__name__}: {error}"
         super().__init__(
-            f"model {model_name!r} cannot predict p_left on the novelty pool ({self.error})"
+            f"model {model_name!r} cannot predict on the novelty pool ({self.error})"
         )
 
 
+def fit_cv_folds(
+    names: Sequence[str],
+    models_dir: Path,
+    responses_path: Path,
+    selection: Selection,
+    *,
+    limited: Iterable[str] = (),
+    time_limit_sec: float = CANDIDATE_FIT_TIME_LIMIT_SEC,
+    cache_dir: Optional[Path] = None,
+    fit_kwargs: Optional[Dict[str, Any]] = None,
+) -> Dict[str, str]:
+    """Fit ``names`` on every CV fold, into ``cache_dir``; the ``limited`` ones
+    under ``time_limit_sec``. Returns why each model that could not be fitted
+    failed, by name (its first failing fold). Changes no model set, so the loop
+    also runs it in the background, for the models a wave admitted, while the
+    next wave's agents work."""
+    fit_kwargs = fit_kwargs or {}
+    limited = set(limited)
+    _, _, fold_paths = fold_training_files(responses_path, selection)
+    # The folds are fitted concurrently, each with its share of the CPUs,
+    # rounded up: 6 fits' worth over 4 folds is 2 each (8 at once, a third
+    # over the allocation), not 1 each (fold by fold within each fold).
+    workers = -(-default_fit_workers(
+        allocated_cpus(), [_fit_cpus(resolve_fit_settings(n, models_dir, fit_kwargs)) for n in names]
+    ) // len(fold_paths))
+
+    def fit_fold(fold: int, path: Path) -> Dict[str, str]:
+        failed: Dict[str, str] = {}
+        timed = [n for n in names if n in limited]
+        if timed and cache_dir is not None:
+            fit_time_limited_concurrently(
+                timed, models_dir, path, cache_dir=cache_dir, fit_kwargs=fit_kwargs,
+                time_limit_sec=time_limit_sec, workers=workers,
+            )
+        for name in timed:
+            try:
+                fit_model(name, models_dir, path, cache_dir=cache_dir, time_limit_sec=time_limit_sec, **fit_kwargs)
+            except INFRASTRUCTURE_ERRORS:
+                raise
+            except FitTimeLimitExceeded as e:
+                failed[name] = f"fold {fold} {_too_slow_reason(e)}"
+            except Exception as e:  # noqa: BLE001 — the model's own failure (infrastructure re-raised above)
+                failed[name] = f"MCMC fit failed on CV fold {fold} ({_describe_failure(e)})"
+        free = [n for n in names if n not in limited]
+        for name, why in fit_models_to_cache(
+            free, models_dir, path, cache_dir=cache_dir, fit_workers=workers, **fit_kwargs
+        ).items():
+            failed[name] = f"MCMC fit failed on CV fold {fold} ({why})"
+        return failed
+
+    failures: Dict[str, str] = {}
+    with ThreadPoolExecutor(max_workers=len(fold_paths)) as pool:
+        for failed in pool.map(fit_fold, range(len(fold_paths)), fold_paths):
+            failures = {**failed, **failures}  # a model's first failing fold
+    return failures
+
+
+def _drop_unscorable_cv_models(
+    models_dir: Path,
+    responses_path: Path,
+    selection: Selection,
+    *,
+    limited: Iterable[str] = (),
+    time_limit_sec: float = CANDIDATE_FIT_TIME_LIMIT_SEC,
+    cache_dir: Optional[Path] = None,
+    fit_kwargs: Optional[Dict[str, Any]] = None,
+    ledger: Optional[HypothesisLedger] = None,
+    ledger_context: str = "",
+) -> None:
+    """Under grouped CV, fit every model on every fold and drop the ones whose
+    ELPD-CV cannot be computed, with a ledger line each: a fold fit that fails,
+    or, for the ``limited`` models (those admitted in this loop; starting and
+    carried models are never limited, as in admission), one still sampling at
+    ``time_limit_sec``, or a non-finite score (a held-out answer given zero
+    probability). Scoring then finds every fold fit in the cache and a finite
+    score, where a single non-finite one would crash ``model_posterior``.
+    A no-op under trial-level LOO. Fails loudly only if no model survives.
+    """
+    if selection.criterion != "grouped_cv":
+        return
+    fit_kwargs = fit_kwargs or {}
+    limited = set(limited)
+    entries = _manifest_entries(models_dir)
+    names = [entry["name"] for entry in entries]
+    failures = fit_cv_folds(
+        names, models_dir, responses_path, selection, limited=limited,
+        time_limit_sec=time_limit_sec, cache_dir=cache_dir, fit_kwargs=fit_kwargs,
+    )
+    scorable = [n for n in names if n not in failures]
+    lpd, _ = cv_pointwise(scorable, models_dir, responses_path, selection, cache_dir=cache_dir, **fit_kwargs)
+    for name in scorable:
+        total = float(np.sum(lpd[name]))
+        if not math.isfinite(total):
+            failures[name] = f"non-finite ELPD-CV ({total}): a held-out answer has zero probability"
+    if not failures:
+        return
+    keep = [entry for entry in entries if entry["name"] not in failures]
+    if not keep:
+        raise ValueError(f"No model in {models_dir} has a computable ELPD-CV: {failures}")
+    for entry in entries:
+        if entry["name"] in failures:
+            print(f"  [drop] model {entry['name']!r}: {failures[entry['name']]}; dropping.", flush=True)
+            _record(
+                ledger,
+                name=entry["name"],
+                outcome="dropped",
+                detail=failures[entry["name"]],
+                hypothesis=entry.get("rationale") or "",
+                context=ledger_context,
+            )
+    _write_manifest(models_dir, keep)
+
 def _pair_labels(pool_rows: Sequence[Mapping[str, str]], mask: np.ndarray) -> List[str]:
-    """``"<sequence_a> vs <sequence_b>"`` for the pool rows ``mask`` selects."""
-    return [
-        f"{pool_rows[i]['sequence_a']} vs {pool_rows[i]['sequence_b']}"
-        for i in np.flatnonzero(mask)
-    ]
+    """The task's labels (``"HHT vs THT"``, ``"{16,8} -> 4"``) for the pool
+    rows ``mask`` selects."""
+    task = task_present_in(pool_rows[0], "stimulus_columns")
+    return [task.stimulus_label(pool_rows[i]) for i in np.flatnonzero(mask)]
 
 
 def _participant_ids_in(responses_path: Path) -> Optional[List[int]]:
@@ -597,7 +713,8 @@ def _pool_prediction(
     model_name: str,
     participant_ids: Optional[Sequence[int]],
 ) -> np.ndarray:
-    """Posterior-mean ``p_left`` of one fitted model on the pool, population-level.
+    """Posterior-mean prediction (the task's ``prediction_var``; ``p_left``
+    below) of one fitted model on the pool, population-level.
 
     The observed-response container is filled with dummies (``p_left`` never
     reads it), as the recovery evaluation does with its pool. A model without
@@ -609,11 +726,14 @@ def _pool_prediction(
     A stimulus where any draw of ``p_left`` is not a probability comes back
     NaN (as in the recovery evaluation); the caller decides what that means.
     """
-    rows = [{**row, "chose_left": 0} for row in pool_rows]
+    task = task_present_in(pool_rows[0], "stimulus_columns")
+    rows = task.stimulus_rows(pool_rows)
 
     def predict(stim_data: Dict[str, np.ndarray]) -> np.ndarray:
         try:
-            return np.asarray(fitted.predict_p_left(stim_data), dtype="float64")
+            return np.asarray(
+                fitted.predict_p_left(stim_data, var_name=task.prediction_var), dtype="float64"
+            )
         except InvalidPredictions as exc:
             return exc.draws.mean(axis=0)
 
@@ -797,36 +917,23 @@ DEFAULT_PRUNE_DSE_MULTIPLIER = 2.0
 DEFAULT_NOVELTY_RMSE_THRESHOLD = 0.002
 
 # The novelty pool: the stimuli on which a candidate's predictions are compared
-# to every admitted model's. The loop generates it from its own seed over the
-# design's pair universe (same-length H/T pairs at lengths 4–8), so two
-# mechanisms are compared across the stimulus space rather than on the few
-# dozen training stimuli the design happened to select. It is deliberately NOT
-# the recovery harness's eval pool (``holdout_eval.build_eval_stimuli``, seeded
-# from the holdout config's ``eval_pool``): the loop must not select models on
-# the stimuli it is later scored against. The orchestrator writes the pool to
-# the run tree as ``novelty_pool.json`` so what the gate saw is auditable.
-NOVELTY_POOL_SEED = 20260919
-NOVELTY_POOL_N_PAIRS = 512
-NOVELTY_POOL_LENGTHS = (4, 5, 6, 7, 8)
+# to every admitted model's. The loop takes it from its task, a fixed sample of
+# the design's stimulus space (``TaskSpec.novelty_pool``: for the coin-flip
+# task 512 same-length H/T pairs at lengths 4–8), so two mechanisms are
+# compared across the stimulus space rather than on the few dozen training
+# stimuli the design happened to select. It is deliberately NOT the recovery
+# harness's eval pool (``holdout_eval.build_eval_stimuli``, seeded from the
+# holdout config's ``eval_pool``): the loop must not select models on the
+# stimuli it is later scored against. The orchestrator writes the pool to the
+# run tree as ``novelty_pool.json`` so what the gate saw is auditable.
 NOVELTY_POOL_FILENAME = "novelty_pool.json"
 
 
-def novelty_pool_rows(
-    *,
-    seed: int = NOVELTY_POOL_SEED,
-    n_pairs: int = NOVELTY_POOL_N_PAIRS,
-    lengths: Sequence[int] = NOVELTY_POOL_LENGTHS,
-) -> List[Dict[str, str]]:
-    """The loop's own stimulus pool for the novelty gate (see the constants above).
-
-    Raw ``sequence_a``/``sequence_b`` rows: each model computes its own
-    features from them, exactly as it does for the responses CSV.
-    """
-    # Lazy, like the design stage's import of the same module (``eig.py``):
-    # the pipeline's coupling to the research library stays thin and explicit.
-    from src.subjective_randomness.stimulus_design import generate_candidate_pool
-
-    return generate_candidate_pool(n_pairs, lengths=tuple(lengths), seed=seed)
+def novelty_pool_rows(responses_path: Path) -> List[Dict[str, str]]:
+    """The novelty pool of the task ``responses_path`` holds responses for:
+    raw stimulus rows, from which each model computes its own features
+    exactly as it does for the responses CSV."""
+    return task_of_file(responses_path).novelty_pool()
 
 
 def _clustered_dse(comparison: Dict[str, Dict[str, Any]], name: str) -> float:
@@ -854,6 +961,7 @@ def _prune_losers(
     *,
     cache_dir: Optional[Path],
     fit_kwargs: Optional[Dict[str, Any]],
+    selection: Selection = LOO,
     dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
@@ -885,7 +993,7 @@ def _prune_losers(
     if len(names) < 2:
         return []
     comparison = compare_table(
-        responses_path, models_dir, cache_dir=cache_dir, **(fit_kwargs or {})
+        responses_path, models_dir, cache_dir=cache_dir, selection=selection, **(fit_kwargs or {})
     )
     if not comparison:
         return []
@@ -923,6 +1031,7 @@ def _prune_losers(
             models_dir,
             cache_dir=cache_dir,
             names=trusted,
+            selection=selection,
             **(fit_kwargs or {}),
         )
     baseline = min(comparison, key=lambda name: comparison[name]["rank"])
@@ -973,6 +1082,7 @@ def _cap_live_set(
     *,
     cache_dir: Optional[Path],
     fit_kwargs: Optional[Dict[str, Any]],
+    selection: Selection = LOO,
     cap: int = MAX_LIVE_MODELS,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
@@ -994,7 +1104,7 @@ def _cap_live_set(
     if excess <= 0:
         return []
     comparison = compare_table(
-        responses_path, models_dir, cache_dir=cache_dir, **(fit_kwargs or {})
+        responses_path, models_dir, cache_dir=cache_dir, selection=selection, **(fit_kwargs or {})
     )
     # Untrusted first, then worst rank first.
     order = sorted(
@@ -1312,8 +1422,8 @@ def _admit_candidate_with_reason(
     (``prefit_candidates``), and this function loads them.
 
     The novelty gate compares the candidate's posterior-mean ``p_left`` with
-    every admitted model's on ``novelty_pool`` (``None`` ⇒ the loop's default
-    pool, ``novelty_pool_rows()``; the orchestrator passes the pool it recorded
+    every admitted model's on ``novelty_pool`` (``None`` ⇒ the task's pool,
+    ``novelty_pool_rows(responses_path)``; the orchestrator passes the pool it recorded
     in the run tree so every candidate of a run is gated on the same stimuli).
     ``novelty_predictions`` is the loop's dict of saved pool predictions, so
     each model is predicted once per loop (``_min_prediction_rmse``); ``None``
@@ -1396,13 +1506,13 @@ def _admit_candidate_with_reason(
             "thresholds or discontinuities in the likelihood."
         )
 
-    # ELPD-LOO gate: a model can sample cleanly yet still assign ~0 probability to
-    # an observed outcome at some posterior draws, giving a non-finite PSIS-LOO.
-    # That NaN/inf would later crash model_posterior (which refuses to build a
-    # posterior a non-finite ELPD would corrupt). Compute it now from the cached
-    # fit (no extra sampling) and drop the candidate here instead.
+    # Finite-likelihood gate: a model can sample cleanly yet still assign ~0
+    # probability to an observed outcome at some posterior draws, and the NaN/inf
+    # would later crash model_posterior (which refuses to build a posterior a
+    # non-finite ELPD would corrupt). Checked on the cached fit's own
+    # log-likelihood (no sampling, no PSIS), under every selection criterion.
     try:
-        elpd = log_likelihood(
+        loglik = mean_log_likelihood(
             model_name,
             responses_path,
             models_dir,
@@ -1415,14 +1525,15 @@ def _admit_candidate_with_reason(
     except Exception as e:
         staged.unlink(missing_ok=True)
         return reject(
-            f"ELPD-LOO computation failed ({type(e).__name__}: {e}); dropping it "
-            "so it cannot abort scoring."
+            f"log-likelihood computation failed ({type(e).__name__}: {e}); "
+            "dropping it so it cannot abort scoring."
         )
-    if not math.isfinite(elpd):
+    if not math.isfinite(loglik):
         staged.unlink(missing_ok=True)
         return reject(
-            f"non-finite ELPD-LOO ({elpd}); a model that assigns ~0 probability "
-            "to an observed outcome would corrupt the posterior — dropping it."
+            f"non-finite log-likelihood ({loglik}); a model that assigns ~0 "
+            "probability to an observed outcome would corrupt the posterior — "
+            "dropping it."
         )
 
     # Novelty gate: a candidate that predicts like an existing model is a
@@ -1432,7 +1543,9 @@ def _admit_candidate_with_reason(
     # the training stimuli. Uses the cached fits from the gates above and prior
     # scoring, so this adds no MCMC.
     if novelty_rmse_threshold > 0:
-        pool = list(novelty_pool) if novelty_pool is not None else novelty_pool_rows()
+        pool = list(novelty_pool) if novelty_pool is not None else novelty_pool_rows(responses_path)
+        task = task_present_in(pool[0], "stimulus_columns")
+        stimulus = " and ".join(task.stimulus_columns)
         try:
             nearest, rmse = _min_prediction_rmse(
                 model_name,
@@ -1449,32 +1562,33 @@ def _admit_candidate_with_reason(
                 f"model binds {list(e.missing)} — response-row bookkeeping a bare "
                 "stimulus never carries — so it cannot be evaluated on a stimulus "
                 "pool (the novelty gate now, the held-out evaluation later); "
-                "compute everything from sequence_a and sequence_b."
+                f"compute everything from {stimulus}."
             )
         except NoveltyPoolUndefined as e:
             staged.unlink(missing_ok=True)
             return reject(
-                f"p_left is undefined (NaN or outside [0, 1]) on {e.n_invalid} of "
+                f"{task.prediction_var} is undefined (NaN or outside [0, 1]) on {e.n_invalid} of "
                 f"the {e.n_pool} novelty-pool stimuli (e.g. {', '.join(e.examples)}). "
-                "p_left must be a probability for every same-length pair, "
-                "including pairs unlike the training stimuli: guard the "
+                f"{task.prediction_var} must be a probability for every stimulus the "
+                "design can show, including stimuli unlike the training ones: guard the "
                 "computation (no log(0), no division by zero, no overflow; keep "
-                "p_left inside [0, 1])."
+                f"{task.prediction_var} inside [0, 1])."
             )
         except NoveltyPoolFailed as e:
             staged.unlink(missing_ok=True)
             return reject(
-                f"p_left could not be predicted on the {len(pool)}-stimulus novelty "
-                f"pool of same-length pairs ({e.error}). The model must define "
-                "p_left (a pm.Deterministic named 'p_left') with one value per "
-                "stimulus row, and its compute_features or prepare_observed must "
-                "work for every same-length H/T pair, including all-H and all-T "
-                "sequences and pairs unlike the training stimuli."
+                f"{task.prediction_var} could not be predicted on the {len(pool)}-stimulus "
+                f"novelty pool ({e.error}). The model must define "
+                f"{task.prediction_var} (a pm.Deterministic named '{task.prediction_var}') "
+                "with one value per stimulus row, and its compute_features or "
+                "prepare_observed must work for every stimulus the design can show "
+                "(e.g. " + ", ".join(task.stimulus_label(r) for r in pool[:3]) + "), "
+                "including stimuli unlike the training ones."
             )
         if nearest is not None and rmse < novelty_rmse_threshold:
             staged.unlink(missing_ok=True)
             return reject(
-                f"predicts like existing model {nearest!r} (p_left RMSE "
+                f"predicts like existing model {nearest!r} ({task.prediction_var} RMSE "
                 f"{rmse:.5f} < {novelty_rmse_threshold} on the {len(pool)}-stimulus "
                 f"novelty pool) — a near-duplicate of {nearest}, not a new "
                 "hypothesis."

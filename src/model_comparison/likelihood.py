@@ -68,6 +68,29 @@ def log_likelihood(
     return fits[model_name].elpd_loo()
 
 
+def mean_log_likelihood(
+    model_name: str,
+    responses_path: Path,
+    models_dir: Path,
+    *,
+    cache_dir: Optional[Path] = None,
+    **fit_kwargs: object,
+) -> float:
+    """The posterior-mean log-likelihood of the training responses
+    (``FittedModel.mean_log_likelihood``): finite unless some draw gives an
+    observed response zero probability. Reuses the cached fit."""
+    from src.models.pymc_inference import fit_models_cached  # type: ignore
+
+    fits = fit_models_cached(
+        [model_name],
+        models_dir=models_dir,
+        responses_path=responses_path,
+        cache_dir=cache_dir,
+        **fit_kwargs,
+    )
+    return fits[model_name].mean_log_likelihood()
+
+
 @dataclass
 class Args:
     """ELPD-LOO of a PyMC cognitive model on observed responses."""

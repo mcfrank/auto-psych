@@ -40,6 +40,7 @@ from typing import Any, Dict, List, Optional
 
 import tyro
 
+from src.model_comparison.cv import LOO
 from src.models.model_manifest import read_manifest_entries
 from src.models.pymc_inference import cached_fit_path, fit_fingerprint, resolve_fit_settings
 from src.pipelines.inner_loop.hypothesis_ledger import (
@@ -200,6 +201,9 @@ def reprune_experiment(
         fit_kwargs=fit_kwargs,
         prune_dse_multiplier=dse_multiplier,
         complexity_prior_const=DEFAULT_COMPLEXITY_PRIOR_CONST,
+        # The re-prune scores by PSIS-LOO (_score and _compare above take no
+        # selection), so the end-of-experiment step must too.
+        selection=LOO,
     )
     _export_inner_loop_models(exp_dir, loop_dir, best_model=result["best_model"])
     finish_model_loop_stage(exp_dir)

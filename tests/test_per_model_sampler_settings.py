@@ -150,7 +150,7 @@ def test_unset_caller_argument_resolves_rather_than_pinning_the_default():
 
 def test_resolution_fills_every_default_key():
     resolved = pi.resolve_fit_settings("motif_stack", SEED_MODELS_DIR, {})
-    assert set(resolved) == set(pi._FIT_DEFAULTS)
+    assert set(resolved) == set(pi._FIT_DEFAULTS) | {"method"}
     assert resolved["draws"] == md.PRODUCTION_DRAWS
     assert resolved["chains"] == md.PRODUCTION_CHAINS
 
@@ -194,7 +194,7 @@ def test_non_dict_sampler_settings_raises(tmp_path):
 def test_model_without_a_declaration_resolves_to_the_global_defaults(tmp_path):
     _write_model_with_settings(tmp_path, "")
     assert pi.model_sampler_settings("declaring", tmp_path) == {}
-    assert pi.resolve_fit_settings("declaring", tmp_path, {}) == dict(pi._FIT_DEFAULTS)
+    assert pi.resolve_fit_settings("declaring", tmp_path, {}) == {**pi._FIT_DEFAULTS, "method": "nuts"}
 
 
 def test_sampler_settings_are_reread_when_the_model_file_changes(tmp_path):

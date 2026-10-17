@@ -61,6 +61,7 @@ from src.models.eig_selection import (  # noqa: E402
     select_n_joint_eig,
 )
 from src.pipelines.outer_loop import eig as eig_mod  # noqa: E402
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS  # noqa: E402
 
 Picks = List[Tuple[int, float, str]]
 
@@ -172,7 +173,7 @@ def design_draws(
     before = set(fit_cache.iterdir())
     names = eig_mod._load_model_names(exp / "cognitive_models")
     names, unbindable = eig_mod._screen_usable_models(
-        names, exp / "cognitive_models", rows[0]
+        names, exp / "cognitive_models", rows[0], SUBJECTIVE_RANDOMNESS
     )
     draws, undefined = eig_mod._posterior_p_left_draws(
         names,
@@ -185,6 +186,7 @@ def design_draws(
         fit_cache_dir=fit_cache,
         max_draws=n_samples,
         seed=42,
+        task=SUBJECTIVE_RANDOMNESS,
     )
     sampled = sorted(p.name for p in set(fit_cache.iterdir()) - before)
     if sampled:
@@ -423,7 +425,7 @@ def main(args: Args) -> None:
     from src.subjective_randomness.stimulus_design import enumerate_all_pairs
 
     pool = enumerate_all_pairs(list(args.lengths), same_length_only=True)
-    rows = [eig_mod._raw_row(item) for item in pool]
+    rows = SUBJECTIVE_RANDOMNESS.stimulus_rows(pool)
     draws = design_draws(
         staged, args.experiment, rows, args.n_samples, work_dir / "draws.npz"
     )

@@ -44,7 +44,9 @@ if [[ -d "$agent_dir/repo/_runs" ]]; then
     rm -f "$partial"
     keep_tree "tar failed writing $archive"
   fi
-  if ! tar tzf "$partial" 2>/dev/null | grep -qx '_runs/'; then
+  # Not grep -q: it exits at the first match, and under pipefail the listing
+  # tar is still writing then fails with SIGPIPE, for a sound archive.
+  if ! tar tzf "$partial" 2>/dev/null | grep -x '_runs/' >/dev/null; then
     rm -f "$partial"
     keep_tree "$archive was written but does not read back (tar tzf)"
   fi

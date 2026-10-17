@@ -16,6 +16,7 @@ import shutil
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
+from src.model_comparison.cv import LOO, Selection
 from src.model_comparison.posterior import compare_table, model_posterior
 from src.pipelines.inner_loop.model_zoo import _manifest_entries
 
@@ -170,13 +171,16 @@ def _score(
     complexity_prior_const: float,
     cache_dir: Optional[Path],
     fit_kwargs: Dict[str, Any],
+    selection: Selection = LOO,
 ) -> Dict[str, Any]:
-    """Compute the ELPD-LOO softmax posterior over all models in the zoo."""
+    """Compute the ELPD softmax posterior over all models in the zoo (ELPD-LOO,
+    or ELPD-CV under grouped cross-validation, ``selection``)."""
     return model_posterior(
         responses_path,
         models_dir,
         complexity_prior_const=complexity_prior_const,
         cache_dir=cache_dir,
+        selection=selection,
         **fit_kwargs,
     )
 
@@ -186,9 +190,13 @@ def _compare(
     models_dir: Path,
     cache_dir: Optional[Path],
     fit_kwargs: Dict[str, Any],
+    selection: Selection = LOO,
 ) -> Dict[str, Dict[str, float]]:
-    """ELPD-LOO distinguishability table (reuses cached fits — no new MCMC)."""
-    return compare_table(responses_path, models_dir, cache_dir=cache_dir, **fit_kwargs)
+    """ELPD distinguishability table (reuses cached fits — no new MCMC under
+    LOO; grouped CV fits each model on its folds once, then caches them)."""
+    return compare_table(
+        responses_path, models_dir, cache_dir=cache_dir, selection=selection, **fit_kwargs
+    )
 
 
 def _export(

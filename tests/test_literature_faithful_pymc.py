@@ -27,6 +27,7 @@ from src.models.model_loading import load_pymc_model, observed_response_data
 from src.models.pymc_inference import prior_predict_p_left
 from src.subjective_randomness.features import featurize_stimulus
 from src.subjective_randomness.holdout_data import p_left_fixed_params
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 from tests.recovery_fixtures import p_left_model_family
 
 MODEL_DIR = (
@@ -86,7 +87,7 @@ def test_new_models_match_their_pure_python_twin(model_name):
     )
     params = dict(family.DEFAULT_PARAMS)
     from_family = p_left_model_family(model_name, TEST_STIMULI, params)
-    from_pymc = p_left_fixed_params(model_name, MODEL_DIR, TEST_STIMULI, params)
+    from_pymc = p_left_fixed_params(model_name, MODEL_DIR, TEST_STIMULI, params, task=SUBJECTIVE_RANDOMNESS)
     np.testing.assert_allclose(from_pymc, from_family, atol=1e-7)
     # The defaults must not sit in a degenerate corner: agreement between
     # constant-0/1 outputs would be vacuous.

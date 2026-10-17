@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import sys
 import subprocess
 from pathlib import Path
 
@@ -367,7 +368,7 @@ def test_the_agents_environment_carries_no_slurm_variables(tmp_path, monkeypatch
         env={"SLURM_ARRAY_TASK_ID": "2", "SLURM_JOB_ID": "1", "PATH": "/usr/bin"},
     )
     assert not any(key.startswith("SLURM_") for key in env)
-    assert env["PATH"] == "/usr/bin"
+    assert env["PATH"] == f"{Path(sys.prefix) / 'bin'}:/usr/bin"  # the venv first
 
 
 # The environment is an allowlist. The harness's holds every .secrets key and
@@ -427,3 +428,60 @@ def test_an_agent_gets_its_own_login_and_no_other_secret(
 def test_an_unknown_backend_has_no_environment_allowlist():
     with pytest.raises(ValueError, match="allowlist"):
         agent_sandbox.agent_environment({"PATH": "/usr/bin"}, "mystery")
+
+
+@needs_bwrap
+def test_the_resolver_configuration_is_readable_inside(tmp_path):
+    """On systemd hosts (Ubuntu: the SC cluster) /etc/resolv.conf links into
+    /run, which the sandbox did not mount: every agent's DNS lookup failed
+    (EAI_AGAIN) and no agent reached its API (pilot, 2026-10-13)."""
+    result, _, _, _ = _run(tmp_path, "cat /etc/resolv.conf")
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == Path("/etc/resolv.conf").read_text()
+
+
+@needs_bwrap
+def test_python_inside_is_the_harness_venv(tmp_path):
+    """An agent's `python`/`python3` is the harness's venv (pandas, PyMC), not
+    the system's: the critique agent's own command, `python3 -m
+    src.critique.ppc`, found no pandas on the SC cluster (2026-10-15)."""
+    # The cells run the venv's interpreter by path: its bin/ is not on PATH.
+    tree, agent_dir, _ = _layout(tmp_path)
+    venv_bin = str(Path(sys.prefix) / "bin")
+    env = {**os.environ, "PATH": ":".join(p for p in os.environ["PATH"].split(":") if p != venv_bin)}
+    cmd, env = sandbox_command(
+        ["bash", "-c", "python3 -c 'import sys, pandas; print(sys.prefix)'"],
+        backend="opencode", cwd=tree, writable_dirs=[agent_dir], agent_dir=agent_dir, env=env,
+    )
+    result = subprocess.run(cmd, env=env, cwd=tree, capture_output=True, text=True, timeout=120)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == sys.prefix
+
+
+def test_concurrent_agents_claim_distinct_kept_compile_dirs(tmp_path):
+    """Agents compiled in their private homes, removed on exit: every agent
+    compiled every model from scratch (~70 s a graph). A cell's agents now each
+    claim a kept compile dir (flock), never one another holds."""
+    from src.runtime.agent_sandbox import claimed_compile_dir
+
+    root = tmp_path / "agent_pytensor"
+    with claimed_compile_dir(root) as first, claimed_compile_dir(root) as second:
+        assert first != second and first.is_dir() and second.is_dir()
+    with claimed_compile_dir(root) as again:
+        assert again == first  # warm: the next agent reuses it
+
+
+@needs_bwrap
+def test_an_agent_compiles_in_the_dir_it_was_given(tmp_path):
+    tree, agent_dir, _ = _layout(tmp_path)
+    compile_dir = tmp_path / "agent_pytensor" / "slot-0"
+    compile_dir.mkdir(parents=True)
+    cmd, env = sandbox_command(
+        ["bash", "-c", 'echo "$PYTENSOR_FLAGS"; touch "${PYTENSOR_FLAGS#base_compiledir=}/compiled"'],
+        backend="opencode", cwd=tree, writable_dirs=[agent_dir], agent_dir=agent_dir,
+        env=dict(os.environ), compile_dir=compile_dir,
+    )
+    result = subprocess.run(cmd, env=env, cwd=tree, capture_output=True, text=True, timeout=120)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == f"base_compiledir={compile_dir}"
+    assert (compile_dir / "compiled").exists()  # kept after the agent

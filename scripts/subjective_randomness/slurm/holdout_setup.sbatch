@@ -25,7 +25,10 @@ source "$SLURM_DIR/_env.sh"
 echo "[setup] building venv at $UV_PROJECT_ENVIRONMENT (python $UV_PYTHON)"
 # Reuse only a venv that actually works; otherwise (missing or corrupted, e.g.
 # a half-written numpy from a clobbered shared env) rebuild it from scratch.
-if [[ -x "$VENV_PY" ]] && "$VENV_PY" -c "import numpy" >/dev/null 2>&1; then
+if [[ "$CLUSTER" == coco ]]; then
+  # A current glibc: the project's own lock, as the tests run it.
+  (cd "$REPO" && uv sync --locked)
+elif [[ -x "$VENV_PY" ]] && "$VENV_PY" -c "import numpy" >/dev/null 2>&1; then
   echo "[setup] reusing existing venv"
 else
   uv venv --clear --python "$UV_PYTHON" "$UV_PROJECT_ENVIRONMENT"
@@ -33,7 +36,7 @@ fi
 
 # Only-binary: never build from source (el7 can't build the scientific stack and
 # doesn't need to — older wheel versions work fine). Idempotent on re-run.
-uv pip install --python "$UV_PROJECT_ENVIRONMENT" --only-binary :all: \
+[[ "$CLUSTER" == coco ]] || uv pip install --python "$UV_PROJECT_ENVIRONMENT" --only-binary :all: \
   "pymc==5.28.5" "pytensor==2.38.3" "arviz<1" \
   numpy scipy pyyaml tyro pyprojroot matplotlib
 
@@ -95,14 +98,16 @@ HARNESS_REPO="$HARNESS_REPO" bash "$REPO/scripts/subjective_randomness/slurm/sta
 #   checkout instead of merely deny-listed.
 SEED_MODELS_REL="${SEED_MODELS_REL:-src/subjective_randomness/pymc_model_families}"
 GT_MODELS_SRC="${GT_MODELS_SRC:-$WORK_ROOT/gt_models_src}"
-GT_FAMILY_REL="${GT_FAMILY_REL:-src/subjective_randomness/model_families}"
+GT_FAMILY_REL="${GT_FAMILY_REL-src/subjective_randomness/model_families}"  # empty: no twins
 GT_FAMILY_SRC="${GT_FAMILY_SRC:-$WORK_ROOT/gt_family_src}"
 echo "[setup] staging pristine seed/GT models -> $GT_MODELS_SRC"
 mkdir -p "$GT_MODELS_SRC"
 rsync -a --delete "$HARNESS_REPO/$SEED_MODELS_REL"/ "$GT_MODELS_SRC"/
-echo "[setup] staging pristine model_families -> $GT_FAMILY_SRC"
-mkdir -p "$GT_FAMILY_SRC"
-rsync -a --delete "$HARNESS_REPO/$GT_FAMILY_REL"/ "$GT_FAMILY_SRC"/
+if [[ -n "$GT_FAMILY_REL" ]]; then
+  echo "[setup] staging pristine model_families -> $GT_FAMILY_SRC"
+  mkdir -p "$GT_FAMILY_SRC"
+  rsync -a --delete "$HARNESS_REPO/$GT_FAMILY_REL"/ "$GT_FAMILY_SRC"/
+fi
 
 # Fail fast: syntax-check the scripts the array/analysis jobs run, and import the
 # whole holdout chain so a missing dependency aborts here (afterok) rather than
@@ -130,10 +135,14 @@ SRC_CONFIG="$HARNESS_REPO/$CFG_REL" GT_MODELS_SRC="$GT_MODELS_SRC" SEED_MODELS_R
 import os, sys, pathlib, yaml
 
 cfg = yaml.safe_load(pathlib.Path(os.environ["SRC_CONFIG"]).read_text())
+# Every ground truth needs its parameters in the config; the config may also
+# give other seeds' (the no-learning baseline scores every seed at its own).
 cfg_gts = sorted((cfg.get("gt_models") or {}).keys())
+if cfg.get("data_source") == "dataset":
+    cfg_gts = ["dataset"]  # a dataset run's one cell holds out no model
 env_gts = sorted(os.environ.get("GT_MODELS", "").split())
-if cfg_gts != env_gts:
-    sys.exit(f"GT_MODELS env {env_gts} != config gt_models {cfg_gts} — "
+if not env_gts or not set(env_gts) <= set(cfg_gts):
+    sys.exit(f"GT_MODELS env {env_gts} are not all among config gt_models {cfg_gts} — "
              f"update GT_MODELS in the submit script or the config.")
 
 rel, seed_rel = cfg["seed_models_dir"], os.environ.get("SEED_MODELS_REL", "")
@@ -141,7 +150,7 @@ if seed_rel and seed_rel != rel:
     sys.exit(f"SEED_MODELS_REL env {seed_rel!r} != config seed_models_dir {rel!r}.")
 
 src = pathlib.Path(os.environ["GT_MODELS_SRC"])
-missing = [g for g in env_gts if not (src / f"{g}.py").is_file()]
+missing = [g for g in env_gts if g != "dataset" and not (src / f"{g}.py").is_file()]
 if missing:
     sys.exit(f"GT snapshot {src} is missing model files: {missing}")
 print(f"[setup] validated GT_MODELS={env_gts}; GT source={src}")

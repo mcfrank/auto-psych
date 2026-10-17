@@ -1,5 +1,10 @@
 """The data contract every cognitive model must honour, checked without sampling.
 
+Written below for the coin-flip task (response ``chose_left``, prediction
+``p_left``); every task's contract is the same with its own response column
+and prediction name (``TaskSpec``, ``src.tasks``), found from the response
+file's columns.
+
 A model is scored on its observed variable (ELPD-LOO, pruning, export) but used
 through its ``p_left`` (the EIG design, the novelty gate, held-out
 evaluation). Loading only requires one observed RV backed by a ``pm.Data``
@@ -34,6 +39,7 @@ import numpy as np
 from src.models.data_binding import _read_csv_rows, extract_observed
 from src.models.model_loading import _import_pymc, load_pymc_model
 from src.models.pymc_inference import is_model_failure
+from src.tasks import TaskSpec, task_of_file
 
 # The largest |P_likelihood(observed response) - Bernoulli(observed; p_left)|
 # tolerated at any trial and test point, on the probability scale. The same
@@ -53,35 +59,31 @@ CONTRACT_PROBABILITY_TOLERANCE = 1e-5
 CONTRACT_JITTERED_POINTS = 3
 CONTRACT_JITTER_SEED = 0
 
-P_LEFT_NAME = "p_left"
 
-
-def _responses_chose_left(responses_path: Path) -> np.ndarray:
-    """The response file's ``chose_left`` column, as 0/1 integers in row order."""
+def _responses(responses_path: Path, task: TaskSpec) -> np.ndarray:
+    """The response file's response column, as 0/1 integers in row order."""
     rows = _read_csv_rows(responses_path)
-    if not rows or "chose_left" not in rows[0]:
-        raise ValueError(
-            f"{responses_path} has no chose_left column; the contract check needs "
-            "a response file."
-        )
-    values = np.array([float(row["chose_left"]) for row in rows])
+    column = task.response_column
+    if not rows:
+        raise ValueError(f"{responses_path} has no rows; the contract check needs responses.")
+    values = np.array([float(row[column]) for row in rows])
     if not np.all((values == 0) | (values == 1)):
-        raise ValueError(f"{responses_path}: chose_left must be 0 or 1 on every row.")
+        raise ValueError(f"{responses_path}: {column} must be 0 or 1 on every row.")
     return values.astype(int)
 
 
-def _describe_mismatch(bound: np.ndarray, chose_left: np.ndarray) -> str:
-    differing = np.flatnonzero(bound != chose_left)
+def _describe_mismatch(bound: np.ndarray, responses: np.ndarray, column: str) -> str:
+    differing = np.flatnonzero(bound != responses)
     what = (
-        "chose_left in another row order"
-        if np.array_equal(np.sort(bound), np.sort(chose_left))
-        else "not the chose_left column"
+        f"{column} in another row order"
+        if np.array_equal(np.sort(bound), np.sort(responses))
+        else f"not the {column} column"
     )
     return (
         f"the observed data the model binds from the responses are {what} "
-        f"({len(differing)} of {len(chose_left)} trials differ, first at row "
+        f"({len(differing)} of {len(responses)} trials differ, first at row "
         f"{differing[0]}); the observed variable must be exactly the responses' "
-        "chose_left, one per trial, in row order"
+        f"{column}, one per trial, in row order"
     )
 
 
@@ -112,11 +114,12 @@ def _response_potentials(model: Any, observed_value: Any) -> List[str]:
     ]
 
 
-def _check_bound_model(model: Any, chose_left: np.ndarray) -> Optional[str]:
+def _check_bound_model(model: Any, responses: np.ndarray, task: TaskSpec) -> Optional[str]:
     """The contract checks on a model whose data are already bound."""
     from pytensor.compile.function import function
 
-    n_trials = len(chose_left)
+    column, prediction = task.response_column, task.prediction_var
+    n_trials = len(responses)
     if len(model.observed_RVs) != 1:
         return (
             f"the model has {len(model.observed_RVs)} observed variables; it must "
@@ -130,33 +133,33 @@ def _check_bound_model(model: Any, chose_left: np.ndarray) -> Optional[str]:
         return (
             f"the observed data have shape {bound.shape}, but the responses have "
             f"{n_trials} trials; the observed variable must be exactly the "
-            "responses' chose_left, one per trial, in row order"
+            f"responses' {column}, one per trial, in row order"
         )
-    if not np.array_equal(bound, chose_left):
-        return _describe_mismatch(bound, chose_left)
+    if not np.array_equal(bound, responses):
+        return _describe_mismatch(bound, responses, column)
 
     potentials = _response_potentials(model, observed_value)
     if potentials:
         return (
             f"pm.Potential {', '.join(repr(p) for p in potentials)} depends on the "
             "responses: a likelihood term outside the observed variable is invisible "
-            "to ELPD-LOO and to p_left. Put the whole likelihood in the one "
+            f"to ELPD-LOO and to {prediction}. Put the whole likelihood in the one "
             "Bernoulli observed variable"
         )
 
-    if P_LEFT_NAME not in model.named_vars:
+    if prediction not in model.named_vars:
         return (
-            "the model has no variable named 'p_left'; it must define "
-            "pm.Deterministic('p_left', ...), the per-trial probability of choosing "
-            "the left sequence that its Bernoulli likelihood uses"
+            f"the model has no variable named {prediction!r}; it must define "
+            f"pm.Deterministic({prediction!r}, ...), the per-trial probability of a "
+            f"positive response ({column} = 1) that its Bernoulli likelihood uses"
         )
-    (p_left,) = model.replace_rvs_by_values([model.named_vars[P_LEFT_NAME]])
+    (p_left,) = model.replace_rvs_by_values([model.named_vars[prediction]])
     (log_likelihood,) = model.logp(vars=[response], sum=False, jacobian=False)
     evaluate = function(
         model.value_vars, [p_left, log_likelihood], on_unused_input="ignore"
     )
 
-    expected_side = chose_left == 1
+    expected_side = responses == 1
     for i, point in enumerate(_test_points(model)):
         p, ll = (
             np.asarray(v, dtype=float)
@@ -164,7 +167,7 @@ def _check_bound_model(model: Any, chose_left: np.ndarray) -> Optional[str]:
         )
         if p.shape != (n_trials,):
             return (
-                f"p_left has shape {p.shape}, not one entry per trial ({n_trials} "
+                f"{prediction} has shape {p.shape}, not one entry per trial ({n_trials} "
                 "trials); it must be a vector with one probability per response row"
             )
         if ll.shape != (n_trials,):
@@ -177,7 +180,7 @@ def _check_bound_model(model: Any, chose_left: np.ndarray) -> Optional[str]:
         if i > 0 and not finite.all():
             continue  # a jittered point off the model's support: nothing to compare
         if not finite.all():
-            return "p_left or the log-likelihood is not finite at the initial point"
+            return f"{prediction} or the log-likelihood is not finite at the initial point"
         implied = np.exp(ll)
         bernoulli = np.where(expected_side, p, 1.0 - p)
         gap = np.abs(implied - bernoulli)
@@ -185,13 +188,13 @@ def _check_bound_model(model: Any, chose_left: np.ndarray) -> Optional[str]:
         if gap[worst] > CONTRACT_PROBABILITY_TOLERANCE:
             return (
                 "the likelihood's probability of the observed responses disagrees "
-                f"with Bernoulli(chose_left; p_left): at row {worst} "
+                f"with Bernoulli({column}; {prediction}): at row {worst} "
                 f"{'the initial point' if i == 0 else 'a jittered test point'} gives "
-                f"p_left = {p[worst]:.6g}, so Bernoulli probability "
+                f"{prediction} = {p[worst]:.6g}, so Bernoulli probability "
                 f"{bernoulli[worst]:.6g}, but the likelihood gives "
-                f"{implied[worst]:.6g}. p_left must be exactly the probability the "
+                f"{implied[worst]:.6g}. {prediction} must be exactly the probability the "
                 "Bernoulli likelihood uses (apply any lapse, mixture or bias to "
-                "p_left itself)"
+                f"{prediction} itself)"
             )
     return None
 
@@ -208,13 +211,14 @@ def model_contract_violation(
     """
     pm = _import_pymc()
     model_file = Path(models_dir) / f"{name}.py"
-    chose_left = _responses_chose_left(responses_path)
+    task = task_of_file(responses_path)
+    responses = _responses(responses_path, task)
     model = load_pymc_model(name, models_dir)
     try:
         observed = extract_observed(responses_path, model)
         with model:
             pm.set_data(observed)
-        return _check_bound_model(model, chose_left)
+        return _check_bound_model(model, responses, task)
     except Exception as e:
         if not is_model_failure(e, model_file):
             raise

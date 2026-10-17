@@ -19,6 +19,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 import src.critique.ppc as ppc
 from src.pipelines.inner_loop import critique_round
 from src.pipelines.inner_loop.critique_round import (
@@ -29,6 +30,8 @@ from src.pipelines.inner_loop.critique_round import (
 )
 from src.runtime.config import REPO_ROOT
 from tests.inner_loop_fixtures import write_task_description_beside
+
+SR_CRITIQUE = SUBJECTIVE_RANDOMNESS.critique_prompt
 
 _RESULT = {
     "model": "bayesian_fair_coin",
@@ -112,7 +115,7 @@ def test_critique_prompt_inlines_the_context_and_names_the_output_dir(tmp_path: 
     section of the prompt, exactly as the candidate agent's documents are."""
     crit = tmp_path / "critique"
     context = "# Critique context\n\n**Incumbent (best) model:** `seed_a`\n"
-    prompt = _build_critique_prompt(crit, context)
+    prompt = _build_critique_prompt(crit, context, prompt_path=SR_CRITIQUE)
     assert "## CRITIQUE_CONTEXT.md" in prompt
     assert context in prompt
     assert f"{crit}/test_stats" in prompt
@@ -123,14 +126,14 @@ def test_critique_prompt_inlines_the_context_and_names_the_output_dir(tmp_path: 
 
 def test_critique_prompt_second_attempt_says_the_first_wrote_nothing(tmp_path: Path):
     crit = tmp_path / "critique"
-    prompt = _build_critique_prompt(crit, "ctx", attempt=1)
+    prompt = _build_critique_prompt(crit, "ctx", prompt_path=SR_CRITIQUE, attempt=1)
     assert "second attempt" in prompt
     assert f"{crit}/test_stats" in prompt
 
 
 def test_critique_prompt_refuses_an_empty_context(tmp_path: Path):
     with pytest.raises(ValueError):
-        _build_critique_prompt(tmp_path / "critique", "")
+        _build_critique_prompt(tmp_path / "critique", "", prompt_path=SR_CRITIQUE)
 
 
 def test_write_critique_context_returns_the_text_it_wrote(tmp_path: Path):
@@ -283,7 +286,7 @@ def test_a_statistic_that_fails_on_the_observed_data_is_set_aside_with_its_error
 def test_the_retry_prompt_carries_the_broken_statistics_errors(tmp_path: Path):
     crit = tmp_path / "critique"
     prompt = _build_critique_prompt(
-        crit, "ctx", attempt=1, broken={"raises": "KeyError: 'no_such_column'"}
+        crit, "ctx", prompt_path=SR_CRITIQUE, attempt=1, broken={"raises": "KeyError: 'no_such_column'"}
     )
     assert "raises: KeyError: 'no_such_column'" in prompt
 

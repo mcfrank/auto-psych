@@ -61,7 +61,7 @@ def _spawn(tmp_path, monkeypatch):
     models_dir = tmp_path / "model_loop" / "models"
     models_dir.mkdir(parents=True)
     responses_path = tmp_path / "model_loop" / "responses.csv"
-    responses_path.write_text("a,b\n1,2\n", encoding="utf-8")
+    responses_path.write_text("sequence_a,sequence_b,participant_id,trial_index,chose_left\nHT,TH,0,0,1\n", encoding="utf-8")
 
     docs = {
         "context": "ctx",

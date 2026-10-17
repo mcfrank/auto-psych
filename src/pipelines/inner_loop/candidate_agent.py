@@ -38,11 +38,10 @@ from src.pipelines.inner_loop.model_zoo import (
     _manifest_names,
     parse_prune_margin,
 )
-from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS
+from src.tasks import task_of_file
+from src.tasks.subjective_randomness import CANDIDATE_HINTS as SUBJECTIVE_RANDOMNESS_LENSES
 from src.runtime.config import REPO_ROOT
 
-_PKG_DIR = Path(__file__).resolve().parent
-_THEORY_PROMPT = _PKG_DIR / "prompts" / "pymc_theory.md"
 
 # Exploration lenses, one per exploratory slot per round. Each is a distinct
 # way to search the hypothesis space; together they push rounds toward genuine
@@ -51,47 +50,8 @@ _THEORY_PROMPT = _PKG_DIR / "prompts" / "pymc_theory.md"
 # round (three exploratory slots) walks three rounds without repeating one.
 # Refining a model is not a lens: refinement slots have briefs of their own.
 # Override per run with the `candidate_hints` parameter / `--hints-file` knob.
-DEFAULT_CANDIDATE_HINTS = [
-    "Propose a mechanism from a genuinely different psychological process "
-    "family than anything in the current set — one the current models cannot "
-    "express, not a variant of them.",
-    "Propose a single mechanism whose predictions would disagree most sharply "
-    "with the current best model somewhere in the stimulus space — and say in "
-    "your hypothesis where that disagreement lives.",
-    "Build a mechanism around information the current models ignore. Derive "
-    "the exact statistic your hypothesis needs from the raw sequences with "
-    "`compute_features` (order, position, recency, specific sub-sequences).",
-    "Propose a process-level account — a memory limit, attention window, "
-    "encoding cost, or sequential-updating process — rather than another "
-    "statistical summary of the stimulus.",
-    "Take a normative account (e.g. Bayesian inference over candidate "
-    "generators) and add exactly one principled distortion: a bias, a "
-    "resource limit, or a mis-weighting.",
-    "Propose something simpler or higher-variance than anything in the set — "
-    "if it is wrong, the model comparison will say so loudly, and that is "
-    "informative.",
-    "Propose a mechanism in which the two sequences are not judged one at a "
-    "time: the comparison itself does the work — a contrast effect, anchoring "
-    "on whichever sequence is read first, or a shared reference point both are "
-    "judged against — so the same sequence would be judged differently beside "
-    "a different partner.",
-    "Propose a mechanism driven by the single most salient local feature — the "
-    "longest run, the most lopsided window, or the presence of one specific "
-    "motif — a maximum over sub-sequences rather than a sum or average over the "
-    "whole sequence, so one striking stretch decides the judgment.",
-    "Propose a mechanism at the level of the decision rule rather than the "
-    "evidence: a lapse rate, a bias toward one response side, an indifference "
-    "band within which the choice is a coin flip, or probability matching — "
-    "with the evidence itself kept as simple as the simplest current model.",
-    "Propose a mechanism in which people track a running tally as they read "
-    "the sequence — the cumulative lead of heads over tails, or how far and how "
-    "often it drifts from balance before correcting — so the path to the final "
-    "count matters, not the count.",
-    "Propose an exemplar account: people carry a few remembered examples of "
-    "what random and designed sequences look like and judge a new sequence by "
-    "its similarity to the nearest ones — define the prototypes and the "
-    "similarity explicitly, as the single mechanism.",
-]
+# The coin-flip task's battery; each task has its own (TaskSpec.candidate_hints).
+DEFAULT_CANDIDATE_HINTS = SUBJECTIVE_RANDOMNESS_LENSES
 
 
 # ─────────────────────────────────────────────
@@ -417,6 +377,7 @@ def _write_candidate_context(
     omit_from_attempted: Iterable[str] = (),
     role: str = SLOT_EXPLORE,
     incumbent: Optional[str] = None,
+    fit_method: Optional[str] = None,
 ) -> Dict[str, Optional[str]]:
     """Write the candidate's context documents and return their text.
 
@@ -459,14 +420,17 @@ def _write_candidate_context(
     with responses_path.open(encoding="utf-8") as f:
         header = f.readline().strip()
     columns = [c for c in header.split(",") if c]
-    extra_columns = [c for c in columns if c not in set(RAW_RESPONSE_COLUMNS)]
+    task = task_of_file(responses_path)
+    extra_columns = [c for c in columns if c not in set(task.raw_columns)]
     if extra_columns:
         raise ValueError(
             f"{responses_path} has column(s) {extra_columns} beyond the raw ones "
-            f"{list(RAW_RESPONSE_COLUMNS)}. The pipeline is raw-only (every model "
+            f"{list(task.raw_columns)}. The pipeline is raw-only (every model "
             "computes its own features), and the candidate brief describes only "
             "the raw columns."
         )
+    stimulus = ", ".join(f"`{c}`" for c in task.stimulus_columns)
+    signature = ", ".join(f"{c}: str" for c in task.stimulus_columns)
     lines = [
         f"# Inner Loop — round {iteration}, candidate {candidate_idx} of "
         f"{candidate_count} ({_ROLE_LABELS[role]})",
@@ -478,16 +442,17 @@ def _write_candidate_context(
         f"Responses CSV: `{responses_path}`",
         f"Columns in the responses CSV: `{header}`",
         "",
-        "There are **no feature columns** in this CSV — only the raw H/T "
-        "sequence strings and the response (`chose_left`). The only numeric "
-        "column you can read directly as a `pm.Data` is `chose_left`.",
+        f"There are **no feature columns** in this CSV — only the raw stimulus "
+        f"columns ({stimulus}) and the response (`{task.response_column}`). Every "
+        "value reaches your model as the string the CSV holds.",
         "",
-        "Your model **must** compute its own features from the raw sequences. "
-        "Define a module-level hook in `candidate.py` — either:",
+        "Your model **must** compute its own features from the raw stimulus "
+        "columns. Define a module-level hook in `candidate.py` — either:",
         "",
-        "- `compute_features(sequence_a: str, sequence_b: str) -> dict[str, "
-        "float]`: returns named numeric features for one stimulus pair; the "
-        "pipeline calls it per trial and exposes each key as a `pm.Data` column.",
+        f"- `compute_features({signature}) -> dict[str, float]`: returns named "
+        "numeric features for one stimulus; the pipeline calls it per trial "
+        "with the stimulus columns in that order and exposes each key as a "
+        "`pm.Data` column.",
         "- `prepare_observed(rows: list[dict]) -> dict[str, np.ndarray]`: "
         "builds all observed arrays at once from the full row list.",
         "",
@@ -517,11 +482,11 @@ def _write_candidate_context(
         "you can act on — the import allowlist, a loadable module-level "
         "`model: pm.Model`, a finite log-probability on the real responses, the "
         "data contract (the observed variable is exactly the responses' "
-        "`chose_left`, `p_left` has one value per trial and is the probability "
-        "the Bernoulli likelihood uses), a "
+        f"`{task.response_column}`, `{task.prediction_var}` has one value per "
+        "trial and is the probability the Bernoulli likelihood uses), a "
         f"short MCMC fit ({CANDIDATE_CHECK_DRAWS} draws, {CANDIDATE_CHECK_TUNE} "
         f"tune, {CANDIDATE_CHECK_CHAINS} chain: a smoke test, not a full "
-        "production fit) and a finite ELPD-LOO — and prints `OK` or the exact "
+        "production fit) and a finite log-likelihood — and prints `OK` or the exact "
         "reason admission would reject the file. Fix anything it reports. It "
         "does not check novelty against the other models, nor convergence, nor "
         "speed: admission's full fit must have almost no divergent transitions, "
@@ -537,7 +502,7 @@ def _write_candidate_context(
         "and a likelihood vectorised over trials.",
         "",
         "```bash",
-        check_candidate_command(candidate_dir, responses_path),
+        check_candidate_command(candidate_dir, responses_path, fit_method),
         "```",
         "",
     ]
@@ -672,7 +637,9 @@ def _repair_note(previous_dir: Path, reason: str) -> str:
     )
 
 
-def _build_candidate_prompt(candidate_dir: Path, docs: Dict[str, Optional[str]]) -> str:
+def _build_candidate_prompt(
+    candidate_dir: Path, docs: Dict[str, Optional[str]], *, theory_prompt: Path
+) -> str:
     """The candidate agent's full prompt: task instructions + injected context.
 
     Every context document is inlined as a delimited section so the agent
@@ -681,10 +648,11 @@ def _build_candidate_prompt(candidate_dir: Path, docs: Dict[str, Optional[str]])
     retry or repair attempt's note (``docs["attempt_note"]``) goes right after
     the output instructions, before any other document. An exploratory slot
     carries ``attempted_hypotheses.md``; a refinement slot carries
-    ``refinement_menu.md`` instead.
+    ``refinement_menu.md`` instead. ``theory_prompt`` is the task's
+    instructions (``TaskSpec.theory_prompt``).
     """
     sections = [
-        f"{_THEORY_PROMPT.read_text(encoding='utf-8')}",
+        f"{Path(theory_prompt).read_text(encoding='utf-8')}",
         "---",
         f"Your working directory for this candidate is `{candidate_dir}`.\n"
         f"Write `hypothesis.md` (your single hypothesis in plain English), "
@@ -746,7 +714,9 @@ def _spawn_candidate_agent(
     # named explicitly since it is not the cwd; the launcher grants any
     # allowed_dirs entry that falls outside the cwd.
     cwd = agent_root if agent_root is not None else REPO_ROOT
-    prompt = _build_candidate_prompt(candidate_dir, docs)
+    prompt = _build_candidate_prompt(
+        candidate_dir, docs, theory_prompt=task_of_file(responses_path).theory_prompt
+    )
     log_path = candidate_dir / "agent.jsonl"
     success, _ = run_coding_agent(
         prompt,

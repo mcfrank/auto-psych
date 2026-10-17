@@ -90,13 +90,28 @@ is_retry=""
 [[ -n "${AGENT_BACKEND:-}" ]] && export AGENT_BACKEND
 [[ -n "${AGENT_MODEL:-}"   ]] && export AGENT_MODEL
 # How claude agents are billed: CLAUDE_AUTH=subscription (CLAUDE_CODE_OAUTH_TOKEN)
-# or CLAUDE_AUTH=api (ANTHROPIC_API_KEY), passed to --claude-auth. No default:
+# or CLAUDE_AUTH=api (ANTHROPIC_API_KEY), or CLAUDE_AUTH=subscription_then_api
+# (both: the API key from the first subscription limit on), passed to
+# --claude-auth. No default:
 # with AGENT_BACKEND=claude a sweep that does not say is refused here, before
 # anything is queued (and again by the harness, before any agent starts).
 [[ -n "${CLAUDE_AUTH:-}" ]] && export CLAUDE_AUTH
 if [[ "${AGENT_BACKEND:-}" == "claude" && -z "${CLAUDE_AUTH:-}" ]]; then
   echo "ERROR: AGENT_BACKEND=claude needs CLAUDE_AUTH=subscription or CLAUDE_AUTH=api" >&2
   exit 1
+fi
+
+# CLUSTER=coco: the SC cluster's cocoflops1 (account and partition cocoflops);
+# its flags override the scripts' Sherlock #SBATCH lines. Cells get CELL_CPUS
+# (default 24: ~6 concurrent 4-chain fits) and CELL_MEM. Exported, so retry
+# rounds resubmit on the same cluster.
+export CLUSTER="${CLUSTER:-sherlock}"
+CLUSTER_FLAGS=()
+CELL_FLAGS=()
+if [[ "$CLUSTER" == coco ]]; then
+  CLUSTER_FLAGS=(--account=cocoflops --partition=cocoflops -w cocoflops1)
+  CELL_FLAGS=(--cpus-per-task="${CELL_CPUS:-24}" --mem="${CELL_MEM:-96G}" --time="${CELL_TIME:-7-00:00:00}")
+  export SCRATCH="${SCRATCH:-/scr/$USER}"  # as in _env.sh
 fi
 
 # Keep Slurm logs off $HOME (15 GB, NFS). Mirror _env.sh's WORK_ROOT default.
@@ -111,13 +126,13 @@ if [[ -n "$is_retry" ]]; then
   [[ -f "$WORK_ROOT/code_commit" ]] || { echo "ERROR: a retry needs the code the sweep staged, and $WORK_ROOT/code_commit does not exist" >&2; exit 1; }
   echo "retry round ${RETRY_ROUND}: no setup job; the cells resume on the staged code ($(cat "$WORK_ROOT/code_commit"))"
 else
-  setup_id=$(sbatch --parsable --export=ALL \
+  setup_id=$(sbatch --parsable "${CLUSTER_FLAGS[@]}" --export=ALL \
     --output="$LOGDIR/%x_%j.out" --error="$LOGDIR/%x_%j.out" \
     holdout_setup.sbatch)
   echo "submitted setup job:    $setup_id"
 fi
 
-array_id=$(sbatch --parsable ${setup_id:+--dependency=afterok:"$setup_id"} --export=ALL \
+array_id=$(sbatch --parsable "${CLUSTER_FLAGS[@]}" "${CELL_FLAGS[@]}" ${setup_id:+--dependency=afterok:"$setup_id"} --export=ALL \
   --array="$ARRAY_SPEC" ${ARRAY_TIME:+--time="$ARRAY_TIME"} ${array_mem:+--mem="$array_mem"} \
   --output="$LOGDIR/%x_%A_%a.out" --error="$LOGDIR/%x_%A_%a.out" \
   holdout_recovery_array.sbatch)
@@ -129,7 +144,7 @@ echo "submitted array job:    $array_id ($ARRAY_SPEC${array_mem:+, --mem=$array_
 MAX_RETRY_ROUNDS="${MAX_RETRY_ROUNDS:-2}"
 export MAX_RETRY_ROUNDS
 if (( ${RETRY_ROUND:-0} < MAX_RETRY_ROUNDS )); then
-  retry_id=$(sbatch --parsable --dependency=afterany:"$array_id" \
+  retry_id=$(sbatch --parsable "${CLUSTER_FLAGS[@]}" --dependency=afterany:"$array_id" \
     --export=ALL,RETRY_ARRAY_ID="$array_id",RETRY_ROUND="${RETRY_ROUND:-0}" \
     --output="$LOGDIR/%x_%j.out" --error="$LOGDIR/%x_%j.out" \
     holdout_retry.sbatch)
@@ -139,10 +154,13 @@ fi
 # afterany: summarise once every task has finished, regardless of per-task
 # success — the analysis uses whatever repeats produced a tidy CSV (agent runs
 # are flaky over many hours). Use afterok to instead require all tasks to pass.
-analysis_id=$(sbatch --parsable --dependency=afterany:"$array_id" --export=ALL \
-  --output="$LOGDIR/%x_%j.out" --error="$LOGDIR/%x_%j.out" \
-  holdout_analysis.sbatch)
-echo "submitted analysis job: $analysis_id"
+# TEST_RETEST_ANALYSIS=0 skips it (a dataset run has no recovery to summarise).
+if [[ "${TEST_RETEST_ANALYSIS:-1}" == 1 ]]; then
+  analysis_id=$(sbatch --parsable "${CLUSTER_FLAGS[@]}" --dependency=afterany:"$array_id" --export=ALL \
+    --output="$LOGDIR/%x_%j.out" --error="$LOGDIR/%x_%j.out" \
+    holdout_analysis.sbatch)
+  echo "submitted analysis job: $analysis_id"
+fi
 
 echo
 echo "watch with:  squeue --me"

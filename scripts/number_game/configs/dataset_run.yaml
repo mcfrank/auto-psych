@@ -1,0 +1,31 @@
+# Number-game dataset run: the live pipeline's stages, each experiment
+# collected from the Bigelow & Piantadosi dataset (src/number_game/dataset.py)
+# instead of participants: 280 designed cells x 9 of each cell's real responses
+# (~2,500 responses, as the subjective-randomness and RSA live experiments),
+# none reused. No ground truth: the loop starts from every seed. Submit with
+#   bash scripts/number_game/slurm/submit_dataset_run.sh
+project_id: number_game
+seed_models_dir: src/pipelines/outer_loop/projects/number_game/seed_models
+data_source: dataset
+n_experiments: 3
+n_participants: 9  # responses drawn per designed cell
+seed: 7
+hide_participant_id: true
+inner_loop:
+  max_iterations: 5
+  candidate_count: 6
+  n_critique_proposals: 8
+  selection: {criterion: grouped_cv, cv_group: [number_set], cv_folds: 4}
+design:
+  n_eig: 280
+  n_random: 0
+agent:
+  timeout_sec: 1800
+  backend: claude
+  claude_auth: subscription
+  model: claude-opus-5-5
+fit:
+  method: warm_start_nuts
+  tune: 200
+  draws: 500
+  chains: 4

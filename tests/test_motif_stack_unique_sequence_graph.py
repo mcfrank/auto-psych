@@ -32,6 +32,7 @@ from src.models.model_loading import (
     pm_data_inputs,
 )
 from src.subjective_randomness.model_families import motif_stack as twin
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 from src.subjective_randomness.holdout_data import p_left_fixed_params
 from tests.recovery_fixtures import p_left_model_family
 
@@ -132,7 +133,7 @@ def test_deduped_adapter_matches_the_pure_python_twin(draw):
         name: float(rng.uniform(low, high))
         for name, (low, high) in twin.PARAM_BOUNDS.items()
     }
-    from_pymc = p_left_fixed_params("motif_stack", MODEL_DIR, STIMULI, params)
+    from_pymc = p_left_fixed_params("motif_stack", MODEL_DIR, STIMULI, params, task=SUBJECTIVE_RANDOMNESS)
     from_twin = p_left_model_family("motif_stack", STIMULI, params)
     np.testing.assert_allclose(from_pymc, from_twin, atol=1e-8, rtol=0)
     # Not vacuous: the predictions must actually vary across stimuli.
@@ -141,7 +142,8 @@ def test_deduped_adapter_matches_the_pure_python_twin(draw):
 
 def test_default_params_match_the_twin():
     from_pymc = p_left_fixed_params(
-        "motif_stack", MODEL_DIR, STIMULI, dict(twin.DEFAULT_PARAMS)
+        "motif_stack", MODEL_DIR, STIMULI, dict(twin.DEFAULT_PARAMS),
+        task=SUBJECTIVE_RANDOMNESS,
     )
     from_twin = p_left_model_family("motif_stack", STIMULI, dict(twin.DEFAULT_PARAMS))
     np.testing.assert_allclose(from_pymc, from_twin, atol=1e-8, rtol=0)
@@ -306,10 +308,11 @@ def test_motif_stack_is_not_dropped_by_the_eig_screener():
     hypothesis set. A `prepare_observed` hook that could not bind a design-pool
     row would get motif_stack excluded from EIG with only a printed `[drop]`
     line — quietly renormalizing the design over the remaining models."""
-    from src.pipelines.outer_loop.eig import _raw_row, _screen_usable_models
+    from src.pipelines.outer_loop.eig import _screen_usable_models
+    from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS as task
 
-    probe_row = _raw_row({"sequence_a": "HHTHTTHT", "sequence_b": "HTHTHTHT"})
-    usable, dropped = _screen_usable_models(["motif_stack"], MODEL_DIR, [probe_row])
+    [probe_row] = task.stimulus_rows([{"sequence_a": "HHTHTTHT", "sequence_b": "HTHTHTHT"}])
+    usable, dropped = _screen_usable_models(["motif_stack"], MODEL_DIR, [probe_row], task)
     assert usable == ["motif_stack"]
     assert dropped == []
 

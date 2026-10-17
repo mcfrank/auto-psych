@@ -626,7 +626,7 @@ class Args:
     coding_agent: Optional[Literal["claude", "opencode"]] = None
     """Coding-agent backend for outer and inner loops. Defaults to the CODING_AGENT
     env var, then 'opencode'. Pass 'claude' for Claude Code."""
-    claude_auth: Optional[Literal["subscription", "api"]] = None
+    claude_auth: Optional[Literal["subscription", "api", "subscription_then_api"]] = None
     """How ``claude`` agents are billed: ``subscription`` (CLAUDE_CODE_OAUTH_TOKEN)
     or ``api`` (ANTHROPIC_API_KEY); without it, CLAUDE_AUTH. Required with the
     claude backend: the run stops before any agent starts when it is missing

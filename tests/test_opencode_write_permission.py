@@ -63,6 +63,7 @@ def test_sbatch_hardening_does_not_add_write_permission(tmp_path):
 def test_candidate_prompt_instructs_bash_writing():
     """The candidate prompt must tell agents to use bash for file creation."""
     from src.pipelines.inner_loop.candidate_agent import _build_candidate_prompt
+    from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 
     prompt = _build_candidate_prompt(
         Path("/tmp/test_candidate_dir"),
@@ -71,6 +72,7 @@ def test_candidate_prompt_instructs_bash_writing():
             "brief": "test brief",
             "existing_hypotheses": "test hypotheses",
         },
+        theory_prompt=SUBJECTIVE_RANDOMNESS.theory_prompt,
     )
     assert "bash" in prompt.lower() or "cat" in prompt.lower(), (
         "candidate prompt does not instruct agents to use bash for file creation"

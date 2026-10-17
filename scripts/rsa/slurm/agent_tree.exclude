@@ -91,6 +91,7 @@ gt.txt
 REFACTOR_NOTES.md
 preprocess.py
 /src/subjective_randomness/
+/src/number_game/
 /src/pipelines/outer_loop/projects/*/references/
 /src/pipelines/outer_loop/projects/*/instruction_literature.md
 /src/pipelines/outer_loop/projects/*/problem_definition.md

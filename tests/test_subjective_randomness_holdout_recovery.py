@@ -31,6 +31,7 @@ from src.pipelines.outer_loop.model_loop_runner import (
     run_starting_models,
 )
 from src.runtime import token_usage
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 from src.subjective_randomness.holdout_data import (
     strip_generating_model,
 )
@@ -98,6 +99,7 @@ def _stub_generate_responses(calls):
         params,
         n_participants,
         *,
+        task,
         seed=0,
         participant_id_offset,
     ):
@@ -1037,7 +1039,8 @@ def test_build_eval_stimuli_excludes_trained_pairs_unordered(tmp_path):
     _write_training_responses(run_root, 1, [trained])
 
     result = build_eval_stimuli(
-        run_root, n_experiments=1, n_pairs=20, lengths=(6,), seed=11, min_remaining=1
+        run_root, n_experiments=1, n_pairs=20, lengths=(6,), seed=11, min_remaining=1,
+        task=SUBJECTIVE_RANDOMNESS,
     )
 
     assert result["n_dropped"] == 1
@@ -1058,6 +1061,7 @@ def test_build_eval_stimuli_raises_when_too_few_remain(tmp_path):
             lengths=(6,),
             seed=11,
             min_remaining=5,
+            task=SUBJECTIVE_RANDOMNESS,
         )
 
 
@@ -1066,7 +1070,7 @@ def test_collect_trained_pairs_requires_every_responses_csv(tmp_path):
     _write_training_responses(run_root, 1, [DESIGN_STIMULI[0]])
     # experiment2 has no data/responses.csv
     with pytest.raises(FileNotFoundError):
-        collect_trained_pairs(run_root, n_experiments=2)
+        collect_trained_pairs(run_root, 2, SUBJECTIVE_RANDOMNESS)
 
 
 # ── trajectory evaluation ───────────────────────────────────────────
@@ -1149,7 +1153,7 @@ def test_evaluate_trajectory_scores_every_history_step(tmp_path, monkeypatch):
         def __init__(self, name):
             self.name = name
 
-        def predict_p_left(self, stim_data):
+        def predict_p_left(self, stim_data, var_name="p_left"):
             return predictions[self.name]
 
     monkeypatch.setattr(
@@ -1167,6 +1171,7 @@ def test_evaluate_trajectory_scores_every_history_step(tmp_path, monkeypatch):
         n_experiments=2,
         cache_dir=None,
         fit_kwargs={},
+        task=SUBJECTIVE_RANDOMNESS,
     )
 
     assert [(r["experiment"], r["step"], r["global_step"]) for r in rows] == [
@@ -1229,7 +1234,7 @@ def test_evaluate_trajectory_computes_bayesian_model_average(tmp_path, monkeypat
         def __init__(self, name):
             self.name = name
 
-        def predict_p_left(self, stim_data):
+        def predict_p_left(self, stim_data, var_name="p_left"):
             return predictions[self.name]
 
     def fake_fit(name, models_dir, responses_path, **kw):
@@ -1247,6 +1252,7 @@ def test_evaluate_trajectory_computes_bayesian_model_average(tmp_path, monkeypat
         n_experiments=1,
         cache_dir=None,
         fit_kwargs={},
+        task=SUBJECTIVE_RANDOMNESS,
     )
 
     row = rows[0]
@@ -1313,7 +1319,7 @@ def test_evaluate_trajectory_marginalizes_participant_random_effect(
 
         model = None
 
-        def predict_p_left(self, rows):
+        def predict_p_left(self, rows, var_name="p_left"):
             return np.array(
                 [table[(int(r["participant_id"]), r["sequence_a"])] for r in rows]
             )
@@ -1333,6 +1339,7 @@ def test_evaluate_trajectory_marginalizes_participant_random_effect(
         n_experiments=1,
         cache_dir=None,
         fit_kwargs={},
+        task=SUBJECTIVE_RANDOMNESS,
     )
 
     # Marginal p_left per stimulus = mean over participants:
@@ -1377,7 +1384,7 @@ def _stub_baseline_fits(monkeypatch, predictions, elpd, untrusted=()):
         def __init__(self, name):
             self.name = name
 
-        def predict_p_left(self, stim_data):
+        def predict_p_left(self, stim_data, var_name="p_left"):
             return predictions[self.name]
 
         def loo_diagnostics(self):
@@ -1407,6 +1414,7 @@ def _fitted_baseline(run_root, n_experiments=2):
         other_seed_models=["seed_x", "seed_y"],
         cache_dir=None,
         fit_kwargs={},
+        task=SUBJECTIVE_RANDOMNESS,
     )
 
 
@@ -1526,13 +1534,7 @@ def test_seed_baseline_correlation_averages_other_seed_models(tmp_path, monkeypa
 
     monkeypatch.setattr(holdout_eval, "p_left_fixed_params", fake_p_left)
     monkeypatch.setattr(
-        holdout_eval,
-        "resolve_generating_params",
-        lambda spec, seed_models_dir, gt_family_dir=None: {
-            "gt": {"a": 1.0},
-            "other_a": {"a": 1.0},
-            "other_b": {"a": 1.0},
-        },
+        holdout_eval, "seed_model_names", lambda seed_models_dir: ["gt", "other_a", "other_b"]
     )
     seeded = _write_seeded_zoo(tmp_path / "run", ["other_a", "other_b"])
 
@@ -1542,6 +1544,8 @@ def test_seed_baseline_correlation_averages_other_seed_models(tmp_path, monkeypa
         EVAL_STIMULI,
         seed_models_dir=SEED_MODELS_DIR,
         seeded_models_dir=seeded,
+        task=SUBJECTIVE_RANDOMNESS,
+        params_by_model={"gt": {"a": 1.0}, "other_a": {"a": 1.0}, "other_b": {"a": 1.0}},
     )
 
     # The ground truth comes from the registry, the other seeds' code from the
@@ -1586,7 +1590,7 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(
 
         model = None
 
-        def predict_p_left(self, stim_data):
+        def predict_p_left(self, stim_data, var_name="p_left"):
             return gt_p
 
     monkeypatch.setattr(
@@ -1596,6 +1600,7 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(
     )
 
     result = {
+        "project_id": "subjective_randomness",
         "n_experiments": 1,
         "fit_kwargs": {},
         "seed_models_dir": str(SEED_MODELS_DIR),
@@ -1672,7 +1677,7 @@ def test_reevaluate_trajectories_records_the_incumbent_trajectory(
 
         model = None
 
-        def predict_p_left(self, stim_data):
+        def predict_p_left(self, stim_data, var_name="p_left"):
             return gt_p
 
     monkeypatch.setattr(
@@ -1681,6 +1686,7 @@ def test_reevaluate_trajectories_records_the_incumbent_trajectory(
         lambda name, models_dir, responses_path, **kw: Fitted(),
     )
     result = {
+        "project_id": "subjective_randomness",
         "n_experiments": 2,
         "fit_kwargs": {},
         "seed_models_dir": str(SEED_MODELS_DIR),
@@ -1780,6 +1786,7 @@ def test_reevaluate_trajectories_rebuilds_exhaustive_eval_pool(tmp_path, monkeyp
 
     gt_models_dir = tmp_path / "impossible_gt"
     result = {
+        "project_id": "subjective_randomness",
         "n_experiments": 1,
         "fit_kwargs": {},
         "seed_models_dir": str(SEED_MODELS_DIR),
@@ -1850,6 +1857,7 @@ def test_evaluate_trajectory_fails_loudly_without_history(tmp_path, monkeypatch)
             n_experiments=1,
             cache_dir=None,
             fit_kwargs={},
+            task=SUBJECTIVE_RANDOMNESS,
         )
 
 
@@ -2409,7 +2417,7 @@ def test_holdout_cli_forwards_novelty_threshold_as_an_inner_loop_override(
 
     def fake_run(config, config_path, results_root, **kwargs):
         captured.update(kwargs)
-        return {"gt_runs": []}
+        return {"data_source": "simulation", "gt_runs": []}
 
     monkeypatch.setattr(mod, "run_holdout_recovery_from_config", fake_run)
     monkeypatch.setattr(mod, "load_config", lambda path: {})
@@ -2563,6 +2571,7 @@ def test_holdout_single_experiment_real_mcmc_with_stub_agents(tmp_path, monkeypa
         n_experiments=1,
         cache_dir=cache_dir,
         fit_kwargs=config["fit"],
+        task=SUBJECTIVE_RANDOMNESS,
     )
     assert {p.name for p in cache_dir.glob("*.nc")} == cached
     assert rows[0]["pearson_r"] == pytest.approx(r)
@@ -2825,7 +2834,7 @@ def test_agent_csv_has_only_raw_columns(tmp_path, monkeypatch):
     with responses.open(encoding="utf-8", newline="") as f:
         reader = csv.DictReader(f)
         rows = list(reader)
-    assert set(reader.fieldnames) == set(holdout_data.RAW_RESPONSE_COLUMNS)
+    assert set(reader.fieldnames) == set(SUBJECTIVE_RANDOMNESS.raw_columns)
     assert len(rows) == 2 * len(DESIGN_STIMULI)
 
 
@@ -2841,14 +2850,14 @@ def test_strip_to_raw_columns_keeps_only_the_raw_five():
             "occ_n20_b": 0.5,
         }
     ]
-    (stripped,) = holdout_data.strip_to_raw_columns(rows)
-    assert tuple(stripped) == holdout_data.RAW_RESPONSE_COLUMNS
+    (stripped,) = holdout_data.strip_to_raw_columns(rows, SUBJECTIVE_RANDOMNESS)
+    assert tuple(stripped) == SUBJECTIVE_RANDOMNESS.raw_columns
     assert rows[0]["p_alts_a"] == 1.0  # input untouched
 
 
 def test_strip_to_raw_columns_fails_loudly_without_the_sequences():
     with pytest.raises(ValueError, match="sequence_a"):
-        holdout_data.strip_to_raw_columns([{"participant_id": 0, "chose_left": 1}])
+        holdout_data.strip_to_raw_columns([{"participant_id": 0, "chose_left": 1}], SUBJECTIVE_RANDOMNESS)
 
 
 # ── Regression: existing metric values must not change ──────────────
@@ -2926,7 +2935,7 @@ def test_evaluate_trajectory_regression_pearson_r_and_rmse_unchanged(
         def __init__(self, name):
             self.name = name
 
-        def predict_p_left(self, stim_data):
+        def predict_p_left(self, stim_data, var_name="p_left"):
             return predictions[self.name]
 
     monkeypatch.setattr(
@@ -2944,6 +2953,7 @@ def test_evaluate_trajectory_regression_pearson_r_and_rmse_unchanged(
         n_experiments=1,
         cache_dir=None,
         fit_kwargs={},
+        task=SUBJECTIVE_RANDOMNESS,
     )
 
     row = rows[0]
@@ -3024,7 +3034,7 @@ def test_holdout_cli_forwards_n_critique_proposals_as_an_inner_loop_override(
 
     def fake_run(config, config_path, results_root, **kwargs):
         captured.update(kwargs)
-        return {"gt_runs": []}
+        return {"data_source": "simulation", "gt_runs": []}
 
     monkeypatch.setattr(mod, "run_holdout_recovery_from_config", fake_run)
     monkeypatch.setattr(mod, "load_config", lambda path: {})
@@ -3067,7 +3077,7 @@ def test_pairs_where_a_model_is_undefined_are_excluded_and_logged(
     class Fitted:
         model = None
 
-        def predict_p_left(self, stim_data):
+        def predict_p_left(self, stim_data, var_name="p_left"):
             draws = np.array([[0.2, np.nan, 0.9], [0.2, 0.4, 0.9]])
             raise InvalidPredictions(
                 "p_left values must be finite and in [0, 1]", draws
@@ -3086,6 +3096,7 @@ def test_pairs_where_a_model_is_undefined_are_excluded_and_logged(
         cache_dir=None,
         fit_kwargs={},
         exclusions_log=log,
+        task=SUBJECTIVE_RANDOMNESS,
     )
 
     assert row["n_eval_excluded"] == 1
@@ -3124,7 +3135,7 @@ def test_an_excluded_step_is_announced_in_the_cells_log(tmp_path, monkeypatch, c
     class Fitted:
         model = None
 
-        def predict_p_left(self, stim_data):
+        def predict_p_left(self, stim_data, var_name="p_left"):
             raise InvalidPredictions("bad", np.array([[0.2, np.nan, 0.9]]))
 
     monkeypatch.setattr(holdout_eval, "fit_model", lambda *a, **k: Fitted())
@@ -3137,6 +3148,7 @@ def test_an_excluded_step_is_announced_in_the_cells_log(tmp_path, monkeypatch, c
         n_experiments=1,
         cache_dir=None,
         fit_kwargs={},
+        task=SUBJECTIVE_RANDOMNESS,
     )
     out = capsys.readouterr().out
     assert "WARNING: experiment 1 step 0: 1 of 3 held-out pairs excluded" in out
@@ -3179,6 +3191,7 @@ def test_the_fitted_seed_baseline_excludes_and_logs_a_seeds_undefined_pairs(
         cache_dir=None,
         fit_kwargs={},
         exclusions_log=log,
+        task=SUBJECTIVE_RANDOMNESS,
     )
     seed_x = out["per_model"]["seed_x"]
     assert seed_x["n_eval_excluded"] == 1

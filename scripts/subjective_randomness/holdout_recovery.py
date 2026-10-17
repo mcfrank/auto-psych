@@ -124,7 +124,7 @@ class Args:
     physically — see ``agent_tree.exclude`` and the GT-leak verifier in
     ``holdout_recovery_array.sbatch``.
     """
-    claude_auth: Optional[Literal["subscription", "api"]] = None
+    claude_auth: Optional[Literal["subscription", "api", "subscription_then_api"]] = None
     """How ``claude`` agents are billed: ``subscription`` (CLAUDE_CODE_OAUTH_TOKEN)
     or ``api`` (ANTHROPIC_API_KEY). Overrides the config's agent.claude_auth;
     without either, CLAUDE_AUTH. Required with the claude backend: the run
@@ -223,6 +223,13 @@ def main(args: Args) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
     print(f"\nWrote holdout-recovery result to {out_path}")
+    if result["data_source"] == "dataset":
+        # No ground truth: nothing was scored, so there are no recovery
+        # metrics to tabulate or plot; the run's conclusions are its best models.
+        for gt_run in result["gt_runs"]:
+            trajectory = gt_run["trajectory"]
+            print(f"  {gt_run['gt_model']}: {len(trajectory)} steps, final best model {trajectory[-1]['best_model']}")
+        return
     for gt_run in result["gt_runs"]:
         final = gt_run["trajectory"][-1]
         leakage = gt_run["leakage"]

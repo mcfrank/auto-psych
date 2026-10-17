@@ -101,3 +101,4 @@ data/rsa/*/responses.csv
 data/rsa/*/round_*/candidate_*/scratch/
 data/rsa/*/round_*/candidate_*/.xdg_data/
 data/rsa/*/round_*/candidate_*/.home/
+data/number-game/

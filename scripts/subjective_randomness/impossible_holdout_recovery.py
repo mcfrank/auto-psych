@@ -90,7 +90,7 @@ class Args:
     """Override the per-agent timeout in seconds."""
     backend: Optional[Literal["claude", "opencode", "codex"]] = None
     """Override the coding-agent backend (default: config, then CODING_AGENT env)."""
-    claude_auth: Optional[Literal["subscription", "api"]] = None
+    claude_auth: Optional[Literal["subscription", "api", "subscription_then_api"]] = None
     """How ``claude`` agents are billed: ``subscription`` (CLAUDE_CODE_OAUTH_TOKEN)
     or ``api`` (ANTHROPIC_API_KEY). Overrides the config's agent.claude_auth;
     without either, CLAUDE_AUTH. Required with the claude backend: the run

@@ -29,8 +29,8 @@ from src.models.model_manifest import (
     read_manifest_names,
 )
 from src.models.project.ground_truth import get_ground_truth_models
+from src.tasks import task_for_project, task_present_in
 from src.pipelines.outer_loop.columns import (
-    RAW_RESPONSE_COLUMNS,
     raw_response_rows,
     write_responses_csv,
 )
@@ -551,14 +551,16 @@ def run_design_programmatic(
     prev_exp_dir: Optional[Path] = None,
     k: int = 64,
     n_random: int = 0,
-    lengths: Sequence[int] = (2, 3, 4, 5, 6, 7, 8),
     n_responses: int,
     seed: int = 42,
+    pool: Optional[Sequence[Dict[str, Any]]] = None,
+    fit_method: Optional[str] = None,
 ) -> None:
     """Select the design's stimuli by exhaustive enumeration (no design agent).
 
-    Enumerates every H/T pair over the given lengths, scores it under the
-    experiment's ACTUAL PyMC model set (batched per-draw p_left), and greedily
+    Takes every stimulus in the project task's design pool (``src.tasks``),
+    scores it under the experiment's ACTUAL PyMC model set (batched per-draw
+    predictions), and greedily
     picks the ``k`` stimuli with maximal joint EIG about model identity,
     writing ``design/stimuli.json``. Each model computes its own features from
     raw stimulus rows via its ``compute_features`` or ``prepare_observed`` hook.
@@ -568,19 +570,17 @@ def run_design_programmatic(
     from its posterior predictive, with model weights from
     the previous registry (weights over models absent here fall back to
     uniform, loudly). Works for any PyMC model in the set — no pure-Python
-    family twin needed. Only implemented for subjective_randomness (H/T pair
-    enumeration). ``n_responses`` is the experiment's participant count: every
+    family twin needed. ``n_responses`` is the experiment's participant count: every
     participant answers every selected stimulus, and the EIG scores them all.
     ``seed`` seeds the predictive draws, the EIG scenarios and the random
     half; the holdout harness derives one per cell and experiment (a live run
-    keeps the historical 42).
+    keeps the historical 42). ``pool`` (default: the task's whole design pool)
+    restricts the stimuli scored.
     """
-    if project_id != "subjective_randomness":
-        raise ValueError(
-            "Exhaustive design is only implemented for subjective_randomness "
-            f"(H/T pair enumeration); got {project_id!r}."
-        )
     from src.pipelines.outer_loop import eig as eig_mod
+    from src.tasks import task_for_project
+
+    task = task_for_project(project_id)
 
     # The set this experiment started from: once its model loop has started,
     # cognitive_models/ may already hold the loop's export.
@@ -589,7 +589,8 @@ def run_design_programmatic(
         stimuli = eig_mod.design_exhaustive(
             models_dir,
             screened_out_path=exp_dir / "design" / "screened_out.json",
-            lengths=tuple(lengths),
+            task=task,
+            pool=pool,
             n_select=k,
             n_random=n_random,
             seed=seed,
@@ -602,13 +603,15 @@ def run_design_programmatic(
             models_dir,
             prev_exp_dir / "model_registry.yaml",
             screened_out_path=exp_dir / "design" / "screened_out.json",
-            lengths=tuple(lengths),
+            task=task,
+            pool=pool,
             n_select=k,
             n_random=n_random,
             seed=seed,
             random_seed=seed,
             responses_csv=prev_exp_dir / "model_loop" / "responses.csv",
             fit_cache_dir=exp_dir / "design" / "_fit_cache",
+            fit_method=fit_method,
             n_responses=n_responses,
         )
         basis = f"posterior after experiments 1..{exp_num - 1} (model weights + parameter posteriors)"
@@ -616,8 +619,8 @@ def run_design_programmatic(
     design_dir = exp_dir / "design"
     write_text_atomically(design_dir / "stimuli.json", json.dumps(stimuli, indent=2))
     print(
-        f"  [design] Exhaustive: enumerated all H/T pairs over lengths {tuple(lengths)}, "
-        f"selected {len(stimuli)} jointly-informative pairs ({basis}) -> "
+        f"  [design] Exhaustive: scored the {task.name} design pool, "
+        f"selected {len(stimuli)} jointly-informative stimuli ({basis}) -> "
         f"{design_dir / 'stimuli.json'}",
         flush=True,
     )
@@ -827,10 +830,11 @@ def run_collect_programmatic(
             flush=True,
         )
         # Agents read data/responses.csv (and the loop's pooled copy of it):
-        # the raw columns only.
-        write_responses_csv(raw_response_rows(rows), csv_path)
+        # the raw columns only, of the task the rows are from.
+        write_responses_csv(raw_response_rows(rows, task_present_in(rows[0])), csv_path)
     else:
-        csv_path.write_text(",".join(RAW_RESPONSE_COLUMNS) + "\n", encoding="utf-8")
+        task = task_for_project(project_id or exp_dir.parent.name)
+        csv_path.write_text(",".join(task.raw_columns) + "\n", encoding="utf-8")
 
     print(f"  [collect] Wrote {len(rows)} rows to {csv_path}", flush=True)
     return csv_path

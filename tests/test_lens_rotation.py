@@ -100,7 +100,7 @@ def _patch_loop_internals(monkeypatch):
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     # The experiment-start screen samples the whole set in one batch; no MCMC here.
     monkeypatch.setattr(model_zoo, "fit_models_to_cache", lambda names, *a, **k: {})
-    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", lambda *a, **k: -100.0)
     monkeypatch.setattr(
         model_zoo,
         "_min_prediction_rmse",

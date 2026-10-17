@@ -85,7 +85,8 @@ SEED_MODELS_REL="${SEED_MODELS_REL:-src/subjective_randomness/pymc_model_familie
 POOL_MODELS_REL="${POOL_MODELS_REL:-src/pipelines/outer_loop/projects/subjective_randomness/seed_models}"
 CONFIG="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml}"
 GT_MODELS_SRC="${GT_MODELS_SRC:-$WORK_ROOT/gt_models_src}"  # pristine GT snapshot
-GT_FAMILY_REL="${GT_FAMILY_REL:-src/subjective_randomness/model_families}"
+# Empty: the project's ground truths have no pure-Python twins (number game).
+GT_FAMILY_REL="${GT_FAMILY_REL-src/subjective_randomness/model_families}"
 GT_FAMILY_SRC="${GT_FAMILY_SRC:-$WORK_ROOT/gt_family_src}"  # pristine family snapshot
 
 TASK="${SLURM_ARRAY_TASK_ID:-1}"
@@ -171,11 +172,33 @@ mkdir -p "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME"
 # The cell's fit processes each compile in a slot of their own below this
 # (_compile_dirs in src/models/pymc_inference.py).
 PYTENSOR_BASE="${L_SCRATCH:-$AGENT_DIR/.cache}/pytensor/job_${SLURM_JOB_ID}"
+# With persistent compile slots (coco), the harness process compiles in a
+# kept directory of its own too, claimed for the job's lifetime by a lock this
+# shell holds open: parent-<k>, apart from the fit processes' slot-<k>.
+if [[ -n "${AUTO_PSYCH_COMPILE_SLOTS:-}" ]]; then
+  mkdir -p "$AUTO_PSYCH_COMPILE_SLOTS"
+  for k in $(seq 0 63); do
+    exec {PARENT_SLOT_FD}>"$AUTO_PSYCH_COMPILE_SLOTS/parent-$k.lock"
+    flock -n "$PARENT_SLOT_FD" && break
+    exec {PARENT_SLOT_FD}>&-
+    [[ $k == 63 ]] && { echo "ERROR: no free parent compile slot in $AUTO_PSYCH_COMPILE_SLOTS" >&2; exit 1; }
+  done
+  PYTENSOR_BASE="$AUTO_PSYCH_COMPILE_SLOTS/parent-$k"
+fi
 mkdir -p "$PYTENSOR_BASE"
 export PYTENSOR_FLAGS="base_compiledir=$PYTENSOR_BASE"
+# The cell's agents compile in kept dirs of their own, one per running agent
+# (agent_sandbox.claimed_compile_dir), beside the agent tree: per cell, since
+# compiled code shows a model's structure.
+export AUTO_PSYCH_AGENT_COMPILE_SLOTS="$AGENT_DIR/agent_pytensor"
 
 echo "[task $TASK] repeat=$REPEAT gt=$GT seed=$SEED -> $RUN_DIR"
-[[ -f "$GT_MODELS_SRC/${GT}.py" ]] || { echo "ERROR: GT snapshot missing $GT_MODELS_SRC/${GT}.py (setup job didn't run?)" >&2; exit 1; }
+# A dataset run's cell (GT_MODELS=dataset, config data_source: dataset) holds
+# out no model: every step below that removes or scans for the held-out model
+# is skipped for it.
+HELD_OUT="$GT"
+[[ "$GT" == dataset ]] && HELD_OUT=""
+[[ -z "$HELD_OUT" || -f "$GT_MODELS_SRC/${GT}.py" ]] || { echo "ERROR: GT snapshot missing $GT_MODELS_SRC/${GT}.py (setup job didn't run?)" >&2; exit 1; }
 
 # --- isolated, sanitized agent tree on scratch --------------------------------
 # The agent tree is the scrubbed repo copy the coding agents run from. It is
@@ -200,11 +223,13 @@ touch "$RUN_REPO/.here"
 # registry AND from the live seed pool (which mirrors the registry since the
 # 2026-08 consolidation; under a superseded-GT config the pool copy simply
 # doesn't exist).
+if [[ -n "$HELD_OUT" ]]; then
 for gt_copy in "$RUN_REPO/$SEED_MODELS_REL/${GT}.py" "$RUN_REPO/$POOL_MODELS_REL/${GT}.py"; do
   rm -f "$gt_copy"
   if [[ -e "$gt_copy" ]]; then echo "ERROR: could not remove $gt_copy" >&2; exit 1; fi
 done
 echo "[task $TASK] removed held-out GT from copy: $SEED_MODELS_REL/${GT}.py + $POOL_MODELS_REL/${GT}.py"
+fi
 
 # Scrub the pure-Python family twin too (the real GT-recipe leak — an agent
 # running its own Python could read its DEFAULT_PARAMS + generative form, which
@@ -213,9 +238,9 @@ echo "[task $TASK] removed held-out GT from copy: $SEED_MODELS_REL/${GT}.py + $P
 # imports every twin, so the file must stay importable, but the parent reads the
 # real DEFAULT_PARAMS from the pristine $GT_FAMILY_SRC via --gt-family-dir (by
 # parsing, not importing). Opencode denies below remain as defence in depth.
-[[ -f "$GT_FAMILY_SRC/${GT}.py" ]] || { echo "ERROR: pristine family snapshot missing $GT_FAMILY_SRC/${GT}.py (setup job didn't stage it?)" >&2; exit 1; }
+[[ -z "$GT_FAMILY_REL" || -f "$GT_FAMILY_SRC/${GT}.py" ]] || { echo "ERROR: pristine family snapshot missing $GT_FAMILY_SRC/${GT}.py (setup job didn't stage it?)" >&2; exit 1; }
 GT_FAMILY_COPY="$RUN_REPO/$GT_FAMILY_REL/${GT}.py"
-if [[ -f "$GT_FAMILY_COPY" ]]; then
+if [[ -n "$GT_FAMILY_REL" && -f "$GT_FAMILY_COPY" ]]; then
   cat > "$GT_FAMILY_COPY" <<'STUB'
 """Held-out ground truth. Its real DEFAULT_PARAMS and generative form live in
 the pristine gt_family snapshot, off every agent's disk. This importable stub
@@ -282,6 +307,7 @@ cd "$RUN_REPO"
 # simply absent is seeded around exactly like a superseded GT (--missing-ok
 # covers that case: a superseded GT was never listed). Run from $RUN_REPO so
 # pyprojroot resolves the copy; the --models-dir paths are absolute regardless.
+if [[ -n "$HELD_OUT" ]]; then
 for models_rel in "$SEED_MODELS_REL" "$POOL_MODELS_REL"; do
   # A directory the agent tree excludes outright (agent_tree.exclude now drops
   # the whole PyMC registry, whose files describe the ground truths) has nothing
@@ -314,6 +340,7 @@ while IFS= read -r -d '' mf; do
     echo "[task $TASK] scrubbed $GT from additional manifest: $mf_rel"
   fi
 done < <(find "$RUN_REPO" -name "models_manifest.yaml" -not -path "*/_runs/*" -print0)
+fi
 
 # --- GT-leak verifier: backend-agnostic, runs for EVERY backend --------------
 # Everything above this point that protects the ground truth is either physical
@@ -332,10 +359,12 @@ done < <(find "$RUN_REPO" -name "models_manifest.yaml" -not -path "*/_runs/*" -p
 # these have been readable in every run to date, under every backend. Keyed on
 # $GT so it generalises to any held-out model; nothing the pipeline runs lives
 # under these names (the harness runs from its own full checkout).
+if [[ -n "$HELD_OUT" ]]; then
 while IFS= read -r -d '' named; do
   rm -f "$named"
   echo "[task $TASK] removed GT-named file from agent tree: ${named#$RUN_REPO/}"
 done < <(find "$RUN_REPO" -name "*${GT}*" -type f -not -path "*/_runs/*" -print0)
+fi
 
 # Assert the physical protections actually landed: the two model-family
 # directories must be absent from the tree entirely, and no implementation file
@@ -350,6 +379,7 @@ for forbidden_dir in src/subjective_randomness/pymc_model_families \
     exit 1
   fi
 done
+if [[ -n "$HELD_OUT" ]]; then
 leak_files=$(find "$RUN_REPO" -name "*${GT}*.py" -not -path "*/_runs/*" 2>/dev/null || true)
 if [[ -n "$leak_files" ]]; then
   echo "ERROR: implementation files for the held-out ground truth '$GT' remain in the agent tree:" >&2
@@ -362,6 +392,7 @@ echo "[task $TASK] GT-leak verifier: no ${GT} implementation and no model-family
 # here, before any agent has run.
 bash "$SLURM_DIR/scan_gt_name.sh" --before-agents "$GT" "$RUN_REPO" /dev/null
 echo "[task $TASK] GT-name scan: '$GT' appears nowhere in the agent tree"
+fi
 
 # Optional cheap-run overrides (set by SMOKE mode or by hand). Values are
 # numeric, so unquoted word-splitting below is safe.
@@ -411,7 +442,7 @@ env "${UNSET_ARGS[@]}" "$AGENT_DIR/venv/bin/python" scripts/subjective_randomnes
   --config "$CONFIG" \
   --gt-model "$GT" \
   --gt-models-dir "$GT_MODELS_SRC" \
-  --gt-family-dir "$GT_FAMILY_SRC" \
+  ${GT_FAMILY_REL:+--gt-family-dir "$GT_FAMILY_SRC"} \
   --seed "$SEED" \
   --backend "${AGENT_BACKEND:-opencode}" \
   ${CLAUDE_AUTH:+--claude-auth "$CLAUDE_AUTH"} \
@@ -433,7 +464,7 @@ echo "[task $TASK] done -> $RUN_DIR/holdout.json"
 # Did any agent write the held-out model's name? It may be a coincidence, so
 # this only warns (listing the files in $RUN_DIR/gt_name_mentions.txt, which the
 # analysis job reports); it never fails a finished cell.
-bash "$SLURM_DIR/scan_gt_name.sh" --after-run "$GT" "$RUN_REPO/_runs" "$RUN_DIR/gt_name_mentions.txt"
+[[ -z "$HELD_OUT" ]] || bash "$SLURM_DIR/scan_gt_name.sh" --after-run "$GT" "$RUN_REPO/_runs" "$RUN_DIR/gt_name_mentions.txt"
 # What the agents looked at (URLs; paths outside their own directory), for a
 # person to skim. Warn-only. Inside the sandbox $HOME is each agent's private
 # home, and the Python install is mounted read-only under it.

@@ -31,6 +31,8 @@ import src.models.pymc_inference as pymc_inference
 from src.models.data_binding import as_participant, make_stim_data
 from src.models.model_loading import load_pymc_model
 from src.pipelines.outer_loop import eig as eig_mod
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
+from tests.paths import sr_pairs
 from tests.test_eig_pymc import _PARTICIPANT_MODEL
 
 TRAINING = [0, 3, 7]
@@ -69,8 +71,10 @@ class _Fitted:
         self.name = name
         self.model = load_pymc_model(name, models_dir)
         self.participants_predicted = []
+        self.var_names_predicted = []
 
-    def predict_p_left_draws(self, stim_data, *, seed, max_draws):
+    def predict_p_left_draws(self, stim_data, *, var_name, seed, max_draws):
+        self.var_names_predicted.append(var_name)
         n_rows = len(stim_data["chose_left"])
         if "participant_id" not in stim_data:
             return np.full((2, n_rows), 0.5)
@@ -121,6 +125,7 @@ def _posterior_draws(models_dir, tmp_path, names=("person_a", "bayesian_fair_coi
         fit_cache_dir=None,
         max_draws=2,
         seed=0,
+        task=SUBJECTIVE_RANDOMNESS,
     )
 
 
@@ -140,7 +145,8 @@ def test_a_design_after_data_predicts_a_person_level_model_as_new_participants(
 
     stimuli = eig_mod.design_exhaustive(
         models_dir,
-        lengths=(3,),
+        task=SUBJECTIVE_RANDOMNESS,
+        pool=sr_pairs(3),
         n_select=2,
         n_samples=2,
         n_scenarios=10,
@@ -155,6 +161,10 @@ def test_a_design_after_data_predicts_a_person_level_model_as_new_participants(
     assert set(captured["draws"]) == {"person_a", "person_b"}
     # Predicted as participants past every training id, averaged draw by draw.
     assert stub_fits["person_a"].participants_predicted == NEW
+    # Every new participant is predicted on the task's prediction variable.
+    assert set(stub_fits["person_a"].var_names_predicted) == {
+        SUBJECTIVE_RANDOMNESS.prediction_var
+    }
     draws = captured["draws"]["person_a"]
     assert draws.shape == (2, 28)  # two draws over the 28 length-3 pairs
     np.testing.assert_allclose(draws[0], 0.1 + 0.01 * np.mean(NEW))
@@ -233,7 +243,7 @@ def test_a_model_that_renumbers_participants_is_screened_out_on_record(tmp_path)
     row = {"sequence_a": "HTH", "sequence_b": "HHT", "chose_left": 0}
 
     usable, dropped = eig_mod._screen_usable_models(
-        ["person_a", "renumbers"], models_dir, [row], responses_csv=_responses(tmp_path)
+        ["person_a", "renumbers"], models_dir, [row], SUBJECTIVE_RANDOMNESS, responses_csv=_responses(tmp_path)
     )
 
     assert usable == ["person_a"]
@@ -248,7 +258,7 @@ def test_the_prior_design_still_screens_out_a_person_level_model(tmp_path):
     row = {"sequence_a": "HTH", "sequence_b": "HHT", "chose_left": 0}
 
     with pytest.raises(ValueError, match="No models"):
-        eig_mod._screen_usable_models(["person_a"], models_dir, [row])
+        eig_mod._screen_usable_models(["person_a"], models_dir, [row], SUBJECTIVE_RANDOMNESS)
 
 
 _TRIAL_MODEL = _PARTICIPANT_MODEL.replace(
@@ -264,7 +274,7 @@ def test_a_model_that_binds_trial_index_is_still_screened_out_after_data(tmp_pat
     row = {"sequence_a": "HTH", "sequence_b": "HHT", "chose_left": 0}
 
     usable, dropped = eig_mod._screen_usable_models(
-        ["person_a", "by_trial"], models_dir, [row], responses_csv=_responses(tmp_path)
+        ["person_a", "by_trial"], models_dir, [row], SUBJECTIVE_RANDOMNESS, responses_csv=_responses(tmp_path)
     )
 
     assert usable == ["person_a"]

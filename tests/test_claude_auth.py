@@ -275,3 +275,13 @@ def test_the_harness_environment_scripts_export_every_secrets_key():
         REPO_ROOT / "scripts" / "outer_loop_live" / "_env.sh",
     ):
         assert 'export "$k=$(echo "$v" | xargs)"' in env_sh.read_text()
+
+
+def test_the_fallback_mode_needs_both_credentials():
+    from src.runtime.agent_sandbox import require_claude_auth
+
+    both = {"CLAUDE_CODE_OAUTH_TOKEN": "oat", "ANTHROPIC_API_KEY": "key"}
+    assert require_claude_auth("claude", "subscription_then_api", dict(both)) == "subscription_then_api"
+    for missing in both:
+        with pytest.raises(RuntimeError, match=missing):
+            require_claude_auth("claude", "subscription_then_api", {k: v for k, v in both.items() if k != missing})

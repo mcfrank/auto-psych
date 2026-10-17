@@ -113,3 +113,17 @@ def test_both_arrays_archive_through_the_verified_helper(array):
         in text
     )
     assert "tar czf" not in text and 'rm -rf "$AGENT_DIR"' not in text
+
+
+def test_a_long_listing_still_reads_back(tmp_path):
+    """The read-back check stopped at its first match (grep -q) while tar was
+    still listing: under pipefail tar's SIGPIPE failed a sound archive and kept
+    every tree (a number-game smoke cell, 2026-10-12)."""
+    run_dir, agent_dir = _cell(tmp_path)
+    runs = agent_dir / "repo" / "_runs" / "experiment1"
+    for i in range(5000):
+        (runs / f"candidate_{i:04d}_with_a_long_name_so_the_listing_fills_the_pipe.md").write_text("x")
+    result = _run(run_dir, agent_dir)
+    assert result.returncode == 0, result.stderr
+    assert "does not read back" not in result.stdout + result.stderr
+    assert (run_dir / "agent_runs.tar.gz").exists() and not agent_dir.exists()

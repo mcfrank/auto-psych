@@ -17,7 +17,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
 import yaml
 
@@ -29,10 +29,11 @@ from src.models.model_manifest import (
     read_manifest_names,
 )
 from src.pipelines.outer_loop.columns import (
-    RAW_RESPONSE_COLUMNS,
     raw_response_rows,
     write_responses_csv,
 )
+from src.model_comparison.cv import Selection
+from src.tasks import OPTIONAL_COLUMNS, all_tasks, task_present_in
 from src.pipelines.outer_loop.orchestrator_validators import (
     EXPORT_RECORD_FILENAME,
     _ZOO_NAME_RE,
@@ -53,8 +54,10 @@ from src.runtime.config import REPO_ROOT
 
 def _pooled_response_rows(exp_dir: Path) -> list[dict[str, str]]:
     """Concatenate response rows from experiment 1 through ``exp_dir``, keeping
-    only the raw columns (a run collected before collection dropped the others
-    still has them in its ``data/responses.csv``)."""
+    only the raw columns of the task the files are from (a run collected
+    before collection dropped the others still has them in its
+    ``data/responses.csv``). Every file must carry the same raw columns (a run
+    hides ``participant_id`` in all its experiments or in none)."""
     project_dir = exp_dir.parent
     current_num = int(exp_dir.name.removeprefix("experiment"))
     rows: list[dict] = []
@@ -62,15 +65,17 @@ def _pooled_response_rows(exp_dir: Path) -> list[dict[str, str]]:
         path = project_dir / f"experiment{exp_num}" / "data" / "responses.csv"
         if path.exists():
             with path.open(encoding="utf-8") as f:
-                rows.extend(raw_response_rows(csv.DictReader(f)))
-    return rows
+                rows.extend(csv.DictReader(f))
+    return raw_response_rows(rows, task_present_in(rows[0])) if rows else []
 
 
-def write_task_description(project_id: str, loop_dir: Path) -> Path:
+def write_task_description(project_id: str, loop_dir: Path, columns: Sequence[str]) -> Path:
     """Copy the project's task description next to the inner loop's responses.
 
     Candidate and critique agents are told the task from it
-    (``inner_loop.task_description``). Fails loudly if the project has none.
+    (``inner_loop.task_description``). Its column table keeps the rows of the
+    ``columns`` the responses carry (a run that hides ``participant_id``
+    drops that row). Fails loudly if the project has none.
     """
     from src.pipelines.outer_loop.orchestrator import outer_project_dir
 
@@ -80,8 +85,15 @@ def write_task_description(project_id: str, loop_dir: Path) -> Path:
             f"Project {project_id!r} has no {TASK_DESCRIPTION_NAME} at {source}; "
             "inner-loop agents must be told the task."
         )
+    absent = OPTIONAL_COLUMNS - set(columns)
+    lines = [
+        line for line in source.read_text(encoding="utf-8").splitlines(keepends=True)
+        if not any(line.startswith(f"| `{column}`") for column in absent)
+    ]
     Path(loop_dir).mkdir(parents=True, exist_ok=True)
-    return Path(shutil.copyfile(source, Path(loop_dir) / TASK_DESCRIPTION_NAME))
+    out = Path(loop_dir) / TASK_DESCRIPTION_NAME
+    out.write_text("".join(lines), encoding="utf-8")
+    return out
 
 
 def agent_notes_dir(exp_dir: Path) -> Path:
@@ -257,14 +269,13 @@ def _export_inner_loop_models(
     if responses_csv.exists():
         with responses_csv.open(encoding="utf-8") as f:
             csv_header = [c.strip() for c in f.readline().strip().split(",")]
-        is_raw = csv_header == list(RAW_RESPONSE_COLUMNS)
+        raw_task = next((t for t in all_tasks() if list(t.raw_columns) == csv_header), None)
+        is_raw = raw_task is not None
     if is_raw:
         from src.models.data_binding import MissingStimulusColumns, make_stim_data
         from src.models.model_loading import load_pymc_model
 
-        raw_row = {c: "0" for c in RAW_RESPONSE_COLUMNS}
-        raw_row["sequence_a"] = "HHT"
-        raw_row["sequence_b"] = "THT"
+        raw_row = dict(raw_task.probe_row)
         for name in rationales:
             try:
                 m = load_pymc_model(name, zoo_dir)
@@ -369,6 +380,7 @@ def run_inner_model_loop_programmatic(
     n_critique_proposals: Optional[int] = None,
     critique_alpha: Optional[float] = None,
     candidate_hints: Optional[List[str]] = None,
+    selection: Optional[Selection] = None,
     novelty_rmse_threshold: Optional[float] = None,
     prune_dse_multiplier: Optional[float] = None,
     candidate_parallelism: Optional[int] = None,
@@ -409,7 +421,7 @@ def run_inner_model_loop_programmatic(
     loop_dir = exp_dir / "model_loop"
     loop_dir.mkdir(parents=True, exist_ok=True)
     responses_path = write_responses_csv(rows, loop_dir / "responses.csv")
-    write_task_description(project_id or exp_dir.parent.name, loop_dir)
+    write_task_description(project_id or exp_dir.parent.name, loop_dir, list(rows[0]))
 
     seed_models_dir = exp_dir / "cognitive_models"
     # Names no candidate may take: the run's starting models, carried or not.
@@ -428,6 +440,8 @@ def run_inner_model_loop_programmatic(
     # None ⇒ inherit run_pymc_inner_loop's defaults for the exploration knobs.
     if candidate_hints is not None:
         extra["candidate_hints"] = list(candidate_hints)
+    if selection is not None:
+        extra["selection"] = selection
     if novelty_rmse_threshold is not None:
         extra["novelty_rmse_threshold"] = novelty_rmse_threshold
     if prune_dse_multiplier is not None:

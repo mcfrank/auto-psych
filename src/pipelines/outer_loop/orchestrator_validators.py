@@ -23,6 +23,7 @@ from src.models.model_manifest import (
     read_manifest_names,
 )
 from src.runtime.config import REPO_ROOT
+from src.tasks import task_present_in
 
 # Inner-loop zoo candidate names (iterN_candidateM). An auto-named winner is
 # exported under the stable `inner_loop_model` name, so a carried/validated model
@@ -142,8 +143,10 @@ def _validate_design(exp_dir: Path) -> tuple[bool, str]:
     for i, item in enumerate(data):
         if not isinstance(item, dict):
             return False, f"Stimulus {i} is not a dict"
-        if "sequence_a" not in item or "sequence_b" not in item:
-            return False, f"Stimulus {i} missing sequence_a or sequence_b"
+        try:
+            task_present_in(item, "stimulus_columns")
+        except ValueError as e:
+            return False, f"Stimulus {i} is no task's stimulus: {e}"
         if "eig" not in item:
             return False, f"Stimulus {i} missing 'eig' field"
     return True, f"Design valid: {len(data)} stimuli"
@@ -273,16 +276,10 @@ def _validate_collect(exp_dir: Path) -> tuple[bool, str]:
     if len(lines) < 2:
         return False, "responses.csv has no data rows"
     header = {h.strip() for h in lines[0].split(",")}
-    required = {
-        "participant_id",
-        "trial_index",
-        "sequence_a",
-        "sequence_b",
-        "chose_left",
-    }
-    missing = required - header
-    if missing:
-        return False, f"responses.csv missing columns: {missing}"
+    try:
+        task_present_in(header)
+    except ValueError as e:
+        return False, f"responses.csv lacks a task's raw columns: {e}"
     return True, f"Collect valid: {len(lines) - 1} rows"
 
 

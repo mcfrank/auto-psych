@@ -33,13 +33,16 @@ caps network namespaces at 0 anyway.
 from __future__ import annotations
 
 import errno
+import fcntl
+import itertools
 import json
 import os
 import shutil
 import sys
 import time
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, List, Mapping, Sequence, Tuple
+from typing import Dict, Iterator, List, Mapping, Optional, Sequence, Tuple
 
 SYSTEM_DIRS = ("/usr", "/etc", "/share/software")
 # On merged-/usr systems (Sherlock's el7 included) these are links into /usr.
@@ -141,6 +144,24 @@ CLAUDE_AUTH_CREDENTIAL = {
     "subscription": "CLAUDE_CODE_OAUTH_TOKEN",  # `claude setup-token`
     "api": "ANTHROPIC_API_KEY",
 }
+# A stated fallback, not a guess: agents start on the subscription and, from a
+# subscription usage limit until its stated reset, the run's agents use the API
+# key (coding_agent switches it, use_api_key_for); every usage record names the
+# one used.
+CLAUDE_AUTH_FALLBACK = "subscription_then_api"
+_api_key_until = 0.0  # time.time() until which a fallback run's agents use the API key
+
+
+def use_api_key_for(seconds: float) -> None:
+    global _api_key_until
+    _api_key_until = time.time() + seconds
+
+
+def effective_claude_auth(mode: str | None) -> str | None:
+    """The credential a ``mode`` agent launched now uses: ``subscription`` or ``api``."""
+    if mode != CLAUDE_AUTH_FALLBACK:
+        return mode
+    return "api" if time.time() < _api_key_until else "subscription"
 
 
 def _claude_auth_mode(mode: str | None) -> str:
@@ -150,10 +171,10 @@ def _claude_auth_mode(mode: str | None) -> str:
             "config, pass --claude-auth, or export CLAUDE_AUTH for the job scripts "
             f"(one of {sorted(CLAUDE_AUTH_CREDENTIAL)})."
         )
-    if mode not in CLAUDE_AUTH_CREDENTIAL:
+    if mode not in (*CLAUDE_AUTH_CREDENTIAL, CLAUDE_AUTH_FALLBACK):
         raise ValueError(
             f"unknown Claude billing mode {mode!r} (expected one of "
-            f"{sorted(CLAUDE_AUTH_CREDENTIAL)})."
+            f"{sorted(CLAUDE_AUTH_CREDENTIAL) + [CLAUDE_AUTH_FALLBACK]})."
         )
     return mode
 
@@ -175,14 +196,42 @@ def require_claude_auth(
             _claude_auth_mode(mode)
         return None
     mode = _claude_auth_mode(mode or env.get(CLAUDE_AUTH_ENV))
-    credential = CLAUDE_AUTH_CREDENTIAL[mode]
-    if not env.get(credential):
-        raise RuntimeError(
-            f"Claude agents are billed by {mode!r} but {credential} is not set; add it "
-            "to .secrets (the job scripts export every key there)."
-        )
+    needed = CLAUDE_AUTH_CREDENTIAL.values() if mode == CLAUDE_AUTH_FALLBACK else [CLAUDE_AUTH_CREDENTIAL[mode]]
+    for credential in needed:
+        if not env.get(credential):
+            raise RuntimeError(
+                f"Claude agents are billed by {mode!r} but {credential} is not set; add it "
+                "to .secrets (the job scripts export every key there)."
+            )
     env[CLAUDE_AUTH_ENV] = mode
     return mode
+
+
+# A cell's pool of agent compile dirs (the job script sets it per cell: compiled
+# code shows a model's structure, so cells must not share it).
+AGENT_COMPILE_SLOTS_ENV = "AUTO_PSYCH_AGENT_COMPILE_SLOTS"
+
+
+@contextmanager
+def claimed_compile_dir(root: Path) -> Iterator[Path]:
+    """A compile dir under ``root`` no other agent uses while the block runs,
+    kept for the next: ``slot-<k>``, claimed with ``flock`` (PyTensor compiles
+    under one lock per dir, and gives up after 120 s)."""
+    root.mkdir(parents=True, exist_ok=True)
+    for k in itertools.count():
+        lock = open(root / f"slot-{k}.lock", "w")
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            lock.close()
+            continue
+        try:
+            directory = root / f"slot-{k}"
+            directory.mkdir(exist_ok=True)
+            yield directory
+        finally:
+            lock.close()
+        return
 
 
 def claude_login_environment(env: Dict[str, str], mode: str | None) -> None:
@@ -193,7 +242,7 @@ def claude_login_environment(env: Dict[str, str], mode: str | None) -> None:
     ANTHROPIC_API_KEY and no OAuth token. Raises when the mode is missing or
     its credential is not in ``env``.
     """
-    mode = _claude_auth_mode(mode)
+    mode = effective_claude_auth(_claude_auth_mode(mode))
     credential = CLAUDE_AUTH_CREDENTIAL[mode]
     if not env.get(credential):
         raise RuntimeError(
@@ -242,8 +291,13 @@ def sandbox_command(
     agent_dir: Path,
     env: Mapping[str, str],
     readable_dirs: Sequence[Path] = (),
+    compile_dir: Optional[Path] = None,
 ) -> Tuple[List[str], Dict[str, str]]:
     """``cmd`` wrapped in a bubblewrap sandbox, and the environment to run it with.
+
+    ``compile_dir`` (``claimed_compile_dir``): a kept PyTensor compile dir the
+    agent compiles in, mounted read-write; without one it compiles in its
+    private home, removed when it exits.
 
     ``cwd`` (the agent's tree) and ``readable_dirs`` are mounted read-only;
     ``writable_dirs`` and ``agent_dir`` (the agent's own directory, the one
@@ -271,6 +325,11 @@ def sandbox_command(
         args += ["--ro-bind-try", directory, directory]
     for link, target in SYSTEM_LINKS.items():
         args += ["--symlink", target, link]
+    # On systemd hosts /etc/resolv.conf links into /run (Ubuntu's stub
+    # resolver): without the link's target there is no DNS inside.
+    resolver = Path("/etc/resolv.conf").resolve()
+    if _outside_system_dirs(resolver):
+        args += ["--ro-bind-try", str(resolver.parent), str(resolver.parent)]
 
     # Home and /tmp first: a working tree that itself lives under $HOME or /tmp
     # is then mounted on top of them rather than hidden by them.
@@ -294,12 +353,17 @@ def sandbox_command(
     args += _login(backend, env, user_home, private_home, claude_auth)
 
     env["TMPDIR"] = "/tmp"
+    # `python` and `python3` are the harness's venv (mounted above), whose
+    # interpreter the cells run by path: the system's has no pandas or PyMC.
+    env["PATH"] = f"{Path(sys.prefix) / 'bin'}:{env.get('PATH', '')}"
     # Caches go to the private home, removed when the agent exits, so scratch/
     # holds only the agent's own files. Sherlock exports PYTHONPYCACHEPREFIX=/tmp
     # for every user, which put a .pyc for every import into scratch/ (about
     # 2,300 files per agent). The harness's pytensor compile dir is not mounted.
     env["PYTHONPYCACHEPREFIX"] = str(user_home / ".cache" / "pycache")
-    env["PYTENSOR_FLAGS"] = f"base_compiledir={user_home / '.cache' / 'pytensor'}"
+    env["PYTENSOR_FLAGS"] = f"base_compiledir={compile_dir or user_home / '.cache' / 'pytensor'}"
+    if compile_dir is not None:
+        args += ["--bind", str(compile_dir), str(compile_dir)]
     for var, default in (
         ("XDG_CACHE_HOME", ".cache"),
         ("XDG_STATE_HOME", ".local/state"),

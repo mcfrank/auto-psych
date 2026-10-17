@@ -16,6 +16,8 @@ from pathlib import Path
 
 import pytest
 
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
+
 GOLDEN_DIR = Path(__file__).parent / "golden"
 
 
@@ -61,6 +63,7 @@ def test_response_generation():
         fixture["n_participants"],
         seed=fixture["seed"],
         participant_id_offset=0,
+        task=SUBJECTIVE_RANDOMNESS,
     )
 
     buf = io.StringIO()
@@ -114,6 +117,7 @@ def test_eval_pool():
             lengths=fixture["lengths"],
             seed=42,
             exhaustive=fixture["exhaustive"],
+            task=SUBJECTIVE_RANDOMNESS,
         )
 
     assert result["n_pool"] == fixture["expected_n_pool"]

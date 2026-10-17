@@ -13,13 +13,13 @@ import pytest
 import yaml
 
 from src.pipelines.outer_loop import model_loop_runner as mlr
-from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 from tests.inner_loop_fixtures import write_task_description_beside
 
 
 # --- helpers ---
 
-RAW_HEADER = list(RAW_RESPONSE_COLUMNS)
+RAW_HEADER = list(SUBJECTIVE_RANDOMNESS.raw_columns)
 
 
 def _raw_row(**overrides):

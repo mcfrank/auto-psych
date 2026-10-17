@@ -15,13 +15,14 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 import numpy as np
 
+from src.model_comparison.cv import LOO, Selection, cv_pointwise
 from src.models.data_binding import make_stim_data
 from src.models.model_loading import model_source_file, pm_data_inputs
 from src.models.pymc_inference import InvalidPredictions, fit_model, is_model_failure
 from src.subjective_randomness.holdout_data import (
+    _family_default_params,
     _raw_eval_rows,
     p_left_fixed_params,
-    resolve_generating_params,
     seed_model_names,
 )
 from src.subjective_randomness.incumbent import (
@@ -37,10 +38,7 @@ from src.subjective_randomness.recovery_metrics import (
     kl_regret as _kl_regret,
     rmse as _rmse,
 )
-from src.subjective_randomness.stimulus_design import (
-    enumerate_all_pairs,
-    generate_candidate_pool,
-)
+from src.tasks import TaskSpec, task_present_in
 
 TRAJECTORY_COLUMNS = [
     "gt_model",
@@ -77,13 +75,10 @@ TRAJECTORY_COLUMNS = [
 # ─────────────────────────────────────────────
 
 
-def _unordered_pair(sequence_a: str, sequence_b: str) -> Tuple[str, str]:
-    return tuple(sorted((sequence_a, sequence_b)))  # type: ignore[return-value]
-
-
-def collect_trained_pairs(run_root: Path, n_experiments: int) -> Set[Tuple[str, str]]:
-    """Every unordered stimulus pair that appeared in the run's training data."""
-    pairs: Set[Tuple[str, str]] = set()
+def collect_trained_pairs(run_root: Path, n_experiments: int, task: TaskSpec) -> Set[Any]:
+    """Every stimulus (``task.stimulus_key``: for the coin-flip task an
+    unordered pair) that appeared in the run's training data."""
+    pairs: Set[Any] = set()
     for exp_num in range(1, n_experiments + 1):
         path = Path(run_root) / f"experiment{exp_num}" / "data" / "responses.csv"
         if not path.exists():
@@ -92,22 +87,26 @@ def collect_trained_pairs(run_root: Path, n_experiments: int) -> Set[Tuple[str, 
             )
         with path.open(encoding="utf-8") as f:
             for row in csv.DictReader(f):
-                pairs.add(_unordered_pair(row["sequence_a"], row["sequence_b"]))
+                pairs.add(task.stimulus_key(row))
     return pairs
 
 
 def build_eval_stimuli(
     run_root: Path,
     *,
+    task: TaskSpec,
     n_experiments: int,
     n_pairs: int,
     lengths: Sequence[int],
     seed: int,
     min_remaining: int = 1,
     exhaustive: bool = False,
-    extra_excluded_pairs: Optional[Set[Tuple[str, str]]] = None,
+    extra_excluded_pairs: Optional[Set[Any]] = None,
 ) -> Dict[str, Any]:
-    """Generate the held-out eval pool, excluding every pair used in training.
+    """Generate the held-out eval pool, excluding every stimulus used in training.
+
+    The pool is the task's (``task.eval_pool``): for the coin-flip task the
+    pairs described below, for the number game every (set, target) cell.
 
     The design stage picks training stimuli by EIG, wherever in the pair space
     they fall, so holdout is guaranteed *after* the run: any pool pair that
@@ -123,19 +122,13 @@ def build_eval_stimuli(
     pairs to drop (e.g. the training pairs of a second cell in a matched-cell
     comparison).
     """
-    pool = (
-        enumerate_all_pairs(lengths, same_length_only=True)
-        if exhaustive
-        else generate_candidate_pool(n_pairs, lengths=tuple(lengths), seed=seed)
+    pool = task.eval_pool(
+        {"exhaustive": exhaustive, "lengths": lengths, "n_pairs": n_pairs, "seed": seed}
     )
-    trained = collect_trained_pairs(run_root, n_experiments)
+    trained = collect_trained_pairs(run_root, n_experiments, task)
     if extra_excluded_pairs:
         trained = trained | extra_excluded_pairs
-    kept = [
-        stim
-        for stim in pool
-        if _unordered_pair(stim["sequence_a"], stim["sequence_b"]) not in trained
-    ]
+    kept = [stim for stim in pool if task.stimulus_key(stim) not in trained]
     if len(kept) < min_remaining:
         raise ValueError(
             f"Only {len(kept)} of {len(pool)} eval stimuli remain after excluding "
@@ -207,10 +200,12 @@ def _eval_prediction(
     base_rows: Sequence[Mapping[str, Any]],
     *,
     participant_ids: Optional[Sequence[int]],
+    var_name: str,
     max_draws: Optional[int] = None,
     mask_invalid: bool = False,
 ) -> np.ndarray:
-    """Population-level held-out ``p_left`` for one fitted model.
+    """Population-level held-out prediction (``var_name``, the task's
+    ``prediction_var``; ``p_left`` below) for one fitted model.
 
     Models without a participant random effect predict directly. A model that
     indexes a ``participant_id`` container has no population-level ``p_left`` of
@@ -235,6 +230,7 @@ def _eval_prediction(
             fitted,
             base_rows,
             participant_ids=participant_ids,
+            var_name=var_name,
             max_draws=max_draws,
             mask_invalid=mask_invalid,
         )
@@ -247,14 +243,13 @@ def _eval_prediction(
         if bindable.all():
             raise  # not a pair the model cannot bind: a failure of its own
         failure = exc
-    lengths = sorted(
-        {len(base_rows[i]["sequence_a"]) for i in np.flatnonzero(~bindable)}
-    )
+    label = task_present_in(base_rows[0], "stimulus_columns").stimulus_label
+    examples = [label(base_rows[i]) for i in np.flatnonzero(~bindable)[:3]]
     print(
         f"  [eval] WARNING: model {getattr(fitted, 'name', '?')!r} cannot be bound to "
-        f"{int((~bindable).sum())} of the {len(base_rows)} held-out pairs (lengths "
-        f"{lengths}; {type(failure).__name__}: {failure}); they are left out like an "
-        "undefined p_left.",
+        f"{int((~bindable).sum())} of the {len(base_rows)} held-out stimuli (e.g. "
+        f"{', '.join(examples)}; {type(failure).__name__}: {failure}); they are "
+        f"left out like an undefined {var_name}.",
         flush=True,
     )
     pred = np.full(len(base_rows), np.nan)
@@ -263,6 +258,7 @@ def _eval_prediction(
             fitted,
             [row for row, ok in zip(base_rows, bindable) if ok],
             participant_ids=participant_ids,
+            var_name=var_name,
             max_draws=max_draws,
             mask_invalid=mask_invalid,
         )
@@ -274,8 +270,8 @@ def _bindable_rows(
     base_rows: Sequence[Mapping[str, Any]],
     participant_ids: Optional[Sequence[int]],
 ) -> np.ndarray:
-    """Which of ``base_rows`` ``model`` can be bound to, one length at a time
-    and, within a length that fails, one pair at a time."""
+    """Which of ``base_rows`` ``model`` can be bound to, by bisection: a chunk
+    that binds is fine, one that does not is split until single rows fail."""
 
     def binds(rows: Sequence[Mapping[str, Any]]) -> bool:
         if participant_ids:
@@ -289,13 +285,15 @@ def _bindable_rows(
         return True
 
     ok = np.ones(len(base_rows), dtype=bool)
-    by_length: Dict[int, List[int]] = {}
-    for i, row in enumerate(base_rows):
-        by_length.setdefault(len(row["sequence_a"]), []).append(i)
-    for indices in by_length.values():
-        if not binds([base_rows[i] for i in indices]):
-            for i in indices:
-                ok[i] = binds([base_rows[i]])
+    pending = [list(range(len(base_rows)))]
+    while pending:
+        indices = pending.pop()
+        if binds([base_rows[i] for i in indices]):
+            continue
+        if len(indices) == 1:
+            ok[indices[0]] = False
+        else:
+            pending += [indices[: len(indices) // 2], indices[len(indices) // 2 :]]
     return ok
 
 
@@ -304,11 +302,12 @@ def _predict_eval_rows(
     base_rows: Sequence[Mapping[str, Any]],
     *,
     participant_ids: Optional[Sequence[int]],
+    var_name: str,
     max_draws: Optional[int],
     mask_invalid: bool,
 ) -> np.ndarray:
     """``_eval_prediction`` on rows the model can be bound to."""
-    predict_kwargs = {} if max_draws is None else {"max_draws": max_draws}
+    predict_kwargs = {"var_name": var_name} if max_draws is None else {"var_name": var_name, "max_draws": max_draws}
     n_stim = len(base_rows)
 
     def predict(stim_data):
@@ -381,12 +380,14 @@ def _fitted_seed_baseline(
     gt_p: np.ndarray,
     *,
     participant_ids: Optional[Sequence[int]],
+    var_name: str,
     cache_dir: Optional[Path],
     fit_kwargs: Mapping[str, Any],
     predict_max_draws: Optional[int] = None,
     eval_stimuli: Optional[Sequence[Mapping[str, str]]] = None,
     exclusions_log: Optional[Path] = None,
     exclusion_record: Optional[Mapping[str, Any]] = None,
+    selection: Selection = LOO,
 ) -> Dict[str, Any]:
     """Fit each seed model (its file in ``models_dir``, or its ``pruned/``) on
     ``responses_path`` and correlate with GT.
@@ -394,9 +395,11 @@ def _fitted_seed_baseline(
     Predicts held-out ``p_left`` for each seed model and correlates with the
     ground truth: the recovery from *fitting the existing starting models*,
     with no agent-discovered structure. Per model it records Pearson r, RMSE,
-    ELPD-LOO and whether the fit can be trusted (reliable PSIS-LOO and a
-    converged fit). The headline baseline is the ELPD-best trusted seed —
-    chosen on the training data, as the loop chooses its own winner
+    ELPD under the loop's ``selection`` criterion (in ``elpd_loo``, as in the
+    loop's comparison table) and whether the fit can be trusted (a converged
+    fit, and under LOO a reliable PSIS-LOO). The headline baseline is the
+    ELPD-best trusted seed — chosen on the training data, as the loop chooses
+    its own winner
     (``elpd_best_model`` / ``elpd_best_r`` / ``elpd_best_rmse``; ``None`` with
     ``elpd_best_reason`` when no seed can be trusted). The mean over seeds is
     kept as a reference field.
@@ -420,6 +423,7 @@ def _fitted_seed_baseline(
             fitted,
             eval_rows,
             participant_ids=participant_ids,
+            var_name=var_name,
             max_draws=predict_max_draws,
             mask_invalid=True,
         )
@@ -442,12 +446,20 @@ def _fitted_seed_baseline(
                     **(exclusion_record or {}),
                 },
             )
-        loo = fitted.loo_diagnostics()
+        if selection.criterion == "grouped_cv":
+            lpd, _ = cv_pointwise(
+                [name], _seed_file_dir(models_dir, name), responses_path, selection,
+                cache_dir=cache_dir, **dict(fit_kwargs),
+            )
+            elpd, reliable = float(np.sum(lpd[name])), True
+        else:
+            loo = fitted.loo_diagnostics()
+            elpd, reliable = float(loo.elpd_loo), not loo.unreliable
         per_model[name] = {
             "pearson_r": pearson_r(gt_p[valid].tolist(), pred[valid].tolist()),
             "rmse": float(np.sqrt(np.mean((gt_p[valid] - pred[valid]) ** 2))),
-            "elpd_loo": float(loo.elpd_loo),
-            "trusted": not loo.unreliable and not fitted.convergence_problems(),
+            "elpd_loo": elpd,
+            "trusted": reliable and not fitted.convergence_problems(),
             "n_eval_excluded": int((~valid).sum()),
         }
     # The two reference means cover different seeds when a seed predicts a
@@ -465,6 +477,7 @@ def _fitted_seed_baseline(
         "mean_r_models": r_models,
         "mean_rmse_models": list(per_model),
         "per_model": per_model,
+        "criterion": selection.criterion,
         "elpd_best_model": best,
         "elpd_best_r": per_model[best]["pearson_r"] if best else None,
         "elpd_best_rmse": per_model[best]["rmse"] if best else None,
@@ -525,6 +538,7 @@ def evaluate_trajectory(
     gt_params: Mapping[str, float],
     eval_stimuli: Sequence[Mapping[str, str]],
     *,
+    task: TaskSpec,
     seed_models_dir: Path,
     n_experiments: int,
     cache_dir: Optional[Path],
@@ -558,8 +572,8 @@ def evaluate_trajectory(
     gt_models_dir = (
         Path(gt_models_dir) if gt_models_dir is not None else Path(seed_models_dir)
     )
-    gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params)
-    eval_rows = _raw_eval_rows(eval_stimuli)
+    gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params, task=task)
+    eval_rows = _raw_eval_rows(eval_stimuli, task)
 
     rows: List[Dict[str, Any]] = []
     global_step = 0
@@ -596,6 +610,7 @@ def evaluate_trajectory(
                         fitted,
                         eval_rows,
                         participant_ids=participant_ids,
+                        var_name=task.prediction_var,
                         max_draws=predict_max_draws,
                         mask_invalid=True,
                     )
@@ -680,6 +695,8 @@ def seed_baseline_correlation(
     gt_params: Mapping[str, float],
     eval_stimuli: Sequence[Mapping[str, str]],
     *,
+    task: TaskSpec,
+    params_by_model: Mapping[str, Mapping[str, Any]],
     seed_models_dir: Path,
     seeded_models_dir: Path,
     gt_models_dir: Optional[Path] = None,
@@ -697,7 +714,9 @@ def seed_baseline_correlation(
 
     ``gt_models_dir`` is where the ground-truth model lives (default:
     ``seed_models_dir``). The *other* seed models are the registry's names
-    (``seed_models_dir``) with their families' default parameters, but their
+    (``seed_models_dir``) with their parameters in ``params_by_model`` (the
+    config's ``gt_models``), or for a coin-flip seed absent from it its
+    family's default parameters, but their
     code is the files the cell was seeded with (``seeded_models_dir``, see
     ``seeded_models_dir()``), so a run is scored with the seeds it ran with.
     For an impossible ground truth, which is not among the project seeds,
@@ -707,16 +726,22 @@ def seed_baseline_correlation(
     gt_models_dir = (
         Path(gt_models_dir) if gt_models_dir is not None else seed_models_dir
     )
-    gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params)
-    defaults = resolve_generating_params(None, seed_models_dir, gt_family_dir)
-
-    others = {name: params for name, params in defaults.items() if name != gt_model}
+    gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params, task=task)
+    others = {
+        name: (
+            params_by_model[name]
+            if name in params_by_model
+            else _family_default_params(name, gt_family_dir)
+        )
+        for name in seed_model_names(seed_models_dir)
+        if name != gt_model
+    }
     _require_seeded(list(others), seeded_models_dir)
 
     per_model: Dict[str, Optional[float]] = {}
     for name, params in others.items():
         pred = p_left_fixed_params(
-            name, _seed_file_dir(seeded_models_dir, name), eval_stimuli, params
+            name, _seed_file_dir(seeded_models_dir, name), eval_stimuli, params, task=task
         )
         per_model[name] = pearson_r(gt_p.tolist(), pred.tolist())
 
@@ -768,6 +793,7 @@ def fitted_seed_baseline_correlation(
     gt_params: Mapping[str, float],
     eval_stimuli: Sequence[Mapping[str, str]],
     *,
+    task: TaskSpec,
     seed_models_dir: Path,
     n_experiments: int,
     other_seed_models: Sequence[str],
@@ -777,6 +803,7 @@ def fitted_seed_baseline_correlation(
     predict_max_draws: Optional[int] = None,
     exclusions_log: Optional[Path] = None,
     exclusion_record: Optional[Mapping[str, Any]] = None,
+    selection: Selection = LOO,
 ) -> Dict[str, Any]:
     """Fitted-seed baseline: other seed models fit on *all* collected data.
 
@@ -800,8 +827,8 @@ def fitted_seed_baseline_correlation(
     gt_models_dir = (
         Path(gt_models_dir) if gt_models_dir is not None else Path(seed_models_dir)
     )
-    gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params)
-    eval_rows = _raw_eval_rows(eval_stimuli)
+    gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params, task=task)
+    eval_rows = _raw_eval_rows(eval_stimuli, task)
     responses_path = _all_responses_so_far(run_root, n_experiments)
     participant_ids = _participant_ids_in(responses_path)
     n_responses = _n_rows(responses_path)
@@ -815,12 +842,14 @@ def fitted_seed_baseline_correlation(
         eval_rows,
         gt_p,
         participant_ids=participant_ids,
+        var_name=task.prediction_var,
         cache_dir=cache_dir,
         fit_kwargs=fit_kwargs,
         predict_max_draws=predict_max_draws,
         eval_stimuli=eval_stimuli,
         exclusions_log=exclusions_log,
         exclusion_record=exclusion_record,
+        selection=selection,
     )
     if baseline["pearson_r"] is None:
         raise ValueError(
@@ -886,7 +915,7 @@ def reevaluate_trajectories(
     cache_dir: Optional[Path],
     gt_models_dir: Optional[Path] = None,
     eval_pool_override: Optional[Mapping[str, Any]] = None,
-    extra_excluded_pairs: Optional[Set[Tuple[str, str]]] = None,
+    extra_excluded_pairs: Optional[Set[Any]] = None,
 ) -> Dict[str, Any]:
     """Recompute every ground truth's trajectory from its finished run tree.
 
@@ -916,6 +945,8 @@ def reevaluate_trajectories(
     gt_models_dir = Path(gt_models_dir) if gt_models_dir is not None else None
     n_experiments = int(result["n_experiments"])
     fit_kwargs = dict(result.get("fit_kwargs", {}))
+    # The criterion the loop selected on (a result before grouped CV: LOO).
+    selection = Selection.from_config(result.get("inner_loop", {}).get("selection", {}))
 
     eval_pool = (
         dict(eval_pool_override)
@@ -923,6 +954,12 @@ def reevaluate_trajectories(
         else dict(result.get("eval_pool", {}))
     )
     predict_max_draws = eval_pool.get("predict_max_draws")
+    from src.tasks import task_for_project
+
+    task = task_for_project(result["project_id"])
+    # The seeds' parameters for the no-learning baseline (recorded since the
+    # number game, whose seeds have no family defaults).
+    params_by_model = dict(result.get("seed_params", {}))
 
     # Names only — the fitted-seed baseline fits these by MCMC, so no
     # pure-Python family twin (and no default params) is required here.
@@ -934,6 +971,7 @@ def reevaluate_trajectories(
         if eval_pool_override is not None:
             rebuilt = build_eval_stimuli(
                 run_root,
+                task=task,
                 n_experiments=n_experiments,
                 n_pairs=int(eval_pool.get("n_pairs", 0)),
                 lengths=tuple(eval_pool["lengths"]),
@@ -953,6 +991,7 @@ def reevaluate_trajectories(
             gt_run["gt_model"],
             gt_run["params"],
             eval_stimuli,
+            task=task,
             seed_models_dir=seed_models_dir,
             n_experiments=n_experiments,
             cache_dir=cache_dir,
@@ -964,6 +1003,8 @@ def reevaluate_trajectories(
             gt_run["gt_model"],
             gt_run["params"],
             eval_stimuli,
+            task=task,
+            params_by_model=params_by_model,
             seed_models_dir=seed_models_dir,
             seeded_models_dir=seeded_models_dir(run_root),
             gt_models_dir=gt_models_dir,
@@ -973,6 +1014,7 @@ def reevaluate_trajectories(
             gt_run["gt_model"],
             gt_run["params"],
             eval_stimuli,
+            task=task,
             seed_models_dir=seed_models_dir,
             n_experiments=n_experiments,
             other_seed_models=other_seeds,
@@ -980,6 +1022,7 @@ def reevaluate_trajectories(
             fit_kwargs=fit_kwargs,
             gt_models_dir=gt_models_dir,
             predict_max_draws=predict_max_draws,
+            selection=selection,
         )
         fitted_baseline = final_fitted_baseline(fitted_by_experiment)
         # The incumbent record is recomputed from the on-disk histories exactly

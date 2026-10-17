@@ -7,7 +7,7 @@ the import allowlist, a loadable module-level ``model: pm.Model``, a finite
 log-probability on the real responses, the data contract (observed data =
 ``chose_left`` in row order, a per-trial ``p_left`` that is the likelihood's
 probability; ``src/models/model_contract.py``), a short MCMC fit and a finite
-ELPD-LOO — with the small ``CANDIDATE_CHECK_*`` sampler settings from
+log-likelihood — with the small ``CANDIDATE_CHECK_*`` sampler settings from
 ``src/models/mcmc_defaults.py``. It is a smoke fit, not a production fit: it
 never writes to the pipeline's fit cache, and it does not run the novelty
 gate (that needs the other models' fits).
@@ -27,11 +27,11 @@ import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import tyro
 
-from src.model_comparison.likelihood import log_likelihood
+from src.model_comparison.likelihood import mean_log_likelihood
 from src.models.mcmc_defaults import (
     CANDIDATE_CHECK_CHAINS,
     CANDIDATE_CHECK_DRAWS,
@@ -63,21 +63,27 @@ class CandidateCheckFailed(RuntimeError):
     """The candidate would be rejected at admission, for the stated reason."""
 
 
-def check_candidate_command(candidate_dir: Path, responses_path: Path) -> str:
+def check_candidate_command(
+    candidate_dir: Path, responses_path: Path, method: Optional[str] = None
+) -> str:
     """The exact shell command CONTEXT.md documents for this candidate.
 
     Uses this process's interpreter — the pipeline's own — so the agent runs
     the check with the PyMC stack the admission gates use, not whatever
-    ``python3`` is on its PATH.
+    ``python3`` is on its PATH; and the run's fit ``method``, so the smoke fit
+    fails where admission's would.
     """
-    return (
+    command = (
         f"{sys.executable} -m src.pipelines.inner_loop.check_candidate \\\n"
         f"    --candidate-dir {candidate_dir} \\\n"
         f"    --responses {responses_path}"
     )
+    return command if method in (None, "nuts") else f"{command} \\\n    --method {method}"
 
 
-def run_candidate_check(candidate_dir: Path, responses_path: Path) -> str:
+def run_candidate_check(
+    candidate_dir: Path, responses_path: Path, method: Optional[str] = None
+) -> str:
     """Run the admission gates on ``candidate_dir/candidate.py``; return the OK report.
 
     Raises ``CandidateCheckFailed`` with the same wording admission would use
@@ -125,6 +131,7 @@ def run_candidate_check(candidate_dir: Path, responses_path: Path) -> str:
             responses_path,
             cache_dir=None,
             **CHECK_FIT_KWARGS,
+            method=method,
         )
     except Exception as e:  # noqa: BLE001 — any sampling failure is the reason
         raise CandidateCheckFailed(
@@ -133,21 +140,22 @@ def run_candidate_check(candidate_dir: Path, responses_path: Path) -> str:
 
     # Same sampler settings ⇒ same in-process cache key ⇒ no second fit.
     try:
-        elpd = log_likelihood(
+        loglik = mean_log_likelihood(
             CANDIDATE_MODULE,
             responses_path,
             candidate_dir,
             cache_dir=None,
             **CHECK_FIT_KWARGS,
+            method=method,
         )
-    except Exception as e:  # noqa: BLE001 — any LOO failure is the reason
+    except Exception as e:  # noqa: BLE001 — any failure here is the reason
         raise CandidateCheckFailed(
-            f"ELPD-LOO computation failed ({type(e).__name__}: {e})"
+            f"log-likelihood computation failed ({type(e).__name__}: {e})"
         ) from e
-    if not math.isfinite(elpd):
+    if not math.isfinite(loglik):
         raise CandidateCheckFailed(
-            f"non-finite ELPD-LOO ({elpd}); a model that assigns ~0 probability "
-            "to an observed outcome would corrupt the posterior"
+            f"non-finite log-likelihood ({loglik}); a model that assigns ~0 "
+            "probability to an observed outcome would corrupt the posterior"
         )
 
     return (
@@ -155,7 +163,7 @@ def run_candidate_check(candidate_dir: Path, responses_path: Path) -> str:
         f"log-probability on {responses_path}, honours the data contract "
         f"(observed = chose_left, p_left = the likelihood's probability), completed a "
         f"{CANDIDATE_CHECK_DRAWS}-draw / {CANDIDATE_CHECK_TUNE}-tune smoke fit "
-        f"({CANDIDATE_CHECK_CHAINS} chain) and has a finite ELPD-LOO ({elpd:.1f} "
+        f"({CANDIDATE_CHECK_CHAINS} chain) and has a finite log-likelihood ({loglik:.1f} "
         f"on this smoke fit). Not checked here: novelty against the other models."
     )
 
@@ -168,10 +176,13 @@ class Args:
     responses: Path
     """The responses CSV named in CONTEXT.md."""
 
+    method: Optional[str] = None
+    """The run's fit method (fit.method), as CONTEXT.md's command passes it."""
+
 
 def main(args: Args) -> None:
     try:
-        report = run_candidate_check(args.candidate_dir, args.responses)
+        report = run_candidate_check(args.candidate_dir, args.responses, args.method)
     except CandidateCheckFailed as e:
         print(
             f"CHECK FAILED — admission would reject this candidate:\n  {e}",

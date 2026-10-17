@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -44,7 +45,6 @@ from src.pipelines.inner_loop.hypothesis_ledger import (
     HypothesisLedger,
 )
 from src.pipelines.inner_loop.candidate_agent import (
-    DEFAULT_CANDIDATE_HINTS,
     _repair_note,
     _retry_note,
     _spawn_candidate_agent,
@@ -62,6 +62,8 @@ from src.pipelines.inner_loop.model_zoo import (
     _NO_FILE_DETAIL,
     _admit_candidate_with_reason,
     _drop_nonfinite_elpd_models,
+    _drop_unscorable_cv_models,
+    fit_cv_folds,
     _drop_unfittable_models,
     _is_all_no_file_round,
     _lens_index,
@@ -77,6 +79,8 @@ from src.pipelines.inner_loop.model_zoo import (
     reserved_names,
     slot_roles,
 )
+from src.model_comparison.cv import LOO, Selection
+from src.tasks import task_of_file
 
 from src.pipelines.inner_loop.critique_round import (
     CRITIQUE_N_PROPOSALS,
@@ -179,6 +183,7 @@ def run_pymc_inner_loop(
     critique_significance_alpha: float = CRITIQUE_SIGNIFICANCE_ALPHA,
     n_critique_replicates: int = CRITIQUE_PPC_REPLICATES,
     candidate_hints: Optional[List[str]] = None,
+    selection: Selection = LOO,
     novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD,
     prune_dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER,
     candidate_parallelism: Optional[int] = None,
@@ -238,9 +243,13 @@ def run_pymc_inner_loop(
         Test statistics the critique agent proposes per round, the raw p-value
         threshold for a significant discrepancy, and the posterior-predictive replicates
         forming each statistic's null distribution.
+    selection
+        How models are compared at every scoring step, in pruning and in the
+        export (``src.model_comparison.cv.Selection``): trial-level PSIS-LOO
+        (the default) or grouped cross-validation over whole units.
     candidate_hints
         Exploration lenses cycled across a round's exploratory slots (``None``
-        ⇒ ``DEFAULT_CANDIDATE_HINTS``). With no more exploratory slots than
+        ⇒ the task's ``candidate_hints``, ``src.tasks``). With no more exploratory slots than
         lenses, every exploratory slot in a round works a distinct lens.
     novelty_rmse_threshold
         Reject a candidate whose posterior-mean ``p_left`` is within this RMSE
@@ -309,12 +318,26 @@ def run_pymc_inner_loop(
         ledger=ledger,
         ledger_context=ledger_context,
     )
+    # Under grouped CV, every model is fitted on every fold now and one whose
+    # ELPD-CV cannot be computed is dropped (no time limit: these are the
+    # starting and carried models). Models admitted later are screened after
+    # their round, their fold fits under the admission time limit.
+    _drop_unscorable_cv_models(
+        models_dir,
+        responses_path,
+        selection,
+        cache_dir=cache_dir,
+        fit_kwargs=fit_kwargs,
+        ledger=ledger,
+        ledger_context=ledger_context,
+    )
+    loop_start_models = set(_manifest_names(models_dir))
     # The novelty pool: generated once from the loop's own seed and recorded in
     # the run tree, so every candidate this run gates is compared on the same
     # stimuli and what the gate saw is auditable. None when the gate is off.
     novelty_pool: Optional[List[Dict[str, str]]] = None
     if novelty_rmse_threshold > 0:
-        novelty_pool = novelty_pool_rows()
+        novelty_pool = novelty_pool_rows(responses_path)
         (results_dir / NOVELTY_POOL_FILENAME).write_text(
             json.dumps(novelty_pool), encoding="utf-8"
         )
@@ -322,11 +345,10 @@ def run_pymc_inner_loop(
     # whole loop, not at every admission: the data and every fit are fixed
     # within it (_min_prediction_rmse says why this matters).
     novelty_predictions: Dict[tuple, Any] = {}
-    n_lenses = (
-        len(candidate_hints)
-        if candidate_hints is not None
-        else len(DEFAULT_CANDIDATE_HINTS)
-    )
+    # Without lenses of its own, the loop walks its task's battery.
+    if candidate_hints is None:
+        candidate_hints = list(task_of_file(responses_path).candidate_hints)
+    n_lenses = len(candidate_hints)
     if max_iterations > 0 and n_lenses < 1:
         raise ValueError(
             "The lens battery is empty — pass at least one exploration lens "
@@ -334,11 +356,11 @@ def run_pymc_inner_loop(
         )
 
     posterior = _score(
-        responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
+        responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs, selection
     )
     # The comparison table (ELPD rank + PSIS-LOO reliability) is what selects
     # the best model at every step; it reuses the fits _score just made.
-    comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs)
+    comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs, selection)
     history: List[Dict[str, Any]] = []
     _record_history_step(history, results_dir, posterior, comparison, iteration=None)
 
@@ -417,6 +439,7 @@ def run_pymc_inner_loop(
                     ),
                     role=slot.role,
                     incumbent=incumbent,
+                    fit_method=(fit_kwargs or {}).get("method"),
                 )
                 slot.ledger_context = (
                     f"{round_context} {_slot_context(slot, incumbent)}{context_suffix}"
@@ -561,32 +584,37 @@ def run_pymc_inner_loop(
                 _copy_rejected_attempt(previous_dir, slot.directory)
                 return True
 
-            def prefit(wave: List[_Slot]) -> None:
-                """Fit the wave's candidates concurrently before admission.
+            claims_lock = threading.Lock()  # a wave's prefits run concurrently
 
-                Names are predicted in slot order as admission will resolve
-                them (a name claimed earlier in the wave is uniquified). The
-                fits land in the cache; admission, below, is unchanged.
+            def prefit(wave: List[_Slot], claimed_in_wave: List[str]) -> None:
+                """Fit candidates before admission, into the cache admission reads.
+
+                Names are predicted as admission will resolve them: a name the
+                wave's candidates fitted before claimed is uniquified. (Two
+                candidates of a wave naming themselves alike and finishing out of
+                slot order get mispredicted names; admission then fits the second
+                itself.) Admission, below, is unchanged.
                 """
                 if cache_dir is None:
                     return  # nowhere to hand the fits over; admission fits one at a time
-                claimed: List[str] = sorted(
-                    reserved_names(models_dir, ledger, starting_models)
-                )
-                candidates = []
-                for slot in wave:
-                    candidate_file = slot.directory / "candidate.py"
-                    if not candidate_file.exists():
-                        continue
-                    name = _resolve_candidate_name(
-                        slot.directory,
-                        models_dir,
-                        fallback=f"iter{iteration}_candidate{slot.idx}",
-                        taken=claimed,
-                        announce=False,
-                    )
-                    claimed.append(name)
-                    candidates.append((candidate_file, name))
+                with claims_lock:
+                    claimed = sorted(reserved_names(models_dir, ledger, starting_models))
+                    claimed += claimed_in_wave
+                    candidates = []
+                    for slot in wave:
+                        candidate_file = slot.directory / "candidate.py"
+                        if not candidate_file.exists():
+                            continue
+                        name = _resolve_candidate_name(
+                            slot.directory,
+                            models_dir,
+                            fallback=f"iter{iteration}_candidate{slot.idx}",
+                            taken=claimed,
+                            announce=False,
+                        )
+                        claimed.append(name)
+                        claimed_in_wave.append(name)
+                        candidates.append((candidate_file, name))
                 prefit_candidates(
                     candidates,
                     responses_path,
@@ -594,26 +622,50 @@ def run_pymc_inner_loop(
                     fit_kwargs=fit_kwargs,
                 )
 
-            # Each wave spawns its attempts concurrently, fits their candidates
-            # concurrently, then settles them sequentially in slot order
-            # (admission mutates the manifest and runs the novelty gate, so
-            # order keeps runs deterministic; the fits it needs are cached by
-            # then). A settled slot that earned a retry or repair joins the
-            # next wave.
+            # Each wave runs its attempts concurrently, each slot's agent and
+            # then at once its candidate's fit, so a finished candidate is
+            # fitted while the wave's slower agents still work; then it settles
+            # them sequentially in slot order (admission mutates the manifest
+            # and runs the novelty gate, so order keeps runs deterministic; the
+            # fits it needs are cached by then). A settled slot that earned a
+            # retry or repair joins the next wave. Under grouped CV the models a
+            # wave admitted are fitted on every fold in the background while the
+            # next wave's agents work (the round's CV screen then finds the fits).
             workers = min(candidate_parallelism or candidate_count, candidate_count)
             pending = list(slots)
-            while pending:
-                if workers > 1 and len(pending) > 1:
-                    with ThreadPoolExecutor(
-                        max_workers=min(workers, len(pending))
-                    ) as pool:
-                        spawn_ok = list(pool.map(spawn, pending))
-                else:
-                    spawn_ok = [spawn(slot) for slot in pending]
-                prefit(pending)
-                pending = [
-                    slot for slot, ok in zip(pending, spawn_ok) if settle(slot, ok)
-                ]
+            fold_fitted: set = set()
+            with ThreadPoolExecutor(max_workers=1) as background:
+                fold_fits = []
+                while pending:
+                    claimed_in_wave: List[str] = []
+
+                    def spawn_and_prefit(slot: _Slot) -> bool:
+                        spawned_ok = spawn(slot)
+                        prefit([slot], claimed_in_wave)
+                        return spawned_ok
+
+                    if workers > 1 and len(pending) > 1:
+                        with ThreadPoolExecutor(
+                            max_workers=min(workers, len(pending))
+                        ) as pool:
+                            spawn_ok = list(pool.map(spawn_and_prefit, pending))
+                    else:
+                        spawn_ok = [spawn_and_prefit(slot) for slot in pending]
+                    pending = [
+                        slot for slot, ok in zip(pending, spawn_ok) if settle(slot, ok)
+                    ]
+                    admitted = [
+                        n for n in _manifest_names(models_dir)
+                        if n not in loop_start_models and n not in fold_fitted
+                    ]
+                    if pending and admitted and cache_dir is not None and selection.criterion == "grouped_cv":
+                        fold_fitted.update(admitted)
+                        fold_fits.append(background.submit(
+                            fit_cv_folds, admitted, models_dir, responses_path, selection,
+                            limited=admitted, cache_dir=cache_dir, fit_kwargs=fit_kwargs,
+                        ))
+                for fold_fit in fold_fits:
+                    fold_fit.result()  # an infrastructure failure raises here
 
             round_results = [slot.result for slot in slots if slot.result is not None]
             if len(round_results) != len(slots):
@@ -645,10 +697,20 @@ def run_pymc_inner_loop(
             )
             continue
 
-        posterior = _score(
-            responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
+        _drop_unscorable_cv_models(
+            models_dir,
+            responses_path,
+            selection,
+            limited=set(_manifest_names(models_dir)) - loop_start_models,
+            cache_dir=cache_dir,
+            fit_kwargs=fit_kwargs,
+            ledger=ledger,
+            ledger_context=round_context,
         )
-        comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs)
+        posterior = _score(
+            responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs, selection
+        )
+        comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs, selection)
         _record_history_step(
             history,
             results_dir,
@@ -680,6 +742,7 @@ def run_pymc_inner_loop(
         fit_kwargs=fit_kwargs,
         prune_dse_multiplier=prune_dse_multiplier,
         complexity_prior_const=complexity_prior_const,
+        selection=selection,
     )
     result["history"] = history
     result["history_path"] = str(results_dir / "history.json")
@@ -702,8 +765,12 @@ def end_experiment(
     fit_kwargs: Optional[Dict[str, Any]],
     prune_dse_multiplier: float,
     complexity_prior_const: float,
+    selection: Selection,
 ) -> Dict[str, Any]:
     """The end of an experiment's loop: prune, cap the live set, export.
+
+    ``selection`` is the loop's model-selection criterion (PSIS-LOO or
+    grouped CV); pruning, the cap and the rescoring all use it.
 
     Pruning happens once, at the end of the experiment (user decision
     2026-09-26): it used to run after every round against the max of a
@@ -722,6 +789,7 @@ def end_experiment(
         responses_path,
         cache_dir=cache_dir,
         fit_kwargs=fit_kwargs,
+        selection=selection,
         dse_multiplier=prune_dse_multiplier,
         ledger=ledger,
         ledger_context=end_context,
@@ -731,13 +799,14 @@ def end_experiment(
         responses_path,
         cache_dir=cache_dir,
         fit_kwargs=fit_kwargs,
+        selection=selection,
         ledger=ledger,
         ledger_context=end_context,
     )
     if retired:
         posterior = _score(
-            responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
+            responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs, selection
         )
-        comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs)
+        comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs, selection)
         _record_end_of_experiment_retirements(history, results_dir, retired)
     return _export(results_dir, models_dir, posterior, comparison)

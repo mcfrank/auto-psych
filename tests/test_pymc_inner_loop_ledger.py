@@ -17,6 +17,7 @@ import json
 
 import yaml
 
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 import src.pipelines.inner_loop.candidate_agent as candidate_agent
 import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
@@ -86,7 +87,7 @@ def _patch_scoring(monkeypatch):
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     # The experiment-start screen samples the whole set in one batch; no MCMC here.
     monkeypatch.setattr(model_zoo, "fit_models_to_cache", lambda names, *a, **k: {})
-    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", lambda *a, **k: -100.0)
     monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: None)
     monkeypatch.setattr(model_zoo, "load_pymc_model", lambda name, models_dir: object())
 
@@ -181,7 +182,8 @@ def test_ledger_inherits_records_every_slot_and_reaches_the_next_brief(
     round1_file = results_dir / "iter_1" / "candidate_0" / "attempted_hypotheses.md"
     assert round1_file.read_text(encoding="utf-8") == briefs[1]["attempted"]
     prompt = candidate_agent._build_candidate_prompt(
-        results_dir / "iter_1" / "candidate_0", briefs[1]
+        results_dir / "iter_1" / "candidate_0", briefs[1],
+        theory_prompt=SUBJECTIVE_RANDOMNESS.theory_prompt,
     )
     assert "## attempted_hypotheses.md" in prompt
     assert "old_idea" in prompt

@@ -43,12 +43,9 @@ def _model_compute_features(model: Any) -> Any:
     return getattr(model, _COMPUTE_FEATURES_ATTR, None)
 
 
-# Columns a model's compute_features may never return: the observed response
-# and the row bookkeeping. A model that redefines one of these is wrong
-# regardless of the value it produces.
-PROTECTED_ROW_COLUMNS = frozenset(
-    {"chose_left", "participant_id", "trial_index", "sequence_a", "sequence_b"}
-)
+# A model's compute_features may never return one of its task's raw columns
+# (the stimulus, the observed response, the row bookkeeping): a model that
+# redefines one of these is wrong regardless of the value it produces.
 
 
 def _same_feature_value(existing: Any, computed: Any) -> bool:
@@ -73,29 +70,35 @@ def _augment_rows_with_features(
 ) -> List[Dict[str, Any]]:
     """Add a model's ``compute_features`` columns to each row.
 
-    Runs the model's ``compute_features(sequence_a, sequence_b)`` hook over
-    every row's raw H/T sequences and merges the returned columns. A no-op
-    (returns ``rows`` unchanged) for models that do not declare the hook.
-    Fails loudly if the hook is declared but rows lack the raw sequences,
-    returns non-dict/non-numeric values, varies its keys across rows, or
-    collides with a protected column.
+    Runs the model's ``compute_features`` hook over every row's raw stimulus
+    columns, passed positionally in the task's order (``sequence_a,
+    sequence_b`` for the coin-flip task, ``number_set, target`` for the number
+    game; the task is the one whose stimulus columns the rows carry), and
+    merges the returned columns. A no-op (returns ``rows`` unchanged) for
+    models that do not declare the hook. Fails loudly if the hook is declared
+    but rows carry no task's stimulus columns, returns non-dict/non-numeric
+    values, varies its keys across rows, or collides with a raw column.
     """
+    from src.tasks import all_tasks, task_present_in
+
     compute_fn = _model_compute_features(model)
     if compute_fn is None or not rows:
         return rows
 
-    missing = {"sequence_a", "sequence_b"} - set(rows[0].keys())
-    if missing:
+    try:
+        task = task_present_in(rows[0].keys(), "stimulus_columns")
+    except ValueError as e:
+        expected = "; ".join(f"{', '.join(t.stimulus_columns)} ({t.name})" for t in all_tasks())
         raise ValueError(
-            f"Model declares compute_features but rows are missing "
-            f"{sorted(missing)}; the raw H/T sequence columns are required to "
-            "compute extra features."
-        )
+            f"Model declares compute_features but rows are missing the raw stimulus "
+            f"columns it computes its features from ({expected}); got {sorted(rows[0])}."
+        ) from e
+    protected = frozenset(task.raw_columns)
 
     augmented: List[Dict[str, Any]] = []
     expected_keys: Optional[tuple] = None
     for i, r in enumerate(rows):
-        extra = compute_fn(r["sequence_a"], r["sequence_b"])
+        extra = compute_fn(*(r[c] for c in task.stimulus_columns))
         if not isinstance(extra, dict):
             raise TypeError(
                 f"compute_features must return a dict of feature_name -> number, "
@@ -111,11 +114,11 @@ def _augment_rows_with_features(
                 "the same feature names for every stimulus."
             )
         for name, value in extra.items():
-            if name in PROTECTED_ROW_COLUMNS:
+            if name in protected:
                 raise ValueError(
                     f"compute_features returned {name!r}, which collides with the "
-                    "response/bookkeeping columns a row must keep "
-                    f"({sorted(PROTECTED_ROW_COLUMNS)}); extra features must use "
+                    "raw stimulus and response/bookkeeping columns a row must keep "
+                    f"({sorted(protected)}); extra features must use "
                     "new names."
                 )
             if name in r and not _same_feature_value(r[name], value):

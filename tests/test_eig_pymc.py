@@ -11,6 +11,7 @@ NUTS) — heavier cases are marked slow to be safe.
 
 from __future__ import annotations
 
+import json
 import shutil
 
 import numpy as np
@@ -18,14 +19,21 @@ import pytest
 import yaml
 
 from src.pipelines.outer_loop import eig as eig_mod
-from tests.paths import PYMC_MODEL_FIXTURES_DIR
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
+from tests.paths import PYMC_MODEL_FIXTURES_DIR, sr_pairs
+
+
+def _pool_file(tmp_path, *lengths):
+    path = tmp_path / f"pool_{'_'.join(map(str, lengths))}.json"
+    path.write_text(json.dumps(sr_pairs(*lengths)))
+    return path
 
 
 def _design(*args, **kwargs):
     """``design_exhaustive`` with one response per stimulus: these tests check
     the design's mechanics, not the replicated-response objective
     (tests/test_eig_replicated_responses.py)."""
-    return eig_mod.design_exhaustive(*args, n_responses=1, **kwargs)
+    return eig_mod.design_exhaustive(*args, n_responses=1, task=SUBJECTIVE_RANDOMNESS, **kwargs)
 
 
 # A model with a participant-level random effect: it needs a `participant_id`
@@ -133,7 +141,7 @@ def test_design_drops_model_that_cannot_bind_to_stimulus(tmp_path, monkeypatch, 
     # Distinct constant means -> a known EIG: 1 - H_b(0.8) = 0.278072 bits.
     means = {"bayesian_fair_coin": 0.8, "representativeness": 0.2}
 
-    def fake_draws(model_names, models_dir, rows, *, n_samples=200, seed=42):
+    def fake_draws(model_names, models_dir, rows, *, n_samples=200, seed=42, var_name="p_left"):
         seen["names"] += list(model_names)
         return {m: np.full((n_samples, len(rows)), means[m]) for m in model_names}
 
@@ -143,7 +151,7 @@ def test_design_drops_model_that_cannot_bind_to_stimulus(tmp_path, monkeypatch, 
 
     out = _design(
         models_dir,
-        lengths=(3,),
+        pool=sr_pairs(3),
         n_select=2,
         n_samples=25,
         n_scenarios=200,
@@ -183,7 +191,7 @@ def test_screen_raises_when_a_model_is_simply_broken(tmp_path, monkeypatch, erro
 
     monkeypatch.setattr("src.models.model_loading.load_pymc_model_cached", boom)
     with pytest.raises(RuntimeError, match="broken"):
-        eig_mod._screen_usable_models(["m"], tmp_path, [{"sequence_a": "HT"}])
+        eig_mod._screen_usable_models(["m"], tmp_path, [{"sequence_a": "HT", "sequence_b": "TH"}], SUBJECTIVE_RANDOMNESS)
 
 
 def test_screen_still_drops_an_unbindable_model_loudly(tmp_path, monkeypatch, capsys):
@@ -197,7 +205,7 @@ def test_screen_still_drops_an_unbindable_model_loudly(tmp_path, monkeypatch, ca
 
     monkeypatch.setattr("src.models.data_binding.make_stim_data", fake_bind)
     usable, dropped = eig_mod._screen_usable_models(
-        ["needs_participant", "fine"], tmp_path, [{"sequence_a": "HT"}]
+        ["needs_participant", "fine"], tmp_path, [{"sequence_a": "HT", "sequence_b": "TH"}], SUBJECTIVE_RANDOMNESS
     )
     assert usable == ["fine"]
     assert [d["model"] for d in dropped] == ["needs_participant"]
@@ -219,7 +227,7 @@ def test_design_raises_when_no_model_can_bind(tmp_path):
     )
 
     with pytest.raises(ValueError, match="no models|cannot be evaluated|stimulus"):
-        _design(models_dir, lengths=(3,), n_select=2)
+        _design(models_dir, pool=sr_pairs(3), n_select=2)
 
 
 def test_exhaustive_design_selects_joint_eig_set(tmp_path):
@@ -233,7 +241,7 @@ def test_exhaustive_design_selects_joint_eig_set(tmp_path):
         models_dir=models_dir,
         n_responses=1,
         out=out,
-        lengths=(3, 4),
+        pool=_pool_file(tmp_path, 3, 4),
         select=5,
         n_samples=25,
         n_scenarios=300,
@@ -268,7 +276,7 @@ def test_exhaustive_design_selects_joint_eig_set(tmp_path):
             n_responses=1,
             models_dir=models_dir,
             out=out2,
-            lengths=(3, 4),
+            pool=_pool_file(tmp_path, 3, 4),
             select=5,
             n_samples=25,
             n_scenarios=300,
@@ -282,7 +290,7 @@ def test_exhaustive_design_pure_random_no_eig(tmp_path):
     pool with NO EIG computation (no model scoring), each marked source='random'
     with eig=None. This is the 64-random ablation."""
     models_dir = _seed(tmp_path)
-    stimuli = _design(models_dir, lengths=(3, 4), n_select=0, n_random=6, seed=1)
+    stimuli = _design(models_dir, pool=sr_pairs(3,4), n_select=0, n_random=6, seed=1)
     assert len(stimuli) == 6
     assert all(s["source"] == "random" for s in stimuli)
     assert all(s["eig"] is None for s in stimuli)
@@ -293,7 +301,7 @@ def test_exhaustive_design_pure_random_no_eig(tmp_path):
             s["sequence_a"]
         ) in (3, 4)
     # deterministic given the seed
-    again = _design(models_dir, lengths=(3, 4), n_select=0, n_random=6, seed=1)
+    again = _design(models_dir, pool=sr_pairs(3,4), n_select=0, n_random=6, seed=1)
     assert {(s["sequence_a"], s["sequence_b"]) for s in again} == keys
 
 
@@ -304,7 +312,7 @@ def test_exhaustive_design_eig_plus_random_split(tmp_path):
     models_dir = _seed(tmp_path)
     stimuli = _design(
         models_dir,
-        lengths=(3, 4),
+        pool=sr_pairs(3,4),
         n_select=3,
         n_random=4,
         n_samples=25,
@@ -327,7 +335,7 @@ def test_exhaustive_design_never_scores_cross_length_pairs(tmp_path, monkeypatch
     models_dir = _seed(tmp_path)
     captured_rows = []
 
-    def fake_draws(model_names, models_dir, rows, *, n_samples=200, seed=42):
+    def fake_draws(model_names, models_dir, rows, *, n_samples=200, seed=42, var_name="p_left"):
         captured_rows.extend(rows)
         return {
             name: np.full((n_samples, len(rows)), probability)
@@ -340,7 +348,7 @@ def test_exhaustive_design_never_scores_cross_length_pairs(tmp_path, monkeypatch
 
     _design(
         models_dir,
-        lengths=(3, 4),
+        pool=sr_pairs(3,4),
         n_select=2,
         n_samples=5,
         n_scenarios=20,
@@ -369,7 +377,7 @@ def test_exhaustive_design_posterior_mode_scores_from_fitted_models(tmp_path):
 
     stimuli = _design(
         models_dir,
-        lengths=(3, 4),
+        pool=sr_pairs(3,4),
         n_select=4,
         n_samples=50,
         n_scenarios=300,
@@ -399,7 +407,7 @@ def test_exhaustive_design_posterior_mode_missing_responses_fails_loudly(tmp_pat
     with pytest.raises(FileNotFoundError, match="responses"):
         _design(
             models_dir,
-            lengths=(3, 4),
+            pool=sr_pairs(3,4),
             n_select=4,
             responses_csv=tmp_path / "nope.csv",
         )
@@ -408,7 +416,7 @@ def test_exhaustive_design_posterior_mode_missing_responses_fails_loudly(tmp_pat
 def test_missing_manifest_raises(tmp_path):
     (tmp_path / "cognitive_models").mkdir(parents=True)
     with pytest.raises(FileNotFoundError):
-        _design(tmp_path / "cognitive_models", lengths=(3,), n_select=2)
+        _design(tmp_path / "cognitive_models", pool=sr_pairs(3), n_select=2)
 
 
 # ── screening: which drops are legitimate ───────────────────────────
@@ -427,7 +435,7 @@ def test_screen_drops_a_participant_level_model_and_reports_which(tmp_path, caps
     models_dir = _seed_with_participant_model(tmp_path)
 
     usable, dropped = eig_mod._screen_usable_models(
-        eig_mod._load_model_names(models_dir), models_dir, [_probe_row()]
+        eig_mod._load_model_names(models_dir), models_dir, [_probe_row()], SUBJECTIVE_RANDOMNESS
     )
 
     assert "participant_re" not in usable
@@ -462,7 +470,7 @@ def test_screen_raises_when_model_needs_feature_columns_it_cannot_compute(tmp_pa
 
     with pytest.raises(RuntimeError, match="feature column"):
         eig_mod._screen_usable_models(
-            eig_mod._load_model_names(models_dir), models_dir, [raw_row]
+            eig_mod._load_model_names(models_dir), models_dir, [raw_row], SUBJECTIVE_RANDOMNESS
         )
 
 
@@ -473,7 +481,7 @@ def test_design_records_the_screened_out_models_as_an_artifact(tmp_path, monkeyp
     models_dir = _seed_with_participant_model(tmp_path)
     monkeypatch.setattr(
         "src.models.pymc_inference.prior_predict_p_left_draws",
-        lambda names, d, rows, *, n_samples=200, seed=42: {
+        lambda names, d, rows, *, n_samples=200, seed=42, var_name="p_left": {
             m: np.full((n_samples, len(rows)), 0.5) for m in names
         },
     )
@@ -481,7 +489,7 @@ def test_design_records_the_screened_out_models_as_an_artifact(tmp_path, monkeyp
 
     _design(
         models_dir,
-        lengths=(3,),
+        pool=sr_pairs(3),
         n_select=1,
         n_samples=5,
         n_scenarios=20,
@@ -502,7 +510,7 @@ def test_design_records_the_screened_out_models_as_an_artifact(tmp_path, monkeyp
 # out of this design and recorded in screened_out.json with the reason.
 
 
-def _undefined_on_long_pairs(names, d, rows, *, n_samples=200, seed=42):
+def _undefined_on_long_pairs(names, d, rows, *, n_samples=200, seed=42, var_name="p_left"):
     from src.models.pymc_inference import InvalidPredictions
 
     (name,) = names  # the design predicts one model at a time
@@ -528,7 +536,7 @@ def test_design_screens_out_a_model_with_an_undefined_p_left_and_records_why(
 
     stimuli = _design(
         models_dir,
-        lengths=(2, 3),
+        pool=sr_pairs(2,3),
         n_select=2,
         n_samples=5,
         n_scenarios=20,
@@ -549,14 +557,14 @@ def test_design_fails_loudly_when_no_model_has_a_defined_p_left(tmp_path, monkey
 
     models_dir = _seed_with_participant_model(tmp_path)
 
-    def all_undefined(names, d, rows, *, n_samples=200, seed=42):
+    def all_undefined(names, d, rows, *, n_samples=200, seed=42, var_name="p_left"):
         raise InvalidPredictions("bad", np.full((n_samples, len(rows)), np.nan))
 
     monkeypatch.setattr(
         "src.models.pymc_inference.prior_predict_p_left_draws", all_undefined
     )
     with pytest.raises(ValueError, match="defined p_left"):
-        _design(models_dir, lengths=(3,), n_select=2, n_samples=5, n_scenarios=20)
+        _design(models_dir, pool=sr_pairs(3), n_select=2, n_samples=5, n_scenarios=20)
 
 
 def test_posterior_design_screens_out_a_model_with_an_undefined_p_left(
@@ -572,7 +580,7 @@ def test_posterior_design_screens_out_a_model_with_an_undefined_p_left(
         def __init__(self, name):
             self.name = name
 
-        def predict_p_left_draws(self, stim_data, *, seed, max_draws):
+        def predict_p_left_draws(self, stim_data, *, seed, max_draws, var_name="p_left"):
             if self.name == "bad":
                 raise InvalidPredictions("bad", np.array([[np.nan, 0.5]]))
             return np.full((1, 2), 0.5)
@@ -593,6 +601,7 @@ def test_posterior_design_screens_out_a_model_with_an_undefined_p_left(
         fit_cache_dir=None,
         max_draws=10,
         seed=0,
+        task=SUBJECTIVE_RANDOMNESS,
     )
 
     assert list(draws) == ["good"]

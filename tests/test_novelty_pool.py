@@ -32,19 +32,24 @@ from src.pipelines.inner_loop import model_zoo
 from src.pipelines.inner_loop.model_zoo import (
     DEFAULT_NOVELTY_RMSE_THRESHOLD,
     NOVELTY_POOL_FILENAME,
-    NOVELTY_POOL_LENGTHS,
-    NOVELTY_POOL_N_PAIRS,
-    NOVELTY_POOL_SEED,
     _admit_candidate,
     _min_prediction_rmse,
-    novelty_pool_rows,
 )
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 from src.subjective_randomness.stimulus_design import (
     enumerate_all_pairs,
     generate_candidate_pool,
 )
+from src.tasks.subjective_randomness import (
+    NOVELTY_POOL_LENGTHS,
+    NOVELTY_POOL_N_PAIRS,
+    NOVELTY_POOL_SEED,
+    SUBJECTIVE_RANDOMNESS,
+)
 from tests.inner_loop_fixtures import write_responses, write_seed_models
+
+# The coin-flip task's novelty pool (the loop takes its task's).
+novelty_pool_rows = SUBJECTIVE_RANDOMNESS.novelty_pool
 
 # The recovery harness's default ``eval_pool.seed`` (holdout_recovery.py,
 # ``run_holdout_recovery_from_config``); the loop's pool must not be that sample.
@@ -120,7 +125,7 @@ def _stub_admission_gates(monkeypatch):
     monkeypatch.setattr(model_zoo, "load_pymc_model", lambda name, models_dir: object())
     monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
     monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
-    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -10.0)
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", lambda *a, **k: -10.0)
 
 
 def _models_dir(tmp_path, names):
@@ -480,7 +485,7 @@ def _patch_scoring(monkeypatch):
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     # The experiment-start screen samples the whole set in one batch; no MCMC here.
     monkeypatch.setattr(model_zoo, "fit_models_to_cache", lambda names, *a, **k: {})
-    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
+    monkeypatch.setattr(model_zoo, "mean_log_likelihood", lambda *a, **k: -100.0)
     monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: None)
     monkeypatch.setattr(model_zoo, "load_pymc_model", lambda name, models_dir: object())
 

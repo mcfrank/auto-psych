@@ -26,6 +26,7 @@ from src.subjective_randomness.holdout_data import (
     p_left_fixed_params,
 )
 from tests.paths import REPO_ROOT
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 
 IMPOSSIBLE_DIR = REPO_ROOT / "src" / "subjective_randomness" / "impossible_models"
 MODELS = [
@@ -84,13 +85,14 @@ def test_the_vendored_clean_sequence_is_the_featurizers(name):
 @pytest.mark.parametrize("name", MODELS)
 def test_each_impossible_model_generates_data_from_raw_rows(name):
     params = {"beta": 4.0, "side_bias": 0.0}
-    p_left = p_left_fixed_params(name, IMPOSSIBLE_DIR, STIMULI, params, seed=3)
+    p_left = p_left_fixed_params(name, IMPOSSIBLE_DIR, STIMULI, params, seed=3, task=SUBJECTIVE_RANDOMNESS)
     assert p_left.shape == (len(STIMULI),)
     assert np.all((p_left > 0) & (p_left < 1))
     assert np.ptp(p_left) > 0  # the rule separates these pairs
 
     rows = generate_responses(
-        name, IMPOSSIBLE_DIR, STIMULI, params, 3, seed=3, participant_id_offset=0
+        name, IMPOSSIBLE_DIR, STIMULI, params, 3, seed=3, participant_id_offset=0,
+        task=SUBJECTIVE_RANDOMNESS,
     )
     assert len(rows) == 3 * len(STIMULI)
     assert set(rows[0]) == {
@@ -112,7 +114,7 @@ def test_the_score_directions_are_the_rules():
     ]  # longer run, more imbalance
     params = {"beta": 4.0, "side_bias": 0.0}
     p = {
-        name: p_left_fixed_params(name, IMPOSSIBLE_DIR, rows, params) for name in MODELS
+        name: p_left_fixed_params(name, IMPOSSIBLE_DIR, rows, params, task=SUBJECTIVE_RANDOMNESS) for name in MODELS
     }
     assert p["more_heads_more_random"][0] > 0.5 > p["fewer_heads_more_random"][0]
     assert p["longer_runs_more_random"][1] > 0.5

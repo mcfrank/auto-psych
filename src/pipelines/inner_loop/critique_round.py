@@ -25,6 +25,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
+from src.tasks import task_of_file
 from src.pipelines.inner_loop.task_description import read_task_description
 from src.critique.ppc import (
     _TEST_STAT_BUDGET_SEC,
@@ -37,8 +38,6 @@ from src.runtime.coding_agent import AgentPermissionDenied
 from src.runtime.usage_limits import AgentInfrastructureError
 from src.runtime.config import REPO_ROOT
 
-_PKG_DIR = Path(__file__).resolve().parent
-_CRITIQUE_PROMPT = _PKG_DIR / "prompts" / "critique.md"
 
 # CriticAL critique defaults. Before each candidate round the inner loop runs a
 # posterior-predictive critique of the incumbent (best) model: the critique agent
@@ -213,6 +212,7 @@ def _build_critique_prompt(
     critique_dir: Path,
     context_text: str,
     *,
+    prompt_path: Path,
     attempt: int = 0,
     broken: Optional[Dict[str, str]] = None,
 ) -> str:
@@ -236,7 +236,7 @@ def _build_critique_prompt(
     # — the launcher pins PWD to it), NOT from critique_dir, so a bare "in this
     # directory" leaves it guessing where to write.
     sections = [
-        _CRITIQUE_PROMPT.read_text(encoding="utf-8"),
+        Path(prompt_path).read_text(encoding="utf-8"),
         "---",
         f"Your working directory for this critique is `{critique_dir}`.\n"
         f"Write your test statistics into `{test_stats_dir}/` (one "
@@ -346,7 +346,11 @@ def _spawn_critique_agent(
         attempts_made = attempt + 1
         success, _ = run_coding_agent(
             _build_critique_prompt(
-                critique_dir, context_text, attempt=attempt, broken=broken
+                critique_dir,
+                context_text,
+                prompt_path=task_of_file(responses_path).critique_prompt,
+                attempt=attempt,
+                broken=broken,
             ),
             cwd=cwd,
             log_path=critique_dir / _critique_log_name(attempt),

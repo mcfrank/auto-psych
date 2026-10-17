@@ -522,7 +522,7 @@ def test_candidate_agent_labels_usage(tmp_path, monkeypatch):
     candidate_dir = tmp_path / "candidate_0"
     candidate_dir.mkdir()
     responses = tmp_path / "responses.csv"
-    responses.write_text("a\n1\n", encoding="utf-8")
+    responses.write_text("sequence_a,sequence_b,participant_id,trial_index,chose_left\nHT,TH,0,0,1\n", encoding="utf-8")
     docs = {
         "context": "c",
         "brief": "b",
@@ -557,7 +557,7 @@ def test_critique_agent_labels_usage(tmp_path, monkeypatch):
         critique_round, "_persist_critique_results", lambda *a, **k: None
     )
     responses = tmp_path / "responses.csv"
-    responses.write_text("a\n1\n", encoding="utf-8")
+    responses.write_text("sequence_a,sequence_b,participant_id,trial_index,chose_left\nHT,TH,0,0,1\n", encoding="utf-8")
     critique_round._spawn_critique_agent(
         tmp_path / "critique",
         "incumbent_model",
@@ -655,7 +655,7 @@ def test_inner_cli_persists_usage_log(tmp_path, monkeypatch):
     import src.pipelines.inner_loop.run as inner_run
 
     responses = tmp_path / "responses.csv"
-    responses.write_text("a\n1\n", encoding="utf-8")
+    responses.write_text("sequence_a,sequence_b,participant_id,trial_index,chose_left\nHT,TH,0,0,1\n", encoding="utf-8")
     seeds = tmp_path / "seeds"
     seeds.mkdir()
     (seeds / "models_manifest.yaml").write_text("models: []\n", encoding="utf-8")
