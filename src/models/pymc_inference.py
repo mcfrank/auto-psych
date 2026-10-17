@@ -587,11 +587,6 @@ class FittedModel:
     _loo_diagnostics: Optional[LooDiagnostics] = field(
         default=None, init=False, repr=False, compare=False
     )
-    # The sampling warnings, computed once per fit and repeated on every
-    # in-process cache hit (R-hat over a per-trial deterministic takes seconds).
-    _sampling_warnings: Optional[List[str]] = field(
-        default=None, init=False, repr=False, compare=False
-    )
 
     def predict_p_left_draws(
         self,
@@ -994,7 +989,8 @@ def _fit_once(
                 f"atomically?), not a property of the model {name!r}; delete it "
                 "to refit."
             ) from e
-        return _checked_fit(name, model, idata, fp)
+        _warn_sampling_diagnostics(name, idata, model)
+        return FittedModel(name=name, model=model, idata=idata, fingerprint=fp)
 
     observed = extract_observed(responses_path, model)
     with model:
@@ -1015,10 +1011,12 @@ def _fit_once(
                 idata_kwargs={"log_likelihood": True},
             )
 
-    fitted = _checked_fit(name, model, idata, fp)
+    _warn_sampling_diagnostics(name, idata, model)
+
     if nc_path is not None:
         write_fit_file(idata, nc_path)
-    return fitted
+
+    return FittedModel(name=name, model=model, idata=idata, fingerprint=fp)
 
 
 def _warm_start_sample(model: Any, settings: Dict[str, Any]) -> Any:
@@ -1116,14 +1114,18 @@ def _divergence_count(idata: Any) -> Optional[int]:
     return int(sample_stats["diverging"].values.sum())
 
 
-def _max_rhat(idata: Any) -> float:
-    """Largest R-hat across variables; NaN when ArviZ cannot compute one.
+def _max_rhat(idata: Any, var_names: Sequence[str]) -> float:
+    """Largest R-hat over the free parameters ``var_names``; NaN when ArviZ
+    cannot compute one (or there are none).
 
     ArviZ returns NaN (not an error) for a single-chain trace, where R-hat is
     undefined. That NaN is reported as "unverified", never as "converged".
+    Deterministics are left out: they are functions of the parameters, and a
+    per-trial one made R-hat cost seconds per fit.
     """
-    az = _import_arviz()
-    rhat = az.rhat(idata)
+    if not var_names:
+        return float("nan")
+    rhat = _import_arviz().rhat(idata.posterior[list(var_names)])
     values = [float(rhat[v].max()) for v in rhat.data_vars]
     # A NaN anywhere means "unverified": Python's max() over NaNs depends on
     # their order, so it could have hidden one.
@@ -1161,13 +1163,8 @@ def convergence_diagnostics(
     n_draws = int(idata.posterior.sizes["chain"] * idata.posterior.sizes["draw"])
     max_r_hat = min_bulk_ess = float("nan")
     if var_names:
-        posterior = idata.posterior[list(var_names)]
-        rhat = az.rhat(posterior)
-        worst_rhat = [float(rhat[v].max()) for v in rhat.data_vars]
-        max_r_hat = (
-            float("nan") if any(math.isnan(v) for v in worst_rhat) else max(worst_rhat)
-        )
-        ess = az.ess(posterior, method="bulk")
+        max_r_hat = _max_rhat(idata, var_names)
+        ess = az.ess(idata.posterior[list(var_names)], method="bulk")
         min_bulk_ess = min(float(ess[v].min()) for v in ess.data_vars)
     return ConvergenceDiagnostics(
         n_divergent=_divergence_count(idata),
@@ -1206,8 +1203,7 @@ def convergence_problems(idata: Any, var_names: Sequence[str]) -> List[str]:
 
 def convergence_problems_of(fitted: "FittedModel") -> List[str]:
     """``convergence_problems`` over a fitted model's free parameters."""
-    free = [rv.name for rv in fitted.model.free_RVs]
-    return convergence_problems(fitted.idata, free)
+    return convergence_problems(fitted.idata, _free_names(fitted.model))
 
 
 def is_near_miss(diag: ConvergenceDiagnostics) -> bool:
@@ -1226,7 +1222,7 @@ def is_near_miss(diag: ConvergenceDiagnostics) -> bool:
 def convergence_diagnostics_of(fitted: "FittedModel") -> ConvergenceDiagnostics:
     """``convergence_diagnostics`` over a fitted model's free parameters."""
     return convergence_diagnostics(
-        fitted.idata, [rv.name for rv in fitted.model.free_RVs]
+        fitted.idata, _free_names(fitted.model)
     )
 
 
@@ -1256,58 +1252,56 @@ def _refit_decision(name: str, fitted: "FittedModel", settings: Dict[str, Any]) 
     return False
 
 
-def _warn_sampling_diagnostics(name: str, idata: Any) -> List[str]:
-    """Loudly surface NUTS trouble (divergences, poor R-hat) for a fit.
+def _warn_sampling_diagnostics(name: str, idata: Any, model: Any) -> None:
+    """Loudly surface NUTS trouble (divergences, poor R-hat over the model's
+    free parameters) for a fit.
 
     These are advisory, not fatal -- ArviZ still returns usable arrays -- but a fit
     with divergences or R-hat > 1.01 is suspect, and accepting its ELPD at face
     value is exactly the silent-quality trap the project's fail-loud rule guards
     against. Print an attributed warning so a degraded fit is visible in the run
-    log. Diagnostics are rerun on loading a stored fit so a suspect one cannot
-    make its warning disappear from a later run. Returns the warnings printed.
+    log. Diagnostics are rerun on cache hits so loading a suspect stored fit
+    cannot make its warning disappear from a later run.
 
     A diagnostic that could not be computed is itself warned about: previously a
     missing ``diverging`` stat read as 0 divergences and an unavailable R-hat as
     NaN, i.e. the two values that mean "this fit is healthy".
     """
-    warnings: List[str] = []
     n_div = _divergence_count(idata)
     if n_div is None:
-        warnings.append(
+        print(
             f"  [warn] {name}: the trace records no divergence statistic, so "
             "sampling quality could NOT be checked (did the sampler fall back "
             "off NUTS?).",
+            file=sys.stderr,
+            flush=True,
         )
     elif n_div > 0:
-        warnings.append(
+        print(
             f"  [warn] {name}: {n_div} divergence(s) during sampling; the posterior "
             "may be biased -- treat its ELPD-LOO with caution.",
+            file=sys.stderr,
+            flush=True,
         )
-    max_rhat = _max_rhat(idata)
+    max_rhat = _max_rhat(idata, _free_names(model))
     if not math.isfinite(max_rhat):
-        warnings.append(
+        print(
             f"  [warn] {name}: R-hat is unavailable (got {max_rhat}); convergence "
             "was NOT verified -- a single-chain fit cannot report one.",
+            file=sys.stderr,
+            flush=True,
         )
     elif max_rhat > 1.01:
-        warnings.append(
+        print(
             f"  [warn] {name}: max R-hat={max_rhat:.3f} (>1.01); chains may not have "
             "converged.",
+            file=sys.stderr,
+            flush=True,
         )
-    _print_warnings(warnings)
-    return warnings
 
 
-def _checked_fit(name: str, model: Any, idata: Any, fingerprint: str) -> "FittedModel":
-    """A ``FittedModel`` whose sampling warnings were printed and kept."""
-    fitted = FittedModel(name=name, model=model, idata=idata, fingerprint=fingerprint)
-    fitted._sampling_warnings = _warn_sampling_diagnostics(name, idata)
-    return fitted
-
-
-def _print_warnings(warnings: List[str]) -> None:
-    for warning in warnings:
-        print(warning, file=sys.stderr, flush=True)
+def _free_names(model: Any) -> List[str]:
+    return [rv.name for rv in model.free_RVs]
 
 
 # ---------------------------------------------------------------------------
@@ -2075,10 +2069,7 @@ def _fit_outcomes(
             continue
         cached = _FIT_CACHE.get(key)
         if cached is not None:
-            if cached._sampling_warnings is None:
-                cached._sampling_warnings = _warn_sampling_diagnostics(name, cached.idata)
-            else:
-                _print_warnings(cached._sampling_warnings)
+            _warn_sampling_diagnostics(name, cached.idata, cached.model)
             outcomes[name] = cached
         else:
             pending.append(name)

@@ -111,7 +111,7 @@ def _stub_loading(monkeypatch):
     monkeypatch.setattr(pi, "_import_pymc", lambda: object())
     monkeypatch.setattr(pi, "_import_arviz", lambda: _FakeArviz())
     monkeypatch.setattr(pi, "load_pymc_model", lambda name, directory: object())
-    monkeypatch.setattr(pi, "_warn_sampling_diagnostics", lambda name, idata: None)
+    monkeypatch.setattr(pi, "_warn_sampling_diagnostics", lambda name, idata, model: None)
 
 
 def _nc_name(name, models_dir, responses, fit_kwargs):
@@ -275,7 +275,7 @@ def test_in_process_cache_hits_never_reach_the_pool(tmp_path, monkeypatch):
         name="hit", model=object(), idata=object(), fingerprint="fp"
     )
     pi._FIT_CACHE[pi._cache_key("hit", models_dir, responses, {})] = cached
-    monkeypatch.setattr(pi, "_warn_sampling_diagnostics", lambda name, idata: None)
+    monkeypatch.setattr(pi, "_warn_sampling_diagnostics", lambda name, idata, model: None)
     fitted = pi.FittedModel(
         name="miss", model=object(), idata=object(), fingerprint="fp2"
     )

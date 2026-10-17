@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -447,6 +448,14 @@ class _FakeSampleStats:
         return self._values[key]
 
 
+def _model_with(*parameters):
+    """A stand-in for a pm.Model with these free parameters."""
+    return SimpleNamespace(free_RVs=[SimpleNamespace(name=p) for p in parameters])
+
+
+_ONE_PARAMETER = _model_with("a")
+
+
 class _FakeIdata:
     def __init__(self, sample_stats=None):
         if sample_stats is not None:
@@ -454,25 +463,25 @@ class _FakeIdata:
 
 
 def test_diagnostics_report_that_divergences_could_not_be_checked(capsys, monkeypatch):
-    monkeypatch.setattr(pi, "_max_rhat", lambda idata: 1.0)
-    pi._warn_sampling_diagnostics("m", _FakeIdata())
+    monkeypatch.setattr(pi, "_max_rhat", lambda idata, var_names: 1.0)
+    pi._warn_sampling_diagnostics("m", _FakeIdata(), _ONE_PARAMETER)
     err = capsys.readouterr().err
     assert "divergence" in err.lower()
     assert "could not" in err.lower() or "no divergence statistic" in err.lower()
 
 
 def test_diagnostics_report_an_unavailable_rhat(capsys, monkeypatch):
-    monkeypatch.setattr(pi, "_max_rhat", lambda idata: float("nan"))
+    monkeypatch.setattr(pi, "_max_rhat", lambda idata, var_names: float("nan"))
     stats = _FakeSampleStats({"diverging": _FakeDataArray(np.zeros(10))})
-    pi._warn_sampling_diagnostics("m", _FakeIdata(stats))
+    pi._warn_sampling_diagnostics("m", _FakeIdata(stats), _ONE_PARAMETER)
     err = capsys.readouterr().err
     assert "r-hat" in err.lower()
 
 
 def test_diagnostics_stay_quiet_for_a_healthy_fit(capsys, monkeypatch):
-    monkeypatch.setattr(pi, "_max_rhat", lambda idata: 1.001)
+    monkeypatch.setattr(pi, "_max_rhat", lambda idata, var_names: 1.001)
     stats = _FakeSampleStats({"diverging": _FakeDataArray(np.zeros(10))})
-    pi._warn_sampling_diagnostics("m", _FakeIdata(stats))
+    pi._warn_sampling_diagnostics("m", _FakeIdata(stats), _ONE_PARAMETER)
     assert capsys.readouterr().err == ""
 
 
@@ -484,9 +493,9 @@ def test_diagnostics_propagate_unexpected_errors(monkeypatch):
         def __getitem__(self, key):
             raise TypeError("sample_stats is not subscriptable like that")
 
-    monkeypatch.setattr(pi, "_max_rhat", lambda idata: 1.0)
+    monkeypatch.setattr(pi, "_max_rhat", lambda idata, var_names: 1.0)
     with pytest.raises(TypeError):
-        pi._warn_sampling_diagnostics("m", _FakeIdata(_Exploding()))
+        pi._warn_sampling_diagnostics("m", _FakeIdata(_Exploding()), _ONE_PARAMETER)
 
 
 def test_in_process_cache_hits_rerun_sampling_diagnostics(tmp_path, monkeypatch):
@@ -503,7 +512,7 @@ def test_in_process_cache_hits_rerun_sampling_diagnostics(tmp_path, monkeypatch)
     monkeypatch.setattr(
         pi,
         "_warn_sampling_diagnostics",
-        lambda name, value: checked.append((name, value)),
+        lambda name, value, model: checked.append((name, value)),
     )
 
     result = pi.fit_models_cached(["m"], models_dir, responses)
@@ -543,7 +552,7 @@ def test_disk_cache_hits_rerun_sampling_diagnostics(tmp_path, monkeypatch):
     monkeypatch.setattr(
         pi,
         "_warn_sampling_diagnostics",
-        lambda name, value: checked.append((name, value)),
+        lambda name, value, model: checked.append((name, value)),
     )
 
     fitted = pi.fit_model("m", models_dir, responses, cache_dir=cache_dir)
@@ -552,23 +561,19 @@ def test_disk_cache_hits_rerun_sampling_diagnostics(tmp_path, monkeypatch):
     assert checked == [("m", idata)]
 
 
-def test_in_process_cache_hits_repeat_the_warning_without_recomputing_it(tmp_path, monkeypatch, capsys):
-    # R-hat over a trace with a per-trial deterministic takes seconds, and a
-    # round's scoring looks every fit up dozens of times.
-    models_dir = tmp_path / "models"
-    models_dir.mkdir()
-    (models_dir / "m.py").write_text("# model\n", encoding="utf-8")
-    responses = tmp_path / "responses.csv"
-    responses.write_text("chose_left\n1\n", encoding="utf-8")
-    stats = _FakeSampleStats({"diverging": _FakeDataArray(np.zeros(10))})
-    cached = pi.FittedModel(name="m", model=object(), idata=_FakeIdata(stats), fingerprint="fp")
-    pi._FIT_CACHE[pi._cache_key("m", models_dir, responses, {})] = cached
-    computed = []
-    monkeypatch.setattr(pi, "_max_rhat", lambda idata: computed.append(idata) or 1.05)
+def test_the_rhat_warning_looks_only_at_the_free_parameters(capsys):
+    # A per-trial deterministic is a function of the parameters: its R-hat
+    # adds nothing, and over thousands of trials it took seconds per fit.
+    import arviz as az
 
-    for _ in range(3):
-        assert pi.fit_models_cached(["m"], models_dir, responses) == {"m": cached}
+    rng = np.random.default_rng(0)
+    stuck = np.stack([np.full(500, c) for c in range(4)])[:, :, None] + rng.normal(0, 0.01, (4, 500, 3))
+    idata = az.from_dict(
+        posterior={"a": rng.normal(size=(4, 500)), "p_yes": stuck},
+        sample_stats={"diverging": np.zeros((4, 500), dtype=bool)},
+    )
 
-    assert len(computed) == 1
-    assert capsys.readouterr().err.count("max R-hat=1.050") == 3
-    pi.clear_fit_cache()
+    pi._warn_sampling_diagnostics("m", idata, _model_with("a"))
+    assert capsys.readouterr().err == ""
+    pi._warn_sampling_diagnostics("m", idata, _model_with("a", "p_yes"))
+    assert "R-hat" in capsys.readouterr().err
