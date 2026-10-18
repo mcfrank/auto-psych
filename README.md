@@ -52,9 +52,32 @@ Active development is organized around two explicit loops:
   `cognitive_models/`, and the next experiment's design uses a uniform model
   prior over it.
 
+## The number-game domain (`projects/number_game/`)
+
+A second project on the same PyMC pipeline: Tenenbaum's number game ("given
+these example numbers, is 32 in the concept too?", yes/no), with Bigelow &
+Piantadosi's (2016) 272,700 responses as its data bank. The pipeline is
+generic over projects through a task spec (`src/tasks/`: the design pool, the
+stimulus rows and the predicted variable, here `p_yes`); the seeds are
+Tenenbaum (2000) and two PyMC ports of Bigelow's numpyro models, checked
+against them (`tests/test_number_game_seed_port.py`).
+
+- **Data:** `data/number-game/` (gitignored, never in agent trees), read by
+  `src/number_game/`.
+- **Recovery runs** (each seed held out as the ground truth in turn):
+  `scripts/number_game/slurm/submit_recovery.sh`, config
+  `scripts/number_game/configs/holdout_recovery.yaml`.
+- **Dataset runs** (no ground truth; each experiment draws real, never-reused
+  responses from the bank for the cells its design picked):
+  `scripts/number_game/slurm/submit_dataset_run.sh`, config
+  `scripts/number_game/configs/dataset_run.yaml` (`data_source: dataset`).
+- Selection is by grouped cross-validation over example sets
+  (`inner_loop.selection`), fits use `fit.method: warm_start_nuts`, and
+  `hide_participant_id` keeps the models population-level.
+
 ## The RSA reference-game domain (`src/rsa/`)
 
-A second domain, built on branch `auto-rsa`: the same loop applied to
+A third domain, built on branch `auto-rsa`: the same loop applied to
 rational-speech-act models of how people interpret a word in a reference game
 (the pragmods paradigm). Agents write models in
 [memo](https://github.com/kach/memo), which are fitted with numpyro, and they
