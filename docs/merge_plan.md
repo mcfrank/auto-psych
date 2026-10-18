@@ -9,9 +9,19 @@ merged yet. Read all of it before running anything.
 base: `git rebase --onto 771e7eba 7135d6d8 number-game`. It no longer contains
 `7135d6d8`, and no commit reachable from it holds a raw Prolific ID, so it is
 safe to push. The pre-replay branch is kept, local only, as
-`number-game-prerewrite-backup`: never push it. The replay onto current
-`origin/main` (§ 3, conflicts § 4) is still to do; start it from
-`771e7eba..number-game` instead of `7135d6d8..number-game`.
+`number-game-prerewrite-backup`: never push it.
+
+**Done (2026-10-17): both branches are in `main`.** On the scrubbed history
+`number-game` and `main` share a real ancestor, so no second replay was
+needed: `8e9e7c9c` merges `number-game` (`09ac0ab0`) into `auto-rsa`
+(`3cd64dab`), and `main` points at it, so every hash in the table below is on
+`main`. The conflicts were resolved as § 4.1-4.3 say, § 4.4 and § 5's
+`_env.sh` change applied, plus two fixes this plan did not foresee: main's
+`end_experiment` (the re-prune refactor) now takes the loop's `selection`
+(number-game's grouped CV left it undefined, a `NameError` at the end of every
+model loop; `reprune.py` passes `LOO`), and main's
+`tests/test_design_person_level_models.py` passes the task. The rest of this
+document is the plan as written before the merge.
 
 Old → new hashes (the dataset run in `/scr/wurgaft/auto-psych/number_game_dataset`
 recorded `573e2c9a`, then `2395ef69`, as its `code_commit`):

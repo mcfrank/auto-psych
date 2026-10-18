@@ -7,10 +7,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 An automated cognitive-science discovery pipeline. Coding agents conjecture
 models of human judgment, design maximally informative experiments, run them on
 real (Prolific + Firebase) or simulated participants, and let Bayesian model
-comparison decide which hypothesis survives. Two domains: *subjective
-randomness* (PyMC models; everything below until **RSA reference games**) and
-*RSA reference games* (memo models fitted with numpyro, `src/rsa/`; that
-section). `README.md` is the authoritative user-facing guide; this file captures
+comparison decide which hypothesis survives. Three domains: *subjective
+randomness* and the *number game* share the PyMC pipeline (everything below
+until **RSA reference games**; the number game's specifics in its own
+section), and *RSA reference games* (memo models fitted with numpyro,
+`src/rsa/`; that section). `README.md` is the authoritative user-facing guide; this file captures
 the architecture and workflow facts that require reading multiple files.
 
 ## Environment & commands
@@ -547,7 +548,7 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   experiment 1 pruned: `_seed_file_dir`), not from the registry, so a run
   is re-scored with the seeds it ran with.
 
-### The number game (branch `number-game`)
+### The number game
 
 Project `projects/number_game/`, task spec `src/tasks/number_game.py`; three
 seeds (Tenenbaum 2000 and two ports of Bigelow's numpyro models, checked by
@@ -555,7 +556,10 @@ seeds (Tenenbaum 2000 and two ports of Bigelow's numpyro models, checked by
 gitignored) is read by `src/number_game/`, kept out of agent trees. Recovery:
 `scripts/number_game/configs/holdout_recovery.yaml`, submitted with
 `scripts/number_game/slurm/submit_recovery.sh`; `data_source: dataset` draws
-experiments from the dataset instead of a ground truth (`src/number_game/dataset.py`).
+experiments from the dataset instead of a ground truth (`src/number_game/dataset.py`;
+submitted with `submit_dataset_run.sh`, which skips the test-retest analysis,
+`TEST_RETEST_ANALYSIS=0`). The pipeline is generic over projects through
+`src/tasks/` (`TaskSpec`: design pool, stimulus rows, prediction variable).
 General settings these runs introduced: `fit.method: warm_start_nuts`,
 `inner_loop.selection` (grouped CV; no PSIS-LOO then), `hide_participant_id`.
 
