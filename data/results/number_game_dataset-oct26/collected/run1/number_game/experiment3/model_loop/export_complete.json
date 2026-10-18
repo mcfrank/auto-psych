@@ -1,0 +1,9 @@
+{
+  "models": [
+    "digit_reversal_mirror_concept",
+    "even_rule_digit_size_principle_counting",
+    "parity_and_digit_size_principle",
+    "bayesian_digit_veto_counting_up"
+  ],
+  "ledger_sha256": "6f7f45ca2cfa3f794d07578c8f269d491e7096cece8ae6685eb82a97c64ae143"
+}

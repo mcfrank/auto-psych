@@ -1,0 +1,132 @@
+{
+  "posteriors": {
+    "final_digit_similarity_gradient": 0.021416,
+    "digit_similarity_with_range_extension": 0.006079,
+    "digit_similarity_with_span_falloff": 0.003536,
+    "place_value_grid_similarity": 1.2e-05,
+    "proximity_cued_digit_retrieval": 0.000174,
+    "serial_position_digit_similarity": 0.003298,
+    "digit_similarity_with_common_factor": 0.94278,
+    "common_factor_digit_range_similarity": 0.022705
+  },
+  "elpd_loo": {
+    "final_digit_similarity_gradient": -1664.0639,
+    "digit_similarity_with_range_extension": -1665.3232,
+    "digit_similarity_with_span_falloff": -1665.8651,
+    "place_value_grid_similarity": -1671.5478,
+    "proximity_cued_digit_retrieval": -1668.8746,
+    "serial_position_digit_similarity": -1665.9345,
+    "digit_similarity_with_common_factor": -1660.2792,
+    "common_factor_digit_range_similarity": -1664.0054
+  },
+  "n_trials": 2520,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "digit_similarity_with_common_factor": {
+      "rank": 0,
+      "elpd_loo": -1660.2791720759265,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.942779680784881,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "common_factor_digit_range_similarity": {
+      "rank": 1,
+      "elpd_loo": -1664.0054251691276,
+      "elpd_diff": 3.726253093201194,
+      "dse": 4.5742079151166894,
+      "dse_clustered": 4.993559299554507,
+      "weight": 0.022704871968903455,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "final_digit_similarity_gradient": {
+      "rank": 2,
+      "elpd_loo": -1664.063859807942,
+      "elpd_diff": 3.784687732015527,
+      "dse": 5.436898610922025,
+      "dse_clustered": 7.480295112656875,
+      "weight": 0.02141614093074893,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "digit_similarity_with_range_extension": {
+      "rank": 3,
+      "elpd_loo": -1665.323182658894,
+      "elpd_diff": 5.04401058296753,
+      "dse": 7.018505617642831,
+      "dse_clustered": 8.821435906979552,
+      "weight": 0.006078889527985611,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "digit_similarity_with_span_falloff": {
+      "rank": 4,
+      "elpd_loo": -1665.8651340362344,
+      "elpd_diff": 5.585961960307941,
+      "dse": 7.000266174939882,
+      "dse_clustered": 9.021748612050503,
+      "weight": 0.003535556308485719,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "serial_position_digit_similarity": {
+      "rank": 5,
+      "elpd_loo": -1665.9345496797735,
+      "elpd_diff": 5.6553776038470005,
+      "dse": 5.460182944311735,
+      "dse_clustered": 7.466703573412515,
+      "weight": 0.0032984577640105266,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "proximity_cued_digit_retrieval": {
+      "rank": 6,
+      "elpd_loo": -1668.874600281542,
+      "elpd_diff": 8.595428205615463,
+      "dse": 6.863694555054194,
+      "dse_clustered": 9.939257963116379,
+      "weight": 0.00017436654992805927,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "place_value_grid_similarity": {
+      "rank": 7,
+      "elpd_loo": -1671.5478441014975,
+      "elpd_diff": 11.26867202557105,
+      "dse": 7.118708762207012,
+      "dse_clustered": 10.302721973550504,
+      "weight": 1.2036165056626784e-05,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "digit_similarity_with_common_factor"
+}

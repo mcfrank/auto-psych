@@ -1,0 +1,12 @@
+# Critique of `final_digit_similarity_gradient`
+
+5 of 8 evaluated test statistics show a significant discrepancy (p ≤ 0.05), over 1000 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **digit_match_near_minus_far** — Among targets sharing a final digit with at least one example, yes rate when the nearest example is within 10 minus yes rate when it is more than 30 away; observed above null means numerical proximity boosts digit-matched targets, which the magnitude-blind model cannot capture. (observed 0.0694 vs null mean -0.0297, z=2.85, p=0.002, q=0.016) [survives FDR]
+- **gcd_divisible_minus_not** — On 2-4 example sets whose examples share a common divisor >=3, among targets with the same parity as every example, yes rate for targets divisible by that divisor minus those not divisible; observed above null means people infer common-factor/multiples rules that the final-digit model cannot represent. (observed 0.141 vs null mean -0.0224, z=2.56, p=0.016, q=0.0639)
+- **all_even_minus_all_odd_sets** — Yes rate on sets whose examples are all even minus yes rate on sets whose examples are all odd (any target); observed below null means people generalize more narrowly from even sets (e.g. inferring multiples rules) than the parity-symmetric digit model predicts, above means more broadly. (observed -0.0617 vs null mean -0.00915, z=-2.13, p=0.034, q=0.0799)
+- **set_size_u_shape** — Mean yes rate on 1- and 4-example sets minus mean yes rate on 2- and 3-example sets; observed above null means generalization breadth depends non-monotonically on set size (broader for 1 and 4 examples) in a way the digit-similarity model, which has no set-size term, under-produces. (observed 0.0767 vs null mean 0.0346, z=2.10, p=0.048, q=0.0799)
+- **recency_digit_match** — On 2-4 example sets, yes rate for targets sharing a final digit with the last-shown example but not the first, minus yes rate for targets sharing it with the first but not the last; observed above null means a recency (order) effect that the order-blind average-similarity model cannot produce, below means primacy. (observed 0.0943 vs null mean 0.00386, z=2.04, p=0.05, q=0.0799)

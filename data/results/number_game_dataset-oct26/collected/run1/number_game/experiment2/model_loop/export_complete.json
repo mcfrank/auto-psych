@@ -1,0 +1,12 @@
+{
+  "models": [
+    "mixed_parity_loosens_criterion",
+    "rule_gated_decade_familiarity",
+    "position_weighted_rule_gated_digits",
+    "mutual_similarity_contrast_standard",
+    "ruleless_set_anything_goes_floor",
+    "rule_gated_mixed_parity_criterion",
+    "coincidence_graded_rule_preemption"
+  ],
+  "ledger_sha256": "5d189526bce346edd8988eb47fd2ed957efc5504426a1c334279dbd4c259f914"
+}

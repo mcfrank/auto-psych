@@ -1,0 +1,6 @@
+reserved_for_new: 0.0
+theories:
+  bayesian_digit_veto_counting_up: 0.25
+  digit_reversal_mirror_concept: 0.25
+  even_rule_digit_size_principle_counting: 0.25
+  parity_and_digit_size_principle: 0.25

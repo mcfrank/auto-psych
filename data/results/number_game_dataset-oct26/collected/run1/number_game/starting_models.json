@@ -1,0 +1,8 @@
+{
+  "starting_models": [
+    "bigelow_piantadosi_independent",
+    "bigelow_piantadosi_interval",
+    "tenenbaum_rules_similarity"
+  ],
+  "starting_models_prunable": true
+}

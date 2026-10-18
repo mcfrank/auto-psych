@@ -1,0 +1,13 @@
+{
+  "models": [
+    "final_digit_similarity_gradient",
+    "digit_similarity_with_range_extension",
+    "digit_similarity_with_span_falloff",
+    "place_value_grid_similarity",
+    "proximity_cued_digit_retrieval",
+    "serial_position_digit_similarity",
+    "digit_similarity_with_common_factor",
+    "common_factor_digit_range_similarity"
+  ],
+  "ledger_sha256": "236539f39544f92f649617fab5f50dbfe3d25364b3066be153fd86dcc5662f7a"
+}

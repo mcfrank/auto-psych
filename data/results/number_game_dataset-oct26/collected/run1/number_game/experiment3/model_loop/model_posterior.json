@@ -1,0 +1,72 @@
+{
+  "posteriors": {
+    "digit_reversal_mirror_concept": 2.3e-05,
+    "even_rule_digit_size_principle_counting": 0.973119,
+    "parity_and_digit_size_principle": 3e-05,
+    "bayesian_digit_veto_counting_up": 0.026828
+  },
+  "elpd_loo": {
+    "digit_reversal_mirror_concept": -4687.8029,
+    "even_rule_digit_size_principle_counting": -4677.1668,
+    "parity_and_digit_size_principle": -4687.5487,
+    "bayesian_digit_veto_counting_up": -4680.7579
+  },
+  "n_trials": 7560,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "even_rule_digit_size_principle_counting": {
+      "rank": 0,
+      "elpd_loo": -4677.16680788208,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.9731187281081396,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 7560,
+      "not_converged": false
+    },
+    "bayesian_digit_veto_counting_up": {
+      "rank": 1,
+      "elpd_loo": -4680.757877903112,
+      "elpd_diff": 3.5910700210315554,
+      "dse": 1.7837027934641827,
+      "dse_clustered": 2.175736808831407,
+      "weight": 0.026827730599792415,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 7560,
+      "not_converged": false
+    },
+    "parity_and_digit_size_principle": {
+      "rank": 2,
+      "elpd_loo": -4687.548722939608,
+      "elpd_diff": 10.381915057527294,
+      "dse": 5.845380727395968,
+      "dse_clustered": 6.5292015227835165,
+      "weight": 3.0154866474418636e-05,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 7560,
+      "not_converged": false
+    },
+    "digit_reversal_mirror_concept": {
+      "rank": 3,
+      "elpd_loo": -4687.802913507327,
+      "elpd_diff": 10.636105625246273,
+      "dse": 5.500277349731636,
+      "dse_clustered": 6.355877189478606,
+      "weight": 2.3386425593553884e-05,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 7560,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "even_rule_digit_size_principle_counting"
+}

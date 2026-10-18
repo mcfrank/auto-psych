@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  common_factor_digit_range_similarity: 0.125
+  digit_similarity_with_common_factor: 0.125
+  digit_similarity_with_range_extension: 0.125
+  digit_similarity_with_span_falloff: 0.125
+  final_digit_similarity_gradient: 0.125
+  place_value_grid_similarity: 0.125
+  proximity_cued_digit_retrieval: 0.125
+  serial_position_digit_similarity: 0.125

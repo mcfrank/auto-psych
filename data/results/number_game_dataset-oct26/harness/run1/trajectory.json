@@ -1,0 +1,298 @@
+{
+  "gt_model": "dataset",
+  "run_root": "/scr/wurgaft/auto-psych/agent_trees/78ecf8bc0448807b/repo/_runs/cell_1",
+  "trajectory": [
+    {
+      "experiment": 1,
+      "step": 0,
+      "global_step": 0,
+      "best_model": "bigelow_piantadosi_independent",
+      "incumbent_changed": false,
+      "incumbent_is_discovered": false
+    },
+    {
+      "experiment": 1,
+      "step": 1,
+      "global_step": 1,
+      "best_model": "exemplar_feature_similarity_gcm",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 2,
+      "global_step": 2,
+      "best_model": "shared_property_rule_matching",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 3,
+      "global_step": 3,
+      "best_model": "final_digit_similarity_gradient",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 4,
+      "global_step": 4,
+      "best_model": "final_digit_similarity_gradient",
+      "incumbent_changed": false,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 5,
+      "global_step": 5,
+      "best_model": "digit_similarity_with_common_factor",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 0,
+      "global_step": 6,
+      "best_model": "digit_similarity_with_common_factor",
+      "incumbent_changed": false,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 1,
+      "global_step": 7,
+      "best_model": "nearest_decade_digit_common_factor",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 2,
+      "global_step": 8,
+      "best_model": "decade_band_digit_common_factor",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 3,
+      "global_step": 9,
+      "best_model": "final_digit_rule_suppresses_parity",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 4,
+      "global_step": 10,
+      "best_model": "rule_gated_decade_familiarity",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 5,
+      "global_step": 11,
+      "best_model": "mutual_similarity_contrast_standard",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 0,
+      "global_step": 12,
+      "best_model": "mutual_similarity_contrast_standard",
+      "incumbent_changed": false,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 1,
+      "global_step": 13,
+      "best_model": "shortfall_from_mutual_similarity",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 2,
+      "global_step": 14,
+      "best_model": "round_counting_privileged_factor",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 3,
+      "global_step": 15,
+      "best_model": "privileged_named_number_concepts",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 4,
+      "global_step": 16,
+      "best_model": "digit_rule_size_principle_counting",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 5,
+      "global_step": 17,
+      "best_model": "even_rule_digit_size_principle_counting",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    }
+  ],
+  "incumbent": {
+    "starting_models": [
+      "bigelow_piantadosi_independent",
+      "bigelow_piantadosi_interval",
+      "tenenbaum_rules_similarity"
+    ],
+    "n_steps": 18,
+    "n_incumbent_changes": 14,
+    "n_steps_discovered_incumbent": 17,
+    "final_incumbent": "even_rule_digit_size_principle_counting",
+    "changes": [
+      {
+        "global_step": 1,
+        "experiment": 1,
+        "step": 1,
+        "from": "bigelow_piantadosi_independent",
+        "to": "exemplar_feature_similarity_gcm"
+      },
+      {
+        "global_step": 2,
+        "experiment": 1,
+        "step": 2,
+        "from": "exemplar_feature_similarity_gcm",
+        "to": "shared_property_rule_matching"
+      },
+      {
+        "global_step": 3,
+        "experiment": 1,
+        "step": 3,
+        "from": "shared_property_rule_matching",
+        "to": "final_digit_similarity_gradient"
+      },
+      {
+        "global_step": 5,
+        "experiment": 1,
+        "step": 5,
+        "from": "final_digit_similarity_gradient",
+        "to": "digit_similarity_with_common_factor"
+      },
+      {
+        "global_step": 7,
+        "experiment": 2,
+        "step": 1,
+        "from": "digit_similarity_with_common_factor",
+        "to": "nearest_decade_digit_common_factor"
+      },
+      {
+        "global_step": 8,
+        "experiment": 2,
+        "step": 2,
+        "from": "nearest_decade_digit_common_factor",
+        "to": "decade_band_digit_common_factor"
+      },
+      {
+        "global_step": 9,
+        "experiment": 2,
+        "step": 3,
+        "from": "decade_band_digit_common_factor",
+        "to": "final_digit_rule_suppresses_parity"
+      },
+      {
+        "global_step": 10,
+        "experiment": 2,
+        "step": 4,
+        "from": "final_digit_rule_suppresses_parity",
+        "to": "rule_gated_decade_familiarity"
+      },
+      {
+        "global_step": 11,
+        "experiment": 2,
+        "step": 5,
+        "from": "rule_gated_decade_familiarity",
+        "to": "mutual_similarity_contrast_standard"
+      },
+      {
+        "global_step": 13,
+        "experiment": 3,
+        "step": 1,
+        "from": "mutual_similarity_contrast_standard",
+        "to": "shortfall_from_mutual_similarity"
+      },
+      {
+        "global_step": 14,
+        "experiment": 3,
+        "step": 2,
+        "from": "shortfall_from_mutual_similarity",
+        "to": "round_counting_privileged_factor"
+      },
+      {
+        "global_step": 15,
+        "experiment": 3,
+        "step": 3,
+        "from": "round_counting_privileged_factor",
+        "to": "privileged_named_number_concepts"
+      },
+      {
+        "global_step": 16,
+        "experiment": 3,
+        "step": 4,
+        "from": "privileged_named_number_concepts",
+        "to": "digit_rule_size_principle_counting"
+      },
+      {
+        "global_step": 17,
+        "experiment": 3,
+        "step": 5,
+        "from": "digit_rule_size_principle_counting",
+        "to": "even_rule_digit_size_principle_counting"
+      }
+    ]
+  },
+  "starting_models_prunable": true,
+  "experiments": [
+    {
+      "experiment": 1,
+      "manifest_models": [
+        "final_digit_similarity_gradient",
+        "digit_similarity_with_range_extension",
+        "digit_similarity_with_span_falloff",
+        "place_value_grid_similarity",
+        "proximity_cued_digit_retrieval",
+        "serial_position_digit_similarity",
+        "digit_similarity_with_common_factor",
+        "common_factor_digit_range_similarity"
+      ]
+    },
+    {
+      "experiment": 2,
+      "manifest_models": [
+        "mixed_parity_loosens_criterion",
+        "rule_gated_decade_familiarity",
+        "position_weighted_rule_gated_digits",
+        "mutual_similarity_contrast_standard",
+        "ruleless_set_anything_goes_floor",
+        "rule_gated_mixed_parity_criterion",
+        "coincidence_graded_rule_preemption"
+      ]
+    },
+    {
+      "experiment": 3,
+      "manifest_models": [
+        "digit_reversal_mirror_concept",
+        "even_rule_digit_size_principle_counting",
+        "parity_and_digit_size_principle",
+        "bayesian_digit_veto_counting_up"
+      ]
+    }
+  ]
+}
