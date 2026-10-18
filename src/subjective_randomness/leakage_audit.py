@@ -12,7 +12,7 @@ import csv
 import hashlib
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Set
+from typing import Any, Dict, List, Mapping, Optional
 
 import yaml
 
@@ -20,25 +20,6 @@ from src.subjective_randomness.holdout_data import (
     GENERATING_MODEL_COLUMN,
     _family_default_params,
 )
-
-
-def _distinctive_param_names(
-    gt_model: str, gt_family_dir: Optional[Path] = None
-) -> Set[str]:
-    """The GT family's parameter names that other families do not share.
-
-    An impossible ground truth has no pure-Python ``model_families`` counterpart;
-    in that case there are no distinctive family params to leak, so the set is
-    empty. (``beta``/``side_bias`` are shared by every family, so they are never
-    distinctive anyway.) Only a *missing* family is tolerated — any other import
-    error in an existing family still propagates loudly. ``gt_family_dir``
-    reroutes the held-out GT to a pristine off-cwd source.
-    """
-    try:
-        params = _family_default_params(gt_model, gt_family_dir)
-    except ModuleNotFoundError:
-        return set()
-    return set(params) - {"beta", "side_bias"}
 
 
 # Column names a candidate binds with ``pm.Data("<name>", ...)``: harness-

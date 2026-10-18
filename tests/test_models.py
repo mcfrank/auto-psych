@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.models.theorist.predictions import Stimulus
+Stimulus = tuple[str, str]
 
 RESPONSE_OPTIONS = ["left", "right"]
 TEST_STIMULI: list[Stimulus] = [

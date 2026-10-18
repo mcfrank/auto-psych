@@ -1187,36 +1187,6 @@ class Admission:
             raise ValueError("a rejected candidate needs a rejection reason")
 
 
-def _admit_candidate(
-    candidate_file: Path,
-    models_dir: Path,
-    model_name: str,
-    responses_path: Path,
-    *,
-    cache_dir: Optional[Path] = None,
-    fit_kwargs: Optional[Dict[str, Any]] = None,
-    novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD,
-    novelty_pool: Optional[Sequence[Mapping[str, str]]] = None,
-    ledger: Optional[HypothesisLedger] = None,
-    ledger_context: str = "",
-    fit_time_limit_sec: Optional[float] = CANDIDATE_FIT_TIME_LIMIT_SEC,
-) -> bool:
-    """``_admit_candidate_with_reason`` for callers that only need the verdict."""
-    return _admit_candidate_with_reason(
-        candidate_file,
-        models_dir,
-        model_name,
-        responses_path,
-        cache_dir=cache_dir,
-        fit_kwargs=fit_kwargs,
-        novelty_rmse_threshold=novelty_rmse_threshold,
-        novelty_pool=novelty_pool,
-        ledger=ledger,
-        ledger_context=ledger_context,
-        fit_time_limit_sec=fit_time_limit_sec,
-    ).admitted
-
-
 def _smaller_steps_already_tried(
     model_name: str, models_dir: Path, fit_kwargs: Optional[Dict[str, Any]], fitted: Any
 ) -> str:

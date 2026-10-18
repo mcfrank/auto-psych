@@ -49,7 +49,7 @@ def _patch_loop_internals(monkeypatch):
     monkeypatch.setattr(scoring, "compare_table", fake_compare)
     # _prune_losers looks up compare_table in model_zoo's namespace:
     monkeypatch.setattr(model_zoo, "compare_table", fake_compare)
-    # Functions looked up in model_zoo's namespace (called by _admit_candidate,
+    # Functions looked up in model_zoo's namespace (called by _admit_candidate_with_reason,
     # _drop_unfittable_models, etc. which now live in model_zoo):
     monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
     monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)

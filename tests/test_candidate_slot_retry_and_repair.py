@@ -460,7 +460,6 @@ def test_repair_that_writes_nothing_is_final(tmp_path, monkeypatch):
 def test_admission_verdict_carries_the_rejection_reason(tmp_path, monkeypatch):
     from src.pipelines.inner_loop.model_zoo import (
         Admission,
-        _admit_candidate,
         _admit_candidate_with_reason,
     )
 
@@ -475,7 +474,7 @@ def test_admission_verdict_carries_the_rejection_reason(tmp_path, monkeypatch):
     assert verdict == Admission(admitted=False, reason="no candidate.py written")
     # The boolean form is unchanged for callers that only need the verdict.
     assert (
-        _admit_candidate(missing, models_dir, "iter0_candidate0", tmp_path / "r.csv")
+        _admit_candidate_with_reason(missing, models_dir, "iter0_candidate0", tmp_path / "r.csv").admitted
         is False
     )
 

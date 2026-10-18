@@ -66,13 +66,6 @@ def sigmoid(x: float) -> float:
     return z / (1.0 + z)
 
 
-def softplus(x: float) -> float:
-    """Numerically stable ``log(1 + exp(x))``."""
-    if x > 30.0:
-        return x
-    return math.log1p(math.exp(x))
-
-
 def clipped(p: float) -> float:
     return max(_EPS, min(1.0 - _EPS, p))
 
@@ -140,12 +133,6 @@ def imbalance(seq: str) -> float:
     """Distance from 50/50 heads/tails, scaled to [0, 1]."""
     seq = clean_sequence(seq)
     return 2.0 * abs(_head_count(seq) / len(seq) - 0.5)
-
-
-@functools.lru_cache(maxsize=_CACHE_SIZE)
-def n_switches(seq: str) -> int:
-    seq = clean_sequence(seq)
-    return _switch_count(seq)
 
 
 @functools.lru_cache(maxsize=_CACHE_SIZE)
@@ -301,8 +288,3 @@ def logsumexp(values: Iterable[float]) -> float:
     if m == -math.inf:
         return -math.inf
     return m + math.log(sum(math.exp(v - m) for v in vals))
-
-
-def bernoulli_log_prob(successes: int, failures: int, p: float) -> float:
-    p = clipped(p)
-    return successes * math.log(p) + failures * math.log(1.0 - p)

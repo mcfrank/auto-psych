@@ -1,6 +1,6 @@
 """Loop-start screening of carried-forward models for finite ELPD-LOO.
 
-Admission (``_admit_candidate``) already rejects a *fresh candidate* whose
+Admission (``_admit_candidate_with_reason``) already rejects a *fresh candidate* whose
 ELPD-LOO is non-finite. But a model admitted in experiment k is carried forward
 into experiment k+1's model set, and a model that scored a finite ELPD on k's
 responses can yield a NaN ELPD on k+1's *different* responses. The loop-start

@@ -352,9 +352,5 @@ def _export(
         "best_model": best_model,
         "posteriors": posterior["posteriors"],
         "elpd_loo": posterior["elpd_loo"],
-        "comparison": comparison,
         "excluded_unreliable": excluded_unreliable,
-        "model_posterior_path": str(results_dir / "model_posterior.json"),
-        "best_model_path": str(results_dir / "best_model.py"),
-        "report_path": str(results_dir / "report.md"),
     }

@@ -46,7 +46,3 @@ def cell_counts(responses: pd.DataFrame) -> pd.DataFrame:
         .agg(yes="sum", n="count")
         .reset_index()
     )
-
-
-def load_cells(path: Path, n_trimmed: int) -> pd.DataFrame:
-    return cell_counts(trim_least_typical(load_responses(path), n_trimmed))

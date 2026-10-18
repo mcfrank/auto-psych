@@ -77,7 +77,7 @@ class TestCheckForbiddenImports:
 
 
 class TestAdmitCandidateImportGate:
-    """_admit_candidate rejects forbidden imports before any other check."""
+    """_admit_candidate_with_reason rejects forbidden imports before any other check."""
 
     @pytest.fixture()
     def setup(self, tmp_path):
@@ -94,7 +94,7 @@ class TestAdmitCandidateImportGate:
 
     def test_rejects_candidate_with_forbidden_import(self, tmp_path, setup):
         from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
-        from src.pipelines.inner_loop.model_zoo import _admit_candidate
+        from src.pipelines.inner_loop.model_zoo import _admit_candidate_with_reason
 
         models_dir, responses_path = setup
         candidate_dir = tmp_path / "candidate"
@@ -115,14 +115,14 @@ class TestAdmitCandidateImportGate:
         )
         ledger = HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
 
-        result = _admit_candidate(
+        result = _admit_candidate_with_reason(
             candidate_dir / "candidate.py",
             models_dir,
             "test_model",
             responses_path,
             ledger=ledger,
             ledger_context="test",
-        )
+        ).admitted
         assert result is False
 
         entries = ledger.entries()
@@ -131,7 +131,7 @@ class TestAdmitCandidateImportGate:
         assert "forbidden import" in entries[0].detail
 
     def test_admits_candidate_with_allowed_imports(self, tmp_path, setup):
-        from src.pipelines.inner_loop.model_zoo import _admit_candidate
+        from src.pipelines.inner_loop.model_zoo import _admit_candidate_with_reason
 
         models_dir, responses_path = setup
         candidate_dir = tmp_path / "candidate"
@@ -178,12 +178,12 @@ class TestAdmitCandidateImportGate:
                 return_value=(None, float("inf")),
             ),
         ):
-            result = _admit_candidate(
+            result = _admit_candidate_with_reason(
                 candidate_dir / "candidate.py",
                 models_dir,
                 "test_model",
                 responses_path,
-            )
+            ).admitted
             assert result is True
 
 

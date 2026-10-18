@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.tasks import task_for_columns, task_for_project, task_present_in
+from src.tasks import task_for_project, task_present_in
 
 
 def test_subjective_randomness_keeps_its_schema():
@@ -31,15 +31,6 @@ def test_number_game_schema():
     assert task.stimulus_key({"number_set": "16,8", "target": "4"}) != task.stimulus_key(
         {"number_set": "8,16", "target": "4"}
     )
-
-
-def test_a_response_file_names_its_task_by_its_columns():
-    assert task_for_columns(["sequence_a", "sequence_b", "participant_id", "trial_index", "chose_left"]).name == (
-        "subjective_randomness"
-    )
-    assert task_for_columns(["number_set", "target", "participant_id", "trial_index", "rating"]).name == "number_game"
-    with pytest.raises(ValueError, match="no task"):
-        task_for_columns(["sequence_a", "rating"])
 
 
 def test_unknown_project_raises():

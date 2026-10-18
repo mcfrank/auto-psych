@@ -120,7 +120,6 @@ def ref_periodicity_score(seq: str) -> float:
     [
         (common.prop_heads, ref_prop_heads),
         (common.imbalance, ref_imbalance),
-        (common.n_switches, ref_n_switches),
         (common.alternation_rate, ref_alternation_rate),
         (common.max_run_length, ref_max_run_length),
         (common.max_run_norm, ref_max_run_norm),
@@ -160,7 +159,6 @@ def test_lru_cache_does_not_change_scores():
             "clean_sequence",
             "prop_heads",
             "imbalance",
-            "n_switches",
             "alternation_rate",
             "max_run_length",
             "max_run_norm",
@@ -184,7 +182,6 @@ def test_double_clean_paths_are_consistent():
         assert common.max_run_norm(seq) == common.max_run_norm(cleaned)
 
 
-def test_logsumexp_and_bernoulli_untouched():
-    # Sanity: functions not part of the refactor still behave as documented.
+def test_logsumexp_untouched():
+    # Sanity: a function not part of the refactor still behaves as documented.
     assert math.isclose(common.logsumexp([0.0, 0.0]), math.log(2.0))
-    assert common.bernoulli_log_prob(0, 0, 0.5) == 0.0

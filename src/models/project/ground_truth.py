@@ -37,8 +37,3 @@ def get_ground_truth_models(
             f"(got {type(registry).__name__})."
         )
     return dict(registry)
-
-
-def get_ground_truth_model_names(project_id: str) -> List[str]:
-    """Return list of ground-truth model names for the project (for CLI validation)."""
-    return list(get_ground_truth_models(project_id).keys())

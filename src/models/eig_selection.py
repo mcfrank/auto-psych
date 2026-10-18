@@ -297,11 +297,6 @@ class _ScenarioState:
                 q[rows] = self.p[n][np.ix_(self.d_idx[rows], cols)]
         return q
 
-    def marginal_gains(self, cols: np.ndarray, h_current: np.ndarray) -> np.ndarray:
-        """Expected posterior-entropy reduction from adding each candidate
-        (float64 scoring; see ``next_entropy``)."""
-        return h_current.mean() - self.next_entropy(cols).mean(axis=0)
-
     def next_entropy(
         self, cols: np.ndarray, dtype: np.dtype = np.dtype(np.float64)
     ) -> np.ndarray:

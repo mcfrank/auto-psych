@@ -33,12 +33,7 @@ def load_registry(registry_path: Path) -> Dict[str, Any]:
         raise ValueError(
             f"Model registry at {path} must be a mapping, got {type(data).__name__}."
         )
-    if "theories" in data:
-        theories = data["theories"]
-    elif "probabilities" in data:
-        theories = data["probabilities"]
-    else:
-        theories = {}
+    theories = data.get("theories", {})
     # Coercing a malformed block to a default is the same silent-data-loss bug
     # as swallowing the parse error above: it would hand the designer a prior
     # that no experiment produced.
@@ -124,23 +119,3 @@ def get_model_weights(registry_path: Path) -> Dict[str, float]:
     """
     reg = load_registry(registry_path)
     return dict(reg.get("theories") or {})
-
-
-def normalize_theories(
-    theories: Dict[str, float], reserved: float = 0.0
-) -> Dict[str, float]:
-    """Scale theory probabilities so they sum to (1 - reserved).
-
-    When the weights sum to <= 0 (an all-zero or collapsed registry) there is no
-    mass to scale, so redistribute the target uniformly rather than returning all
-    zeros. (Do NOT coalesce the sum to 1.0 first — that would mask the zero-sum
-    case and silently emit an all-zero distribution.)
-    """
-    theories = validate_theory_weights(theories)
-    reserved = _validate_reserved(reserved, context="model weights")
-    total = math.fsum(theories.values())
-    target = 1.0 - reserved
-    if total <= 0:
-        n = len(theories) or 1
-        return {k: target / n for k in theories}
-    return {k: (v / total) * target for k, v in theories.items()}

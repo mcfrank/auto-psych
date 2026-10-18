@@ -282,32 +282,6 @@ def prior_predict_p_left_draws(
     return out
 
 
-def prior_predict_p_left_batch(
-    model_names: List[str],
-    models_dir: Path,
-    feature_rows: List[Dict[str, Any]],
-    *,
-    var_name: str = "p_left",
-    n_samples: int = 200,
-    seed: int = 42,
-) -> Dict[str, np.ndarray]:
-    """Prior-predictive mean of `p_left` for each model over a *batch* of stimuli.
-
-    Mean over the draws of :func:`prior_predict_p_left_draws`; returns
-    ``{model_name: array of shape (n_rows,)}``. With the same ``seed`` the
-    means match :func:`prior_predict_p_left` row for row.
-    """
-    draws = prior_predict_p_left_draws(
-        model_names,
-        models_dir,
-        feature_rows,
-        var_name=var_name,
-        n_samples=n_samples,
-        seed=seed,
-    )
-    return {name: arr.mean(axis=0) for name, arr in draws.items()}
-
-
 def eig_from_prior_means(
     preds: Dict[str, float],
     model_weights: Optional[Dict[str, float]] = None,
@@ -351,31 +325,6 @@ def eig_from_prior_means(
     h_m = -sum(p * math.log2(p) for p in p_model.values() if p > 0)
     h_m_given_r = p_left * h_given_r(True) + p_right * h_given_r(False)
     return max(0.0, h_m - h_m_given_r)
-
-
-def expected_information_gain_prior_pymc(
-    feature_row: Dict[str, Any],
-    model_names: List[str],
-    models_dir: Path,
-    *,
-    model_weights: Optional[Dict[str, float]] = None,
-    n_samples: int = 200,
-    seed: int = 42,
-) -> float:
-    """EIG of a candidate stimulus computed from prior-predictive p_left per model.
-
-    Standard formula: EIG = H(M) - E_R[H(M|R)] in bits.
-    `feature_row` must include every pm.Data input of the models (including a
-    dummy observed-response value, which is ignored for p_left).
-    """
-    preds = prior_predict_p_left(
-        model_names,
-        models_dir,
-        feature_row,
-        n_samples=n_samples,
-        seed=seed,
-    )
-    return eig_from_prior_means(preds, model_weights)
 
 
 # ---------------------------------------------------------------------------

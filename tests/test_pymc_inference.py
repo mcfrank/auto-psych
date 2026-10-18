@@ -271,18 +271,20 @@ def test_prior_predict_p_left_returns_per_model_means():
         assert abs(v - 0.5) < 0.2
 
 
-def test_expected_information_gain_prior_pymc_nonneg():
+def test_prior_eig_of_a_stimulus_is_between_zero_and_one_bit():
     raw_row = {
         "sequence_a": "HHHHHHHTTT",
         "sequence_b": "HHHTTTTTT" + "T",
         "chose_left": 0,
     }
     clear_model_cache()
-    eig = pi.expected_information_gain_prior_pymc(
-        raw_row,
-        ["bayesian_fair_coin", "representativeness"],
-        PYMC_MODEL_FIXTURES_DIR,
-        n_samples=50,
+    eig = pi.eig_from_prior_means(
+        pi.prior_predict_p_left(
+            ["bayesian_fair_coin", "representativeness"],
+            PYMC_MODEL_FIXTURES_DIR,
+            raw_row,
+            n_samples=50,
+        )
     )
     assert eig >= 0.0
     assert eig <= 1.0  # EIG over 2 models is at most log2(2) = 1 bit
@@ -388,17 +390,12 @@ def test_prior_predict_p_left_draws_shape_and_mean_consistency():
     draws = pi.prior_predict_p_left_draws(
         names, PYMC_MODEL_FIXTURES_DIR, rows, n_samples=40, seed=3
     )
-    batch = pi.prior_predict_p_left_batch(
-        names, PYMC_MODEL_FIXTURES_DIR, rows, n_samples=40, seed=3
-    )
     for name in names:
         assert draws[name].shape == (40, len(rows))
         assert np.all((0.0 <= draws[name]) & (draws[name] <= 1.0))
-        # The batched means are exactly the per-draw means (same draws).
-        np.testing.assert_allclose(draws[name].mean(axis=0), batch[name])
 
 
-def test_prior_predict_p_left_batch_matches_per_row():
+def test_the_per_row_prior_mean_is_the_mean_of_the_batched_draws():
     rows = [
         {"sequence_a": "HHHHHTTTTT", "sequence_b": "HHHHHTTTTT", "chose_left": 0},
         {"sequence_a": "HHHHHHHH", "sequence_b": "HHHTTT", "chose_left": 0},
@@ -406,12 +403,12 @@ def test_prior_predict_p_left_batch_matches_per_row():
     ]
     names = ["bayesian_fair_coin", "representativeness"]
     clear_model_cache()
-    batch = pi.prior_predict_p_left_batch(
-        names, PYMC_MODEL_FIXTURES_DIR, rows, n_samples=50, seed=11
-    )
-    assert set(batch.keys()) == set(names)
-    for name in names:
-        assert batch[name].shape == (len(rows),)
+    batch = {
+        name: draws.mean(axis=0)
+        for name, draws in pi.prior_predict_p_left_draws(
+            names, PYMC_MODEL_FIXTURES_DIR, rows, n_samples=50, seed=11
+        ).items()
+    }
     # Same seed → same prior parameter draws → the batched means must match the
     # per-row path (which re-seeds identically for every row).
     for i, row in enumerate(rows):

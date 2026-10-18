@@ -33,11 +33,6 @@ def slug(value: str) -> str:
     return cleaned or "auto-psych"
 
 
-def experiment_number_from_dir(exp_dir: Path) -> int:
-    match = re.search(r"experiment(\d+)$", exp_dir.name)
-    return int(match.group(1)) if match else 1
-
-
 def git_metadata(repo_root: Path) -> dict[str, Any]:
     """Record the commit (and dirtiness) a deployment was built from.
 
@@ -204,7 +199,7 @@ def build_manifest(
     *,
     exp_dir: Path,
     project_id: str,
-    run_id: int | None,
+    run_id: int,
     deploy_target: str,
     prolific_mode: str,
     agent_backend: str,
@@ -220,19 +215,16 @@ def build_manifest(
     if prolific_mode not in VALID_PROLIFIC_MODES:
         raise ValueError(f"Unknown Prolific mode: {prolific_mode}")
 
-    resolved_run_id = (
-        run_id if run_id is not None else experiment_number_from_dir(exp_dir)
-    )
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     git = code_provenance(repo_root)
     short_sha = git["git_commit"][:7]
-    experiment_id = f"{project_id}_experiment{resolved_run_id}"
+    experiment_id = f"{project_id}_experiment{run_id}"
     # The run label (an explicit --run-label, or a unique auto token) makes the
     # deployment/session ids and hosting path unique PER RUN, so parallel runs
     # never collide on Firestore session ids or deploy to the same path. The
     # e{run} part separates experiments within a single run.
     label = slug(run_label) if run_label else uuid.uuid4().hex[:8]
-    id_base = slug(f"{project_id}-e{resolved_run_id}-{label}-{timestamp}-{short_sha}")
+    id_base = slug(f"{project_id}-e{run_id}-{label}-{timestamp}-{short_sha}")
     # Each run can deploy to its OWN Firebase Hosting site (AUTO_PSYCH_HOSTING_SITE,
     # set per-run by submit_parallel.sh) so concurrent parallel deploys don't
     # clobber a shared live site — the failure that 404'd all but the last run.
@@ -248,13 +240,13 @@ def build_manifest(
         else None
     )
     # /submit and /results Cloud Functions stay at the site root (results_api_url).
-    hosting_path = f"e{resolved_run_id}-{label}"
+    hosting_path = f"e{run_id}-{label}"
     experiment_url = f"{site_root}/{hosting_path}/" if site_root else None
 
     manifest = DeploymentManifest(
         project_id=project_id,
         experiment_id=experiment_id,
-        run_id=resolved_run_id,
+        run_id=run_id,
         deployment_id=f"deploy_{id_base}",
         collection_session_id=f"session_{id_base}",
         study_id=f"study_{slug(project_id)}",

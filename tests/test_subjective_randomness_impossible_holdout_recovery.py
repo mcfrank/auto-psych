@@ -29,10 +29,7 @@ from src.subjective_randomness.holdout_eval import (
 from src.subjective_randomness.holdout_recovery import (
     run_impossible_holdout_recovery_from_config,
 )
-from src.subjective_randomness.leakage_audit import (
-    _distinctive_param_names,
-    leakage_check,
-)
+from src.subjective_randomness.leakage_audit import leakage_check
 from src.subjective_randomness.holdout_data import p_left_fixed_params
 from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 from tests.model_registry import FAITHFUL_MODEL_NAMES
@@ -380,14 +377,6 @@ def test_impossible_model_requires_exact_params():
 
 
 # ── leakage audit / param resolution robustness ─────────────────────
-
-
-def test_distinctive_param_names_empty_for_impossible_model():
-    # An impossible model has no model_families counterpart, so there are no
-    # distinctive params to leak (and no crash).
-    assert _distinctive_param_names("more_heads_more_random") == set()
-    # An existing family still reports its distinctive params (no regression).
-    assert _distinctive_param_names("local_representativeness")
 
 
 def test_leakage_check_robust_to_missing_model_family(tmp_path):

@@ -14,7 +14,7 @@ import pytest
 
 from src.pipelines.outer_loop.columns import raw_response_rows
 from src.pipelines.outer_loop.model_loop_runner import write_task_description
-from src.tasks import task_for_columns, task_for_project, task_present_in
+from src.tasks import task_for_project, task_present_in
 
 NG = task_for_project("number_game")
 ROW = {"number_set": "16,8", "target": "4", "participant_id": "0", "trial_index": "0", "rating": "1"}
@@ -22,10 +22,7 @@ HIDDEN = {k: v for k, v in ROW.items() if k != "participant_id"}
 
 
 def test_a_file_without_participant_id_still_names_its_task():
-    assert task_for_columns(list(HIDDEN)).name == "number_game"
     assert task_present_in(list(HIDDEN)).name == "number_game"
-    with pytest.raises(ValueError, match="no task"):
-        task_for_columns(["number_set", "target", "participant_id", "rating"])  # trial_index is required
 
 
 def test_raw_rows_keep_participant_id_only_when_the_rows_carry_it():

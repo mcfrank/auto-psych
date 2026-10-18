@@ -2838,28 +2838,6 @@ def test_agent_csv_has_only_raw_columns(tmp_path, monkeypatch):
     assert len(rows) == 2 * len(DESIGN_STIMULI)
 
 
-def test_strip_to_raw_columns_keeps_only_the_raw_five():
-    rows = [
-        {
-            "sequence_a": "HTHT",
-            "sequence_b": "HHTT",
-            "participant_id": 0,
-            "trial_index": 3,
-            "chose_left": 1,
-            "p_alts_a": 1.0,
-            "occ_n20_b": 0.5,
-        }
-    ]
-    (stripped,) = holdout_data.strip_to_raw_columns(rows, SUBJECTIVE_RANDOMNESS)
-    assert tuple(stripped) == SUBJECTIVE_RANDOMNESS.raw_columns
-    assert rows[0]["p_alts_a"] == 1.0  # input untouched
-
-
-def test_strip_to_raw_columns_fails_loudly_without_the_sequences():
-    with pytest.raises(ValueError, match="sequence_a"):
-        holdout_data.strip_to_raw_columns([{"participant_id": 0, "chose_left": 1}], SUBJECTIVE_RANDOMNESS)
-
-
 # ── Regression: existing metric values must not change ──────────────
 
 

@@ -3,10 +3,9 @@
 from pathlib import Path
 
 import pytest
-import yaml
 
 from src.subjective_randomness.features import featurize_stimulus
-from src.models.theorist.loader import get_model_names_from_manifest
+from src.models.model_manifest import read_loadable_model_names
 from src.models.data_binding import make_stim_data
 from src.models.model_loading import (
     load_pymc_model,
@@ -71,8 +70,7 @@ def test_subjective_randomness_manifest_lists_loadable_pymc_models():
     # would shrink the model set without a trace. *Which* models these are is
     # pinned once, in test_literature_faithful_pymc.py; here the manifest is
     # the reference.
-    manifest = yaml.safe_load((MODEL_DIR / "models_manifest.yaml").read_text())
-    assert get_model_names_from_manifest(manifest, MODEL_DIR) == faithful_model_names()
+    assert read_loadable_model_names(MODEL_DIR) == faithful_model_names()
 
 
 @pytest.mark.parametrize("model_name,expected_inputs", EXPECTED_INPUTS.items())

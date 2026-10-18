@@ -20,9 +20,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-import yaml
 
-from src.models.theorist.loader import get_model_names_from_manifest
+from src.models.model_manifest import read_loadable_model_names
 from src.models.model_loading import load_pymc_model, observed_response_data
 from src.models.pymc_inference import prior_predict_p_left
 from src.subjective_randomness.features import featurize_stimulus
@@ -57,8 +56,7 @@ def test_registry_manifest_is_exactly_the_literature_faithful_set():
     # counterpart (falk_konold_dp <- encoding_compressibility, motif_stack <-
     # bayesian_diagnosticity, finite_experience_occurrence <-
     # window_typicality, local_representativeness <- prototype_similarity).
-    manifest = yaml.safe_load((MODEL_DIR / "models_manifest.yaml").read_text())
-    assert get_model_names_from_manifest(manifest, MODEL_DIR) == NEW_MODELS
+    assert read_loadable_model_names(MODEL_DIR) == NEW_MODELS
 
 
 @pytest.mark.parametrize("model_name", NEW_MODELS)

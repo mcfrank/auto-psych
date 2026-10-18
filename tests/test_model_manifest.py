@@ -126,9 +126,11 @@ def test_read_manifest_entries_keeps_order_and_rationales(tmp_path):
     assert read_manifest_names(tmp_path) == ["second_listed", "first_listed"]
 
 
-def test_read_manifest_entries_normalises_bare_string_entries(tmp_path):
+def test_a_bare_string_entry_is_refused(tmp_path):
+    # Every manifest the pipeline writes lists mappings ({name, rationale}).
     _write_manifest(tmp_path, "models:\n  - just_a_name\n")
-    assert read_manifest_entries(tmp_path) == [{"name": "just_a_name"}]
+    with pytest.raises(ValueError, match="not a mapping"):
+        read_manifest_entries(tmp_path)
 
 
 def test_read_manifest_entries_accepts_an_empty_model_list(tmp_path):

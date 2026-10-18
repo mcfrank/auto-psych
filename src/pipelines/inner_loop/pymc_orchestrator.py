@@ -746,8 +746,6 @@ def run_pymc_inner_loop(
     )
     result["history"] = history
     result["history_path"] = str(results_dir / "history.json")
-    result["live_models"] = _manifest_names(models_dir)
-    result["ledger_path"] = str(ledger.path)
     return result
 
 
