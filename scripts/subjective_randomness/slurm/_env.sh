@@ -90,6 +90,9 @@ fi
 # (.python-version; memo, the RSA domain's model language, needs >= 3.12), on
 # Sherlock and on coco (Ubuntu 24.04, where the setup job syncs the lock itself).
 export UV_PYTHON="${UV_PYTHON:-3.12}"
+# uv's own interpreters only: on coco miniconda's bin (for uv) is on PATH, and
+# a missing managed Python must fail, not quietly build on conda's or the system's.
+export UV_PYTHON_PREFERENCE=only-managed
 
 # --- caches off $HOME ------------------------------------------------------
 # Per-run venv (not a shared dir): a single shared venv couples independent

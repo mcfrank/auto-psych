@@ -65,6 +65,7 @@ fi
 # uv otherwise grabs the newest, for which few binary packages ship el7 wheels
 # yet -> the scientific stack builds from source on el7 (slow / fails).
 export UV_PYTHON="${UV_PYTHON:-3.12}"
+export UV_PYTHON_PREFERENCE=only-managed  # never a system or conda Python
 
 # --- caches + state off $HOME ----------------------------------------------
 # Shared venv (built once by setup.sbatch): no run does `uv pip install` at run
