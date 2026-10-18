@@ -66,6 +66,9 @@ fi
 # yet -> the scientific stack builds from source on el7 (slow / fails).
 export UV_PYTHON="${UV_PYTHON:-3.12}"
 export UV_PYTHON_PREFERENCE=only-managed  # never a system or conda Python
+# sbatch --export=ALL passes on the submitting shell's activated conda env or
+# virtualenv, which uv would take as the environment to use.
+unset CONDA_PREFIX CONDA_DEFAULT_ENV VIRTUAL_ENV
 
 # --- caches + state off $HOME ----------------------------------------------
 # Shared venv (built once by setup.sbatch): no run does `uv pip install` at run

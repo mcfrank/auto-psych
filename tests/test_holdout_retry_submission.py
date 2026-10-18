@@ -504,3 +504,12 @@ def test_a_dataset_run_chains_no_test_retest_analysis(tmp_path):
     calls = _submissions(tmp_path / "sbatch_calls")
     assert len(_by_script(calls, "holdout_recovery_array.sbatch")) == 1
     assert _by_script(calls, "holdout_analysis.sbatch") == []
+
+
+@pytest.mark.parametrize("env, node", [({}, "cocoflops1"), ({"COCO_NODE": "cocoflops2"}, "cocoflops2")])
+def test_coco_jobs_go_to_the_chosen_node(tmp_path, env, node):
+    # /scr is node-local: setup, cells and retries must all land on one node.
+    result = _run_submit(tmp_path, script="../../number_game/slurm/submit_dataset_run.sh", USER="me", **env)
+    assert result.returncode == 0, result.stderr
+    for call in _submissions(tmp_path / "sbatch_calls"):
+        assert call["args"][call["args"].index("-w") + 1] == node

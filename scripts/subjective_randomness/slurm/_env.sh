@@ -93,6 +93,9 @@ export UV_PYTHON="${UV_PYTHON:-3.12}"
 # uv's own interpreters only: on coco miniconda's bin (for uv) is on PATH, and
 # a missing managed Python must fail, not quietly build on conda's or the system's.
 export UV_PYTHON_PREFERENCE=only-managed
+# sbatch --export=ALL passes on the submitting shell's activated conda env or
+# virtualenv, which uv would take as the environment to use.
+unset CONDA_PREFIX CONDA_DEFAULT_ENV VIRTUAL_ENV
 
 # --- caches off $HOME ------------------------------------------------------
 # Per-run venv (not a shared dir): a single shared venv couples independent
