@@ -123,8 +123,6 @@ def render_template_experiment(
     *,
     n_stimuli: int = 4,
     stimuli: list[dict[str, str]] | None = None,
-    instructions_html: str = DEFAULT_INSTRUCTIONS_HTML,
-    debrief_html: str = DEFAULT_DEBRIEF_HTML,
 ) -> Path:
     """Render the real participant template into a deployable experiment dir.
 
@@ -162,10 +160,10 @@ def render_template_experiment(
     # substitute JSON — strings become quoted JS string literals, lists become
     # JS array literals — which is exactly what the template expects.
     substitutions = {
-        "{{INSTRUCTIONS_HTML}}": json.dumps(instructions_html),
+        "{{INSTRUCTIONS_HTML}}": json.dumps(DEFAULT_INSTRUCTIONS_HTML),
         "{{STIMULI_JSON}}": json.dumps(trial_variables, indent=2),
         "{{TRIAL_CHOICES_JSON}}": json.dumps(TRIAL_CHOICES),
-        "{{DEBRIEF_HTML}}": json.dumps(debrief_html),
+        "{{DEBRIEF_HTML}}": json.dumps(DEFAULT_DEBRIEF_HTML),
     }
     rendered = template
     for placeholder, value in substitutions.items():

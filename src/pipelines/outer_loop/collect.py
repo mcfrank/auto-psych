@@ -412,7 +412,6 @@ def _collect_from_firebase(
                                 project_id,
                                 run_id,
                                 logs_dir,
-                                state,
                             )
                             log_status(
                                 "Steering: LLM (Gemini)"

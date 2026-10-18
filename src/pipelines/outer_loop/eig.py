@@ -387,15 +387,12 @@ def _posterior_p_left_draws(
     max_draws: int,
     seed: int,
     task: Any,
-    fit_draws: Optional[int] = None,
-    fit_tune: Optional[int] = None,
-    fit_chains: Optional[int] = None,
     fit_method: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Per-draw posterior-predictive prediction (the task's probability) over ``rows`` for each model.
 
     Fits every model on ``responses_csv`` (design-time MCMC settings from
-    ``src.models.mcmc_defaults`` unless overridden; target_accept is the
+    ``src.models.mcmc_defaults``; target_accept is the
     model's own declared value, else DESIGN_TWIN_TARGET_ACCEPT) and predicts
     prediction draws (the task's ``prediction_var``) for the stimulus pool,
     thinned to ``max_draws`` posterior samples; a model with a participant
@@ -420,9 +417,9 @@ def _posterior_p_left_draws(
             models_dir,
             responses_csv,
             cache_dir=fit_cache_dir,
-            draws=fit_draws if fit_draws is not None else DESIGN_TWIN_DRAWS,
-            tune=fit_tune if fit_tune is not None else DESIGN_TWIN_TUNE,
-            chains=fit_chains if fit_chains is not None else DESIGN_TWIN_CHAINS,
+            draws=DESIGN_TWIN_DRAWS,
+            tune=DESIGN_TWIN_TUNE,
+            chains=DESIGN_TWIN_CHAINS,
             target_accept=model_sampler_settings(name, models_dir).get(
                 "target_accept", DESIGN_TWIN_TARGET_ACCEPT
             ),
@@ -583,13 +580,9 @@ def design_exhaustive(
     n_samples: int = 200,
     n_scenarios: int = 1000,
     seed: int = 42,
-    random_seed: Optional[int] = None,
     screened_out_path: Optional[Path] = None,
     responses_csv: Optional[Path] = None,
     fit_cache_dir: Optional[Path] = None,
-    fit_draws: Optional[int] = None,
-    fit_tune: Optional[int] = None,
-    fit_chains: Optional[int] = None,
     fit_method: Optional[str] = None,
     n_responses: int,
     lazy: bool = DESIGN_LAZY_SEARCH,
@@ -609,7 +602,7 @@ def design_exhaustive(
     Without ``responses_csv``, per-draw predictions come from each model's
     **prior** predictive (experiment 1). With ``responses_csv``, each model is
     first fitted on those responses (MCMC, at the design-time settings from
-    ``src.models.mcmc_defaults`` unless fit_* override them) and per-draw
+    ``src.models.mcmc_defaults``) and per-draw
     predictions come from its **posterior** predictive, thinned to ``n_samples``
     draws — sequential design informed by the data so far.
 
@@ -696,9 +689,6 @@ def design_exhaustive(
                 max_draws=n_samples,
                 seed=seed,
                 task=task,
-                fit_draws=fit_draws,
-                fit_tune=fit_tune,
-                fit_chains=fit_chains,
                 fit_method=fit_method,
             )
         screened_out += invalid
@@ -756,7 +746,7 @@ def design_exhaustive(
                 f"n_random={n_random} exceeds the {len(remaining)} stimuli left after "
                 f"EIG selection."
             )
-        rng = _random.Random(random_seed if random_seed is not None else seed)
+        rng = _random.Random(seed)
         for offset, idx in enumerate(sorted(rng.sample(remaining, n_random)), start=1):
             results.append(
                 {

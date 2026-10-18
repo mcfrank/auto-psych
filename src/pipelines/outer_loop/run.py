@@ -196,6 +196,7 @@ def _run_agent(
                 agent_key=agent_key,
                 exp_dir=exp_dir,
                 allowed_dirs=allowed_dirs,
+                timeout_secs=agent_timeout_sec,
                 backend=backend,
                 repair_feedback=repair_feedback,
             )

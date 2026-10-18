@@ -94,3 +94,22 @@ def test_outer_loop_coding_agent_is_a_stock_agent(tmp_path, monkeypatch):
     # Its notes live with this run, beside the run's experiment<N>/ trees.
     assert captured["memory_dir"] == tmp_path / "agent_notes"
     assert captured["sandbox"] is True
+
+
+def test_the_implement_agent_gets_the_runs_agent_timeout(tmp_path, monkeypatch):
+    # --agent-timeout-sec reached the inner loop's agents but not this one,
+    # which always ran under spawn_cc_agent's own 900 s.
+    monkeypatch.setattr(run, "write_context", lambda **k: None)
+    monkeypatch.setattr(run, "outer_project_dir", lambda project_id: tmp_path)
+    timeouts = []
+    monkeypatch.setattr(
+        run, "spawn_cc_agent", lambda **k: timeouts.append(k.get("timeout_secs")) or (True, "")
+    )
+
+    run._run_agent(
+        agent_key="3_implement", exp_dir=tmp_path, project_id="p", exp_num=1,
+        mode="live", n_participants=1, prev_exp_dir=None, validate=False,
+        backend="opencode", agent_timeout_sec=1800,
+    )
+
+    assert timeouts == [1800]

@@ -328,7 +328,6 @@ def write_context(
     project_id: str,
     exp_num: int,
     prev_exp_dir: Optional[Path] = None,
-    extra: Optional[Dict[str, Any]] = None,
 ) -> Path:
     """Write CONTEXT.md into exp_dir for the given agent. Return path."""
     prob_path = outer_project_dir(project_id) / "problem_definition.md"
@@ -362,11 +361,6 @@ def write_context(
             f"- Previous model posterior: `{prev_exp_dir / 'model_loop' / 'model_posterior.json'}`",
         ]
 
-    if extra:
-        lines += ["", "## Additional context", ""]
-        for k, v in extra.items():
-            lines.append(f"- **{k}**: {v}")
-
     context_path = exp_dir / "CONTEXT.md"
     context_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return context_path
@@ -383,25 +377,20 @@ def spawn_cc_agent(
     allowed_dirs: Optional[List[Path]] = None,
     timeout_secs: int = 900,
     backend: Optional[str] = None,
-    prompt_key: Optional[str] = None,
     repair_feedback: Optional[str] = None,
-    model: Optional[str] = None,
 ) -> tuple[bool, str]:
     """
     Spawn a coding agent (Claude Code or opencode) for the given agent_key.
-    Reads prompt from src/pipelines/outer_loop/prompts/<agent_key>.md, or
-    <prompt_key>.md when prompt_key is given (lets a caller swap the prompt
-    while keeping the stage identity — logs/validation still use agent_key).
+    Reads prompt from src/pipelines/outer_loop/prompts/<agent_key>.md.
     Tells the agent to read CONTEXT.md and complete the task.
     File tool access is restricted to allowed_dirs (defaults to exp_dir only).
     Bash still runs from REPO_ROOT so python3 -m src.* imports work.
     Streams output to exp_dir/logs/<agent_key>.jsonl and prints live summaries.
-    `backend` selects the agent CLI; None resolves via CODING_AGENT/default.
-    `model` overrides the backend's default agent model (verbatim, per-backend
-    format — e.g. opencode wants `provider/model`).
+    `backend` selects the agent CLI; None resolves via CODING_AGENT/default,
+    and the model via CODING_AGENT_MODEL/the backend's default.
     Returns (success, final_result_text).
     """
-    prompt_path = PROMPTS_DIR / f"{prompt_key or agent_key}.md"
+    prompt_path = PROMPTS_DIR / f"{agent_key}.md"
     if not prompt_path.exists():
         return False, f"Prompt not found: {prompt_path}"
 
@@ -436,7 +425,6 @@ def spawn_cc_agent(
         writable_dirs=dirs,  # the experiment it builds; the rest is read-only
         timeout_secs=timeout_secs,
         backend=backend,
-        model=model,
         usage_label=f"outer:{agent_key}",
         stock=True,  # a loop agent: none of the user's Claude setup
         memory_dir=agent_notes_dir(exp_dir),  # notes shared within this run only
@@ -481,9 +469,7 @@ def _collect_llm_participant_programmatic(
         )
         return []
 
-    prompt_text = load_prompt_for_run(
-        project_id or "", 1, "4_collect_participant", None
-    )
+    prompt_text = load_prompt_for_run(project_id or "", 1, "4_collect_participant")
     if not prompt_text.strip():
         print(
             "  [collect] no 4_collect_participant.md prompt found; cannot run no-browser mode",
@@ -594,7 +580,6 @@ def run_design_programmatic(
             n_select=k,
             n_random=n_random,
             seed=seed,
-            random_seed=seed,
             n_responses=n_responses,
         )
         basis = "prior predictive + uniform model weights"
@@ -608,7 +593,6 @@ def run_design_programmatic(
             n_select=k,
             n_random=n_random,
             seed=seed,
-            random_seed=seed,
             responses_csv=prev_exp_dir / "model_loop" / "responses.csv",
             fit_cache_dir=exp_dir / "design" / "_fit_cache",
             fit_method=fit_method,

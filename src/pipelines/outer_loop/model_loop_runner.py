@@ -375,7 +375,6 @@ def run_inner_model_loop_programmatic(
     cache_dir: Optional[Path] = None,
     project_id: Optional[str] = None,
     agent_timeout_sec: int = 900,
-    complexity_prior_const: Optional[float] = None,
     enable_critique: bool = True,
     n_critique_proposals: Optional[int] = None,
     critique_alpha: Optional[float] = None,
@@ -400,8 +399,6 @@ def run_inner_model_loop_programmatic(
     (the standard `data/outer_loop/<project>/experimentN` layout) and must be
     passed explicitly when experiments live elsewhere. `cache_dir` shares the
     MCMC fit cache so later analyses can re-load the loop's fits for free.
-    `complexity_prior_const` overrides the inner loop's default Occam line-count
-    prior (leave None to use it; pass 0.0 to disable the penalty).
     `enable_critique` runs a CriticAL posterior-predictive critique of the
     incumbent before each candidate round (the critique feeds the candidate
     agents); `n_critique_proposals` (None ⇒ inner-loop default) sets how many test
@@ -426,12 +423,7 @@ def run_inner_model_loop_programmatic(
     seed_models_dir = exp_dir / "cognitive_models"
     # Names no candidate may take: the run's starting models, carried or not.
     starting_models = run_starting_models(exp_dir, project_id or exp_dir.parent.name)
-    # None ⇒ inherit run_pymc_inner_loop's default Occam line-count prior.
-    extra = (
-        {}
-        if complexity_prior_const is None
-        else {"complexity_prior_const": complexity_prior_const}
-    )
+    extra = {}
     # None ⇒ inherit run_pymc_inner_loop's default proposal count / critique alpha.
     if n_critique_proposals is not None:
         extra["n_critique_proposals"] = n_critique_proposals

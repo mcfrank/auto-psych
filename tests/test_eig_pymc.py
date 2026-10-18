@@ -361,7 +361,7 @@ def test_exhaustive_design_never_scores_cross_length_pairs(tmp_path, monkeypatch
 
 
 @pytest.mark.slow
-def test_exhaustive_design_posterior_mode_scores_from_fitted_models(tmp_path):
+def test_exhaustive_design_posterior_mode_scores_from_fitted_models(tmp_path, monkeypatch):
     """With a responses CSV, exhaustive design scores the pool from each
     model's *posterior*-predictive p_left (fit on those responses) instead of
     the prior — no pure-Python twin involved.
@@ -371,9 +371,14 @@ def test_exhaustive_design_posterior_mode_scores_from_fitted_models(tmp_path):
     marked for."""
     import json
 
+    from src.models import mcmc_defaults
+
     models_dir = _seed(tmp_path)
     responses = PYMC_MODEL_FIXTURES_DIR / "responses.csv"
     cache = tmp_path / "fit_cache"
+    # Short design-time fits keep the test fast (read at call time).
+    monkeypatch.setattr(mcmc_defaults, "DESIGN_TWIN_DRAWS", 100)
+    monkeypatch.setattr(mcmc_defaults, "DESIGN_TWIN_TUNE", 100)
 
     stimuli = _design(
         models_dir,
@@ -383,9 +388,6 @@ def test_exhaustive_design_posterior_mode_scores_from_fitted_models(tmp_path):
         n_scenarios=300,
         responses_csv=responses,
         fit_cache_dir=cache,
-        fit_draws=100,
-        fit_tune=100,
-        fit_chains=2,
     )
 
     assert len(stimuli) == 4

@@ -181,7 +181,6 @@ def run_pymc_inner_loop(
     enable_critique: bool = True,
     n_critique_proposals: int = CRITIQUE_N_PROPOSALS,
     critique_significance_alpha: float = CRITIQUE_SIGNIFICANCE_ALPHA,
-    n_critique_replicates: int = CRITIQUE_PPC_REPLICATES,
     candidate_hints: Optional[List[str]] = None,
     selection: Selection = LOO,
     novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD,
@@ -239,10 +238,11 @@ def run_pymc_inner_loop(
         A critique agent that writes no usable statistic is retried once; a
         round can end with no critique, and every round's ``history.json``
         entry records its critique status either way.
-    n_critique_proposals, critique_significance_alpha, n_critique_replicates
-        Test statistics the critique agent proposes per round, the raw p-value
-        threshold for a significant discrepancy, and the posterior-predictive replicates
-        forming each statistic's null distribution.
+    n_critique_proposals, critique_significance_alpha
+        Test statistics the critique agent proposes per round, and the raw
+        p-value threshold for a significant discrepancy (each statistic's null
+        distribution has ``CRITIQUE_PPC_REPLICATES`` posterior-predictive
+        replicates).
     selection
         How models are compared at every scoring step, in pruning and in the
         export (``src.model_comparison.cv.Selection``): trial-level PSIS-LOO
@@ -380,7 +380,7 @@ def run_pymc_inner_loop(
                 fit_kwargs=fit_kwargs,
                 n_proposals=n_critique_proposals,
                 significance_alpha=critique_significance_alpha,
-                n_replicates=n_critique_replicates,
+                n_replicates=CRITIQUE_PPC_REPLICATES,
                 agent_timeout_sec=agent_timeout_sec,
                 backend=backend,
                 agent_model=agent_model,
@@ -717,7 +717,6 @@ def run_pymc_inner_loop(
             posterior,
             comparison,
             iteration=iteration,
-            pruned=[],
             critique=critique_status,
         )
 

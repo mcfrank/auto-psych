@@ -123,7 +123,6 @@ def _record_history_step(
     posterior: Dict[str, Any],
     comparison: Dict[str, Dict[str, Any]],
     iteration: Optional[int],
-    pruned: Optional[List[str]] = None,
     critique: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Append one scoring step to the history and persist it immediately.
@@ -134,8 +133,6 @@ def _record_history_step(
     reliable models), so the trajectory a recovery harness scores from this
     file is the model the loop would carry forward. The raw posterior argmax
     and the models excluded as unreliable are recorded beside it for audit.
-    ``pruned`` records any models dropped by the pruning pass this step (the
-    posterior and comparison in the entry are over the surviving set).
     ``critique`` is the status of the critique the round ran with (see
     ``critique_round.CRITIQUE_STATUS_*``): required for a round's step, so an
     absent critique is visible in the run record, and absent for the seed
@@ -155,8 +152,6 @@ def _record_history_step(
         "posteriors": dict(posterior["posteriors"]),
         "elpd_loo": dict(posterior["elpd_loo"]),
     }
-    if pruned:
-        entry["pruned"] = list(pruned)
     if critique is not None:
         entry["critique"] = dict(critique)
     history.append(entry)

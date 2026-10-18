@@ -101,7 +101,6 @@ def build_eval_stimuli(
     seed: int,
     min_remaining: int = 1,
     exhaustive: bool = False,
-    extra_excluded_pairs: Optional[Set[Any]] = None,
 ) -> Dict[str, Any]:
     """Generate the held-out eval pool, excluding every stimulus used in training.
 
@@ -117,17 +116,11 @@ def build_eval_stimuli(
     pair at the given ``lengths`` rather than an ``n_pairs`` sample, so the correlation is
     measured over the whole stimulus space at those lengths (``n_pairs``/``seed``
     are then unused).
-
-    ``extra_excluded_pairs``, when given, is an additional set of unordered
-    pairs to drop (e.g. the training pairs of a second cell in a matched-cell
-    comparison).
     """
     pool = task.eval_pool(
         {"exhaustive": exhaustive, "lengths": lengths, "n_pairs": n_pairs, "seed": seed}
     )
     trained = collect_trained_pairs(run_root, n_experiments, task)
-    if extra_excluded_pairs:
-        trained = trained | extra_excluded_pairs
     kept = [stim for stim in pool if task.stimulus_key(stim) not in trained]
     if len(kept) < min_remaining:
         raise ValueError(
@@ -915,7 +908,6 @@ def reevaluate_trajectories(
     cache_dir: Optional[Path],
     gt_models_dir: Optional[Path] = None,
     eval_pool_override: Optional[Mapping[str, Any]] = None,
-    extra_excluded_pairs: Optional[Set[Any]] = None,
 ) -> Dict[str, Any]:
     """Recompute every ground truth's trajectory from its finished run tree.
 
@@ -978,7 +970,6 @@ def reevaluate_trajectories(
                 seed=int(eval_pool.get("seed", 0)),
                 min_remaining=int(eval_pool.get("min_remaining", 1)),
                 exhaustive=bool(eval_pool.get("exhaustive", False)),
-                extra_excluded_pairs=extra_excluded_pairs,
             )
             eval_stimuli = rebuilt["stimuli"]
         else:

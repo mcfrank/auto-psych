@@ -1350,7 +1350,6 @@ def _admit_candidate_with_reason(
     novelty_pool: Optional[Sequence[Mapping[str, str]]] = None,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
-    fit_time_limit_sec: Optional[float] = CANDIDATE_FIT_TIME_LIMIT_SEC,
     name_note: str = "",
     novelty_predictions: Optional[Dict[tuple, np.ndarray]] = None,
 ) -> Admission:
@@ -1385,7 +1384,7 @@ def _admit_candidate_with_reason(
     candidate.
 
     Each sampling run of the admission fit is stopped at
-    ``fit_time_limit_sec`` (``CANDIDATE_FIT_TIME_LIMIT_SEC``); a candidate
+    ``CANDIDATE_FIT_TIME_LIMIT_SEC``; a candidate
     still sampling then is rejected as too slow to fit, with the limit in the
     reason. In the loop these fits are usually in the cache already: the
     orchestrator fits a wave's candidates concurrently first
@@ -1438,7 +1437,7 @@ def _admit_candidate_with_reason(
             models_dir,
             responses_path,
             cache_dir=cache_dir,
-            time_limit_sec=fit_time_limit_sec,
+            time_limit_sec=CANDIDATE_FIT_TIME_LIMIT_SEC,
             **(fit_kwargs or {}),
         )
     except INFRASTRUCTURE_ERRORS:

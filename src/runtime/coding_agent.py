@@ -374,7 +374,6 @@ def build_command(
     prompt: str,
     allowed_dirs: list[Path],
     model: Optional[str],
-    extra_args: Sequence[str] = (),
     stock: bool = False,
     memory_dir: Optional[Path] = None,
 ) -> list[str]:
@@ -388,9 +387,7 @@ def build_command(
     directory), so ``allowed_dirs`` reaches the command line only for Claude
     Code; :func:`run_coding_agent` honours it for opencode by granting the
     directories in the cwd's ``opencode.json``.
-    ``extra_args`` are backend CLI flags appended verbatim before the prompt
-    (e.g. Claude's ``--max-turns`` / ``--max-budget-usd`` / ``--disallowedTools``
-    for a long-running supervisor session). ``stock`` runs Claude without the
+    ``stock`` runs Claude without the
     user's personal configuration (see ``STOCK_CLAUDE_ARGS``); codex and
     opencode have no user-level instruction files here, so it adds nothing to
     their command lines. ``memory_dir`` is where a Claude agent keeps its
@@ -414,12 +411,12 @@ def build_command(
             cmd += STOCK_CLAUDE_ARGS
         if memory_dir is not None:
             cmd += ["--settings", json.dumps({"autoMemoryDirectory": str(memory_dir)})]
-        cmd += ["--model", model, *extra_args, "-p"]
+        cmd += ["--model", model, "-p"]
         if not prompt_via_stdin(backend, prompt):
             cmd.append(prompt)
         return cmd
     if backend == "opencode":
-        cmd = ["opencode", "run", "--format", "json", "-m", model, *extra_args]
+        cmd = ["opencode", "run", "--format", "json", "-m", model]
         if not prompt_via_stdin(backend, prompt):
             cmd.append(prompt)
         return cmd
@@ -437,7 +434,6 @@ def build_command(
             "danger-full-access",
             "--skip-git-repo-check",
             "--json",
-            *extra_args,
             "-",
         ]
     # Reachable only if _DEFAULT_MODEL gains a backend without a branch here.
@@ -694,12 +690,10 @@ def run_coding_agent(
     env: Optional[dict] = None,
     on_summary: Optional[Callable[[str], None]] = print,
     usage_label: str = "coding_agent",
-    extra_args: Sequence[str] = (),
     stock: bool = False,
     memory_dir: Optional[Path] = None,
     sandbox: bool = False,
     writable_dirs: Optional[list[Path]] = None,
-    wait_out_usage_limits: bool = True,
 ) -> tuple[bool, str]:
     """Spawn the selected coding agent, stream output to ``log_path``.
 
@@ -722,8 +716,7 @@ def run_coding_agent(
     ``OPENCODE_LOCK_RETRIES`` times with backoff; any other failure is final.
 
     A run that ends on the account's usage or rate limit (see
-    :mod:`src.runtime.usage_limits`) is, with ``wait_out_usage_limits``, not
-    returned: the agent's own directories (its ``writable_dirs`` and its log's
+    :mod:`src.runtime.usage_limits`) is not returned: the agent's own directories (its ``writable_dirs`` and its log's
     directory, less the log, its notes and CLI state) are put back as they were
     before the call — a sandboxed agent can write nowhere else, so nothing it
     left half-done can pass for its output — the launcher waits until the
@@ -731,8 +724,6 @@ def run_coding_agent(
     runs the agent again. It raises :class:`AgentUsageLimitExceeded` when the
     limit would not lift within ``AGENT_USAGE_LIMIT_MAX_WAIT_SEC`` of waiting,
     and :class:`AgentLoginFailed` at once when the login cannot pay for calls.
-    Callers that handle limits themselves (the review tools, which requeue
-    their job) pass ``wait_out_usage_limits=False``.
 
     Whatever usage the stream reported is recorded to
     :mod:`src.runtime.token_usage` under ``usage_label`` — also on timeout or
@@ -753,7 +744,6 @@ def run_coding_agent(
         prompt=prompt,
         allowed_dirs=list(allowed_dirs or []),
         model=model,
-        extra_args=extra_args,
         stock=stock,
         memory_dir=memory_dir,
     )
@@ -807,7 +797,7 @@ def run_coding_agent(
     # How a Claude agent is billed (agent_sandbox.require_claude_auth), for the record.
     claude_mode = child_env.get(CLAUDE_AUTH_ENV) if backend == "claude" else None
     own_dirs = (
-        [*writable_dirs, log_path.parent] if sandbox and wait_out_usage_limits else []
+        [*writable_dirs, log_path.parent] if sandbox else []
     )
     kept = [log_path, log_path.parent / HOME_NAME, agent_data_home(log_path)]
     kept += [memory_dir] if memory_dir else []
@@ -830,10 +820,8 @@ def run_coding_agent(
             log_mode = "a"
             usage = stream.usage_fields()
             messages = [] if timed_out else _cli_messages(backend, stream, raw_output)
-            limit = detect_usage_limit(messages) if wait_out_usage_limits else None
-            login_failure = (
-                detect_login_failure(messages) if wait_out_usage_limits else None
-            )
+            limit = detect_usage_limit(messages)
+            login_failure = detect_login_failure(messages)
             if limit is None and login_failure is None:
                 break
             claude_auth = effective_claude_auth(claude_mode)
