@@ -297,3 +297,27 @@ def test_render_summary_tabulates_runs_and_winners():
     assert "run1" in md and "run2" in md
     assert "iter1_candidate0" in md and "iter0_candidate1" in md
     assert "experiment1" in md
+
+
+def test_collect_leaves_out_each_agents_scratch_directory(tmp_path, monkeypatch):
+    # The sandbox gives every agent a scratch dir (its /tmp) inside its
+    # candidate directory; the Claude CLI leaves Unix sockets there, which
+    # copytree cannot copy.
+    import socket
+
+    source = tmp_path / "scratch_root"
+    source.mkdir()
+    exp = source / "run1" / "data" / PROJECT / "experiment1"
+    _write_experiment(exp)
+    socks = exp / "model_loop" / "iter_0" / "candidate_0" / "scratch" / "cc-socks"
+    socks.mkdir(parents=True)
+    monkeypatch.chdir(socks)  # a socket path is limited to ~108 characters
+    sock = socket.socket(socket.AF_UNIX)
+    sock.bind("2.sock")
+    dest = tmp_path / "dest"
+
+    collect_human_results(source, dest, project=PROJECT, runs=["run1"])
+
+    assert (dest / "run1" / PROJECT / "experiment1" / "model_loop").is_dir()
+    assert not list(dest.rglob("scratch"))
+    sock.close()

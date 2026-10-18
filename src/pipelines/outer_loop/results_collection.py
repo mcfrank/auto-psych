@@ -46,8 +46,9 @@ from typing import Optional
 from src.runtime.formatting import format_number
 
 # Directories / files that are never results. ``.fit_cache`` holds the multi-100MB
-# MCMC ``.nc`` traces; the rest are build/output cruft that can reappear in a tree.
-EXCLUDE_DIR_NAMES = {".fit_cache", "node_modules", "__pycache__", ".git"}
+# MCMC ``.nc`` traces; ``scratch`` is each agent's private /tmp (the Claude CLI
+# leaves Unix sockets there); the rest are build/output cruft that can reappear.
+EXCLUDE_DIR_NAMES = {".fit_cache", "scratch", "node_modules", "__pycache__", ".git"}
 EXCLUDE_FILE_SUFFIXES = (".nc",)
 
 # Run-label prefixes/names that are not the "real" human loop.
