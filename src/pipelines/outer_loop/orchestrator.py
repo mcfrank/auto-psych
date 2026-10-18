@@ -463,28 +463,13 @@ def _collect_llm_participant_programmatic(
     from src.pipelines.outer_loop.participants import get_participant_model
 
     if not stimuli:
-        print(
-            "  [collect] no stimuli (design/stimuli.json missing or empty); nothing to collect",
-            flush=True,
-        )
-        return []
-
+        raise ValueError("no stimuli to collect (design/stimuli.json is empty)")
     prompt_text = load_prompt_for_run(project_id or "", 1, "4_collect_participant")
     if not prompt_text.strip():
-        print(
-            "  [collect] no 4_collect_participant.md prompt found; cannot run no-browser mode",
-            flush=True,
+        raise FileNotFoundError(
+            "no 4_collect_participant.md prompt: the no-browser mode cannot run"
         )
-        return []
-
-    try:
-        model = get_participant_model(participant_backend, participant_model)
-    except Exception as exc:
-        print(
-            f"  [collect] failed to init participant model ({participant_backend}, {participant_model}): {exc}",
-            flush=True,
-        )
-        return []
+    model = get_participant_model(participant_backend, participant_model)
 
     print(
         f"  [collect] LLM participants via {model.name}: {n_participants} participant(s) x {len(stimuli)} stimuli",
@@ -650,7 +635,7 @@ def run_collect_programmatic(
     cognitive_models_manifest = manifest_path(cognitive_models_dir)
 
     stimuli: List[Dict[str, Any]] = []
-    if stimuli_path.exists():
+    if stimuli_path.exists():  # live collection reads its stimuli from the page
         stimuli = json.loads(stimuli_path.read_text(encoding="utf-8"))
 
     data_dir = exp_dir / "data"
@@ -750,22 +735,15 @@ def run_collect_programmatic(
     elif rows is None:
         # PyMC cognitive models: sample synthetic responses from their
         # prior-predictive p_left.
-        model_names: List[str] = []
-        if cognitive_models_manifest.exists():
-            model_names = read_loadable_model_names(cognitive_models_dir)
+        model_names = read_loadable_model_names(cognitive_models_dir)
         if not model_names:
-            print(
-                f"  [collect] Warning: no loadable models in {cognitive_models_dir} — cannot generate data",
-                flush=True,
-            )
-            rows = []
-        else:
-            rows = _generate_from_pymc_models(
-                stimuli,
-                model_names,
-                n_participants,
-                models_dir=cognitive_models_dir,
-            )
+            raise ValueError(f"no models in {cognitive_models_dir} to generate data from")
+        rows = _generate_from_pymc_models(
+            stimuli,
+            model_names,
+            n_participants,
+            models_dir=cognitive_models_dir,
+        )
 
     # Fail loudly on degenerate collected data: if real participants produced no
     # response variation (every trial chose the same side), the data carries no

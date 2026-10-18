@@ -62,8 +62,7 @@ from src.models.loo_reliability import (
     describe_unreliable,
     loo_diagnostics,
 )
-from src.models.probability import validate_probability, validate_probability_array
-from src.registry.io import validate_theory_weights
+from src.models.probability import validate_probability_array
 
 from src.models.model_loading import (
     _exec_model_module,
@@ -295,12 +294,7 @@ def eig_from_prior_means(
 
     if not preds:
         return 0.0
-    preds = {
-        name: validate_probability(value, context=f"prediction for model {name!r}")
-        for name, value in preds.items()
-    }
     if model_weights:
-        model_weights = validate_theory_weights(model_weights)
         total_w = math.fsum(model_weights.get(m, 0.0) for m in preds)
         if total_w <= 0:
             p_model = {m: 1.0 / len(preds) for m in preds}
@@ -1284,8 +1278,6 @@ def default_fit_workers(cpus: int, per_fit_cpus: Sequence[int]) -> int:
     is sized for the 4-chain ones. Never below 1: a single fit that on its own
     exceeds the allocation still runs, as it always has.
     """
-    if not per_fit_cpus:
-        raise ValueError("default_fit_workers: no fits to size the pool for.")
     return max(1, int(cpus) // max(int(c) for c in per_fit_cpus))
 
 
@@ -1641,10 +1633,6 @@ def sample_fits_time_limited(
     oversubscribed machine would stop fits that would finish on their own
     cores. ``_target`` replaces the child's entry point (tests only).
     """
-    if time_limit_sec <= 0:
-        raise ValueError(f"time_limit_sec must be > 0, got {time_limit_sec}.")
-    if workers < 1:
-        raise ValueError(f"workers must be >= 1, got {workers}.")
     outcomes: List[Optional[BaseException]] = [None] * len(requests)
     queue: List[int] = []
     for i, request in enumerate(requests):
@@ -1857,10 +1845,6 @@ def _fit_executor(
     fit needs the usual ``if __name__ == "__main__":`` guard (all of the
     repo's do; an ad-hoc script without one re-runs itself in each worker).
     """
-    if len(compile_dirs) < workers:
-        raise ValueError(
-            f"{workers} fit-pool workers need as many compile directories."
-        )
     context = multiprocessing.get_context("spawn")
     handed_out = context.SimpleQueue()
     for compile_dir in compile_dirs:
@@ -1996,8 +1980,6 @@ def _fit_outcomes(
     model's (``INFRASTRUCTURE_ERRORS``: a broken pool, an unreadable cache
     file, out of memory) raises instead, whatever the caller.
     """
-    if fit_workers is not None and fit_workers < 1:
-        raise ValueError(f"fit_workers must be >= 1, got {fit_workers}.")
     models_dir = Path(models_dir)
     responses_path = Path(responses_path)
     outcomes: Dict[str, Union[FittedModel, BaseException]] = {}

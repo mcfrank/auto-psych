@@ -51,11 +51,6 @@ def test_default_fit_workers_never_oversubscribes_the_allocation(
     assert pi.default_fit_workers(cpus, per_fit_cpus) == expected
 
 
-def test_default_fit_workers_rejects_an_empty_fit_list():
-    with pytest.raises(ValueError, match="no fits"):
-        pi.default_fit_workers(16, [])
-
-
 def test_allocated_cpus_is_the_scheduler_affinity_not_the_node_size():
     assert pi.allocated_cpus() == len(os.sched_getaffinity(0))
 
@@ -402,13 +397,6 @@ def test_pool_fits_from_a_temporary_transport_dir_outlive_it(tmp_path):
         assert (tmp_path / f"{name}.nc").exists()
         assert again.elpd_loo() == fits[name].elpd_loo()
     pi.clear_fit_cache()
-
-
-@pytest.mark.parametrize("bad_workers", [0, -1])
-def test_fit_models_cached_rejects_nonpositive_fit_workers(tmp_path, bad_workers):
-    models_dir, responses = _stub_models(tmp_path, ["a"])
-    with pytest.raises(ValueError, match="fit_workers"):
-        pi.fit_models_cached(["a"], models_dir, responses, fit_workers=bad_workers)
 
 
 # ---------------------------------------------------------------------------

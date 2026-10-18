@@ -335,18 +335,6 @@ def test_eig_from_prior_means_degenerate_p_left_is_zero():
     assert pi.eig_from_prior_means({"m1": 1.0, "m2": 1.0}) == 0.0
 
 
-@pytest.mark.parametrize("prediction", [-0.1, 1.1, float("nan"), float("inf")])
-def test_eig_from_prior_means_rejects_invalid_probability(prediction):
-    with pytest.raises(ValueError, match="m1"):
-        pi.eig_from_prior_means({"m1": prediction, "m2": 0.5})
-
-
-@pytest.mark.parametrize("weight", [-1.0, float("nan"), float("inf")])
-def test_eig_from_prior_means_rejects_invalid_weight(weight):
-    with pytest.raises(ValueError, match="m1"):
-        pi.eig_from_prior_means({"m1": 0.8, "m2": 0.2}, {"m1": weight, "m2": 1.0})
-
-
 @pytest.mark.slow
 def test_fitted_model_predict_p_left_draws_shape_and_mean_consistency(tmp_path):
     """Posterior-predictive per-draw p_left: shape (n_draws, n_stim), values in

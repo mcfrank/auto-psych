@@ -55,8 +55,7 @@ def validate_cc_output(agent_key: str, exp_dir: Path) -> tuple[bool, str]:
         "4_collect": _validate_collect,
         "5_model_loop": _validate_model_loop,
     }
-    fn = validators.get(agent_key)
-    return fn(exp_dir) if fn else (True, "No validator for this agent")
+    return validators[agent_key](exp_dir)
 
 
 def _validate_model_set(exp_dir: Path) -> tuple[bool, str]:

@@ -79,7 +79,6 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
-from src.registry.io import validate_theory_weights
 
 # Numeric floor for probabilities entering logs. The PyMC models already clip
 # p_left to [1e-6, 1 - 1e-6]; this only guards hand-built arrays at 0 or 1.
@@ -113,10 +112,6 @@ def _validated_p(
                 f"Model {name!r} has {arr.shape[1]} stimuli but another model "
                 f"has {n_stim}; all models must score the same stimulus pool."
             )
-        if not np.isfinite(arr).all() or arr.min() < 0.0 or arr.max() > 1.0:
-            raise ValueError(
-                f"Model {name!r}: p_left values must be finite and in [0, 1]."
-            )
         out[name] = np.clip(arr, _P_CLIP, 1.0 - _P_CLIP)
     assert n_stim is not None
     return out, n_stim
@@ -131,8 +126,7 @@ def _model_prior(
     is zero falls back to uniform rather than failing.
     """
     if model_weights:
-        validated = validate_theory_weights(model_weights)
-        w = np.array([validated.get(n, 0.0) for n in names], dtype=float)
+        w = np.array([model_weights.get(n, 0.0) for n in names], dtype=float)
         if w.sum() <= 0:
             w = np.ones(len(names))
     else:

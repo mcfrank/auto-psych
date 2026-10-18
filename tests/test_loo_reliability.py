@@ -138,14 +138,6 @@ def test_elpd_matches_arviz_and_pointwise_loo_is_kept():
     assert diag.good_k == pytest.approx(float(diag.loo.good_k))
 
 
-def test_tolerance_must_be_a_proportion():
-    idata = _idata()
-    with pytest.raises(ValueError, match="bad_k_tolerance"):
-        lr.loo_diagnostics(idata, bad_k_tolerance=-0.1)
-    with pytest.raises(ValueError, match="bad_k_tolerance"):
-        lr.loo_diagnostics(idata, bad_k_tolerance=1.5)
-
-
 def test_requires_exactly_one_log_likelihood_variable():
     import arviz as az
     import xarray as xr

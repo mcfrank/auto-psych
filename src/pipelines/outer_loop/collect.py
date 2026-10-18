@@ -209,10 +209,8 @@ def _run_one_participant_firebase(args: tuple) -> tuple[int, bool, str | None]:
         logs_dir_path,
     ) = args
     logs_dir = Path(logs_dir_path) if logs_dir_path else None
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        return (participant_index, False, "playwright not installed")
+    from playwright.sync_api import sync_playwright  # the parent checked it imports
+
     try:
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch(headless=True)
