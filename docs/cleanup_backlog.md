@@ -13,6 +13,76 @@ Order of work: Tier 1 by area, one commit per area with its tests; Tier 3
 alongside, file by file; Tier 2 item by item once decided. Full suite once at
 the end.
 
+## Verified plan (2026-10-18, against `main` after the merges)
+
+Re-checked item by item against the merged tree, `src/rsa/` and `scripts/rsa/`
+included, counting any script run by hand (README / usage docstring / `python
+-m` in docs) as a caller. Branch `cleanup`; one commit per step, each with the
+listed tests; Tier 3 comments trimmed in the same files; full suite once at the
+end. Must stay (other code uses them): `run_coding_agent`'s `env` and
+`sandbox` (rsa passes `env=`, `sandbox=False`); `convergence_problems` (rsa's
+numpy fits); `collect._results_request` / `_poll_prolific_until_target` /
+`_pause_unfilled_study` / `_PROLIFIC_MAX_WAIT_SEC` and
+`critique_round._format_critiques_md` / `_usable_test_statistics` (rsa imports
+them by name); `pymc_orchestrator._compare` (tests monkeypatch it there); the
+`likelihood.py` CLI (documented in its docstring); `reporting.aggregate_holdout_trajectories`
+(`scripts/subjective_randomness/plot_holdout_curves.py`, run by hand).
+
+1. **Dead modules and names** (no caller anywhere): `deployment/firestore.py` +
+   test; `src/models/theorist/` + `src/models/__init__.py` re-exports +
+   `project/__init__.py` (and `synthetic_data`'s unreachable branch, which uses
+   it); `holdout_data.validate_raw_pool_models` + `test_raw_config_validation.py`,
+   `strip_to_raw_columns`; `leakage_audit._distinctive_param_names`;
+   `observability.append_validation_failure`; `prolific.list_submissions`
+   (move its pagination test to `list_studies`); `config.py`'s five dead names;
+   `common.softplus`, `n_switches`, `bernoulli_log_prob`; `_ScenarioState.marginal_gains`;
+   `task_for_columns`; `number_game.data.load_cells`; the bare-string manifest
+   shim; `registry`'s `"probabilities"` key and `normalize_theories`;
+   `manifest.experiment_number_from_dir` (`build_manifest` takes an int);
+   `prior_predict_p_left_batch`, `expected_information_gain_prior_pymc`;
+   `model_zoo._admit_candidate`; unread result keys (`run_pymc_inner_loop`'s
+   `live_models` / `ledger_path`, `_export`'s `*_path` and `comparison`).
+2. **Never-passed parameters**: `eig`'s `fit_draws/tune/chains` (check
+   `test_eig_pymc` time) and `random_seed`; `spawn_cc_agent`'s `prompt_key`,
+   `timeout_secs`, `model`, `write_context(extra=)`; `run_inner_model_loop_programmatic`'s
+   `complexity_prior_const`; `build_eval_stimuli`'s `extra_excluded_pairs`;
+   `run_coding_agent`'s `extra_args`, `on_summary`, `wait_out_usage_limits`;
+   `participants.py` / `smoke.py` / `llm.py` dead kwargs (update
+   `scripts/smoke_open_participant.py`); `pruned=[]`; `n_critique_replicates`,
+   `fit_time_limit_sec`.
+3. **Fail loudly instead of falling back**: `orchestrator.py`'s `return []`
+   paths and the no-loadable-models `rows = []` (769-773, new); `project_id or …`;
+   the repeated ground-truth and config checks; the matplotlib ImportError skip
+   in `holdout_test_retest.py`; the redundant `collect.py` ImportError guard;
+   `scoring` / `model_zoo` / `candidate_agent` empty-comparison fallbacks;
+   unreachable validator branches; internal-boundary re-validation (EIG weights,
+   `_validated_p`'s range check, worker-count guards, `bad_k_tolerance`).
+4. **Deduplicate**: `run.py`'s 30 arguments × 6 (pass `Args`); `_drop_*_models`
+   tail (empty check optional for the CV one); score → compare → record (4
+   copies; keep `_compare` looked up in `pymc_orchestrator`); experiment-number
+   parsing; `extract_observed` / `make_stim_data` dtype loop (keep the plain
+   `ValueError`); `prior_predict_p_left` over `_draws`; `mean_log_likelihood` /
+   `log_likelihood`; `posterior.py`'s not-converged block; `check_candidate`'s
+   gates (admission also needs `hypothesis.md`); `collect.py`'s serial browser
+   loop and `/results` fetch; firebase polling loops; `model_zoo._untrusted` /
+   `scoring._excluded`; `DATA_CSV` (6 copies; put it in `number_game/data.py`);
+   `FittedModel.convergence_problems()` method; `plot_holdout_recovery` /
+   `reanalyze_holdout_exhaustive` output block (`format_number` prints "n/a"
+   where `_fmt` printed "undefined").
+5. **Merge the impossible-model CLI into `holdout_recovery.py`** (both
+   impossible sbatch files, `impossible_models/__init__.py`, docs, ~8 tests).
+6. **Tier 2, as decided**, then Tier 3 leftovers; full suite.
+
+Bugs found in passing (fix separately): `run.py` receives `agent_timeout_sec`
+but never passes it to `spawn_cc_agent`, so `3_implement` always gets 900 s;
+`results_collection.summarize_model_posterior` picks the posterior argmax;
+`eig._write_output` crashes on random picks.
+
+Tier 2 revisions after the re-check: keep the pooled aggregation (only the
+plotnine figure half, ~650 lines, and the `plotnine` dependency can go); keep
+the exhaustive-pool reanalysis chain and `validate_lazy_eig.py` (documented
+tools).
+
 ## Tier 1: safe (no behaviour change), ~2,000 lines incl. tests
 
 ### Pipelines (`src/pipelines/`)
