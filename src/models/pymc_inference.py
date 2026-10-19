@@ -5,9 +5,9 @@ Each model is a ``<name>.py`` file with a module-level
 to observed data via MCMC, and exposes posterior-mean predictions, ELPD-LOO
 for Bayesian model comparison, and posterior-predictive samples for PPC.
 
-Convention: every ``pm.Data`` container in the model must have a name matching
-a column in the preprocessed responses CSV. The bridge auto-pulls
-``df[name].values`` for each container. The observed-response container is
+Convention: the responses CSV carries only the raw columns; every other
+``pm.Data`` container is filled by the model's own ``compute_features`` or
+``prepare_observed`` hook (``data_binding``). The observed-response container is
 identified by tracing ``model.observed_RVs[0]`` back through the pytensor graph
 to its ``TensorSharedVariable`` ancestor.
 
@@ -132,24 +132,17 @@ def model_logp_is_finite(
     probability at the initial point. Returns ``(True, "")`` when that logp is
     finite, else ``(False, reason)``.
 
-    A model whose graph evaluates to NaN or ``-inf`` — e.g. the numerically
-    unsafe ``pt.sqrt(x**2)``, which NaNs in PyTensor for some inputs — passes
-    graph-loading but crashes ``pm.sample`` at its start-value check, aborting
-    the whole run. This catches such a model cheaply, before any sampling.
-
-    NUTS also needs a finite *gradient* of the logp, and it evaluates the logp
-    at jittered initial points. We therefore check both the logp and its gradient
-    at the initial point. This is still not a full guarantee (a logp that only
-    NaNs once NUTS jitters off the initial point can slip through), but it catches
-    the common non-finite-gradient failure that a logp-only check misses.
+    A model whose logp or its gradient is NaN or ``-inf`` at the initial point
+    (e.g. ``pt.sqrt(x**2)``) would crash ``pm.sample`` at its start-value check;
+    this catches it cheaply. A logp that only fails at NUTS's jittered start
+    points can still slip through.
 
     ``(False, reason)`` states one thing only: *this model cannot be fit to this
     data*. A broken harness is not that, and propagates — otherwise a missing
     dependency would silently condemn every candidate the inner loop
     generated. A code error (``BROKEN_MODEL_CODE_ERRORS``) raised in the
     model's own file — a typo in its ``compute_features`` — is the model's,
-    and a ``(False, reason)`` like any other (``is_model_failure``); it used
-    to propagate and end the cell.
+    and a ``(False, reason)`` like any other (``is_model_failure``).
     """
     pm = _import_pymc()
     model_file = Path(models_dir) / f"{name}.py"
@@ -450,10 +443,9 @@ def resolve_fit_settings(
         )
     declared = model_sampler_settings(name, models_dir)
     settings = {**_FIT_DEFAULTS, **declared, **given, "method": method}
-    # A model's declared target_accept is a floor: the loop passes one
-    # explicitly, which used to override a model that needs smaller steps
-    # (a model declaring 0.9 ran at the sweep's 0.8), and declaring a higher value
-    # is how a candidate rejected for divergences fixes itself.
+    # A model's declared target_accept is a floor over the loop's explicit
+    # one: declaring a higher value is how a candidate rejected for
+    # divergences fixes itself.
     if "target_accept" in declared:
         settings["target_accept"] = max(
             settings["target_accept"], declared["target_accept"]
@@ -832,11 +824,9 @@ def refit_settings(settings: Dict[str, Any], first_fingerprint: str) -> Dict[str
     """The settings of a near miss's refit: ``ESCALATED_TARGET_ACCEPT`` and a
     random seed of its own.
 
-    The refit used to reuse the first fit's ``random_seed`` (42, for every fit
-    in every cell), so it started its chains from the same draws. Its seed is
-    now derived from the first fit's seed and fingerprint (model source, data
-    and settings; ``refit_random_seed``): different from the first fit's,
-    different for every model and data set, and the same on every resume.
+    The seed is derived from the first fit's seed and fingerprint (model
+    source, data and settings; ``refit_random_seed``): different from the first
+    fit's, different for every model and data set, and the same on every resume.
     ``random_seed`` is a sampler setting, so it is part of the refit's cache
     fingerprint.
     """
@@ -1206,9 +1196,8 @@ def _warn_sampling_diagnostics(name: str, idata: Any, model: Any) -> None:
     log. Diagnostics are rerun on cache hits so loading a suspect stored fit
     cannot make its warning disappear from a later run.
 
-    A diagnostic that could not be computed is itself warned about: previously a
-    missing ``diverging`` stat read as 0 divergences and an unavailable R-hat as
-    NaN, i.e. the two values that mean "this fit is healthy".
+    A diagnostic that could not be computed is itself warned about, rather than
+    read as healthy.
     """
     n_div = _divergence_count(idata)
     if n_div is None:
@@ -1276,7 +1265,7 @@ def default_fit_workers(cpus: int, per_fit_cpus: Sequence[int]) -> int:
 
     The widest fit sets the budget, so a batch that mixes 2- and 4-chain fits
     is sized for the 4-chain ones. Never below 1: a single fit that on its own
-    exceeds the allocation still runs, as it always has.
+    exceeds the allocation still runs.
     """
     return max(1, int(cpus) // max(int(c) for c in per_fit_cpus))
 
@@ -1287,9 +1276,8 @@ class FitInfrastructureFailure(RuntimeError):
     A pool worker that died (one out-of-memory kill breaks the whole pool, so
     every pending fit fails with it), a fit file that cannot be read or
     written, the machine out of memory. Always raised, never reported as the
-    model's failure: the start-of-experiment screen used to turn each one into
-    a dropped model — starting models included — and a ledger line "MCMC fit
-    failed", which later agents then read as a property of the model.
+    model's failure (a dropped model and a ledger line that later agents would
+    read as a property of the model).
     """
 
 
@@ -1363,8 +1351,7 @@ def _fit_process_caches() -> Iterator[str]:
     On import, arviz 0.23 writes a once-a-day marker, ``<XDG cache>/arviz/
     daily_warning``, through a fixed-name ``daily_warning.tmp`` whenever the
     stored date is not today. Fit processes that import it together after
-    midnight collide on that file (one finds it already moved and raises
-    ``FileNotFoundError``), which ended 11 of 24 cells of a sweep.
+    midnight would collide on that file (``FileNotFoundError``).
     """
     with tempfile.TemporaryDirectory(prefix="fit-process-caches-") as root:
         yield root
@@ -1385,11 +1372,8 @@ def _use_own_cache_dir(cache_root: str) -> None:
 
 # PyTensor compiles a model's C code in its compile directory under one file
 # lock (``<compiledir>/.lock``), and a process gives up after waiting
-# ``compile__timeout`` (120 s) for it. Every process of a node used to share one
-# directory (``$L_SCRATCH`` is per user and node, not per job), so the
-# concurrent fit processes of a cell, and those of the other cells on the node,
-# queued on one lock, and a cell died on ``Timeout: The file lock
-# '.../compiledir_.../.lock' could not be acquired`` (2026-09-28). Each fit
+# ``compile__timeout`` (120 s) for it, so processes sharing one directory
+# queue on one lock and can time out. Each fit
 # process therefore compiles in a directory no other running process uses: a
 # numbered *slot* under this process's own root, held while the fit process
 # runs and handed to the next one after it, so compiled code is reused within

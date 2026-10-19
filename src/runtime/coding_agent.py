@@ -20,14 +20,12 @@ events. Every run records its usage to :mod:`src.runtime.token_usage` under
 the caller's ``usage_label`` so a pipeline run can account for its total
 token spend.
 
-The launch contract (P34). ``opencode run`` roots its session — the directory
+The launch contract. ``opencode run`` roots its session — the directory
 inside which paths are "internal" and whose ``opencode.json`` it loads — at
 ``process.env.PWD ?? process.cwd()``. ``subprocess.Popen(cwd=...)`` changes the
-child's directory but leaves the inherited ``PWD`` alone, so an agent launched
-from a harness whose shell sat elsewhere got a session rooted *there*, and its
-own working directory was "external": asked for, and auto-rejected by the
-non-interactive ``run`` command (104 of 360 candidate slots in the 2026-09
-sweep ended as "no candidate.py written" that way). The launcher therefore
+child's directory but leaves the inherited ``PWD`` alone, so without care an
+agent's own working directory is "external" and its writes are auto-rejected
+by the non-interactive ``run`` command. The launcher therefore
 
 * pins ``PWD`` to the real cwd for every backend (:func:`child_environment`);
 * for opencode, gives each agent a private ``XDG_DATA_HOME`` beside its log so
@@ -116,9 +114,8 @@ PERMISSION_DENIAL_SIGNATURE = "auto-rejecting"
 # Name of the per-agent XDG_DATA_HOME, created beside the agent's log.
 AGENT_DATA_HOME_NAME = ".xdg_data"
 # opencode's shell tool kills a command after 120 s unless the call passes its
-# own timeout. Model fits and the candidate self-checks take 2-10 min, and in
-# the RSA smoke test (2026-10-06) every self-check was killed before it
-# printed a verdict. This is the default for calls that set none (ms).
+# own timeout. Model fits and the candidate self-checks take 2-10 min, so this
+# is the default for calls that set none (ms).
 OPENCODE_BASH_TIMEOUT_ENV = "OPENCODE_EXPERIMENTAL_BASH_DEFAULT_TIMEOUT_MS"
 OPENCODE_BASH_TIMEOUT_MS = 15 * 60 * 1000
 _ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
@@ -162,7 +159,7 @@ def check_for_permission_denials(log_path: Path, own_dirs: Sequence[Path]) -> li
     Only opencode's own notice counts: a line that *is* a denial notice. The
     agent's tool calls and their output are JSON events, so an agent that
     merely displays the signature — ``cat``-ing this file, which agents can
-    read — no longer looks like a denial. (One did, and it killed a cell.)
+    read — does not look like a denial.
     """
     own = [Path(d).resolve() for d in own_dirs]
     text = Path(log_path).read_text(encoding="utf-8", errors="replace")

@@ -88,8 +88,8 @@ rsa_condition_data_dir() {
   echo "$data_root/$condition"
 }
 
-# Does this checkout's loop CLI take --seed? (src/rsa/loop/run.py did not before
-# 2026-10-07; without it the replicates differ only by the agents' sampling.)
+# Does this checkout's loop CLI take --seed? (Without it the replicates differ
+# only by the agents' sampling.)
 # Run from a repo root (the harness copy). The help is captured first: piped
 # into grep -q, the CLI could die of SIGPIPE and pipefail would read a "no".
 rsa_loop_cli_has_seed() {
@@ -101,8 +101,7 @@ rsa_loop_cli_has_seed() {
 # The sweep's venv: $GROUP_HOME/venvs/auto-psych_<sweep> (Sherlock's rule:
 # Python environments live in $GROUP_HOME, not on $SCRATCH), else
 # $WORK_ROOT/venv. UV_PROJECT_ENVIRONMENT, if exported, wins.
-# The sweep root every script defaults to. One place: after run 1, three
-# scripts still defaulted to rsa_run1 and run 2's first submit went there.
+# The sweep root every script defaults to, in one place.
 RSA_SWEEP_NAME="rsa_run2"
 rsa_default_work_root() {
   local base="${SCRATCH:-${GROUP_SCRATCH:-}}"
@@ -115,8 +114,8 @@ rsa_default_venv() {
   if [[ -n "${UV_PROJECT_ENVIRONMENT:-}" ]]; then
     echo "$UV_PROJECT_ENVIRONMENT"
   elif [[ -n "${GROUP_HOME:-}" ]]; then
-    # One venv for every RSA job: run 2's, built by its prepare step. A venv named
-    # after each WORK_ROOT (rehearsals, live) was never built (live stage 1, 2026-10-10).
+    # One venv for every RSA job: run 2's, built by its prepare step (no other
+    # WORK_ROOT builds one).
     echo "$GROUP_HOME/venvs/auto-psych_$RSA_SWEEP_NAME"
   else
     echo "$work_root/venv"

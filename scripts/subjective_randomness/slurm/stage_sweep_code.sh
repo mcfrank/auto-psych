@@ -6,12 +6,10 @@
 #   REPO=<checkout> WORK_ROOT=<sweep root> bash stage_sweep_code.sh
 #
 # Every job after setup (the array, its retries, their analysis) runs on these
-# copies, never on the live checkout: retries used to re-run setup days later,
-# re-staging whatever $REPO held by then under cells that had started on other
-# code. With code_commit present this stages nothing and fails if the
+# copies, never on the live checkout, so a retry days later cannot run cells
+# on other code. With code_commit present this stages nothing and fails if the
 # checkout's code (code_commit.sh) differs from what was staged. It refuses a
-# WORK_ROOT that has cells but no code_commit: those cells started before code
-# was staged once per sweep.
+# WORK_ROOT that has cells but no code_commit (their code is unknown).
 #
 #   $WORK_ROOT/harness_repo  full copy; the harness process and the Slurm
 #                            scripts of every later job run from here

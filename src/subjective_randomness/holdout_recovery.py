@@ -8,12 +8,16 @@ tries to recover the held-out process. After every inner-loop scoring step we
 ask: how well does the then-best model predict the ground truth's ``p_left``
 on a large held-out stimulus set (Pearson r and RMSE)?
 
-Layout under ``results_root`` (one run per held-out model)::
+Layout under ``results_root`` (one cell per held-out model, named
+``cell_<i>`` so no path an agent sees names the model)::
 
-    <gt_model>/
+    cell_<i>/
         experiment1..N/        # full agentic pipeline output trees
         eval_stimuli.json      # held-out stimulus set (post-run exclusion)
-        trajectory.json        # per-step correlation trajectory + leakage audit
+
+and ``<summary_root>/<gt_model>/trajectory.json`` (per-step correlation
+trajectory + leakage audit), outside the agents' tree when a summary root is
+given.
 
 The expensive seams (`run_design_programmatic`, `generate_responses`,
 `fit_model`, ...) are imported at module level so tests can monkeypatch them
@@ -100,10 +104,9 @@ def forget_command_line() -> None:
 
     Candidate models and critique statistics are agent-written code that runs
     in the harness process, and the harness's arguments name the held-out
-    ground truth (``--gt-model``, and the ``run<r>/<gt>/`` output paths).
-    ``typing.sys.argv`` used to pass the code gate; the gate now blocks that
-    route, and this empties what any other in-process route would find. The
-    lists are cleared in place, so every reference to ``sys.argv`` sees it,
+    ground truth (``--gt-model``, and the ``run<r>/<gt>/`` output paths). The
+    code gate blocks the routes to ``sys.argv`` it knows of; this empties what
+    any other in-process route would find. The lists are cleared in place, so every reference to ``sys.argv`` sees it,
     and fit workers spawned later inherit the cleared list. The script path
     stays (``argv[0]``).
     """
@@ -354,9 +357,8 @@ def derive_seed(*parts: Any) -> int:
     """A seed for one purpose in one cell, from everything that identifies it.
 
     Distinct (cell seed, ground truth, experiment, purpose) tuples get
-    unrelated seeds. The response seed used to be ``cell seed + experiment``,
-    so repeat r's experiment 2 reused repeat r+1's experiment 1 seed, and every
-    design used seed 42.
+    unrelated seeds (a sum such as ``cell seed + experiment`` would let repeat
+    r's experiment 2 reuse repeat r+1's experiment 1 seed).
     """
     digest = hashlib.sha256("|".join(str(part) for part in parts).encode()).digest()
     return int.from_bytes(digest[:4], "big") % 2**31
@@ -886,8 +888,8 @@ def _run_holdout_recovery_resolved(
             "n_eval_dropped": eval_info["n_dropped"],
             "trajectory": trajectory,
             "incumbent": summarise_incumbents(trajectory, starting_models),
-            # False for a run that protected its starting models from pruning
-            # (the code before 2026-09-28): the two conditions must not be pooled.
+            # False for a run that protected its starting models from pruning:
+            # the two conditions must not be pooled.
             "starting_models_prunable": starting_models_prunable(run_root),
             "baseline": baseline,
             "fitted_baseline": fitted_baseline,

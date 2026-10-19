@@ -37,8 +37,7 @@ say "- cells present: $n_cells"
 
 # 1. Every cell must have its result. Cells are judged by their results
 #    (holdout.json, and the summary job's MISSING_CELLS.txt), not by logs: a
-#    cell that failed and was resumed by a retry leaves the failed attempt's
-#    log behind, which used to FAIL every sweep that needed a retry.
+#    cell resumed by a retry leaves the failed attempt's log behind.
 n_result=0; unfinished=()
 for C in "$W"/run*/*/; do
   [[ -d "$C" ]] || continue
@@ -101,8 +100,8 @@ else
 fi
 
 # 4. The agents' CSVs must carry the raw columns and nothing else.
-#    Check BOTH data/responses.csv AND model_loop/responses.csv — arm C's bug
-#    was that data/ was raw but model_loop/ was featurized.
+#    Check BOTH data/responses.csv AND model_loop/responses.csv (one can be
+#    raw while the other is not).
 bad_csv=0; n_csv=0
 _check_csv_header() {
   local CSV="$1" LABEL="$2"
@@ -399,14 +398,11 @@ else
 fi
 
 # 11. Critique presence: every round's history.json entry records the critique
-#     status it ran with (P35: "critiqued" with the agent's statistic counts,
+#     status it ran with ("critiqued" with the agent's statistic counts,
 #     "no_critique", or "disabled"). A finished run in which NO round of an
-#     experiment produced a critique is flagged as a WARNING, not a failure —
-#     the loop is designed to proceed without a critique, and a false failure
-#     here has cancelled a gated arm before. The point is visibility: the old
-#     fallback battery made every archived round look critiqued (one
-#     pipeline-written statistic, the marginal choice rate) while the critique
-#     agent had never once produced a statistic.
+#     experiment produced a critique is flagged as a WARNING, not a failure:
+#     the loop is designed to proceed without a critique, and the point is
+#     visibility.
 _CRITIQUE_CHECKER=$(mktemp /tmp/check_critique_XXXXXX.py)
 cat > "$_CRITIQUE_CHECKER" <<'PYEOF'
 """Summarise the per-round critique status of one inner-loop history.json.

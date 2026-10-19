@@ -51,8 +51,8 @@ def sync_seed_models(check: bool) -> int:
         raise ValueError(f"Registry manifest lists no models: {REGISTRY_DIR}")
 
     # The two manifests each keep their own explanatory header, so they are not
-    # byte-identical — but they must list the SAME models. A name mismatch is the
-    # 2026-07 divergence, so refuse to sync bodies onto a mismatched name set.
+    # byte-identical — but they must list the SAME models, so refuse to sync
+    # bodies onto a mismatched name set.
     seed_names = read_manifest_names(SEED_POOL_DIR)
     if seed_names != names:
         raise ValueError(

@@ -6,10 +6,8 @@
 #SBATCH --mem=128GB               # inner-loop MCMC over many models on pooled
                                   # multi-experiment data is memory-heavy: the loop
                                   # holds every loaded fit, ~1.5 GB a model at 7,680
-                                  # trials (3000 draws x 4 chains). 16GB, then 64GB
-                                  # (run 1 of the October 2026 live run, round 2 of
-                                  # experiment 3, 24 models: 67 GB peak), OOM-killed
-                                  # exp3 model loops.
+                                  # trials (3000 draws x 4 chains); 24 models in an
+                                  # experiment-3 round peaked at 67 GB.
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.out
 #

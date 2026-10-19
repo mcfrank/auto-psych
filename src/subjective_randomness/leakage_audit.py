@@ -94,10 +94,9 @@ def leakage_check(
 ) -> Dict[str, Any]:
     """Audit a run for ground-truth leakage into agent-written models.
 
-    Agents can read the project assets dir, which contains the held-out seed
-    model's source. This flags (without enforcing) byte-identical copies,
-    mentions of the GT family's distinctive parameter names, and files named
-    after the GT model, across every experiment's ``cognitive_models/`` and
+    This flags (without enforcing) byte-identical copies of the ground truth's
+    source, mentions of its distinctive parameter names and values
+    (``gt_params`` minus ``beta``/``side_bias``), and files named after it, across every experiment's ``cognitive_models/`` and
     ``model_loop/models/``. Heuristic: a paraphrased reimplementation can evade
     it, so flags are an audit trail, not proof of a clean run.
 
@@ -107,9 +106,9 @@ def leakage_check(
     in the project assets the agents can read, so identical-copy leakage is
     effectively impossible.
 
-    It also audits the two channels that carried the held-out model's *name*
-    (the 2026-09 review panel's finding, closed at the source by
-    ``strip_generating_model`` and the array's manifest scrub):
+    It also audits the two channels that could carry the held-out model's
+    *name* (closed at the source by ``strip_generating_model`` and the array's
+    manifest scrub):
 
     * ``any_csv_generating_model`` — a CSV under the run tree whose header still
       carries ``generating_model``, whose value is the held-out model on every
@@ -120,8 +119,8 @@ def leakage_check(
       ``None`` rather than ``False``, so an unchecked channel is never read as
       a clean one.
 
-    Per admitted model it records ``data_columns``: the featurizer columns the
-    model binds with ``pm.Data(...)``. A model assembled entirely out of
+    Per admitted model it records ``data_columns``: the columns the model binds
+    with ``pm.Data(...)``. A model assembled entirely out of
     provided columns is a regression on the harness's features rather than a
     mechanism, so a report can say per ground truth how much of recovery is
     which.

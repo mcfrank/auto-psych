@@ -1,7 +1,6 @@
 #!/bin/bash
 # Launch ONE holdout-recovery test-retest run over the literature-faithful
-# seed-model set (the active registry since the 2026-08 consolidation), with
-# 5 repeats per held-out model.
+# seed-model set (the active registry), with 5 repeats per held-out model.
 #
 # This is a thin, pinned wrapper around submit_holdout_test_retest.sh. It
 # exists so the parameters for *this* run are explicit and reproducible, and

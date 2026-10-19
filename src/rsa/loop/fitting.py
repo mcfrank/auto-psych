@@ -36,11 +36,10 @@ FIT_TIME_LIMIT_SEC = 30 * 60  # as the PyMC domain's CANDIDATE_FIT_TIME_LIMIT_SE
 # A fit that runs in its own (pinned) child and is never killed: for models
 # already in play (seeds, carried and admitted models, the outer loop's bar
 # models and ground truth). Only a new candidate's admission fit is limited,
-# the SR pipeline's rule. The 2026-10-09 rehearsal died when a promoted
-# reference model's prospective fit passed 30 minutes.
+# the SR pipeline's rule.
 NO_TIME_LIMIT = math.inf
-# A fit child runs single-threaded: measured on the combined data (40k trials,
-# 2026-10-07), one fit takes ~55 s on one thread and ~53 s on four, and four
+# A fit child runs single-threaded: measured on the combined data (40k trials),
+# one fit takes ~55 s on one thread and ~53 s on four, and four
 # single-threaded fits at once on four cores ~75 s each. So the loop runs one
 # fit per CPU (`src.rsa.loop.orchestrator.default_fit_workers`).
 SINGLE_THREAD_XLA_FLAGS = "--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1"
@@ -77,7 +76,7 @@ def fingerprint(model_path: Path, responses_path: Path, settings: FitSettings) -
 
 def cache_paths(cache_dir: Path, name: str, fp: str) -> tuple[Path, Path]:
     # Not Path.with_suffix: it would replace ".<fp>" and key the cache by name
-    # alone (until 2026-10-07 it did: a refit read back the fit it replaces).
+    # alone, so a refit would read back the fit it replaces.
     base = f"{name}.{fp}"
     return Path(cache_dir) / f"{base}.nc", Path(cache_dir) / f"{base}.json"
 
@@ -241,14 +240,12 @@ def _start_with_cache(proc, cache_dir: str, core: Optional[int] = None) -> None:
 
     The child sees ``core`` alone from its first instruction (`src.rsa.cpus`):
     started from a thread pinned to it, its JAX and OpenBLAS pools are one
-    core's, about 7 threads instead of 7 per core of the job (Research
-    Computing's warning on job 47042590, 2026-10-08).
+    core's, about 7 threads instead of 7 per core of the job.
 
     On import, arviz writes a once-a-day marker, ``<XDG cache>/arviz/
     daily_warning``, through a fixed-name ``daily_warning.tmp``. Fit children
     that import it together after midnight collide on that file and die
-    (three of Sherlock run 2's cells, 2026-10-08; the SR harness's
-    ``_fit_process_caches`` fixed the same bug). A child imports arviz before
+    (as the SR harness's ``_fit_process_caches`` also prevents). A child imports arviz before
     any code of ours runs in it (spawn re-imports the main module), so the
     directory has to be in the environment it starts with.
     """

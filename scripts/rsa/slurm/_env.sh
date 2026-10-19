@@ -19,7 +19,7 @@ RSA_SLURM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$RSA_SLURM_DIR/_cells.sh"
 export WORK_ROOT="${WORK_ROOT:-$(rsa_default_work_root)}"
 [[ -n "$WORK_ROOT" ]] || exit 1
-# Sherlock run 1 (2026-10-07) needed these exported by hand:
+# Sherlock needs these:
 # - the venv in $GROUP_HOME (Sherlock's rule), not $WORK_ROOT/venv on $SCRATCH;
 export UV_PROJECT_ENVIRONMENT="$(rsa_default_venv "$WORK_ROOT")"
 # - uv's standalone Python looks for /etc/ssl/cert.pem, which el7 lacks, and
@@ -34,18 +34,17 @@ fi
 # Shared with subjective randomness: VENV_PY, caches off $HOME, modules,
 # .secrets, BLAS threads.
 source "$RSA_SLURM_DIR/../../subjective_randomness/slurm/_env.sh"
-# JAX on one CPU per process (Research Computing, 2026-10-09): XLA's CPU
-# runtime sizes its thread pool by the node's cores, not the job's allocation,
-# and oversubscribed the cores. Fit children already ran single-threaded
-# (src.rsa.loop.fitting.SINGLE_THREAD_XLA_FLAGS); now every process does
-# (design, simulation, scoring). Parallelism comes from one process per CPU.
+# JAX on one CPU per process: XLA's CPU runtime sizes its thread pool by the
+# node's cores, not the job's allocation. Every process runs single-threaded
+# (as fit children do, src.rsa.loop.fitting.SINGLE_THREAD_XLA_FLAGS);
+# parallelism comes from one process per CPU.
 export XLA_FLAGS="${XLA_FLAGS:+$XLA_FLAGS }--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1"
 # Those flags stop XLA *using* threads, not creating them: pools are sized by
 # the cores a process can see, so every process the harness starts sees one
-# core (src.rsa.cpus; Research Computing's warning on job 47042590,
-# HANDOFF_threads.md). OpenBLAS sizes its pool when numpy loads: one thread.
+# core (src.rsa.cpus; HANDOFF_threads.md). OpenBLAS sizes its pool when
+# numpy loads: one thread.
 export OPENBLAS_NUM_THREADS=1
-# JAX's persistent compilation cache, shared by every RSA job (2026-10-09):
+# JAX's persistent compilation cache, shared by every RSA job:
 # a program compiled once (a model's predictions on a fixed pool, a fit on data
 # another job already used) is read back, not recompiled. Measured: a fit's
 # fixed cost fell from 36 s to 15 s (rsa_l2) and 57 s to 23 s on a hit. Outside
@@ -74,8 +73,8 @@ if [[ -n "${OPENCODE_BIN_DIR:-}" ]]; then
   [[ -x "$OPENCODE_BIN_DIR/opencode" ]] || { echo "FATAL: OPENCODE_BIN_DIR=$OPENCODE_BIN_DIR has no opencode" >&2; exit 1; }
   # The npm package's launcher is a node script; node comes from a module
   # (mounted read-only into the sandbox with the rest of /share/software).
-  # Node 24, as main's live jobs: firebase-tools 15 does not support Node 25 (live
-  # stage 1, 2026-10-10); opencode 1.18.35 runs under 24.
+  # Node 24, as main's live jobs: firebase-tools 15 does not support Node 25;
+  # opencode 1.18.35 runs under 24.
   ml load "${NODEJS_MODULE:-nodejs/24.13.0}"
   export PATH="$OPENCODE_BIN_DIR:$PATH"
 fi

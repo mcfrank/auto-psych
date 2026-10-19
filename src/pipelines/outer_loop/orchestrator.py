@@ -131,8 +131,8 @@ def run_unique_participant_ids(
     """``rows`` with a ``participant_id`` unique across the run's experiments.
 
     Collection numbers participants from 0 in every experiment, and the loop
-    pools every experiment's responses, so two different people used to share
-    an id (and a participant random effect). A participant is identified by
+    pools every experiment's responses, so without renumbering two different
+    people would share an id (and a participant random effect). A participant is identified by
     ``participant_id_str`` (the Prolific ID, on live and Firebase rows) when
     the rows carry it, else by the collection's own ``participant_id``. One
     seen in an earlier experiment of the run (its raw collected file) keeps
@@ -309,10 +309,8 @@ def carry_forward_cognitive_models(prev_exp_dir: Path, exp_dir: Path) -> bool:
             shutil.copyfile(prev_ledger, staging / LEDGER_FILENAME)
 
     # The files, manifest and ledger are built beside the destination and
-    # renamed into place together. They used to be copied in place, the
-    # manifest before the ledger, so a crash in between left a valid-looking
-    # set whose manifest made the copy count as done: the ledger was lost for
-    # good (second audit B14).
+    # renamed into place together, so a crash never leaves a valid-looking set
+    # (a manifest that makes the copy count as done) without its ledger.
     replace_directory(dest_dir, build)
     return True
 

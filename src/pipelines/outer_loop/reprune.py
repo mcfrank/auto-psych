@@ -21,9 +21,9 @@ started from the old export: move it aside if it ran nothing), when the stage
 did not finish, and when any fit the comparison needs is not in the cache
 (``fit_kwargs`` must be the loop's own sampler settings; nothing is sampled).
 
-Written for the October 2026 live run (user decision 2026-09-30): pruning at
-2·dse_clustered left experiment 1 a single model, which gives the next
-design nothing to discriminate; the series moved to 4.
+Used when a multiplier proves too strict, e.g. one that leaves an experiment
+a single model and the next design nothing to discriminate (user decision
+2026-09-30).
 
     python -m src.pipelines.outer_loop.reprune --experiment-dir <run>/<project>/experiment1 \\
         --dse-multiplier 4 --draws 3000 --tune 2000 --chains 4 --target-accept 0.8

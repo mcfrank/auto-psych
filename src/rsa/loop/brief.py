@@ -102,13 +102,12 @@ PLAIN_SCOPE_NOTE = (
 
 # The harness's own interpreter, as in the PyMC loop: sandboxed agents have no
 # `uv` (it lives in ~/.local/bin, which the private home hides) and `uv run`
-# would sync the read-only venv; the 2026-10-07 smoke test found the `uv run`
-# form unrunnable in the sandbox.
+# would sync the read-only venv.
 CHECK_COMMAND = sys.executable + " -m src.rsa.loop.check_candidate {candidate_dir} --responses {responses}"
 # The shell timeout agents must give the self-check: its fit may take up to
 # CHECK_TIME_LIMIT_SEC (10 min) after loading and the contract. opencode's
-# shell tool kills a command after 120 s by default, which in the 2026-10-06
-# smoke test killed every self-check before it printed anything.
+# shell tool kills a command after 120 s by default, before a self-check
+# prints anything.
 CHECK_SHELL_TIMEOUT_MS = 900_000
 
 

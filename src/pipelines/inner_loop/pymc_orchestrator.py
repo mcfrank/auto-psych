@@ -117,8 +117,7 @@ class _Slot:
     ``candidate_<i>_repair_1/``, with the rejection reason in its prompt and
     the rejected files copied in. A repair that writes nothing, or is rejected
     again, is final — so every slot ends admitted or with a recorded reason the
-    agent had a chance to act on. In the 2026-09 sweep 29% of slots ended as
-    "no candidate.py written" and no rejected candidate ever saw its reason.
+    agent had a chance to act on.
 
     A slot has a ``role`` (``model_zoo.slot_roles``), fixed across its
     attempts: an exploratory slot works the lens ``lens``; a refinement slot
@@ -764,8 +763,7 @@ def end_experiment(
     grouped CV); pruning, the cap and the rescoring all use it.
 
     Pruning happens once, at the end of the experiment (user decision
-    2026-09-26): it used to run after every round against the max of a
-    growing zoo. Then the live set is capped. Both apply to every model,
+    2026-09-26). Then the live set is capped. Both apply to every model,
     starting models included (user decision 2026-09-28). Neither can change
     the best trusted model or empty the set: pruning measures every margin
     against the best trusted model, and the cap retires untrusted fits first,

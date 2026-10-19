@@ -173,9 +173,8 @@ def _screen_usable_models(
     unbindable column is ``participant_id`` is kept: it is bound as a new
     participant here (and dropped, on record, if its hook renumbers
     participants), and ``_posterior_p_left_draws`` predicts it as new
-    participants (``_new_participant_draws``). Until 2026-09-30 it was
-    dropped, and in the October 2026 live run, where every leading model had a
-    participant effect, that left the experiment-2 design with no model at all.
+    participants (``_new_participant_draws``): dropping person-level models
+    can leave a design with no model at all.
 
     A failure is the model's when its own code raised it, or when it is not a
     code error at all (``is_model_failure``). A code error raised by the
@@ -325,11 +324,10 @@ def _screen_invalid_predictions(
     probability on every pair, and a ``screened_out.json`` record for each
     model whose prediction is not.
 
-    A carried model can break on pairs unlike any it was trained on (the
-    recovery evaluation met one, commit 4de536c), and one such model used to
-    crash the design — identically on every retry, since a resume reuses the
-    same models and fits. It is left out of this design, loudly and on
-    record, like a model that cannot bind a stimulus row.
+    A carried model can break on pairs unlike any it was trained on, and would
+    crash the design identically on every retry (a resume reuses the same
+    models and fits). It is left out of this design, loudly and on record,
+    like a model that cannot bind a stimulus row.
     """
     from src.models.pymc_inference import InvalidPredictions  # type: ignore
 
@@ -432,30 +430,20 @@ def _posterior_p_left_draws(
 # lazy batched greedy — a full pass over the pool every DESIGN_REFRESH_EVERY
 # picks, and in between only the best-ranked candidates re-scored in batches of
 # DESIGN_LAZY_BATCH_SIZE — in float32. Exact greedy (a full pass per pick, in
-# float64) took 11-13 h per later-experiment design; this takes ~3 min on 16
-# CPUs. Validated on two experiment-2 designs of the September 2026 sweep
-# (scripts/subjective_randomness/validate_lazy_eig.py, 2026-09-27): exact
-# greedy in float32 picked sets with the same joint EIG as in float64 (59-64 of
-# 64 pairs shared, the rest near-ties), and lazy greedy's out-of-sample joint EIG
-# was within Monte Carlo noise of exact greedy's (design 1, over three
-# scenario seeds each: 2.078 vs 2.080 bits; design 2: 0.0006 bits lower, of
-# 2.69), while exact greedy itself moved by up to 0.008 bits between scenario
-# seeds. It is an approximation all the same (joint EIG is not submodular);
-# exact greedy stays available (lazy=False, scoring_dtype "float64", or the
-# eig CLI's --no-lazy --scoring-dtype float64).
+# float64) takes 11-13 h per later-experiment design; this takes ~3 min on 16
+# CPUs, and its joint EIG is within exact greedy's own scenario-to-scenario
+# spread (scripts/subjective_randomness/validate_lazy_eig.py). It is an
+# approximation all the same (joint EIG is not submodular); exact greedy stays
+# available (lazy=False, scoring_dtype "float64").
 DESIGN_LAZY_SEARCH = True
 DESIGN_LAZY_BATCH_SIZE = 512
 DESIGN_REFRESH_EVERY = 16
 DESIGN_SCORING_DTYPE = "float32"
 # Each Monte Carlo scenario's likelihood average leaves out the draw that
 # generated the scenario (src/models/eig_selection.py; first audit, C5): an
-# average that includes it rewards the true model for memorising its own draw.
-# Measured on the two experiment-2 designs of the validation above (lazy
-# float32, seeds 42 and 43, 2026-09-27): the same run time (167 s vs 167 s;
-# 205 s vs 196-203 s), recorded joint_eig_bits lower by 0.06-0.10 and
-# 0.02-0.03 bits (the inflation removed), and sets whose joint EIG on 50,000
-# fresh scenarios, scored without the generating draw, is within the
-# selection's own seed-to-seed spread (0.000 to -0.005 bits of 2.0 and 2.7).
+# average that includes it rewards the true model for memorising its own draw
+# and inflates joint_eig_bits (by 0.02-0.1 bits on the validation designs), at
+# no extra cost.
 DESIGN_LEAVE_ONE_OUT = True
 
 

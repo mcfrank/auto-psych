@@ -43,7 +43,7 @@ MAX_PARALLEL_PARTICIPANTS = 3
 _PROLIFIC_POLL_INTERVAL_SEC = 30
 # Stop waiting on a Prolific study after this long so a stalled/under-recruited
 # study (participants return or time out and the target is never met) can't hang
-# the pipeline forever (user decision 2026-09-28: 3 hours, was 2). On timeout
+# the pipeline forever (user decision 2026-09-28: 3 hours). On timeout
 # the study is paused and we fetch whatever results exist.
 _PROLIFIC_MAX_WAIT_SEC = 3 * 60 * 60  # 3 hours
 # Prolific study statuses in which nobody new is being recruited.
@@ -482,8 +482,8 @@ def _this_runs_rows(
     ``/results`` answers per session (or project and run), which earlier
     collections of the same run share. Raises when no row belongs to this
     collection's participants, or when the rows carry no
-    ``participant_id_str`` to tell: every row used to be kept then, mixing
-    other collections' data into this experiment.
+    ``participant_id_str`` to tell, rather than mix other collections' data
+    into this experiment.
     """
     if not rows:
         return rows

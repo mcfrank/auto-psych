@@ -12,7 +12,6 @@
 # alone, and so is a task whose cell already has its holdout.json (Slurm can
 # mark a task that finished as OUT_OF_MEMORY or TIMEOUT). Each resubmission
 # chains its own retry job, up to MAX_RETRY_ROUNDS.
-# Cells used to die this way and then silently vanish from every report.
 #
 # Retries run on the code the sweep's setup job staged, never on the live
 # checkout: this script, _env.sh and the submit script are the staged copies

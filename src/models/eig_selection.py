@@ -512,8 +512,7 @@ def select_n_joint_eig(
         are not part of the returned ``indices``.
     leave_one_out: average a scenario's own model's likelihood over every
         draw but the one that generated the scenario (the module docstring
-        says why). ``False`` includes the generating draw, as the estimator
-        did before 2026-09-27.
+        says why). ``False`` includes the generating draw.
     """
     _validate_n_responses(n_responses)
     p, n_stim = _validated_p(p_left_draws)

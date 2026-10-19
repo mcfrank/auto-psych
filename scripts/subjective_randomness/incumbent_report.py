@@ -145,8 +145,8 @@ def render_markdown(
 
 def main(args: Args) -> None:
     # Only complete cells (a holdout.json): a cell that stopped part-way has a
-    # run record too, and used to be counted as if its steps were the whole
-    # cell. The unfinished and never-started cells are listed instead.
+    # run record too, which is not the whole cell. The unfinished and
+    # never-started cells are listed instead.
     survey = survey_sweep(
         args.sweep,
         n_repeats=args.n_repeats,

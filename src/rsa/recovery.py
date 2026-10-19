@@ -16,10 +16,9 @@ Reported beside the verdict, not part of it:
 * the starting models' distances, the baseline: a verdict the seeds would
   pass says nothing;
 * the held-out fit, the exported model's held-out lpd minus the ground
-  truth's with its clustered SE (src.rsa.evaluate_heldout). It used to be an
-  "or" clause of the verdict and was powerless: on the salience data rsa_l1
-  and rsa_l2, 0.05 RMSE from the truth, were within 2 SE of it on held-out
-  conditions (Sherlock run 1, PI decision 2026-10-08).
+  truth's with its clustered SE (src.rsa.evaluate_heldout). Not part of the
+  verdict: models 0.05 RMSE from the truth can be within 2 SE of it on
+  held-out conditions (PI decision 2026-10-08).
 """
 
 from __future__ import annotations

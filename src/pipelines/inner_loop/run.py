@@ -107,7 +107,8 @@ class Args:
     """Per-candidate coding-agent timeout in seconds."""
     hints_file: Optional[Path] = None
     """YAML list of exploration hints cycled across a round's exploratory
-    slots (default: the built-in DEFAULT_CANDIDATE_HINTS lens battery)."""
+    slots (default: the responses' task's own lens battery,
+    TaskSpec.candidate_hints)."""
     novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD
     """Reject a candidate whose p_left is within this RMSE of an admitted
     model's on the loop's novelty pool, a broad loop-generated stimulus pool

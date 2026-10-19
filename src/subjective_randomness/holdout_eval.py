@@ -398,7 +398,7 @@ def _fitted_seed_baseline(
 
     A held-out pair where a seed's ``p_left`` is undefined (NaN or outside
     [0, 1]) is left out of that seed's metrics, as the trajectory leaves it out
-    of a step's (user decision 2026-09-27, audit B6): ``per_model[name]
+    of a step's (user decision 2026-09-27): ``per_model[name]
     ["n_eval_excluded"]`` counts them, a warning is printed, and
     ``exclusions_log`` gets one line per such seed with the pairs.
     """
@@ -743,7 +743,7 @@ def _all_responses_so_far(run_root: Path, n_experiments: int) -> Path:
     """The final experiment's cumulative inner-loop responses: every experiment once.
 
     Each experiment's ``model_loop/responses.csv`` already holds experiments
-    1..k, so the last one is the full training set (concatenating them used to
+    1..k, so the last one is the full training set (concatenating them would
     count experiment 1 once per experiment). Checked against the experiments'
     own ``data/responses.csv`` row counts; a mismatch raises.
     """
@@ -862,11 +862,8 @@ def fitted_seed_baseline_by_experiment(
     experiment ``k`` was fit on) — ``fitted_seed_baseline_correlation`` with
     ``n_experiments=k``. The seed fits are the loop's own, so with the run's
     ``cache_dir`` they are cache hits. The last entry is the ``fitted_baseline``
-    the harness records (the final data).
-
-    The baseline used to be scored only on the final data and drawn flat
-    across every step, so only the final experiment's steps were compared with
-    it on the same data (second audit W1).
+    the harness records (the final data). Each experiment's steps are thus
+    compared with a baseline fit on the same data.
     """
     return [
         {

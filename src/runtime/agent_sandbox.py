@@ -138,7 +138,7 @@ BACKEND_ENV = {
 # scripts) and reaches this module as CLAUDE_AUTH in the harness's
 # environment; there is no default, because the credential decides who pays:
 # the CLI prefers ANTHROPIC_API_KEY over the subscription's OAuth token, so a
-# stray key in .secrets used to move a subscription run onto API billing.
+# stray key in .secrets would move a subscription run onto API billing.
 CLAUDE_AUTH_ENV = "CLAUDE_AUTH"
 CLAUDE_AUTH_CREDENTIAL = {
     "subscription": "CLAUDE_CODE_OAUTH_TOKEN",  # `claude setup-token`
@@ -336,8 +336,8 @@ def sandbox_command(
     args += ["--bind", str(private_home), str(user_home)]
     args += ["--bind", str(scratch), "/tmp"]
     # The tree is read-only and the agent's own directories are writable on
-    # top of it: a Gemini candidate once emptied an admitted model in the
-    # shared zoo with a broken heredoc, and the cell crashed on it.
+    # top of it, so an agent cannot damage the shared zoo (an admitted model
+    # emptied by a broken heredoc crashes the cell).
     for directory in _outermost([Path(cwd), *map(Path, readable_dirs)]):
         args += ["--ro-bind", str(directory), str(directory)]
     for directory in _outermost([*map(Path, writable_dirs), agent_dir]):

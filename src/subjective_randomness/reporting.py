@@ -235,9 +235,9 @@ def _best_seed_value(
     """A cell's seed-model baseline value for the combined figure, or None.
 
     The fit-to-all-data baseline is the ELPD-best seed — chosen on the
-    training data, as the loop chooses its winner (``elpd_best_*``). It used to
-    be the seed with the best held-out value against the ground truth, which
-    only an oracle could choose. A result scored before ``elpd_best_*`` existed
+    training data, as the loop chooses its winner (``elpd_best_*``), not the
+    seed with the best held-out value, which only an oracle could choose. A
+    result scored before ``elpd_best_*`` existed
     has no such baseline; that is said on stderr, not papered over.
 
     The default-params baseline stores only a bare Pearson r per model (so it
@@ -371,7 +371,7 @@ def aggregate_holdout_trajectories(
 
     **Positions.** Cells are aligned by experiment, not by their running
     ``global_step``: an abandoned candidate round writes no step, so step k of
-    one cell used to be averaged with a different round of another. Within
+    one cell can be a different round of another. Within
     each experiment the positions are its seed step, each round every cell
     recorded (by ``iteration``), and its end — every cell's last step. Each
     point carries ``x`` (consecutive over the panel), ``experiment`` and

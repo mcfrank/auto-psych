@@ -154,10 +154,8 @@ class OuterConfig:
     num_chains: int = 4
     dense_mass: bool = True
     """NUTS with a dense mass matrix (`src.rsa.fit.FitSettings.dense_mass`).
-    Measured 2026-10-09 on 28k existing trials, 4 chains of 1000 + 1000: the
-    same posterior means, higher ESS, and 2.5-9x fewer leapfrog steps on the
-    promoted models with 5-7 parameters (the slowest fit, 494 s -> 149 s);
-    no change on 2-parameter rsa_l2."""
+    On 28k existing trials: the same posterior means, higher ESS, and 2.5-9x
+    fewer leapfrog steps on the promoted models with 5-7 parameters."""
     n_draws: int = 200
     n_scenarios: int = 2000
     seed: int = 0
@@ -169,8 +167,7 @@ class OuterConfig:
 def mean_kl(p, q, n_displays: int) -> float:
     """Mean KL(p || q) per display, in nats. The class probabilities come
     flattened over the displays (`posterior_mean_class_probs`), so the total is
-    divided by the display count (rehearsal 2's interim report, 2026-10-10,
-    found the recovery record holding the sum)."""
+    divided by the display count."""
     p, q = np.asarray(p, float), np.clip(np.asarray(q, float), 1e-12, None)
     total = np.sum(np.where(p > 0, p * (np.log(np.clip(p, 1e-12, None)) - np.log(q)), 0.0))
     return float(total / n_displays)
@@ -229,8 +226,8 @@ class OuterRun:
         """The previous experiment's live set, one model per hypothesis the live
         displays can tell apart (`src.rsa.design.distinct`), best first by the
         loop's final standing (trusted, then its selection criterion), at most
-        ``max_carried``. Recorded in ``experiment<n>/carry.json``. The
-        2026-10-09 rehearsal carried 12 near-copies into experiment 3."""
+        ``max_carried``, so near-copies are not carried. Recorded in
+        ``experiment<n>/carry.json``."""
         out = self.exp(n) / "carry.json"
         if out.exists():
             return json.loads(out.read_text())["kept"]
@@ -448,8 +445,7 @@ class OuterRun:
             critique=c.critique,
         )
         # The agents' spend, per experiment (appended across resumes; the summary
-        # covers the whole log), written even when the loop fails. The rehearsal
-        # of 2026-10-09 recorded none.
+        # covers the whole log), written even when the loop fails.
         usage_log = out / "token_usage.jsonl"
         marker = start_usage_log(usage_log)
         try:
@@ -478,10 +474,9 @@ class OuterRun:
         going into experiment n and after its inner loop. The measure is the
         mean KL divergence from the ground truth's choice-class probabilities
         (nats per display), on the design pool and on this experiment's
-        designed displays; RMSE on the pool is kept beside it. The 2026-10-09
-        rehearsal's pool RMSE said its models were getting closer while they
-        predicted the designed displays worse: an average over 794 displays,
-        most of which tell little apart, hides the few that matter."""
+        designed displays; RMSE on the pool is kept beside it. Pool RMSE alone
+        averages over hundreds of displays that tell little apart and hides the
+        few that matter."""
         if self.cfg.collection != "simulated":
             return None
         out = self.private / f"experiment{n}" / "recovery.json"
