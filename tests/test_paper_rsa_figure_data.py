@@ -54,14 +54,48 @@ def _panels():
     }
 
 
-def _run(tmp_path, prereg, panels, chains=None):
+def _run(tmp_path, prereg, panels, chains=None, chain_models=None):
     (tmp_path / "prereg.json").write_text(json.dumps(prereg))
     (tmp_path / "panels.json").write_text(json.dumps(panels))
     (tmp_path / "chains.json").write_text(json.dumps(chains or _chains()))
+    if chain_models is not None:
+        (tmp_path / "chain_models.json").write_text(json.dumps(chain_models))
     out = tmp_path / "rsa.json"
     main(Args(prereg=tmp_path / "prereg.json", panels=tmp_path / "panels.json",
-              chain_seeds=tmp_path / "chains.json", chains=["c0", "c1"], out=out))
+              chain_seeds=tmp_path / "chains.json", chains=["c0", "c1"], out=out,
+              chain_models=None if chain_models is None else tmp_path / "chain_models.json"))
     return json.loads(out.read_text())
+
+
+def _chain_models(best_promoted="promoted:p1"):
+    """``rsa_chain_models.py``'s sums: each chain's other models, scored the same way."""
+    chain = {"others_at_end": {"live_x": -80.0}, "pruned_during_run": {"gone_y": -120.0},
+             "removed_outcome": {"gone_y": "pruned", "broken": "pruned"},
+             "unscored": {"broken": "not converged (r_hat)"}}
+    return {"best_promoted": best_promoted, "best_promoted_lpd": -100.0,
+            "chains": {"c0": chain, "c1": {**chain, "others_at_end": {}}}}
+
+
+def test_each_chains_other_models_are_against_the_same_bar(tmp_path):
+    c0, c1 = _run(tmp_path, _prereg(), _panels(), chain_models=_chain_models())["runs"]
+    assert c0["others_at_end"] == {"live_x": 20.0}  # -80 against the bar's -100
+    assert c0["pruned_during_run"] == {"gone_y": -20.0}
+    assert c0["pruned_unscored"] == {"broken": "not converged (r_hat)"}
+    assert c1["others_at_end"] == {}
+
+
+def test_chain_models_scored_against_another_bar_raise(tmp_path):
+    with pytest.raises(RuntimeError, match="scored against 'promoted:p2'"):
+        _run(tmp_path, _prereg(), _panels(), chain_models=_chain_models("promoted:p2"))
+
+
+def test_missing_chain_model_scores_raise_unless_left_out_explicitly(tmp_path):
+    for name, doc in (("prereg.json", _prereg()), ("panels.json", _panels()), ("chains.json", _chains())):
+        (tmp_path / name).write_text(json.dumps(doc))
+    with pytest.raises(FileNotFoundError, match="--chain-models None"):
+        main(Args(prereg=tmp_path / "prereg.json", panels=tmp_path / "panels.json",
+                  chain_seeds=tmp_path / "chains.json", chains=["c0", "c1"],
+                  out=tmp_path / "rsa.json", chain_models=tmp_path / "absent.json"))
 
 
 def test_each_chain_is_its_starting_models_and_final_against_the_best_promoted_seed(tmp_path):

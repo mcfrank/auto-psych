@@ -12,7 +12,12 @@
 #  run's sampler settings. About 10 GB of fits go to $SCRATCH; the ~1 MB
 #  figure data are written into the checkout.
 #
-#    cd $HOME/auto-psych && sbatch scripts/paper/sr_figure_data.sbatch
+#  It also reads the records of the 233 models the runs removed, which the
+#  shards of submit_figure_data.sh score first:
+#
+#    cd $HOME/auto-psych && bash scripts/paper/submit_figure_data.sh sr
+#
+#  (submitting this alone raises unless every removed model has a record).
 #
 #  A rerun reuses the fits already in $FIT_WORK_DIR. Then, anywhere:
 #    uv run python -m scripts.paper.figures
@@ -25,6 +30,9 @@ FIT_WORK_DIR="${FIT_WORK_DIR:-$WORK_ROOT/sr_figure_data}"
 export PYTENSOR_FLAGS="base_compiledir=${L_SCRATCH:-/tmp}/pytensor/job_${SLURM_JOB_ID}"
 
 cd "$REPO"
+if [[ -f "$FIT_WORK_DIR/code_commit" && "$(git rev-parse HEAD)" != "$(cat "$FIT_WORK_DIR/code_commit")" ]]; then
+  echo "FATAL: the checkout is at $(git rev-parse HEAD), the setup job recorded $(cat "$FIT_WORK_DIR/code_commit")" >&2; exit 1
+fi
 echo "[paper] code $(git rev-parse HEAD) $( [[ -z "$(git status --porcelain)" ]] && echo clean || echo DIRTY)"
 uv sync --locked
 "$VENV_PY" -m scripts.paper.sr_figure_data --work-dir "$FIT_WORK_DIR"

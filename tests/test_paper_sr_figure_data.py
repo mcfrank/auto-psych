@@ -35,6 +35,9 @@ for _name, _source in MODEL_SOURCES.items():
 
 
 REPEATS = 10  # 30 fixture trials are too few for a reliable PSIS-LOO
+REMOVED = "gone"  # the model each fixture run pruned in experiment 1 (refitted)
+LATE = "gone_late"  # pruned at the end of experiment 2: its ELPD is the loop's
+LATE_ELPD = -170.0
 
 
 def _fixture_rows():
@@ -54,13 +57,15 @@ def _write_responses(path: Path) -> None:
 
 
 def _write_run(run_root: Path, *, winner_source: str, winner: str) -> None:
-    """A finished run in the collected layout: seeds pruned in experiment 1,
-    experiment 2 final with its winner, pooled responses and export record."""
+    """A finished run in the collected layout: seeds and one removed model
+    (``REMOVED``) pruned in experiment 1, experiment 2 final with its winner,
+    pooled responses, the ledger and the export record."""
     sr = run_root / "subjective_randomness"
     pruned = sr / "experiment1" / "model_loop" / "models" / "pruned"
     pruned.mkdir(parents=True)
     for seed in SEEDS:
         (pruned / f"{seed}.py").write_text(MODEL_SOURCES[seed])
+    (pruned / f"{REMOVED}.py").write_text(MODEL_SOURCES["narrow"])
     (sr / "starting_models.json").write_text(
         json.dumps({"starting_models": SEEDS, "starting_models_prunable": True})
     )
@@ -75,6 +80,19 @@ def _write_run(run_root: Path, *, winner_source: str, winner: str) -> None:
         "elpd_loo": {winner: -150.0, "rival": -155.0}, "excluded_unreliable": [],
     }))
     (loop / "export_complete.json").write_text("{}")
+    (loop / "models" / "pruned").mkdir()
+    (loop / "models" / "pruned" / f"{LATE}.py").write_text(MODEL_SOURCES["small_lapse"])
+    (loop / "history.json").write_text(json.dumps([
+        {"elpd_loo": {winner: -150.0, "rival": -155.0, LATE: LATE_ELPD}}]))
+    ledger = [(winner, "admitted", "experiment1 round 1"), ("rival", "admitted", "experiment1 round 1"),
+              (REMOVED, "admitted", "experiment1 round 1"),
+              (REMOVED, "pruned", "experiment1 end of experiment"),
+              (LATE, "admitted", "experiment2 round 1"),
+              (LATE, "pruned", "experiment2 end of experiment")]
+    (loop / "attempted_hypotheses.jsonl").write_text("".join(
+        json.dumps({"name": n, "outcome": o, "detail": "20 nats behind w (3× dse)",
+                    "hypothesis": f"{n} hypothesis", "context": c}) + "\n"
+        for n, o, c in ledger))
 
 
 def _run_main(tmp_path, **kwargs):
@@ -85,9 +103,11 @@ def _run_main(tmp_path, **kwargs):
         _write_run(runs_root / "run1", winner_source="narrow", winner="winner_one")
         _write_run(runs_root / "run2", winner_source="small_lapse", winner="winner_two")
     out = tmp_path / "sr.json"
-    main(Args(runs_root=runs_root, runs=["run1", "run2"], out=out, work_dir=tmp_path / "work",
-              draws=500, tune=500, chains=2, pooled_draws=500,
-              pooled_accepted_fit_problems={}, **kwargs))
+    settings = dict(runs_root=runs_root, runs=["run1", "run2"], out=out,
+                    work_dir=tmp_path / "work", draws=500, tune=500, chains=2, pooled_draws=500,
+                    pooled_accepted_fit_problems={}, **kwargs)
+    main(Args(**settings, removed_shard=0, removed_shards=1))  # the removed models first
+    main(Args(**settings))
     return json.loads(out.read_text())
 
 
@@ -117,23 +137,15 @@ def test_figure_data_compares_each_winner_with_the_seeds_and_tabulates_all_runs_
     _write_run(runs_root / "run1", winner_source="narrow", winner="winner_one")
     _write_run(runs_root / "run2", winner_source="small_lapse", winner="winner_two")
     out = tmp_path / "sr.json"
+    settings = dict(runs_root=runs_root, runs=["run1", "run2"], out=out,
+                    work_dir=tmp_path / "work", draws=500, tune=500, chains=2, pooled_draws=500,
+                    pooled_tune=600, pooled_target_accept=0.9, pooled_random_seed=7,
+                    pooled_accepted_fit_problems={})
 
-    main(
-        Args(
-            runs_root=runs_root,
-            runs=["run1", "run2"],
-            out=out,
-            work_dir=tmp_path / "work",
-            draws=500,
-            tune=500,
-            chains=2,
-            pooled_draws=500,
-            pooled_tune=600,
-            pooled_target_accept=0.9,
-            pooled_random_seed=7,
-            pooled_accepted_fit_problems={},
-        )
-    )
+    with pytest.raises(RuntimeError, match=r"no current scored record .*\['gone'\]"):
+        main(Args(**settings))  # the removed models are scored first
+    main(Args(**settings, removed_shard=0, removed_shards=1))
+    main(Args(**settings))
 
     data = json.loads(out.read_text())
     assert data["domain"] == "subjective_randomness"
@@ -149,6 +161,14 @@ def test_figure_data_compares_each_winner_with_the_seeds_and_tabulates_all_runs_
         # against the best seed fitted here.
         assert run["others_at_end"] == {
             "rival": pytest.approx(-155.0 - run["elpd"][run["best_seed"]])}
+        # The removed model, fitted here on the same data, against the best seed.
+        assert run["pruned_outcome"] == {REMOVED: "pruned", LATE: "pruned"}
+        assert run["pruned_source"] == {REMOVED: "refit", LATE: "loop"}
+        assert run["pruned_unscored"] == {}
+        best_seed = run["elpd"][run["best_seed"]]
+        assert run["pruned_during_run"] == {
+            REMOVED: pytest.approx(run["pruned_elpd"][REMOVED] - best_seed),
+            LATE: pytest.approx(LATE_ELPD - best_seed)}
     assert "best_run" not in data
 
     # Figure 3: both runs' winners and the seeds fitted on both runs' data,

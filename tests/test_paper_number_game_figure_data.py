@@ -106,8 +106,8 @@ def test_the_removed_models_are_every_admitted_model_not_live_at_the_end_nor_a_s
     live = ng.live_models(final_dir)
     seeds = json.loads((ng.DEFAULT_RUN_DIR / "starting_models.json").read_text())["starting_models"]
 
-    removed = ng.removed_models(ng.DEFAULT_RUN_DIR, final_dir,
-                                live=[live["winner"], *live["others"]], seeds=seeds)
+    removed = ng.rm.removed_models(ng.DEFAULT_RUN_DIR, final_dir,
+                                   live=[live["winner"], *live["others"]], seeds=seeds)
 
     assert len(removed) == 84
     assert not set(removed) & {live["winner"], *live["others"], *seeds}
@@ -115,3 +115,25 @@ def test_the_removed_models_are_every_admitted_model_not_live_at_the_end_nor_a_s
     assert removed["bayesian_digit_feature_concepts"]["outcome"] == "dropped"
     assert sum(r["outcome"] == "pruned" for r in removed.values()) == 83
     assert all(r["file"].exists() for r in removed.values())
+
+
+def test_the_models_pruned_at_the_end_of_experiment_3_keep_the_loops_elpd():
+    final_dir = ng.sr.final_experiment_dir(ng.DEFAULT_RUN_DIR)
+    live = ng.live_models(final_dir)
+    seeds = json.loads((ng.DEFAULT_RUN_DIR / "starting_models.json").read_text())["starting_models"]
+    removed = ng.rm.removed_models(ng.DEFAULT_RUN_DIR, final_dir,
+                                   live=[live["winner"], *live["others"]], seeds=seeds)
+
+    recorded = ng.rm.recorded_scores(final_dir, removed)
+
+    assert len(recorded) == 32
+    # A refit on the final data at the run's settings gave -4689.3915 (2026-10-19).
+    assert recorded["digit_rule_size_principle_counting"] == pytest.approx(-4689.3915, abs=1e-4)
+    # Exactly the models pruned (not retired) at the end of experiment 3.
+    late = {n for n, r in removed.items() if r["outcome"] == "pruned"
+            and r["context"] == "experiment3 end of experiment"
+            and ng.rm.RETIRED_MARK not in r["detail"]}
+    assert set(recorded) == late
+    assert "bayesian_digit_feature_concepts" not in recorded  # dropped in experiment 3
+    assert any(r["context"].startswith("experiment1") for n, r in removed.items()
+               if n not in recorded)

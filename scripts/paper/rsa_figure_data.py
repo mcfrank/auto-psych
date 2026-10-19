@@ -13,8 +13,10 @@ Read from the campaign's aggregates in the repository; nothing is fitted.
   pre-registered test's (``primary``). A starting model's difference comes
   from the ``lpd`` totals; the analysis records no paired SE for it. The
   textbook RSA models (the campaign's "starting models", ``seed:<name>``) are
-  left out; no other model of a chain was scored on the pre-registered
-  experiment.
+  left out. Each chain's other models live at the end and the models it
+  removed come from ``--chain-models`` (``rsa_chain_models.py``, a Sherlock
+  job: scored the same way after the fact, so descriptive only), as lpd
+  differences from the same bar.
 - Figure 3: each display's observed proportion choosing each object class
   (all the campaign's data pooled) beside the posterior-mean class
   probability of the best chain final (highest held-out density) and of the
@@ -36,7 +38,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import tyro
 from pyprojroot import here
@@ -44,6 +46,7 @@ from pyprojroot import here
 DEFAULT_PREREG = here() / "data" / "rsa" / "prereg" / "run" / "prereg_analysis.json"
 DEFAULT_PANELS = here() / "data" / "rsa" / "viz" / "panels.json"
 DEFAULT_CHAIN_SEEDS = here() / "data" / "rsa" / "live_seeds" / "chains" / "chains.json"
+DEFAULT_CHAIN_MODELS = here() / "data" / "rsa" / "prereg" / "chain_models_lpd.json"
 DEFAULT_OUT = here() / "data" / "paper" / "figure_data" / "rsa.json"
 
 PROMOTED_PREFIX = "promoted:"
@@ -58,6 +61,9 @@ class Args:
     """Each chain's starting models (its share of the promoted seeds)."""
     chains: List[str] = field(default_factory=lambda: ["c0", "c1", "c2"])
     """panels.json keys of the live chains' finals (``c<k>`` is chain k)."""
+    chain_models: Optional[Path] = DEFAULT_CHAIN_MODELS
+    """Every other chain model's lpd on the pre-registered experiment
+    (``rsa_chain_models.py``); ``None`` leaves them out."""
     out: Path = DEFAULT_OUT
 
 
@@ -94,7 +100,7 @@ def _chain_starting_models(chain_seeds: Dict[str, Any], chain: str) -> List[str]
 
 
 def chain_record(chain: str, final: str, starting: List[str], prereg: Dict[str, Any],
-                 best_promoted: str) -> Dict[str, Any]:
+                 best_promoted: str, chain_models: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     if final not in prereg["primary"]:
         raise RuntimeError(f"{chain}'s final {final!r} is not in the pre-registered test")
     promoted = _lpds(prereg, PROMOTED_PREFIX)
@@ -116,14 +122,28 @@ def chain_record(chain: str, final: str, starting: List[str], prereg: Dict[str, 
             vs_best_seed[model] = {"diff": 0.0, "se": 0.0}
         else:
             vs_best_seed[model] = {"diff": promoted[model] - promoted[best_promoted], "se": None}
-    return {
+    record = {
         "run": chain,
         "n_trials": int(prereg["n_trials"]),
         "best_model": final,
         "best_seed": best_promoted,
         "elpd": {final: float(prereg["lpd"][final]), **{m: promoted[m] for m in starting}},
         "vs_best_seed": vs_best_seed,
-        "others_at_end": {},  # no other model of a chain was scored on the test
+        "others_at_end": {},
+    }
+    if chain_models is None:
+        return record
+    if chain_models["best_promoted"] != f"{PROMOTED_PREFIX}{best_promoted}":
+        raise RuntimeError(f"the chain models were scored against {chain_models['best_promoted']!r}, "
+                           f"not the best promoted seed {best_promoted!r}")
+    bar = promoted[best_promoted]
+    mine = chain_models["chains"][chain]
+    return {
+        **record,
+        "others_at_end": {n: v - bar for n, v in mine["others_at_end"].items()},
+        "pruned_during_run": {n: v - bar for n, v in mine["pruned_during_run"].items()},
+        "pruned_outcome": mine["removed_outcome"],
+        "pruned_unscored": mine["unscored"],
     }
 
 
@@ -155,6 +175,14 @@ def main(args: Args) -> None:
     prereg = json.loads(args.prereg.read_text())
     panels = json.loads(args.panels.read_text())
     chain_seeds = json.loads(args.chain_seeds.read_text())
+    chain_models = None
+    if args.chain_models is not None:
+        if not args.chain_models.exists():
+            raise FileNotFoundError(
+                f"no chain-model scores at {args.chain_models} (the Sherlock job "
+                "scripts/paper/submit_rsa_chain_models.sh writes them; pass --chain-models None "
+                "to leave those models out)")
+        chain_models = json.loads(args.chain_models.read_text())
     best_promoted = _best_promoted(prereg)
     if panels["models"][PROMOTED_PANEL_KEY]["model"] != best_promoted:
         raise RuntimeError(
@@ -164,7 +192,7 @@ def main(args: Args) -> None:
         )
     runs = [
         chain_record(c, panels["models"][c]["model"], _chain_starting_models(chain_seeds, c),
-                     prereg, best_promoted)
+                     prereg, best_promoted, chain_models)
         for c in args.chains
     ]
     best = max(runs, key=lambda r: r["elpd"][r["best_model"]])

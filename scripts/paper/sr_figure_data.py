@@ -17,13 +17,25 @@ sampler settings, and compares them by PSIS-LOO
   stimulus pair: both presentation orders are pooled onto the pair's
   alphabetically first sequence, so ``observed`` is P(choose ``pair[0]``).
 
+Figure 2 also draws the models each run removed (pruned, retired or
+dropped; ``scripts/paper/removed_models.py``), each fitted on the run's final
+data at the same settings and scored by its own PSIS-LOO:
+``pruned_during_run``, as a difference from the run's best seed. Those
+pruned at the end of the final experiment have their ELPD-LOO in its
+``history.json`` (18 to 21 per run); the other 50 to 60 per run are fitted
+first, in shards (``--removed-shard``); ``pruned_source`` says which. One
+that did not converge or whose PSIS-LOO is unreliable is listed in
+``pruned_unscored`` with the reason instead.
+
 The seeds were pruned in experiment 1, so no seed has an ELPD on the final
 data without these fits. Fits are cached under ``--work-dir``, and each run's
 (and the pooled) result is saved there as ``scored.json``; a rerun reuses
 both. A winner or best seed whose fit did not converge, or whose PSIS-LOO is
 unreliable, raises: both are drawn in the figures.
 
-Usage (long: one person-level winner takes tens of minutes at 7,680 trials):
+Usage (long: one person-level winner takes tens of minutes at 7,680 trials;
+on Sherlock, both steps: ``bash scripts/paper/submit_figure_data.sh sr``):
+    uv run python -m scripts.paper.sr_figure_data --removed-shard 0 --removed-shards 1
     uv run python -m scripts.paper.sr_figure_data
 """
 
@@ -112,6 +124,12 @@ class Args:
     discard_fits_after_run: bool = False
     """Delete each run's fits once it is scored and predicted (each run's fits
     take ~3 GB at 7,680 trials); a rerun then refits everything."""
+    removed_shard: Optional[int] = None
+    """Score only this shard of every run's removed models (of
+    ``--removed-shards``) into ``<work-dir>/<run>/removed/`` and stop; without
+    it the script assembles the figure data, which needs every removed
+    model's record."""
+    removed_shards: int = 1
 
 
 # --- locating a run's models and data --------------------------------------
@@ -425,6 +443,89 @@ def others_at_end(posterior: Dict[str, Any], record: Dict[str, Any]) -> Dict[str
             if name != record["best_model"]}
 
 
+# --- the models each run removed ----------------------------------------------
+
+
+def score_removed_model(name: str, models_dir: Path, responses: Path, *, cache_dir: Path,
+                        **fit_kwargs: Any) -> Dict[str, Any]:
+    """One removed model's ELPD-LOO from its cached fit, or why it has none."""
+    from src.models.pymc_inference import convergence_problems_of, fit_models_cached
+
+    fitted = fit_models_cached([name], models_dir=models_dir, responses_path=responses,
+                               cache_dir=cache_dir, **fit_kwargs)[name]
+    problems = convergence_problems_of(fitted)
+    if problems:
+        return {"unscored": f"not converged ({'; '.join(problems)})"}
+    diag = fitted.loo_diagnostics()
+    if diag.unreliable:
+        return {"unscored": f"unreliable PSIS-LOO ({diag.n_bad_k} of {diag.n_points} trials "
+                            f"with a high Pareto k)"}
+    return {"elpd": float(diag.elpd_loo)}
+
+
+def run_removed(args: Args, run: str, fit_kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    """A run's removed models, its final responses and how a record of one
+    is keyed."""
+    from scripts.paper import removed_models as rm
+
+    sr_dir = args.runs_root / run / "subjective_randomness"
+    final_dir = final_experiment_dir(sr_dir)
+    loop = final_dir / "model_loop"
+    live = list(json.loads((loop / "model_posterior.json").read_text())["elpd_loo"])
+    seeds = json.loads((sr_dir / "starting_models.json").read_text())["starting_models"]
+    removed = rm.removed_models(sr_dir, final_dir, live=live, seeds=seeds)
+    recorded = rm.recorded_scores(final_dir, removed)
+    responses = loop / "responses.csv"
+    return {
+        "removed": removed,
+        "recorded": recorded,
+        "to_fit": sorted(set(removed) - set(recorded)),
+        "responses": responses,
+        "inputs": lambda name: run_inputs(responses, {name: removed[name]["file"]}, fit_kwargs),
+        "records_dir": args.work_dir / run / "removed",
+    }
+
+
+def score_removed_shard(args: Args, fit_kwargs: Dict[str, Any]) -> None:
+    """Score shard ``--removed-shard`` of every run's removed models, taken
+    together (in run order, then by name)."""
+    from scripts.paper import removed_models as rm
+
+    by_run = {run: run_removed(args, run, fit_kwargs) for run in args.runs}
+    items = [(run, name) for run in args.runs for name in by_run[run]["to_fit"]]
+    mine = rm.shard_of(items, args.removed_shard, args.removed_shards)
+    for run in args.runs:
+        names = [name for r, name in mine if r == run]
+        if not names:
+            continue
+        info = by_run[run]
+        models_dir = args.work_dir / run / "shards" / f"shard_{args.removed_shard}" / "models"
+        cache_dir = args.work_dir / run / "fit_cache"
+        print(f"[{run}] scoring {len(names)} removed models", flush=True)
+        rm.score_shard(
+            {n: info["removed"][n]["file"] for n in names},
+            models_dir=models_dir, records_dir=info["records_dir"], inputs=info["inputs"],
+            training_files=[("all data", info["responses"])],
+            score=lambda n: score_removed_model(n, models_dir, info["responses"],
+                                                cache_dir=cache_dir, **fit_kwargs),
+            cache_dir=cache_dir, fit_kwargs=fit_kwargs,
+        )
+
+
+def pruned_fields(info: Dict[str, Any], scored: Dict[str, Any], record: Dict[str, Any]) -> Dict[str, Any]:
+    """A run's removed models in its figure record: each scored one as its
+    ELPD-LOO difference from the run's best seed."""
+    best_seed = record["elpd"][record["best_seed"]]
+    elpd = {**scored["elpd"], **info["recorded"]}
+    return {
+        "pruned_during_run": {n: e - best_seed for n, e in elpd.items()},
+        "pruned_elpd": elpd,
+        "pruned_unscored": scored["unscored"],
+        "pruned_outcome": {n: r["outcome"] for n, r in info["removed"].items()},
+        "pruned_source": {n: "loop" if n in info["recorded"] else "refit" for n in info["removed"]},
+    }
+
+
 def score_run(args: Args, run: str, fit_kwargs: Dict[str, Any]) -> Dict[str, Any]:
     """Figure 2's record of one run: its winner and seeds on its final data.
     Also returns the run's model files and responses for the pooled fits."""
@@ -550,7 +651,22 @@ def main(args: Args) -> None:
         "chains": args.chains,
         "target_accept": args.target_accept,
     }
+    if args.removed_shard is not None:
+        score_removed_shard(args, fit_kwargs)
+        return
+    from scripts.paper import removed_models as rm
+
+    # Every removed model's record first: a missing one stops the script
+    # before any fit.
+    removed = {run: run_removed(args, run, fit_kwargs) for run in args.runs}
+    removed_scored = {
+        run: rm.collect(info["to_fit"], records_dir=info["records_dir"], inputs=info["inputs"])
+        for run, info in removed.items()
+    }
     scored_runs = [score_run(args, run, fit_kwargs) for run in args.runs]
+    for r in scored_runs:
+        run = r["record"]["run"]
+        r["record"].update(pruned_fields(removed[run], removed_scored[run], r["record"]))
     pooled = score_all_runs_pooled(args, scored_runs, fit_kwargs)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)

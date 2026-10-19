@@ -18,10 +18,13 @@ the run's own criterion, grouped cross-validation over example sets
   is recorded beside it. So is every model the run admitted and later
   removed (pruned, retired by the cap or dropped as unfittable; the ledger's
   ``admitted`` names that are neither live at the end nor seeds), scored on
-  the same final data: ``pruned_during_run``. A removed model whose fit
-  fails, or does not converge, is listed in ``pruned_unscored`` with the
-  reason instead (its ELPD-CV is no measurement); it does not stop the
-  script, since it is not one of the models the comparison is about.
+  the same final data: ``pruned_during_run``. Of the 84, the 32 pruned at
+  the end of experiment 3 have their ELPD-CV in its ``history.json``; the
+  other 52 are fitted first, in shards (``--removed-shard``;
+  ``scripts/paper/removed_models.py``). ``pruned_source`` says which. A
+  removed model whose fit fails, or does not converge, is listed in
+  ``pruned_unscored`` with the reason instead (its ELPD-CV is no
+  measurement).
 - Figure 3: one run, so "all runs pooled" is the run's final data, and the
   best model and best seed are Figure 2's. Each (example set, target) cell's
   observed proportion of "yes" beside both models' posterior-mean P(yes),
@@ -33,22 +36,24 @@ result is saved there as ``scored.json``; a rerun reuses both. Any compared
 model whose fit did not converge raises: which model is best is then not
 known.
 
-Usage (on Sherlock: ``sbatch scripts/paper/number_game_figure_data.sbatch``):
+Usage (on Sherlock, both steps: ``bash scripts/paper/submit_figure_data.sh
+number_game``):
+    uv run python -m scripts.paper.number_game_figure_data --removed-shard 0 --removed-shards 1
     uv run python -m scripts.paper.number_game_figure_data
 """
 
 from __future__ import annotations
 
 import json
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import numpy as np
 import tyro
 from pyprojroot import here
 
+from scripts.paper import removed_models as rm
 from scripts.paper import sr_figure_data as sr
 
 RUN_ROOT = here() / "data" / "results" / "number_game_dataset-oct26"
@@ -72,6 +77,11 @@ class Args:
     written beside it) and the fit cache."""
     prediction_draws: int = 2000
     """Posterior draws (thinned) behind each posterior-mean prediction."""
+    removed_shard: Optional[int] = None
+    """Score only this shard of the removed models (of ``--removed-shards``)
+    into ``<work-dir>/removed/`` and stop; without it the script assembles
+    the figure data, which needs every removed model's record."""
+    removed_shards: int = 1
 
 
 def run_settings(holdout: Dict[str, Any]) -> Dict[str, Any]:
@@ -130,80 +140,21 @@ def score_run(
     return {**scored, "others_at_end": others_at_end}
 
 
-def removed_models(run_dir: Path, final_dir: Path, *, live: Sequence[str],
-                   seeds: Sequence[str]) -> Dict[str, Dict[str, Any]]:
-    """Every model the run admitted and later removed: name -> its source
-    file and the ledger's last outcome for it (``pruned``, ``dropped``). The
-    final ledger continues every earlier experiment's. A model's copies (in
-    any experiment's ``models/`` or ``models/pruned/``) must be identical."""
-    from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
+def score_removed_model(name: str, models_dir: Path, responses: Path, *, selection: Any,
+                        cache_dir: Path, **fit_kwargs: Any) -> Dict[str, Any]:
+    """One removed model's ELPD-CV from its cached fits, or why it has none:
+    its full-data fit (which decides convergence, as in ``compare_table``)
+    did not converge."""
+    from src.model_comparison.cv import cv_pointwise
+    from src.models.pymc_inference import convergence_problems_of, fit_models_cached
 
-    entries = HypothesisLedger(final_dir / "model_loop" / "attempted_hypotheses.jsonl").entries()
-    admitted = [e.name for e in entries if e.outcome == "admitted"]
-    last_outcome = {e.name: e.outcome for e in entries}
-    removed: Dict[str, Dict[str, Any]] = {}
-    for name in dict.fromkeys(admitted):
-        if name in live or name in seeds:
-            continue
-        if last_outcome[name] == "admitted":
-            raise RuntimeError(f"{name!r} was admitted, is not live at the end and was never removed")
-        copies = sorted(run_dir.glob(f"experiment*/model_loop/models/{name}.py"))
-        copies += sorted(run_dir.glob(f"experiment*/model_loop/models/pruned/{name}.py"))
-        if not copies:
-            raise FileNotFoundError(f"no source file of the removed model {name!r} in {run_dir}")
-        if len({sr._sha256(p) for p in copies}) > 1:
-            raise RuntimeError(f"the removed model {name!r} has differing copies: {copies}")
-        removed[name] = {"file": copies[0], "outcome": last_outcome[name]}
-    return removed
-
-
-def score_removed(
-    names: Sequence[str],
-    models_dir: Path,
-    responses: Path,
-    *,
-    selection: Any,
-    cache_dir: Path,
-    **fit_kwargs: Any,
-) -> Dict[str, Any]:
-    """Each removed model's ELPD-CV on ``responses``, or why it has none.
-
-    All of them are fitted first, concurrently and tolerantly, on all the
-    responses and on every fold's training file (``fit_models_to_cache``: a
-    model's own failure is reported by name; an infrastructure failure
-    raises). Each model that fitted everywhere is then scored alone from the
-    cache, which is cleared after each (a loaded fit stays in memory)."""
-    from src.model_comparison.cv import cv_pointwise, fold_training_files
-    from src.models.pymc_inference import (
-        clear_fit_cache, convergence_problems_of, fit_models_cached, fit_models_to_cache,
-    )
-
-    _, _, fold_files = fold_training_files(responses, selection)
-    failed: Dict[str, str] = {}
-    for label, path in [("all data", responses)] + [(f"CV fold {f}", p) for f, p in enumerate(fold_files)]:
-        todo = [n for n in names if n not in failed]
-        print(f"[removed] fitting {len(todo)} models on {label}", flush=True)
-        for name, reason in fit_models_to_cache(todo, models_dir, path, cache_dir=cache_dir,
-                                                **fit_kwargs).items():
-            failed[name] = f"fit failed on {label} ({reason})"
-        clear_fit_cache()
-
-    elpd: Dict[str, float] = {}
-    unscored = dict(failed)
-    for name in names:
-        if name in failed:
-            continue
-        fitted = fit_models_cached([name], models_dir=models_dir, responses_path=responses,
-                                   cache_dir=cache_dir, **fit_kwargs)[name]
-        problems = convergence_problems_of(fitted)
-        if problems:
-            unscored[name] = f"not converged ({'; '.join(problems)})"
-        else:
-            lpd, _ = cv_pointwise([name], models_dir, responses, selection, cache_dir=cache_dir,
-                                  **fit_kwargs)
-            elpd[name] = float(lpd[name].sum())
-        clear_fit_cache()
-    return {"elpd": elpd, "unscored": unscored}
+    fitted = fit_models_cached([name], models_dir=models_dir, responses_path=responses,
+                               cache_dir=cache_dir, **fit_kwargs)[name]
+    problems = convergence_problems_of(fitted)
+    if problems:
+        return {"unscored": f"not converged ({'; '.join(problems)})"}
+    lpd, _ = cv_pointwise([name], models_dir, responses, selection, cache_dir=cache_dir, **fit_kwargs)
+    return {"elpd": float(lpd[name].sum())}
 
 
 def condition_table(
@@ -265,10 +216,44 @@ def main(args: Args) -> None:
     files = {n: loop / "models" / f"{n}.py" for n in [live["winner"], *live["others"]]}
     files.update({s: sr.seed_file(args.run_dir, final_dir, s) for s in seeds})
 
+    removed = rm.removed_models(args.run_dir, final_dir, live=[live["winner"], *live["others"]],
+                                seeds=seeds)
+    recorded = rm.recorded_scores(final_dir, removed)
+    to_fit = sorted(set(removed) - set(recorded))
+    records_dir = args.work_dir / "removed"
+    cache_dir = args.work_dir / "fit_cache"
+
+    def removed_inputs(name: str) -> Dict[str, Any]:
+        return sr.run_inputs(loop / "responses.csv", {name: removed[name]["file"]}, fit_kwargs,
+                             selection=selection.as_record())
+
+    if args.removed_shard is not None:
+        # Each shard compares on a copy of its own: the CV folds are written
+        # beside the responses, and identical copies share the fit cache.
+        shard_dir = args.work_dir / "shards" / f"shard_{args.removed_shard}"
+        responses = shard_dir / "responses.csv"
+        rm.copy_atomically(loop / "responses.csv", responses)
+        from src.model_comparison.cv import fold_training_files
+
+        _, _, fold_files = fold_training_files(responses, selection)
+        names = rm.shard_of(to_fit, args.removed_shard, args.removed_shards)
+        rm.score_shard(
+            {n: removed[n]["file"] for n in names},
+            models_dir=shard_dir / "models", records_dir=records_dir, inputs=removed_inputs,
+            training_files=[("all data", responses)]
+            + [(f"CV fold {f}", p) for f, p in enumerate(fold_files)],
+            score=lambda n: score_removed_model(n, shard_dir / "models", responses,
+                                                selection=selection, cache_dir=cache_dir,
+                                                **fit_kwargs),
+            cache_dir=cache_dir, fit_kwargs=fit_kwargs,
+        )
+        return
+    removed_scored = rm.collect(to_fit, records_dir=records_dir, inputs=removed_inputs)
+    removed_scored["elpd"].update(recorded)
+
     # Compared on a copy: the CV folds are written beside the responses.
-    args.work_dir.mkdir(parents=True, exist_ok=True)
     responses = args.work_dir / "responses.csv"
-    shutil.copy(loop / "responses.csv", responses)
+    rm.copy_atomically(loop / "responses.csv", responses)
     rows = sr._read_rows(responses)
     if len(rows) != live["n_trials"]:
         raise RuntimeError(
@@ -285,7 +270,6 @@ def main(args: Args) -> None:
         record = saved["record"]
     else:
         models_dir = args.work_dir / "models"
-        cache_dir = args.work_dir / "fit_cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
         sr.write_model_set(models_dir, files)
         print(f"fitting {list(files)} on {responses} (grouped CV: {selection.as_record()})",
@@ -314,25 +298,6 @@ def main(args: Args) -> None:
         }
         sr.save_scored(scored_path, inputs, record)
 
-    removed = removed_models(args.run_dir, final_dir, live=[live["winner"], *live["others"]],
-                             seeds=seeds)
-    removed_files = {n: r["file"] for n, r in removed.items()}
-    removed_inputs = sr.run_inputs(responses, removed_files, fit_kwargs,
-                                   selection=selection.as_record())
-    removed_path = args.work_dir / "pruned_scored.json"
-    saved = sr.load_scored(removed_path, removed_inputs)
-    if saved is not None:
-        print(f"reusing the removed models' scored record {removed_path}", flush=True)
-        removed_scored = saved["record"]
-    else:
-        removed_dir = args.work_dir / "removed_models"
-        cache_dir = args.work_dir / "fit_cache"
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        sr.write_model_set(removed_dir, removed_files)
-        removed_scored = score_removed(list(removed_files), removed_dir, responses,
-                                       selection=selection, cache_dir=cache_dir, **fit_kwargs)
-        sr.save_scored(removed_path, removed_inputs, removed_scored)
-
     run = record["run"]
     best_seed_elpd = run["elpd"][run["best_seed"]]
     run = {
@@ -341,6 +306,7 @@ def main(args: Args) -> None:
         "pruned_elpd": removed_scored["elpd"],
         "pruned_unscored": removed_scored["unscored"],
         "pruned_outcome": {n: r["outcome"] for n, r in removed.items()},
+        "pruned_source": {n: "loop" if n in recorded else "refit" for n in removed},
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(

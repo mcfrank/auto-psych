@@ -1,12 +1,25 @@
 # Paper figures 2-4
 
-Three steps; each writes files the next reads.
+Each step writes files the next reads. The three fitting steps run on
+Sherlock, each as a chain of jobs: setup, an array of shards scoring the
+models each run removed (Figure 2's "pruned during the run", about 50-80 per
+run), then the assembly.
 
-| step | command | writes | cost |
+| step | on Sherlock | writes | cost |
 |---|---|---|---|
-| SR data | `uv run python -m scripts.paper.sr_figure_data` | `data/paper/figure_data/subjective_randomness.json` | hours: 15 MCMC fits at ~7,700 trials, then 7 on all runs pooled (~23,000) |
-| RSA data | `uv run python -m scripts.paper.rsa_figure_data` | `data/paper/figure_data/rsa.json` | seconds: reads existing aggregates |
-| number-game data | `uv run python -m scripts.paper.number_game_figure_data` | `data/paper/figure_data/number_game.json` | 455 MCMC fits: 91 models, each on all 7,560 responses and on 4 CV folds (an hour or two on 32 cores) |
+| SR data | `bash scripts/paper/submit_figure_data.sh sr` | `data/paper/figure_data/subjective_randomness.json` | 176 removed models, one fit each (44 shards), then 15 MCMC fits at ~7,700 trials and 7 on all runs pooled (~23,000) |
+| number-game data | `bash scripts/paper/submit_figure_data.sh number_game` | `data/paper/figure_data/number_game.json` | 52 removed models × 5 fits (8 shards), then 7 models × 5 |
+| RSA chain models | `bash scripts/paper/submit_rsa_chain_models.sh` | `data/rsa/prereg/chain_models_lpd.json` (sums only) | 224 numpyro fits on the pooled data (28 shards of 8) |
+| RSA data | `uv run python -m scripts.paper.rsa_figure_data` (anywhere) | `data/paper/figure_data/rsa.json` | seconds: reads aggregates, the chain models' sums included (`--chain-models None` leaves them out) |
+| figures | `uv run python -m scripts.paper.figures` (anywhere) | `data/paper/figures/fig{2,3,4}_*.{pdf,png}` | seconds |
+
+Every array task writes one record per model and skips models whose record
+is current, so resubmitting a submitter redoes only what is missing; the
+assembly raises naming any model without a record. A removed model pruned at
+the end of its run's final experiment (SR and number game) is not refitted:
+that experiment's `history.json` records its ELPD on exactly the final data
+at the run's settings (`removed_models.recorded_scores`; a refit reproduced
+it to four decimals).
 | figures | `uv run python -m scripts.paper.figures` | `data/paper/figures/fig{2,3,4}_*.{pdf,png}` | seconds |
 
 What each figure shows:
@@ -23,13 +36,17 @@ What each figure shows:
     the same data and settings (no MCMC; its winner's agrees with the refit
     within 1 nat).
   - Reference games: log predictive density on the held-out pre-registered
-    experiment (`data/rsa/prereg/run/prereg_analysis.json`). A chain's
+    experiment (`data/rsa/prereg/run/prereg_analysis.json`). Each chain's
+    other live models and removed models are `rsa_chain_models.py`'s,
+    scored exactly like the finals and the bar (fitted on the same pooled
+    data at the bar's settings; the job first checks it reproduces their
+    pre-registered lpd) but after the fact: descriptive only, since the
+    pre-registered data are spent. A chain's
     starting models are its share of the promoted seeds (run 2's best
     models, refitted; `data/rsa/live_seeds/chains/chains.json`); the zero is
     the best of all of them, the pre-registered bar, and a final's difference
     and SE are the pre-registered test's. The textbook RSA models are not
-    drawn. The campaign's "chains" are its runs; no other model of a chain
-    was scored on the pre-registered data.
+    drawn. The campaign's "chains" are its runs.
   - Number game: ELPD from grouped cross-validation (4 folds of whole
     example sets, the run's own criterion and settings, from its
     `holdout.json`) on the one dataset run's final data, 7,560 responses
@@ -37,10 +54,11 @@ What each figure shows:
     three literature seeds (pruned in experiment 1), the other models live at
     the end the run's three other carried models; `number_game_figure_data.py`
     refits all seven. The SE is stimulus-clustered ((set, target) cells).
-    The number game alone also draws the models pruned during the run (grey
-    dots): every model the run admitted and later pruned, retired or dropped,
-    scored on the same data (`pruned_during_run`; one whose fit fails or does
-    not converge is listed with the reason in `pruned_unscored` instead).
+  - Every domain also draws the models pruned during the run (grey dots):
+    every model the run admitted and later pruned, retired or dropped,
+    scored on the same data as the rest of its column (`pruned_during_run`;
+    one whose fit fails or does not converge is listed with the reason in
+    `pruned_unscored` instead).
 - **Figure 3** (`fig3_conditions`): all runs' data pooled, each condition's
   observed proportion against the prediction of the best discovered model and
   of the best seed, both fitted on the pooled data (the figure data's
