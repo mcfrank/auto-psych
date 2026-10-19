@@ -89,27 +89,30 @@ def test_outer_loop_coding_agent_is_a_stock_agent(tmp_path, monkeypatch):
     exp_dir = tmp_path / "experiment1"
     exp_dir.mkdir()
     (exp_dir / "CONTEXT.md").write_text("context\n", encoding="utf-8")
-    orchestrator.spawn_cc_agent("3_implement", exp_dir, backend="claude")
+    orchestrator.spawn_cc_agent("3_implement", exp_dir, timeout_secs=900, backend="claude")
     assert captured["stock"] is True
     # Its notes live with this run, beside the run's experiment<N>/ trees.
     assert captured["memory_dir"] == tmp_path / "agent_notes"
     assert captured["sandbox"] is True
 
 
-def test_the_implement_agent_gets_the_runs_agent_timeout(tmp_path, monkeypatch):
-    # --agent-timeout-sec reached the inner loop's agents but not this one,
-    # which always ran under spawn_cc_agent's own 900 s.
+@pytest.mark.parametrize("extra, expected", [
+    ({}, 900),                                      # what subjective-randomness runs always had
+    ({"agent_timeout_sec": 1800}, 900),             # that one is the critique/candidate agents'
+    ({"implement_agent_timeout_sec": 1200}, 1200),
+])
+def test_the_implement_agent_has_a_timeout_of_its_own(tmp_path, monkeypatch, extra, expected):
     monkeypatch.setattr(run, "write_context", lambda **k: None)
     monkeypatch.setattr(run, "outer_project_dir", lambda project_id: tmp_path)
     timeouts = []
     monkeypatch.setattr(
-        run, "spawn_cc_agent", lambda **k: timeouts.append(k.get("timeout_secs")) or (True, "")
+        run, "spawn_cc_agent", lambda **k: timeouts.append(k["timeout_secs"]) or (True, "")
     )
 
     run._run_agent(
         agent_key="3_implement", exp_dir=tmp_path, project_id="p", exp_num=1,
         mode="live", n_participants=1, prev_exp_dir=None, validate=False,
-        backend="opencode", agent_timeout_sec=1800,
+        backend="opencode", **extra,
     )
 
-    assert timeouts == [1800]
+    assert timeouts == [expected]

@@ -375,7 +375,8 @@ def spawn_cc_agent(
     agent_key: str,
     exp_dir: Path,
     allowed_dirs: Optional[List[Path]] = None,
-    timeout_secs: int = 900,
+    *,
+    timeout_secs: int,
     backend: Optional[str] = None,
     repair_feedback: Optional[str] = None,
 ) -> tuple[bool, str]:
