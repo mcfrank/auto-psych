@@ -7,7 +7,7 @@
 # test_model_manifest.py asserts the model bodies are byte-identical and
 # test_subjective_randomness_seed_recovery.py asserts the manifests agree; the
 # 2026-07 hero-run pool that used to live here (and diverged from the registry
-# for a month) is preserved under archive_hero_run_2026_07/.
+# for a month) is in git history.
 #
 # Active seed set (2026-08 fidelity consolidation): the four
 # literature-faithful models, each replacing the superseded original it was

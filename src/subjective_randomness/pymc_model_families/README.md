@@ -21,8 +21,7 @@ across (the pool manifest keeps its own header but must list the same models).
 if a manifest name has no pure-Python twin. (They diverged once, between the
 hero-run promotion of 2026-07 and the reconciliation of 2026-08, which left
 the recovery harness's twin lookup raising `ModuleNotFoundError` for every
-pool model; the retired winners are archived under the seed pool's
-`archive_hero_run_2026_07/`.)
+pool model; the retired winners are in git history.)
 
 The 2026-08 seed-model fidelity review **replaced** the original four models
 with closer paper-anchored versions (each with a pure-Python twin and

@@ -1585,7 +1585,7 @@ Discrepancies, where the code wins:
 
 1. **README.md:14** says the seed pool is "the best models discovered by three
    earlier human replicate runs". The live pool is the four literature-faithful
-   models. The hero-run pool is archived in `seed_models/archive_hero_run_2026_07/`.
+   models. The hero-run pool is in git history.
 2. **CLAUDE.md, Ledger bullet** says the ledger is rendered as "already tried —
    do not re-propose". The heading is now "Tried before", and pruned mechanisms
    may return with a substantive change (as CLAUDE.md's own Pruning bullet

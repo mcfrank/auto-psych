@@ -532,7 +532,7 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
 
 - `src/pipelines/outer_loop/projects/<id>/` = **assets the generic pipeline
   consumes** (`problem_definition.md`, `ground_truth_models.py`, `seed_models/`,
-  `evaluate_recovery.py`, and a gitignored per-run `prolific_config.yaml`
+  and a gitignored per-run `prolific_config.yaml`
   rendered by the live launchers). Adding a project = adding an
   asset directory. This lives under `src/`, not the run-output `projects/` tree.
 - `src/subjective_randomness/` = a **standalone research library** for the

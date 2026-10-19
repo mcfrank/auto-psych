@@ -44,26 +44,11 @@ FORBIDDEN_MODULES = {
     "subjective_randomness.features",
 }
 
-# Research analysis tools that legitimately need the feature library.
-EXCLUDED_FILES = {
-    REPO
-    / "src"
-    / "pipelines"
-    / "outer_loop"
-    / "projects"
-    / "subjective_randomness"
-    / "evaluate_recovery.py",
-}
-
-
 def _python_files(root: Path):
     if root.is_file() and root.suffix == ".py":
-        if root not in EXCLUDED_FILES:
-            yield root
+        yield root
     elif root.is_dir():
-        for p in root.rglob("*.py"):
-            if p not in EXCLUDED_FILES:
-                yield p
+        yield from root.rglob("*.py")
 
 
 def _ast_imports_feature_module(path: Path) -> list[str]:

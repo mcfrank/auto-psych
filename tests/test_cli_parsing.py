@@ -153,10 +153,6 @@ def test_cli_module_help_runs(module, expected_flag):
     [
         # Standalone scripts (not importable as `src.*` modules), so the help
         # smoke is the only guard on their tyro dataclasses.
-        (
-            "src/pipelines/outer_loop/projects/subjective_randomness/evaluate_recovery.py",
-            "--ground-truth-model",
-        ),
         ("scripts/smoke_open_participant.py", "--hf-model"),
     ],
 )

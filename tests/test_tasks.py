@@ -35,7 +35,7 @@ def test_number_game_schema():
 
 def test_unknown_project_raises():
     with pytest.raises(KeyError, match="no task"):
-        task_for_project("think_aloud_game24")
+        task_for_project("no_such_project")
 
 
 def test_number_game_pools():
