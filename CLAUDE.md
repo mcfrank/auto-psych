@@ -9,749 +9,329 @@ models of human judgment, design maximally informative experiments, run them on
 real (Prolific + Firebase) or simulated participants, and let Bayesian model
 comparison decide which hypothesis survives. Three domains: *subjective
 randomness* and the *number game* share the PyMC pipeline (everything below
-until **RSA reference games**; the number game's specifics in its own
-section), and *RSA reference games* (memo models fitted with numpyro,
-`src/rsa/`; that section). `README.md` is the authoritative user-facing guide; this file captures
-the architecture and workflow facts that require reading multiple files.
+until **RSA reference games**), and *RSA reference games* (memo models fitted
+with numpyro, `src/rsa/`, a separate stack). `README.md` is the user-facing
+guide; this file captures the architecture and the rules that span files.
 
 ## Environment & commands
 
-`uv` drives everything. The default sync installs the `dev`, `pymc` **and**
-`rsa` groups (see `pyproject.toml` `default-groups`) — the test suite and inner
-loop need the PyMC stack, and the RSA domain needs memo/JAX/numpyro, so a plain
-`uv sync` is enough; `open-models` (torch/transformers) is heavy and opt-in.
+`uv` drives everything; a plain `uv sync` installs the `dev`, `pymc` and `rsa`
+groups (`open-models`, torch/transformers, is opt-in).
 
 ```bash
-uv sync                      # dev + pymc + rsa (everything the tests need)
-uv run pytest -q             # full suite incl. real-MCMC tests (~2 min)
-uv run pytest -q -m "not slow"          # fast suite (~30 s), skips NUTS sampling
-uv run pytest tests/test_eig_selection.py::test_name   # single test
-./scripts/test               # wrapper: full suite (run before committing)
-./scripts/test_fast          # wrapper: fast suite (run after each change)
+uv sync
+uv run pytest -q                        # full suite incl. real MCMC (slow marker = runs NUTS)
+uv run pytest -q -m "not slow"          # fast suite
+uv run pytest tests/test_eig_selection.py::test_name
+./scripts/test / ./scripts/test_fast    # wrappers
 ```
 
-- The `slow` marker means "runs NUTS" (PyMC, or numpyro for the RSA models).
-  Deselect it for fast iteration.
-- CI (`.github/workflows/tests.yml`) runs `uv sync --locked`, then
-  `tests/test_python_sources_compile.py` (byte-compiles every `.py`), then the
-  fast suite. There is **no committed linter/formatter config** (the `.ruff_cache`
-  is from ad-hoc runs); match surrounding style.
-- **Python 3.12** (`.python-version`; the Sherlock jobs already ran 3.12 via
-  `UV_PYTHON`). memo, the RSA models' language, requires ≥ 3.12. **Keep the
-  `arviz<1` / `pymc<6` caps** in `pyproject.toml`: without them 3.12 resolves
-  arviz 1.x / pymc 6.x, whose API rename breaks the model-comparison code. The
-  `rsa` group's `python_version >= '3.12'` markers keep a 3.11 environment
-  resolvable. jax/jaxlib are pinned to 0.7.0 (the last manylinux2014 wheels)
-  and numpyro to 0.19.0, and the numpy/scipy/pandas caps exist, so wheels
-  resolve on Sherlock's glibc 2.17 nodes — don't move them unless you only
-  target glibc ≥ 2.28.
+- The full suite needs more than 5 GB of memory (the JAX/numpyro RSA tests); on
+  a small interactive allocation it dies silently partway.
+- CI (`.github/workflows/tests.yml`): `uv sync --locked`,
+  `tests/test_python_sources_compile.py`, then the fast suite. No committed
+  linter/formatter config; match surrounding style.
+- **Python 3.12** (memo needs ≥ 3.12). **Keep the `arviz<1` / `pymc<6` caps**
+  (newer releases rename the API the model comparison uses) and the
+  jax/jaxlib 0.7.0, numpyro 0.19.0 and numpy/scipy/pandas pins: they keep wheels
+  resolving on Sherlock's glibc 2.17 nodes.
 
 ## Conventions (from the user's global instructions — they apply here)
 
 - Filepaths via `pyprojroot.here()`; CLIs are `tyro` dataclasses (`--help` lists
-  every knob). Every entry point is `python -m src.<...>` run under `uv run`.
-- **Fail loudly.** This codebase deliberately raises on missing models, corrupt
-  registries/artifacts, absent credentials, etc. rather than silently falling
-  back. Preserve that — never add a silent default or fallback.
-- Follow BDD dual-loop TDD: a failing integration test first, then inner
-  red-green-refactor. Run the relevant test after each green step, the full
-  suite before a commit-worthy checkpoint.
+  every knob), run under `uv run`.
+- **Fail loudly.** The codebase deliberately raises on missing models, corrupt
+  artifacts, absent credentials, etc. Never add a silent default or fallback.
+- BDD dual-loop TDD: a failing integration test first, then red-green-refactor.
 
 ## Architecture — the mental model
 
-Two nested loops. **The single most important fact: stages are decoupled
-processes that pass state through on-disk artifacts (CSV / JSON / YAML / `.py`
-files), not in-memory objects.** Every cognitive model is a self-contained `.py`
-file discovered via a `models_manifest.yaml`; MCMC fits are content-addressed and
-cached; the only state crossing an experiment boundary is (a) the carried model
-files (the live set), (b) the ledger of attempted hypotheses beside them and
-(c) the registry (a uniform prior over the carried set).
+Two nested loops. **Stages are decoupled processes that pass state through
+on-disk artifacts (CSV / JSON / YAML / `.py` files), not in-memory objects.**
+Every cognitive model is a self-contained `.py` file listed in a
+`models_manifest.yaml`; MCMC fits are content-addressed and cached. The only
+state crossing an experiment boundary: the carried model files (the live set),
+the ledger of attempted hypotheses beside them, and the registry (a uniform
+prior over the carried set).
 
 ### Outer loop — `src/pipelines/outer_loop/` (`run.py` → `orchestrator.py`)
 
-Per experiment, stages run in order. `AGENT_KEYS = ["2_design", "3_implement",
-"4_collect", "5_model_loop"]` — **there is no stage 1** (the theorist and design
-agents were removed; the numbering is historical). Before the stages, a
-pseudo-stage establishes the model set: experiment 1 seeds from
-`projects/<id>/seed_models/`; experiments ≥2 `carry_forward_cognitive_models`
-from the previous experiment. Both seed/carry steps are idempotent and atomic
-(the files, manifest and ledger are built beside `cognitive_models/` and renamed
-into place, `src/runtime/atomic_files.py`; a crash leaves no set, never a
-manifest without its ledger), which is what makes `--resume` (run into an
-existing `experimentN/` dir) and `--agent <stage>` (run one stage) safe.
-`run.py` carries an experiment's set forward only when that experiment's
-model-loop stage validates (its export record, below).
+`AGENT_KEYS = ["2_design", "3_implement", "4_collect", "5_model_loop"]` (there
+is no stage 1). First the model set: experiment 1 seeds from
+`projects/<id>/seed_models/`, later experiments carry forward the previous
+experiment's set — only once that experiment's model-loop stage validates. Seed
+and carry are idempotent and atomic (built beside `cognitive_models/` and
+renamed in, `src/runtime/atomic_files.py`), which makes `--resume` and
+`--agent <stage>` safe.
 
-- `2_design` — **programmatic, no agent.** `eig.design_exhaustive` enumerates the
-  H/T pair space (every same-length pair, lengths 2–8) and greedily selects the
-  max-joint-EIG stimulus set (64 by default) → `design/stimuli.json`. The EIG
-  counts every participant's response: a stimulus yields k ~ Binomial(n, p_left)
-  with `n_responses` = the experiment's participant count (required at every
-  entry point). This joint EIG saturates after a few picks: selection stops
-  once the best gain is within two Monte Carlo standard errors of zero (or
-  below `NEGLIGIBLE_GAIN_BITS`), and the remaining slots are filled by
-  single-response EIG conditioned on the picks so far (`source`
-  `eig_single_response_fill` in `stimuli.json`). Experiment 1 uses prior-predictive draws; experiments ≥2 fit
-  the models on all data so far (the previous experiment's cumulative
-  `model_loop/responses.csv`) at the model's declared `target_accept`, else
-  `DESIGN_TWIN_TARGET_ACCEPT` (0.9). The holdout harness derives every seed
-  from (cell seed, ground truth, experiment, purpose) (`derive_seed`). The
-  greedy search is **lazy batched greedy in float32 on every allocated CPU**
-  (`DESIGN_LAZY_SEARCH`, `DESIGN_SCORING_DTYPE` in `eig.py`): a full pass over
-  the pool every 16 picks, in between only the best-ranked candidates
-  re-scored in batches of 512. It is an approximation (joint EIG is not
-  submodular), validated against exact float64 greedy on two experiment-2
-  designs (`scripts/subjective_randomness/validate_lazy_eig.py`: within exact
-  greedy's own scenario-to-scenario spread) — ~3 min instead of 11-13 h.
-  Each Monte Carlo scenario's likelihood average **leaves out the draw that
-  generated it** (`DESIGN_LEAVE_ONE_OUT`, first audit C5): including it
-  rewarded the true model for memorising its draw and inflated the joint EIG,
-  the noise-floor stop and `joint_eig_bits` (by ~0.02-0.1 bits on the two
-  validation designs). Same cost; the estimate is consistent but not
-  unbiased (finite draw average); a model needs ≥ 2 draws.
-- `3_implement` — the one true coding-agent stage: writes a jsPsych experiment;
-  skipped in `simulated_participants_nobrowser` mode. Optional Firebase/Prolific
-  deploy phase follows when `--deploy-target != none`.
-- `4_collect` — programmatic: writes `data/responses.csv` (simulated / LLM-as-
-  participant / live / ground-truth).
-- `5_model_loop` — drives the inner loop, exports the live set, writes
-  `model_registry.yaml`, and last `model_loop/export_complete.json` (the
-  exported names and the ledger's hash; `finish_model_loop_stage`). The
-  validator requires that record to agree with `cognitive_models/`, its
-  ledger and the registry, so a stage killed between export and registry is
-  not done. Every (re)start goes through `begin_model_loop_stage`: the first
-  records the stage's input set (`experimentN/cognitive_models_input/`) and
-  the run's `agent_notes/` (`experimentN/agent_notes_at_start/`); a restart
-  puts both back — notes written by the abandoned attempt are **discarded**,
-  not archived (the run tree is readable by later agents) — and every start
-  empties `model_loop/` and resets the registry. `cognitive_models/` is both the
-  loop's input and its export, so without the recorded input a resume used to
-  seed the loop from its own half-written export. A `model_loop/` with content
-  but no recorded input (older code) raises. The design reads the recorded
-  input when it exists (`experiment_input_models_dir`). `responses.csv`,
-  `stimuli.json`, the registry and `starting_models.json` are written through a
-  temporary file and renamed. The stage's fits are cached in
-  `model_loop/.fit_cache` (`run.py`): the admission gates reuse a fit only
-  through that cache, and until 2026-09-30 the live (and simulated) stage ran
-  without one, so every novelty check re-sampled every admitted model and no
-  wave was prefitted (`tests/test_live_model_stage_fit_cache.py`).
+- `2_design` — **programmatic.** `eig.design_exhaustive` scores the task's whole
+  design pool and greedily selects the max-joint-EIG set (64 by default) →
+  `design/stimuli.json`. The EIG counts every participant's response
+  (`n_responses` = the participant count, required everywhere). Selection stops
+  once the best gain is within Monte Carlo noise of zero; the remaining slots
+  are filled by single-response EIG (`source: eig_single_response_fill`).
+  Experiment 1 uses prior predictions; later experiments fit on all data so far.
+  The search is lazy batched greedy in float32 (an approximation validated by
+  `scripts/subjective_randomness/validate_lazy_eig.py`), and each Monte Carlo
+  scenario **leaves out the draw that generated it** (`DESIGN_LEAVE_ONE_OUT`),
+  so a model needs ≥ 2 draws.
+- `3_implement` — the one coding-agent stage: writes a jsPsych experiment
+  (skipped in `simulated_participants_nobrowser`); a Firebase/Prolific deploy
+  follows when `--deploy-target != none`.
+- `4_collect` — programmatic: writes `data/responses.csv`.
+- `5_model_loop` — runs the inner loop, exports the live set, writes
+  `model_registry.yaml` and last `model_loop/export_complete.json`, which the
+  validator checks against `cognitive_models/`, its ledger and the registry.
+  Every (re)start goes through `begin_model_loop_stage`: the first records the
+  input set (`cognitive_models_input/`) and the run's notes
+  (`agent_notes_at_start/`); a restart restores both — notes from the abandoned
+  attempt are **discarded** (later agents read the run tree) — and empties
+  `model_loop/`. A `model_loop/` with content but no recorded input raises.
 
-Coding stages that fail their validator are re-spawned with the error injected as
-repair feedback (`--max-validation-repairs`); programmatic stages fail terminally.
-Validators (`_validate_*` in `orchestrator_validators.py`) enforce the artifact
-contracts (e.g. jsPsych button-only + `chose_left` data column).
+Coding stages that fail their validator (`_validate_*` in
+`orchestrator_validators.py`) are re-spawned with the error as feedback;
+programmatic stages fail terminally.
 
 ### Inner loop — `src/pipelines/inner_loop/`
 
-`pymc_orchestrator.py` orchestrates; `model_zoo.py` manages seeding, admission,
-pruning and the novelty gate; `scoring.py` handles ELPD-LOO scoring, best-model
-selection and export; `candidate_agent.py` writes candidate briefs and spawns
-agents. The model zoo lives at `model_loop/models/`. **The run's starting
-models are not protected** (user decision 2026-09-28): they are pruned,
-retired by the cap and dropped when unfittable exactly like agent-proposed
-models, and once gone they leave the carried set and the next design's
-prior and appear in the ledger and on the refinement menu. They are recorded
-once, when experiment 1's model loop first runs, in
-`<run>/starting_models.json` (`run_starting_models` in `model_loop_runner.py`,
-`{"starting_models": [...], "starting_models_prunable": true}`), not
-recomputed from names; the outer loop passes them to the inner loop as
-`starting_models`, whose only remaining use is reserving their names. A
-record in the earlier bare-list form means a run that started with protected
-starting models, and it refuses to continue (the two conditions must not
-mix; the Gemini sweeps running on 2026-09-28 are the "protected" condition);
-a later experiment of a run without a record raises. No candidate may take a
-starting model's name, nor that of a model pruned, retired or dropped earlier
-in the run (`reserved_names` in `model_zoo.py`): it is renamed `<name>_2` like
-any clash, and the admitted ledger entry's detail records the rename. Each round:
-optional CriticAL critique → spawn candidate agents in parallel (exploratory
-slots steered by a rotating exploration "lens", refinement slots by a named
-target — see **Slot roles**) → admit sequentially.
+`pymc_orchestrator.py` orchestrates; `model_zoo.py` does seeding, admission,
+pruning and the novelty gate; `scoring.py` scoring and export;
+`candidate_agent.py` briefs and spawns agents. Each round: optional critique →
+candidate agents in parallel → sequential admission.
 
-- **Admission and the novelty gate** (`_admit_candidate` in `model_zoo.py`): a
-  candidate is admitted only with a loadable `candidate.py` (module-level
-  `model: pm.Model`) that passes the code gate (`import_gate.py`: an import
-  allowlist, and no `open`/`np.load`/`eval`/`__import__`/`getattr`/dunder
-  escapes, no forbidden module reached as an attribute (`typing.sys`,
-  `dataclasses.builtins`), no file reader (`np.DataSource`, `pd.read_*`) and
-  no attribute lookup inside `str.format` — the code runs in the harness
-  process, which clears its own argv once parsed) + `hypothesis.md` (`model_name.txt` is
-  optional; a slot name is the fallback), passing the logp gate, the **data
-  contract** (`model_contract_violation` in `src/models/model_contract.py`,
-  no sampling: the observed data are the CSV's `chose_left` in row order,
-  `p_left` has one entry per trial, and at the initial point and 3 jittered
-  points the likelihood's probability of each response equals
-  Bernoulli(chose_left; p_left) within 1e-5; no `pm.Potential` on the
-  responses — also run on every starting model at experiment start, where a
-  starting model that breaks it raises (a broken project file, not a model
-  failing to fit), and by `check_candidate`), the
-  real-fit/finite-ELPD gates and the **convergence gate** (≤0.1% divergent transitions, R-hat ≤
-  1.05, bulk ESS ≥ 100; `fit_model` refits a failing fit once at
-  `target_accept` 0.95, with a random seed of its own derived from the first
-  fit's seed and fingerprint (`refit_settings`), only when it is a near miss
-  — ≤2% divergent, R-hat ≤ 1.2, bulk ESS ≥ 20, `NEAR_MISS_*` in
-  `mcmc_defaults.py` — and uses that fit everywhere, while a fit far from converging is returned as is; a
-  model's declared `target_accept` is a floor on the loop's — so the rejection
-  and the brief advise reparameterising, never smaller steps), within the
-  **admission time limit** (each sampling run of a candidate's fit is killed,
-  chains and all, after `CANDIDATE_FIT_TIME_LIMIT_SEC` = 30 min (was 15;
-  user decision 2026-09-28), and the candidate is rejected as too slow to
-  fit; starting and carried models are never limited), AND with posterior-
-  mean `p_left` ≥ `novelty_rmse_threshold` (0.002) RMSE from every admitted
-  model **on the loop's novelty pool** — 512 same-length H/T pairs at lengths
-  4–8 that the loop generates from its own seed (`novelty_pool_rows`) and
-  records as `model_loop/novelty_pool.json` — not on the training stimuli.
-  Measured on the 64 training stimuli at 0.02, the September 2026 sweep's 23
-  rejection margins were bimodal: ~5 re-skins at ~0 and ~18 distinct
-  mechanisms spread from 0.006 to the threshold that merely agreed on the
-  training points. The pool is deliberately not the recovery harness's eval
-  pool: the loop must not select models on the stimuli it is scored against.
-  A candidate that binds `participant_id` is marginalised over the training
-  participants; one that binds `trial_index` is rejected with that reason
-  (it cannot be evaluated on any stimulus pool), and so is one whose `p_left`
-  is undefined (NaN or outside [0, 1]) on any pool stimulus
-  (`NoveltyPoolUndefined`, the reason names example pairs), and so is one
-  whose own code fails on the pool (`NoveltyPoolFailed`: no `p_left`, a
-  `p_left` without one value per stimulus, a hook that breaks on some pair).
-  A code error (`NameError`, `AttributeError`, …) raised in the candidate's
-  own file is a rejection at the logp gate too, in admission and in the
-  prefit; the same error raised by the harness, or an infrastructure error,
-  still raises (`is_model_failure` in `pymc_inference.py`, which tells them
-  apart by the traceback). An admitted model
-  undefined on some pool stimuli is compared on the rest (and left out when
-  undefined on all). The threshold is a knob of
-  the holdout config (`inner_loop.novelty_rmse_threshold`, CLI
-  `--novelty-rmse-threshold`, sbatch `NOVELTY_RMSE_THRESHOLD`). Each model's
-  pool prediction is computed once per model loop and kept for its later
-  admissions (`novelty_predictions`, keyed by the fit's `_cache_key`, the pool
-  and the participants; the prediction is deterministic, so no verdict
-  changes). Until 2026-09-30 every admission recomputed every model, once per
-  participant for a per-person model, and the October 2026 live run's rounds
-  grew from 1.5 to 2.9 hours (`tests/test_novelty_predictions_saved.py`).
-- **Slot retry and repair** (`_Slot` in `pymc_orchestrator.py`): a round is
-  spawn → prefit (concurrent candidate fits) → settle waves. A slot whose
-  agent wrote no `candidate.py` (or whose agent process failed) is
-  re-spawned once in `candidate_<i>_retry_1/`; a
-  candidate that `_admit_candidate_with_reason` rejects is re-spawned once in
-  `candidate_<i>_repair_1/` with the rejection reason verbatim in its prompt
-  (`_repair_note`) and the rejected files copied in — a repair is always
-  final and never counts as an unfilled slot. Every attempt is a ledger line
-  (`… retry 1` / `… repair 1` in its context). An agent call that ends on the account's
-  usage or rate limit (`src/runtime/usage_limits.py`: Claude's session limit,
-  API 429/529, Gemini quota errors, codex usage limits — read only from the
-  CLI's own channels) is none of these: `run_coding_agent` restores the
-  agent's own directories, waits until the stated reset (logged `[USAGE
-  LIMIT]`) and runs it again, recording the wait in `token_usage.jsonl`; past
-  `AGENT_USAGE_LIMIT_MAX_WAIT_SEC` (12 h, `src/runtime/config.py`) it raises
-  `AgentUsageLimitExceeded`, and a login that cannot pay raises
-  `AgentLoginFailed` (the 2026-09-28 Opus sweep read hundreds of session-limit
-  replies as empty slots and abandoned every round of a cell). The all-slots-empty round
-  retry (`MAX_EMPTY_ROUND_RETRIES`) stays as the outer guard. `CONTEXT.md`
-  documents a self-check command (`check_candidate.py`; `CANDIDATE_CHECK_*`
-  in `mcmc_defaults.py`) that runs the admission gates with a smoke fit.
-- **Slot roles — breadth and depth** (`slot_roles` in `model_zoo.py`): a
-  round's `candidate_count` slots have roles. With four or more, `C - 3`
-  exploratory slots walk the eleven-lens battery (`DEFAULT_CANDIDATE_HINTS`;
-  only exploratory slots advance the walk, so `_lens_offset` counts them),
-  two slots **refine the incumbent** (the latest history step's
-  `best_model`, named in the brief with its hypothesis, standing and source
-  path) and one **refines a non-incumbent model of the agent's choosing**
-  from `refinement_menu.md` — the live non-incumbent models ranked by
-  standing and the ledger's pruned models ranked by margin
-  (`parse_prune_margin` reads the margin `_prune_losers` wrote), each with
-  its full hypothesis and source (`models/<name>.py`, or for a pruned model
-  the `model_loop/models/pruned/<name>.py` of the experiment that pruned it,
-  found through its ledger context), framed as a menu. Below four slots the
-  refinement slots go one at a time: at 3 one of each, at 2 exploratory +
-  incumbent, at 1 exploratory only. Refinement briefs lift the anti-grafting
-  and no-composition clauses (exploratory briefs keep them and the "do not
-  re-propose" list). The role is the slot's *assignment*, recorded in the
-  ledger context (`… candidate 1 refine incumbent <name>`, `… candidate 2
-  refine chosen`); which model the agent refined is stated in its
-  `hypothesis.md` in prose and **never parsed** — no target file, no regex,
-  no ledger field, no novelty-gate exemption. Motivation: 0 of 27 incumbent
-  changes in the September 2026 sweep, with three breadth mechanisms and no
-  depth mechanism. The holdout configs run **five rounds of six** per
-  experiment (`max_iterations: 5`, `candidate_count: 6`; the sweep that
-  motivated the plan ran two rounds of three). A round's agents run
-  concurrently, one worker per slot (`candidate_parallelism`, default
-  `candidate_count`); retry and repair attempts spawn concurrently too.
-- **Pruning** (`_prune_losers` in `model_zoo.py`) runs **once, at the end of each
-  experiment**: models with a trusted fit (reliable PSIS-LOO and converged),
-  the run's starting models included, that are statistically distinguishable from the best *trusted*
-  model (when the rank-0 model is untrusted the comparison is recomputed over
-  the trusted models; it used to switch pruning off for the experiment)
-  (`elpd_diff > dse_multiplier·dse_clustered`, the stimulus-clustered SE of
-  `src/models/clustered_se.py`: the trial-level `dse` treats the correlated
-  responses to one pair as independent and is ~2x too small) move to
-  `models/pruned/`. Then
-  `_cap_live_set` keeps at most `MAX_LIVE_MODELS` (8) live models: untrusted
-  fits retire first, then the lowest by ELPD-LOO, starting models included
-  (`cap >= 1` is enforced). Neither can remove the best trusted model (its
-  margin is 0, and the cap retires it last), so the set is never emptied. There is no
-  stacking-weight floor (stacking weights are ensemble coefficients, not
-  plausibility). A pruned mechanism may come back with a substantive change:
-  the ledger forbids only unchanged copies and near-duplicates. The step
-  (prune, cap, export) is `pymc_orchestrator.end_experiment`; nothing before it
-  depends on the multiplier, so `src/pipelines/outer_loop/reprune.py` redoes it
-  for a finished experiment at another one (from the pruned files and cached
-  fits, no MCMC; refused once the next experiment's directory exists). The
-  recovery sweep prunes at 2; the October 2026 live series at 4
-  (`data/results/human_experiment_sr-oct26/full_run_sr-oct26.yaml`, user decision 2026-09-30): at 2 its run 1's
-  experiment 1 kept one model, leaving the next design nothing to
-  discriminate, and that experiment was re-pruned at 4.
-- **Ledger** (`src/pipelines/inner_loop/hypothesis_ledger.py`):
-  `model_loop/attempted_hypotheses.jsonl` records every candidate slot
-  (admitted / rejected, with the reason) and every prune (with the margin),
-  continues the ledger the previous experiment carried, and is rendered into
-  every candidate brief as `attempted_hypotheses.md` ("already tried — do not
-  re-propose": the retired hypotheses, i.e. those no longer in the set).
-  Without it, pruned hypotheses vanished from `existing_hypotheses.md` and were
-  re-proposed (in the weakest recovery cell 11 of 13 re-proposals had already
-  been pruned there). Hypotheses are stored in full — whitespace collapsed,
-  never truncated — and rendered one heading per retired model rather than as
-  a table, so a multi-sentence hypothesis reaches the next round's brief
-  intact. `LedgerEntry` must not gain fields: `from_json` requires an exact
-  key-set match, so a new field makes every inherited ledger unreadable.
-- **Export**: the exported winner (`_best_exportable_model` in `scoring.py`) is the best model
-  by **ELPD-LOO rank** (`az.compare`'s `rank`) among those whose PSIS-LOO is
-  *reliable* — never the softmax posterior argmax: the posterior is rounded to
-  six decimals, so every model more than ~14 nats behind reads 0.0 and a
-  `max` over it picked by manifest order (62 of 230 baseline experiments
-  exported a far-behind seed that way). The same rule selects the per-step
-  `best_model` in `history.json` (which also records `argmax_model` and
-  `excluded_unreliable`) and the critique incumbent, so what the recovery
-  harness scores, what the critic critiques and what is carried agree. The
-  outer loop (`_export_inner_loop_models` in `model_loop_runner.py`) then makes `cognitive_models/` the
-  **live set**: every zoo survivor (not only the winner — a rival within
-  2·dse is carried and left to the next design; a starting model only if it
-  survived), with a carried model the loop pruned, retired or dropped
-  removed, and the ledger copied beside the manifest. Before this, only the winner crossed the boundary: 19 unresolved
-  rivals were dropped at 40 boundaries in the iteration-2 recovery sweep.
-  "Reliable" is `src/models/loo_reliability.py`'s verdict (a tolerated
-  proportion of high-Pareto-k trials, with constant-log-likelihood trials
-  exempt as exact), **not** arviz's blanket any-k>0.7 flag — that flag fired on
-  clipped `p_left` trials and was silently discarding genuine winners. The
-  exact trials are also *scored* exactly: `loo_diagnostics` hands arviz a copy
-  of the log-likelihood in which each is exactly constant
-  (`_with_exact_trials_constant`). A trial constant only to rounding (a
-  heads/tails-symmetric model's `p_left` = 0.5 ± an ulp on a mirror pair such
-  as HH vs TT) made arviz's PSIS smooth every weight to NaN, so the whole
-  ELPD-LOO was NaN; until 2026-10-07 that dropped 6 of the October 2026 live
-  series' run 2's 8 carried models at its experiment 2 (the previous winner
-  among them) and rejected candidates as "non-finite ELPD-LOO"
-  (`tests/test_loo_reliability.py`, built from one of those trials).
+- **Starting models are not protected** (user decision 2026-09-28): pruned,
+  capped and dropped like any model. They are recorded once in
+  `<run>/starting_models.json` (`{"starting_models": [...],
+  "starting_models_prunable": true}`); a bare-list record means a run started
+  with protected seeds and refuses to continue (the conditions must not mix).
+  No candidate may reuse a starting model's name or that of a model retired
+  earlier in the run (`reserved_names`); clashes are renamed `<name>_2`.
+- **Admission** (`_admit_candidate`): a loadable `candidate.py` (module-level
+  `model: pm.Model`) plus `hypothesis.md`, passing in order: the **code gate**
+  (`import_gate.py`: import allowlist, no file access or reflection escapes —
+  agent code runs in the harness process); the logp gate; the **data contract**
+  (`src/models/model_contract.py`: the likelihood must be Bernoulli(chose_left;
+  p_left) over the CSV's rows, no `pm.Potential` on the responses; a starting
+  model that breaks it raises); the fit and finite-ELPD gates; the
+  **convergence gate** (≤0.1% divergent, R-hat ≤ 1.05, bulk ESS ≥ 100; a near
+  miss is refit once at `target_accept` 0.95; a model's declared
+  `target_accept` is a floor, so rejections advise reparameterising); the
+  **time limit** (`CANDIDATE_FIT_TIME_LIMIT_SEC` = 30 min per sampling run,
+  user decision 2026-09-28; starting and carried models are never limited); and
+  the **novelty gate** (posterior-mean `p_left` ≥ `novelty_rmse_threshold`,
+  0.002, RMSE from every admitted model on the loop's own 512-stimulus novelty
+  pool — deliberately not the training stimuli nor the recovery harness's eval
+  pool). A candidate binding `trial_index`, or undefined or failing on the
+  pool, is rejected. A code error raised in the candidate's own file is a
+  rejection; the same error from the harness, or an infrastructure error,
+  raises (`is_model_failure`).
+- **Retry and repair** (`_Slot`): a slot whose agent wrote nothing is
+  re-spawned once (`candidate_<i>_retry_1/`); a rejected candidate is
+  re-spawned once with the rejection verbatim (`candidate_<i>_repair_1/`); a
+  repair is final. Every attempt is a ledger line. An agent stopped by a usage
+  or rate limit (`src/runtime/usage_limits.py`) waits for the stated reset and
+  reruns, up to 12 h (`AgentUsageLimitExceeded`); a login that cannot pay
+  raises `AgentLoginFailed`. Agents self-check with `check_candidate.py`.
+- **Slot roles** (`slot_roles`): with ≥ 4 slots, `C - 3` exploratory slots walk
+  the task's lens battery (`TaskSpec.candidate_hints`), two **refine the
+  incumbent** and one **refines a model of the agent's choosing** from
+  `refinement_menu.md` (live and pruned models with hypotheses and sources).
+  Refinement briefs lift the anti-grafting and no-composition clauses. The role
+  is the slot's assignment, recorded in the ledger context; which model an
+  agent refined is prose in its `hypothesis.md` and is **never parsed**. The
+  holdout configs run five rounds of six per experiment.
+- **Pruning** (`_prune_losers`) runs **once, at the end of each experiment**:
+  trusted models (reliable PSIS-LOO and converged) with `elpd_diff >
+  dse_multiplier · dse_clustered` behind the best trusted model move to
+  `models/pruned/` (`dse_clustered`, `src/models/clustered_se.py`: the
+  trial-level `dse` is ~2x too small). Then `_cap_live_set` keeps at most 8
+  (untrusted first, then lowest ELPD). The best trusted model always survives.
+  No stacking-weight floor (stacking weights are ensemble coefficients). The
+  step is `pymc_orchestrator.end_experiment`; `outer_loop/reprune.py` redoes it
+  for a finished experiment at another multiplier without MCMC. Recovery sweeps
+  prune at 2, the October 2026 live series at 4 (user decision 2026-09-30).
+- **Ledger** (`hypothesis_ledger.py`): `model_loop/attempted_hypotheses.jsonl`
+  records every slot and prune, carries across experiments, and is rendered
+  into every brief as "already tried — do not re-propose". A pruned mechanism
+  may return with a substantive change. **`LedgerEntry` must not gain
+  fields**: `from_json` requires an exact key-set match, so a new field makes
+  every inherited ledger unreadable.
+- **Export / "best"**: `_best_exportable_model` (`scoring.py`) — the best model
+  by ELPD-LOO rank among those with reliable PSIS-LOO, **never the softmax
+  posterior argmax** (rounded, so far-behind models tie at 0.0). The same rule
+  gives `history.json`'s `best_model`, the critique incumbent and `SUMMARY.md`.
+  `cognitive_models/` becomes the **live set**: every survivor, not only the
+  winner. "Reliable" is `src/models/loo_reliability.py`'s verdict, not arviz's
+  blanket k > 0.7 flag; constant-log-likelihood trials are exempt and scored
+  as exactly constant (rounding noise there makes PSIS return NaN).
+- **Registry** (`src/registry/io.py`): after each experiment a **uniform prior
+  over the carried set**, which the next design reads. Not stacking weights:
+  those made every present model's prior ~0 (zero EIG everywhere).
 
-### How weights flow between experiments (the registry)
+### Supporting modules and rules
 
-`src/registry/io.py` schema: `{theories: {name: prob}, reserved_for_new}`. After
-experiment N, `update_registry_from_interpretation` writes a **uniform prior
-over the carried set** (the `cognitive_models/` manifest the export just
-wrote) to `model_registry.yaml`; experiment N+1's design reads it as the model
-prior for EIG selection. It used to copy `az.compare`'s stacking weights, which
-are ensemble coefficients rather than plausibility and were written over the
-whole zoo: in 15 of 40 next-experiment designs of the iteration-2 recovery
-sweep every model actually present had weight ~0 (or one had 1.0), so all 32
-EIG-selected stimuli had zero EIG. The stacking weights remain a report field
-in `model_posterior.json`. Model *files* flow separately via carry-forward.
+- **Agent isolation** (`src/runtime/agent_sandbox.py`): agents run in
+  bubblewrap (jobs stop without `bwrap`), their tree read-only, only their own
+  directories writable, with an allowlisted environment (the backend's own
+  login, no other secrets, no `SLURM_*`). Agent trees hold only `src/` and the
+  run tree (`agent_tree.exclude`). `scan_gt_name.sh --before-agents` stops a
+  cell whose tree names its held-out ground truth — **never write a
+  ground-truth model name into anything under `src/` that agents see.**
+- **Raw-only data.** `responses.csv` carries only `sequence_a, sequence_b,
+  participant_id, trial_index, chose_left` (`outer_loop/columns.py`); every
+  model computes its own features (`compute_features` or `prepare_observed`
+  hook). Full collected rows (with Prolific IDs) go to
+  `<project>/raw_collected/`, which no agent gets; `run.py` refuses a
+  collecting run whose output tree is inside the repo (set
+  `AUTO_PSYCH_OUTPUT_DIR`). `tests/test_agent_prompts_raw_only.py` fails if an
+  agent-facing text presents a feature column as data.
+- **Design screening is recorded** in `design/screened_out.json`: models that
+  cannot be predicted on the pool (bookkeeping columns, their own errors,
+  undefined predictions) are left out of that design on record. Person-level
+  models are predicted as 40 new participants (user decision 2026-09-30;
+  `docs/person_level_models.md`). Missing stimulus columns raise
+  (`MissingStimulusColumns`).
+- `src/models/mcmc_defaults.py` is the **single source of sampler defaults**.
+- `src/models/pymc_inference.py`: fits cached on (model sha, csv sha, sampler
+  settings) in-process and as `<name>.<fingerprint>.nc`; concurrent fits in a
+  process pool sized to the allocated CPUs; a wave's candidates prefit in
+  time-limited children before sequential admission. **An infrastructure
+  failure is never a model's** (`INFRASTRUCTURE_ERRORS`,
+  `FitInfrastructureFailure`): it raises, never a drop or a rejection. Each
+  fit process gets its own cache and PyTensor compile directory.
+- `src/model_comparison/`: ELPD-LOO softmax posterior (overconfident, a report
+  field), the `az.compare` table, grouped CV (`cv.py`).
+- `src/critique/ppc.py`: agent-written test statistics scored against
+  posterior-predictive replicates (two-sided p + BH-FDR q). The critique runs
+  **before** the round's candidates (its `critiques.md` goes into every brief);
+  no usable statistic after one retry → the round runs uncritiqued and records
+  `"no_critique"`. There is no fallback battery.
+- `src/runtime/coding_agent.py`: `run_coding_agent` is the single launcher;
+  backend = explicit arg → `CODING_AGENT` → `opencode`.
+- `src/subjective_randomness/incumbent.py`: the **incumbent record** (did the
+  exported best model change, is it discovered), the primary metric for
+  improving the loop; `incumbent_report.py` summarises a sweep.
+- Sweep summaries (`sweep_cells.py`, `reporting.aggregate_holdout_trajectories`)
+  list partial and missing cells, pool by position within an experiment, and
+  average the loop and every baseline over the same cells.
 
-### Supporting modules
+### Projects vs. the research library
 
-- **Agent isolation** (`src/runtime/agent_sandbox.py`, holdout agent trees):
-  loop agents run stock and in bubblewrap (every job's `_env.sh`, live and
-  simulation, runs `ml load system bubblewrap` and stops without `bwrap`) —
-  their tree read-only, only their own candidate/critique dir, the run's notes, a scratch dir at /tmp and a
-  private home writable, and an allowlisted environment
-  (`agent_environment`: system basics, the compiler toolchain, network
-  settings and the backend's own login — no other `.secrets` key, no
-  `SLURM_*`, no sweep variables). Agent trees contain only
-  `src/` and the run tree (`agent_tree.exclude`: no docs, tests, scripts,
-  research library, project literature or `.secrets`). Before agents start,
-  `scan_gt_name.sh --before-agents` stops a cell whose tree names its held-out
-  ground truth; after a run it only warns (`gt_name_mentions.txt`), and
-  `agent_activity_report.py` lists the URLs agents looked at and any paths
-  outside their directory. Inner-loop agents are told the task from the
-  project's `task_description.md`.
-
-- **Screening a model out of a design is recorded.**
-  A design after data (experiments ≥ 2) predicts a model with a participant
-  effect (it binds `participant_id`) as `DESIGN_NEW_PARTICIPANTS` (40) new
-  participants — ids past every training id, whose slots no data reached, so
-  draws from the model's own population distribution — and averages per draw
-  (`eig._new_participant_draws`): the person-level parameters marginalized, the
-  model's prediction for a new person (user decision 2026-09-30). A model
-  without spare slots or whose hook renumbers participants is screened out on
-  record (`NoNewParticipant`). Until 2026-09-30 every such model was omitted,
-  and with every leading model per-person on real data the October 2026 live
-  run's experiment-2 design had no model left
-  (`tests/test_design_person_level_models.py`). How every stage treats
-  person-level models, and the plans to make it uniform (the prior design, the
-  novelty gate and evaluation, a new-subject ELPD): `docs/person_level_models.md`.
-  `eig._screen_usable_models` omits a model whose only unbindable columns are
-  response-row bookkeeping (`NON_STIMULUS_COLUMNS`: `participant_id` before any
-  data, `trial_index` always), and also one that
-  fails to bind any design-pool row for a reason of its own (bound to every
-  row, not one probe row: a hook that breaks on a length-2 pair used to crash
-  the design; recorded with the error and the failing pair lengths). A code
-  error the harness raised, or an infrastructure error, raises (a code error
-  raised in the model's own file is the model's: `is_model_failure`).
-  Missing stimulus columns raise too: that means the design rows lack columns the model
-  needs, and dropping the model would renormalize EIG over whichever ones
-  happen to bind. `make_stim_data` signals this with `MissingStimulusColumns`,
-  which carries `.missing` as data so callers classify structurally rather than
-  by re-parsing a message. A model whose predictive `p_left` is undefined (NaN
-  or outside [0, 1]) on some design-pool pairs (`InvalidPredictions`, prior or
-  posterior) is also left out of that design — it used to crash the cell, on
-  every retry — recorded with `invalid_pairs` and a reason naming example
-  pairs; `verify_holdout_run.sh` warns on those rather than failing. Every
-  drop is written to `design/screened_out.json`
-  (empty list = the screen ran and dropped nothing), so a silent shrink of the
-  hypothesis set is visible in the run tree.
-- **Raw-only pipeline.** There is no featurizer: `responses.csv` carries only
-  the five `RAW_RESPONSE_COLUMNS` (`sequence_a`, `sequence_b`, `participant_id`,
-  `trial_index`, `chose_left`, defined in `src/pipelines/outer_loop/columns.py`).
-  Every model computes its own features via a `compute_features(sequence_a,
-  sequence_b)` or `prepare_observed(rows)` hook. Collection keeps only these
-  in `data/responses.csv` (`raw_response_rows`) and the full collected rows
-  (`/results` adds `participant_id_str`, the Prolific ID) in
-  `<project>/raw_collected/`, beside the experiment dirs, which no agent is
-  given (`raw_collected_responses_path`); pooling keeps only them too. Agents
-  can read their working tree, the repository, so `run.py` refuses to start a
-  run that collects when the output tree is inside it (the default
-  `data/outer_loop`; set `AUTO_PSYCH_OUTPUT_DIR` elsewhere), and collection
-  refuses to write the raw file there (`require_outside_agent_trees`).
-  `pymc_model_families/` (and
-  the live pool `seed_models/`) all carry `compute_features` hooks, and so do
-  the impossible ground truths in `src/subjective_randomness/impossible_models/`
-  (added 2026-09-28: without them every impossible cell stopped at data
-  generation). The verifier
-  (`scripts/subjective_randomness/slurm/verify_holdout_run.sh`) checks that
-  every agent-facing CSV in a finished run carries only raw columns. The
-  agents' prompts say so too: `prompts/pymc_theory.md` and
-  `prompts/critique.md` describe only the raw columns (its skeleton computes
-  its features with `compute_features`), the candidate brief raises on a CSV
-  with any other column, and `tests/test_agent_prompts_raw_only.py` fails if
-  an agent-facing text presents a feature column as data (first audit, D9).
-- `src/models/mcmc_defaults.py` — the **single source of MCMC sampler defaults**
-  (`PRODUCTION_*`, `DESIGN_TWIN_*`). Every entry point imports from here; change
-  defaults only here.
-- `src/models/model_loading.py` — loads agent-written `.py` files; requires a
-  module-level `model: pm.Model`. Attaches optional data-binding hooks
-  (`compute_features`, `prepare_observed`, mutually exclusive).
-  `src/models/data_binding.py` maps CSV rows / row dicts to `pm.set_data` dicts.
-  `src/models/pymc_inference.py` adds fitting, prediction, caching and
-  diagnostics. Fits are cached on `(model sha, csv sha, sampler sig)` in-process
-  and on disk (`<name>.<fingerprint>.nc`). `fit_models_cached` samples the
-  models that need MCMC concurrently: a spawned `ProcessPoolExecutor` whose
-  workers (`fit_workers`; by default as many as `workers × cores-per-fit`
-  fits in the CPUs Slurm allocated, `allocated_cpus`) each fit one model
-  with BLAS pinned to one thread and persist its `.nc`, which the parent
-  loads. `fit_models_to_cache` is the tolerant sibling (a model's own
-  failures reported by name) that the experiment-start ELPD screen
-  (`model_zoo._drop_nonfinite_elpd_models`) uses to sample the whole set in
-  one batch. A wave's candidates are fitted concurrently before their
-  sequential admission (`model_zoo.prefit_candidates` →
-  `fit_time_limited_concurrently`: every candidate past the cheap gates, under
-  its predicted admission name, each run in its own time-limited child, as
-  many at once as the CPUs hold); admission then loads those fits (or their
-  remembered failure/timeout), so its verdicts are sequential admission's. **An infrastructure failure is never a
-  model's**: a broken pool (one worker killed breaks every pending fit), an
-  unreadable `.nc`, `OSError`/`MemoryError` (`INFRASTRUCTURE_ERRORS`,
-  `FitInfrastructureFailure`) raise everywhere — never a drop, a rejection or
-  a ledger line. The screen drops a starting model like any other (it used
-  to raise for a protected seed), and
-  `.nc` files are written to a temporary name and `os.replace`d into place
-  (`write_fit_file`). Every fit process (pool worker or time-limited child)
-  gets an `XDG_CACHE_HOME` of its own under a temporary root the parent
-  removes (`_fit_process_caches`): arviz writes a once-a-day marker there on
-  import through a fixed-name temporary file, and fit processes started
-  together after midnight collided on it (11 of 24 cells, 2026-09-28). Each
-  also compiles in a PyTensor compile directory no other running process uses
-  (`_compile_dirs`: a numbered slot under the harness process's own root,
-  reused by the next fit process), and the job scripts give each job its own
-  `base_compiledir` (`$L_SCRATCH/pytensor/job_$SLURM_JOB_ID`): every process
-  on a node shared one compile lock, and a cell died waiting 120 s for it.
-- `src/model_comparison/{posterior,likelihood}.py` — ELPD-LOO softmax posterior
-  (`model_posterior`, documented as overconfident) + `az.compare` PSIS-LOO table.
-- `src/critique/ppc.py` — CriticAL posterior-predictive check: agent-written
-  `test_statistic(df) -> float` scored against posterior-predictive replicates,
-  two-sided empirical p + BH-FDR q; results steer the next candidate round.
-  The critique agent's context is inlined into its prompt
-  (`critique_round._build_critique_prompt`); an agent that writes no usable
-  statistic is retried once, then the round runs with **no** critique and the
-  round's `history.json` entry records `"no_critique"` — as does a round in
-  which no statistic produced a p-value (each errored or ran out of time;
-  the reason lists why). Each call of a statistic has a 5 s limit and all of
-  its 1001 calls a 300 s budget (`_TEST_STAT_CALL_TIMEOUT_SEC`,
-  `_TEST_STAT_BUDGET_SEC`); one 30 s limit over all calls used to time out
-  ordinary statistics at 7,680 rows. There is no
-  pipeline-written fallback battery — one existed and, under the raw-only
-  schema, reduced to the marginal choice rate, which hid a critique subsystem
-  that had never produced a statistic through an entire sweep.
-  `verify_holdout_run.sh` warns when no round of an experiment was critiqued.
-  The critique agent runs **before** the round's candidate agents, not
-  alongside them: its `critiques.md` is inlined into every candidate brief,
-  so running it concurrently would hand the candidates a stale critique (of
-  the previous incumbent) or none — measured cost 1–4 min of agent time per
-  round. `inner_loop.n_critique_proposals` (default 8) is a holdout-config
-  knob (CLI `--n-critique-proposals`, sbatch `N_CRITIQUE_PROPOSALS`).
-- `src/runtime/coding_agent.py` — backend-agnostic agent launcher.
-  `run_coding_agent(...)` is the single call site; `select_backend` resolves
-  explicit arg → `CODING_AGENT` env → `opencode` default. `claude` uses
-  `--dangerously-skip-permissions --add-dir`; `opencode` uses `opencode run`
-  (no `--add-dir`). Token usage is always recorded.
-- `src/subjective_randomness/incumbent.py` — the **incumbent record**, the
-  primary metric for improving the loop: per scoring step of a holdout cell,
-  did the exported `best_model` change from the previous step, and is it a
-  *discovered* model (not scored at experiment 1's seed step, i.e. not one of
-  the project seeds the cell started with). The harness writes the two flags
-  onto every `trajectory.json` row / `holdout.csv` column and a per-cell
-  `incumbent` summary block; `scripts/subjective_randomness/incumbent_report.py`
-  reports it over the finished (complete) cells of a sweep (archives or kept
-  repo copies; partial and missing cells are listed, not counted), and
-  `verify_holdout_run.sh` warns (never fails) on a cell with zero changes.
-  Baseline: 0 changes over 27 steps in the three complete `motif_stack` cells
-  of the September 2026 sweep.
-
-- **Sweep summaries compare like with like** (`src/subjective_randomness/sweep_cells.py`,
-  `reporting.aggregate_holdout_trajectories`). Every summary (test-retest,
-  incumbent report) lists the expected
-  cells that are partial (no `holdout.json`) or missing; trajectories are
-  pooled by position within an experiment (seed step, rounds every cell ran,
-  end), never by `global_step` (abandoned rounds write no step); and at each
-  position the loop and every baseline are averaged over the same cells. The
-  harness scores the fitted-seed baseline at the end of every experiment on
-  that experiment's cumulative data (`fitted_baseline_by_experiment`; the
-  loop's own seed fits, so cache hits while a seed is live, a fresh fit once
-  it was pruned — the baseline covers every starting model either way);
-  `fitted_baseline` stays the final data's. `holdout.json` records
-  `starting_models_prunable` per run and in its `inner_loop` block (from the
-  run's `starting_models.json`; results of both conditions are never
-  summarised together).
-
-### Projects vs. the research library — two different things
-
-- `src/pipelines/outer_loop/projects/<id>/` = **assets the generic pipeline
-  consumes** (`problem_definition.md`, `ground_truth_models.py`, `seed_models/`,
-  and a gitignored per-run `prolific_config.yaml`
-  rendered by the live launchers). Adding a project = adding an
-  asset directory. This lives under `src/`, not the run-output `projects/` tree.
-- `src/subjective_randomness/` = a **standalone research library** for the
-  subjective-randomness domain (model families, the pair pools in
-  `stimulus_design.py`, recovery harnesses). Coupling to the pipeline is
-  deliberately thin (two cross-imports). `pymc_model_families/` is the frozen
-  recovery registry; the project's `seed_models/` manifest mirrors it (a test
-  asserts they agree, byte for byte: the `motif_stack` seed is the Viterbi
-  model that is also the ground truth; a softmax seed was tried and reverted
-  on 2026-09-27 because it failed the convergence gate on two of the three
-  ground truths' data). The seed baselines load the seeds' code from the run
-  tree (`holdout_eval.seeded_models_dir`, or its `pruned/` for a seed
-  experiment 1 pruned: `_seed_file_dir`), not from the registry, so a run
-  is re-scored with the seeds it ran with.
+- `src/pipelines/outer_loop/projects/<id>/`: **assets the pipeline consumes**
+  (`problem_definition.md`, `task_description.md`, `seed_models/`, a gitignored
+  per-run `prolific_config.yaml`). Adding a project = adding an asset dir.
+- `src/subjective_randomness/`: a **harness-only research library** (agent
+  trees exclude it): the PyMC model families, pair pools, recovery harness.
+  `pymc_model_families/` is the frozen recovery registry, and the project's
+  `seed_models/` mirrors it **byte for byte** (a test checks;
+  `sync_seed_models.py` copies). Editing a seed or registry file changes its
+  hash, hence every cached fit, and what agents read. Ground-truth generating
+  parameters live in the recovery configs' `seed_params` (impossible models'
+  explicitly in `gt_models`).
+- `src/tasks/`: the `TaskSpec` per project (design pool, stimulus rows,
+  prediction variable, lens battery) that keeps the pipeline generic.
 
 ### The number game
 
-Project `projects/number_game/`, task spec `src/tasks/number_game.py`; three
-seeds (Tenenbaum 2000 and two ports of Bigelow's numpyro models, checked by
-`tests/test_number_game_seed_port.py`); the dataset (`data/number-game/`,
-gitignored) is read by `src/number_game/`, kept out of agent trees. Recovery:
-`scripts/number_game/configs/holdout_recovery.yaml`, submitted with
-`scripts/number_game/slurm/submit_recovery.sh`; `data_source: dataset` draws
-experiments from the dataset instead of a ground truth (`src/number_game/dataset.py`;
-submitted with `submit_dataset_run.sh`, which skips the test-retest analysis,
-`TEST_RETEST_ANALYSIS=0`). The pipeline is generic over projects through
-`src/tasks/` (`TaskSpec`: design pool, stimulus rows, prediction variable).
-General settings these runs introduced: `fit.method: warm_start_nuts`,
-`inner_loop.selection` (grouped CV; no PSIS-LOO then), `hide_participant_id`.
+`projects/number_game/`, `src/tasks/number_game.py`; three seeds (Tenenbaum
+2000 and two ports of Bigelow's numpyro models); the dataset
+(`data/number-game/`, gitignored) is read by `src/number_game/`. Recovery:
+`scripts/number_game/slurm/submit_recovery.sh`; `data_source: dataset` runs
+draw responses from the dataset instead (`submit_dataset_run.sh`). These runs
+use `fit.method: warm_start_nuts`, grouped-CV selection (`inner_loop.selection`)
+and `hide_participant_id`.
 
 ### Inspecting results
 
-- `src/viewer/` — Flask + static SPA explorer over finished runs on disk
-  (`python -m src.viewer.server`); `freeze.py` snapshots curated runs to a static
-  site. The tree is re-walked per request (no build step).
-- `src/monitor/` — live dashboard for an in-progress human study (Firestore +
-  Prolific), discovered from `deployment_manifest.json` files. Its first job is
-  catching degenerate data (participants answering one side every trial).
+`src/viewer/` (`python -m src.viewer.server`; `freeze.py` makes a static site);
+`src/monitor/` is the live dashboard for an in-progress human study (first job:
+catching participants who answer one side every trial).
 
-## RSA reference games — `src/rsa/` (developed on branch `auto-rsa`)
+## RSA reference games — `src/rsa/`
 
-The same discovery idea applied to rational-speech-act models of reference
-games (Frank & Goodman, 2012; the pragmods paradigm). It is a **parallel
-stack**, not a project plugged into the outer loop above: the loop, design,
-collection and scoring are RSA-specific modules that reuse the shared runtime
-(`src/runtime/` agent launcher and sandbox, Prolific, the Firebase functions,
-`src/critique/ppc.py`). **Start at `docs/auto_rsa/CAMPAIGN_LOG.md`**: every
-decision with its reason, how it differs from main (§3), and every run in order.
-`docs/auto_rsa/LOOP_ALGORITHM.md` spells out the live loop step by step.
+Rational-speech-act models of reference games (Frank & Goodman, 2012). A
+**parallel stack** (user decision: keep it separate from the TaskSpec
+pipeline) reusing the shared runtime, Prolific, Firebase functions and
+`src/critique/ppc.py`. **Start at `docs/auto_rsa/CAMPAIGN_LOG.md`** (every
+decision and run); `LOOP_ALGORITHM.md` spells out the live loop.
 
-- **Models** are self-contained memo files (`src/rsa/model_file.py`: `PARAMS`
-  of numpyro priors and `choice_probs(params, ctx)` for one display), fitted
-  with numpyro NUTS (`src/rsa/fit.py`; the likelihood is the harness's, a
-  Categorical over classes of identical objects, evaluated once per distinct
-  display). Fits are cached like main's (model file, data file, settings).
-- **Data**: the canonical trial schema and every coding decision are in
-  `src/pipelines/outer_loop/projects/rsa_reference/data/README.md`; licences
-  in `docs/auto_rsa/DATASETS.md`. CC-BY sources and pragmods are committed
-  there; sources without a licence are fetched by `src.rsa.ingest` into the
-  gitignored `data/rsa/external/`, with only their pin files committed. Never
-  commit trial-level data from an unlicensed or NC-ND source (aggregates are
-  fine).
-- **Inner loop** (`src/rsa/loop/`): candidate agents write memo files under
-  the import gate's RSA allowlist and with **no network**
-  (`src/rsa/loop/no_network.py`); selection is by **grouped cross-validation**
-  (whole displays/conditions per fold), not ELPD-LOO; a loop stops after 2
-  stale rounds. `python -m src.rsa.loop.check_candidate` is the agents'
-  self-check.
-- **Outer loop** (`src/rsa/outer/`, `src/rsa/design/`, `src/rsa/live/`,
-  `src/rsa/experiment/`): EIG design over the carried models and the "bar"
-  (starting + promoted seeds), with display-type quotas, on a 1,597-display
-  plain pool (`src.rsa.loop.novelty.plain_pool`); a jsPsych page; live
-  collection; carry-forward of at most 8 distinct models; a committed model
-  scored prospectively on the next experiment (claim 2).
+- Models are memo files (`src/rsa/model_file.py`) fitted with numpyro NUTS
+  (`src/rsa/fit.py`); selection by grouped cross-validation; candidate agents
+  have **no network** (`src/rsa/loop/no_network.py`); self-check
+  `python -m src.rsa.loop.check_candidate`.
+- **Data**: schema and coding decisions in
+  `src/pipelines/outer_loop/projects/rsa_reference/data/README.md`, licences in
+  `docs/auto_rsa/DATASETS.md`. **Never commit trial-level data from an
+  unlicensed or NC-ND source** (aggregates are fine); those are fetched by
+  `src.rsa.ingest` into gitignored `data/rsa/external/`.
 - **The pre-registered final experiment** (`src/rsa/prereg/`,
-  `docs/auto_rsa/PREREG_FINAL.md`, OSF https://osf.io/s48jv, git tag
-  `rsa-prereg-final`): frozen pool predictions, a fixed analysis script, and
-  hash checks at launch. **Never change the frozen files**
+  `docs/auto_rsa/PREREG_FINAL.md`, OSF https://osf.io/s48jv, tag
+  `rsa-prereg-final`). **Never change the frozen files**
   (`data/rsa/prereg/design/`, `data/rsa/live/finals_pool_preds_final.json`,
-  `data/rsa/live/bar_pool_preds.json`, `src/rsa/prereg/analysis.py`); their
-  sha256s are on OSF. Its data are spent: nothing chosen after seeing them may
-  be judged on them again (`docs/auto_rsa/CONSOLIDATION.md` §5).
-- **Post-hoc** (`src/rsa/consolidate/`: a superset model, backward elimination,
-  memo twin; `src/rsa/viz/`: the campaign figures in `docs/auto_rsa/figures/`).
-- **`data/rsa/`** holds the runs' records, brought back from Sherlock:
-  aggregates, model files, agent transcripts, never Prolific participant ids
-  or trial-level live data (`data/rsa/README.md`). Run directories named
-  `private/` there hold only scores (`prospective.json`, `recovery.json`) and
-  configs, not the cluster's private files.
-- **Cluster**: `scripts/rsa/slurm/` (each job stages its code once and records
-  `code_commit`), `scripts/rsa/live/` (live launchers, double-gated like
-  main's). Cloud sessions drive the work through handoff docs
-  (`docs/auto_rsa/HANDOFF_*.md`) that a local session runs on Sherlock.
+  `data/rsa/live/bar_pool_preds.json`, `src/rsa/prereg/analysis.py`; sha256s on
+  OSF) **and don't move `src/rsa/prereg/`** (the bundle hashes code by path).
+  Its data are spent: nothing chosen after seeing them may be judged on them
+  again (`docs/auto_rsa/CONSOLIDATION.md` §5).
+- `data/rsa/` holds run records: never Prolific IDs or trial-level live data.
+- Cluster scripts: `scripts/rsa/slurm/`, live launchers `scripts/rsa/live/`.
 
 ## Cluster & live runs
 
-- **SC cluster:** `CLUSTER=coco` runs the Slurm scripts on `cocoflops1`
-  (see `scripts/subjective_randomness/slurm/README.md`).
-- Holdout sweeps resume their own failed cells: after each array a retry job
-  (`holdout_retry.sbatch`, via `cell_status.py`) resubmits timeouts, crashes
-  and out-of-memory tasks (the latter with `--mem=128G` on their array only)
-  with `--resume`, capped at `%MAX_PARALLEL`, up to `MAX_RETRY_ROUNDS` (2);
-  the summary job lists any expected cell still without a result in
-  `MISSING_CELLS.txt`. A sweep runs on **one code**: the setup job stages
-  `harness_repo` and `agent_src` once and records `$WORK_ROOT/code_commit`;
-  retries skip setup and run the staged scripts; every cell records the code
-  it started on and refuses to resume on other code. `verify_holdout_run.sh`
-  judges cells by `holdout.json` / `MISSING_CELLS.txt`, not by task logs.
-- **The impossible-model sweep is the literature sweep's control.** Its
-  submitter (`submit_impossible_holdout_test_retest.sh`) only sets its config,
-  ground truths and `GT_MODELS_REL` (where the setup job stages the GT
-  snapshot from: `impossible_models/`) and runs the literature chain, so its
-  cells run the same setup, array, retry and summary jobs, and
-  `configs/impossible_holdout_recovery.yaml` equals
-  `holdout_recovery_faithful.yaml` except `gt_models`/`gt_models_dir`
+- **Clusters:** Sherlock by default; `CLUSTER=coco` runs on `COCO_NODE`
+  (default `cocoflops1`; `/scr` is node-local, so a chain runs on one node).
+  Never run heavy work on a login node; keep job I/O on scratch. Playwright
+  browser simulation does not run on Sherlock compute nodes — use
+  `--mode simulated_participants_nobrowser`. Runbooks:
+  `scripts/subjective_randomness/README.md` and `slurm/README.md`.
+- **Sweeps** (`submit_holdout_test_retest.sh`): setup → array → retry →
+  summary. The setup job stages the code once (`harness_repo`, `agent_src`,
+  `code_commit`); a sweep runs on **one code**, and a cell refuses to resume on
+  other code. The retry job resubmits timeouts, crashes and out-of-memory cells
+  (up to 2 rounds); `MISSING_CELLS.txt` lists cells still without a result.
+  The impossible-model sweep (the literature sweep's control) is the same chain
+  with its own config, ground truths and `GT_MODELS_REL`; its config must equal
+  the faithful one except `gt_models`/`gt_models_dir`
   (`tests/test_impossible_config_matches_faithful.py`).
-- **Live runs recruit real participants and spend real money.** They are double-
-  gated: the config needs `confirm_live_recruitment: true` **and** `run.py`
-  enforces `--confirm-live-recruitment`; the launchers print a cost summary and
-  require typing `yes`. See `scripts/outer_loop_live/README.md`. `scancel` kills
-  the pipeline job but **not** an already-published Prolific study — stop that in
-  the Prolific dashboard.
-- **A collection that gives up pauses its study.** After the 3-hour poll
-  (`_PROLIFIC_MAX_WAIT_SEC` in `collect.py`, the only place it is set; was 2
-  hours until the user's 2026-09-28 decision) ends short of its target,
-  `_pause_unfilled_study` pauses an `ACTIVE` study (`pause_study` in
-  `src/runtime/prolific.py`; PAUSE is reversible, STOP is not) and raises if it
-  cannot; the partial data are then modelled as before. A study that reached
-  its target is left alone (its places are full).
-- **A live study excludes earlier participants.** `create_draft_study`
-  (`deployment/prolific.py`) lists the account's studies just before
-  creating one (`list_studies` in `src/runtime/prolific.py`) and adds
-  Prolific's `previous_studies_blocklist` filter over every published study
-  the pipeline named (`STUDY_INTERNAL_NAME_PREFIX`, `auto-psych `), parallel
-  runs' included; Prolific applies it at publish, so someone mid-way through
-  a parallel run's study is not yet excluded. The IDs are never written to a
-  config (the repository keeps no Prolific IDs). A failed listing creates no
-  study; the eligibility check requires the filter to exist;
-  `prolific.exclude_earlier_participants: false` recruits earlier people on
-  purpose. Until 2026-10-02 nothing excluded them (two people took experiments
-  1 and 2 of the October 2026 series' run 1;
-  `tests/test_exclude_earlier_participants.py`).
-- **One participant count.** `--n-participants` sets the study's places, the
-  design's N and the collection target (`load_recruitment_config` in
-  `deployment/prolific.py`, checked in `run.py` before any stage). The rendered
-  `prolific_config.yaml` carries no count (a legacy `total_available_places`
-  must agree) and is never committed; a Prolific run without it raises.
-- **One live study per experiment.** The live job always passes `--resume`, so
-  a relaunch used to redesign, redeploy and publish a second study. Now an
-  experiment whose `deployment/deployment_manifest.json` records a live
-  `prolific_study_id` (published or not confirmed) refuses `2_design`,
-  `3_implement` and the deploy (`refuse_second_live_study` in
-  `deployment/manifest.py`, checked in `run.py` and `run_deployment`), raising
-  `LiveStudyAlreadyRecorded` with the recovery: `RESUME_AGENTS=4_collect:5_model_loop`,
-  or the deliberate `--publish-another-prolific-study`
-  (`PUBLISH_ANOTHER_PROLIFIC_STUDY=1`), which archives the old manifest.
-  `--resume` skips no stage, and `start_full_run.sh RUNS=<i>` deletes run
-  *i*'s results, so a running run is moved onto fixed code by hand (runbook
-  § 9): `scancel`, rsync into the run's own copy (its `public/` holds the
-  earlier pages Firebase serves) and record the commit, then the unfinished
-  stage with `RESUME_AGENTS` and the rest with `EXPERIMENTS=<next>-<last>`
-  and `--dependency=afterok`. `--qos=long` is not on this account; jobs default to the `mcfrank` partition (the lab's owner node, up to 7 days; `normal` caps at 48 h).
-- **The page is deployed before the study exists.** A Firebase deploy
-  (`run_deployment` in `deployment/local.py`) checks the results token and,
-  for `live`, Prolific's eligibility IDs (`verify_live_eligibility`), deploys
-  the page and functions, checks the live `/results` refuses a tokenless read
-  and accepts the token (`verify_functions_live`: until 2026-09-29 no
-  functions deploy from Sherlock replaced anything, firebase-tools exiting 0
-  after its child `node` failed to load libstdc++; `_env.sh`'s `node` wrapper
-  fixes that), and only then creates the draft, records
-  its id at once and (live only) publishes it. The draft used to be created
-  first, so a failed deploy left a recorded study that the guard above
-  refused to relaunch past; now a failed deploy records no study. The page
-  needs only the locally built completion redirect (Prolific passes
-  `STUDY_ID` in the URL). A `--mode live` run with `--prolific-mode none`
-  deploys experiment 1 and stops (there is no study to collect from); a
-  resume with `--agent` still collects from a recorded study.
-- **Each series of parallel runs has its own Hosting sites.**
-  `start_full_run.sh` / `submit_parallel.sh` deploy run *i* to
-  `<firebase_project>-<run_label>-run<i>` (`_hosting_site.sh`; the config's
-  `run_label` is passed as `SERIES_LABEL`), so a new series in the same
-  project never replaces an earlier series' pages. Site IDs over 30
-  characters (or with other than `[a-z0-9-]`) stop the launch before its
-  prompt; with `auto-psych-2c5da` that leaves 8 characters for `run_label`.
-  All runs of a project share its `/submit` and `/results` functions.
-- **Deploy provenance from the launchers' copies.** The launchers run each
-  job from an rsync copy without `.git`; right after copying they record the
-  checkout's commit and dirtiness (untracked files included) into the copy
-  as `code_provenance.json` (`python -m
-  src.pipelines.outer_loop.deployment.record_provenance`). The deploy
-  (`code_provenance` in `deployment/manifest.py`) reads git in a checkout,
-  that record in a copy, and raises with neither; the manifest gets
-  `git_commit`, `git_dirty` and `metadata.code_provenance`. Rsyncing fixed
-  code into a copy deletes the record: record it again.
-- **Participant ids are unique across a run's experiments.** `4_collect`
-  (`run_unique_participant_ids` in `orchestrator.py`) numbers new people after
-  every id the earlier experiments used and gives someone seen in an earlier
-  experiment (same `participant_id_str`, read from the earlier `raw_collected/`
-  files) their earlier id; `/results` numbers from 0 each time, which gave
-  different people one id in the pooled data. The Firebase browser collector
-  raises when `/results` has no row of its own participants (it used to keep
-  every row).
-- Secrets live in repo-root `.secrets` (see `.secrets.example`): `PROLIFIC_API_TOKEN`,
-  `FIREBASE_TOKEN` (`firebase login:ci`), `AUTO_PSYCH_RESULTS_TOKEN` (guards the
-  `/results` Cloud Function — deploy/collect fail loudly without it; `/register_session` was removed 2026-09-29),
-  `GOOGLE_API_KEY` (the default opencode/Gemini agents' login, and the
-  simulated/Gemini paths), and for Claude agents
-  `CLAUDE_CODE_OAUTH_TOKEN` (subscription) and/or `ANTHROPIC_API_KEY` (API).
-- **Claude billing is stated per run, never guessed.** With the `claude`
-  backend a run needs `agent.claude_auth` / `--claude-auth` / `CLAUDE_AUTH`
-  (`subscription` or `api`; job scripts pass `CLAUDE_AUTH` to the flag) and
-  that mode's credential, checked before any agent starts
-  (`require_claude_auth` in `src/runtime/agent_sandbox.py`). Each sandboxed
-  agent gets only that credential: in `subscription` mode no `ANTHROPIC_*`
-  variable (the CLI prefers an API key over the OAuth token), in `api` mode no
-  OAuth token. The mode is recorded on every token-usage record and in
-  `holdout.json` (`agent.claude_auth`).
-- On Sherlock: never run heavy work on the login node (submit via Slurm), keep
-  job I/O on `$SCRATCH`, and note Playwright browser simulation does **not** run
-  on the compute nodes (glibc 2.17) — use `--mode simulated_participants_nobrowser`.
-  Recovery-harness runbooks: `scripts/subjective_randomness/README.md` and its
-  `slurm/README.md`.
+- **Live runs recruit real people and spend real money**: double-gated
+  (`confirm_live_recruitment: true` in the config **and**
+  `--confirm-live-recruitment`; launchers require typing `yes`).
+  `scancel` does **not** stop a published Prolific study — use the dashboard.
+  Runbook: `scripts/outer_loop_live/README.md`.
+- **Live-study rules** (each enforced in code):
+  - One participant count: `--n-participants` sets places, design N and the
+    collection target; the rendered `prolific_config.yaml` carries none and is
+    never committed.
+  - **One study per experiment**: an experiment whose deployment manifest
+    records a study refuses to redesign, reimplement or redeploy
+    (`LiveStudyAlreadyRecorded`); recover with
+    `RESUME_AGENTS=4_collect:5_model_loop`, or deliberately with
+    `--publish-another-prolific-study`. `--resume` skips no stage, and
+    `start_full_run.sh RUNS=<i>` deletes run *i*'s results, so a running run is
+    moved onto fixed code by hand (runbook § 9).
+  - A collection that gives up after its 3-hour poll (`_PROLIFIC_MAX_WAIT_SEC`,
+    user decision 2026-09-28) **pauses** its study (reversible) and models the
+    partial data.
+  - Every study excludes earlier participants (`previous_studies_blocklist`
+    over the pipeline's published studies); IDs are never written to a config.
+  - The page and functions are deployed and verified before the draft study
+    is created, so a failed deploy records no study.
+  - Each series of parallel runs deploys to its own Hosting sites
+    (`<firebase_project>-<run_label>-run<i>`; with `auto-psych-2c5da`,
+    `run_label` has 8 characters). All runs share `functions/` (`/submit`,
+    `/results`, and RSA's `/assign`).
+  - Launchers run from rsync copies without `.git` and record
+    `code_provenance.json`; rsyncing fixed code deletes it — record it again.
+  - Participant ids are unique across a run's experiments (a returning person
+    keeps their id).
+  - Jobs default to the `mcfrank` partition (up to 7 days); `--qos=long` is
+    not on this account.
+- **Secrets** live in repo-root `.secrets` (`.secrets.example`):
+  `PROLIFIC_API_TOKEN`, `FIREBASE_TOKEN`, `AUTO_PSYCH_RESULTS_TOKEN` (guards
+  `/results`), `GOOGLE_API_KEY` (opencode/Gemini agents), and for Claude
+  agents `CLAUDE_CODE_OAUTH_TOKEN` and/or `ANTHROPIC_API_KEY`.
+- **Claude billing is stated per run, never guessed**: the `claude` backend
+  needs `CLAUDE_AUTH` / `--claude-auth` (`subscription`, `api`, or
+  `subscription_then_api`: the API key from a subscription limit until its
+  stated reset) and that credential, checked before any agent starts. Each
+  agent gets only the credential in use (the CLI prefers an API key over the
+  OAuth token). The mode is recorded in token usage and `holdout.json`.
