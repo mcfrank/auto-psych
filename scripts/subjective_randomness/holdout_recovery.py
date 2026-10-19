@@ -41,6 +41,7 @@ from src.subjective_randomness.holdout_recovery import (  # noqa: E402
 )
 from src.subjective_randomness.reporting import plot_holdout_trajectories  # noqa: E402
 from src.subjective_randomness.tidy import write_tidy_csv  # noqa: E402
+from src.runtime.diagnostics import install_run_diagnostics  # noqa: E402
 
 
 @dataclass
@@ -269,4 +270,5 @@ if __name__ == "__main__":
     # The arguments name the held-out ground truth; agent-written code runs in
     # this process (see forget_command_line).
     forget_command_line()
+    install_run_diagnostics()
     main(parsed)
