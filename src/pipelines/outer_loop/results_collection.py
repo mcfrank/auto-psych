@@ -315,10 +315,13 @@ def _verify_no_prolific_ids(dest: Path) -> None:
 
 
 def summarize_model_posterior(posterior: dict) -> dict:
-    """Distill a ``model_posterior.json`` payload into headline numbers."""
+    """Distill a ``model_posterior.json`` payload into headline numbers. The
+    best model is the one the loop exported (``_best_exportable_model``)."""
+    from src.pipelines.inner_loop.scoring import _best_exportable_model
+
     posteriors = posterior["posteriors"]
-    best_model = max(posteriors, key=posteriors.get)
     comparison = posterior.get("comparison", {})
+    best_model = _best_exportable_model(posterior, comparison)
 
     by_rank = sorted(comparison.items(), key=lambda kv: kv[1].get("rank", 1e9))
     top_elpd_model = by_rank[0][0] if by_rank else None
