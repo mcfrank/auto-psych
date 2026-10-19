@@ -18,7 +18,7 @@ from typing import Any, Dict, Iterable, List, Optional
 
 from src.model_comparison.cv import LOO, Selection
 from src.model_comparison.posterior import compare_table, model_posterior
-from src.pipelines.inner_loop.model_zoo import _manifest_entries
+from src.pipelines.inner_loop.model_zoo import _manifest_entries, _untrusted
 
 # Complexity prior of the softmax model posterior (a report field and the
 # model-average weights; selection, pruning and carry-forward use ELPD-LOO
@@ -35,18 +35,12 @@ def _best_model(posterior: Dict[str, Any]) -> str:
     return max(posterior["posteriors"], key=lambda m: posterior["posteriors"][m])
 
 
-def _excluded(row: Dict[str, Any]) -> bool:
-    """A model whose ELPD cannot be trusted: unreliable PSIS-LOO or a fit that
-    failed the convergence gate. Such a model is never exported or pruned."""
-    return bool(row.get("loo_unreliable") or row.get("not_converged"))
-
-
 def _unreliable_names(comparison: Dict[str, Dict[str, Any]]) -> List[str]:
     """Models excluded from export — unreliable PSIS-LOO or not converged — sorted."""
     return sorted(
         name
         for name, row in comparison.items()
-        if isinstance(row, dict) and _excluded(row)
+        if isinstance(row, dict) and _untrusted(row)
     )
 
 
@@ -79,7 +73,7 @@ def _best_exportable_model(
             f"Model(s) {missing} are in the posterior but have no comparison row; "
             "the posterior and the az.compare table must cover the same model set."
         )
-    reliable = [name for name in posteriors if not _excluded(comparison[name])]
+    reliable = [name for name in posteriors if not _untrusted(comparison[name])]
     if not reliable:
         raise RuntimeError(
             "Cannot export a model: no model has both a reliable PSIS-LOO estimate "

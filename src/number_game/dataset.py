@@ -20,10 +20,8 @@ from typing import Any, Dict, List, Mapping, Sequence, Tuple
 
 import numpy as np
 
-from src.number_game.data import load_responses
-from src.runtime.config import REPO_ROOT
+from src.number_game.data import DATA_CSV, load_responses
 
-DATA_CSV = REPO_ROOT / "data" / "number-game" / "human experiment" / "numbergame_data.csv"
 
 Cell = Tuple[str, str]  # (number_set "16,8", target "4"), as the responses CSV gives them
 

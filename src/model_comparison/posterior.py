@@ -119,6 +119,20 @@ def _pool_response_csvs(paths: List[Path]) -> Path:
     return tmp
 
 
+def _flag_not_converged(name: str, row: Dict[str, Any]) -> None:
+    """Set a comparison row's ``not_converged`` from its convergence problems,
+    and say so out loud when it has any."""
+    row["not_converged"] = bool(row["convergence_problems"])
+    if row["not_converged"]:
+        print(
+            f"  [warn] {name} did not converge: "
+            f"{'; '.join(row['convergence_problems'])}. It cannot be "
+            "exported or pruned.",
+            file=sys.stderr,
+            flush=True,
+        )
+
+
 def compare_table(
     responses_path: Path,
     models_dir: Path,
@@ -240,15 +254,7 @@ def compare_table(
             "convergence_problems": convergence_problems_of(fits[name]),
             "criterion": "loo",
         }
-        out[name]["not_converged"] = bool(out[name]["convergence_problems"])
-        if out[name]["not_converged"]:
-            print(
-                f"  [warn] {name} did not converge: "
-                f"{'; '.join(out[name]['convergence_problems'])}. It cannot be "
-                "exported or pruned.",
-                file=sys.stderr,
-                flush=True,
-            )
+        _flag_not_converged(name, out[name])
         if diag.unreliable:
             print(
                 f"  [warn] PSIS-LOO for {describe_unreliable(name, diag)} Any "
@@ -295,15 +301,7 @@ def _cv_compare_table(
             "criterion": "grouped_cv",
             "n_cv_points": int(len(diff)),
         }
-        out[name]["not_converged"] = bool(out[name]["convergence_problems"])
-        if out[name]["not_converged"]:
-            print(
-                f"  [warn] {name} did not converge: "
-                f"{'; '.join(out[name]['convergence_problems'])}. It cannot be "
-                "exported or pruned.",
-                file=sys.stderr,
-                flush=True,
-            )
+        _flag_not_converged(name, out[name])
     return out
 
 

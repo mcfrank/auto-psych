@@ -52,7 +52,7 @@ from src.number_game import data as ng_data  # noqa: E402
 from src.number_game.metrics import binned_mean_r2  # noqa: E402
 from src.runtime.config import REPO_ROOT  # noqa: E402
 
-DATA_CSV = REPO_ROOT / "data" / "number-game" / "human experiment" / "numbergame_data.csv"
+DATA_CSV = ng_data.DATA_CSV
 GOLDEN_DIR = REPO_ROOT / "tests" / "fixtures" / "number_game"
 PRIORS = {"basic": infer.prior_eb_numbergame, "interval": infer.prior_eb_numbergame_interval}
 

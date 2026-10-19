@@ -951,7 +951,8 @@ def _clustered_dse(comparison: Dict[str, Dict[str, Any]], name: str) -> float:
 
 
 def _untrusted(row: Dict[str, Any]) -> bool:
-    """An unreliable PSIS-LOO or a fit that failed the convergence gate."""
+    """A model whose ELPD cannot be trusted: unreliable PSIS-LOO or a fit that
+    failed the convergence gate. Such a model is never exported or pruned."""
     return bool(row.get("loo_unreliable") or row.get("not_converged"))
 
 

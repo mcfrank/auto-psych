@@ -26,7 +26,7 @@ from src.models.model_loading import load_pymc_model
 from src.number_game import data as ng_data
 from src.runtime.config import REPO_ROOT
 
-DATA_CSV = REPO_ROOT / "data" / "number-game" / "human experiment" / "numbergame_data.csv"
+DATA_CSV = ng_data.DATA_CSV
 SEEDS_DIR = REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects" / "number_game" / "seed_models"
 
 
