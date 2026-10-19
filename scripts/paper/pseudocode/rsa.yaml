@@ -1,0 +1,34 @@
+# Annotated pseudocode of the RSA winner, chain 0's final (Figure 4).
+# Hand-written from the model's code; the figure script checks `sha256`
+# against `source`, so a changed model invalidates this description.
+domain: rsa
+model: boundary_avoidable_ambiguity_listener
+source: data/rsa/live/live_rsa_c0/outputs/experiment3/model_loop/models/boundary_avoidable_ambiguity_listener.py
+sha256: a80185358d52967bdec8e7e77e6a984ff3d2d262ac54f6e113a591b40bb66245
+title: "RSA reference games: which object does the word refer to?"
+lines:
+  - code: "prior(o) ∝ exp(w·salience(o))"
+    note: "unique, distinctive, many-featured, coloured, typical"
+  - code: "L0(o | u) ∝ lex(u, o)"
+    note: "literal listener"
+  - code: "S1(u | o) ∝ lex(u, o) · exp(α [L0(o|u)"
+  - code: "        − w_int · interior(u, o)"
+    note: "interior: neither the simplest nor the richest match"
+  - code: "        − c_av · avoidable(u, o)]"
+    note: "avoidable: u is ambiguous though o had a unique word"
+  - code: "        − w_conf · confusion(u, o))"
+    note: "confusion: u also fits objects that resemble o"
+  - code: "L1(o | u) ∝ prior(o) · S1(u | o)"
+  - code: "S2, L2(o | u): the same recursion one level up"
+    note: "second-order pragmatic listener"
+  - code: "p_attend = σ(b + w_pop·[u fits 1 object]"
+    note: "capacity-limited attention"
+  - code: "           − w_load·(objects − 2) − w_cand·(matches − 1))"
+  - code: "P(o | u) = p_attend · L2(o | u)"
+  - code: "         + (1 − p_attend) · capture(o)"
+    note: "otherwise salience among the matching objects"
+  - code: "if u fits all objects but one:"
+  - code: "  with prob. p_out choose the one it does not fit"
+    note: "the lone odd-one-out"
+  - code: "no informative word: P(o) = prior(o)"
+  - code: "with prob. lapse choose uniformly"

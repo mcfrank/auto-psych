@@ -1,0 +1,38 @@
+# Annotated pseudocode of the subjective-randomness winner (Figure 4).
+# Hand-written from the model's code; the figure script checks `sha256`
+# against `source`, so a changed model invalidates this description.
+domain: subjective_randomness
+model: personal_pattern_detection_gain
+source: data/results/human_experiment_sr-oct26/collected/run1/subjective_randomness/experiment3/model_loop/models/personal_pattern_detection_gain.py
+sha256: 208e56895fc1af2102278dfb67825923703e27d7f60a8deace75c03707046039
+title: "Subjective randomness: which of two coin-flip sequences looks more random?"
+lines:
+  - code: "for each person i:"
+    note: "person-level parameters"
+  - code: "  θᵢ  ideal switching rate;  βᵢ  sensitivity to it"
+  - code: "  γᵢ  weight on H/T imbalance;  δᵢ  on the longest streak"
+  - code: "  gᵢ  pattern-detection gain (median 1)"
+    note: "one trait scales every structural cue"
+  - code: "  λᵢ  lapse (guessing) rate"
+  - code: "for each sequence x of length n:"
+  - code: "  sw(x)   = share of adjacent flips that switch"
+  - code: "  imb(x)  = |#H − #T| / n"
+  - code: "  run(x)  = (longest streak − 1) / (n − 1)"
+  - code: "  end(x)  = (final streak − 1) / (n − 1)"
+    note: "recency: a long final streak"
+  - code: "  pal(x)  = 1 if x reads the same reversed"
+    note: "designed-looking sequences penalised"
+  - code: "  anti(x) = 1 if x equals its reversed complement"
+  - code: "  var(x)  = variety of run lengths (0 to 1)"
+    note: "varied runs look random"
+  - code: "  lop(x)  = (range of the H−T tally − 1) / (n − 1)"
+    note: "the most lopsided stretch"
+  - code: "  struct(x) = −κ end − ρ pal − χ anti + ω var − η lop"
+    note: "cue weights shared by everyone"
+  - code: "  dev = sw(x) − θᵢ"
+  - code: "  score(x) = −βᵢ dev² · (φ if dev > 0 else 1)"
+    note: "over-alternation weighted by a fitted φ"
+  - code: "             − γᵢ imb(x) − δᵢ run(x) + gᵢ struct(x)"
+  - code: "P(choose a over b) ="
+  - code: "    λᵢ/2 + (1 − λᵢ) σ(score(a) − score(b))"
+    note: "a person guesses at rate λᵢ"

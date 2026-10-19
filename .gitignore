@@ -102,3 +102,5 @@ data/rsa/*/round_*/candidate_*/scratch/
 data/rsa/*/round_*/candidate_*/.xdg_data/
 data/rsa/*/round_*/candidate_*/.home/
 data/number-game/
+# Paper figure fits and comparison sets (scripts/paper/); rebuildable, large
+data/paper/work/

@@ -411,11 +411,18 @@ _FIT_DEFAULTS = {
     "max_treedepth": 10,
 }
 
-# How a fit samples (``fit.method``): production NUTS, or NUTS started from the
-# posterior mode (``src.models.warm_start``). Chosen by the caller only, never
-# by a model file. Not in _FIT_DEFAULTS, so the default's cache signature (and
-# every fit cached before the method existed) is unchanged.
-FIT_METHODS = ("nuts", "warm_start_nuts")
+# How a fit samples (``fit.method``): production NUTS, NUTS started from the
+# posterior mode (``src.models.warm_start``), or production NUTS with every
+# chain started at the model's initial point rather than a jittered one
+# (``nuts_no_jitter``: a jittered start far out in a large data set's
+# posterior can shrink the step size to zero in warm-up, and that chain never
+# moves). Chosen by the caller only, never by a model file. Not in
+# _FIT_DEFAULTS, so the default's cache signature (and every fit cached before
+# the method existed) is unchanged.
+FIT_METHODS = ("nuts", "warm_start_nuts", "nuts_no_jitter")
+
+# PyMC's ``init`` for each plain-NUTS method ("auto" is jitter+adapt_diag).
+_NUTS_INIT = {"nuts": "auto", "nuts_no_jitter": "adapt_diag"}
 
 # Name of the optional module-level dict a model `.py` may declare to request
 # sampler settings suited to *its own* posterior geometry.
@@ -1006,6 +1013,7 @@ def _fit_once(
                 cores=settings["cores"],
                 target_accept=settings["target_accept"],
                 max_treedepth=settings["max_treedepth"],
+                init=_NUTS_INIT[settings["method"]],
                 progressbar=False,
                 random_seed=settings["random_seed"],
                 idata_kwargs={"log_likelihood": True},
