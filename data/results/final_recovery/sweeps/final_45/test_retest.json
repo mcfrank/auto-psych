@@ -6,35 +6,61 @@
     "run1",
     "run2"
   ],
-  "runs_missing_tidy": [
-    "run1/falk_konold_dp",
-    "run1/finite_experience_occurrence",
-    "run2/falk_konold_dp",
-    "run2/finite_experience_occurrence",
-    "run2/local_representativeness"
-  ],
+  "runs_missing_tidy": [],
   "gt_models": [
+    "falk_konold_dp",
+    "finite_experience_occurrence",
     "local_representativeness",
     "motif_stack"
   ],
   "runs_in_complete_matrix": [
-    "run1"
+    "run1",
+    "run2"
   ],
-  "icc_2_1": null,
-  "mean_pairwise_corr": null,
+  "icc_2_1": 0.816966135487192,
+  "mean_pairwise_corr": 0.9777551327623772,
   "per_gt_model": {
-    "local_representativeness": {
-      "n_runs": 1,
-      "mean": 0.8392219051431223,
-      "sd": 0.0,
-      "cv": 0.0,
-      "min": 0.8392219051431223,
-      "max": 0.8392219051431223,
+    "falk_konold_dp": {
+      "n_runs": 2,
+      "mean": 0.9898457918286929,
+      "sd": 0.005186389344743117,
+      "cv": 0.005239593265493921,
+      "min": 0.9861784607531514,
+      "max": 0.9935131229042344,
       "values": [
-        0.839222
+        0.986178,
+        0.993513
+      ],
+      "modal_best_model": "streak_cue_fills_switch_gap",
+      "best_model_agreement": 0.5
+    },
+    "finite_experience_occurrence": {
+      "n_runs": 2,
+      "mean": 0.9460705813662176,
+      "sd": 0.007921349701012,
+      "cv": 0.008372895064100612,
+      "min": 0.940469341276482,
+      "max": 0.9516718214559532,
+      "values": [
+        0.940469,
+        0.951672
+      ],
+      "modal_best_model": "length_diluted_first_read_anchor",
+      "best_model_agreement": 0.5
+    },
+    "local_representativeness": {
+      "n_runs": 2,
+      "mean": 0.8694749939042526,
+      "sd": 0.04278432842966754,
+      "cv": 0.049207083273954386,
+      "min": 0.8392219051431223,
+      "max": 0.899728082665383,
+      "values": [
+        0.839222,
+        0.899728
       ],
       "modal_best_model": "rejection_alternation_stretch_share",
-      "best_model_agreement": 1.0
+      "best_model_agreement": 0.5
     },
     "motif_stack": {
       "n_runs": 2,
@@ -54,14 +80,37 @@
   "per_metric": {
     "rmse": {
       "per_gt_model": {
+        "falk_konold_dp": {
+          "n_runs": 2,
+          "mean": 0.036635095510658994,
+          "sd": 0.007786597318128016,
+          "min": 0.03112913974464169,
+          "max": 0.0421410512766763,
+          "values": [
+            0.042141,
+            0.031129
+          ]
+        },
+        "finite_experience_occurrence": {
+          "n_runs": 2,
+          "mean": 0.026145104956976056,
+          "sd": 0.005156179711611258,
+          "min": 0.022499135317879237,
+          "max": 0.029791074596072872,
+          "values": [
+            0.029791,
+            0.022499
+          ]
+        },
         "local_representativeness": {
-          "n_runs": 1,
-          "mean": 0.07847733972554131,
-          "sd": 0.0,
-          "min": 0.07847733972554131,
+          "n_runs": 2,
+          "mean": 0.07135096135147179,
+          "sd": 0.010078220947211463,
+          "min": 0.06422458297740224,
           "max": 0.07847733972554131,
           "values": [
-            0.078477
+            0.078477,
+            0.064225
           ]
         },
         "motif_stack": {
@@ -79,14 +128,37 @@
     },
     "kl_regret": {
       "per_gt_model": {
+        "falk_konold_dp": {
+          "n_runs": 2,
+          "mean": 0.0035398036399481875,
+          "sd": 0.0013203870611689776,
+          "min": 0.0026061489952046266,
+          "max": 0.004473458284691748,
+          "values": [
+            0.004473,
+            0.002606
+          ]
+        },
+        "finite_experience_occurrence": {
+          "n_runs": 2,
+          "mean": 0.0015282860105143895,
+          "sd": 0.00042336541801341244,
+          "min": 0.0012289214525172281,
+          "max": 0.0018276505685115507,
+          "values": [
+            0.001828,
+            0.001229
+          ]
+        },
         "local_representativeness": {
-          "n_runs": 1,
-          "mean": 0.013026688732710465,
-          "sd": 0.0,
-          "min": 0.013026688732710465,
+          "n_runs": 2,
+          "mean": 0.010934451588107007,
+          "sd": 0.002958870145598969,
+          "min": 0.00884221444350355,
           "max": 0.013026688732710465,
           "values": [
-            0.013027
+            0.013027,
+            0.008842
           ]
         },
         "motif_stack": {
@@ -105,6 +177,28 @@
   },
   "eval_exclusions": {
     "steps": [
+      {
+        "cell": "run1/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 3,
+        "step": 4,
+        "global_step": 16,
+        "best_model": "longest_streak_salience",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43246,
+        "models": "switch_contrast_attention"
+      },
+      {
+        "cell": "run1/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 3,
+        "step": 5,
+        "global_step": 17,
+        "best_model": "streak_cue_fills_switch_gap",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43246,
+        "models": "switch_contrast_attention"
+      },
       {
         "cell": "run1/local_representativeness",
         "gt_model": "local_representativeness",
@@ -247,6 +341,215 @@
         "n_eval_excluded": 1,
         "n_eval_stimuli": 43245,
         "models": "half_split_drift_coverage"
+      },
+      {
+        "cell": "run2/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 1,
+        "step": 5,
+        "global_step": 5,
+        "best_model": "shrunken_switch_rate_representativeness",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43246,
+        "models": "noisy_encoding_representativeness"
+      },
+      {
+        "cell": "run2/finite_experience_occurrence",
+        "gt_model": "finite_experience_occurrence",
+        "experiment": 2,
+        "step": 3,
+        "global_step": 9,
+        "best_model": "recency_terminal_run_representative",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43243,
+        "models": "designed_exemplar_categorization"
+      },
+      {
+        "cell": "run2/finite_experience_occurrence",
+        "gt_model": "finite_experience_occurrence",
+        "experiment": 2,
+        "step": 4,
+        "global_step": 10,
+        "best_model": "run_length_heterogeneity",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43243,
+        "models": "designed_exemplar_categorization"
+      },
+      {
+        "cell": "run2/finite_experience_occurrence",
+        "gt_model": "finite_experience_occurrence",
+        "experiment": 2,
+        "step": 5,
+        "global_step": 11,
+        "best_model": "stuck_coin_vs_even_beat",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43243,
+        "models": "designed_exemplar_categorization"
+      },
+      {
+        "cell": "run2/finite_experience_occurrence",
+        "gt_model": "finite_experience_occurrence",
+        "experiment": 3,
+        "step": 2,
+        "global_step": 14,
+        "best_model": "stuck_coin_opening_contrast",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43243,
+        "models": "designer_vs_switchy_mental_coin"
+      },
+      {
+        "cell": "run2/finite_experience_occurrence",
+        "gt_model": "finite_experience_occurrence",
+        "experiment": 3,
+        "step": 3,
+        "global_step": 15,
+        "best_model": "nonrule_terminal_run_fallback",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43243,
+        "models": "designer_vs_switchy_mental_coin"
+      },
+      {
+        "cell": "run2/finite_experience_occurrence",
+        "gt_model": "finite_experience_occurrence",
+        "experiment": 3,
+        "step": 4,
+        "global_step": 16,
+        "best_model": "partner_switching_rule_masking",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43243,
+        "models": "designer_vs_switchy_mental_coin"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 1,
+        "step": 1,
+        "global_step": 1,
+        "best_model": "motif_stack_biased_coin",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "experience_plus_local_balance"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 1,
+        "step": 2,
+        "global_step": 2,
+        "best_model": "motif_stack_biased_coin",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "experience_balance_motif_repetition; experience_plus_local_balance"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 1,
+        "step": 3,
+        "global_step": 3,
+        "best_model": "motif_stack_periodic_repeater",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "experience_balance_motif_repetition"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 1,
+        "step": 4,
+        "global_step": 4,
+        "best_model": "motif_stack_periodic_repeater",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "experience_balance_motif_repetition"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 2,
+        "step": 4,
+        "global_step": 10,
+        "best_model": "sampled_hypothesis_belief_stack",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "noisy_memory_encoding_belief_stack"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 2,
+        "step": 5,
+        "global_step": 11,
+        "best_model": "sampled_hypothesis_memory_blur",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "noisy_memory_encoding_belief_stack; sampled_hypothesis_memory_blur"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 3,
+        "step": 0,
+        "global_step": 12,
+        "best_model": "noisy_memory_encoding_belief_stack",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "noisy_memory_encoding_belief_stack; sampled_hypothesis_memory_blur"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 3,
+        "step": 1,
+        "global_step": 13,
+        "best_model": "noisy_memory_encoding_belief_stack",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "belief_indifference_band; noisy_memory_encoding_belief_stack; sampled_hypothesis_memory_blur; serial_position_encoding_belief_stack; serial_position_memory_belief_stack"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 3,
+        "step": 2,
+        "global_step": 14,
+        "best_model": "alternating_coin_memory_belief_stack",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "alternating_coin_memory_belief_stack; belief_indifference_band; noisy_memory_encoding_belief_stack; sampled_hypothesis_memory_blur; serial_position_encoding_belief_stack; serial_position_memory_belief_stack; switch_contingent_memory_belief_stack; transposition_memory_sampled_belief"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 3,
+        "step": 3,
+        "global_step": 15,
+        "best_model": "mismatch_salient_memory_belief_stack",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "alternating_coin_memory_belief_stack; belief_indifference_band; comparison_guided_memory_belief; difference_attentive_memory_belief; mismatch_salient_memory_belief_stack; noisy_memory_encoding_belief_stack; sampled_hypothesis_memory_blur; serial_position_encoding_belief_stack; serial_position_memory_belief_stack; switch_contingent_memory_belief_stack; transposition_memory_sampled_belief"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 3,
+        "step": 4,
+        "global_step": 16,
+        "best_model": "load_dependent_memory_belief_stack",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "alternating_coin_memory_belief_stack; belief_indifference_band; belief_sampling_vote_matching; comparison_guided_memory_belief; difference_attentive_memory_belief; load_dependent_memory_belief_stack; mismatch_salient_memory_belief_stack; noisy_memory_encoding_belief_stack; partner_anchored_belief_contrast; sampled_hypothesis_memory_blur; serial_position_encoding_belief_stack; serial_position_memory_belief_stack; switch_contingent_memory_belief_stack; transposition_memory_sampled_belief"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 3,
+        "step": 5,
+        "global_step": 17,
+        "best_model": "tally_balancing_coin_memory_belief",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "alternating_coin_memory_belief_stack; belief_indifference_band; chunked_load_memory_belief; comparison_guided_memory_belief; difference_attentive_memory_belief; gist_memory_belief_stack; load_dependent_memory_belief_stack; load_limited_partner_contrast; mismatch_salient_memory_belief_stack; noisy_memory_encoding_belief_stack; partner_anchored_belief_contrast; serial_position_encoding_belief_stack; serial_position_memory_belief_stack; switch_contingent_memory_belief_stack; tally_balancing_coin_memory_belief"
       },
       {
         "cell": "run2/motif_stack",
@@ -400,30 +703,198 @@
     "expected_from": "stated: 2 repeats; ground truths falk_konold_dp, motif_stack, finite_experience_occurrence, local_representativeness",
     "n_expected": 8,
     "complete": [
+      "run1/falk_konold_dp",
+      "run1/finite_experience_occurrence",
       "run1/local_representativeness",
       "run1/motif_stack",
+      "run2/falk_konold_dp",
+      "run2/finite_experience_occurrence",
+      "run2/local_representativeness",
       "run2/motif_stack"
     ],
-    "partial": {
-      "run1/falk_konold_dp": "started but has no holdout.json: the cell did not finish (still running, or failed and not resumed)",
-      "run1/finite_experience_occurrence": "started but has no holdout.json: the cell did not finish (still running, or failed and not resumed)",
-      "run2/falk_konold_dp": "started but has no holdout.json: the cell did not finish (still running, or failed and not resumed)",
-      "run2/finite_experience_occurrence": "started but has no holdout.json: the cell did not finish (still running, or failed and not resumed)",
-      "run2/local_representativeness": "started but has no holdout.json: the cell did not finish (still running, or failed and not resumed)"
-    },
+    "partial": {},
     "missing": {}
   },
   "loop_vs_fitted_baseline": [
     {
+      "gt_model": "falk_konold_dp",
+      "experiment": 1,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.899803272377909,
+      "fitted_baseline_mean": 0.8902718893570123,
+      "mean_difference": 0.009531383020896733,
+      "cells": [
+        "run1/falk_konold_dp",
+        "run2/falk_konold_dp"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "falk_konold_dp",
+      "experiment": 1,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.10125247749328431,
+      "fitted_baseline_mean": 0.11088034295539494,
+      "mean_difference": -0.00962786546211063,
+      "cells": [
+        "run1/falk_konold_dp",
+        "run2/falk_konold_dp"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "falk_konold_dp",
+      "experiment": 2,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.9841548192223355,
+      "fitted_baseline_mean": 0.9832285136362007,
+      "mean_difference": 0.000926305586134879,
+      "cells": [
+        "run1/falk_konold_dp",
+        "run2/falk_konold_dp"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "falk_konold_dp",
+      "experiment": 2,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.046113202800957695,
+      "fitted_baseline_mean": 0.04738938377510215,
+      "mean_difference": -0.0012761809741444578,
+      "cells": [
+        "run1/falk_konold_dp",
+        "run2/falk_konold_dp"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "falk_konold_dp",
+      "experiment": 3,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.9898457918286929,
+      "fitted_baseline_mean": 0.9830470076850503,
+      "mean_difference": 0.0067987841436426555,
+      "cells": [
+        "run1/falk_konold_dp",
+        "run2/falk_konold_dp"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "falk_konold_dp",
+      "experiment": 3,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.036635095510658994,
+      "fitted_baseline_mean": 0.04849935117237118,
+      "mean_difference": -0.01186425566171219,
+      "cells": [
+        "run1/falk_konold_dp",
+        "run2/falk_konold_dp"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "finite_experience_occurrence",
+      "experiment": 1,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.9630059195355871,
+      "fitted_baseline_mean": 0.5275275831477988,
+      "mean_difference": 0.43547833638778827,
+      "cells": [
+        "run1/finite_experience_occurrence",
+        "run2/finite_experience_occurrence"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "finite_experience_occurrence",
+      "experiment": 1,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.023739473583683564,
+      "fitted_baseline_mean": 0.07232542597214336,
+      "mean_difference": -0.04858595238845981,
+      "cells": [
+        "run1/finite_experience_occurrence",
+        "run2/finite_experience_occurrence"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "finite_experience_occurrence",
+      "experiment": 2,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.9169369611183016,
+      "fitted_baseline_mean": 0.5233904047084923,
+      "mean_difference": 0.39354655640980923,
+      "cells": [
+        "run1/finite_experience_occurrence",
+        "run2/finite_experience_occurrence"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "finite_experience_occurrence",
+      "experiment": 2,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.03236814391509589,
+      "fitted_baseline_mean": 0.08291774652825165,
+      "mean_difference": -0.05054960261315576,
+      "cells": [
+        "run1/finite_experience_occurrence",
+        "run2/finite_experience_occurrence"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "finite_experience_occurrence",
+      "experiment": 3,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.9460705813662176,
+      "fitted_baseline_mean": 0.5359595903523372,
+      "mean_difference": 0.4101109910138804,
+      "cells": [
+        "run1/finite_experience_occurrence",
+        "run2/finite_experience_occurrence"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "finite_experience_occurrence",
+      "experiment": 3,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.026145104956976056,
+      "fitted_baseline_mean": 0.0812050766098519,
+      "mean_difference": -0.05505997165287585,
+      "cells": [
+        "run1/finite_experience_occurrence",
+        "run2/finite_experience_occurrence"
+      ],
+      "excluded": {}
+    },
+    {
       "gt_model": "local_representativeness",
       "experiment": 1,
       "metric": "pearson_r",
-      "n_cells": 1,
-      "loop_mean": 0.7661556404847817,
-      "fitted_baseline_mean": 0.4413996607826628,
-      "mean_difference": 0.3247559797021189,
+      "n_cells": 2,
+      "loop_mean": 0.8005105963153378,
+      "fitted_baseline_mean": 0.4406607612544357,
+      "mean_difference": 0.3598498350609022,
       "cells": [
-        "run1/local_representativeness"
+        "run1/local_representativeness",
+        "run2/local_representativeness"
       ],
       "excluded": {}
     },
@@ -431,12 +902,13 @@
       "gt_model": "local_representativeness",
       "experiment": 1,
       "metric": "rmse",
-      "n_cells": 1,
-      "loop_mean": 0.09877851728562967,
-      "fitted_baseline_mean": 0.1297955231545793,
-      "mean_difference": -0.03101700586894962,
+      "n_cells": 2,
+      "loop_mean": 0.0905138915056275,
+      "fitted_baseline_mean": 0.13016803304391572,
+      "mean_difference": -0.039654141538288244,
       "cells": [
-        "run1/local_representativeness"
+        "run1/local_representativeness",
+        "run2/local_representativeness"
       ],
       "excluded": {}
     },
@@ -444,12 +916,13 @@
       "gt_model": "local_representativeness",
       "experiment": 2,
       "metric": "pearson_r",
-      "n_cells": 1,
-      "loop_mean": 0.6607421127928814,
-      "fitted_baseline_mean": 0.4415914872904852,
-      "mean_difference": 0.21915062550239622,
+      "n_cells": 2,
+      "loop_mean": 0.7799721030243991,
+      "fitted_baseline_mean": 0.4409050304799583,
+      "mean_difference": 0.3390670725444408,
       "cells": [
-        "run1/local_representativeness"
+        "run1/local_representativeness",
+        "run2/local_representativeness"
       ],
       "excluded": {}
     },
@@ -457,12 +930,13 @@
       "gt_model": "local_representativeness",
       "experiment": 2,
       "metric": "rmse",
-      "n_cells": 1,
-      "loop_mean": 0.10802068244075887,
-      "fitted_baseline_mean": 0.129353267337759,
-      "mean_difference": -0.021332584897000142,
+      "n_cells": 2,
+      "loop_mean": 0.08562228385360057,
+      "fitted_baseline_mean": 0.12948344136865875,
+      "mean_difference": -0.043861157515058195,
       "cells": [
-        "run1/local_representativeness"
+        "run1/local_representativeness",
+        "run2/local_representativeness"
       ],
       "excluded": {}
     },
@@ -470,12 +944,13 @@
       "gt_model": "local_representativeness",
       "experiment": 3,
       "metric": "pearson_r",
-      "n_cells": 1,
-      "loop_mean": 0.8392219051431223,
-      "fitted_baseline_mean": 0.4416747877624944,
-      "mean_difference": 0.3975471173806279,
+      "n_cells": 2,
+      "loop_mean": 0.8694749939042526,
+      "fitted_baseline_mean": 0.4409776956339284,
+      "mean_difference": 0.42849729827032423,
       "cells": [
-        "run1/local_representativeness"
+        "run1/local_representativeness",
+        "run2/local_representativeness"
       ],
       "excluded": {}
     },
@@ -483,12 +958,13 @@
       "gt_model": "local_representativeness",
       "experiment": 3,
       "metric": "rmse",
-      "n_cells": 1,
-      "loop_mean": 0.07847733972554131,
-      "fitted_baseline_mean": 0.12911248633875722,
-      "mean_difference": -0.0506351466132159,
+      "n_cells": 2,
+      "loop_mean": 0.07135096135147179,
+      "fitted_baseline_mean": 0.12919362022810602,
+      "mean_difference": -0.057842658876634236,
       "cells": [
-        "run1/local_representativeness"
+        "run1/local_representativeness",
+        "run2/local_representativeness"
       ],
       "excluded": {}
     },

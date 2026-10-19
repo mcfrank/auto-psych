@@ -1,0 +1,5 @@
+gt_model,run,pearson_r,rmse,kl_regret,pearson_r_bma,best_model,global_step
+fewer_heads_more_random,run1,0.9998679545520258,0.006330762842693238,0.0010467380938617645,0.999878325397665,shared_tails_reading_order_band,17
+longer_runs_more_random,run1,0.9956323280442945,0.021996712835639507,0.001232375993172274,0.9958908050355947,coherent_edit_noise_accelerating_streak,17
+more_heads_more_random,run1,0.9996496643831588,0.011139109764408158,0.002750178906237103,0.9997165679400293,span_limited_left_default_onset,17
+more_imbalance_more_random,run1,0.9967617605113157,0.021962271014890917,0.0012692116218232896,0.9974893867130098,confirmed_heads_match_anchor_tally,17

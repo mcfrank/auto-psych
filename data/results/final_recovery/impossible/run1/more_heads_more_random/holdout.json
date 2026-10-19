@@ -1,0 +1,1684 @@
+{
+  "project_id": "subjective_randomness",
+  "seed_models_dir": "/scratch/users/benpry/auto-psych/final_impossible_1/harness_repo/src/subjective_randomness/pymc_model_families",
+  "n_experiments": 3,
+  "n_participants": 40,
+  "inner_loop": {
+    "max_iterations": 5,
+    "candidate_count": 6,
+    "novelty_rmse_threshold": 0.002,
+    "n_critique_proposals": 8,
+    "starting_models_prunable": true
+  },
+  "fit_kwargs": {
+    "draws": 1000,
+    "tune": 1000,
+    "chains": 4,
+    "target_accept": 0.8
+  },
+  "seed": 101,
+  "eval_pool": {
+    "n_pairs": 500,
+    "lengths": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "seed": 11,
+    "min_remaining": 100,
+    "exhaustive": true,
+    "predict_max_draws": 500
+  },
+  "metrics_version": 2,
+  "gt_runs": [
+    {
+      "gt_model": "more_heads_more_random",
+      "params": {
+        "beta": 4.0,
+        "side_bias": 0.0
+      },
+      "run_root": "/scratch/users/benpry/auto-psych/agent_trees/add1448d7545d9e6/repo/_runs/cell_1",
+      "n_eval_stimuli": 43243,
+      "n_eval_dropped": 192,
+      "trajectory": [
+        {
+          "experiment": 1,
+          "step": 0,
+          "iteration": null,
+          "global_step": 0,
+          "best_model": "local_representativeness",
+          "pearson_r": 8.240775945427765e-06,
+          "rmse": 0.4387487317539673,
+          "kl_regret": 0.520377415107033,
+          "bias": -0.20991002699822575,
+          "calib_slope": 5.957340483403272e-07,
+          "calib_intercept": 0.5076187788324088,
+          "pearson_r_bma": 9.307374337550736e-05,
+          "rmse_bma": 0.43867234925535875,
+          "kl_regret_bma": 0.5202734184499147,
+          "bias_bma": -0.20270659173911318,
+          "calib_slope_bma": 1.4695185609951444e-05,
+          "calib_intercept_bma": 0.5148120973228525,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": false
+        },
+        {
+          "experiment": 1,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 1,
+          "best_model": "heads_proportion_judgment",
+          "pearson_r": 0.999969581681494,
+          "rmse": 0.003435829762491707,
+          "kl_regret": 0.0007889969968445364,
+          "bias": 0.0006135106449908261,
+          "calib_slope": 1.004008239961877,
+          "calib_intercept": -0.0022625187016860338,
+          "pearson_r_bma": 0.99994234780532,
+          "rmse_bma": 0.004576208648573357,
+          "kl_regret_bma": 0.0005967944091517601,
+          "bias_bma": 0.0016414484036869417,
+          "calib_slope_bma": 1.0027602952050307,
+          "calib_intercept_bma": -0.00033914409842528137,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 2,
+          "best_model": "heads_share_periodic_penalty",
+          "pearson_r": 0.9971091001934094,
+          "rmse": 0.029516478859415766,
+          "kl_regret": 0.0031331527744460712,
+          "bias": 0.0007752825065447072,
+          "calib_slope": 1.005258600085519,
+          "calib_intercept": -0.002997916780981935,
+          "pearson_r_bma": 0.9983862916545193,
+          "rmse_bma": 0.022070211130421374,
+          "kl_regret_bma": 0.0018716015794997029,
+          "bias_bma": 0.0004733474622014926,
+          "calib_slope_bma": 1.0052629812064744,
+          "calib_intercept_bma": -0.003302995407685194,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 3,
+          "best_model": "graded_motif_repetition_penalty",
+          "pearson_r": 0.9954831198851346,
+          "rmse": 0.03691755143274415,
+          "kl_regret": 0.004747970965679525,
+          "bias": 0.0007616486822955666,
+          "calib_slope": 1.0054920425430616,
+          "calib_intercept": -0.003179052392808246,
+          "pearson_r_bma": 0.9969838575304372,
+          "rmse_bma": 0.03013351466277141,
+          "kl_regret_bma": 0.003232302610882073,
+          "bias_bma": 0.0010339049468405799,
+          "calib_slope_bma": 1.0048412068714978,
+          "calib_intercept_bma": -0.0024398025078501417,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 4,
+          "best_model": "contrast_salient_motif_penalty",
+          "pearson_r": 0.993005706223801,
+          "rmse": 0.04582676395931976,
+          "kl_regret": 0.00915581834111565,
+          "bias": 0.0003104625086578317,
+          "calib_slope": 1.0027215511734615,
+          "calib_intercept": -0.0016423300181880318,
+          "pearson_r_bma": 0.9948479763797133,
+          "rmse_bma": 0.03925819573705629,
+          "kl_regret_bma": 0.005796906656511534,
+          "bias_bma": 0.003717304812027144,
+          "calib_slope_bma": 0.9978032185749547,
+          "calib_intercept_bma": 0.005293559703639539,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 5,
+          "best_model": "contrast_salient_motif_penalty",
+          "pearson_r": 0.993005706223801,
+          "rmse": 0.04582676395931976,
+          "kl_regret": 0.00915581834111565,
+          "bias": 0.0003104625086578317,
+          "calib_slope": 1.0027215511734615,
+          "calib_intercept": -0.0016423300181880318,
+          "pearson_r_bma": 0.9939546462739907,
+          "rmse_bma": 0.04288374304528516,
+          "kl_regret_bma": 0.006911149405769467,
+          "bias_bma": 0.007441832895848689,
+          "calib_slope_bma": 0.9928782210146284,
+          "calib_intercept_bma": 0.012551917510863375,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 0,
+          "iteration": null,
+          "global_step": 6,
+          "best_model": "side_biased_motif_heads_share",
+          "pearson_r": 0.9996851551702606,
+          "rmse": 0.011235786929536667,
+          "kl_regret": 0.0012721001513515883,
+          "bias": 0.0057511363060636245,
+          "calib_slope": 0.9982134573463441,
+          "calib_intercept": 0.007033032886576196,
+          "pearson_r_bma": 0.9998064476605198,
+          "rmse_bma": 0.008760169420849156,
+          "kl_regret_bma": 0.0011780385077787817,
+          "bias_bma": 0.004423065463758937,
+          "calib_slope_bma": 0.9999819961903047,
+          "calib_intercept_bma": 0.004435983723525827,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 7,
+          "best_model": "streak_aversion_motif_discount",
+          "pearson_r": 0.9993074996075884,
+          "rmse": 0.015278799615224591,
+          "kl_regret": 0.0015532572016869824,
+          "bias": 0.005382926764861046,
+          "calib_slope": 0.9989407612107006,
+          "calib_intercept": 0.006142955082506951,
+          "pearson_r_bma": 0.9995420840108263,
+          "rmse_bma": 0.012740498494517258,
+          "kl_regret_bma": 0.0013291986391528925,
+          "bias_bma": 0.005206666049757133,
+          "calib_slope_bma": 0.9989579737259682,
+          "calib_intercept_bma": 0.0059543439897983275,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "half_balance_left_default_heads",
+            "streak_aversion_motif_discount"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 8,
+          "best_model": "early_heads_streak_motif",
+          "pearson_r": 0.9987142593870281,
+          "rmse": 0.021230317021950957,
+          "kl_regret": 0.002053898761761055,
+          "bias": 0.008369464191497243,
+          "calib_slope": 0.9945881868168799,
+          "calib_intercept": 0.012252565254762593,
+          "pearson_r_bma": 0.9993835292958738,
+          "rmse_bma": 0.014910548862976896,
+          "kl_regret_bma": 0.001614423301977437,
+          "bias_bma": 0.006344623108730343,
+          "calib_slope_bma": 0.9981317956931132,
+          "calib_intercept_bma": 0.007685102886025086,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "early_heads_streak_motif",
+            "half_balance_left_default_heads",
+            "length_accumulated_left_default",
+            "streak_aversion_motif_discount"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 9,
+          "best_model": "early_heads_streak_periodic_veto",
+          "pearson_r": 0.9988077425583907,
+          "rmse": 0.020556653336628657,
+          "kl_regret": 0.003499579373671872,
+          "bias": 0.00839058507242851,
+          "calib_slope": 0.9989580824894854,
+          "calib_intercept": 0.009138184972131924,
+          "pearson_r_bma": 0.9990625342832385,
+          "rmse_bma": 0.01825692697915524,
+          "kl_regret_bma": 0.0029379257041109133,
+          "bias_bma": 0.007499239286869185,
+          "calib_slope_bma": 0.9996380262401331,
+          "calib_intercept_bma": 0.007758963827287024,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "early_heads_streak_motif",
+            "early_heads_streak_periodic_veto",
+            "half_balance_left_default_heads",
+            "length_accumulated_left_default",
+            "mirror_symmetry_aversion",
+            "streak_aversion_motif_discount",
+            "winner_scrutiny_motif_primacy"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 10,
+          "best_model": "early_heads_streak_periodic_veto",
+          "pearson_r": 0.9988077425583907,
+          "rmse": 0.020556653336628657,
+          "kl_regret": 0.003499579373671872,
+          "bias": 0.00839058507242851,
+          "calib_slope": 0.9989580824894854,
+          "calib_intercept": 0.009138184972131924,
+          "pearson_r_bma": 0.9989395419314837,
+          "rmse_bma": 0.019371499454391393,
+          "kl_regret_bma": 0.0032069163188742176,
+          "bias_bma": 0.007865981645916334,
+          "calib_slope_bma": 0.9994288106132347,
+          "calib_intercept_bma": 0.008275823235051827,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "early_heads_streak_motif",
+            "early_heads_streak_periodic_veto",
+            "flip_clump_size_periodic_veto",
+            "front_loaded_heads_periodic_veto",
+            "half_balance_left_default_heads",
+            "length_accumulated_left_default",
+            "mirror_symmetry_aversion",
+            "run_length_variety_aversion",
+            "streak_aversion_motif_discount",
+            "winner_scrutiny_motif_primacy"
+          ],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 11,
+          "best_model": "anchored_streak_assimilation",
+          "pearson_r": 0.998770824557749,
+          "rmse": 0.02096114392949097,
+          "kl_regret": 0.003505389696888888,
+          "bias": 0.008744138483853464,
+          "calib_slope": 0.9984119005387367,
+          "calib_intercept": 0.009883636559255837,
+          "pearson_r_bma": 0.9988932080793136,
+          "rmse_bma": 0.019854891768262876,
+          "kl_regret_bma": 0.0032973588818258383,
+          "bias_bma": 0.008203207523828245,
+          "calib_slope_bma": 0.9990299412834043,
+          "calib_intercept_bma": 0.008899247077741812,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "anchored_streak_assimilation",
+            "early_heads_streak_motif",
+            "early_heads_streak_periodic_veto",
+            "flip_clump_size_periodic_veto",
+            "front_loaded_heads_periodic_veto",
+            "half_balance_left_default_heads",
+            "halving_first_impression_heads",
+            "length_accumulated_left_default",
+            "mirror_symmetry_aversion",
+            "reading_accumulated_order_effects",
+            "run_length_variety_aversion",
+            "streak_aversion_motif_discount",
+            "winner_scrutiny_motif_primacy"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 0,
+          "iteration": null,
+          "global_step": 12,
+          "best_model": "periodic_veto_streak_tiebreak",
+          "pearson_r": 0.9997792395866653,
+          "rmse": 0.009214418938302113,
+          "kl_regret": 0.002501430211362082,
+          "bias": 0.0039008810983093855,
+          "calib_slope": 1.0050758396972606,
+          "calib_intercept": 0.00025884877781567894,
+          "pearson_r_bma": 0.9997600515395904,
+          "rmse_bma": 0.009603782008999629,
+          "kl_regret_bma": 0.002550261710904572,
+          "bias_bma": 0.004164212941282255,
+          "calib_slope_bma": 1.0047460842939842,
+          "calib_intercept_bma": 0.0007587877455640379,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "anchored_streak_assimilation",
+            "early_heads_streak_periodic_veto",
+            "flip_clump_size_periodic_veto",
+            "front_loaded_heads_periodic_veto",
+            "halving_first_impression_heads",
+            "reading_accumulated_order_effects",
+            "run_length_variety_aversion"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 13,
+          "best_model": "heads_streak_tiebreak_periodic_veto",
+          "pearson_r": 0.99970469581566,
+          "rmse": 0.010398265300122712,
+          "kl_regret": 0.00242538851338931,
+          "bias": 0.0041556663903776336,
+          "calib_slope": 1.0043817146343001,
+          "calib_intercept": 0.0010116848485818286,
+          "pearson_r_bma": 0.9997438424023354,
+          "rmse_bma": 0.00984407446735273,
+          "kl_regret_bma": 0.0024426401038310187,
+          "bias_bma": 0.004173768261979923,
+          "calib_slope_bma": 1.004587424172332,
+          "calib_intercept_bma": 0.0008821853712782657,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "anchored_streak_assimilation",
+            "early_heads_streak_periodic_veto",
+            "flip_clump_size_periodic_veto",
+            "front_loaded_heads_periodic_veto",
+            "halving_first_impression_heads",
+            "heads_clump_size_periodic_veto",
+            "reading_accumulated_order_effects",
+            "run_length_variety_aversion",
+            "tally_return_to_balance"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 14,
+          "best_model": "excess_heads_streak_tiebreak_veto",
+          "pearson_r": 0.9996487399801868,
+          "rmse": 0.01126387925959771,
+          "kl_regret": 0.0026111316207703323,
+          "bias": 0.004395208536137178,
+          "calib_slope": 1.0043920944270397,
+          "calib_intercept": 0.0012437792531021508,
+          "pearson_r_bma": 0.9997232147924262,
+          "rmse_bma": 0.01017737342584881,
+          "kl_regret_bma": 0.002540371987723171,
+          "bias_bma": 0.004223933858495381,
+          "calib_slope_bma": 1.004652064837952,
+          "calib_intercept_bma": 0.0008859697959192614,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "anchored_streak_assimilation",
+            "early_heads_streak_periodic_veto",
+            "flip_clump_size_periodic_veto",
+            "front_loaded_heads_periodic_veto",
+            "halving_first_impression_heads",
+            "heads_clump_size_periodic_veto",
+            "reading_accumulated_order_effects",
+            "run_length_variety_aversion",
+            "tally_return_to_balance"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 15,
+          "best_model": "late_heads_recency_streak_tiebreak",
+          "pearson_r": 0.9997005788520406,
+          "rmse": 0.010312570024447123,
+          "kl_regret": 0.0025475907604198466,
+          "bias": 0.0034863302396155316,
+          "calib_slope": 1.0056544635180542,
+          "calib_intercept": -0.0005708780482900355,
+          "pearson_r_bma": 0.9997292478744123,
+          "rmse_bma": 0.010019240872290199,
+          "kl_regret_bma": 0.0024870445949362646,
+          "bias_bma": 0.003994573965126819,
+          "calib_slope_bma": 1.00496280063409,
+          "calib_intercept_bma": 0.00043364978557136613,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "anchored_streak_assimilation",
+            "early_heads_streak_periodic_veto",
+            "flip_clump_size_periodic_veto",
+            "front_loaded_heads_periodic_veto",
+            "halving_first_impression_heads",
+            "heads_clump_size_periodic_veto",
+            "reading_accumulated_order_effects",
+            "run_length_variety_aversion",
+            "tally_return_to_balance"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 16,
+          "best_model": "delayed_heads_onset_streak_tiebreak",
+          "pearson_r": 0.9996997047145709,
+          "rmse": 0.010268194084306237,
+          "kl_regret": 0.00250597841118558,
+          "bias": 0.003245831848032084,
+          "calib_slope": 1.005890461395452,
+          "calib_intercept": -0.00098071037244718,
+          "pearson_r_bma": 0.9997326043740945,
+          "rmse_bma": 0.00988327358791079,
+          "kl_regret_bma": 0.00248273026217129,
+          "bias_bma": 0.0036524229376633135,
+          "calib_slope_bma": 1.0054983148714773,
+          "calib_intercept_bma": -0.0002927450866497816,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "anchored_streak_assimilation",
+            "early_heads_streak_periodic_veto",
+            "flip_clump_size_periodic_veto",
+            "front_loaded_heads_periodic_veto",
+            "halving_first_impression_heads",
+            "heads_clump_size_periodic_veto",
+            "reading_accumulated_order_effects",
+            "run_length_variety_aversion",
+            "tally_return_to_balance"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 17,
+          "best_model": "span_limited_left_default_onset",
+          "pearson_r": 0.9996496643831588,
+          "rmse": 0.011139109764408158,
+          "kl_regret": 0.002750178906237103,
+          "bias": 0.0038375751421241906,
+          "calib_slope": 1.0056202381030288,
+          "calib_intercept": -0.00019507561931486617,
+          "pearson_r_bma": 0.9997165679400293,
+          "rmse_bma": 0.010137099249960226,
+          "kl_regret_bma": 0.0024688222347741258,
+          "bias_bma": 0.0036732904928977435,
+          "calib_slope_bma": 1.0055739916626667,
+          "calib_intercept_bma": -0.0003261773785070421,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "anchored_streak_assimilation",
+            "early_heads_streak_periodic_veto",
+            "flip_clump_size_periodic_veto",
+            "front_loaded_heads_periodic_veto",
+            "halving_first_impression_heads",
+            "heads_clump_size_periodic_veto",
+            "reading_accumulated_order_effects",
+            "run_length_variety_aversion",
+            "tally_return_to_balance"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        }
+      ],
+      "incumbent": {
+        "starting_models": [
+          "falk_konold_dp",
+          "finite_experience_occurrence",
+          "local_representativeness",
+          "motif_stack"
+        ],
+        "n_steps": 18,
+        "n_incumbent_changes": 15,
+        "n_steps_discovered_incumbent": 17,
+        "final_incumbent": "span_limited_left_default_onset",
+        "changes": [
+          {
+            "global_step": 1,
+            "experiment": 1,
+            "step": 1,
+            "from": "local_representativeness",
+            "to": "heads_proportion_judgment"
+          },
+          {
+            "global_step": 2,
+            "experiment": 1,
+            "step": 2,
+            "from": "heads_proportion_judgment",
+            "to": "heads_share_periodic_penalty"
+          },
+          {
+            "global_step": 3,
+            "experiment": 1,
+            "step": 3,
+            "from": "heads_share_periodic_penalty",
+            "to": "graded_motif_repetition_penalty"
+          },
+          {
+            "global_step": 4,
+            "experiment": 1,
+            "step": 4,
+            "from": "graded_motif_repetition_penalty",
+            "to": "contrast_salient_motif_penalty"
+          },
+          {
+            "global_step": 6,
+            "experiment": 2,
+            "step": 0,
+            "from": "contrast_salient_motif_penalty",
+            "to": "side_biased_motif_heads_share"
+          },
+          {
+            "global_step": 7,
+            "experiment": 2,
+            "step": 1,
+            "from": "side_biased_motif_heads_share",
+            "to": "streak_aversion_motif_discount"
+          },
+          {
+            "global_step": 8,
+            "experiment": 2,
+            "step": 2,
+            "from": "streak_aversion_motif_discount",
+            "to": "early_heads_streak_motif"
+          },
+          {
+            "global_step": 9,
+            "experiment": 2,
+            "step": 3,
+            "from": "early_heads_streak_motif",
+            "to": "early_heads_streak_periodic_veto"
+          },
+          {
+            "global_step": 11,
+            "experiment": 2,
+            "step": 5,
+            "from": "early_heads_streak_periodic_veto",
+            "to": "anchored_streak_assimilation"
+          },
+          {
+            "global_step": 12,
+            "experiment": 3,
+            "step": 0,
+            "from": "anchored_streak_assimilation",
+            "to": "periodic_veto_streak_tiebreak"
+          },
+          {
+            "global_step": 13,
+            "experiment": 3,
+            "step": 1,
+            "from": "periodic_veto_streak_tiebreak",
+            "to": "heads_streak_tiebreak_periodic_veto"
+          },
+          {
+            "global_step": 14,
+            "experiment": 3,
+            "step": 2,
+            "from": "heads_streak_tiebreak_periodic_veto",
+            "to": "excess_heads_streak_tiebreak_veto"
+          },
+          {
+            "global_step": 15,
+            "experiment": 3,
+            "step": 3,
+            "from": "excess_heads_streak_tiebreak_veto",
+            "to": "late_heads_recency_streak_tiebreak"
+          },
+          {
+            "global_step": 16,
+            "experiment": 3,
+            "step": 4,
+            "from": "late_heads_recency_streak_tiebreak",
+            "to": "delayed_heads_onset_streak_tiebreak"
+          },
+          {
+            "global_step": 17,
+            "experiment": 3,
+            "step": 5,
+            "from": "delayed_heads_onset_streak_tiebreak",
+            "to": "span_limited_left_default_onset"
+          }
+        ]
+      },
+      "starting_models_prunable": true,
+      "baseline": {
+        "mean_r": 0.0002956652169668143,
+        "per_model": {
+          "falk_konold_dp": 0.00032251422495906617,
+          "motif_stack": -1.5898626255336525e-05,
+          "finite_experience_occurrence": 0.0007569885372700954,
+          "local_representativeness": 0.00011905673189343214
+        }
+      },
+      "fitted_baseline": {
+        "mean_r_models": [
+          "falk_konold_dp",
+          "finite_experience_occurrence",
+          "local_representativeness",
+          "motif_stack"
+        ],
+        "mean_rmse_models": [
+          "falk_konold_dp",
+          "finite_experience_occurrence",
+          "local_representativeness",
+          "motif_stack"
+        ],
+        "per_model": {
+          "falk_konold_dp": {
+            "pearson_r": 0.0002960842018462024,
+            "rmse": 0.4410502384912362,
+            "elpd_loo": -5547.9773794541925,
+            "trusted": true,
+            "n_eval_excluded": 0
+          },
+          "finite_experience_occurrence": {
+            "pearson_r": 0.0007090739570066705,
+            "rmse": 0.4362760492747887,
+            "elpd_loo": -5340.06862576683,
+            "trusted": true,
+            "n_eval_excluded": 0
+          },
+          "local_representativeness": {
+            "pearson_r": -7.814024949015696e-05,
+            "rmse": 0.4365339013309933,
+            "elpd_loo": -5331.02044035442,
+            "trusted": true,
+            "n_eval_excluded": 0
+          },
+          "motif_stack": {
+            "pearson_r": 8.380472448856197e-05,
+            "rmse": 0.43648321739697055,
+            "elpd_loo": -5315.105326423356,
+            "trusted": true,
+            "n_eval_excluded": 0
+          }
+        },
+        "elpd_best_model": "motif_stack",
+        "elpd_best_r": 8.380472448856197e-05,
+        "elpd_best_rmse": 0.43648321739697055,
+        "elpd_best_reason": null,
+        "mean_r": 0.00025270565846281947,
+        "mean_rmse": 0.43758585162349717,
+        "n_responses": 7680
+      },
+      "fitted_baseline_by_experiment": [
+        {
+          "experiment": 1,
+          "mean_r_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "mean_rmse_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "per_model": {
+            "falk_konold_dp": {
+              "pearson_r": 0.000338473512445889,
+              "rmse": 0.44340723523231723,
+              "elpd_loo": -1940.1898241350245,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "finite_experience_occurrence": {
+              "pearson_r": 0.0007449414583458022,
+              "rmse": 0.43773934263365155,
+              "elpd_loo": -1789.3580375727392,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "local_representativeness": {
+              "pearson_r": 8.240775945427765e-06,
+              "rmse": 0.4387487317539673,
+              "elpd_loo": -1765.786395937885,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "motif_stack": {
+              "pearson_r": 9.307374337550736e-05,
+              "rmse": 0.43867234925535875,
+              "elpd_loo": -1726.0589750170693,
+              "trusted": false,
+              "n_eval_excluded": 0
+            }
+          },
+          "elpd_best_model": "local_representativeness",
+          "elpd_best_r": 8.240775945427765e-06,
+          "elpd_best_rmse": 0.4387487317539673,
+          "elpd_best_reason": null,
+          "mean_r": 0.0002961823725281566,
+          "mean_rmse": 0.43964191471882375,
+          "n_responses": 2560
+        },
+        {
+          "experiment": 2,
+          "mean_r_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "mean_rmse_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "per_model": {
+            "falk_konold_dp": {
+              "pearson_r": 0.0002778884758695959,
+              "rmse": 0.4400653082952128,
+              "elpd_loo": -3752.562029454973,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "finite_experience_occurrence": {
+              "pearson_r": 0.0006763594771120311,
+              "rmse": 0.4349960361800567,
+              "elpd_loo": -3565.712795918272,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "local_representativeness": {
+              "pearson_r": -0.00012773348714962838,
+              "rmse": 0.43500086174371755,
+              "elpd_loo": -3556.851920797588,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "motif_stack": {
+              "pearson_r": 0.00014482471146026694,
+              "rmse": 0.4353963850810565,
+              "elpd_loo": -3536.705835897388,
+              "trusted": true,
+              "n_eval_excluded": 0
+            }
+          },
+          "elpd_best_model": "motif_stack",
+          "elpd_best_r": 0.00014482471146026694,
+          "elpd_best_rmse": 0.4353963850810565,
+          "elpd_best_reason": null,
+          "mean_r": 0.0002428347943230664,
+          "mean_rmse": 0.4363646478250109,
+          "n_responses": 5120
+        },
+        {
+          "experiment": 3,
+          "mean_r_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "mean_rmse_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "per_model": {
+            "falk_konold_dp": {
+              "pearson_r": 0.0002960842018462024,
+              "rmse": 0.4410502384912362,
+              "elpd_loo": -5547.9773794541925,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "finite_experience_occurrence": {
+              "pearson_r": 0.0007090739570066705,
+              "rmse": 0.4362760492747887,
+              "elpd_loo": -5340.06862576683,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "local_representativeness": {
+              "pearson_r": -7.814024949015696e-05,
+              "rmse": 0.4365339013309933,
+              "elpd_loo": -5331.02044035442,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "motif_stack": {
+              "pearson_r": 8.380472448856197e-05,
+              "rmse": 0.43648321739697055,
+              "elpd_loo": -5315.105326423356,
+              "trusted": true,
+              "n_eval_excluded": 0
+            }
+          },
+          "elpd_best_model": "motif_stack",
+          "elpd_best_r": 8.380472448856197e-05,
+          "elpd_best_rmse": 0.43648321739697055,
+          "elpd_best_reason": null,
+          "mean_r": 0.00025270565846281947,
+          "mean_rmse": 0.43758585162349717,
+          "n_responses": 7680
+        }
+      ],
+      "leakage": {
+        "files": [
+          {
+            "path": "experiment1/cognitive_models/contrast_salient_motif_penalty.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff",
+              "motif_contrast_cubed"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/cognitive_models/glance_heads_motif_tiebreak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "motif_contrast_cubed"
+            ],
+            "n_data_cols": 2
+          },
+          {
+            "path": "experiment1/cognitive_models/graded_motif_repetition_penalty.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff",
+              "motif_reps_diff"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/cognitive_models/heads_share_periodic_penalty.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff",
+              "periodic_diff"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/cognitive_models/motif_penalty_left_default.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff",
+              "motif_reps_diff"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/cognitive_models/repetition_scaled_motif_penalty.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff",
+              "motif_reps_diff"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/cognitive_models/salient_motif_contrast_left_default.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff",
+              "motif_contrast_cubed"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/cognitive_models/side_biased_motif_heads_share.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "motif_reps_diff_lr",
+              "share_diff_lr"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/model_loop/models/contrast_salient_motif_penalty.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff",
+              "motif_contrast_cubed"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/model_loop/models/glance_heads_motif_tiebreak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "motif_contrast_cubed"
+            ],
+            "n_data_cols": 2
+          },
+          {
+            "path": "experiment1/model_loop/models/graded_motif_repetition_penalty.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff",
+              "motif_reps_diff"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/model_loop/models/heads_share_periodic_penalty.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff",
+              "periodic_diff"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/model_loop/models/motif_penalty_left_default.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff",
+              "motif_reps_diff"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/model_loop/models/repetition_scaled_motif_penalty.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff",
+              "motif_reps_diff"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/model_loop/models/salient_motif_contrast_left_default.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff",
+              "motif_contrast_cubed"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/model_loop/models/side_biased_motif_heads_share.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "motif_reps_diff_lr",
+              "share_diff_lr"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment2/cognitive_models/anchored_streak_assimilation.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "anchor_streak_excess",
+              "chose_left",
+              "heads_lateness_diff_lr",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "right_streak_excess",
+              "winner_periodic"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/cognitive_models/early_heads_streak_periodic_veto.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_lateness_diff_lr",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/cognitive_models/flip_clump_size_periodic_veto.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "clump_diff_lr",
+              "heads_lateness_diff_lr",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/cognitive_models/front_loaded_heads_periodic_veto.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "front_loading_diff_lr",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/cognitive_models/halving_first_impression_heads.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "first_impression_diff_lr",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/cognitive_models/periodic_veto_streak_tiebreak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment2/cognitive_models/reading_accumulated_order_effects.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "flips_read_frac",
+              "heads_lateness_diff_lr",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/cognitive_models/run_length_variety_aversion.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_lateness_diff_lr",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "run_variety_diff_lr",
+              "streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/model_loop/models/anchored_streak_assimilation.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "anchor_streak_excess",
+              "chose_left",
+              "heads_lateness_diff_lr",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "right_streak_excess",
+              "winner_periodic"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/model_loop/models/early_heads_streak_periodic_veto.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_lateness_diff_lr",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/model_loop/models/flip_clump_size_periodic_veto.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "clump_diff_lr",
+              "heads_lateness_diff_lr",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/model_loop/models/front_loaded_heads_periodic_veto.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "front_loading_diff_lr",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/model_loop/models/halving_first_impression_heads.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "first_impression_diff_lr",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/model_loop/models/periodic_veto_streak_tiebreak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment2/model_loop/models/reading_accumulated_order_effects.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "flips_read_frac",
+              "heads_lateness_diff_lr",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/model_loop/models/run_length_variety_aversion.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_lateness_diff_lr",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "run_variety_diff_lr",
+              "streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment3/cognitive_models/back_loaded_heads_streak_tiebreak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_back_loading_diff_lr",
+              "tie_excess_heads_streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/cognitive_models/delayed_heads_onset_streak_tiebreak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_excess_heads_streak_diff_lr",
+              "tie_heads_onset_delay_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/cognitive_models/excess_heads_streak_tiebreak_veto.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_excess_heads_streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment3/cognitive_models/first_read_candidate_scrutiny.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_left_excess_heads_streak",
+              "tie_left_heads_lateness",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/cognitive_models/late_heads_recency_streak_tiebreak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_excess_heads_streak_diff_lr",
+              "tie_heads_lateness_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/cognitive_models/span_limited_left_default_onset.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "beyond_span",
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_excess_heads_streak_diff_lr",
+              "tie_heads_onset_delay_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment3/cognitive_models/span_limited_periodic_veto_recency.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "span_winner_periodic",
+              "tie_excess_heads_streak_diff_lr",
+              "tie_heads_lateness_diff_lr"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/cognitive_models/tally_comeback_depth_tiebreak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_comeback_depth_diff_lr",
+              "tie_excess_heads_streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/model_loop/models/back_loaded_heads_streak_tiebreak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_back_loading_diff_lr",
+              "tie_excess_heads_streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/model_loop/models/delayed_heads_onset_streak_tiebreak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_excess_heads_streak_diff_lr",
+              "tie_heads_onset_delay_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/model_loop/models/excess_heads_streak_tiebreak_veto.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_excess_heads_streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment3/model_loop/models/first_read_candidate_scrutiny.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_left_excess_heads_streak",
+              "tie_left_heads_lateness",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/model_loop/models/late_heads_recency_streak_tiebreak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_excess_heads_streak_diff_lr",
+              "tie_heads_lateness_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/model_loop/models/span_limited_left_default_onset.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "beyond_span",
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_excess_heads_streak_diff_lr",
+              "tie_heads_onset_delay_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment3/model_loop/models/span_limited_periodic_veto_recency.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "span_winner_periodic",
+              "tie_excess_heads_streak_diff_lr",
+              "tie_heads_lateness_diff_lr"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/model_loop/models/tally_comeback_depth_tiebreak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "heads_share_diff_lr",
+              "heads_winner_left",
+              "tie_comeback_depth_diff_lr",
+              "tie_excess_heads_streak_diff_lr",
+              "winner_periodic"
+            ],
+            "n_data_cols": 6
+          }
+        ],
+        "any_identical": false,
+        "any_mention": false,
+        "any_value_mention": false,
+        "any_gt_named": false,
+        "csv_generating_model_files": [],
+        "any_csv_generating_model": false,
+        "manifest_gt_named_files": [],
+        "any_manifest_gt_named": false,
+        "max_data_cols": 7
+      },
+      "experiments": [
+        {
+          "experiment": 1,
+          "manifest_models": [
+            "heads_share_periodic_penalty",
+            "repetition_scaled_motif_penalty",
+            "graded_motif_repetition_penalty",
+            "motif_penalty_left_default",
+            "contrast_salient_motif_penalty",
+            "side_biased_motif_heads_share",
+            "salient_motif_contrast_left_default",
+            "glance_heads_motif_tiebreak"
+          ]
+        },
+        {
+          "experiment": 2,
+          "manifest_models": [
+            "early_heads_streak_periodic_veto",
+            "periodic_veto_streak_tiebreak",
+            "run_length_variety_aversion",
+            "front_loaded_heads_periodic_veto",
+            "flip_clump_size_periodic_veto",
+            "anchored_streak_assimilation",
+            "halving_first_impression_heads",
+            "reading_accumulated_order_effects"
+          ]
+        },
+        {
+          "experiment": 3,
+          "manifest_models": [
+            "excess_heads_streak_tiebreak_veto",
+            "late_heads_recency_streak_tiebreak",
+            "first_read_candidate_scrutiny",
+            "delayed_heads_onset_streak_tiebreak",
+            "span_limited_periodic_veto_recency",
+            "back_loaded_heads_streak_tiebreak",
+            "tally_comeback_depth_tiebreak",
+            "span_limited_left_default_onset"
+          ]
+        }
+      ]
+    }
+  ],
+  "agent": {
+    "backend": "claude",
+    "model": "claude-opus-5-5",
+    "claude_auth": "api"
+  }
+}

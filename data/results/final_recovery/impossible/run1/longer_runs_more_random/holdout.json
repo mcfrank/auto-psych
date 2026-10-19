@@ -1,0 +1,1636 @@
+{
+  "project_id": "subjective_randomness",
+  "seed_models_dir": "/scratch/users/benpry/auto-psych/final_impossible_1/harness_repo/src/subjective_randomness/pymc_model_families",
+  "n_experiments": 3,
+  "n_participants": 40,
+  "inner_loop": {
+    "max_iterations": 5,
+    "candidate_count": 6,
+    "novelty_rmse_threshold": 0.002,
+    "n_critique_proposals": 8,
+    "starting_models_prunable": true
+  },
+  "fit_kwargs": {
+    "draws": 1000,
+    "tune": 1000,
+    "chains": 4,
+    "target_accept": 0.8
+  },
+  "seed": 101,
+  "eval_pool": {
+    "n_pairs": 500,
+    "lengths": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "seed": 11,
+    "min_remaining": 100,
+    "exhaustive": true,
+    "predict_max_draws": 500
+  },
+  "metrics_version": 2,
+  "gt_runs": [
+    {
+      "gt_model": "longer_runs_more_random",
+      "params": {
+        "beta": 4.0,
+        "side_bias": 0.0
+      },
+      "run_root": "/scratch/users/benpry/auto-psych/agent_trees/468ac4204f5bbc33/repo/_runs/cell_1",
+      "n_eval_stimuli": 43250,
+      "n_eval_dropped": 185,
+      "trajectory": [
+        {
+          "experiment": 1,
+          "step": 0,
+          "iteration": null,
+          "global_step": 0,
+          "best_model": "finite_experience_occurrence",
+          "pearson_r": -0.12332008729768974,
+          "rmse": 0.2113260493803297,
+          "kl_regret": 0.09748009243272772,
+          "bias": 0.011619391383768923,
+          "calib_slope": -0.003644488020885385,
+          "calib_intercept": 0.5132498138266555,
+          "pearson_r_bma": 0.77006435311743,
+          "rmse_bma": 0.14155544650758714,
+          "kl_regret_bma": 0.04746083921297984,
+          "bias_bma": 0.019341612055009925,
+          "calib_slope_bma": 0.7436113573198048,
+          "calib_intercept_bma": 0.1474869311119988,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": false
+        },
+        {
+          "experiment": 1,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 1,
+          "best_model": "relative_longest_streak",
+          "pearson_r": 0.9999967637842471,
+          "rmse": 0.002101982278915411,
+          "kl_regret": 1.4239769144615e-05,
+          "bias": 2.322414030216635e-06,
+          "calib_slope": 0.9903202487226431,
+          "calib_intercept": 0.004840348010103135,
+          "pearson_r_bma": 0.9999967438487971,
+          "rmse_bma": 0.0020985949194787757,
+          "kl_regret_bma": 1.4174849589569991e-05,
+          "bias_bma": 6.975807349214525e-05,
+          "calib_slope_bma": 0.9903446432237213,
+          "calib_intercept_bma": 0.004895591081425399,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 2,
+          "best_model": "person_specific_streak_span",
+          "pearson_r": 0.9999869380637145,
+          "rmse": 0.0010820314221757798,
+          "kl_regret": 5.849599684515624e-06,
+          "bias": -1.1047518215024064e-06,
+          "calib_slope": 0.9993519184933816,
+          "calib_intercept": 0.00032281213690021904,
+          "pearson_r_bma": 0.9998529090576046,
+          "rmse_bma": 0.004812960980177655,
+          "kl_regret_bma": 5.587649042488236e-05,
+          "bias_bma": 0.0024008933292879353,
+          "calib_slope_bma": 1.009696352953877,
+          "calib_intercept_bma": -0.0024454299320494366,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 3,
+          "best_model": "length_discounted_streak_span",
+          "pearson_r": 0.9998662480615497,
+          "rmse": 0.0036502164068938294,
+          "kl_regret": 5.004074046811497e-05,
+          "bias": -1.648420369826468e-06,
+          "calib_slope": 0.9938845487940641,
+          "calib_intercept": 0.0030549083398710986,
+          "pearson_r_bma": 0.9996757291559936,
+          "rmse_bma": 0.005416195534192411,
+          "kl_regret_bma": 7.057274423283581e-05,
+          "bias_bma": 0.0007806943325978334,
+          "calib_slope_bma": 1.0007625872100525,
+          "calib_intercept_bma": 0.0003995464804332771,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "pair_normalized_streak_contrast"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 4,
+          "best_model": "length_discounted_streak_span",
+          "pearson_r": 0.9998662480615497,
+          "rmse": 0.0036502164068938294,
+          "kl_regret": 5.004074046811497e-05,
+          "bias": -1.648420369826468e-06,
+          "calib_slope": 0.9938845487940641,
+          "calib_intercept": 0.0030549083398710986,
+          "pearson_r_bma": 0.9997017041181046,
+          "rmse_bma": 0.0054435853238161205,
+          "kl_regret_bma": 7.458058101819765e-05,
+          "bias_bma": 0.000555651260332101,
+          "calib_slope_bma": 1.0076150918107207,
+          "calib_intercept_bma": -0.0032504391768413132,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "exemplar_streak_vs_zigzag",
+            "pair_normalized_streak_contrast"
+          ],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 5,
+          "best_model": "endpoint_anchored_streak_span",
+          "pearson_r": 0.9992670605217212,
+          "rmse": 0.010970222379493735,
+          "kl_regret": 0.000371213583441794,
+          "bias": -1.3286182062904925e-06,
+          "calib_slope": 0.9630695681573422,
+          "calib_intercept": 0.018456828810590575,
+          "pearson_r_bma": 0.999472940857588,
+          "rmse_bma": 0.006853418982853781,
+          "kl_regret_bma": 0.0001399302442831631,
+          "bias_bma": 0.00024542903092591035,
+          "calib_slope_bma": 0.996064762039536,
+          "calib_intercept_bma": 0.0022122958713542418,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "exemplar_streak_vs_zigzag",
+            "noisy_encoding_streak_span",
+            "pair_normalized_streak_contrast"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 0,
+          "iteration": null,
+          "global_step": 6,
+          "best_model": "ordinal_verdict_plus_streak_span",
+          "pearson_r": 0.9978460648378527,
+          "rmse": 0.016648802497220117,
+          "kl_regret": 0.0006468888872468363,
+          "bias": -2.7789412874178776e-05,
+          "calib_slope": 1.0400204066585348,
+          "calib_intercept": -0.020030343841329457,
+          "pearson_r_bma": 0.9989375626647027,
+          "rmse_bma": 0.012335876352889517,
+          "kl_regret_bma": 0.00035538378479905514,
+          "bias_bma": -2.034988817891663e-05,
+          "calib_slope_bma": 1.034196389428557,
+          "calib_intercept_bma": -0.017112008817024293,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 7,
+          "best_model": "ordinal_verdict_plus_streak_span",
+          "pearson_r": 0.9978460648378527,
+          "rmse": 0.016648802497220117,
+          "kl_regret": 0.0006468888872468363,
+          "bias": -2.7789412874178776e-05,
+          "calib_slope": 1.0400204066585348,
+          "calib_intercept": -0.020030343841329457,
+          "pearson_r_bma": 0.9987158118368773,
+          "rmse_bma": 0.01329826116978448,
+          "kl_regret_bma": 0.00041187669999675943,
+          "bias_bma": 2.4756921750726064e-05,
+          "calib_slope_bma": 1.0353000343672392,
+          "calib_intercept_bma": -0.017618513542280556,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 8,
+          "best_model": "ordinal_verdict_plus_streak_span",
+          "pearson_r": 0.9978460648378527,
+          "rmse": 0.016648802497220117,
+          "kl_regret": 0.0006468888872468363,
+          "bias": -2.7789412874178776e-05,
+          "calib_slope": 1.0400204066585348,
+          "calib_intercept": -0.020030343841329457,
+          "pearson_r_bma": 0.9985269390927407,
+          "rmse_bma": 0.014134659972034226,
+          "kl_regret_bma": 0.0004643207225689275,
+          "bias_bma": 7.317750644421395e-05,
+          "calib_slope_bma": 1.036744151071065,
+          "calib_intercept_bma": -0.018291875302673732,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 9,
+          "best_model": "aligned_overlap_streak_contrast",
+          "pearson_r": 0.9964553773677216,
+          "rmse": 0.02075880655548106,
+          "kl_regret": 0.0011002416133561142,
+          "bias": -3.212790697872555e-05,
+          "calib_slope": 1.0445152199038255,
+          "calib_intercept": -0.022281229690110982,
+          "pearson_r_bma": 0.9980961335779569,
+          "rmse_bma": 0.015801148100986772,
+          "kl_regret_bma": 0.0005887464729181551,
+          "bias_bma": 1.8854588190303537e-05,
+          "calib_slope_bma": 1.0391168466369733,
+          "calib_intercept_bma": -0.019532092349542396,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "exemplar_alignment_category_membership"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 10,
+          "best_model": "aligned_overlap_accelerating_streak",
+          "pearson_r": 0.9961398678587057,
+          "rmse": 0.021453172059580323,
+          "kl_regret": 0.0011949227161739146,
+          "bias": -3.468784883527953e-05,
+          "calib_slope": 1.044205658251678,
+          "calib_intercept": -0.022129067972237182,
+          "pearson_r_bma": 0.9976425307301943,
+          "rmse_bma": 0.017103529645763397,
+          "kl_regret_bma": 0.0006959672311071454,
+          "bias_bma": -5.7063872386917834e-06,
+          "calib_slope_bma": 1.038940420425857,
+          "calib_intercept_bma": -0.019468473939655118,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "exemplar_alignment_category_membership"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 11,
+          "best_model": "primacy_scanned_overlap_streak",
+          "pearson_r": 0.9961512032487382,
+          "rmse": 0.020867043790248205,
+          "kl_regret": 0.0011480774392472928,
+          "bias": -2.9215271369374973e-05,
+          "calib_slope": 1.0387918695713858,
+          "calib_intercept": -0.019417735788990975,
+          "pearson_r_bma": 0.9970686111093116,
+          "rmse_bma": 0.018641386763548318,
+          "kl_regret_bma": 0.0008661491637749909,
+          "bias_bma": -2.108644185910397e-05,
+          "calib_slope_bma": 1.0388940118663508,
+          "calib_intercept_bma": -0.019460658584564194,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "exemplar_alignment_category_membership"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 0,
+          "iteration": null,
+          "global_step": 12,
+          "best_model": "aligned_overlap_streak_contrast",
+          "pearson_r": 0.9976304306010365,
+          "rmse": 0.01699672145524644,
+          "kl_regret": 0.000709010016052864,
+          "bias": -2.720296340679236e-05,
+          "calib_slope": 1.0376844672957286,
+          "calib_intercept": -0.018862234166904135,
+          "pearson_r_bma": 0.9975825023193926,
+          "rmse_bma": 0.017080780156199203,
+          "kl_regret_bma": 0.0007140124960618776,
+          "bias_bma": -2.777272791814044e-05,
+          "calib_slope_bma": 1.037224335736201,
+          "calib_intercept_bma": -0.01863282609430278,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 13,
+          "best_model": "overlap_thurstonian_streak_contrast",
+          "pearson_r": 0.9965569016830707,
+          "rmse": 0.01873038151361309,
+          "kl_regret": 0.000872138039883853,
+          "bias": -2.946453895764397e-05,
+          "calib_slope": 1.0257165280222742,
+          "calib_intercept": -0.012882813478297728,
+          "pearson_r_bma": 0.9971766162227648,
+          "rmse_bma": 0.017741411714504135,
+          "kl_regret_bma": 0.000771103601086721,
+          "bias_bma": -2.8632707575416885e-05,
+          "calib_slope_bma": 1.0328311860035402,
+          "calib_intercept_bma": -0.016437950848437077,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 14,
+          "best_model": "additive_variance_overlap_streak",
+          "pearson_r": 0.9962889675431356,
+          "rmse": 0.01908924360278524,
+          "kl_regret": 0.0009392797732478361,
+          "bias": -2.818256287850844e-05,
+          "calib_slope": 1.02151640553201,
+          "calib_intercept": -0.01078227300555934,
+          "pearson_r_bma": 0.9968588526264417,
+          "rmse_bma": 0.018162043923708706,
+          "kl_regret_bma": 0.0008213457031675265,
+          "bias_bma": -2.8818123941340122e-05,
+          "calib_slope_bma": 1.0282117137902393,
+          "calib_intercept_bma": -0.014129283054847341,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 15,
+          "best_model": "additive_variance_edit_streak",
+          "pearson_r": 0.9962058101547924,
+          "rmse": 0.019721638075795047,
+          "kl_regret": 0.0009942611167573208,
+          "bias": -2.671812389194833e-05,
+          "calib_slope": 1.0274032248232332,
+          "calib_intercept": -0.013723092972660889,
+          "pearson_r_bma": 0.9967098412994765,
+          "rmse_bma": 0.018521857712308416,
+          "kl_regret_bma": 0.0008614888083954802,
+          "bias_bma": -2.8011497744957586e-05,
+          "calib_slope_bma": 1.0279330299615295,
+          "calib_intercept_bma": -0.013989187654305846,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "per_flip_forger_streak_evidence"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 16,
+          "best_model": "coherent_edit_noise_accelerating_streak",
+          "pearson_r": 0.9956323280442945,
+          "rmse": 0.021996712835639507,
+          "kl_regret": 0.001232375993172274,
+          "bias": -3.053102639643069e-05,
+          "calib_slope": 1.038400722004003,
+          "calib_intercept": -0.01922355252013974,
+          "pearson_r_bma": 0.9960221113481665,
+          "rmse_bma": 0.020792645197940236,
+          "kl_regret_bma": 0.0010896662373549885,
+          "bias_bma": -2.9358175916077155e-05,
+          "calib_slope_bma": 1.0348920365165728,
+          "calib_intercept_bma": -0.01746870753901525,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "per_flip_forger_streak_evidence"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 17,
+          "best_model": "coherent_edit_noise_accelerating_streak",
+          "pearson_r": 0.9956323280442945,
+          "rmse": 0.021996712835639507,
+          "kl_regret": 0.001232375993172274,
+          "bias": -3.053102639643069e-05,
+          "calib_slope": 1.038400722004003,
+          "calib_intercept": -0.01922355252013974,
+          "pearson_r_bma": 0.9958908050355947,
+          "rmse_bma": 0.021196891219360456,
+          "kl_regret_bma": 0.0011294741580282453,
+          "bias_bma": -3.0092668683632218e-05,
+          "calib_slope_bma": 1.0360237984103113,
+          "calib_intercept_bma": -0.01803510666564201,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "per_flip_forger_streak_evidence"
+          ],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        }
+      ],
+      "incumbent": {
+        "starting_models": [
+          "falk_konold_dp",
+          "finite_experience_occurrence",
+          "local_representativeness",
+          "motif_stack"
+        ],
+        "n_steps": 18,
+        "n_incumbent_changes": 13,
+        "n_steps_discovered_incumbent": 17,
+        "final_incumbent": "coherent_edit_noise_accelerating_streak",
+        "changes": [
+          {
+            "global_step": 1,
+            "experiment": 1,
+            "step": 1,
+            "from": "finite_experience_occurrence",
+            "to": "relative_longest_streak"
+          },
+          {
+            "global_step": 2,
+            "experiment": 1,
+            "step": 2,
+            "from": "relative_longest_streak",
+            "to": "person_specific_streak_span"
+          },
+          {
+            "global_step": 3,
+            "experiment": 1,
+            "step": 3,
+            "from": "person_specific_streak_span",
+            "to": "length_discounted_streak_span"
+          },
+          {
+            "global_step": 5,
+            "experiment": 1,
+            "step": 5,
+            "from": "length_discounted_streak_span",
+            "to": "endpoint_anchored_streak_span"
+          },
+          {
+            "global_step": 6,
+            "experiment": 2,
+            "step": 0,
+            "from": "endpoint_anchored_streak_span",
+            "to": "ordinal_verdict_plus_streak_span"
+          },
+          {
+            "global_step": 9,
+            "experiment": 2,
+            "step": 3,
+            "from": "ordinal_verdict_plus_streak_span",
+            "to": "aligned_overlap_streak_contrast"
+          },
+          {
+            "global_step": 10,
+            "experiment": 2,
+            "step": 4,
+            "from": "aligned_overlap_streak_contrast",
+            "to": "aligned_overlap_accelerating_streak"
+          },
+          {
+            "global_step": 11,
+            "experiment": 2,
+            "step": 5,
+            "from": "aligned_overlap_accelerating_streak",
+            "to": "primacy_scanned_overlap_streak"
+          },
+          {
+            "global_step": 12,
+            "experiment": 3,
+            "step": 0,
+            "from": "primacy_scanned_overlap_streak",
+            "to": "aligned_overlap_streak_contrast"
+          },
+          {
+            "global_step": 13,
+            "experiment": 3,
+            "step": 1,
+            "from": "aligned_overlap_streak_contrast",
+            "to": "overlap_thurstonian_streak_contrast"
+          },
+          {
+            "global_step": 14,
+            "experiment": 3,
+            "step": 2,
+            "from": "overlap_thurstonian_streak_contrast",
+            "to": "additive_variance_overlap_streak"
+          },
+          {
+            "global_step": 15,
+            "experiment": 3,
+            "step": 3,
+            "from": "additive_variance_overlap_streak",
+            "to": "additive_variance_edit_streak"
+          },
+          {
+            "global_step": 16,
+            "experiment": 3,
+            "step": 4,
+            "from": "additive_variance_edit_streak",
+            "to": "coherent_edit_noise_accelerating_streak"
+          }
+        ]
+      },
+      "starting_models_prunable": true,
+      "baseline": {
+        "mean_r": -0.4838924407603946,
+        "per_model": {
+          "falk_konold_dp": -0.6662705590503543,
+          "motif_stack": -0.627685484781661,
+          "finite_experience_occurrence": -0.065405608776068,
+          "local_representativeness": -0.5762081104334952
+        }
+      },
+      "fitted_baseline": {
+        "mean_r_models": [
+          "falk_konold_dp",
+          "finite_experience_occurrence",
+          "local_representativeness",
+          "motif_stack"
+        ],
+        "mean_rmse_models": [
+          "falk_konold_dp",
+          "finite_experience_occurrence",
+          "local_representativeness",
+          "motif_stack"
+        ],
+        "per_model": {
+          "falk_konold_dp": {
+            "pearson_r": -0.6729277408094632,
+            "rmse": 0.25936873316065234,
+            "elpd_loo": -5725.727687656541,
+            "trusted": true,
+            "n_eval_excluded": 0
+          },
+          "finite_experience_occurrence": {
+            "pearson_r": -0.12346181012815925,
+            "rmse": 0.210913665962438,
+            "elpd_loo": -5346.803058800806,
+            "trusted": true,
+            "n_eval_excluded": 0
+          },
+          "local_representativeness": {
+            "pearson_r": -0.14564668697210018,
+            "rmse": 0.21178152249825735,
+            "elpd_loo": -5325.313977371859,
+            "trusted": true,
+            "n_eval_excluded": 0
+          },
+          "motif_stack": {
+            "pearson_r": 0.8007713775307452,
+            "rmse": 0.138229131472228,
+            "elpd_loo": -4226.805192148678,
+            "trusted": false,
+            "n_eval_excluded": 0
+          }
+        },
+        "elpd_best_model": "local_representativeness",
+        "elpd_best_r": -0.14564668697210018,
+        "elpd_best_rmse": 0.21178152249825735,
+        "elpd_best_reason": null,
+        "mean_r": -0.035316215094744335,
+        "mean_rmse": 0.20507326327339392,
+        "n_responses": 7680
+      },
+      "fitted_baseline_by_experiment": [
+        {
+          "experiment": 1,
+          "mean_r_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "mean_rmse_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "per_model": {
+            "falk_konold_dp": {
+              "pearson_r": -0.6729153494432207,
+              "rmse": 0.2597393841425884,
+              "elpd_loo": -2085.1732309035096,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "finite_experience_occurrence": {
+              "pearson_r": -0.12332008729768974,
+              "rmse": 0.2113260493803297,
+              "elpd_loo": -1777.0587247164406,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "local_representativeness": {
+              "pearson_r": 0.00290274657440013,
+              "rmse": 0.21065067508092256,
+              "elpd_loo": -1786.532228622746,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "motif_stack": {
+              "pearson_r": 0.77006435311743,
+              "rmse": 0.14155544650758714,
+              "elpd_loo": -1193.3659005630095,
+              "trusted": false,
+              "n_eval_excluded": 0
+            }
+          },
+          "elpd_best_model": "finite_experience_occurrence",
+          "elpd_best_r": -0.12332008729768974,
+          "elpd_best_rmse": 0.2113260493803297,
+          "elpd_best_reason": null,
+          "mean_r": -0.005817084262270067,
+          "mean_rmse": 0.20581788877785692,
+          "n_responses": 2560
+        },
+        {
+          "experiment": 2,
+          "mean_r_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "mean_rmse_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "per_model": {
+            "falk_konold_dp": {
+              "pearson_r": -0.6729279938348243,
+              "rmse": 0.25939599953085785,
+              "elpd_loo": -3872.0740324829644,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "finite_experience_occurrence": {
+              "pearson_r": -0.12322637768379897,
+              "rmse": 0.21115460033606337,
+              "elpd_loo": -3550.0861416638763,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "local_representativeness": {
+              "pearson_r": -0.1341978042821404,
+              "rmse": 0.21337837640277876,
+              "elpd_loo": -3544.053139757747,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "motif_stack": {
+              "pearson_r": 0.7057774929547885,
+              "rmse": 0.15393476665266284,
+              "elpd_loo": -2851.952824596068,
+              "trusted": false,
+              "n_eval_excluded": 0
+            }
+          },
+          "elpd_best_model": "local_representativeness",
+          "elpd_best_r": -0.1341978042821404,
+          "elpd_best_rmse": 0.21337837640277876,
+          "elpd_best_reason": null,
+          "mean_r": -0.05614367071149376,
+          "mean_rmse": 0.2094659357305907,
+          "n_responses": 5120
+        },
+        {
+          "experiment": 3,
+          "mean_r_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "mean_rmse_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "per_model": {
+            "falk_konold_dp": {
+              "pearson_r": -0.6729277408094632,
+              "rmse": 0.25936873316065234,
+              "elpd_loo": -5725.727687656541,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "finite_experience_occurrence": {
+              "pearson_r": -0.12346181012815925,
+              "rmse": 0.210913665962438,
+              "elpd_loo": -5346.803058800806,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "local_representativeness": {
+              "pearson_r": -0.14564668697210018,
+              "rmse": 0.21178152249825735,
+              "elpd_loo": -5325.313977371859,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "motif_stack": {
+              "pearson_r": 0.8007713775307452,
+              "rmse": 0.138229131472228,
+              "elpd_loo": -4226.805192148678,
+              "trusted": false,
+              "n_eval_excluded": 0
+            }
+          },
+          "elpd_best_model": "local_representativeness",
+          "elpd_best_r": -0.14564668697210018,
+          "elpd_best_rmse": 0.21178152249825735,
+          "elpd_best_reason": null,
+          "mean_r": -0.035316215094744335,
+          "mean_rmse": 0.20507326327339392,
+          "n_responses": 7680
+        }
+      ],
+      "leakage": {
+        "files": [
+          {
+            "path": "experiment1/cognitive_models/compressed_length_discounted_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "participant_id",
+              "span_diff"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment1/cognitive_models/endpoint_anchored_streak_span.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "participant_id",
+              "span_a",
+              "span_b"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/cognitive_models/endpoint_salient_streak_span.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "cspan_a",
+              "cspan_b",
+              "log_len_rel",
+              "participant_id"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/cognitive_models/length_discounted_streak_span.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "participant_id",
+              "span_diff"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment1/cognitive_models/length_discounted_streak_span_2.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "span_len",
+              "streak_excess_a",
+              "streak_excess_b"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment1/cognitive_models/ordinal_verdict_plus_streak_span.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/cognitive_models/person_specific_streak_span.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "participant_id",
+              "streak_span_a",
+              "streak_span_b"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment1/cognitive_models/streak_span_with_imbalance.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "imbalance_a",
+              "imbalance_b",
+              "participant_id",
+              "streak_span_a",
+              "streak_span_b"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/model_loop/models/compressed_length_discounted_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "participant_id",
+              "span_diff"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment1/model_loop/models/endpoint_anchored_streak_span.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "participant_id",
+              "span_a",
+              "span_b"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/model_loop/models/endpoint_salient_streak_span.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "cspan_a",
+              "cspan_b",
+              "log_len_rel",
+              "participant_id"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/model_loop/models/length_discounted_streak_span.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "participant_id",
+              "span_diff"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment1/model_loop/models/length_discounted_streak_span_2.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "span_len",
+              "streak_excess_a",
+              "streak_excess_b"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment1/model_loop/models/ordinal_verdict_plus_streak_span.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/model_loop/models/person_specific_streak_span.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "participant_id",
+              "streak_span_a",
+              "streak_span_b"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment1/model_loop/models/streak_span_with_imbalance.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "imbalance_a",
+              "imbalance_b",
+              "participant_id",
+              "streak_span_a",
+              "streak_span_b"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/cognitive_models/aligned_overlap_accelerating_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_diff_share",
+              "log_len_rel",
+              "participant_id",
+              "span_a",
+              "span_b",
+              "verdict"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/cognitive_models/aligned_overlap_streak_contrast.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_diff_share",
+              "log_len_rel",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/cognitive_models/gaussian_noise_streak_verdict.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment2/cognitive_models/overlap_scaled_lexicographic_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_diff_share",
+              "log_len_rel",
+              "participant_id",
+              "span_diff",
+              "tie_verdict",
+              "verdict"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/cognitive_models/primacy_scanned_overlap_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "diff_centroid",
+              "log_diff_share",
+              "log_len_rel",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/cognitive_models/primacy_weighted_overlap_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "diff_loc",
+              "log_diff_share",
+              "log_len_rel",
+              "participant_id",
+              "span_a",
+              "span_b",
+              "verdict"
+            ],
+            "n_data_cols": 8
+          },
+          {
+            "path": "experiment2/cognitive_models/scan_order_divergence_streak_contrast.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "diff_lateness",
+              "log_len_rel",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/cognitive_models/start_discounted_overlap_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_diff_share",
+              "log_len_rel",
+              "participant_id",
+              "span_a",
+              "span_b",
+              "start_a",
+              "start_b",
+              "verdict"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment2/model_loop/models/aligned_overlap_accelerating_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_diff_share",
+              "log_len_rel",
+              "participant_id",
+              "span_a",
+              "span_b",
+              "verdict"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/model_loop/models/aligned_overlap_streak_contrast.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_diff_share",
+              "log_len_rel",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/model_loop/models/gaussian_noise_streak_verdict.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment2/model_loop/models/overlap_scaled_lexicographic_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_diff_share",
+              "log_len_rel",
+              "participant_id",
+              "span_diff",
+              "tie_verdict",
+              "verdict"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/model_loop/models/primacy_scanned_overlap_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "diff_centroid",
+              "log_diff_share",
+              "log_len_rel",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/model_loop/models/primacy_weighted_overlap_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "diff_loc",
+              "log_diff_share",
+              "log_len_rel",
+              "participant_id",
+              "span_a",
+              "span_b",
+              "verdict"
+            ],
+            "n_data_cols": 8
+          },
+          {
+            "path": "experiment2/model_loop/models/scan_order_divergence_streak_contrast.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "diff_lateness",
+              "log_len_rel",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/model_loop/models/start_discounted_overlap_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_diff_share",
+              "log_len_rel",
+              "participant_id",
+              "span_a",
+              "span_b",
+              "start_a",
+              "start_b",
+              "verdict"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment3/cognitive_models/additive_variance_edit_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "n_edit",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/cognitive_models/additive_variance_overlap_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "n_diff",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/cognitive_models/alignable_accelerating_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "n_shared",
+              "participant_id",
+              "span_a",
+              "span_b",
+              "verdict"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment3/cognitive_models/alignable_contrast_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "n_shared",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/cognitive_models/coherent_edit_noise_accelerating_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "n_edit",
+              "participant_id",
+              "span_a",
+              "span_b",
+              "verdict"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment3/cognitive_models/correlated_edit_noise_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "n_edit",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/cognitive_models/overlap_thurstonian_streak_contrast.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_diff_share",
+              "log_len_rel",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/cognitive_models/shift_tolerant_thurstonian_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_edit_share",
+              "log_len_rel",
+              "participant_id",
+              "span_a",
+              "span_b",
+              "verdict"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment3/model_loop/models/additive_variance_edit_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "n_edit",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/model_loop/models/additive_variance_overlap_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "n_diff",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/model_loop/models/alignable_accelerating_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "n_shared",
+              "participant_id",
+              "span_a",
+              "span_b",
+              "verdict"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment3/model_loop/models/alignable_contrast_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "n_shared",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/model_loop/models/coherent_edit_noise_accelerating_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "n_edit",
+              "participant_id",
+              "span_a",
+              "span_b",
+              "verdict"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment3/model_loop/models/correlated_edit_noise_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_len_rel",
+              "n_edit",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/model_loop/models/overlap_thurstonian_streak_contrast.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_diff_share",
+              "log_len_rel",
+              "participant_id",
+              "span_diff",
+              "verdict"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/model_loop/models/shift_tolerant_thurstonian_streak.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "log_edit_share",
+              "log_len_rel",
+              "participant_id",
+              "span_a",
+              "span_b",
+              "verdict"
+            ],
+            "n_data_cols": 7
+          }
+        ],
+        "any_identical": false,
+        "any_mention": false,
+        "any_value_mention": false,
+        "any_gt_named": false,
+        "csv_generating_model_files": [],
+        "any_csv_generating_model": false,
+        "manifest_gt_named_files": [],
+        "any_manifest_gt_named": false,
+        "max_data_cols": 9
+      },
+      "experiments": [
+        {
+          "experiment": 1,
+          "manifest_models": [
+            "person_specific_streak_span",
+            "streak_span_with_imbalance",
+            "length_discounted_streak_span",
+            "length_discounted_streak_span_2",
+            "compressed_length_discounted_streak",
+            "endpoint_salient_streak_span",
+            "endpoint_anchored_streak_span",
+            "ordinal_verdict_plus_streak_span"
+          ]
+        },
+        {
+          "experiment": 2,
+          "manifest_models": [
+            "aligned_overlap_streak_contrast",
+            "aligned_overlap_accelerating_streak",
+            "gaussian_noise_streak_verdict",
+            "overlap_scaled_lexicographic_streak",
+            "scan_order_divergence_streak_contrast",
+            "primacy_weighted_overlap_streak",
+            "primacy_scanned_overlap_streak",
+            "start_discounted_overlap_streak"
+          ]
+        },
+        {
+          "experiment": 3,
+          "manifest_models": [
+            "overlap_thurstonian_streak_contrast",
+            "shift_tolerant_thurstonian_streak",
+            "additive_variance_overlap_streak",
+            "additive_variance_edit_streak",
+            "alignable_contrast_streak",
+            "coherent_edit_noise_accelerating_streak",
+            "correlated_edit_noise_streak",
+            "alignable_accelerating_streak"
+          ]
+        }
+      ]
+    }
+  ],
+  "agent": {
+    "backend": "claude",
+    "model": "claude-opus-5-5",
+    "claude_auth": "api"
+  }
+}

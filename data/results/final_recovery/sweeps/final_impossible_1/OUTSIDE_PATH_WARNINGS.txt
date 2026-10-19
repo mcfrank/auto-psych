@@ -1,0 +1,4 @@
+run1/fewer_heads_more_random: see /scratch/users/benpry/auto-psych/final_impossible_1/run1/fewer_heads_more_random/agent_activity.md
+run1/longer_runs_more_random: see /scratch/users/benpry/auto-psych/final_impossible_1/run1/longer_runs_more_random/agent_activity.md
+run1/more_heads_more_random: see /scratch/users/benpry/auto-psych/final_impossible_1/run1/more_heads_more_random/agent_activity.md
+run1/more_imbalance_more_random: see /scratch/users/benpry/auto-psych/final_impossible_1/run1/more_imbalance_more_random/agent_activity.md

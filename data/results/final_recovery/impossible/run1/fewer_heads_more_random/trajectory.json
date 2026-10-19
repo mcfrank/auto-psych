@@ -1,0 +1,1542 @@
+{
+  "gt_model": "fewer_heads_more_random",
+  "params": {
+    "beta": 4.0,
+    "side_bias": 0.0
+  },
+  "run_root": "/scratch/users/benpry/auto-psych/agent_trees/8a85e7568405b9e6/repo/_runs/cell_1",
+  "n_eval_stimuli": 43244,
+  "n_eval_dropped": 191,
+  "trajectory": [
+    {
+      "experiment": 1,
+      "step": 0,
+      "iteration": null,
+      "global_step": 0,
+      "best_model": "local_representativeness",
+      "pearson_r": 0.00039823009726790235,
+      "rmse": 0.44386277619990283,
+      "kl_regret": 0.5293027211177039,
+      "bias": 0.2221334199431522,
+      "calib_slope": 8.446808224319282e-06,
+      "calib_intercept": 0.5048979049200928,
+      "pearson_r_bma": -0.00046468646402567,
+      "rmse_bma": 0.4460468315160297,
+      "kl_regret_bma": 0.5332118316289861,
+      "bias_bma": 0.22518067306760034,
+      "calib_slope_bma": -3.0489205008773987e-05,
+      "calib_intercept_bma": 0.5079561678592677,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": false,
+      "incumbent_is_discovered": false
+    },
+    {
+      "experiment": 1,
+      "step": 1,
+      "iteration": 0,
+      "global_step": 1,
+      "best_model": "tails_count_preference",
+      "pearson_r": 0.9999983821051144,
+      "rmse": 0.0009514069207437626,
+      "kl_regret": 2.6451904754011336e-05,
+      "bias": 0.0002145422130633621,
+      "calib_slope": 0.9983890620384543,
+      "calib_intercept": 0.0006700621037787347,
+      "pearson_r_bma": 0.9999140784168158,
+      "rmse_bma": 0.005638687232547204,
+      "kl_regret_bma": 0.00010148816391172622,
+      "bias_bma": -0.0018091391502423042,
+      "calib_slope_bma": 0.9952033857843484,
+      "calib_intercept_bma": -0.0004528155453151217,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 2,
+      "iteration": 1,
+      "global_step": 2,
+      "best_model": "length_scaled_tails_count",
+      "pearson_r": 0.9999889850812873,
+      "rmse": 0.001809339422227204,
+      "kl_regret": 7.278167768804378e-05,
+      "bias": 1.879125684588692e-05,
+      "calib_slope": 1.0003606436796442,
+      "calib_intercept": -8.318682887820117e-05,
+      "pearson_r_bma": 0.9998870384822842,
+      "rmse_bma": 0.0062952280039176535,
+      "kl_regret_bma": 0.00012739115022434585,
+      "bias_bma": -0.002162323036890306,
+      "calib_slope_bma": 0.9964735612953047,
+      "calib_intercept_bma": -0.0011651629899346871,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 3,
+      "iteration": 2,
+      "global_step": 3,
+      "best_model": "sqrt_accumulated_tails_count",
+      "pearson_r": 0.9999762289304902,
+      "rmse": 0.0026742973989255215,
+      "kl_regret": 0.00015255174794947653,
+      "bias": -2.3876110515742956e-05,
+      "calib_slope": 1.0009046169983313,
+      "calib_intercept": -0.00027967183080768176,
+      "pearson_r_bma": 0.9999648371571165,
+      "rmse_bma": 0.0032305642140285254,
+      "kl_regret_bma": 9.384926560464021e-05,
+      "bias_bma": -0.00023350970473296398,
+      "calib_slope_bma": 1.0000350099450874,
+      "calib_intercept_bma": -0.0002434093574451568,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 4,
+      "iteration": 3,
+      "global_step": 4,
+      "best_model": "sqrt_accumulated_tails_count",
+      "pearson_r": 0.9999762289304902,
+      "rmse": 0.0026742973989255215,
+      "kl_regret": 0.00015255174794947653,
+      "bias": -2.3876110515742956e-05,
+      "calib_slope": 1.0009046169983313,
+      "calib_intercept": -0.00027967183080768176,
+      "pearson_r_bma": 0.9998879775624839,
+      "rmse_bma": 0.005780969774732067,
+      "kl_regret_bma": 0.00015938946894515413,
+      "bias_bma": 0.0005090431402166454,
+      "calib_slope_bma": 1.0005642789777933,
+      "calib_intercept_bma": 0.00034948373790993914,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": false,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 5,
+      "iteration": 4,
+      "global_step": 5,
+      "best_model": "self_correcting_mirror_tally",
+      "pearson_r": 0.9990488381192885,
+      "rmse": 0.016783006619217056,
+      "kl_regret": 0.0007669407814180039,
+      "bias": 1.185917036540886e-05,
+      "calib_slope": 1.000702840096356,
+      "calib_intercept": -0.00018688502977087795,
+      "pearson_r_bma": 0.9995109635535772,
+      "rmse_bma": 0.013146562656304928,
+      "kl_regret_bma": 0.0004919797601437385,
+      "bias_bma": 0.004466154630104389,
+      "calib_slope_bma": 1.0066286173272252,
+      "calib_intercept_bma": 0.002591760645556218,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "recency_graded_sqrt_tails_tally",
+        "self_correcting_mirror_tally"
+      ],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 0,
+      "iteration": null,
+      "global_step": 6,
+      "best_model": "peak_stretch_sqrt_tails_count",
+      "pearson_r": 0.9999486276673607,
+      "rmse": 0.003932342706702364,
+      "kl_regret": 0.00016522488208704092,
+      "bias": 0.00024149719505024524,
+      "calib_slope": 1.0011706403025302,
+      "calib_intercept": -8.95282711687595e-05,
+      "pearson_r_bma": 0.9999729925346266,
+      "rmse_bma": 0.002867268390396118,
+      "kl_regret_bma": 0.0001514942213463151,
+      "bias_bma": 0.0001729810079010609,
+      "calib_slope_bma": 1.0011621544589422,
+      "calib_intercept_bma": -0.00015564489089836542,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "recency_graded_sqrt_tails_tally",
+        "self_correcting_mirror_tally"
+      ],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 1,
+      "iteration": 0,
+      "global_step": 7,
+      "best_model": "self_correction_confidence_check",
+      "pearson_r": 0.9998923779757641,
+      "rmse": 0.005654765104270734,
+      "kl_regret": 0.0006446584007289581,
+      "bias": 0.00024391754745725175,
+      "calib_slope": 0.9987880604871702,
+      "calib_intercept": 0.0005866213151275446,
+      "pearson_r_bma": 0.9999492199151597,
+      "rmse_bma": 0.003918643890555572,
+      "kl_regret_bma": 0.00020554212584693123,
+      "bias_bma": 0.0005186142302412053,
+      "calib_slope_bma": 1.000704924993295,
+      "calib_intercept_bma": 0.0003192804775499769,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "recency_graded_sqrt_tails_tally",
+        "self_correcting_mirror_tally"
+      ],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 2,
+      "iteration": 1,
+      "global_step": 8,
+      "best_model": "stretch_contrast_selfcorrect_check",
+      "pearson_r": 0.9995707470949515,
+      "rmse": 0.011418316079372725,
+      "kl_regret": 0.0008333227592131592,
+      "bias": 0.0018806693273166132,
+      "calib_slope": 1.0001331400799935,
+      "calib_intercept": 0.0018430209079370874,
+      "pearson_r_bma": 0.9998826025113361,
+      "rmse_bma": 0.005968325480761678,
+      "kl_regret_bma": 0.000363370493012133,
+      "bias_bma": 0.0009489193658828052,
+      "calib_slope_bma": 1.0004271689948134,
+      "calib_intercept_bma": 0.0008281275091897022,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "recency_graded_sqrt_tails_tally",
+        "self_correcting_mirror_tally"
+      ],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 3,
+      "iteration": 2,
+      "global_step": 9,
+      "best_model": "accelerating_stretch_selfcorrect_check",
+      "pearson_r": 0.9995447813685523,
+      "rmse": 0.011794237610681381,
+      "kl_regret": 0.0008963537079542038,
+      "bias": 0.002163430750618985,
+      "calib_slope": 0.9997564082159796,
+      "calib_intercept": 0.0022323119293194416,
+      "pearson_r_bma": 0.9997701060805995,
+      "rmse_bma": 0.008382877315478654,
+      "kl_regret_bma": 0.0005689609623568419,
+      "bias_bma": 0.001536576293411555,
+      "calib_slope_bma": 1.0001258653590686,
+      "calib_intercept_bma": 0.001500984968666963,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "recency_graded_sqrt_tails_tally",
+        "self_correcting_mirror_tally"
+      ],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 4,
+      "iteration": 3,
+      "global_step": 10,
+      "best_model": "chance_exemplar_stretch_selfcorrect",
+      "pearson_r": 0.9995943131949396,
+      "rmse": 0.01111202659570808,
+      "kl_regret": 0.0008856053365366746,
+      "bias": 0.0019287615683797098,
+      "calib_slope": 0.9988655560415647,
+      "calib_intercept": 0.0022495516859152853,
+      "pearson_r_bma": 0.9996890222128693,
+      "rmse_bma": 0.009757012827091342,
+      "kl_regret_bma": 0.0007224356617793375,
+      "bias_bma": 0.0018398906225569256,
+      "calib_slope_bma": 0.9997664423620348,
+      "calib_intercept_bma": 0.0019059344157095759,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "recency_graded_sqrt_tails_tally",
+        "self_correcting_mirror_tally"
+      ],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 5,
+      "iteration": 4,
+      "global_step": 11,
+      "best_model": "streak_tally_chance_exemplar_check",
+      "pearson_r": 0.9995309610174279,
+      "rmse": 0.011827518467041036,
+      "kl_regret": 0.0009032622371630966,
+      "bias": 0.0011017079635871664,
+      "calib_slope": 1.0003376084304865,
+      "calib_intercept": 0.0010062414160407762,
+      "pearson_r_bma": 0.9996677790935755,
+      "rmse_bma": 0.010043634059036905,
+      "kl_regret_bma": 0.0007942399417768083,
+      "bias_bma": 0.0016719518581446381,
+      "calib_slope_bma": 0.9996848065155628,
+      "calib_intercept_bma": 0.0017610800642294255,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "recency_graded_sqrt_tails_tally",
+        "self_correcting_mirror_tally"
+      ],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 0,
+      "iteration": null,
+      "global_step": 12,
+      "best_model": "streak_tally_chance_exemplar_check",
+      "pearson_r": 0.999913390124667,
+      "rmse": 0.006163618581246419,
+      "kl_regret": 0.0014890337520934859,
+      "bias": -0.0008275168380548827,
+      "calib_slope": 1.0087435518475196,
+      "calib_intercept": -0.0032999036568652773,
+      "pearson_r_bma": 0.9999329409484156,
+      "rmse_bma": 0.005644793709252727,
+      "kl_regret_bma": 0.0014922566032714326,
+      "bias_bma": -0.001052487210933237,
+      "calib_slope_bma": 1.0084821687771426,
+      "calib_intercept_bma": -0.003450963556159148,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": false,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 1,
+      "iteration": 0,
+      "global_step": 13,
+      "best_model": "tails_indifference_band",
+      "pearson_r": 0.9999989339369416,
+      "rmse": 0.0008623635592296722,
+      "kl_regret": 0.0003464286230139128,
+      "bias": -0.00022951199642231104,
+      "calib_slope": 1.0015944851631835,
+      "calib_intercept": -0.000680379580785262,
+      "pearson_r_bma": 0.9999978567460958,
+      "rmse_bma": 0.0010948098185703764,
+      "kl_regret_bma": 0.00013860842035334883,
+      "bias_bma": -0.00021919883390811632,
+      "calib_slope_bma": 1.001868742375729,
+      "calib_intercept_bma": -0.0007476172727849395,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 2,
+      "iteration": 1,
+      "global_step": 14,
+      "best_model": "lone_interior_difference_band",
+      "pearson_r": 0.9999190012453893,
+      "rmse": 0.004977551292781326,
+      "kl_regret": 0.0008409561689926395,
+      "bias": 0.000395104094201488,
+      "calib_slope": 1.002029339030456,
+      "calib_intercept": -0.0001787257586197133,
+      "pearson_r_bma": 0.9999623272877085,
+      "rmse_bma": 0.0034525486475532902,
+      "kl_regret_bma": 0.0004828801723559081,
+      "bias_bma": 0.00018568469354186216,
+      "calib_slope_bma": 1.002200095591155,
+      "calib_intercept_bma": -0.0004364294580700423,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 3,
+      "iteration": 2,
+      "global_step": 15,
+      "best_model": "lone_interior_difference_band",
+      "pearson_r": 0.9999190012453893,
+      "rmse": 0.004977551292781326,
+      "kl_regret": 0.0008409561689926395,
+      "bias": 0.000395104094201488,
+      "calib_slope": 1.002029339030456,
+      "calib_intercept": -0.0001787257586197133,
+      "pearson_r_bma": 0.9999197990595493,
+      "rmse_bma": 0.004930566505159254,
+      "kl_regret_bma": 0.0006860699641068224,
+      "bias_bma": 0.00044774126688306164,
+      "calib_slope_bma": 1.0015552145402746,
+      "calib_intercept_bma": 7.978113778672746e-06,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": false,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 4,
+      "iteration": 3,
+      "global_step": 16,
+      "best_model": "reading_order_lone_interior_band",
+      "pearson_r": 0.9998317363229068,
+      "rmse": 0.007112434582120806,
+      "kl_regret": 0.0009942755492566198,
+      "bias": 0.0005277596299840028,
+      "calib_slope": 1.0017431134075714,
+      "calib_intercept": 3.486490164844591e-05,
+      "pearson_r_bma": 0.9999507405205977,
+      "rmse_bma": 0.0039744922275084535,
+      "kl_regret_bma": 0.0006145040626236284,
+      "bias_bma": 0.0005373122832772782,
+      "calib_slope_bma": 1.002459766076791,
+      "calib_intercept_bma": -0.0001582280796863511,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 5,
+      "iteration": 4,
+      "global_step": 17,
+      "best_model": "shared_tails_reading_order_band",
+      "pearson_r": 0.9998679545520258,
+      "rmse": 0.006330762842693238,
+      "kl_regret": 0.0010467380938617645,
+      "bias": 0.00016302714392375567,
+      "calib_slope": 1.0024315981387504,
+      "calib_intercept": -0.0005245482592684536,
+      "pearson_r_bma": 0.999878325397665,
+      "rmse_bma": 0.006092169763031883,
+      "kl_regret_bma": 0.0008703137104584138,
+      "bias_bma": 0.0007019598781191548,
+      "calib_slope_bma": 1.0019401852253382,
+      "calib_intercept_bma": 0.00015333976802767157,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    }
+  ],
+  "incumbent": {
+    "starting_models": [
+      "falk_konold_dp",
+      "finite_experience_occurrence",
+      "local_representativeness",
+      "motif_stack"
+    ],
+    "n_steps": 18,
+    "n_incumbent_changes": 14,
+    "n_steps_discovered_incumbent": 17,
+    "final_incumbent": "shared_tails_reading_order_band",
+    "changes": [
+      {
+        "global_step": 1,
+        "experiment": 1,
+        "step": 1,
+        "from": "local_representativeness",
+        "to": "tails_count_preference"
+      },
+      {
+        "global_step": 2,
+        "experiment": 1,
+        "step": 2,
+        "from": "tails_count_preference",
+        "to": "length_scaled_tails_count"
+      },
+      {
+        "global_step": 3,
+        "experiment": 1,
+        "step": 3,
+        "from": "length_scaled_tails_count",
+        "to": "sqrt_accumulated_tails_count"
+      },
+      {
+        "global_step": 5,
+        "experiment": 1,
+        "step": 5,
+        "from": "sqrt_accumulated_tails_count",
+        "to": "self_correcting_mirror_tally"
+      },
+      {
+        "global_step": 6,
+        "experiment": 2,
+        "step": 0,
+        "from": "self_correcting_mirror_tally",
+        "to": "peak_stretch_sqrt_tails_count"
+      },
+      {
+        "global_step": 7,
+        "experiment": 2,
+        "step": 1,
+        "from": "peak_stretch_sqrt_tails_count",
+        "to": "self_correction_confidence_check"
+      },
+      {
+        "global_step": 8,
+        "experiment": 2,
+        "step": 2,
+        "from": "self_correction_confidence_check",
+        "to": "stretch_contrast_selfcorrect_check"
+      },
+      {
+        "global_step": 9,
+        "experiment": 2,
+        "step": 3,
+        "from": "stretch_contrast_selfcorrect_check",
+        "to": "accelerating_stretch_selfcorrect_check"
+      },
+      {
+        "global_step": 10,
+        "experiment": 2,
+        "step": 4,
+        "from": "accelerating_stretch_selfcorrect_check",
+        "to": "chance_exemplar_stretch_selfcorrect"
+      },
+      {
+        "global_step": 11,
+        "experiment": 2,
+        "step": 5,
+        "from": "chance_exemplar_stretch_selfcorrect",
+        "to": "streak_tally_chance_exemplar_check"
+      },
+      {
+        "global_step": 13,
+        "experiment": 3,
+        "step": 1,
+        "from": "streak_tally_chance_exemplar_check",
+        "to": "tails_indifference_band"
+      },
+      {
+        "global_step": 14,
+        "experiment": 3,
+        "step": 2,
+        "from": "tails_indifference_band",
+        "to": "lone_interior_difference_band"
+      },
+      {
+        "global_step": 16,
+        "experiment": 3,
+        "step": 4,
+        "from": "lone_interior_difference_band",
+        "to": "reading_order_lone_interior_band"
+      },
+      {
+        "global_step": 17,
+        "experiment": 3,
+        "step": 5,
+        "from": "reading_order_lone_interior_band",
+        "to": "shared_tails_reading_order_band"
+      }
+    ]
+  },
+  "starting_models_prunable": true,
+  "baseline": {
+    "mean_r": 0.00033702540527691285,
+    "per_model": {
+      "falk_konold_dp": 0.00017776572965761583,
+      "motif_stack": 0.00026335934682152583,
+      "finite_experience_occurrence": 0.0004330396980140296,
+      "local_representativeness": 0.00047393684661448023
+    }
+  },
+  "fitted_baseline": {
+    "mean_r_models": [
+      "falk_konold_dp",
+      "finite_experience_occurrence",
+      "local_representativeness",
+      "motif_stack"
+    ],
+    "mean_rmse_models": [
+      "falk_konold_dp",
+      "finite_experience_occurrence",
+      "local_representativeness",
+      "motif_stack"
+    ],
+    "per_model": {
+      "falk_konold_dp": {
+        "pearson_r": 0.00027373067343201596,
+        "rmse": 0.4482561141963736,
+        "elpd_loo": -5522.444075757951,
+        "trusted": true,
+        "n_eval_excluded": 0
+      },
+      "finite_experience_occurrence": {
+        "pearson_r": 0.00047525876632940076,
+        "rmse": 0.4430761708314575,
+        "elpd_loo": -5338.465914063677,
+        "trusted": true,
+        "n_eval_excluded": 0
+      },
+      "local_representativeness": {
+        "pearson_r": 0.00018702030110791823,
+        "rmse": 0.4432849300975099,
+        "elpd_loo": -5336.498354596178,
+        "trusted": true,
+        "n_eval_excluded": 0
+      },
+      "motif_stack": {
+        "pearson_r": -0.0004615224249133813,
+        "rmse": 0.4439326106947927,
+        "elpd_loo": -5304.785726003485,
+        "trusted": true,
+        "n_eval_excluded": 0
+      }
+    },
+    "elpd_best_model": "motif_stack",
+    "elpd_best_r": -0.0004615224249133813,
+    "elpd_best_rmse": 0.4439326106947927,
+    "elpd_best_reason": null,
+    "mean_r": 0.00011862182898898842,
+    "mean_rmse": 0.44463745645503344,
+    "n_responses": 7680
+  },
+  "fitted_baseline_by_experiment": [
+    {
+      "experiment": 1,
+      "mean_r_models": [
+        "falk_konold_dp",
+        "finite_experience_occurrence",
+        "local_representativeness",
+        "motif_stack"
+      ],
+      "mean_rmse_models": [
+        "falk_konold_dp",
+        "finite_experience_occurrence",
+        "local_representativeness",
+        "motif_stack"
+      ],
+      "per_model": {
+        "falk_konold_dp": {
+          "pearson_r": 0.0002529028035721028,
+          "rmse": 0.44709024674626374,
+          "elpd_loo": -1873.804272767899,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "finite_experience_occurrence": {
+          "pearson_r": 0.0005071894556318809,
+          "rmse": 0.4441709159996119,
+          "elpd_loo": -1781.868716777706,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "local_representativeness": {
+          "pearson_r": 0.00039823009726790235,
+          "rmse": 0.44386277619990283,
+          "elpd_loo": -1781.5084160379802,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "motif_stack": {
+          "pearson_r": -0.00046468646402567,
+          "rmse": 0.4460468315160297,
+          "elpd_loo": -1765.1383349022217,
+          "trusted": false,
+          "n_eval_excluded": 0
+        }
+      },
+      "elpd_best_model": "local_representativeness",
+      "elpd_best_r": 0.00039823009726790235,
+      "elpd_best_rmse": 0.44386277619990283,
+      "elpd_best_reason": null,
+      "mean_r": 0.00017340897311155401,
+      "mean_rmse": 0.44529269261545207,
+      "n_responses": 2560
+    },
+    {
+      "experiment": 2,
+      "mean_r_models": [
+        "falk_konold_dp",
+        "finite_experience_occurrence",
+        "local_representativeness",
+        "motif_stack"
+      ],
+      "mean_rmse_models": [
+        "falk_konold_dp",
+        "finite_experience_occurrence",
+        "local_representativeness",
+        "motif_stack"
+      ],
+      "per_model": {
+        "falk_konold_dp": {
+          "pearson_r": 0.0002771455391680685,
+          "rmse": 0.44845930323812017,
+          "elpd_loo": -3712.3782954606872,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "finite_experience_occurrence": {
+          "pearson_r": 0.0004906954704320131,
+          "rmse": 0.4435723958784126,
+          "elpd_loo": -3556.5249842172066,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "local_representativeness": {
+          "pearson_r": 0.0003364058675084945,
+          "rmse": 0.4440613699689701,
+          "elpd_loo": -3555.596924124268,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "motif_stack": {
+          "pearson_r": -0.0021291852932936576,
+          "rmse": 0.4474784652649307,
+          "elpd_loo": -55846.24068417239,
+          "trusted": false,
+          "n_eval_excluded": 0
+        }
+      },
+      "elpd_best_model": "local_representativeness",
+      "elpd_best_r": 0.0003364058675084945,
+      "elpd_best_rmse": 0.4440613699689701,
+      "elpd_best_reason": null,
+      "mean_r": -0.0002562346040462704,
+      "mean_rmse": 0.44589288358760837,
+      "n_responses": 5120
+    },
+    {
+      "experiment": 3,
+      "mean_r_models": [
+        "falk_konold_dp",
+        "finite_experience_occurrence",
+        "local_representativeness",
+        "motif_stack"
+      ],
+      "mean_rmse_models": [
+        "falk_konold_dp",
+        "finite_experience_occurrence",
+        "local_representativeness",
+        "motif_stack"
+      ],
+      "per_model": {
+        "falk_konold_dp": {
+          "pearson_r": 0.00027373067343201596,
+          "rmse": 0.4482561141963736,
+          "elpd_loo": -5522.444075757951,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "finite_experience_occurrence": {
+          "pearson_r": 0.00047525876632940076,
+          "rmse": 0.4430761708314575,
+          "elpd_loo": -5338.465914063677,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "local_representativeness": {
+          "pearson_r": 0.00018702030110791823,
+          "rmse": 0.4432849300975099,
+          "elpd_loo": -5336.498354596178,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "motif_stack": {
+          "pearson_r": -0.0004615224249133813,
+          "rmse": 0.4439326106947927,
+          "elpd_loo": -5304.785726003485,
+          "trusted": true,
+          "n_eval_excluded": 0
+        }
+      },
+      "elpd_best_model": "motif_stack",
+      "elpd_best_r": -0.0004615224249133813,
+      "elpd_best_rmse": 0.4439326106947927,
+      "elpd_best_reason": null,
+      "mean_r": 0.00011862182898898842,
+      "mean_rmse": 0.44463745645503344,
+      "n_responses": 7680
+    }
+  ],
+  "leakage": {
+    "files": [
+      {
+        "path": "experiment1/cognitive_models/lempel_ziv_chunk_complexity.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "lz_diff",
+          "sqrt_rel_length",
+          "tails_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/cognitive_models/longest_tails_streak_sqrt_count.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "sqrt_rel_length",
+          "tails_diff",
+          "tails_run_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/cognitive_models/peak_stretch_sqrt_tails_count.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "peak_diff",
+          "sqrt_rel_length",
+          "tails_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/cognitive_models/recency_graded_sqrt_tails_tally.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "recency_diff",
+          "sqrt_rel_length",
+          "tails_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/cognitive_models/self_correcting_mirror_tally.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "mirror_comp_diff",
+          "sqrt_rel_length",
+          "tails_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/cognitive_models/sqrt_accumulated_tails_and_switches.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "sqrt_rel_length",
+          "switch_diff",
+          "tails_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/cognitive_models/sqrt_accumulated_tails_count.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "sqrt_rel_length",
+          "tails_diff"
+        ],
+        "n_data_cols": 3
+      },
+      {
+        "path": "experiment1/cognitive_models/sqrt_tails_recency_gradient.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "sqrt_rel_length",
+          "tail_pos_diff",
+          "tails_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/model_loop/models/lempel_ziv_chunk_complexity.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "lz_diff",
+          "sqrt_rel_length",
+          "tails_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/model_loop/models/longest_tails_streak_sqrt_count.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "sqrt_rel_length",
+          "tails_diff",
+          "tails_run_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/model_loop/models/peak_stretch_sqrt_tails_count.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "peak_diff",
+          "sqrt_rel_length",
+          "tails_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/model_loop/models/recency_graded_sqrt_tails_tally.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "recency_diff",
+          "sqrt_rel_length",
+          "tails_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/model_loop/models/self_correcting_mirror_tally.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "mirror_comp_diff",
+          "sqrt_rel_length",
+          "tails_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/model_loop/models/sqrt_accumulated_tails_and_switches.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "sqrt_rel_length",
+          "switch_diff",
+          "tails_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/model_loop/models/sqrt_accumulated_tails_count.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "sqrt_rel_length",
+          "tails_diff"
+        ],
+        "n_data_cols": 3
+      },
+      {
+        "path": "experiment1/model_loop/models/sqrt_tails_recency_gradient.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "sqrt_rel_length",
+          "tail_pos_diff",
+          "tails_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment2/cognitive_models/accelerating_stretch_selfcorrect_check.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "self_corr_agree",
+          "sqrt_rel_length",
+          "stretch_contrast_sq",
+          "tails_diff"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment2/cognitive_models/accelerating_stretch_witnessed_check.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "self_corr_agree",
+          "sqrt_rel_length",
+          "stretch_contrast_sq",
+          "stretch_witness",
+          "tails_diff"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/cognitive_models/chance_exemplar_stretch_selfcorrect.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chance_exemplar_diff",
+          "chose_left",
+          "self_corr_agree",
+          "sqrt_rel_length",
+          "stretch_contrast_diff",
+          "tails_diff"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/cognitive_models/streak_tally_chance_exemplar_check.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chance_exemplar_diff",
+          "chose_left",
+          "self_corr_agree",
+          "sqrt_rel_length",
+          "streak_tally_diff",
+          "tails_diff"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/cognitive_models/stretch_contrast_selfcorrect_check.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "self_corr_agree",
+          "sqrt_rel_length",
+          "stretch_contrast_diff",
+          "tails_diff"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment2/cognitive_models/three_in_a_row_chance_exemplar_check.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chance_exemplar_diff",
+          "chose_left",
+          "self_corr_agree",
+          "sqrt_rel_length",
+          "streak_verdict_diff",
+          "tails_diff"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/cognitive_models/witnessed_accelerating_chance_exemplar.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chance_exemplar_diff",
+          "chose_left",
+          "sqrt_rel_length",
+          "stretch_contrast_sq",
+          "tails_diff",
+          "witnessed_agree"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/cognitive_models/witnessed_accelerating_stretch_check.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "sqrt_rel_length",
+          "stretch_contrast_sq",
+          "tails_diff",
+          "witnessed_agree"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment2/model_loop/models/accelerating_stretch_selfcorrect_check.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "self_corr_agree",
+          "sqrt_rel_length",
+          "stretch_contrast_sq",
+          "tails_diff"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment2/model_loop/models/accelerating_stretch_witnessed_check.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "self_corr_agree",
+          "sqrt_rel_length",
+          "stretch_contrast_sq",
+          "stretch_witness",
+          "tails_diff"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/model_loop/models/chance_exemplar_stretch_selfcorrect.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chance_exemplar_diff",
+          "chose_left",
+          "self_corr_agree",
+          "sqrt_rel_length",
+          "stretch_contrast_diff",
+          "tails_diff"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/model_loop/models/streak_tally_chance_exemplar_check.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chance_exemplar_diff",
+          "chose_left",
+          "self_corr_agree",
+          "sqrt_rel_length",
+          "streak_tally_diff",
+          "tails_diff"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/model_loop/models/stretch_contrast_selfcorrect_check.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "self_corr_agree",
+          "sqrt_rel_length",
+          "stretch_contrast_diff",
+          "tails_diff"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment2/model_loop/models/three_in_a_row_chance_exemplar_check.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chance_exemplar_diff",
+          "chose_left",
+          "self_corr_agree",
+          "sqrt_rel_length",
+          "streak_verdict_diff",
+          "tails_diff"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/model_loop/models/witnessed_accelerating_chance_exemplar.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chance_exemplar_diff",
+          "chose_left",
+          "sqrt_rel_length",
+          "stretch_contrast_sq",
+          "tails_diff",
+          "witnessed_agree"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/model_loop/models/witnessed_accelerating_stretch_check.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "sqrt_rel_length",
+          "stretch_contrast_sq",
+          "tails_diff",
+          "witnessed_agree"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment3/cognitive_models/flip_count_fading_lone_interior.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "flips_read",
+          "lone_interior",
+          "one_tail",
+          "tails_sign"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment3/cognitive_models/glance_span_lone_interior_band.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "glance_lone_interior",
+          "one_tail",
+          "tails_sign"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment3/cognitive_models/isolated_flip_absorption_band.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "all_absorbed",
+          "chose_left",
+          "n_differ",
+          "one_tail",
+          "tails_sign"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment3/cognitive_models/lone_interior_difference_band.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "lone_interior",
+          "one_tail",
+          "tails_sign"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment3/cognitive_models/per_flip_attention_decay_lone_interior.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "flips_read",
+          "lone_interior",
+          "one_tail",
+          "tails_sign"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment3/cognitive_models/reading_order_lone_interior_band.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "lone_interior",
+          "one_tail",
+          "read_pos",
+          "tails_sign"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment3/cognitive_models/shared_tails_reading_order_band.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "lone_interior",
+          "one_tail",
+          "read_pos",
+          "shared_tails",
+          "tails_sign"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment3/cognitive_models/shared_tails_reference_band.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "lone_interior",
+          "one_tail",
+          "shared_tails",
+          "tails_sign"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment3/model_loop/models/flip_count_fading_lone_interior.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "flips_read",
+          "lone_interior",
+          "one_tail",
+          "tails_sign"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment3/model_loop/models/glance_span_lone_interior_band.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "glance_lone_interior",
+          "one_tail",
+          "tails_sign"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment3/model_loop/models/isolated_flip_absorption_band.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "all_absorbed",
+          "chose_left",
+          "n_differ",
+          "one_tail",
+          "tails_sign"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment3/model_loop/models/lone_interior_difference_band.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "lone_interior",
+          "one_tail",
+          "tails_sign"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment3/model_loop/models/per_flip_attention_decay_lone_interior.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "flips_read",
+          "lone_interior",
+          "one_tail",
+          "tails_sign"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment3/model_loop/models/reading_order_lone_interior_band.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "lone_interior",
+          "one_tail",
+          "read_pos",
+          "tails_sign"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment3/model_loop/models/shared_tails_reading_order_band.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "lone_interior",
+          "one_tail",
+          "read_pos",
+          "shared_tails",
+          "tails_sign"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment3/model_loop/models/shared_tails_reference_band.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "lone_interior",
+          "one_tail",
+          "shared_tails",
+          "tails_sign"
+        ],
+        "n_data_cols": 5
+      }
+    ],
+    "any_identical": false,
+    "any_mention": false,
+    "any_value_mention": false,
+    "any_gt_named": false,
+    "csv_generating_model_files": [],
+    "any_csv_generating_model": false,
+    "manifest_gt_named_files": [],
+    "any_manifest_gt_named": false,
+    "max_data_cols": 6
+  },
+  "experiments": [
+    {
+      "experiment": 1,
+      "manifest_models": [
+        "sqrt_accumulated_tails_count",
+        "sqrt_accumulated_tails_and_switches",
+        "peak_stretch_sqrt_tails_count",
+        "self_correcting_mirror_tally",
+        "sqrt_tails_recency_gradient",
+        "recency_graded_sqrt_tails_tally",
+        "longest_tails_streak_sqrt_count",
+        "lempel_ziv_chunk_complexity"
+      ]
+    },
+    {
+      "experiment": 2,
+      "manifest_models": [
+        "stretch_contrast_selfcorrect_check",
+        "accelerating_stretch_selfcorrect_check",
+        "accelerating_stretch_witnessed_check",
+        "witnessed_accelerating_stretch_check",
+        "chance_exemplar_stretch_selfcorrect",
+        "streak_tally_chance_exemplar_check",
+        "three_in_a_row_chance_exemplar_check",
+        "witnessed_accelerating_chance_exemplar"
+      ]
+    },
+    {
+      "experiment": 3,
+      "manifest_models": [
+        "lone_interior_difference_band",
+        "isolated_flip_absorption_band",
+        "reading_order_lone_interior_band",
+        "glance_span_lone_interior_band",
+        "shared_tails_reference_band",
+        "per_flip_attention_decay_lone_interior",
+        "flip_count_fading_lone_interior",
+        "shared_tails_reading_order_band"
+      ]
+    }
+  ]
+}
