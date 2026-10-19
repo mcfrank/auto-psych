@@ -135,9 +135,7 @@ dataclass — `--help` lists every knob with its documented default.
 |---|---|
 | `python -m src.pipelines.outer_loop.run` | The main pipeline: per experiment, seed/carry-forward the model set → `2_design` (programmatic exhaustive EIG selection) → `3_implement` (+ Firebase deploy when `--deploy-target firebase`) → `4_collect` → `5_model_loop`. `--agent <stage>` reruns one stage; `--resume` continues an existing tree. |
 | `python -m src.pipelines.inner_loop.run` | The inner model loop standalone, on an already-featurized responses CSV + a seed-model dir. Exposes all discovery knobs (`--hints-file`, `--novelty-rmse-threshold`, `--prune-*`, `--candidate-parallelism`). |
-| `python -m src.pipelines.outer_loop.eig` | Exhaustive stimulus design against a model dir: enumerates every H/T pair over `--lengths` and greedily selects the max-joint-EIG set of `--select` stimuli (prior-predictive; `--registry` weights the models, `--responses` designs from the posterior; lazy batched greedy in float32 by default, `--no-lazy --scoring-dtype float64` for exact greedy). The pipeline's design stage runs this logic; the CLI is also usable directly. |
 | `python -m src.critique.ppc` | The CriticAL posterior-predictive harness: computes agent-proposed test statistics on observed vs. replicated data (raw p + BH-FDR q). The inner loop runs it over the critique agent's statistics; usable standalone on any fitted model. |
-| `python -m src.model_comparison.posterior` | Fit + ELPD-LOO-compare every model in a manifest dir on a responses CSV. |
 
 **Cluster launchers (live runs — real money)** — see
 `scripts/outer_loop_live/README.md` for the full runbook:

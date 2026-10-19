@@ -17,10 +17,8 @@ import tyro
 from src.pipelines.outer_loop.orchestrator import experiment_dir, outer_data_dir
 from src.pipelines.outer_loop.run import Args as OuterArgs
 from src.pipelines.outer_loop.run import _parse_experiments
-from src.pipelines.outer_loop.eig import Args as EigArgs
 from src.pipelines.inner_loop.run import Args as InnerArgs
 from src.model_comparison.likelihood import Args as LikelihoodArgs
-from src.model_comparison.posterior import Args as PosteriorArgs
 from tests.paths import REPO_ROOT
 
 
@@ -57,16 +55,6 @@ def test_parse_experiments_rejects_bad_input(value, fragment):
 # ── tyro dataclass parsing ──────────────────────────────────────────
 
 
-def test_posterior_cli_pools_multiple_responses():
-    args = tyro.cli(
-        PosteriorArgs,
-        args=["--responses", "a.csv", "b.csv", "--models-dir", "m"],
-    )
-    assert args.responses == [Path("a.csv"), Path("b.csv")]
-    assert args.models_dir == Path("m")
-    assert args.out is None
-
-
 def test_likelihood_cli_required_fields_and_optional_cache():
     args = tyro.cli(
         LikelihoodArgs,
@@ -100,18 +88,6 @@ def test_outer_run_cli_literal_choice_and_bool_flag():
     assert not hasattr(args, "design_mode")
 
 
-def test_eig_cli_defaults_and_required():
-    args = tyro.cli(EigArgs, args=["--models-dir", "m", "--n-responses", "40"])
-    assert args.models_dir == Path("m")
-    assert args.n_responses == 40
-    assert args.select == 32
-    # The pool is the project task's design pool, or a JSON file of part of it.
-    assert args.project == "subjective_randomness" and args.pool is None
-    assert args.n_samples == 200
-    # The candidate-pool mode is gone: exhaustive selection is the only mode.
-    assert not hasattr(args, "candidates")
-
-
 def test_inner_run_cli_required_paths():
     args = tyro.cli(
         InnerArgs,
@@ -130,9 +106,7 @@ def test_inner_run_cli_required_paths():
     "module,expected_flag",
     [
         ("src.model_comparison.likelihood", "--model"),
-        ("src.model_comparison.posterior", "--models-dir"),
         ("src.pipelines.outer_loop.run", "--project"),
-        ("src.pipelines.outer_loop.eig", "--select"),
         ("src.pipelines.inner_loop.run", "--seed-models"),
     ],
 )

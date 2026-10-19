@@ -11,7 +11,6 @@ NUTS) — heavier cases are marked slow to be safe.
 
 from __future__ import annotations
 
-import json
 import shutil
 
 import numpy as np
@@ -21,12 +20,6 @@ import yaml
 from src.pipelines.outer_loop import eig as eig_mod
 from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 from tests.paths import PYMC_MODEL_FIXTURES_DIR, sr_pairs
-
-
-def _pool_file(tmp_path, *lengths):
-    path = tmp_path / f"pool_{'_'.join(map(str, lengths))}.json"
-    path.write_text(json.dumps(sr_pairs(*lengths)))
-    return path
 
 
 def _design(*args, **kwargs):
@@ -231,24 +224,11 @@ def test_design_raises_when_no_model_can_bind(tmp_path):
 
 
 def test_exhaustive_design_selects_joint_eig_set(tmp_path):
-    """The CLI enumerates the pair universe, scores under the PyMC models, and
-    greedily selects the max-joint-EIG set."""
-    import json
-
+    """The design scores the pair pool under the PyMC models and greedily
+    selects the max-joint-EIG set."""
     models_dir = _seed(tmp_path)
-    out = tmp_path / "stimuli.json"
-    args = eig_mod.Args(
-        models_dir=models_dir,
-        n_responses=1,
-        out=out,
-        pool=_pool_file(tmp_path, 3, 4),
-        select=5,
-        n_samples=25,
-        n_scenarios=300,
-    )
-    eig_mod.main(args)
-
-    stimuli = json.loads(out.read_text(encoding="utf-8"))
+    kwargs = dict(pool=sr_pairs(3, 4), n_select=5, n_samples=25, n_scenarios=300, seed=42)
+    stimuli = _design(models_dir, **kwargs)
     assert len(stimuli) == 5
     keys = set()
     for rank, item in enumerate(stimuli, start=1):
@@ -270,19 +250,7 @@ def test_exhaustive_design_selects_joint_eig_set(tmp_path):
     assert stimuli[-1]["joint_eig_bits"] >= stimuli[0]["joint_eig_bits"] - 0.02
 
     # Deterministic: rerunning produces the same design.
-    out2 = tmp_path / "stimuli2.json"
-    eig_mod.main(
-        eig_mod.Args(
-            n_responses=1,
-            models_dir=models_dir,
-            out=out2,
-            pool=_pool_file(tmp_path, 3, 4),
-            select=5,
-            n_samples=25,
-            n_scenarios=300,
-        )
-    )
-    assert json.loads(out2.read_text(encoding="utf-8")) == stimuli
+    assert _design(models_dir, **kwargs) == stimuli
 
 
 def test_exhaustive_design_pure_random_no_eig(tmp_path):

@@ -6,15 +6,6 @@ models:
 
     P(model | data) ∝ exp(elpd_loo(model))
 
-Multiple --responses files are pooled into a single observed set before
-fitting (one MCMC run per model on pooled data).
-
-Usage (CLI):
-    python3 -m src.model_comparison.posterior \\
-        --responses  EXP1/data/responses.csv EXP2/data/responses.csv \\
-        --models-dir EXP_DIR/cognitive_models \\
-        --out        EXP_DIR/critique/model_posterior.json
-
 Output JSON:
     {
       "posteriors":      {"alternation": 0.82, "representativeness": 0.18},
@@ -28,59 +19,13 @@ from __future__ import annotations
 import csv
 
 import numpy as np
-import json
 import math
-import os
 import sys
-import tempfile
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence
-
-import tyro
-from pyprojroot import here
-
-# Ensure repo root on path so "import src..." works when run as a module/script.
-# Must precede the (function-level) src imports below, hence here() rather than
-# the canonical src.runtime.config.REPO_ROOT (same resolution).
-sys.path.insert(0, str(here()))
-
-from src.model_comparison.cv import LOO, Selection, cv_pointwise  # noqa: E402
+from typing import Any, Dict, Mapping, Optional, Sequence
 
 
-def _pool_response_csvs(paths: List[Path]) -> Path:
-    """Concatenate multiple CSVs into one temporary file with a single header.
-
-    Returns the path to the pooled CSV. All inputs must share the same header.
-    """
-    if len(paths) == 1:
-        return paths[0]
-    header: Optional[List[str]] = None
-    pooled_rows: List[List[str]] = []
-    for p in paths:
-        with p.open(encoding="utf-8", newline="") as f:
-            reader = csv.reader(f)
-            this_header = next(reader)
-            if header is None:
-                header = this_header
-            elif this_header != header:
-                raise ValueError(
-                    f"Cannot pool {p}: header {this_header} differs from first file's header {header}"
-                )
-            for row in reader:
-                pooled_rows.append(row)
-    if header is None:
-        raise ValueError("No response files provided")
-    # mkstemp returns (fd, path); close the fd immediately or it leaks on every
-    # multi-CSV pool. The caller is responsible for unlinking the returned path.
-    fd, tmp_name = tempfile.mkstemp(prefix="pooled_responses_", suffix=".csv")
-    os.close(fd)
-    tmp = Path(tmp_name)
-    with tmp.open("w", encoding="utf-8", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(header)
-        w.writerows(pooled_rows)
-    return tmp
+from src.model_comparison.cv import LOO, Selection, cv_pointwise
 
 
 def _flag_not_converged(name: str, row: Dict[str, Any]) -> None:
@@ -351,59 +296,3 @@ def model_posterior(
         "criterion": selection.criterion,
     }
     return result
-
-
-@dataclass
-class Args:
-    """Bayesian posterior over PyMC cognitive models."""
-
-    responses: List[Path]
-    """Path(s) to responses.csv — multiple files are pooled (must share header)."""
-    models_dir: Path
-    """Path to the cognitive_models/ directory."""
-    out: Optional[Path] = None
-    """Write JSON to this file (default: stdout)."""
-    cache_dir: Optional[Path] = None
-    """Optional directory to persist .nc fits (default: in-process cache only)."""
-
-
-def main(args: Args) -> None:
-    """CLI entry point: compute and write the Bayesian model posterior as JSON."""
-    if not args.responses:
-        print("Error: at least one --responses path is required", file=sys.stderr)
-        sys.exit(1)
-    for p in args.responses:
-        if not p.exists():
-            print(f"Error: {p} not found", file=sys.stderr)
-            sys.exit(1)
-
-    pooled = _pool_response_csvs(args.responses)
-
-    try:
-        result = model_posterior(
-            responses_path=pooled,
-            models_dir=args.models_dir,
-            cache_dir=args.cache_dir,
-        )
-    finally:
-        # Remove the pooled temp file (only created when >1 input was pooled).
-        if pooled not in args.responses and pooled.exists():
-            pooled.unlink()
-
-    output = json.dumps(result, indent=2)
-    if args.out:
-        args.out.write_text(output, encoding="utf-8")
-        best = max(result["posteriors"], key=lambda m: result["posteriors"][m])
-        print(
-            f"Wrote model_posterior.json — best: {best} "
-            f"(posterior={result['posteriors'][best]:.3f}, "
-            f"elpd_loo={result['elpd_loo'][best]:.1f}, "
-            f"n_trials={result['n_trials']})",
-            flush=True,
-        )
-    else:
-        print(output)
-
-
-if __name__ == "__main__":
-    main(tyro.cli(Args))

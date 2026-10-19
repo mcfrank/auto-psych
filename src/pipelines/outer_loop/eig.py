@@ -8,35 +8,14 @@ batched per-draw pass per PyMC model (module-level `model: pm.Model`), and
 greedily select the set with maximal *joint* EIG about model identity
 (src.models.eig_selection). Each model computes its own features from raw
 stimulus rows via its ``compute_features`` or ``prepare_observed`` hook.
-
-Usage (CLI):
-    python3 -m src.pipelines.outer_loop.eig \\
-        --select 32 --project subjective_randomness \\
-        --models-dir PATH/cognitive_models \\
-        --registry   PATH/model_registry.yaml \\
-        --out        PATH/design/stimuli.json
-
-    # --out defaults to stdout if omitted
-    # --registry is optional (uniform prior over models if omitted)
-    # --responses PREV/model_loop/responses.csv (all data so far) scores from
-    # the posterior predictive; --n-responses is the participants per experiment
 """
 
 from __future__ import annotations
 
 import json
-import sys
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
-import tyro
-from pyprojroot import here
-
-# Ensure repo root on path so "import src..." works when run as a module/script.
-# Must precede the (function-level) src imports below, hence here() rather than
-# the canonical src.runtime.config.REPO_ROOT (same resolution).
-sys.path.insert(0, str(here()))
 
 
 def _load_model_names(models_dir: Path) -> List[str]:
@@ -759,86 +738,3 @@ def design_exhaustive(
             )
 
     return results
-
-
-@dataclass
-class Args:
-    """Score the task's whole design pool and select the max-joint-EIG set."""
-
-    models_dir: Path
-    """Path to the cognitive_models/ directory."""
-    n_responses: int
-    """Responses each selected stimulus receives (participants per experiment)."""
-    registry: Optional[Path] = None
-    """Path to model_registry.yaml (optional; uniform prior if omitted)."""
-    out: Optional[Path] = None
-    """Output JSON file path (default: stdout)."""
-    project: str = "subjective_randomness"
-    """The project whose task's design pool is scored."""
-    pool: Optional[Path] = None
-    """A JSON list of stimuli to score instead of the task's whole design pool."""
-    n_samples: int = 200
-    """Per-draw prediction samples per model (prior- or posterior-predictive)."""
-    select: int = 32
-    """Stimulus-set size for the joint-EIG selection."""
-    n_scenarios: int = 1000
-    """Monte Carlo scenarios for joint-EIG gain estimation."""
-    seed: int = 42
-    """Seed for predictive draws and selection scenarios."""
-    responses: Optional[Path] = None
-    """Responses so far (the previous experiment's model_loop/responses.csv):
-    fit each model on them and design from the POSTERIOR predictive instead of
-    the prior."""
-    fit_cache: Optional[Path] = None
-    """Cache dir for the design-time MCMC fits (with --responses)."""
-    lazy: bool = DESIGN_LAZY_SEARCH
-    """Lazy batched greedy search instead of exact greedy (an approximation;
-    see src/models/eig_selection.py)."""
-    scoring_dtype: Literal["float32", "float64"] = DESIGN_SCORING_DTYPE
-    """Precision of candidate scoring."""
-    leave_one_out: bool = DESIGN_LEAVE_ONE_OUT
-    """Leave each scenario's generating draw out of its likelihood average
-    (--no-leave-one-out: the estimator used before 2026-09-27, which
-    includes it)."""
-
-
-def _write_output(stimuli: List[Dict[str, Any]], out: Optional[Path]) -> None:
-    """Write the selected stimuli to ``out`` (or stdout if ``None``)."""
-    output = json.dumps(stimuli, indent=2)
-    if out:
-        out.write_text(output, encoding="utf-8")
-        eig_vals = [s["eig"] for s in stimuli]
-        print(
-            f"Wrote {len(stimuli)} stimuli to {out} "
-            f"(EIG range: {min(eig_vals):.4f} – {max(eig_vals):.4f})",
-            flush=True,
-        )
-    else:
-        print(output)
-
-
-def main(args: Args) -> None:
-    """CLI entry point: run exhaustive EIG design and write selected stimuli."""
-    from src.tasks import task_for_project  # type: ignore
-
-    selected = design_exhaustive(
-        models_dir=args.models_dir,
-        registry_path=args.registry,
-        task=task_for_project(args.project),
-        pool=json.loads(args.pool.read_text(encoding="utf-8")) if args.pool else None,
-        n_select=args.select,
-        n_samples=args.n_samples,
-        n_scenarios=args.n_scenarios,
-        seed=args.seed,
-        responses_csv=args.responses,
-        fit_cache_dir=args.fit_cache,
-        n_responses=args.n_responses,
-        lazy=args.lazy,
-        scoring_dtype=args.scoring_dtype,
-        leave_one_out=args.leave_one_out,
-    )
-    _write_output(selected, args.out)
-
-
-if __name__ == "__main__":
-    main(tyro.cli(Args))

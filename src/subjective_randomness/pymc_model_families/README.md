@@ -41,12 +41,3 @@ The superseded originals were removed in September 2026 (git history keeps
 them). A newly discovered model earns its place here only through the
 standard recovery/holdout comparison — and needs generating parameters in
 the recovery configs' `seed_params` before it can be added.
-
-Run model comparison (responses.csv carries only raw columns; each model
-computes its own features via its `compute_features` hook):
-
-```bash
-uv run python -m src.model_comparison.posterior \
-  --responses path/to/responses.csv \
-  --models-dir src/subjective_randomness/pymc_model_families
-```
