@@ -1,7 +1,7 @@
 """Fast unit tests for src/model_comparison/posterior.py.
 
 The ELPD-LOO scoring (which needs MCMC) is monkeypatched out so these tests
-exercise only the softmax/posterior arithmetic and the complexity prior — no
+exercise only the softmax/posterior arithmetic — no
 PyMC sampling required.
 """
 
@@ -67,60 +67,7 @@ def test_non_finite_elpd_raises_instead_of_corrupting_posterior(
         mp.model_posterior(responses, models_dir)
 
 
-def test_complexity_prior_penalises_longer_models(tmp_path, monkeypatch):
-    models_dir = _make_models_dir(tmp_path, ["simple", "complex"])
-    # Make "complex" genuinely longer so model_complexity differs.
-    (models_dir / "complex.py").write_text(
-        "x = 1\ny = 2\nz = 3\n" * 50, encoding="utf-8"
-    )
-    responses = _make_responses(tmp_path, 3)
-    # Equal fit; only the complexity prior should break the tie.
-    monkeypatch.setattr(ll, "log_likelihood", lambda m, *a, **k: -10.0)
-
-    result = mp.model_posterior(responses, models_dir, complexity_prior_const=-0.01)
-
-    assert result["complexity_prior_const"] == -0.01
-    assert result["complexities"]["complex"] > result["complexities"]["simple"]
-    assert result["posteriors"]["simple"] > result["posteriors"]["complex"]
-
-
-def test_complexity_counts_noncomment_lines_not_chars(tmp_path):
-    """Complexity is non-blank non-comment *lines*, not characters.
-
-    A model with few but very long lines must score as *less* complex than one
-    with many short lines — the opposite of a character count.
-    """
-    models_dir = _make_models_dir(tmp_path, ["few_long_lines", "many_short_lines"])
-    # 2 code lines, each very long (hundreds of characters).
-    (models_dir / "few_long_lines.py").write_text(
-        "a = " + "1 + " * 200 + "1\n" + "b = " + "2 + " * 200 + "2\n",
-        encoding="utf-8",
-    )
-    # 10 short code lines, plus comments and blanks that must NOT count.
-    (models_dir / "many_short_lines.py").write_text(
-        "# header comment\n\n"
-        + "".join(f"x{i} = {i}  # trailing comment\n" for i in range(10)),
-        encoding="utf-8",
-    )
-
-    assert mp.model_complexity("few_long_lines", models_dir) == 2
-    assert mp.model_complexity("many_short_lines", models_dir) == 10
-    assert mp.model_complexity("many_short_lines", models_dir) > mp.model_complexity(
-        "few_long_lines", models_dir
-    )
-
-
 def test_missing_manifest_raises(tmp_path):
     (tmp_path / "cognitive_models").mkdir()
     with pytest.raises(FileNotFoundError):
         mp.model_posterior(tmp_path / "responses.csv", tmp_path / "cognitive_models")
-
-
-def test_the_loops_default_posterior_has_no_complexity_prior():
-    """User decision 2026-09-29: the real runs use no complexity penalty. On 14
-    finished recovery cells, no penalty and the line-count penalty were
-    indistinguishable in held-out accuracy, and among near-tied models the one
-    with shorter code was closer to the hidden model half the time."""
-    from src.pipelines.inner_loop import scoring
-
-    assert scoring.DEFAULT_COMPLEXITY_PRIOR_CONST == 0.0

@@ -65,7 +65,6 @@ def test_posterior_cli_pools_multiple_responses():
     assert args.responses == [Path("a.csv"), Path("b.csv")]
     assert args.models_dir == Path("m")
     assert args.out is None
-    assert args.complexity_prior == 0.0
 
 
 def test_likelihood_cli_required_fields_and_optional_cache():

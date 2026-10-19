@@ -20,15 +20,6 @@ from src.model_comparison.cv import LOO, Selection
 from src.model_comparison.posterior import compare_table, model_posterior
 from src.pipelines.inner_loop.model_zoo import _manifest_entries, _untrusted
 
-# Complexity prior of the softmax model posterior (a report field and the
-# model-average weights; selection, pruning and carry-forward use ELPD-LOO
-# alone): each model's log-prior is this constant times its non-comment line
-# count (``model_complexity``). 0.0: no prior (user decision 2026-09-29; it was
-# -0.05). On 14 finished recovery cells a line-count penalty left held-out
-# accuracy unchanged within noise, and among near-tied models the one with
-# shorter code was closer to the hidden model only half the time.
-DEFAULT_COMPLEXITY_PRIOR_CONST = 0.0
-
 
 def _best_model(posterior: Dict[str, Any]) -> str:
     """The raw softmax-posterior argmax (a report field, not the selection rule)."""
@@ -56,8 +47,8 @@ def _best_exportable_model(
     ``posteriors``: those are rounded to six decimals, so every model more
     than ~14 nats behind the argmax reads 0.0 and ties, and a ``max`` over
     them picks whichever comes first in the manifest (62 of 230 baseline
-    experiments exported a far-behind seed that way). The posterior (which
-    also carries the line-count complexity prior) stays a report field.
+    experiments exported a far-behind seed that way). The posterior stays a
+    report field.
 
     With no comparison table (no reliability or rank information available)
     we fall back to the plain posterior argmax. Every model in the posterior
@@ -157,7 +148,6 @@ def _record_history_step(
 def _score(
     responses_path: Path,
     models_dir: Path,
-    complexity_prior_const: float,
     cache_dir: Optional[Path],
     fit_kwargs: Dict[str, Any],
     selection: Selection = LOO,
@@ -167,7 +157,6 @@ def _score(
     return model_posterior(
         responses_path,
         models_dir,
-        complexity_prior_const=complexity_prior_const,
         cache_dir=cache_dir,
         selection=selection,
         **fit_kwargs,

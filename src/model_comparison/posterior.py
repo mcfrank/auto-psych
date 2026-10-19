@@ -1,16 +1,10 @@
 """Bayesian model posterior over PyMC cognitive models.
 
 For each model, ELPD-LOO is computed on the pooled observed responses; these
-log-scores are softmaxed (with an optional complexity prior) to form the
-posterior over models.
+log-scores are softmaxed (a uniform model prior) to form the posterior over
+models:
 
-    P(model | data) ∝ exp(elpd_loo(model)) * P(model)
-
-With --complexity-prior CONST, log-prior = CONST * complexity(model), where
-complexity = non-blank, non-comment LINES in the model's .py file (see
-``model_complexity``). Negative CONST penalises complex models (Occam's razor).
-The DEFAULT_COMPLEXITY_PRIOR_CONST in the inner loop is tuned for this line
-count, not a character count.
+    P(model | data) ∝ exp(elpd_loo(model))
 
 Multiple --responses files are pooled into a single observed set before
 fitting (one MCMC run per model on pooled data).
@@ -25,10 +19,7 @@ Output JSON:
     {
       "posteriors":      {"alternation": 0.82, "representativeness": 0.18},
       "elpd_loo":        {"alternation": -38.1, "representativeness": -45.7},
-      "n_trials":        300,
-      // if --complexity-prior is non-zero:
-      "complexity_prior_const": -0.01,
-      "complexities":    {"alternation": 312, "representativeness": 748}
+      "n_trials":        300
     }
 """
 
@@ -55,33 +46,6 @@ from pyprojroot import here
 sys.path.insert(0, str(here()))
 
 from src.model_comparison.cv import LOO, Selection, cv_pointwise  # noqa: E402
-
-
-def model_complexity(model_name: str, models_dir: Path) -> int:
-    """Number of non-blank, non-comment lines of code in `<model_name>.py`.
-
-    A line counts when it still has non-whitespace content once its `#`-comment
-    portion is stripped. This is the Occam complexity proxy for the model
-    posterior: shared boilerplate (imports, the `pm.Data` containers, the
-    likelihood) is roughly constant across models and cancels in the softmax, so
-    only the lines a hypothesis spends on extra mechanism move posterior mass —
-    a model that blends several heuristics pays for every extra cue it adds.
-    """
-    model_file = models_dir / f"{model_name}.py"
-    if not model_file.exists():
-        # Returning 0 here would silently hand a missing model the *best* possible
-        # Occam prior (log_prior = const * 0 = 0) under a negative complexity
-        # constant. A model in the comparison with no source file is a bug, not a
-        # zero-complexity model — fail loudly.
-        raise FileNotFoundError(
-            f"Cannot compute complexity for {model_name!r}: no source at {model_file}"
-        )
-    count = 0
-    for line in model_file.read_text(encoding="utf-8").splitlines():
-        code_part = line.split("#")[0]
-        if code_part.strip():
-            count += 1
-    return count
 
 
 def _pool_response_csvs(paths: List[Path]) -> Path:
@@ -309,7 +273,6 @@ def model_posterior(
     responses_path: Path,
     models_dir: Path,
     *,
-    complexity_prior_const: float = 0.0,
     cache_dir: Optional[Path] = None,
     selection: Selection = LOO,
     **fit_kwargs: Any,
@@ -322,8 +285,7 @@ def model_posterior(
 
     Fits each model in `<models_dir>/models_manifest.yaml` to the pooled
     responses at `responses_path` (MCMC), scores each by ELPD-LOO, and
-    softmaxes the scores (with optional complexity prior) to produce a
-    normalized posterior.
+    softmaxes the scores to produce a normalized posterior.
 
     Extra ``fit_kwargs`` (e.g. ``draws``, ``tune``, ``chains``) are forwarded
     to the MCMC fit of every model.
@@ -338,8 +300,7 @@ def model_posterior(
     that is overconfident about its certainty; use the ``dse`` column of
     ``compare_table`` for the standard-error-aware view of distinguishability.
 
-    Returns a dict with `posteriors`, `elpd_loo`, `n_trials`, and (if
-    complexity_prior_const != 0) `complexity_prior_const` + `complexities`.
+    Returns a dict with `posteriors`, `elpd_loo`, `n_trials` and `criterion`.
     """
     from src.models.model_manifest import read_loadable_model_names  # type: ignore
     from src.model_comparison import likelihood as _likelihood  # type: ignore
@@ -374,16 +335,7 @@ def model_posterior(
             "a NaN/inf would silently corrupt. Inspect the model(s)' likelihood."
         )
 
-    if complexity_prior_const != 0.0:
-        complexities: Optional[Dict[str, int]] = {
-            m: model_complexity(m, models_dir) for m in model_names
-        }
-        log_priors = {m: complexity_prior_const * complexities[m] for m in model_names}
-    else:
-        complexities = None
-        log_priors = {m: 0.0 for m in model_names}
-
-    log_scores = {m: elpd[m] + log_priors[m] for m in model_names}
+    log_scores = elpd
     max_score = max(log_scores.values())
     sum_exp = sum(math.exp(s - max_score) for s in log_scores.values())
     log_norm = max_score + math.log(sum_exp)
@@ -398,9 +350,6 @@ def model_posterior(
         "n_trials": n_trials,
         "criterion": selection.criterion,
     }
-    if complexities is not None:
-        result["complexity_prior_const"] = complexity_prior_const
-        result["complexities"] = complexities
     return result
 
 
@@ -414,10 +363,6 @@ class Args:
     """Path to the cognitive_models/ directory."""
     out: Optional[Path] = None
     """Write JSON to this file (default: stdout)."""
-    complexity_prior: float = 0.0
-    """Log-prior per model = CONST * complexity, where complexity = non-blank,
-    non-comment LINES in the model .py file. Negative CONST penalises complex
-    models (Occam's razor). Default: 0.0 (uniform prior)."""
     cache_dir: Optional[Path] = None
     """Optional directory to persist .nc fits (default: in-process cache only)."""
 
@@ -438,7 +383,6 @@ def main(args: Args) -> None:
         result = model_posterior(
             responses_path=pooled,
             models_dir=args.models_dir,
-            complexity_prior_const=args.complexity_prior,
             cache_dir=args.cache_dir,
         )
     finally:
@@ -450,16 +394,11 @@ def main(args: Args) -> None:
     if args.out:
         args.out.write_text(output, encoding="utf-8")
         best = max(result["posteriors"], key=lambda m: result["posteriors"][m])
-        prior_note = (
-            f", complexity_prior_const={result['complexity_prior_const']}"
-            if "complexity_prior_const" in result
-            else ""
-        )
         print(
             f"Wrote model_posterior.json — best: {best} "
             f"(posterior={result['posteriors'][best]:.3f}, "
             f"elpd_loo={result['elpd_loo'][best]:.1f}, "
-            f"n_trials={result['n_trials']}{prior_note})",
+            f"n_trials={result['n_trials']})",
             flush=True,
         )
     else:

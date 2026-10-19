@@ -925,13 +925,11 @@ experiment means every carried model is refit on it.
 - **ELPD-LOO:** `FittedModel.loo_diagnostics` → `loo_diagnostics`
   (loo_reliability.py:91) → `az.loo(idata, pointwise=True)` on the per-trial
   Bernoulli log-likelihood. It is computed once per fit.
-- **Softmax "posterior"** (`model_posterior`, posterior.py:231):
-  `score_m = elpd_m + c · lines_m`, with `c = DEFAULT_COMPLEXITY_PRIOR_CONST`
-  (scoring.py) and `lines_m` the number of non-blank, non-comment lines in
-  the model file. By default `c = 0`, so there is **no complexity prior** and
-  the posterior is a softmax of ELPD-LOO alone (user decision 2026-09-29; it
-  was −0.05: on 14 finished recovery cells the penalty left held-out accuracy
-  unchanged within noise). Then `posterior_m = softmax(score)`, rounded to 6 decimals.
+- **Softmax "posterior"** (`model_posterior`, posterior.py): a softmax of
+  ELPD-LOO, with no complexity prior (a line-count prior was removed: since
+  the user's decision of 2026-09-29 its constant was 0; at −0.05, on 14
+  finished recovery cells, it left held-out accuracy unchanged within noise),
+  rounded to 6 decimals.
   It raises on a non-finite ELPD. It is used only as a report field and as the
   BMA weights in evaluation (§7). It does **not** select the best model.
 - **Comparison table** (`compare_table`, posterior.py:120): `az.compare` on the
@@ -1285,7 +1283,7 @@ non-abandoned round, so up to 6 per experiment and 18 per cell:
 | `step` | 0.. within the experiment |
 | `iteration` | `null` for the seed step, else the round index |
 | `best_model` | `_best_exportable_model` (§5.5) |
-| `argmax_model` | softmax-posterior argmax (with complexity prior), for audit |
+| `argmax_model` | softmax-posterior argmax, for audit |
 | `excluded_unreliable` | names that are `loo_unreliable` **or** `not_converged` |
 | `posteriors` | softmax posterior (6 dp) |
 | `elpd_loo` | ELPD-LOO (4 dp) |

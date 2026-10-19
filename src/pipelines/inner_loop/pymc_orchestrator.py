@@ -4,7 +4,7 @@ The inner loop improves a cognitive model by repeatedly asking a coding agent
 to write a new candidate **PyMC model** (`candidate.py` with a module-level
 `with pm.Model() as model:` block), fitting every surviving model to the
 observed responses via MCMC, and scoring them by ELPD-LOO. The Bayesian
-posterior over models (softmax of ELPD-LOO, optionally with a complexity prior)
+posterior over models (softmax of ELPD-LOO)
 selects the incumbent; the best model is exported for the outer loop.
 
 This replaces the earlier maximum-likelihood + BIC tournament: models are now
@@ -90,7 +90,6 @@ from src.pipelines.inner_loop.critique_round import (
     critique_disabled_status,
 )
 from src.pipelines.inner_loop.scoring import (
-    DEFAULT_COMPLEXITY_PRIOR_CONST,
     _compare,
     _export,
     _record_end_of_experiment_retirements,
@@ -172,7 +171,6 @@ def run_pymc_inner_loop(
     seed_models_dir: Path,
     max_iterations: int = 3,
     candidate_count: int = 3,
-    complexity_prior_const: float = DEFAULT_COMPLEXITY_PRIOR_CONST,
     cache_dir: Optional[Path] = None,
     agent_timeout_sec: int = 900,
     backend: Optional[str] = None,
@@ -227,8 +225,6 @@ def run_pymc_inner_loop(
         refines a non-incumbent model of the agent's choosing from a menu of
         the live and pruned models; at three, one of each; at two, one
         exploratory and one incumbent slot; at one, exploratory only.
-    complexity_prior_const
-        Passed through to ``model_posterior`` (negative penalises complex models).
     fit_kwargs
         Extra kwargs for MCMC (e.g. ``{"draws": 500, "tune": 500, "chains": 2}``).
     enable_critique
@@ -356,7 +352,7 @@ def run_pymc_inner_loop(
         )
 
     posterior = _score(
-        responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs, selection
+        responses_path, models_dir, cache_dir, fit_kwargs, selection
     )
     # The comparison table (ELPD rank + PSIS-LOO reliability) is what selects
     # the best model at every step; it reuses the fits _score just made.
@@ -708,7 +704,7 @@ def run_pymc_inner_loop(
             ledger_context=round_context,
         )
         posterior = _score(
-            responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs, selection
+            responses_path, models_dir, cache_dir, fit_kwargs, selection
         )
         comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs, selection)
         _record_history_step(
@@ -740,7 +736,6 @@ def run_pymc_inner_loop(
         cache_dir=cache_dir,
         fit_kwargs=fit_kwargs,
         prune_dse_multiplier=prune_dse_multiplier,
-        complexity_prior_const=complexity_prior_const,
         selection=selection,
     )
     result["history"] = history
@@ -761,7 +756,6 @@ def end_experiment(
     cache_dir: Optional[Path],
     fit_kwargs: Optional[Dict[str, Any]],
     prune_dse_multiplier: float,
-    complexity_prior_const: float,
     selection: Selection,
 ) -> Dict[str, Any]:
     """The end of an experiment's loop: prune, cap the live set, export.
@@ -802,7 +796,7 @@ def end_experiment(
     )
     if retired:
         posterior = _score(
-            responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs, selection
+            responses_path, models_dir, cache_dir, fit_kwargs, selection
         )
         comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs, selection)
         _record_end_of_experiment_retirements(history, results_dir, retired)

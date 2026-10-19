@@ -54,7 +54,6 @@ from src.pipelines.inner_loop.model_zoo import (
     DEFAULT_PRUNE_DSE_MULTIPLIER,
 )
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
-from src.pipelines.inner_loop.scoring import DEFAULT_COMPLEXITY_PRIOR_CONST
 from src.runtime.agent_sandbox import require_claude_auth
 from src.runtime.coding_agent import select_backend
 from src.runtime.token_usage import start_usage_log, write_usage_report
@@ -89,9 +88,6 @@ class Args:
     """Candidate slots per round (only used when --max-iterations > 0). Slots
     have roles (model_zoo.slot_roles): exploratory, refine-the-incumbent (two
     at four or more slots) and refine-a-model-of-the-agent's-choosing (one)."""
-    complexity_prior: float = DEFAULT_COMPLEXITY_PRIOR_CONST
-    """Log-prior per model = CONST * non-comment line count (negative penalises
-    complex models). Defaults to a gentle Occam backstop; pass 0.0 to disable."""
     draws: int = PRODUCTION_DRAWS
     """MCMC posterior draws per chain (src.models.mcmc_defaults; pass lower values for quick local runs)."""
     tune: int = PRODUCTION_TUNE
@@ -154,7 +150,6 @@ def main(args: Args) -> None:
             seed_models_dir=seed_models_dir,
             max_iterations=args.max_iterations,
             candidate_count=args.candidate_count,
-            complexity_prior_const=args.complexity_prior,
             cache_dir=args.cache_dir,
             agent_timeout_sec=args.agent_timeout_sec,
             backend=backend,
