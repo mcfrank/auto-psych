@@ -6,6 +6,7 @@ Three steps; each writes files the next reads.
 |---|---|---|---|
 | SR data | `uv run python -m scripts.paper.sr_figure_data` | `data/paper/figure_data/subjective_randomness.json` | hours: 15 MCMC fits at ~7,700 trials, then 7 on all runs pooled (~23,000) |
 | RSA data | `uv run python -m scripts.paper.rsa_figure_data` | `data/paper/figure_data/rsa.json` | seconds: reads existing aggregates |
+| number-game data | `uv run python -m scripts.paper.number_game_figure_data` | `data/paper/figure_data/number_game.json` | 455 MCMC fits: 91 models, each on all 7,560 responses and on 4 CV folds (an hour or two on 32 cores) |
 | figures | `uv run python -m scripts.paper.figures` | `data/paper/figures/fig{2,3,4}_*.{pdf,png}` | seconds |
 
 What each figure shows:
@@ -29,6 +30,17 @@ What each figure shows:
     and SE are the pre-registered test's. The textbook RSA models are not
     drawn. The campaign's "chains" are its runs; no other model of a chain
     was scored on the pre-registered data.
+  - Number game: ELPD from grouped cross-validation (4 folds of whole
+    example sets, the run's own criterion and settings, from its
+    `holdout.json`) on the one dataset run's final data, 7,560 responses
+    (`data/results/number_game_dataset-oct26/`). The starting models are the
+    three literature seeds (pruned in experiment 1), the other models live at
+    the end the run's three other carried models; `number_game_figure_data.py`
+    refits all seven. The SE is stimulus-clustered ((set, target) cells).
+    The number game alone also draws the models pruned during the run (grey
+    dots): every model the run admitted and later pruned, retired or dropped,
+    scored on the same data (`pruned_during_run`; one whose fit fails or does
+    not converge is listed with the reason in `pruned_unscored` instead).
 - **Figure 3** (`fig3_conditions`): all runs' data pooled, each condition's
   observed proportion against the prediction of the best discovered model and
   of the best seed, both fitted on the pooled data (the figure data's
@@ -50,6 +62,10 @@ What each figure shows:
     model is the chain final with the highest held-out density, the best
     starting model the best promoted seed (panels.json
     records no pooled ELPD). Conditions are (display, object class) cells.
+  - Number game: one run, so its final data; the best model is the run's
+    winner and the best starting model the seed with the highest ELPD-CV,
+    both fitted on all 7,560 responses. Conditions are (example set, target)
+    cells: 840, 9 responses each (no cell was drawn twice).
 - **Figure 4** (`fig4_pseudocode`): hand-written annotated pseudocode of each
   domain's Figure 3 model, `pseudocode/<domain>.yaml`. Each spec records its
   model file's SHA-256, and the figure script refuses a spec whose model
@@ -60,6 +76,10 @@ DATA)", for drafting the figures' look from invented figure data.
 
 The number game is drawn as "results pending" until its figure data exist
 (`--pending-domains` controls this; any other missing domain raises).
+
+Run the number-game data step on Sherlock too:
+`sbatch scripts/paper/number_game_figure_data.sbatch` (fits on `$SCRATCH`;
+a rerun reuses them and its `scored.json`).
 
 Run the SR data step on Sherlock: `sbatch scripts/paper/sr_figure_data.sbatch`
 from the checkout. Its fits take about 16 GB (kept on `$SCRATCH`). Each run's

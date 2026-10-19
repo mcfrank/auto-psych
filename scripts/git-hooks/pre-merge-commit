@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# A merge commit gets the same Prolific-id check as any other commit.
+exec "$(dirname "$0")/pre-commit"

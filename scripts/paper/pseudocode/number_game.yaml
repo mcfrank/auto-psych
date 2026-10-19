@@ -1,0 +1,29 @@
+# Annotated pseudocode of the number-game winner, the dataset run's final
+# (Figure 4). Hand-written from the model's code; the figure script checks
+# `sha256` against `source`, so a changed model invalidates this description.
+domain: number_game
+model: even_rule_digit_size_principle_counting
+source: data/results/number_game_dataset-oct26/collected/run1/number_game/experiment3/model_loop/models/even_rule_digit_size_principle_counting.py
+sha256: 55d24ab2031f08aae8f454fde750d8e3d8bfb11429645f1fd649df9d61273117
+title: "Number game: is the target in the concept the examples come from?"
+lines:
+  - code: "sim(t) = share of examples ending in t's digit"
+    note: "graded last-digit similarity"
+  - code: "       + s · (1 − pre·rule) · share of same parity"
+    note: "rule: the examples share a last digit"
+  - code: "mutual = the same similarity among the examples"
+  - code: "shortfall = softplus(mutual − sim(t))"
+    note: "t judged against how alike the examples are"
+  - code: "logit P(yes) = b + g·sim(t) − c·shortfall"
+  - code: "  + w_f·[t a multiple of the examples' factor]"
+    note: "round factors (×5, ×10) weighted apart"
+  - code: "  + w_m·(1 − pre_m·[any rule]) · exp(−gap / width)"
+    note: "decades outside the examples' range"
+  - code: "                         any rule: a shared digit or factor ≥ 3"
+  - code: "  + w_c·[t = k·x, x ≥ 3 an example] · exp(−cost·(k − 2))"
+    note: "counting up by multiples"
+  - code: "  − w_s·(n − 2)·[t breaks the last-digit rule]"
+    note: "size principle"
+  - code: "  − w_e·[all examples even, t odd]"
+    note: "\"even\" is a privileged concept, \"odd\" is not"
+  - code: "answer ~ Bernoulli(P(yes))"

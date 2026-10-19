@@ -119,3 +119,11 @@ def test_each_run_is_a_column_of_its_seeds_its_other_models_and_its_winner():
     assert run1["seeds"] == [0.0, -8.0]
     assert run1["others"] == [9.0]
     assert run1["winner"] == {"diff": 12.0, "se": 3.0}
+
+
+def test_a_run_that_scores_its_pruned_models_has_them_in_its_column():
+    data = _domain_data("number_game")
+    data["runs"][0]["pruned_during_run"] = {"gone": 4.0, "gone_too": -30.0}
+    columns = figures.elpd_columns("number_game", data)
+    assert columns[0]["pruned"] == [4.0, -30.0]
+    assert columns[1]["pruned"] == []  # its figure data score no pruned model

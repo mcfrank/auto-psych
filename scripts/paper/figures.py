@@ -3,9 +3,10 @@
 - Figure 2 (``fig2_elpd``): per domain, a column per run of ELPD
   differences from the best starting model (subjective randomness: the
   run's own seeds; reference games: the best promoted seed, the
-  pre-registered bar): its starting models (dashes), its other models live
-  at the end (small dots) and its best discovered model (±2 SE of the paired
-  difference, labelled). How each domain is scored
+  pre-registered bar): its starting models (dashes), the models it pruned
+  (grey dots; the number game only), its other models live at the end (small
+  dots) and its best discovered model (±2 SE of the paired difference,
+  labelled). How each domain is scored
   is for the caption (the figure data's ``scoring``).
 - Figure 3 (``fig3_conditions``): per domain, all runs' data pooled: each
   condition's observed choice proportion against the prediction of the best
@@ -63,6 +64,8 @@ GRID = "#e4e3df"
 # Figure 2's other models live at a run's end: a lighter shade of the
 # discovered models' teal.
 COLOR_OTHERS = "#48c9a0"
+# Figure 2's models pruned during a run: a neutral grey.
+COLOR_PRUNED = "#b9b7b0"
 MOCK_MARK = " (MOCK DATA)"  # appended to a mock domain's titles
 
 FULL_WIDTH_IN = 7.2  # a two-column paper's text width
@@ -187,12 +190,15 @@ def _save(fig, out_dir: Path, name: str) -> None:
 
 def elpd_columns(domain: str, data: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Figure 2's columns, one per run, each as differences from the best
-    starting model: the run's starting models, its other models live at the
-    end and its winner with the SE of its paired difference."""
+    starting model: the run's starting models, the models it pruned (only a
+    run whose figure data score them has ``pruned_during_run``), its other
+    models live at the end and its winner with the SE of its paired
+    difference."""
     columns = []
     for run in data["runs"]:
         seeds = [v["diff"] for name, v in run["vs_best_seed"].items() if name != run["best_model"]]
         columns.append({"label": run_label(domain, run["run"]), "seeds": seeds,
+                        "pruned": list(run["pruned_during_run"].values()) if "pruned_during_run" in run else [],
                         "others": list(run["others_at_end"].values()),
                         "winner": run["vs_best_seed"][run["best_model"]]})
     return columns
@@ -214,10 +220,13 @@ def draw_elpd(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path,
         columns = elpd_columns(domain, data)
         for x, column in enumerate(columns):
             for value in column["seeds"]:
-                ax.plot([x - 0.36, x - 0.14], [value, value], color=COLOR_SEED, linewidth=1.1,
+                ax.plot([x - 0.40, x - 0.22], [value, value], color=COLOR_SEED, linewidth=1.1,
                         solid_capstyle="butt", zorder=2)
+            pruned = np.asarray(column["pruned"], dtype=float)
+            ax.scatter(x - 0.08 + jitter.uniform(-0.07, 0.07, pruned.size), pruned, s=8,
+                       color=COLOR_PRUNED, linewidths=0, alpha=0.8, zorder=1)
             others = np.asarray(column["others"], dtype=float)
-            ax.scatter(x + jitter.uniform(-0.08, 0.08, others.size), others, s=12,
+            ax.scatter(x + 0.09 + jitter.uniform(-0.05, 0.05, others.size), others, s=12,
                        color=COLOR_OTHERS, linewidths=0, alpha=0.8, zorder=2)
             win = column["winner"]
             ax.errorbar(x + 0.25, win["diff"], yerr=2 * win["se"], fmt="o", markersize=6,
@@ -235,6 +244,8 @@ def draw_elpd(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path,
                      loc="left")
     handles = [
         Line2D([], [], color=COLOR_SEED, linewidth=1.1, label="Starting models"),
+        Line2D([], [], marker="o", color=COLOR_PRUNED, linestyle="none", markersize=3,
+               label="Pruned during the run"),
         Line2D([], [], marker="o", color=COLOR_OTHERS, linestyle="none", markersize=3.5,
                label="Other models live at the end of the run"),
         Line2D([], [], marker="o", color=COLOR_DISCOVERED, linestyle="none", markersize=6,

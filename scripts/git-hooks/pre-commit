@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Refuse a commit that adds anything that looks like a Prolific id (worker,
+# study or submission): 24 lowercase hex characters not inside a longer
+# letter/digit token, as PROLIFIC_ID_PATTERN in
+# src/pipelines/outer_loop/results_collection.py but also matching ids joined
+# by "_". Only added lines and added/renamed file names are checked, so a
+# commit that removes an id goes through. The refusal names file:line, never
+# the id itself.
+#
+# Enable once per clone:  git config core.hooksPath scripts/git-hooks
+# Bypass (only for an id you know is not a participant's): git commit --no-verify
+set -euo pipefail
+
+hex24=$(printf '[0-9a-f]%.0s' {1..24})
+id_re="(^|[^0-9A-Za-z])${hex24}([^0-9A-Za-z]|\$)"
+
+names=$(git diff --cached --name-only --diff-filter=ACR | grep -E "$id_re" || true)
+lines=$(git diff --cached --text -U0 --no-color --no-ext-diff --diff-filter=ACMR |
+  awk -v re="$id_re" '
+    /^diff --git / { header = 1; next }
+    header && /^\+\+\+ / { file = substr($0, 7); next }
+    /^@@/ { header = 0; split($3, a, ","); line = substr(a[1], 2) + 0; next }
+    header { next }
+    /^\+/ { if (substr($0, 2) ~ re) print file ":" line; line++ }
+  ')
+
+if [ -z "$names" ] && [ -z "$lines" ]; then
+  exit 0
+fi
+{
+  echo "Commit refused: these look like Prolific ids (24 hex characters)."
+  [ -n "$names" ] && printf '%s\n' "$names" | sed 's/^/  /; s/$/ (file name)/'
+  [ -n "$lines" ] && printf '%s\n' "$lines" | sed 's/^/  /'
+  echo "Remove or redact them. If one is certainly not a participant's id,"
+  echo "commit with --no-verify."
+} >&2
+exit 1
