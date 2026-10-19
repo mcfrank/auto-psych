@@ -34,7 +34,7 @@ import hashlib
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
 
 from src.models.model_manifest import read_manifest_names
 from src.pipelines.outer_loop.columns import write_responses_csv
@@ -405,7 +405,6 @@ def run_holdout_recovery_from_config(
     resume: bool = False,
     gt_models_dir: Optional[Path] = None,
     summary_root: Optional[Path] = None,
-    gt_params_by_model_override: Optional[Mapping[str, Mapping[str, float]]] = None,
     agent_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Run holdout recovery for every configured ground-truth model.
@@ -427,6 +426,10 @@ def run_holdout_recovery_from_config(
                           the no-learning baseline scores every seed at its own)
         gt_models         null | [names] | {name: params|null}; null params ->
                           that model's seed_params
+        gt_models_dir     where the ground-truth models live (default:
+                          seed_models_dir); the impossible-model sweep points
+                          it at src/subjective_randomness/impossible_models,
+                          outside the seed pool, and gives explicit params
         n_experiments, n_participants, seed
         hide_participant_id
                           true -> the responses agents and models see carry
@@ -449,21 +452,20 @@ def run_holdout_recovery_from_config(
         fit               MCMC kwargs (draws/tune/chains/...; method: nuts (default)
                           or warm_start_nuts, NUTS started from the posterior mode)
 
-    ``gt_models_dir`` (default: ``seed_models_dir``) is where the ground-truth
-    models live; the impossible-theory variant points it at a separate directory
-    so the agent seed pool stays the normal seed models. When
-    ``gt_params_by_model_override`` is given, the per-model fixed params are
-    taken from it verbatim instead of resolving the config's ``gt_models`` spec
-    (impossible models have no ``seed_params``).
+    The ``gt_models_dir`` argument (the array passes a pristine snapshot)
+    overrides the config's.
     """
     project_id = config.get("project_id", PROJECT_ID)
     # seed_models_dir is the GT/baseline registry and is allowed to differ from
     # the live project seed pool (see docstring). Resolving the configured
     # gt_models just below raises for a model with no parameters anywhere.
     seed_models_dir = resolve_path(config["seed_models_dir"], config_path)
-    gt_models_dir = (
-        Path(gt_models_dir) if gt_models_dir is not None else seed_models_dir
-    )
+    if gt_models_dir is not None:
+        gt_models_dir = Path(gt_models_dir)
+    elif "gt_models_dir" in config:
+        gt_models_dir = resolve_path(config["gt_models_dir"], config_path)
+    else:
+        gt_models_dir = seed_models_dir
 
     # data_source: dataset (number game) collects every experiment from the
     # dataset in place of a ground truth: one cell per run, named "dataset",
@@ -475,10 +477,6 @@ def run_holdout_recovery_from_config(
         if config.get("gt_models"):
             raise ValueError("A dataset run has no ground truth: drop gt_models from the config.")
         gt_params_by_model = {DATASET: {}}
-    elif gt_params_by_model_override is not None:
-        gt_params_by_model = {
-            name: dict(params) for name, params in gt_params_by_model_override.items()
-        }
     else:
         gt_params_by_model = resolve_generating_params(
             config.get("gt_models"), config.get("seed_params", {})
@@ -929,63 +927,6 @@ def _run_holdout_recovery_resolved(
         "metrics_version": 2,
         "gt_runs": gt_runs,
     }
-
-
-def run_impossible_holdout_recovery_from_config(
-    config: Mapping[str, Any],
-    config_path: Path,
-    results_root: Path,
-    **overrides: Any,
-) -> Dict[str, Any]:
-    """Run holdout recovery with impossible-theory ground-truth generators.
-
-    Identical to ``run_holdout_recovery_from_config`` except the ground truth is
-    a deliberately weird model (e.g. "more heads => more random") that lives in a
-    separate ``gt_models_dir`` outside the project seed pool. The agentic loop is
-    still seeded with the normal seed models, so it is *expected* to fail to
-    recover the ground truth (the held-out correlation should stay low). The
-    config must provide:
-
-      * ``gt_models_dir`` — directory of impossible PyMC models (it has no
-        ``models_manifest.yaml``, so it never enters the agent seed pool).
-      * ``gt_models`` — a ``{name: {beta, side_bias}}`` mapping; explicit params
-        are required because impossible models have no ``seed_params``.
-
-    All keyword overrides are forwarded to ``run_holdout_recovery_from_config``.
-    """
-    if "gt_models_dir" not in config:
-        raise KeyError(
-            "Impossible-theory holdout config must set 'gt_models_dir' (the "
-            "directory of impossible ground-truth models, separate from the "
-            "project seed pool)."
-        )
-    gt_models_dir = resolve_path(config["gt_models_dir"], config_path)
-
-    spec = config.get("gt_models")
-    if not isinstance(spec, Mapping) or not spec:
-        raise ValueError(
-            "Impossible-theory holdout config must give 'gt_models' as a "
-            "non-empty mapping of {name: {beta, side_bias}}; got "
-            f"{type(spec).__name__}."
-        )
-    gt_params_by_model: Dict[str, Dict[str, float]] = {}
-    for name, params in spec.items():
-        if not params:
-            raise ValueError(
-                f"Impossible ground-truth model {name!r} needs explicit params "
-                f"{{beta, side_bias}}: an impossible model has no seed_params "
-                f"to fall back on."
-            )
-        gt_params_by_model[name] = dict(params)
-
-    return run_holdout_recovery_from_config(
-        config,
-        config_path,
-        results_root,
-        gt_models_dir=gt_models_dir,
-        gt_params_by_model_override=gt_params_by_model,
-        **overrides,
-    )
 
 
 def trajectory_tidy_rows(result: Mapping[str, Any]) -> List[Dict[str, Any]]:

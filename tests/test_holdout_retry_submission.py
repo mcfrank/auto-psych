@@ -58,11 +58,14 @@ def _submissions(log_dir: Path) -> list[dict]:
 
 
 def _run_submit(
-    tmp_path: Path, script: str = "submit_holdout_test_retest.sh", **env_overrides: str
+    tmp_path: Path,
+    script: str = "submit_holdout_test_retest.sh",
+    sbatch: str = FAKE_SBATCH,
+    **env_overrides: str,
 ) -> subprocess.CompletedProcess:
     log_dir = tmp_path / "sbatch_calls"
     log_dir.mkdir(exist_ok=True)
-    bin_dir = _bin_dir(tmp_path, sbatch=FAKE_SBATCH)
+    bin_dir = _bin_dir(tmp_path, sbatch=sbatch)
     env = {
         "PATH": f"{bin_dir}:{os.environ['PATH']}",
         "HOME": str(tmp_path),
@@ -170,7 +173,6 @@ def test_the_retry_resumes_on_the_staged_scripts_with_memory_per_group(tmp_path)
         # An earlier round's out-of-memory value, inherited through --export=ALL.
         "ARRAY_MEM": "128G",
         "SUBMIT_LOG": str(submit_log),
-        "RETRY_SUBMIT_SCRIPT": "submit_holdout_test_retest.sh",
         # The live checkout's scripts must not be what runs.
         "HOLDOUT_SLURM_DIR": str(tmp_path / "live_checkout_that_does_not_exist"),
     }
@@ -385,116 +387,42 @@ def test_cells_without_a_code_record_are_not_restaged_under(tmp_path):
     assert not (work / "harness_repo").exists()
 
 
-# ── The impossible-model sweep: the same retry and summary machinery ──
+# ── The impossible-model sweep: the literature sweep's chain ──
 #
-# Its submitter used to submit setup, array and analysis only, so a cell that
-# timed out or ran out of memory needed a manual resubmission (AUDIT_STATUS,
-# "New since the audits" 2).
+# Its submitter used to submit its own setup, array and analysis, with no
+# retries (AUDIT_STATUS, "New since the audits" 2); since 2026-10-18 it sets
+# the impossible config, ground truths and GT directory and runs the
+# literature sweep's submitter.
 
 IMPOSSIBLE = "submit_impossible_holdout_test_retest.sh"
+# Also records the sweep settings each job inherits.
+FAKE_SBATCH_SWEEP = FAKE_SBATCH.replace(
+    'echo "ENV ARRAY_MEM=${ARRAY_MEM:-}"; }',
+    'echo "ENV ARRAY_MEM=${ARRAY_MEM:-}"; echo "ENV CONFIG=${CONFIG:-}";\n'
+    '  echo "ENV GT_MODELS_REL=${GT_MODELS_REL:-}"; echo "ENV GT_MODELS=${GT_MODELS:-}"; }',
+)
 
 
-def test_the_impossible_sweep_chains_the_shared_retry_job_and_a_summary(tmp_path):
-    result = _run_submit(tmp_path, IMPOSSIBLE)
+def test_the_impossible_sweep_runs_the_literature_chain_with_its_ground_truths(tmp_path):
+    result = _run_submit(tmp_path, IMPOSSIBLE, sbatch=FAKE_SBATCH_SWEEP)
     assert result.returncode == 0, result.stderr
     calls = _submissions(tmp_path / "sbatch_calls")
     assert [c["script"] for c in calls] == [
-        "impossible_holdout_setup.sbatch",
-        "impossible_holdout_recovery_array.sbatch",
+        "holdout_setup.sbatch",
+        "holdout_recovery_array.sbatch",
         "holdout_retry.sbatch",
         "holdout_analysis.sbatch",
     ]
     array, retry = calls[1], calls[2]
     assert "--array=1-20%5" in array["args"]
     assert "--dependency=afterany:1002" in retry["args"]
-    assert any(
-        "RETRY_ARRAY_ID=1002" in a and "RETRY_ROUND=0" in a for a in retry["args"]
-    )
-    assert "--dependency=afterany:1002" in calls[3]["args"]
-
-
-def test_an_impossible_retry_skips_setup_keeps_the_cap_and_the_memory_to_its_array(
-    tmp_path,
-):
-    (tmp_path / "work").mkdir()
-    (tmp_path / "work" / "code_commit").write_text("abc123\n", encoding="utf-8")
-    result = _run_submit(
-        tmp_path,
-        IMPOSSIBLE,
-        RETRY_ROUND="2",
-        ARRAY_TASKS="3,7",
-        ARRAY_MEM="128G",
-        MAX_PARALLEL="4",
-    )
-    assert result.returncode == 0, result.stderr
-    calls = _submissions(tmp_path / "sbatch_calls")
-    assert _by_script(calls, "impossible_holdout_setup.sbatch") == []
-    # The last round (2 of 2) chains no further retry.
-    assert _by_script(calls, "holdout_retry.sbatch") == []
-    (array,) = _by_script(calls, "impossible_holdout_recovery_array.sbatch")
-    assert "--array=3,7%4" in array["args"] and "--mem=128G" in array["args"]
-    for call in calls:
-        assert call["env"] == {"SBATCH_MEM_PER_NODE": "", "ARRAY_MEM": ""}, call
-        if call is not array:
-            assert not any(a.startswith("--mem") for a in call["args"]), call
-
-
-def test_the_old_mem_knob_fails_loudly(tmp_path):
-    result = _run_submit(tmp_path, IMPOSSIBLE, MEM="64GB")
-    assert result.returncode != 0 and "ARRAY_MEM" in result.stderr
-    assert _submissions(tmp_path / "sbatch_calls") == []
-
-
-def test_the_retry_job_resubmits_through_the_impossible_submitter(tmp_path):
-    staged = _staged_harness(tmp_path)
-    (staged / IMPOSSIBLE).write_text(
-        'echo "impossible tasks=$ARRAY_TASKS mem=${ARRAY_MEM:-}" >> "$SUBMIT_LOG"\n',
-        encoding="utf-8",
-    )
-    sacct = "#!/bin/bash\nprintf '9_1|TIMEOUT\\n9_2|OUT_OF_MEMORY\\n'\n"
-    bin_dir = _bin_dir(tmp_path, sacct=sacct)
-    submit_log = tmp_path / "submit.log"
-    env = {
-        "PATH": f"{bin_dir}:{os.environ['PATH']}",
-        "HOME": str(tmp_path),
-        "WORK_ROOT": str(tmp_path / "work"),
-        "GT_MODELS": "a b",
-        "RETRY_ARRAY_ID": "9",
-        "RETRY_ROUND": "0",
-        "SUBMIT_LOG": str(submit_log),
-        "RETRY_SUBMIT_SCRIPT": IMPOSSIBLE,
-    }
-    result = subprocess.run(
-        ["bash", str(SLURM_DIR / "holdout_retry.sbatch")],
-        env=env,
-        capture_output=True,
-        text=True,
-        timeout=60,
-    )
-    assert result.returncode == 0, result.stderr
-    assert submit_log.read_text(encoding="utf-8").splitlines() == [
-        "impossible tasks=1 mem=",
-        "impossible tasks=2 mem=128G",
-    ]
-
-
-def test_the_retry_job_needs_to_be_told_which_sweep_it_retries(tmp_path):
-    _staged_harness(tmp_path)
-    env = {
-        "PATH": os.environ["PATH"],
-        "HOME": str(tmp_path),
-        "WORK_ROOT": str(tmp_path / "work"),
-        "GT_MODELS": "a b",
-        "RETRY_ARRAY_ID": "9",
-    }
-    result = subprocess.run(
-        ["bash", str(SLURM_DIR / "holdout_retry.sbatch")],
-        env=env,
-        capture_output=True,
-        text=True,
-        timeout=60,
-    )
-    assert result.returncode != 0 and "RETRY_SUBMIT_SCRIPT" in result.stderr
+    for call in calls:  # every job, retries included, runs the impossible sweep
+        assert call["env"]["CONFIG"].endswith("configs/impossible_holdout_recovery.yaml")
+        assert call["env"]["GT_MODELS_REL"] == "src/subjective_randomness/impossible_models"
+        assert call["env"]["GT_MODELS"].split() == [
+            "more_heads_more_random", "fewer_heads_more_random",
+            "longer_runs_more_random", "more_imbalance_more_random",
+        ]
 
 
 def test_a_dataset_run_chains_no_test_retest_analysis(tmp_path):

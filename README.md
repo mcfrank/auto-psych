@@ -153,7 +153,7 @@ dataclass — `--help` lists every knob with its documented default.
 | Command | What it does |
 |---|---|
 | `python scripts/subjective_randomness/holdout_recovery.py` | Full agentic loop vs. a held-out registry ground truth; per-step recovery trajectory. |
-| `python scripts/subjective_randomness/impossible_holdout_recovery.py` | Same, with deliberately-weird "impossible" ground truths outside every model family. |
+| `python scripts/subjective_randomness/holdout_recovery.py --config scripts/subjective_randomness/configs/impossible_holdout_recovery.yaml` | Same, with deliberately-weird "impossible" ground truths outside every model family. |
 | `python scripts/subjective_randomness/reanalyze_holdout_exhaustive.py` | Re-evaluate finished holdout runs on the exhaustive stimulus pool (no agents, cached fits). |
 | `scripts/subjective_randomness/slurm/` | Sherlock submitters for the above (test–retest replicates + no-inner-loop ablations). |
 

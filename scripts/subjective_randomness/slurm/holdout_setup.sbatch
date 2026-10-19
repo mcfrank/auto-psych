@@ -90,14 +90,16 @@ HARNESS_REPO="$HARNESS_REPO" bash "$REPO/scripts/subjective_randomness/slurm/sta
 
 # Pristine snapshots outside any agent's sandbox, taken from the staged copy
 # (so a re-run of this setup reproduces them exactly).
-# The GT registry (config seed_models_dir) holds every GT's PyMC generator;
-# the parent reads the held-out model from this snapshot only (its generating
-# parameters are in the config).
+# The ground truths' PyMC generators live in the GT registry (config
+# seed_models_dir), or for the impossible sweep in GT_MODELS_REL (config
+# gt_models_dir, outside the seed pool); the parent reads the held-out model
+# from this snapshot only (its generating parameters are in the config).
 SEED_MODELS_REL="${SEED_MODELS_REL:-src/subjective_randomness/pymc_model_families}"
+GT_MODELS_REL="${GT_MODELS_REL:-$SEED_MODELS_REL}"
 GT_MODELS_SRC="${GT_MODELS_SRC:-$WORK_ROOT/gt_models_src}"
-echo "[setup] staging pristine seed/GT models -> $GT_MODELS_SRC"
+echo "[setup] staging pristine GT models ($GT_MODELS_REL) -> $GT_MODELS_SRC"
 mkdir -p "$GT_MODELS_SRC"
-rsync -a --delete "$HARNESS_REPO/$SEED_MODELS_REL"/ "$GT_MODELS_SRC"/
+rsync -a --delete "$HARNESS_REPO/$GT_MODELS_REL"/ "$GT_MODELS_SRC"/
 
 # Fail fast: syntax-check the scripts the array/analysis jobs run, and import the
 # whole holdout chain so a missing dependency aborts here (afterok) rather than
@@ -121,6 +123,7 @@ PY
 # snapshot contains every ground-truth model file.
 CFG_REL="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml}"
 SRC_CONFIG="$HARNESS_REPO/$CFG_REL" GT_MODELS_SRC="$GT_MODELS_SRC" SEED_MODELS_REL="$SEED_MODELS_REL" \
+GT_MODELS_REL="$GT_MODELS_REL" \
 "$VENV_PY" - <<'PY'
 import os, sys, pathlib, yaml
 
@@ -138,6 +141,17 @@ if not env_gts or not set(env_gts) <= set(cfg_gts):
 rel, seed_rel = cfg["seed_models_dir"], os.environ.get("SEED_MODELS_REL", "")
 if seed_rel and seed_rel != rel:
     sys.exit(f"SEED_MODELS_REL env {seed_rel!r} != config seed_models_dir {rel!r}.")
+
+# The snapshot must come from where the config says the ground truths live. An
+# impossible recipe must sit outside the agents' seed pool (that is what keeps
+# it from them).
+gt_rel = cfg.get("gt_models_dir", rel)
+if gt_rel != os.environ["GT_MODELS_REL"]:
+    sys.exit(f"config gt_models_dir {gt_rel!r} != GT_MODELS_REL {os.environ['GT_MODELS_REL']!r} — "
+             f"keep the staged snapshot and the config in sync.")
+if "gt_models_dir" in cfg and gt_rel == rel:
+    sys.exit(f"config gt_models_dir {gt_rel!r} must differ from seed_models_dir: "
+             f"a separate GT directory has to sit outside the agents' seed pool.")
 
 src = pathlib.Path(os.environ["GT_MODELS_SRC"])
 missing = [g for g in env_gts if g != "dataset" and not (src / f"{g}.py").is_file()]

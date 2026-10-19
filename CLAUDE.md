@@ -642,8 +642,10 @@ decision with its reason, how it differs from main (§3), and every run in order
   it started on and refuses to resume on other code. `verify_holdout_run.sh`
   judges cells by `holdout.json` / `MISSING_CELLS.txt`, not by task logs.
 - **The impossible-model sweep is the literature sweep's control.** Its
-  submitter chains the same retry job and `MISSING_CELLS.txt` summary
-  (`holdout_retry.sbatch` resubmits through `RETRY_SUBMIT_SCRIPT`), and
+  submitter (`submit_impossible_holdout_test_retest.sh`) only sets its config,
+  ground truths and `GT_MODELS_REL` (where the setup job stages the GT
+  snapshot from: `impossible_models/`) and runs the literature chain, so its
+  cells run the same setup, array, retry and summary jobs, and
   `configs/impossible_holdout_recovery.yaml` equals
   `holdout_recovery_faithful.yaml` except `gt_models`/`gt_models_dir`
   (`tests/test_impossible_config_matches_faithful.py`).

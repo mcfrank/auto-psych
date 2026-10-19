@@ -43,7 +43,7 @@ SLURM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # --- the ablation: zero inner-loop iterations ------------------------------
 # Forwarded by submit_impossible_holdout_test_retest.sh -> the array sbatch,
 # which turns it into `--inner-loop-iterations 0` on every
-# impossible_holdout_recovery.py invocation.
+# holdout_recovery.py invocation.
 export INNER_LOOP_ITERATIONS="${INNER_LOOP_ITERATIONS:-0}"
 
 # --- this run's pinned parameters (match run_impossible_test_retest.sh) ------

@@ -117,9 +117,7 @@ def test_the_harness_forgets_its_command_line_once_parsed(monkeypatch):
     assert sys.orig_argv == ["/venv/bin/python", "holdout_recovery.py"]
 
 
-@pytest.mark.parametrize(
-    "script", ["holdout_recovery.py", "impossible_holdout_recovery.py"]
-)
+@pytest.mark.parametrize("script", ["holdout_recovery.py"])
 def test_the_harness_clis_forget_their_command_line_before_running(script):
     from tests.paths import SCRIPTS_DIR
 

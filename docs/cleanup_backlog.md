@@ -111,9 +111,24 @@ Tier 2, decided item by item:
   (the bare-list `starting_models.json` refusal, the unrecorded-input
   `model_loop` refusal), a format the reanalysis chain or viewer still reads,
   or the deployed `/results` contract.
-- **Still to discuss:** the plotnine half of `reporting.py`; merging the
-  impossible-model chain (with plan step 5); the two concurrent-fit mechanisms;
-  the `posterior.py` and `eig.py` CLIs.
+- **Done:** the `posterior.py` and `eig.py` CLIs (f7123e31; also the eig
+  CLI's `_write_output` bug); the plotnine half of `reporting.py` and the
+  `plotnine` dependency (176babe2).
+- **Done: the impossible-model chain merged into the literature chain** (with
+  plan step 5). `submit_impossible_holdout_test_retest.sh` sets the config,
+  ground truths and `GT_MODELS_REL` and runs `submit_holdout_test_retest.sh`;
+  the impossible setup/array sbatch files, `impossible_holdout_recovery.py`,
+  `run_impossible_holdout_recovery_from_config` and `RETRY_SUBMIT_SCRIPT` are
+  gone, and `run_holdout_recovery_from_config` reads `gt_models_dir` from the
+  config. An impossible cell's agent tree, data and ground-truth parameters are
+  unchanged. What does change for impossible sweeps: they can run on coco
+  (`CLUSTER=coco`), get the inode preflight and the compile slots, their
+  opencode deny list adds `**/gt.txt`, and a null-params impossible GT fails
+  with a `KeyError` naming it. The literature sweep's opencode deny list adds
+  `**/impossible_models/**` and `*holdout_recovery*.yaml` (nothing in its tree
+  matches), and its array also refuses a tree with `src/subjective_randomness/`
+  or `scripts/`.
+- **Kept:** the two concurrent-fit mechanisms (merging changes cancellation).
 
 ## Tier 1: safe (no behaviour change), ~2,000 lines incl. tests
 

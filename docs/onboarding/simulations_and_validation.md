@@ -11,7 +11,7 @@ and cluster launchers: `scripts/subjective_randomness/` (its `README.md` and
 | check | question | agents? | entry point |
 |---|---|---|---|
 | held-out recovery | with the true model removed from the start set, do the agents rebuild something that predicts like it? | yes | `holdout_recovery.py` |
-| impossible controls (the paper's "alien" rules) | with an implausible true rule, does the loop fail, as it should? | yes | `impossible_holdout_recovery.py` |
+| impossible controls (the paper's "alien" rules) | with an implausible true rule, does the loop fail, as it should? | yes | `holdout_recovery.py` with `impossible_holdout_recovery.yaml` |
 | no-inner-loop variants | how much do the agents add? | no | `INNER_LOOP_ITERATIONS=0`, `run_impossible_no_inner_loop_test_retest.sh` |
 
 Settings (`configs/holdout_recovery_faithful.yaml`; the impossible config is

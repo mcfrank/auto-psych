@@ -16,9 +16,10 @@
 #
 # Retries run on the code the sweep's setup job staged, never on the live
 # checkout: this script, _env.sh and the submit script are the staged copies
-# in harness_repo, and the resubmission skips the setup job. Shared by the
-# literature and the impossible-model sweeps: RETRY_SUBMIT_SCRIPT, exported by
-# the sweep's submit script, names the one to resubmit through.
+# in harness_repo, and the resubmission skips the setup job. Every sweep
+# (literature, impossible, number game) resubmits through
+# submit_holdout_test_retest.sh; the settings its own submitter exported
+# (CONFIG, GT_MODELS, GT_MODELS_REL, ...) reach this job through --export=ALL.
 set -euo pipefail
 : "${WORK_ROOT:?WORK_ROOT is not set}"
 HARNESS_REPO="${HARNESS_REPO:-$WORK_ROOT/harness_repo}"
@@ -26,9 +27,6 @@ SLURM_DIR="$HARNESS_REPO/scripts/subjective_randomness/slurm"
 [[ -f "$SLURM_DIR/_env.sh" ]] || { echo "ERROR: no staged scripts at $SLURM_DIR (the setup job did not stage this sweep)" >&2; exit 1; }
 source "$SLURM_DIR/_env.sh"
 : "${RETRY_ARRAY_ID:?RETRY_ARRAY_ID is not set}"
-: "${RETRY_SUBMIT_SCRIPT:?RETRY_SUBMIT_SCRIPT is not set: the submit script of the sweep exports it}"
-[[ "$RETRY_SUBMIT_SCRIPT" == */* ]] && { echo "ERROR: RETRY_SUBMIT_SCRIPT must be a script name in $SLURM_DIR, got $RETRY_SUBMIT_SCRIPT" >&2; exit 1; }
-[[ -f "$SLURM_DIR/$RETRY_SUBMIT_SCRIPT" ]] || { echo "ERROR: no staged $SLURM_DIR/$RETRY_SUBMIT_SCRIPT" >&2; exit 1; }
 round=$(( ${RETRY_ROUND:-0} + 1 ))
 
 plan=$(sacct -j "$RETRY_ARRAY_ID" -X -n -P -o JobID,State \
@@ -41,10 +39,10 @@ echo "[retry] array $RETRY_ARRAY_ID, round $round: resume [$same], resume with 1
 # inherited may carry an earlier round's value.
 if [[ -n "$same" ]]; then
   RETRY_ROUND=$round ARRAY_TASKS="$same" ARRAY_MEM="" \
-    bash "$SLURM_DIR/$RETRY_SUBMIT_SCRIPT"
+    bash "$SLURM_DIR/submit_holdout_test_retest.sh"
 fi
 if [[ -n "$more" ]]; then
   RETRY_ROUND=$round ARRAY_TASKS="$more" ARRAY_MEM=128G \
-    bash "$SLURM_DIR/$RETRY_SUBMIT_SCRIPT"
+    bash "$SLURM_DIR/submit_holdout_test_retest.sh"
 fi
 [[ -n "$same$more" ]] || echo "[retry] nothing to resume"

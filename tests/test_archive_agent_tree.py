@@ -102,11 +102,8 @@ def test_an_existing_archive_is_never_overwritten(tmp_path):
     assert agent_dir.exists()
 
 
-@pytest.mark.parametrize(
-    "array",
-    ["holdout_recovery_array.sbatch", "impossible_holdout_recovery_array.sbatch"],
-)
-def test_both_arrays_archive_through_the_verified_helper(array):
+@pytest.mark.parametrize("array", ["holdout_recovery_array.sbatch"])
+def test_the_array_archives_through_the_verified_helper(array):
     text = (SLURM_DIR / array).read_text(encoding="utf-8")
     assert (
         'bash "$SLURM_DIR/archive_agent_tree.sh" "$TASK" "$RUN_DIR" "$AGENT_DIR"'

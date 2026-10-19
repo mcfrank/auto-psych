@@ -152,7 +152,6 @@ def test_the_mode_is_recorded_with_the_agents_token_usage(tmp_path, monkeypatch)
 
 HOLDOUT_SCRIPTS = [
     REPO_ROOT / "scripts" / "subjective_randomness" / "holdout_recovery.py",
-    REPO_ROOT / "scripts" / "subjective_randomness" / "impossible_holdout_recovery.py",
 ]
 
 
@@ -254,7 +253,6 @@ def test_the_job_scripts_pass_claude_auth_through():
     slurm = REPO_ROOT / "scripts" / "subjective_randomness" / "slurm"
     for script in (
         slurm / "holdout_recovery_array.sbatch",
-        slurm / "impossible_holdout_recovery_array.sbatch",
     ):
         assert '${CLAUDE_AUTH:+--claude-auth "$CLAUDE_AUTH"}' in script.read_text()
     live = (REPO_ROOT / "scripts" / "outer_loop_live" / "run_live.sbatch").read_text()

@@ -236,10 +236,10 @@ fi
 # belt-and-braces. (Before P34 the harness's `cd "$HARNESS_REPO"` below leaked
 # into the agents' PWD, opencode rooted every session at harness_repo instead,
 # and the agents' own candidate dirs were "external" and auto-rejected.) The GT
-# PyMC files are deleted; the denies additionally cover both model-family dirs
-# (model_families/ was removed 2026-10-18; its deny stays harmless), the
-# seed pool, and the holdout configs (their gt_models keys name the held-out
-# model). external_directory grants the *location*; the read deny still blocks
+# PyMC files are deleted; the denies additionally cover the model-family and
+# impossible-model dirs (model_families/ was removed 2026-10-18; its deny stays
+# harmless), the seed pool, and the holdout configs (their gt_models keys name
+# the held-out model). external_directory grants the *location*; the read deny still blocks
 # the *operation*, so the grant exposes nothing sensitive.
 "$VENV_PY" - "$RUN_REPO/opencode.json" "$RUN_REPO" <<'PY'
 import json, sys, pathlib
@@ -251,7 +251,8 @@ deny_globs = [
     "**/seed_models/**",
     "**/model_families/**",
     "**/pymc_model_families/**",
-    "**/configs/holdout_recovery*.yaml",
+    "**/impossible_models/**",
+    "**/configs/*holdout_recovery*.yaml",
     "**/ground_truth_models.py",
     "**/evaluate_recovery.py",
     "**/gt.txt",
@@ -335,15 +336,15 @@ while IFS= read -r -d '' named; do
 done < <(find "$RUN_REPO" -name "*${GT}*" -type f -not -path "*/_runs/*" -print0)
 fi
 
-# Assert the physical protections actually landed: the two model-family
-# directories must be absent from the tree entirely, and no implementation file
-# for the held-out model may remain anywhere. (The name scan below then checks
-# that no file mentions it at all; docs/, tests/ and scripts/, which did, are
-# no longer copied.)
-for forbidden_dir in src/subjective_randomness/pymc_model_families \
-                     src/subjective_randomness/model_families; do
+# Assert the physical protections actually landed: the research library (the
+# model families and the impossible models) and scripts/ (the configs naming
+# the ground truths) must be absent from the tree entirely, and no
+# implementation file for the held-out model may remain anywhere. (The name
+# scan below then checks that no file mentions it at all; docs/, tests/ and
+# scripts/, which did, are no longer copied.)
+for forbidden_dir in src/subjective_randomness scripts; do
   if [[ -d "$RUN_REPO/$forbidden_dir" ]]; then
-    echo "ERROR: $forbidden_dir is present in the agent tree; it holds implementations of the ground truths." >&2
+    echo "ERROR: $forbidden_dir is present in the agent tree; it holds the ground truths' implementations or configs naming them." >&2
     echo "Add it to agent_tree.exclude. (Only opencode honours the read deny-list; claude and codex ignore it.)" >&2
     exit 1
   fi

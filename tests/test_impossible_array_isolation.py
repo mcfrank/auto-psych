@@ -1,7 +1,7 @@
-"""The impossible-GT control array builds its agent tree the way the faithful
-array does.
+"""An impossible-GT control cell builds its agent tree the way a literature
+cell does: since 2026-10-18 it runs the literature array itself.
 
-It used to keep the tree at ``run<r>/<gt>/repo`` — so every agent prompt named
+The impossible array used to keep the tree at ``run<r>/<gt>/repo`` — so every agent prompt named
 the recipe (``more_heads_more_random``) — build it with an old inline exclude
 list that kept ``tests/``, ``docs/``, ``CLAUDE.md`` and ``.secrets``, run the
 harness from inside the agent tree, pass the agents the harness's whole
@@ -20,7 +20,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from tests.paths import REPO_ROOT, load_script_module
+from tests.paths import REPO_ROOT
 
 SLURM_DIR = REPO_ROOT / "scripts" / "subjective_randomness" / "slurm"
 GT = "more_heads_more_random"
@@ -53,9 +53,11 @@ def _staged_sweep(tmp_path: Path) -> Path:
         f'export VENV_PY="{sys.executable}"\nexport REPO="{tmp_path / "checkout"}"\n',
         encoding="utf-8",
     )
-    (staged / "impossible_holdout_recovery.py").write_text(
-        _FAKE_HARNESS, encoding="utf-8"
+    shutil.copy(
+        REPO_ROOT / "scripts" / "subjective_randomness" / "remove_manifest_entry.py",
+        staged / "remove_manifest_entry.py",
     )
+    (staged / "holdout_recovery.py").write_text(_FAKE_HARNESS, encoding="utf-8")
     # The staged agent source: what agent_tree.exclude leaves of a checkout.
     agent_src = work / "agent_src"
     (agent_src / "src" / "pipelines").mkdir(parents=True)
@@ -64,13 +66,9 @@ def _staged_sweep(tmp_path: Path) -> Path:
     )
     (agent_src / "opencode.json").write_text("{}", encoding="utf-8")
     (work / "code_commit").write_text("abc123\n", encoding="utf-8")
-    (work / "impossible_models_src").mkdir()
-    (work / "impossible_models_src" / f"{GT}.py").write_text(
-        "# the recipe\n", encoding="utf-8"
-    )
-    (work / "impossible_config_src.yaml").write_text(
-        "gt_models_dir: x\n", encoding="utf-8"
-    )
+    # The setup job's pristine GT snapshot (of GT_MODELS_REL).
+    (work / "gt_models_src").mkdir()
+    (work / "gt_models_src" / f"{GT}.py").write_text("# the recipe\n", encoding="utf-8")
     return work
 
 
@@ -84,6 +82,7 @@ def _run(tmp_path: Path, work: Path) -> subprocess.CompletedProcess:
         "HOME": str(tmp_path),
         "WORK_ROOT": str(work),
         "GT_MODELS": f"{GT} fewer_heads_more_random",
+        "CONFIG": "scripts/subjective_randomness/configs/impossible_holdout_recovery.yaml",
         "SLURM_ARRAY_TASK_ID": "1",
         "SLURM_JOB_ID": "77",
         "AGENT_TREES_ROOT": str(tmp_path / "agent_trees"),
@@ -91,7 +90,7 @@ def _run(tmp_path: Path, work: Path) -> subprocess.CompletedProcess:
         "FAKE_HARNESS_RECORD": str(tmp_path / "harness.json"),
     }
     return subprocess.run(
-        ["bash", str(SLURM_DIR / "impossible_holdout_recovery_array.sbatch")],
+        ["bash", str(SLURM_DIR / "holdout_recovery_array.sbatch")],
         env=env,
         capture_output=True,
         text=True,
@@ -116,6 +115,9 @@ def test_the_tree_is_opaque_scrubbed_and_the_harness_runs_outside_it(tmp_path):
     assert GT not in agent_root
     assert argv[argv.index("--summary-root") + 1] == str(work / "run1")
     assert argv[argv.index("--results-root") + 1] == f"{agent_root}/_runs"
+    # The harness reads the recipe from the pristine snapshot, outside the tree.
+    assert argv[argv.index("--gt-models-dir") + 1] == str(work / "gt_models_src")
+    assert argv[argv.index("--config") + 1].endswith("impossible_holdout_recovery.yaml")
     # The harness's environment (the agents' allowlist is taken from it)
     # names neither the recipe nor the sweep.
     env = record["env"]
@@ -135,34 +137,3 @@ def test_a_tree_that_names_the_recipe_stops_before_any_agent_runs(tmp_path):
     assert result.returncode != 0
     assert "names the held-out ground truth" in result.stderr
     assert not (tmp_path / "harness.json").exists()
-
-
-def test_the_impossible_cli_forwards_the_agent_root_and_summary_root(
-    tmp_path, monkeypatch
-):
-    cli = load_script_module(
-        REPO_ROOT
-        / "scripts"
-        / "subjective_randomness"
-        / "impossible_holdout_recovery.py"
-    )
-    seen = {}
-
-    def fake_run(config, config_path, results_root, **overrides):
-        seen.update(overrides)
-        return {"gt_runs": []}
-
-    monkeypatch.setattr(cli, "run_impossible_holdout_recovery_from_config", fake_run)
-    monkeypatch.setattr(cli, "load_config", lambda path: {})
-    cli.main(
-        cli.Args(
-            config=tmp_path / "c.yaml",
-            out=tmp_path / "out.json",
-            agent_root=tmp_path / "tree",
-            summary_root=tmp_path / "summary",
-            agent_model="google/gemini-3.1-pro-preview",
-        )
-    )
-    assert seen["agent_root"] == tmp_path / "tree"
-    assert seen["summary_root"] == tmp_path / "summary"
-    assert seen["agent_model_override"] == "google/gemini-3.1-pro-preview"
