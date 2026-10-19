@@ -5,17 +5,29 @@
 # the held-out correlation should stay low.
 #
 # This is the CONTROL for holdout_recovery_faithful.yaml: everything below
-# gt_models is that config's, verbatim (the budget, design, agent, evaluation
+# gt_models (and seed_params) is that config's, verbatim (the budget, design, agent, evaluation
 # pool and MCMC settings); only gt_models_dir and gt_models differ.
 # tests/test_impossible_config_matches_faithful.py fails on any other
 # difference. Until 2026-09-28 this config ran 2 rounds x 3 candidates, a
 # 32-stimulus design (no design block), a 900 s agent timeout and PyMC's
 # default target_accept, so the two sweeps were not comparable.
 project_id: subjective_randomness
-# The GT/baseline registry: the model set with pure-Python family twins for
-# data generation and for the fixed-param baselines. The impossible ground
-# truth is not in it (see gt_models_dir below).
+# The GT/baseline registry: the seed models the fixed-param baselines score.
+# The impossible ground truth is not in it (see gt_models_dir below).
 seed_models_dir: src/subjective_randomness/pymc_model_families
+
+# The seed models' generating parameters: the faithful sweep's ground truths
+# generate data at them, and the no-learning baseline scores every seed at its
+# own. (Until 2026-10-18 they were the DEFAULT_PARAMS of pure-Python twins in
+# src/subjective_randomness/model_families; same values.)
+seed_params:
+  falk_konold_dp: { beta: 1.0, side_bias: 0.0 }
+  motif_stack:
+    { delta: 0.5493, alpha: 0.2073, repetition_weight: 0.6839, mirror_share: 0.4989,
+      complement_share: 0.3984, beta: 1.0, side_bias: 0.0 }
+  finite_experience_occurrence: { beta: 4.0, side_bias: 0.0 }
+  local_representativeness:
+    { theta_alt: 0.65, alt_weight: 0.75, periodic_share: 0.45, beta: 4.0, side_bias: 0.0 }
 
 # Impossible ground-truth models live OUTSIDE the seed pool (this directory has
 # no models_manifest.yaml) so the agents never see them. Each is a PyMC file
@@ -24,7 +36,7 @@ seed_models_dir: src/subjective_randomness/pymc_model_families
 gt_models_dir: src/subjective_randomness/impossible_models
 
 # name -> fixed generating params. Params MUST name exactly the model's free
-# RVs ({beta, side_bias}); there is no model_families fallback for these. beta=4
+# RVs ({beta, side_bias}); seed_params has none for these. beta=4
 # keeps p_left graded (not saturated) and side_bias=0 keeps it symmetric. The
 # features (head count, max-run length, imbalance) all vary on the eval pool,
 # so the ground-truth p_left is non-constant and the correlation is well

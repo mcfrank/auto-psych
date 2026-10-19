@@ -5,9 +5,9 @@ more random-looking") that lives OUTSIDE the project seed pool. The integration
 test drives ``run_impossible_holdout_recovery_from_config`` end to end with the
 expensive seams stubbed out, asserting the observable contract: the agentic loop
 is seeded with the *normal* project seed models, every ground-truth touchpoint
-reads from the separate impossible-models directory, and the leakage audit is
-robust to the impossible model having no pure-Python ``model_families``
-counterpart.
+reads from the separate impossible-models directory, and the leakage audit runs
+with no generating parameters to look for (an impossible model has no entry in
+the config's ``seed_params``).
 """
 
 from __future__ import annotations
@@ -35,6 +35,7 @@ from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 from tests.model_registry import FAITHFUL_MODEL_NAMES
 from tests.recovery_fixtures import CannedPredictionFit
 from tests.paths import REPO_ROOT
+from tests.test_ground_truth_params_in_config import SEED_PARAMS
 
 # The recovery GT/baseline registry: the models with pure-Python family twins,
 # and the single source of truth for the active seed set (the live project
@@ -249,6 +250,7 @@ def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
     config = {
         "project_id": "subjective_randomness",
         "seed_models_dir": str(SEED_MODELS_DIR),
+        "seed_params": SEED_PARAMS,
         "gt_models_dir": str(IMPOSSIBLE_MODELS_DIR),
         "gt_models": {"more_heads_more_random": {"beta": 4.0, "side_bias": 0.0}},
         "n_experiments": 2,
@@ -300,8 +302,8 @@ def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
     # impossible GT is not in the project seed set).
     assert set(gt_run["fitted_baseline"]["per_model"]) == FAITHFUL_MODEL_NAMES
 
-    # Leakage is audited and robust to the impossible GT having no model_families
-    # counterpart: no distinctive params to mention, no identical copy.
+    # Leakage is audited with no seed_params entry for the impossible GT: no
+    # distinctive params to mention, no identical copy.
     assert gt_run["leakage"]["any_identical"] is False
     assert gt_run["leakage"]["any_mention"] is False
     assert (run_root / "trajectory.json").exists()
@@ -379,7 +381,7 @@ def test_impossible_model_requires_exact_params():
 # ── leakage audit / param resolution robustness ─────────────────────
 
 
-def test_leakage_check_robust_to_missing_model_family(tmp_path):
+def test_leakage_check_of_an_impossible_gt_without_params(tmp_path):
     run_root = tmp_path / "run"
     models_dir = run_root / "experiment1" / "cognitive_models"
     models_dir.mkdir(parents=True)
@@ -392,6 +394,7 @@ def test_leakage_check_robust_to_missing_model_family(tmp_path):
         seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
         gt_models_dir=IMPOSSIBLE_MODELS_DIR,
+        gt_params={},
     )
     assert result["any_identical"] is False
     assert result["any_mention"] is False
@@ -405,6 +408,7 @@ def test_impossible_wrapper_requires_explicit_params(tmp_path):
     config = {
         "project_id": "subjective_randomness",
         "seed_models_dir": str(SEED_MODELS_DIR),
+        "seed_params": SEED_PARAMS,
         "gt_models_dir": str(IMPOSSIBLE_MODELS_DIR),
         "gt_models": {"more_heads_more_random": None},
     }
@@ -417,6 +421,7 @@ def test_impossible_wrapper_requires_explicit_params(tmp_path):
 def test_impossible_wrapper_requires_gt_models_dir(tmp_path):
     config = {
         "seed_models_dir": str(SEED_MODELS_DIR),
+        "seed_params": SEED_PARAMS,
         "gt_models": {"more_heads_more_random": {"beta": 4.0, "side_bias": 0.0}},
     }
     with pytest.raises(KeyError, match="gt_models_dir"):
@@ -501,6 +506,7 @@ def test_impossible_holdout_exhaustive_eval_thins_posterior(tmp_path, monkeypatc
     config = {
         "project_id": "subjective_randomness",
         "seed_models_dir": str(SEED_MODELS_DIR),
+        "seed_params": SEED_PARAMS,
         "gt_models_dir": str(IMPOSSIBLE_MODELS_DIR),
         "gt_models": {"more_heads_more_random": {"beta": 4.0, "side_bias": 0.0}},
         "n_experiments": 2,

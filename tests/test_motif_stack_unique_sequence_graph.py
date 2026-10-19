@@ -12,7 +12,6 @@ This module pins the restructure:
 * ``p_left`` stays a per-trial ``pm.Deterministic`` of shape ``(T,)`` and the
   observed Bernoulli stays per-trial, because ELPD-LOO granularity and
   ``predict_p_left_draws`` depend on it;
-* the likelihood is UNCHANGED — it still agrees with the pure-Python twin;
 * the same-length restriction is enforced loudly in Python at data-preparation
   time instead of by an ``Assert`` embedded in the logp graph.
 """
@@ -31,10 +30,10 @@ from src.models.model_loading import (
     observed_response_data,
     pm_data_inputs,
 )
-from src.subjective_randomness.model_families import motif_stack as twin
+from src.subjective_randomness.pymc_model_families.motif_stack import _memory_flags
 from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 from src.subjective_randomness.holdout_data import p_left_fixed_params
-from tests.recovery_fixtures import p_left_model_family
+from tests.test_ground_truth_params_in_config import SEED_PARAMS
 
 MODEL_DIR = (
     Path(__file__).resolve().parent.parent
@@ -109,44 +108,12 @@ def test_stimulus_bank_is_large_and_exercises_every_memory_flag():
     """Guard the guard: an equivalence test over degenerate stimuli proves little."""
     assert len(STIMULI) >= 100
     assert {len(s["sequence_a"]) for s in STIMULI} == {4, 5, 6, 7, 8}
-    fired = {"mirror": 0, "complement": 0, "duplication": 0}
+    fired = [0, 0, 0]  # mirror, complement, duplication
     for stim in STIMULI:
         for side in ("sequence_a", "sequence_b"):
-            for flag, matched in twin._memory_patterns(stim[side]).items():
-                fired[flag] += int(matched)
-    assert all(count > 0 for count in fired.values()), fired
-
-
-# --- Integration: the likelihood is unchanged ------------------------------
-
-
-@pytest.mark.parametrize("draw", range(6))
-def test_deduped_adapter_matches_the_pure_python_twin(draw):
-    """Numeric equivalence at 1e-8 over random parameter draws x 100+ stimuli.
-
-    The pure-Python twin is the anchor; the restructure is purely computational,
-    so agreement must hold to floating-point noise for ANY parameter vector, not
-    just the published defaults.
-    """
-    rng = np.random.default_rng(draw)
-    params = {
-        name: float(rng.uniform(low, high))
-        for name, (low, high) in twin.PARAM_BOUNDS.items()
-    }
-    from_pymc = p_left_fixed_params("motif_stack", MODEL_DIR, STIMULI, params, task=SUBJECTIVE_RANDOMNESS)
-    from_twin = p_left_model_family("motif_stack", STIMULI, params)
-    np.testing.assert_allclose(from_pymc, from_twin, atol=1e-8, rtol=0)
-    # Not vacuous: the predictions must actually vary across stimuli.
-    assert from_twin.std() > 1e-3
-
-
-def test_default_params_match_the_twin():
-    from_pymc = p_left_fixed_params(
-        "motif_stack", MODEL_DIR, STIMULI, dict(twin.DEFAULT_PARAMS),
-        task=SUBJECTIVE_RANDOMNESS,
-    )
-    from_twin = p_left_model_family("motif_stack", STIMULI, dict(twin.DEFAULT_PARAMS))
-    np.testing.assert_allclose(from_pymc, from_twin, atol=1e-8, rtol=0)
+            for i, matched in enumerate(_memory_flags(stim[side])):
+                fired[i] += matched
+    assert all(count > 0 for count in fired), fired
 
 
 # --- The new data layout ---------------------------------------------------
@@ -331,7 +298,6 @@ def test_smoke_fit_and_posterior_prediction(tmp_path):
     import csv
 
     from src.models.pymc_inference import fit_model
-    from src.subjective_randomness.features import featurize_responses_csv
 
     rng = np.random.default_rng(0)
     pairs = [
@@ -339,8 +305,13 @@ def test_smoke_fit_and_posterior_prediction(tmp_path):
     ][:16]
     assert pairs, "need length-8 pairs for the smoke fit"
 
-    raw = tmp_path / "raw.csv"
-    with raw.open("w", newline="", encoding="utf-8") as handle:
+    p_lefts = p_left_fixed_params(
+        "motif_stack", MODEL_DIR,
+        [{"sequence_a": a, "sequence_b": b} for a, b in pairs],
+        SEED_PARAMS["motif_stack"], task=SUBJECTIVE_RANDOMNESS,
+    )
+    responses = tmp_path / "responses.csv"
+    with responses.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(
             handle,
             fieldnames=[
@@ -353,8 +324,7 @@ def test_smoke_fit_and_posterior_prediction(tmp_path):
         )
         writer.writeheader()
         for participant in range(4):
-            for trial, (seq_a, seq_b) in enumerate(pairs):
-                p_left = twin.predict_left({"sequence_a": seq_a, "sequence_b": seq_b})
+            for trial, ((seq_a, seq_b), p_left) in enumerate(zip(pairs, p_lefts)):
                 writer.writerow(
                     {
                         "participant_id": f"p{participant}",
@@ -364,8 +334,7 @@ def test_smoke_fit_and_posterior_prediction(tmp_path):
                         "chose_left": int(rng.random() < p_left),
                     }
                 )
-    responses = tmp_path / "responses.csv"
-    n_rows = featurize_responses_csv(raw, responses)
+    n_rows = 4 * len(pairs)
 
     fitted = fit_model(
         "motif_stack",

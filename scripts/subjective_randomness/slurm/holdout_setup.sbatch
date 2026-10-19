@@ -90,24 +90,14 @@ HARNESS_REPO="$HARNESS_REPO" bash "$REPO/scripts/subjective_randomness/slurm/sta
 
 # Pristine snapshots outside any agent's sandbox, taken from the staged copy
 # (so a re-run of this setup reproduces them exactly).
-# - The GT registry (config seed_models_dir) holds every GT's PyMC generator;
-#   the parent reads the held-out model from this snapshot only.
-# - The pure-Python model_families (DEFAULT_PARAMS + generative form): the
-#   parent reads the held-out GT's family from here by PARSING (never
-#   importing), so the generative source can be scrubbed from the agent's
-#   checkout instead of merely deny-listed.
+# The GT registry (config seed_models_dir) holds every GT's PyMC generator;
+# the parent reads the held-out model from this snapshot only (its generating
+# parameters are in the config).
 SEED_MODELS_REL="${SEED_MODELS_REL:-src/subjective_randomness/pymc_model_families}"
 GT_MODELS_SRC="${GT_MODELS_SRC:-$WORK_ROOT/gt_models_src}"
-GT_FAMILY_REL="${GT_FAMILY_REL-src/subjective_randomness/model_families}"  # empty: no twins
-GT_FAMILY_SRC="${GT_FAMILY_SRC:-$WORK_ROOT/gt_family_src}"
 echo "[setup] staging pristine seed/GT models -> $GT_MODELS_SRC"
 mkdir -p "$GT_MODELS_SRC"
 rsync -a --delete "$HARNESS_REPO/$SEED_MODELS_REL"/ "$GT_MODELS_SRC"/
-if [[ -n "$GT_FAMILY_REL" ]]; then
-  echo "[setup] staging pristine model_families -> $GT_FAMILY_SRC"
-  mkdir -p "$GT_FAMILY_SRC"
-  rsync -a --delete "$HARNESS_REPO/$GT_FAMILY_REL"/ "$GT_FAMILY_SRC"/
-fi
 
 # Fail fast: syntax-check the scripts the array/analysis jobs run, and import the
 # whole holdout chain so a missing dependency aborts here (afterok) rather than

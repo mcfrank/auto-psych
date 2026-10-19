@@ -20,7 +20,6 @@ from src.models.data_binding import make_stim_data
 from src.models.model_loading import model_source_file, pm_data_inputs
 from src.models.pymc_inference import InvalidPredictions, fit_model, is_model_failure
 from src.subjective_randomness.holdout_data import (
-    _family_default_params,
     _raw_eval_rows,
     p_left_fixed_params,
     seed_model_names,
@@ -693,7 +692,6 @@ def seed_baseline_correlation(
     seed_models_dir: Path,
     seeded_models_dir: Path,
     gt_models_dir: Optional[Path] = None,
-    gt_family_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """No-learning baseline: how well the *other* seed models predict the GT.
 
@@ -708,9 +706,7 @@ def seed_baseline_correlation(
     ``gt_models_dir`` is where the ground-truth model lives (default:
     ``seed_models_dir``). The *other* seed models are the registry's names
     (``seed_models_dir``) with their parameters in ``params_by_model`` (the
-    config's ``gt_models``), or for a coin-flip seed absent from it its
-    family's default parameters, but their
-    code is the files the cell was seeded with (``seeded_models_dir``, see
+    config's ``seed_params`` and ``gt_models``), but their code is the files the cell was seeded with (``seeded_models_dir``, see
     ``seeded_models_dir()``), so a run is scored with the seeds it ran with.
     For an impossible ground truth, which is not among the project seeds,
     nothing is excluded — every seed model is scored against it.
@@ -721,11 +717,7 @@ def seed_baseline_correlation(
     )
     gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params, task=task)
     others = {
-        name: (
-            params_by_model[name]
-            if name in params_by_model
-            else _family_default_params(name, gt_family_dir)
-        )
+        name: params_by_model[name]
         for name in seed_model_names(seed_models_dir)
         if name != gt_model
     }
@@ -905,6 +897,7 @@ def reevaluate_trajectories(
     result: Mapping[str, Any],
     *,
     seed_models_dir: Path,
+    seed_params: Mapping[str, Mapping[str, Any]],
     cache_dir: Optional[Path],
     gt_models_dir: Optional[Path] = None,
     eval_pool_override: Optional[Mapping[str, Any]] = None,
@@ -918,6 +911,10 @@ def reevaluate_trajectories(
     loop already finished can be re-analyzed (e.g. to add a baseline or
     regenerate the figure) without re-running any agents. Returns a new result;
     the input is not mutated.
+
+    ``seed_params`` are the seeds' generating parameters for the no-learning
+    baseline (a config's ``seed_params``); the result's own recorded
+    ``seed_params`` override them.
 
     ``gt_models_dir`` (default: ``seed_models_dir``) is where each ground-truth
     generator lives. Pass the impossible-models directory to re-score a run
@@ -949,12 +946,11 @@ def reevaluate_trajectories(
     from src.tasks import task_for_project
 
     task = task_for_project(result["project_id"])
-    # The seeds' parameters for the no-learning baseline (recorded since the
-    # number game, whose seeds have no family defaults).
-    params_by_model = dict(result.get("seed_params", {}))
+    # The seeds' parameters for the no-learning baseline: what the run recorded,
+    # over the given ones (an impossible run recorded only its ground truths').
+    params_by_model = {**seed_params, **result.get("seed_params", {})}
 
-    # Names only — the fitted-seed baseline fits these by MCMC, so no
-    # pure-Python family twin (and no default params) is required here.
+    # Names only — the fitted-seed baseline fits these by MCMC.
     all_seed_models = set(seed_model_names(seed_models_dir))
     new_runs: List[Dict[str, Any]] = []
     for gt_run in result["gt_runs"]:

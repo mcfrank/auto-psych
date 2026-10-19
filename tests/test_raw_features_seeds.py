@@ -1,8 +1,6 @@
 """Every seed model computes its own features from raw H/T sequences.
 
 Guards:
-* vendored helpers in each seed are byte-identical to the originals in
-  ``src/subjective_randomness/model_families/common.py``;
 * each seed's ``compute_features`` returns exactly the columns its ``pm.Data``
   containers read, with the correct values;
 * no seed imports the project featurizer;
@@ -74,28 +72,6 @@ def _bound_columns(path):
     return names
 
 
-def _module_functions(path):
-    src = path.read_text(encoding="utf-8")
-    tree = ast.parse(src)
-    return {
-        node.name: ast.get_source_segment(src, node)
-        for node in tree.body
-        if isinstance(node, ast.FunctionDef)
-    }
-
-
-def _canonical_sources():
-    src = (REPO_ROOT / "src" / "subjective_randomness" / "features.py").read_text(
-        encoding="utf-8"
-    )
-    tree = ast.parse(src)
-    return {
-        node.name: ast.get_source_segment(src, node)
-        for node in tree.body
-        if isinstance(node, ast.FunctionDef)
-    }
-
-
 def _loaded_hook(model):
     import importlib.util
 
@@ -105,18 +81,6 @@ def _loaded_hook(model):
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod.compute_features
-
-
-@pytest.mark.parametrize("model", sorted(VENDORED))
-def test_vendored_helpers_are_byte_identical_to_the_originals(model):
-    helpers, _ = VENDORED[model]
-    vendored = _module_functions(REGISTRY / f"{model}.py")
-    original = _canonical_sources()
-    for helper in helpers:
-        assert helper in vendored, f"{model} does not vendor {helper}"
-        assert vendored[helper] == original[helper], (
-            f"{model}'s copy of {helper} has drifted from features.py"
-        )
 
 
 @pytest.mark.parametrize("model", sorted(VENDORED))

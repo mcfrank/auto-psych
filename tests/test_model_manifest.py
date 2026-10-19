@@ -12,14 +12,13 @@ models. Two of these manifests are project assets rather than run outputs:
 
 The two drifted apart once already (the hero-run winners were promoted into
 the seed pool in 2026-07, the faithful set was consolidated into the registry
-in 2026-08), which silently broke every recovery helper that resolves a seed
-name to its pure-Python twin. The tests here are the landmine that makes such
+in 2026-08), which silently broke every recovery helper that resolved a seed
+name to its (since removed) pure-Python twin. The tests here are the landmine that makes such
 a divergence fail loudly at the next test run.
 """
 
 from __future__ import annotations
 
-import importlib
 from pathlib import Path
 
 import pytest
@@ -31,8 +30,12 @@ from src.models.model_manifest import (
     read_manifest_names,
     remove_manifest_entry,
 )
+from src.subjective_randomness.config import load_config
 from tests.paths import REPO_ROOT
 
+FAITHFUL_CONFIG = (
+    REPO_ROOT / "scripts" / "subjective_randomness" / "configs" / "holdout_recovery_faithful.yaml"
+)
 REGISTRY_DIR = REPO_ROOT / "src" / "subjective_randomness" / "pymc_model_families"
 LIVE_SEED_DIR = (
     REPO_ROOT
@@ -48,21 +51,18 @@ LIVE_SEED_DIR = (
 @pytest.mark.parametrize(
     "models_dir", [REGISTRY_DIR, LIVE_SEED_DIR], ids=["registry", "live_seed_pool"]
 )
-def test_every_manifest_model_has_a_pure_python_twin(models_dir):
-    """Each active model resolves to ``model_families.<name>.DEFAULT_PARAMS``.
+def test_every_manifest_model_has_generating_params(models_dir):
+    """Each active model has an entry in the recovery config's ``seed_params``.
 
-    Recovery needs the twin: ``holdout_data.resolve_generating_params``
-    imports it by name to fix the generating parameters, and the twin is what
-    the PyMC adapter is validated against. A manifest name without a twin is a
-    ``ModuleNotFoundError`` waiting for the next recovery run.
+    Recovery fixes a ground truth's generating parameters from that entry
+    (``holdout_data.resolve_generating_params``); a manifest name without one
+    is a ``KeyError`` waiting for the next recovery run.
     """
     names = read_manifest_names(models_dir)
     assert names, f"{models_dir} has an empty manifest"
+    seed_params = load_config(FAITHFUL_CONFIG)["seed_params"]
     for name in names:
-        family = importlib.import_module(
-            f"src.subjective_randomness.model_families.{name}"
-        )
-        assert dict(family.DEFAULT_PARAMS), f"{name} has empty DEFAULT_PARAMS"
+        assert seed_params[name], f"{name} has empty seed_params"
 
 
 @pytest.mark.parametrize(

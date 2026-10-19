@@ -83,6 +83,38 @@ plotnine figure half, ~650 lines, and the `plotnine` dependency can go); keep
 the exhaustive-pool reanalysis chain and `validate_lazy_eig.py` (documented
 tools).
 
+## Outcomes on branch `cleanup` (2026-10-18)
+
+Steps 1–4 are done (c8d102a1, b7d13c03, d94e61af, 326f96be). Kept after all:
+the validator's `best_model` fallback and scoring's empty-comparison fallback
+(about a dozen test stubs rely on them). The `agent_timeout_sec` bug is fixed
+without changing any run: the implement agent has its own
+`implement_agent_timeout_sec` (900, what every run got) (9b5f510e).
+
+Tier 2, decided item by item:
+
+- **Done:** `sanitize_prompt_listings.py` (bda9ff8e); the complexity prior
+  (2f6039aa; the stale sentence in an archived `report.md` is left as written);
+  `think_aloud_game24`, the hero-run seed archive and `evaluate_recovery.py`
+  (e7d7e37d; the `evaluate_recovery` deny patterns stay, they cost nothing).
+- **Done: the pure-Python twins and `features.py`.** The generating parameters
+  moved to the recovery configs' `seed_params` (values pinned in
+  `tests/test_ground_truth_params_in_config.py`, equal to the old
+  `DEFAULT_PARAMS`), the `gt_family_src` snapshot and `--gt-family-dir` are
+  gone, and the leakage audit gets the GT's `seed_params` entry. The
+  paper-vector tests now test the PyMC models' own feature functions. The
+  seed and impossible model files' comments that cite `model_families/` or
+  `features.py` are left: editing them changes the files' hashes (fit cache,
+  the byte-identity test) and what agents read. The `**/model_families/**`
+  denies and the verifier's forbidden-path lists stay (harmless).
+- **Nothing removed: old-run-format compatibility.** Every piece is a guard
+  (the bare-list `starting_models.json` refusal, the unrecorded-input
+  `model_loop` refusal), a format the reanalysis chain or viewer still reads,
+  or the deployed `/results` contract.
+- **Still to discuss:** the plotnine half of `reporting.py`; merging the
+  impossible-model chain (with plan step 5); the two concurrent-fit mechanisms;
+  the `posterior.py` and `eig.py` CLIs.
+
 ## Tier 1: safe (no behaviour change), ~2,000 lines incl. tests
 
 ### Pipelines (`src/pipelines/`)

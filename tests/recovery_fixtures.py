@@ -3,15 +3,11 @@
 * ``CannedPredictionFit`` — a stand-in for a fitted PyMC model. Recovery tests
   monkeypatch ``fit_model`` so no MCMC runs, and the holdout path only ever
   asks a fit to predict on the held-out stimuli.
-* ``p_left_model_family`` — ``p_left`` from a registry model's pure-Python
-  twin, the independent implementation each PyMC adapter is checked against.
 """
 
 from __future__ import annotations
 
-import importlib
 from types import SimpleNamespace
-from typing import Mapping, Sequence
 
 import numpy as np
 
@@ -35,27 +31,3 @@ class CannedPredictionFit:
     def convergence_problems(self):
         return []
 
-
-def p_left_model_family(
-    model_name: str,
-    stimuli: Sequence[Mapping[str, str]],
-    params: Mapping[str, float],
-) -> np.ndarray:
-    """``p_left`` per stimulus from the pure-Python model family ``model_name``.
-
-    Fails loudly unless ``params`` names exactly the family's parameters.
-    """
-    module = importlib.import_module(
-        f"src.subjective_randomness.model_families.{model_name}"
-    )
-    expected = set(module.DEFAULT_PARAMS)
-    if set(params) != expected:
-        missing = sorted(expected - set(params))
-        extra = sorted(set(params) - expected)
-        raise ValueError(
-            f"Generating params must name exactly {model_name}'s parameters "
-            f"{sorted(expected)}. Missing: {missing}. Unexpected: {extra}."
-        )
-    return np.array(
-        [module.predict_left(stim, dict(params)) for stim in stimuli], dtype="float64"
-    )

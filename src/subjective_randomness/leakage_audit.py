@@ -16,10 +16,7 @@ from typing import Any, Dict, List, Mapping, Optional
 
 import yaml
 
-from src.subjective_randomness.holdout_data import (
-    GENERATING_MODEL_COLUMN,
-    _family_default_params,
-)
+from src.subjective_randomness.holdout_data import GENERATING_MODEL_COLUMN
 
 
 # Column names a candidate binds with ``pm.Data("<name>", ...)``: harness-
@@ -92,7 +89,7 @@ def leakage_check(
     seed_models_dir: Path,
     n_experiments: int,
     gt_models_dir: Optional[Path] = None,
-    gt_family_dir: Optional[Path] = None,
+    gt_params: Mapping[str, float],
     checkout_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Audit a run for ground-truth leakage into agent-written models.
@@ -136,11 +133,6 @@ def leakage_check(
     gt_hash = hashlib.sha256(
         (gt_models_dir / f"{gt_model}.py").read_bytes()
     ).hexdigest()
-    gt_params: Dict[str, float] = {}
-    try:
-        gt_params = _family_default_params(gt_model, gt_family_dir)
-    except ModuleNotFoundError:
-        pass
     distinctive = set(gt_params) - {"beta", "side_bias"}
     # Distinctive param VALUES an agent could paste from the leaked source. Drop
     # trivially common values (0/0.5/1) that would false-positive everywhere; a
