@@ -296,7 +296,7 @@ target — see **Slot roles**) → admit sequentially.
   for a finished experiment at another one (from the pruned files and cached
   fits, no MCMC; refused once the next experiment's directory exists). The
   recovery sweep prunes at 2; the October 2026 live series at 4
-  (`full_run_sr-oct26.yaml`, user decision 2026-09-30): at 2 its run 1's
+  (`data/results/human_experiment_sr-oct26/full_run_sr-oct26.yaml`, user decision 2026-09-30): at 2 its run 1's
   experiment 1 kept one model, leaving the next design nothing to
   discriminate, and that experiment was re-pruned at 4.
 - **Ledger** (`src/pipelines/inner_loop/hypothesis_ledger.py`):
