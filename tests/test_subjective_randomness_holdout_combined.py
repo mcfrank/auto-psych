@@ -3,20 +3,16 @@
 Each finished ``holdout.json`` holds one ground truth's trajectory for a single
 run. ``aggregate_holdout_trajectories`` pools the matching ground truths across
 runs and reduces each inner-loop step (and each flat seed-model baseline) to a
-mean and a spread, so ``plot_holdout_trajectories_combined`` can draw the same
-per-model panels as the single-run figure but with error bars across runs.
+mean and a spread (``scripts/subjective_randomness/plot_holdout_curves.py``
+draws it).
 """
 
 from __future__ import annotations
 
-import plotnine
 import pytest
 
 from src.subjective_randomness.reporting import (
     aggregate_holdout_trajectories,
-    holdout_combined_frames,
-    holdout_trajectories_ggplot,
-    plot_holdout_trajectories_combined,
 )
 
 
@@ -296,177 +292,3 @@ def test_aggregate_marks_outer_experiment_boundaries():
 def test_aggregate_rejects_unknown_metric():
     with pytest.raises(ValueError, match="metric"):
         aggregate_holdout_trajectories([RUN_A], metric="nonsense")
-
-
-def test_combined_frames_carry_error_band_bounds_for_plotnine():
-    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse", error="std")
-    frames = holdout_combined_frames(agg)
-
-    traj = frames["trajectory"]
-    assert set(traj["series"].dropna().unique()) == {"best model"}
-    step0 = traj[traj["position"] == 0].iloc[0]
-    assert step0["mean"] == pytest.approx(0.3)  # mean([0.2, 0.4]) rmse
-    # Error bars are drawn from explicit ymin/ymax = mean ± spread columns.
-    assert step0["ymin"] == pytest.approx(0.3 - 0.1414213562, abs=1e-6)
-    assert step0["ymax"] == pytest.approx(0.3 + 0.1414213562, abs=1e-6)
-
-    baselines = frames["baselines"]
-    fitted = baselines[baselines["series"] == "ELPD-best other seed model"]
-    # At each position, the experiment's own fitted seeds: [0.4, 0.45] in
-    # experiment 1, [0.35, 0.40] at the end of experiment 2.
-    assert list(fitted["mean"]) == pytest.approx([0.425, 0.425, 0.375])
-
-    boundaries = frames["boundaries"]
-    assert list(boundaries["boundary"]) == [2]
-    # The dotted line is drawn half a step before the new experiment begins.
-    assert boundaries.iloc[0]["x"] == pytest.approx(1.5)
-
-
-def test_combined_frames_relabel_the_fitted_baseline():
-    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse", error="std")
-    # Default (holdout): the fitted-seed baseline is the ELPD-best *other* seed model.
-    default = set(holdout_combined_frames(agg)["baselines"]["series"])
-    assert "ELPD-best other seed model" in default
-    assert "best seed model" not in default
-    # Impossible callers hold out no seed, so it is just "best seed model".
-    relabeled = set(
-        holdout_combined_frames(agg, fitted_baseline_label="best seed model")[
-            "baselines"
-        ]["series"]
-    )
-    assert "best seed model" in relabeled
-    assert "ELPD-best other seed model" not in relabeled
-
-
-def test_combined_frames_label_experiment_rounds():
-    # RUN_A/RUN_B span two outer experiments (boundary at position 2), so the
-    # single ground-truth panel gets two "exp. round N" labels.
-    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse", error="std")
-    rounds = holdout_combined_frames(agg)["rounds"]
-    assert list(rounds["round"]) == [1, 2]
-    assert list(rounds["label"]) == ["exp.\nround 1", "exp.\nround 2"]
-    # Each label sits inside its own region. The boundary line is at x = 1.5
-    # (position 2 - 0.5); the positions are [0, 2] so xmin = -0.5, xmax = 2.5.
-    r1 = rounds[rounds["round"] == 1].iloc[0]
-    r2 = rounds[rounds["round"] == 2].iloc[0]
-    assert -0.5 <= r1["x"] < 1.5
-    assert 1.5 <= r2["x"] < 2.5
-    # Labels are faceted by ground truth like every other frame.
-    assert set(rounds["facet"].dropna()) == {"m"}
-
-
-def test_round_labels_only_on_the_leftmost_panel():
-    # Two ground truths -> two facets. The "exp. round N" labels should appear
-    # only in the leftmost (first, by sorted gt name) panel, not be repeated.
-    two_gt = {
-        "gt_runs": [
-            _gt_run(
-                name,
-                [
-                    {
-                        "global_step": 0,
-                        "step": 0,
-                        "experiment": 1,
-                        "pearson_r": 0.8,
-                        "rmse": 0.2,
-                        "pearson_r_bma": 0.7,
-                        "rmse_bma": 0.3,
-                    },
-                    {
-                        "global_step": 1,
-                        "step": 0,
-                        "experiment": 2,
-                        "pearson_r": 0.9,
-                        "rmse": 0.1,
-                        "pearson_r_bma": 0.8,
-                        "rmse_bma": 0.2,
-                    },
-                ],
-                baseline={"mean_r": 0.5, "per_model": {"s1": 0.45}},
-                fitted_baseline={
-                    "per_model": {"s1": {"pearson_r": 0.55, "rmse": 0.35}}
-                },
-            )
-            for name in ("aaa", "zzz")
-        ]
-    }
-    rounds = holdout_combined_frames(
-        aggregate_holdout_trajectories([two_gt], metric="rmse")
-    )["rounds"]
-    assert set(rounds["gt_model"]) == {"aaa"}  # leftmost facet only
-    assert list(rounds["round"]) == [1, 2]
-
-
-def test_holdout_ggplot_draws_experiment_round_labels():
-    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
-    plot = holdout_trajectories_ggplot(agg)
-    geoms = [type(layer.geom).__name__ for layer in plot.layers]
-    assert "geom_text" in geoms
-
-
-def test_holdout_ggplot_accepts_a_fitted_baseline_label():
-    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
-    plot = holdout_trajectories_ggplot(agg, fitted_baseline_label="best seed model")
-    assert isinstance(plot, plotnine.ggplot)
-
-
-def test_holdout_trajectories_ggplot_returns_a_ggplot_object():
-    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
-    assert isinstance(holdout_trajectories_ggplot(agg), plotnine.ggplot)
-
-
-def test_holdout_ggplot_default_x_label():
-    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
-    plot = holdout_trajectories_ggplot(agg)
-    assert plot.labels.x == "position in experiment (seed, shared rounds, end)"
-
-
-def test_holdout_ggplot_accepts_a_custom_x_label():
-    # The no-inner-loop ablation has one step per experiment, so its caller
-    # relabels the x axis to "experiment".
-    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
-    plot = holdout_trajectories_ggplot(agg, x_label="experiment")
-    assert plot.labels.x == "experiment"
-
-
-def test_holdout_ggplot_default_strip_text_size():
-    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
-    plot = holdout_trajectories_ggplot(agg)
-    assert plot.theme.themeables.property("strip_text", "size") == 17
-
-
-def test_holdout_ggplot_accepts_a_custom_strip_text_size():
-    # Impossible recovery has long facet names (e.g. "more_imbalance_more_random")
-    # that overlap at the default size, so its caller shrinks the panel headings.
-    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
-    plot = holdout_trajectories_ggplot(agg, strip_text_size=13)
-    assert plot.theme.themeables.property("strip_text", "size") == 13
-
-
-def test_plot_combined_forwards_strip_text_size(tmp_path):
-    # The save wrapper must thread strip_text_size through to the ggplot builder.
-    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
-    captured = {}
-    import src.subjective_randomness.reporting as reporting
-
-    original = reporting.holdout_trajectories_ggplot
-
-    def _spy(aggregated, **kwargs):
-        captured.update(kwargs)
-        return original(aggregated, **kwargs)
-
-    reporting.holdout_trajectories_ggplot = _spy
-    try:
-        reporting.plot_holdout_trajectories_combined(
-            agg, tmp_path / "out.pdf", strip_text_size=13
-        )
-    finally:
-        reporting.holdout_trajectories_ggplot = original
-    assert captured.get("strip_text_size") == 13
-
-
-def test_plot_combined_writes_a_figure(tmp_path):
-    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
-    out = tmp_path / "combined_rmse.pdf"
-    plot_holdout_trajectories_combined(agg, out)
-    assert out.exists() and out.stat().st_size > 0
