@@ -41,6 +41,15 @@ with the closed campaign's on paradigms neither campaign saw.
 | Final bakeoff | Two arms (forced choice, which favours the closed theories; a blind new paradigm, which favours generalization); fit A primary (both sides on the same pooled data), fit B secondary (each on its own campaign's data) (§7) | |
 | Blind paradigm | Designed by an isolated designer run that no chain sees | |
 
+## Decisions (PI, 2026-10-21)
+
+| Decision | Choice | Why |
+|---|---|---|
+| Porting rule | As in §3, approved; its exact mechanics and the cases it does not settle are in §3.1 | |
+| Budget parity | **Equal dollars** per experiment: the closed campaign's ~$133 (200 × $0.50 × Prolific's 1.33), about 600 participant-minutes at the same hourly rate. The designer chooses N and length within it | the comparison is of methods at equal cost |
+| Old-data guard | k = **4** clustered SEs, as the closed campaign's guard | |
+| Pilot participants | Gemini 3.8 Flash | cost |
+
 ## 1. Claims
 
 1. **Transfer.** On the blind paradigm, this campaign's final theories predict new people better
@@ -104,6 +113,30 @@ posterior) go into the link; anything that changes the latent posterior or speak
 theory. Each port must reproduce its original forced-choice predictions exactly on the old
 data. The closed finals are ported, tested and frozen before the open campaign starts, so
 nothing in it can influence them.
+
+### 3.1 The port, exactly (`src/rsa_open/port.py`)
+
+A closed model file defines `PARAMS` and `choice_probs(params, ctx)`. The port:
+1. requires every `return` of `choice_probs` to be `with_lapse(X, params["lapse"])`, and
+   `PARAMS["lapse"]` to be the choice link's prior, `Beta(1, 9)`;
+2. removes `lapse` from `PARAMS`, returns `X`, and renames the function `listener`. It edits
+   only those spans of the source text, so every memo line stays byte for byte as it was (memo
+   parses its own source);
+3. refuses, with the reason, any file it cannot port this way. There is no fallback.
+
+**Composing** a theory with a link gives an ordinary model file (`compose`): the theory, then
+the link's parameters and its `choice_probs`. The existing fitting, CV and loop code runs it
+unchanged. The test of a port: composed with the choice link, it gives the original's choice
+probabilities exactly, at the same parameter values.
+
+Of the 20 files to port (5 starting models, 12 promoted seeds, 3 closed finals), 19 port this
+way and reproduce their originals exactly (`tests/test_rsa_open_port.py`). Two cases need a
+decision (§10):
+- `softmax_surprisal_isolated_costly_l4` (promoted) applies a decision temperature `beta` to
+  the listener posterior before its lapse. The mechanical port keeps it in the theory. The rule
+  as written puts it in the link, but a link is shared by every theory on a paradigm.
+- `competition_endpoint_binding_lapse_l2` (chain 2's final) is refused: it has no uniform
+  lapse. Its `lapse` mixes in the theory's own salience prior, on word trials only.
 
 ## 4. The designer
 
@@ -176,7 +209,7 @@ The existing protocol covers the rest (PI, 2026-10-20).
 | Phase | What | Where | Status |
 |---|---|---|---|
 | 0 | This plan; Gemini 4 smoke test | cloud | plan written; smoke test below |
-| 1 | Paradigm-spec schema and validator; link library with recovery tests; theory + link refactor; port the seeds and closed finals (exact-equivalence tests) | cloud | |
+| 1 | Paradigm-spec schema and validator; link library with recovery tests; theory + link refactor; port the seeds and closed finals (exact-equivalence tests) | cloud | port and choice link done (`src/rsa_open/`); 19 of 20 ported exactly; the rest waits on §10 |
 | 2 | Designer tools as an agent CLI; designer brief; implementer; simulated pilot | cloud | |
 | 3 | Rehearsal on simulated participants with a ground-truth theory across paradigms | Sherlock | |
 | 4 | One live paradigm per chain, with PI review | live | |
@@ -192,10 +225,19 @@ Gemini 3.8 Flash, the theorist, runs as before.
 
 ## 10. Open
 
-1. **Budget parity:** equal participants per experiment (200, as before), or equal dollars or
-   participant-minutes, with the designer trading N against length?
-2. **k** for the old-data guard. The closed campaign's guarded selection kept a candidate
-   eligible within 4 dse on the existing rows (`docs/auto_rsa/LOOP_ALGORITHM.md` §5).
-3. The designer's tool-call budget and its stopping rule.
-4. The LLM-pilot participant model (Gemini 4, or 3.8 Flash for cost).
+1. **The designer's limits** (proposal, 2026-10-21): per cycle, 2 h of wall clock, 40 tool
+   calls, at most 3 simulated pilots. `submit` refuses a paradigm whose EIG per dollar is below
+   half the closed campaign's paradigm's at the same budget, under the same theories. A cycle
+   that fails gets one retry with the reason in its brief; a second failure stops the chain.
+   Bounds on the design: N ≥ 100, at most 15 minutes per person.
+2. **A decision temperature** (§3.1): keep the mechanical port (the temperature is part of that
+   one seed's theory), or give the choice link a temperature for every theory (every port then
+   reproduces its original at temperature 1, but each gains a parameter).
+3. **Chain 2's final** (§3.1): its prior-mixing lapse stays in the theory, as a latent mechanism,
+   and the choice link adds the uniform lapse every other theory has (one more parameter, and
+   its predictions equal the original's at link lapse 0); or it is ported by hand.
+4. **Speakers.** The production and "would the speaker say X?" links need a theory's speaker
+   distribution. RSA theories have one; heuristic listeners (`lexical_preemption_heuristic`,
+   `oddity_heuristic_listener`) do not. Must every theory define a speaker, or is a theory
+   without one not scored on speaker-side paradigms?
 5. The bakeoff's hypotheses and power, at registration.
