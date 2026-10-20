@@ -11,5 +11,14 @@
       "/var/folders/**": "allow",
       "/private/var/folders/**": "allow"
     }
+  },
+  "provider": {
+    "google": {
+      "models": {
+        "gemini-4-argon": {
+          "name": "Gemini 4 (argon)"
+        }
+      }
+    }
   }
 }

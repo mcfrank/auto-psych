@@ -37,7 +37,8 @@ with the closed campaign's on paradigms neither campaign saw.
 | Seeds | The closed campaign's seeds, *not* its finals: each chain starts from its closed counterpart's seeds (6, 5 and 5 of the 12 promoted seeds); the bar is again the 5 starting models plus the 12 promoted seeds | the bakeoff compares the two methods from the same start |
 | Data | The literature data the closed campaign started from (its "E") plus this campaign's own live data. **No closed-campaign live or pre-registered data** | the methods are compared on equal data |
 | Theorist | Gemini 3.8 Flash, as in the closed campaign, with the same sandbox, timeouts and round structure | only the paradigm side changes |
-| Designer and implementer | Gemini 4 (`gemini-4-argon`) | long-horizon tool use; smoke test §9 |
+| Designer | Gemini 4 (`gemini-4-argon`) | long-horizon tool use; smoke test §9 |
+| The page (2026-10-21, **for the PI**) | One generic, tested jsPsych page renders every paradigm from trial lists built in Python, instead of an implementer agent writing a page per paradigm | every spec uses one of six widgets with SVG or text: an agent-written page adds code to validate and nothing a spec can ask for; the pilot reads the same lists the page shows. Reversible |
 | Final bakeoff | Two arms (forced choice, which favours the closed theories; a blind new paradigm, which favours generalization); fit A primary (both sides on the same pooled data), fit B secondary (each on its own campaign's data) (§7) | |
 | Blind paradigm | Designed by an isolated designer run that no chain sees | |
 
@@ -113,9 +114,13 @@ move. The open fit takes the likelihood from the link:
 - **rating** is an ordered probit on `beta · logit(p)` of the probed referent, with equally
   spaced cutpoints (`center`, `spread`) and a uniform-rating lapse; the paradigm fixes
   `scale_points`.
-- **allocation** (response type `slider`) is a Dirichlet-multinomial around the lapse-mixed
+- **allocation** (response type `bet`) is a Dirichlet-multinomial around the lapse-mixed
   posterior, with concentration `kappa`; the paradigm fixes `total_points`. This is the betting
   measure of Frank & Goodman (2012); zeros are ordinary outcomes.
+- **ordered_beta** (response type `slider`) is a 0–max slider on one probed referent: point
+  masses at 0 and max from two cutpoints on the logit of its tempered probability, a discrete
+  Beta (precision `phi`) between them (Kubinec, 2022).
+- **production** and **binary_judgment** score the theory's speaker (§3.1).
 
 **The recovery test** (`recovery_check`): 3 independent datasets of 1,500 simulated responses
 from a theory at known parameters are refitted. Each true value must fall inside its 98%
@@ -123,7 +128,7 @@ posterior interval, and each link parameter must be learned (posterior sd at mos
 prior's), in all replicates but at most one, and every fit must converge. One replicate is
 allowed to miss because a single dataset misses a 98% interval over several parameters often
 enough to fail a sound link. That happened to the allocation link's lapse on one seed, while
-the likelihood's profile peaks at the truth. All three library links pass.
+the likelihood's profile peaks at the truth. All six library links pass.
 
 **A paradigm spec** (written by the designer) is a structured file: charter fields; materials
 (SVG or text); instructions; trial structure; response type and link; the parameterized trial
@@ -213,8 +218,9 @@ write their own.
    - `link_check` runs a proposed link's recovery test;
    - `pilot` builds the page and runs LLM participants through it;
    - `submit` freezes the spec and its link and refuses without a passing pilot of that spec.
-3. **Implementer** (Gemini 4): builds the jsPsych page from the spec, under main's validators
-   (button-only responses, data contract, catch and comprehension trials).
+3. **The page** (`src/rsa_open/screens.py`, `page.html`; replaces the planned implementer, a
+   decision for the PI): trial lists are built in Python from the frozen spec and design, and
+   one generic jsPsych page plays them (§4.2).
 4. **Pilot gate:** LLM participants complete it; comprehension and catch rates above a floor; the
    data parse into the declared response type; the time estimate within ±30%.
 5. **Review:** the PI reviews the first paradigm of each chain; afterwards only flagged ones.
@@ -270,6 +276,72 @@ score 0.90–0.99 bits with 97–100% correct.
 **The cost:** a theory difference the link can mimic (a sharper listener against a higher
 temperature) counts as information, though the joint fit may not separate it.
 
+### 4.2 The tools, the page and the pilot (built 2026-10-21)
+
+**The tools** (`src/rsa_open/tools.py`) run in the designer's sandbox, on its workspace
+(`context/` and `inputs/` read-only, `work/` its own):
+- `validate`: every problem with a spec, at once;
+- `eig`: §4.1, with a seed fixed by the spec's sha256, against a floor scored once per context;
+- `link-check`: the recovery test in this paradigm (its scene space, number of responses and
+  scale), simulated from a live theory at its posterior mean (2–20 minutes);
+- `submit`: records the spec once it has a floor-meeting `eig` and a recovering `link-check` of
+  that exact spec.
+
+Every call is logged and the 41st refused.
+
+**Prompts carry the message.** A listener or judgment prompt shows the speaker's word where it
+says `{message}`; listener paradigms with prior queries give a `prior_prompt`; ratings and
+sliders name their ends (`scale_labels`).
+
+**The page** (`src/rsa_open/screens.py`, `page.html`, `page.py`). Trial lists are a pure
+function of (spec, design, seed, list):
+- each list takes `trials_per_participant` units of one shuffled order of the design, so every
+  unit is answered equally often to within one;
+- catch trials, with pass rules, go at random positions, after a practice trial;
+- domains rotate, features map to words at random, and object order is random;
+- objects are drawn (SVG) or written (text).
+
+One jsPsych plugin handles all six response types (a slider must be touched; a bet's points
+must add up). A wrong comprehension answer shows the instructions once more. Responses are
+recorded in the link's form, as scene indices.
+
+**The pilot** (`src/rsa_open/pilot.py`). Gemini 3.8 Flash participants take the same lists, one
+chat each; an SVG trial is one image (resvg), the marked object framed. The gate requires:
+
+| check | threshold |
+|---|---|
+| comprehension, by the second reading | ≥ 80% |
+| catch trials passed | ≥ 80% |
+| usable answers | ≥ 95% |
+| test data | parse as the link's data |
+| time estimate | within 30% of the declared minutes |
+| test answers | not all identical |
+
+A first live run passed: 3 participants, choice, SVG creatures, every check and catch trial right.
+
+### 4.3 The designer cycle (`src/rsa_open/designer.py`)
+
+**Each cycle:**
+1. The harness lays out a workspace: the context, with the floor scored; the schema; a
+   placeholder format example; the link library; the chain's earlier paradigms and per-theory
+   fits.
+2. It spawns Gemini 4 with the brief: the goal (theories that generalize across paradigms), the
+   charter, the theories, the bounds, the tools, and a `rationale.md` to write.
+3. After each session the harness checks the submission itself:
+   - the spec validates and is the one submitted;
+   - its design is re-scored with the harness's seed and must meet the floor; that design runs;
+   - its link is re-checked;
+   - its lists are piloted.
+4. A failed submission goes back with the report. A cycle allows up to 3 submissions, and an
+   unchanged failed spec is refused.
+
+**Limits:** 2 h of agent time, 40 tool calls. A session without a submission ends the cycle. A
+failed cycle gets one retry with its reason; then `DesignerFailed` stops the chain.
+
+**Freezing** writes the spec, design, lists, a preview page, the link check, the pilot and
+`record.json`. The record holds the hashes, `review_required` for a chain's first experiment,
+and the code commit.
+
 ## 5. The inner loop
 
 As in the closed campaign (admission gates, grouped CV, the ledger, the critic, the 2-stale-round
@@ -285,8 +357,8 @@ stop, carry-forward of at most 8 distinct theories), with three changes:
 
 The same seeds and chain split, the same literature data, the same theorist model and sandbox,
 the same rounds and slots, 3 chains × 3 experiments, the same per-experiment budget, and no
-closed-campaign data. What differs: the designer, the implementer, and that the paradigm, and
-with it the link, changes every experiment.
+closed-campaign data. What differs: the designer, the page built from its spec, and that the
+paradigm, and with it the link, changes every experiment.
 
 ## 7. The final bakeoff (pre-registered, as `rsa-prereg-final` was)
 
@@ -319,7 +391,7 @@ The existing protocol covers the rest (PI, 2026-10-20).
 |---|---|---|---|
 | 0 | This plan; Gemini 4 smoke test | cloud | plan written; smoke test below |
 | 1 | Paradigm-spec schema and validator; link library with recovery tests; theory + link refactor; port the seeds and closed finals (exact-equivalence tests) | cloud | **done** (`src/rsa_open/`): all 20 models port (18 by rule a, chain 2's final by rule b, one by hand) and equal their originals; five links (choice, rating, allocation, production, binary judgment), each with a temperature and a lapse, each passing the recovery test; every theory has a speaker; the paradigm spec and its validator. Not yet: freezing the ported closed finals (with their derived speakers) before the campaign |
-| 2 | Designer tools as an agent CLI; designer brief; implementer; simulated pilot | cloud | EIG tool done (§4.1: trial units, per-dollar score, floor; allocation refused); next: `link_check`, `submit`, the brief, the implementer, the simulated pilot |
+| 2 | Designer tools as an agent CLI; designer brief; the page; simulated pilot | cloud | **built** (§4.1–4.3): the EIG tool; the tools CLI (`validate`, `eig`, `link-check`, `submit`, 40 calls); spec-driven trial lists and one page for all six response types (tested in Chromium); the pilot with Gemini 3.8 Flash participants and its gate (a live 3-participant run passed); the designer cycle (brief, the harness's own re-checks, up to 3 pilots, one retry, freeze). Not yet: a real Gemini 4 designer cycle end to end; EIG for bets; designer-proposed links |
 | 3 | Rehearsal on simulated participants with a ground-truth theory across paradigms | Sherlock | |
 | 4 | One live paradigm per chain, with PI review | live | |
 | 5 | Campaign: 3 chains × 3 experiments | live | |
