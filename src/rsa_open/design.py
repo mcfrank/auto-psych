@@ -11,10 +11,11 @@ refused.
 
 **Trial units** (`trial_units`) are the smallest things a design picks, for the paradigm's link:
 a scene (choice); a scene and a probed object (rating); a scene and a target (production); a
-scene, a target and a real message (binary judgment). A probe or target is taken once per class
-of identical objects, since probing either gives the same predictions. Allocation (slider)
-responses are not categorical, and the tool refuses them (`NotImplementedError`) until it has
-an estimator for them.
+scene, a target and a real message (binary judgment); a scene and a probed object (slider:
+the ordered-beta link, its responses binned into 12 outcomes, so the score is a lower bound). A probe or target is taken once per class
+of identical objects, since probing either gives the same predictions. Bets (the allocation
+link) are not categorical, and the tool refuses them (`NotImplementedError`) until it has an
+estimator for them.
 
 **Scoring** (`score_paradigm`): a new paradigm's link has no data yet, so its parameters are
 drawn from the link's prior: ``LINK_SETTINGS`` settings, each paired with the same posterior
@@ -165,7 +166,7 @@ def trial_units(scenes: Sequence[Context], link: LinkLikelihood) -> List[Unit]:
         n_real = ctx.shape[1] - (1 if ctx.needs_sink else 0)
         if link.name == "choice":
             units.append(Unit(i, ()))
-        elif link.name == "rating":
+        elif link.name in ("rating", "ordered_beta"):
             units += [Unit(i, (("probe", r),)) for r in reps]
         elif link.name == "production":
             units += [Unit(i, (("target", r),)) for r in reps]
@@ -202,6 +203,10 @@ def outcome_prob_draws(theory: TheoryModel, link: LinkLikelihood, theory_draws: 
     width = max(max(groups[s].shape) for s in by_group)  # outcome slots never exceed objects, messages, or points
     if link.name == "rating":
         width = max(width, link.options["scale_points"])
+    if link.name == "ordered_beta":
+        from src.rsa_open.links import slider_bin_edges
+
+        width = max(width, len(slider_bin_edges(link.options["total_points"])) + 1)
     width = max(width, 2)
     probs = np.zeros((n_draws, len(units), width), dtype=np.float64)
     valid = np.zeros((len(units), width), dtype=bool)

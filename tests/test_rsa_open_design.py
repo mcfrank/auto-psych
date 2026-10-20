@@ -43,6 +43,17 @@ def test_outcome_probabilities_are_the_likelihood_of_each_outcome(name):
         assert np.exp(ll) == pytest.approx(probs[k], rel=1e-5)
 
 
+def test_slider_bins_are_a_proper_distribution_that_moves_with_the_probability():
+    from src.rsa_open.links import ordered_beta_bin_probs
+
+    params = {"cut_low": -3.0, "cut_gap": 6.0, "phi": 10.0, "lapse": 0.05}
+    probs = np.asarray(ordered_beta_bin_probs(jnp.asarray([0.05, 0.3, 0.6, 0.95]), 100, params))
+    assert probs.shape == (4, 12)
+    np.testing.assert_allclose(probs.sum(axis=1), 1.0, atol=1e-5)
+    means = (probs * np.arange(12)).sum(axis=1)
+    assert np.all(np.diff(means) > 0)
+
+
 def test_trial_units_are_one_per_distinguishable_question():
     from src.rsa_open.design import trial_units
     from src.rsa_open.links import likelihood
@@ -51,6 +62,7 @@ def test_trial_units_are_one_per_distinguishable_question():
     assert len(trial_units(scenes, likelihood("choice"))) == 2
     # A probe or target per class of identical objects: 3 classes, then 2.
     assert len(trial_units(scenes, likelihood("rating", scale_points=5))) == 5
+    assert len(trial_units(scenes, likelihood("ordered_beta", total_points=100))) == 5
     assert len(trial_units(scenes, likelihood("production"))) == 5
     # Judgments: each target with each real message (2 real messages in each scene).
     assert len(trial_units(scenes, likelihood("binary_judgment"))) == 10
@@ -61,7 +73,7 @@ def test_the_tool_refuses_allocation_until_it_can_score_it():
     from src.rsa_open.links import likelihood
 
     with pytest.raises(NotImplementedError, match="allocation"):
-        trial_units([SCENE], likelihood("allocation", total_points=100))
+        trial_units([SCENE], likelihood("allocation", total_points=100))  # a bet
 
 
 @pytest.fixture(scope="module")
@@ -113,6 +125,7 @@ def small_paradigm(response):
     {"type": "rating", "link": "rating", "prompt": "How likely?", "scale_points": 5},
     {"type": "production", "link": "production", "prompt": "Which word would you use?"},
     {"type": "binary_judgment", "link": "binary_judgment", "prompt": "Would the speaker say it?"},
+    {"type": "slider", "link": "ordered_beta", "prompt": "How likely?", "total_points": 100},
 ], ids=lambda r: r["type"])
 def test_the_tool_designs_a_paradigm_and_reports_its_information_per_dollar(context, response, tmp_path):
     from src.rsa_open.design import load_context, score_paradigm

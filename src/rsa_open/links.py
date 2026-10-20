@@ -20,10 +20,21 @@ LogNormal(0, 0.5), median 1) and then mixed with a uniform guess with probabilit
 - **rating**: rate how likely a probed referent is, on a ``scale_points`` scale. An ordered
   probit on the logit of the tempered probability, with equally spaced cutpoints (``center``,
   ``spread``); the lapse is a uniform rating.
-- **allocation**: split ``total_points`` points (or sliders) over the referents. A
+- **allocation**: split ``total_points`` points over the referents (a bet). A
   Dirichlet-multinomial with concentration ``kappa`` times the tempered, lapse-mixed
-  posterior. Exact zeros are ordinary outcomes. This is the betting measure of Frank & Goodman
-  (2012); the paradigm response type is ``slider``.
+  posterior: the discrete counterpart of a Dirichlet, exact for integer bets, with zeros as
+  ordinary outcomes. This is the betting measure of Frank & Goodman (2012); the paradigm
+  response type is ``bet``.
+- **ordered_beta**: one slider (or bet) from 0 to ``total_points`` on a probed referent
+  (Kubinec, 2022): with ``eta`` the logit of its tempered probability q, P(0) = 1 - σ(eta - k1)
+  and P(max) = σ(eta - k2), with cutpoints k1 = ``cut_low`` and k2 = k1 + ``cut_gap``; the
+  interior values 1..max-1 share P(interior) as a **discrete Beta**: proportional to the
+  Beta(q φ, (1 - q) φ) density at v / max (``phi``, the precision), normalized over them, so the
+  slider's max + 1 positions get an exact distribution (a density times 1 / max would not be
+  one: near 0 or 1 a Beta's mass sits between the slider's steps). The lapse is uniform over the
+  max + 1 positions. The paradigm response type is ``slider``. For the design tool the same
+  distribution is binned (`SLIDER_BINS`): coarsening can only lose information, so the tool's
+  score is a lower bound.
 
 The speaker-side links score the theory's **speaker** (`src.rsa_open.fit.TheoryModel`): its own
 ``speaker(params, ctx)`` if it defines one, else the speaker derived from its listener
@@ -56,7 +67,8 @@ import numpyro.distributions as dist
 from src.rsa_open.link_kit import temper, with_uniform
 from src.rsa_open.port import LISTENER
 
-RATING_CLIP = 1e-6  # logit(p) is taken at p clipped to [RATING_CLIP, 1 - RATING_CLIP]
+RATING_CLIP = 1e-6
+SLIDER_BINS = 10  # interior bins of a slider for the design tool; with 0 and max, 12 outcomes  # logit(p) is taken at p clipped to [RATING_CLIP, 1 - RATING_CLIP]
 CONCENTRATION_FLOOR = 1e-8
 
 
@@ -100,9 +112,14 @@ LINKS: Dict[str, Link] = {
                      "tempered probability, equally spaced cutpoints, and a uniform-rating lapse."),
     ),
     "allocation": Link(
-        name="allocation", response_type="slider",
-        description=("Split points (or sliders) over the referents: a Dirichlet-multinomial "
-                     "around the posterior mixed with a uniform guess."),
+        name="allocation", response_type="bet",
+        description=("Split points over the referents (a bet): a Dirichlet-multinomial around the "
+                     "tempered posterior mixed with a uniform guess."),
+    ),
+    "ordered_beta": Link(
+        name="ordered_beta", response_type="slider",
+        description=("A 0-max slider on a probed referent: ordered beta, with point masses at 0 and "
+                     "max and a Beta in between around its tempered probability."),
     ),
     "production": Link(
         name="production", response_type="production",
@@ -142,6 +159,46 @@ def allocation_log_prob(latent, points, total: int, kappa, lapse, temperature=1.
     conc = jnp.maximum(kappa * with_uniform(temper(jnp.asarray(latent), temperature), lapse),
                        CONCENTRATION_FLOOR)
     return dist.DirichletMultinomial(conc, total_count=total).log_prob(points)
+
+
+def _ordered_beta_parts(q, p):
+    """(P(0), P(max), P(interior), Beta a, Beta b) for the probed referent's tempered q."""
+    q = jnp.clip(q, RATING_CLIP, 1.0 - RATING_CLIP)
+    eta = jnp.log(q) - jnp.log1p(-q)
+    k1, k2 = p["cut_low"], p["cut_low"] + p["cut_gap"]
+    p0 = 1.0 - jax.nn.sigmoid(eta - k1)
+    p1 = jax.nn.sigmoid(eta - k2)
+    return p0, p1, 1.0 - p0 - p1, q * p["phi"], (1.0 - q) * p["phi"]
+
+
+def ordered_beta_pmf(q, top: int, p) -> jnp.ndarray:
+    """(..., top + 1): P(each slider position 0..top) for the probed referent's tempered q."""
+    p0, p1, mid, a, b = _ordered_beta_parts(q, p)
+    y = jnp.arange(1, top, dtype=jnp.float32) / top
+    log_density = dist.Beta(a[..., None], b[..., None]).log_prob(y)
+    interior = mid[..., None] * jax.nn.softmax(log_density, axis=-1)
+    core = jnp.concatenate([p0[..., None], interior, p1[..., None]], axis=-1)
+    return (1.0 - p["lapse"]) * core + p["lapse"] / (top + 1)
+
+
+def ordered_beta_log_prob(q, value, top: int, p) -> jnp.ndarray:
+    """log P(slider at ``value`` of 0..top) for the probed referent's tempered probability q."""
+    pmf = ordered_beta_pmf(q, top, p)
+    return jnp.log(jnp.take_along_axis(pmf, jnp.asarray(value)[..., None], axis=-1)[..., 0])
+
+
+def slider_bin_edges(top: int) -> np.ndarray:
+    """Interior bin edges over 1..top-1 (values, inclusive lower, exclusive upper)."""
+    return np.unique(np.linspace(1, top, SLIDER_BINS + 1).round().astype(int))
+
+
+def ordered_beta_bin_probs(q, top: int, p) -> jnp.ndarray:
+    """(..., n_bins + 2): P(0), each interior bin, P(top), from the same distribution as
+    `ordered_beta_pmf`."""
+    pmf = ordered_beta_pmf(q, top, p)
+    edges = slider_bin_edges(top)
+    bins = [pmf[..., lo:hi].sum(axis=-1) for lo, hi in zip(edges[:-1], edges[1:])]
+    return jnp.stack([pmf[..., 0], *bins, pmf[..., top]], axis=-1)
 
 
 @dataclass(frozen=True)
@@ -188,6 +245,15 @@ class LinkLikelihood:
             if sum(pts) != total:
                 raise ValueError(f"trial {i}: points must sum to {total}; got {sum(pts)}")
             return {"points": [int(x) for x in pts]}
+        if self.name == "ordered_beta":
+            top, r = self.options["total_points"], response.get("probe")
+            if not isinstance(r, (int, np.integer)) or not 0 <= r < n:
+                raise ValueError(f"trial {i}: a slider response needs 'probe', an object index "
+                                 f"0..{n - 1}; got {dict(response)}")
+            v = response.get("value")
+            if not isinstance(v, (int, np.integer)) or not 0 <= v <= top:
+                raise ValueError(f"trial {i}: a slider value must be an integer between 0 and {top}; got {v!r}")
+            return {"probe": int(r), "value": int(v)}
         if self.name in SPEAKER_LINKS:
             n_utt = ctx.shape[1]
             n_real = n_utt - (1 if ctx.needs_sink else 0)
@@ -233,6 +299,9 @@ class LinkLikelihood:
         if self.name == "allocation":
             return allocation_log_prob(latent, enc["points"].astype(latent.dtype),
                                        self.options["total_points"], p["kappa"], p["lapse"], p["temperature"])
+        if self.name == "ordered_beta":
+            q = jnp.take_along_axis(temper(latent, p["temperature"]), enc["probe"][:, None], axis=1)[:, 0]
+            return ordered_beta_log_prob(q, enc["value"], self.options["total_points"], p)
         if self.name in SPEAKER_LINKS:
             if self.name == "production":
                 dist_u = _speaker_choice(latent, enc["target"], arrays.is_sink, p)
@@ -244,7 +313,7 @@ class LinkLikelihood:
         raise KeyError(self.name)
 
     # -- outcomes, for the design tool (src.rsa_open.design)
-    CATEGORICAL = ("choice", "rating", "production", "binary_judgment")
+    CATEGORICAL = ("choice", "rating", "production", "binary_judgment", "ordered_beta")  # ordered_beta: binned
 
     def outcome_probs(self, latent: jnp.ndarray, p: Mapping[str, Any], unit: Mapping[str, jnp.ndarray],
                       arrays, classes) -> jnp.ndarray:
@@ -259,6 +328,9 @@ class LinkLikelihood:
             tempered = temper(latent, p["temperature"])
             pr = jnp.take_along_axis(tempered, unit["probe"][:, None], axis=1)[:, 0]
             return rating_probs(pr, p["center"], p["spread"], p["lapse"], self.options["scale_points"])
+        if self.name == "ordered_beta":
+            q = jnp.take_along_axis(temper(latent, p["temperature"]), unit["probe"][:, None], axis=1)[:, 0]
+            return ordered_beta_bin_probs(q, self.options["total_points"], p)
         if self.name == "production":
             return _speaker_choice(latent, unit["target"], arrays.is_sink, p)
         if self.name == "binary_judgment":
@@ -275,6 +347,9 @@ class LinkLikelihood:
             return c == jnp.arange(c.shape[1])[None, :]  # a class sits at its first object
         if self.name == "rating":
             return jnp.ones((unit["probe"].shape[0], self.options["scale_points"]), dtype=bool)
+        if self.name == "ordered_beta":
+            return jnp.ones((unit["probe"].shape[0], len(slider_bin_edges(self.options["total_points"])) + 1),
+                            dtype=bool)
         if self.name == "production":
             return arrays.is_sink < 0.5
         if self.name == "binary_judgment":
@@ -308,6 +383,11 @@ class LinkLikelihood:
                                CONCENTRATION_FLOOR)
             pts = dist.DirichletMultinomial(conc, total_count=self.options["total_points"]).sample(key)
             return [{"points": [int(x) for x in row]} for row in np.asarray(pts)]
+        if self.name == "ordered_beta":
+            top = self.options["total_points"]
+            q = temper(latent, p["temperature"])[jnp.arange(latent.shape[0]), jnp.asarray(probes)]
+            values = np.asarray(jax.random.categorical(key, jnp.log(ordered_beta_pmf(q, top, p)), axis=-1))
+            return [{"probe": int(r), "value": int(v)} for r, v in zip(probes, values)]
         if self.name == "production":
             dist_u = _speaker_choice(latent, jnp.asarray(probes), arrays.is_sink, p)
             said = jax.random.categorical(key, _safe_log(dist_u), axis=-1)
@@ -365,6 +445,15 @@ def likelihood(name: str, *, scale_points: Optional[int] = None,
             name, link.response_type,
             {"kappa": dist.LogNormal(float(np.log(10.0)), 1.0), **_shared_params()},
             {"kappa": 10.0, **SHARED_REFERENCE},
+            {"total_points": int(total_points)})
+    if name == "ordered_beta":
+        if total_points is None:
+            raise ValueError("the ordered_beta link needs total_points (the slider's maximum)")
+        return LinkLikelihood(
+            name, link.response_type,
+            {"cut_low": dist.Normal(-3.0, 1.5), "cut_gap": dist.LogNormal(float(np.log(6.0)), 0.5),
+             "phi": dist.LogNormal(float(np.log(10.0)), 1.0), **_shared_params()},
+            {"cut_low": -3.0, "cut_gap": 6.0, "phi": 10.0, **SHARED_REFERENCE},
             {"total_points": int(total_points)})
     if name == "production":
         return LinkLikelihood(name, link.response_type, {**_shared_params()}, {**SHARED_REFERENCE})

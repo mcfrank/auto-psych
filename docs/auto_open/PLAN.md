@@ -51,6 +51,7 @@ with the closed campaign's on paradigms neither campaign saw.
 | Pilot participants | Gemini 3.8 Flash | cost |
 | Response process | Every link has a decision temperature and a lapse; a temperature written into a ported theory is cut (one hand port) | standard in a link; equal flexibility for every theory, old ones included |
 | Chain 2's final | Ported whole (rule b); its prior-mixing lapse stays in the theory as `theory_lapse`, and the link adds its uniform lapse | the theory's mixture must earn its parameter |
+| Sliders and bets (PI 2026-10-21) | A one-referent slider or bet uses the ordered-beta link (a discrete Beta between point masses at 0 and max); a bet over all referents (F&G 2012) keeps the Dirichlet-multinomial, response type `bet` | sliders and bets are prominent in the RSA literature; endpoints pile up in real slider data |
 | Speakers | Every theory has a speaker: its own `speaker(params, ctx)`, or the one derived from its listener, `speaker(u | r) ∝ listener(r | u)` over the scene's real messages (§3.1) | the charter covers what a speaker should say; a derived speaker is specific to each theory, where S0/S1 would give every listener-only theory the same one |
 | Designer limits | Per cycle: 2 h of wall clock, 40 tool calls, at most 3 simulated pilots. `submit` refuses a paradigm whose EIG per dollar is below half the closed campaign's paradigm's at the same budget, under the same theories. A failed cycle gets **one retry** with the reason in the brief; a second failure stops the chain and reports. Design bounds: N ≥ 100, at most 15 minutes per person | bounded cost; informative without dictating the design; fail loudly, no fallback design |
 
@@ -95,7 +96,8 @@ paradigm. The first library, written and tested before the campaign:
 |---|---|---|
 | choice | pick one referent | listener posterior, with a lapse to uniform |
 | rating | Likert-type rating of one referent | ordered probit on the posterior probability |
-| slider / allocation | points or a slider over referents | Dirichlet or beta around the posterior |
+| slider (`ordered_beta`) | a 0–max slider or bet on one referent | ordered beta (Kubinec, 2022): point masses at 0 and max, a discrete Beta between, around its tempered probability |
+| bet (`allocation`) | split points over the referents (Frank & Goodman, 2012) | Dirichlet-multinomial around the tempered posterior |
 | production | pick a message for a target | speaker distribution, with a lapse |
 | binary judgment | "would the speaker say X?" | probit on the logit of the speaker probability, with a bias |
 
@@ -238,10 +240,11 @@ fits, so that it designs against the theories rather than individual people.
   selection, then the joint EIG and power on fresh scenarios.
 - **The floor** is half the bits per dollar of the closed paradigm (1,597 scenes, 200 × 13 of
   52, the choice link) under the same theories.
-- **Allocation (slider) paradigms are refused** until there is an estimator for responses that
-  are not categorical.
+- **Sliders** (the ordered-beta link) are scored on their responses binned into 12 outcomes
+  (0, ten interior bins, max). Coarsening can only lose information, so the score is a lower
+  bound. **Bets** (allocation) are refused until there is an estimator for them.
 
-**Link parameters, a decision for the PI.** A new paradigm's link has no data, so its parameters
+**Link parameters (approved by the PI, 2026-10-21).** A new paradigm's link has no data, so its parameters
 come from the link's prior. Averaging them inside each theory's evidence (the estimator as
 written) is a draw lottery: with diffuse nuisance parameters and ~1,000 responses, a theory's
 evidence is whichever single draw happens to fit. The measurements, on a rating paradigm with

@@ -56,7 +56,7 @@ MAX_POOL = 6000
 MAX_SVG_CHARS = 20_000
 MAX_SCALE_POINTS = 11
 MAX_TOTAL_POINTS = 1000
-RESPONSE_TYPES = ("choice", "rating", "slider", "production", "binary_judgment")
+RESPONSE_TYPES = ("choice", "rating", "slider", "bet", "production", "binary_judgment")
 
 SVG_NS = "http://www.w3.org/2000/svg"
 SVG_ELEMENTS = {
@@ -134,13 +134,14 @@ class SceneSpace(_Strict):
 
 
 class Response(_Strict):
-    type: Literal["choice", "rating", "slider", "production", "binary_judgment"]
+    type: Literal["choice", "rating", "slider", "bet", "production", "binary_judgment"]
     link: str
     prompt: str
     scale_points: Optional[int] = None
     """rating: the number of points on the scale (2-11), frozen with the paradigm."""
     total_points: Optional[int] = None
-    """slider: the points split over the referents (2-1000), frozen with the paradigm."""
+    """slider: its maximum (a 0-max slider on one referent); bet: the points split over the
+    referents. 2-1000, frozen with the paradigm."""
 
 
 class Design(_Strict):
@@ -347,11 +348,11 @@ def _problems(p: Paradigm) -> List[str]:
             problems.append(f"response.scale_points must be 2-{MAX_SCALE_POINTS} for a rating response")
     elif r.scale_points is not None:
         problems.append("response.scale_points applies only to rating responses")
-    if r.type == "slider":
+    if r.type in ("slider", "bet"):
         if r.total_points is None or not 2 <= r.total_points <= MAX_TOTAL_POINTS:
-            problems.append(f"response.total_points must be 2-{MAX_TOTAL_POINTS} for a slider response")
+            problems.append(f"response.total_points must be 2-{MAX_TOTAL_POINTS} for a {r.type} response")
     elif r.total_points is not None:
-        problems.append("response.total_points applies only to slider responses")
+        problems.append("response.total_points applies only to slider and bet responses")
 
     checks = p.instructions.comprehension_checks
     if not checks:

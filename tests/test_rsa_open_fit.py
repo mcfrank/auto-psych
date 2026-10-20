@@ -84,6 +84,8 @@ def test_allocation_probabilities_over_every_split_sum_to_one():
     ("allocation", {"points": [50, 40]}, "one entry per object"),
     ("allocation", {"points": [50, 40, 20]}, "sum to 100"),
     ("allocation", {"points": [60, 50, -10]}, "negative"),
+    ("ordered_beta", {"probe": 0, "value": 101}, "between 0 and 100"),
+    ("ordered_beta", {"probe": 3, "value": 50}, "probe"),
 ])
 def test_malformed_responses_fail_loudly(link, response, problem):
     from src.rsa.context import Context
@@ -106,7 +108,7 @@ def test_simulated_responses_have_the_link_s_form(contexts, theory):
     from src.rsa_open.fit import OpenData, TheoryModel, simulate
     from src.rsa_open.links import likelihood
 
-    for name in ("choice", "rating", "allocation"):
+    for name in ("choice", "rating", "allocation", "ordered_beta"):
         link = likelihood(name, scale_points=7, total_points=100)
         params = {**{k: v[0] for k, v in _first_draw(TheoryModel(theory).params).items()},
                   **link.reference_params}
@@ -119,7 +121,7 @@ def _first_draw(params):
 
 
 @pytest.mark.slow  # NUTS on simulated data, once per link
-@pytest.mark.parametrize("name", ["choice", "rating", "allocation"])
+@pytest.mark.parametrize("name", ["choice", "rating", "allocation", "ordered_beta"])
 def test_each_link_recovers_known_parameters_from_simulated_data(name, theory):
     from src.rsa_open.fit import recovery_check
     from src.rsa_open.links import likelihood
@@ -158,3 +160,15 @@ def test_a_theory_without_parameters_is_scored_at_every_draw(contexts, tmp_path)
     assert ll.shape == (2, len(contexts)) and np.all(np.isfinite(ll))
     one = np.asarray(trial_log_lik(theory, link, data, {"lapse": 0.2, "temperature": 2.0}))
     np.testing.assert_allclose(ll[1], one, rtol=1e-5)
+
+
+def test_an_ordered_beta_slider_puts_mass_at_its_ends_and_sums_to_one():
+    from src.rsa_open.links import ordered_beta_log_prob
+
+    params = {"cut_low": -3.0, "cut_gap": 6.0, "phi": 10.0, "lapse": 0.05}
+    values = jnp.arange(101)
+    for q, at_zero, at_top in ((0.02, True, False), (0.5, False, False), (0.98, False, True)):
+        probs = np.exp(np.asarray(ordered_beta_log_prob(jnp.full(101, q), values, 100, params)))
+        assert probs.sum() == pytest.approx(1.0, abs=1e-5)  # a discrete Beta over the interior
+        assert (probs[0] > 0.3) == at_zero and (probs[100] > 0.3) == at_top
+        assert abs((probs * np.arange(101)).sum() / probs.sum() / 100 - q) < 0.15
