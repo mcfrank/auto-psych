@@ -1,0 +1,2 @@
+model,elpd,se_people,se_two_way,elpd_subsample,max_pareto_k,n_k_over_0.7,n_person_vectors,n_people,n_trials,is_ess_share_min,is_ess_share_median,random_seed,seconds
+graded_periodicity_personal_ideal,-4153.201318688387,113.8077427208282,153.53199170069718,-4154.018997328098,,0,2,118,7680,0.1945503513912155,0.4314456724220762,20261003,500

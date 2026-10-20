@@ -1,0 +1,2 @@
+model,elpd,se_people,se_two_way,elpd_subsample,max_pareto_k,n_k_over_0.7,n_person_vectors,n_people,n_trials,is_ess_share_min,is_ess_share_median,random_seed,seconds
+most_lopsided_stretch_aversion,-3436.052798516701,111.45062770092485,147.10965787915904,-3441.953567464825,0.6502258433727328,0,5,120,7680,0.03929107617314181,0.14658677556768515,20261003,435

@@ -1,0 +1,13 @@
+{
+  "model": "individual_streak_aversion_lapse__pooled",
+  "data_run": 2,
+  "models_dir": "data/results/human_experiment_sr-oct26/analysis/fits/transfer/run1_on_run2/models",
+  "seed": 20261003,
+  "elpd_loo": -4358.9992333622395,
+  "tried": [
+    {
+      "seed": 20261003,
+      "problems": []
+    }
+  ]
+}

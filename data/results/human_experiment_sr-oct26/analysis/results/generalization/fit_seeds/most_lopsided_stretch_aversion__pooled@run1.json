@@ -1,0 +1,13 @@
+{
+  "model": "most_lopsided_stretch_aversion__pooled",
+  "data_run": 1,
+  "models_dir": "data/results/human_experiment_sr-oct26/analysis/fits/transfer/run1_on_run1/models",
+  "seed": 20261003,
+  "elpd_loo": -4407.849624866966,
+  "tried": [
+    {
+      "seed": 20261003,
+      "problems": []
+    }
+  ]
+}

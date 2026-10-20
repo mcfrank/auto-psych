@@ -1,0 +1,2 @@
+model,elpd,se_people,se_two_way,elpd_subsample,max_pareto_k,n_k_over_0.7,n_person_vectors,n_people,n_trials,is_ess_share_min,is_ess_share_median,random_seed,seconds
+tally_span_switch_ideal_periodic_unit,-3966.2321358213358,115.55917833202571,154.32996929731422,-3971.1706784406665,,0,4,118,7680,0.027071865638156795,0.16907730433359447,20261003,486

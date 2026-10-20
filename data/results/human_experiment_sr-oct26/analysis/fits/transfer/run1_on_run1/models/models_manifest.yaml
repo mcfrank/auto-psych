@@ -1,0 +1,11 @@
+models:
+  - name: falk_konold_dp
+  - name: finite_experience_occurrence
+  - name: local_representativeness
+  - name: motif_stack
+  - name: individual_streak_aversion_lapse
+  - name: most_lopsided_stretch_aversion
+  - name: personal_pattern_detection_gain
+  - name: individual_streak_aversion_lapse__pooled
+  - name: most_lopsided_stretch_aversion__pooled
+  - name: personal_pattern_detection_gain__pooled

@@ -1,0 +1,21 @@
+{
+  "model": "edge_streak_primacy_recency_pattern_rule",
+  "data_run": 1,
+  "models_dir": "data/results/human_experiment_sr-oct26/analysis/fits/transfer/run2_on_run1/models",
+  "seed": 6,
+  "elpd_loo": -3594.6391002617556,
+  "tried": [
+    {
+      "seed": 20261003,
+      "problems": [
+        "3001 divergent transitions of 12000",
+        "max R-hat 1.528 > 1.05",
+        "min bulk ESS 7 < 100"
+      ]
+    },
+    {
+      "seed": 6,
+      "problems": []
+    }
+  ]
+}

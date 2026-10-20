@@ -1,0 +1,13 @@
+{
+  "model": "motif_stack",
+  "data_run": 1,
+  "models_dir": "data/results/human_experiment_sr-oct26/analysis/fits/transfer/run1_on_run1/models",
+  "seed": 6,
+  "elpd_loo": -4608.7167237835765,
+  "tried": [
+    {
+      "seed": 6,
+      "problems": []
+    }
+  ]
+}

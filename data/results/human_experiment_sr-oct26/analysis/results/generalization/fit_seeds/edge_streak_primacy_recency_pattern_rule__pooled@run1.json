@@ -1,0 +1,13 @@
+{
+  "model": "edge_streak_primacy_recency_pattern_rule__pooled",
+  "data_run": 1,
+  "models_dir": "data/results/human_experiment_sr-oct26/analysis/fits/transfer/run2_on_run1/models",
+  "seed": 20261003,
+  "elpd_loo": -4469.920567509165,
+  "tried": [
+    {
+      "seed": 20261003,
+      "problems": []
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+model,elpd,se_people,se_two_way,elpd_subsample,max_pareto_k,n_k_over_0.7,n_person_vectors,n_people,n_trials,is_ess_share_min,is_ess_share_median,random_seed,seconds
+personal_pattern_detection_gain,-3644.919959836692,115.90286515259828,152.18683648855296,-3649.78366955711,0.49665187667033106,0,6,118,7680,0.043174876926991734,0.12672113795822534,20261003,488

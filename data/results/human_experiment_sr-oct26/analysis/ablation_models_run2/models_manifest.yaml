@@ -1,0 +1,11 @@
+models:
+  - name: falk_konold_dp__personal
+  - name: finite_experience_occurrence__personal
+  - name: local_representativeness__personal
+  - name: motif_stack__personal
+  - name: graded_periodicity_personal_ideal__pooled
+  - name: graded_periodicity_personal_ideal__sens
+  - name: tally_span_switch_ideal_periodic_unit__pooled
+  - name: tally_span_switch_ideal_periodic_unit__sens
+  - name: edge_streak_primacy_recency_pattern_rule__pooled
+  - name: edge_streak_primacy_recency_pattern_rule__sens

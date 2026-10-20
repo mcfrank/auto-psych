@@ -1,0 +1,2 @@
+model,elpd,se_people,se_two_way,elpd_subsample,max_pareto_k,n_k_over_0.7,n_person_vectors,n_people,n_trials,is_ess_share_min,is_ess_share_median,random_seed,seconds
+individual_streak_aversion_lapse,-3560.214054105287,102.57322114806306,139.69666894949302,-3560.2069907500336,,0,4,120,7680,0.06641661301858892,0.179978878825305,20261003,399

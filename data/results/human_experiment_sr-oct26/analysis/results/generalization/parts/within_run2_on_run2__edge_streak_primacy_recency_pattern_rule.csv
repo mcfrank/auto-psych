@@ -1,0 +1,2 @@
+model,elpd,se_people,se_two_way,elpd_subsample,max_pareto_k,n_k_over_0.7,n_person_vectors,n_people,n_trials,is_ess_share_min,is_ess_share_median,random_seed,seconds
+edge_streak_primacy_recency_pattern_rule,-3471.391039603056,109.47430475354021,147.85742635298996,-3474.673288323291,0.38821601111905235,0,6,120,7680,0.041829630578510135,0.13693063244951537,6,489
