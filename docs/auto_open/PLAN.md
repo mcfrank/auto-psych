@@ -49,6 +49,7 @@ with the closed campaign's on paradigms neither campaign saw.
 | Budget parity | **Equal dollars** per experiment: the closed campaign's ~$133 (200 × $0.50 × Prolific's 1.33), about 600 participant-minutes at the same hourly rate. The designer chooses N and length within it | the comparison is of methods at equal cost |
 | Old-data guard | k = **4** clustered SEs, as the closed campaign's guard | |
 | Pilot participants | Gemini 3.8 Flash | cost |
+| Designer limits | Per cycle: 2 h of wall clock, 40 tool calls, at most 3 simulated pilots. `submit` refuses a paradigm whose EIG per dollar is below half the closed campaign's paradigm's at the same budget, under the same theories. A failed cycle gets **one retry** with the reason in the brief; a second failure stops the chain and reports. Design bounds: N ≥ 100, at most 15 minutes per person | bounded cost; informative without dictating the design; fail loudly, no fallback design |
 
 ## 1. Claims
 
@@ -225,19 +226,14 @@ Gemini 3.8 Flash, the theorist, runs as before.
 
 ## 10. Open
 
-1. **The designer's limits** (proposal, 2026-10-21): per cycle, 2 h of wall clock, 40 tool
-   calls, at most 3 simulated pilots. `submit` refuses a paradigm whose EIG per dollar is below
-   half the closed campaign's paradigm's at the same budget, under the same theories. A cycle
-   that fails gets one retry with the reason in its brief; a second failure stops the chain.
-   Bounds on the design: N ≥ 100, at most 15 minutes per person.
-2. **A decision temperature** (§3.1): keep the mechanical port (the temperature is part of that
+1. **A decision temperature** (§3.1): keep the mechanical port (the temperature is part of that
    one seed's theory), or give the choice link a temperature for every theory (every port then
    reproduces its original at temperature 1, but each gains a parameter).
-3. **Chain 2's final** (§3.1): its prior-mixing lapse stays in the theory, as a latent mechanism,
+2. **Chain 2's final** (§3.1): its prior-mixing lapse stays in the theory, as a latent mechanism,
    and the choice link adds the uniform lapse every other theory has (one more parameter, and
    its predictions equal the original's at link lapse 0); or it is ported by hand.
-4. **Speakers.** The production and "would the speaker say X?" links need a theory's speaker
+3. **Speakers.** The production and "would the speaker say X?" links need a theory's speaker
    distribution. RSA theories have one; heuristic listeners (`lexical_preemption_heuristic`,
    `oddity_heuristic_listener`) do not. Must every theory define a speaker, or is a theory
    without one not scored on speaker-side paradigms?
-5. The bakeoff's hypotheses and power, at registration.
+4. The bakeoff's hypotheses and power, at registration.
