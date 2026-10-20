@@ -51,7 +51,7 @@ with the closed campaign's on paradigms neither campaign saw.
 | Pilot participants | Gemini 3.8 Flash | cost |
 | Response process | Every link has a decision temperature and a lapse; a temperature written into a ported theory is cut (one hand port) | standard in a link; equal flexibility for every theory, old ones included |
 | Chain 2's final | Ported whole (rule b); its prior-mixing lapse stays in the theory as `theory_lapse`, and the link adds its uniform lapse | the theory's mixture must earn its parameter |
-| Speakers | Every theory must define a speaker; the default for a theory without one is to be confirmed (§10) | the charter covers what a speaker should say |
+| Speakers | Every theory has a speaker: its own `speaker(params, ctx)`, or the one derived from its listener, `speaker(u | r) ∝ listener(r | u)` over the scene's real messages (§3.1) | the charter covers what a speaker should say; a derived speaker is specific to each theory, where S0/S1 would give every listener-only theory the same one |
 | Designer limits | Per cycle: 2 h of wall clock, 40 tool calls, at most 3 simulated pilots. `submit` refuses a paradigm whose EIG per dollar is below half the closed campaign's paradigm's at the same budget, under the same theories. A failed cycle gets **one retry** with the reason in the brief; a second failure stops the chain and reports. Design bounds: N ≥ 100, at most 15 minutes per person | bounded cost; informative without dictating the design; fail loudly, no fallback design |
 
 ## 1. Claims
@@ -97,7 +97,7 @@ paradigm. The first library, written and tested before the campaign:
 | rating | Likert-type rating of one referent | ordered probit on the posterior probability |
 | slider / allocation | points or a slider over referents | Dirichlet or beta around the posterior |
 | production | pick a message for a target | speaker distribution, with a lapse |
-| binary judgment | "would the speaker say X?" | Bernoulli on the speaker probability |
+| binary judgment | "would the speaker say X?" | probit on the logit of the speaker probability, with a bias |
 
 Each library link has a recovery test (simulate from known parameters, refit, recover), and the
 choice link must reproduce today's forced-choice likelihood exactly. A designer-proposed link
@@ -186,12 +186,17 @@ unchanged.
 
 Each port equals its original at those values, and every port gains the link's temperature.
 
-**Speakers** (PI 2026-10-21): every theory must define a speaker, because the production and
-"would the speaker say X?" links need one. For a theory without one, the proposal is
-`speaker(r → u) ∝ listener(r | u)`, taken over the scene's messages: the speaker who expects
-this theory's own listener. It has no new parameter, because the link's temperature is its
-rationality. For an RSA listener at depth n this is the speaker at depth n + 1; for a heuristic
-listener it is the speaker that heuristic implies. The rule is to be confirmed (§10).
+**Speakers** (PI 2026-10-21; `src.rsa_open.fit.TheoryModel`). Every theory has a speaker,
+because the production and "would the speaker say X?" links need one: its own
+`speaker(params, ctx)` (an N_UTT × N_OBJ array, column r the distribution over messages for
+target r), or the speaker derived from its listener:
+`speaker(u | r) ∝ listener(r | u)` over the scene's real messages, never the sink. That is the
+speaker who expects this theory's own listener. It has no parameter of its own, because a
+speaker link's temperature is its rationality. For an RSA listener at depth n it is the speaker
+at depth n + 1; for a heuristic listener, the speaker the heuristic implies. When no real
+message is true of the target for this listener, the speaker is indifferent: uniform over the
+real messages. Every ported theory uses the derived speaker; the open campaign's theorists may
+write their own.
 
 ## 4. The designer
 
@@ -264,7 +269,7 @@ The existing protocol covers the rest (PI, 2026-10-20).
 | Phase | What | Where | Status |
 |---|---|---|---|
 | 0 | This plan; Gemini 4 smoke test | cloud | plan written; smoke test below |
-| 1 | Paradigm-spec schema and validator; link library with recovery tests; theory + link refactor; port the seeds and closed finals (exact-equivalence tests) | cloud | port and choice link done (`src/rsa_open/`); 19 of 20 ported exactly; the rest waits on §10. Paradigm spec and validator done (`src/rsa_open/paradigm.py`): budget, pay rate, N and length bounds, scene-pool bound (≤ 6 objects, ≤ 4 features, ≤ 6,000 scenes), SVG safety, content rules, link check; the closed paradigm written as a spec gives the closed design pool exactly. Fitting path for any link (`src/rsa_open/fit.py`), leaving the closed fit untouched; choice, rating and allocation links done and each passes the recovery test (3 replicates). Next: production and binary-judgment links, once §10's speaker question is settled |
+| 1 | Paradigm-spec schema and validator; link library with recovery tests; theory + link refactor; port the seeds and closed finals (exact-equivalence tests) | cloud | **done** (`src/rsa_open/`): all 20 models port (18 by rule a, chain 2's final by rule b, one by hand) and equal their originals; five links (choice, rating, allocation, production, binary judgment), each with a temperature and a lapse, each passing the recovery test; every theory has a speaker; the paradigm spec and its validator. Not yet: freezing the ported closed finals (with their derived speakers) before the campaign |
 | 2 | Designer tools as an agent CLI; designer brief; implementer; simulated pilot | cloud | |
 | 3 | Rehearsal on simulated participants with a ground-truth theory across paradigms | Sherlock | |
 | 4 | One live paradigm per chain, with PI review | live | |
@@ -280,7 +285,7 @@ Gemini 3.8 Flash, the theorist, runs as before.
 
 ## 10. Open
 
-1. **The default speaker** (§3.1): the derived speaker, `speaker(r → u) ∝ listener(r | u)`,
-   for every theory without one, ported or new? Or S0/S1 from the literal semantics (the same
-   for every theory)?
+1. **Designing trials beyond the scene.** A rating's probed object, and a speaker trial's target
+   and judged message, are design choices too: the EIG tools must score (scene, probe or target,
+   message) units, not scenes alone (Phase 2).
 2. The bakeoff's hypotheses and power, at registration.

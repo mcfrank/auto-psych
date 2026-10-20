@@ -6,7 +6,9 @@ trial's latent posterior over the objects of its scene, and the link scores the 
 closed fit is left untouched, so the closed campaign's frozen results cannot move; under the
 choice link the two give the same per-trial log-likelihood (tests/test_rsa_open_fit.py).
 
-- `TheoryModel` loads a theory file (``PARAMS``, ``listener``) with the closed loader.
+- `TheoryModel` loads a theory file (``PARAMS``, ``listener``, optionally ``speaker``) with the
+  closed loader. Every theory has a speaker (PI 2026-10-21): its own, or the one derived from
+  its listener (`TheoryModel.group_speaker`).
 - `OpenData` checks every response against its scene and its link, and groups the trials by
   display shape.
 - `fit` samples theory and link parameters jointly with NUTS (the closed fit's settings) and
@@ -40,7 +42,18 @@ OBSERVED_SITE = "response"
 
 
 class TheoryModel(RSAModel):
-    """A theory file, loaded like a model file but evaluated through ``listener``."""
+    """A theory file, loaded like a model file but evaluated through ``listener``.
+
+    Its speaker (``group_speaker``) is the file's own ``speaker(params, ctx)``, an
+    (N_UTT, N_OBJ) array whose column r is P(message | target r), when it defines one; else the
+    speaker derived from its listener:
+
+        speaker(u | r) ∝ listener(r | u)   over the scene's real messages (never the sink),
+
+    the speaker who expects this theory's listener. It has no parameter of its own: a speaker
+    link's temperature is its rationality. When no real message is true of r for this listener
+    (every listener(r | u) is 0), the speaker is indifferent: uniform over the real messages.
+    """
 
     def _choice_probs(self, shape: Tuple[int, int]):
         fn = getattr(self.module(shape), LISTENER, None)
@@ -49,6 +62,49 @@ class TheoryModel(RSAModel):
                 f"{self.path.name} must define {LISTENER}(params, ctx) returning the listener's "
                 f"posterior over the objects, shape (N_OBJ,)")
         return fn
+
+    def has_own_speaker(self) -> bool:
+        return callable(getattr(self._any_module(), "speaker", None))
+
+    def _speaker_fn(self, shape: Tuple[int, int]):
+        own = getattr(self.module(shape), "speaker", None)
+        if callable(own):
+            return own
+        listener = self._choice_probs(shape)
+
+        def derived(params, ctx):
+            heard = lambda u: listener(params, ctx._replace(utterance=u, is_prior=jnp.zeros_like(ctx.is_prior)))  # noqa: E731
+            table = jax.vmap(heard)(jnp.arange(ctx.lex.shape[0], dtype=ctx.utterance.dtype))  # (N_UTT, N_OBJ)
+            real = (1.0 - ctx.is_sink)[:, None]
+            weights = table * real
+            total = weights.sum(axis=0, keepdims=True)
+            indifferent = jnp.broadcast_to(real / real.sum(), weights.shape)
+            return jnp.where(total > 0, weights / jnp.where(total > 0, total, 1.0), indifferent)
+
+        return derived
+
+    def group_speaker(self, params: Mapping[str, Any], group: ShapeGroup) -> jnp.ndarray:
+        """(trials, N_UTT, N_OBJ) speaker distributions for one shape group."""
+        key = ("speaker", group.shape)
+        if key not in self._jitted:
+            fn = self._speaker_fn(group.shape)
+            self._jitted[key] = jax.jit(lambda p, arrays: jax.vmap(lambda ctx: fn(p, ctx))(arrays))
+        return self._jitted[key](dict(params), group.arrays)
+
+    def draws_speaker(self, params: Mapping[str, Any], group: ShapeGroup) -> jnp.ndarray:
+        """(draws, trials, N_UTT, N_OBJ) for a batch of parameter draws."""
+        key = ("speaker draws", group.shape)
+        if key not in self._jitted:
+            fn = self._speaker_fn(group.shape)
+            per_draw = lambda p, arrays: jax.vmap(lambda ctx: fn(p, ctx))(arrays)  # noqa: E731
+            self._jitted[key] = jax.jit(jax.vmap(per_draw, in_axes=(0, None)))
+        return self._jitted[key](dict(params), group.arrays)
+
+
+def _latent(theory: TheoryModel, link: LinkLikelihood, params, group: ShapeGroup, draws: bool = False):
+    if link.side == "speaker":
+        return (theory.draws_speaker if draws else theory.group_speaker)(params, group)
+    return (theory.draws_probs if draws else theory.group_probs)(params, group)
 
 
 @dataclass(frozen=True)
@@ -82,8 +138,8 @@ def trial_log_lik(theory: RSAModel, link: LinkLikelihood, data: OpenData,
     tp, lp = _split(theory, link, params)
     out = jnp.zeros(data.n_trials)
     for group, enc in zip(data.groups, data.encoded):
-        latent = theory.group_probs(tp, group)
-        out = out.at[jnp.asarray(group.indices)].set(link.log_lik(latent, lp, enc, jnp.asarray(group.classes)))
+        ll = link.log_lik(_latent(theory, link, tp, group), lp, enc, group.arrays, jnp.asarray(group.classes))
+        out = out.at[jnp.asarray(group.indices)].set(ll)
     return out
 
 
@@ -96,7 +152,8 @@ def _numpyro_model(theory: RSAModel, link: LinkLikelihood, data: OpenData):
     tp, lp = _split(theory, link, params)
     total = 0.0
     for group, enc in zip(data.groups, data.encoded):
-        total = total + jnp.sum(link.log_lik(theory.group_probs(tp, group), lp, enc, jnp.asarray(group.classes)))
+        total = total + jnp.sum(link.log_lik(_latent(theory, link, tp, group), lp, enc, group.arrays,
+                                             jnp.asarray(group.classes)))
     numpyro.factor(OBSERVED_SITE, total)
 
 
@@ -105,14 +162,13 @@ def pointwise_log_lik(theory: RSAModel, link: LinkLikelihood, data: OpenData,
     """(draws, trials) log-likelihood of each response at each posterior draw."""
     n_draws = len(next(iter(flat.values())))
     out = np.empty((n_draws, data.n_trials), dtype=np.float32)
-    per_draw = jax.vmap(lambda latent, lp, enc, classes: link.log_lik(latent, lp, enc, classes),
-                        in_axes=(0, 0, None, None))
     for group, enc in zip(data.groups, data.encoded):
+        classes = jnp.asarray(group.classes)
+        per_draw = jax.vmap(lambda latent, lp: link.log_lik(latent, lp, enc, group.arrays, classes))
         start = 0
         for n, params in draw_batches(flat, np.arange(n_draws)):
             tp, lp = _split(theory, link, params)
-            latent = theory.draws_probs(tp, group)
-            out[start:start + n, group.indices] = np.asarray(per_draw(latent, lp, enc, jnp.asarray(group.classes)))[:n]
+            out[start:start + n, group.indices] = np.asarray(per_draw(_latent(theory, link, tp, group, True), lp))[:n]
             start += n
     return out
 
@@ -150,16 +206,20 @@ def fit(theory: RSAModel, link: LinkLikelihood, data: OpenData,
 
 def simulate(theory: RSAModel, link: LinkLikelihood, contexts: Sequence[Context],
              params: Mapping[str, Any], key, probes: Optional[Sequence[int]] = None) -> List[dict]:
-    """One simulated response per scene, in input order. ``probes`` (for ratings) default to a
-    random object per trial."""
+    """One simulated response per scene, in input order. ``probes`` (the probed object of a
+    rating, the target of a speaker link) default to a random object per trial; a judgment's
+    message is a random real message of the scene."""
     tp, lp = _split(theory, link, {k: jnp.asarray(np.asarray(v).reshape(())) for k, v in params.items()})
     rng = np.random.default_rng(np.asarray(jax.random.randint(key, (), 0, 2**31 - 1)).item())
     if probes is None:
         probes = [int(rng.integers(ctx.shape[0])) for ctx in contexts]
+    utterances = np.asarray([int(rng.integers(ctx.shape[1] - (1 if ctx.needs_sink else 0))) for ctx in contexts])
     out: List[Optional[dict]] = [None] * len(contexts)
     for k, group in zip(jax.random.split(key, len(contexts) or 1), group_by_shape(contexts).values()):
-        latent = theory.group_probs(tp, group)
-        for i, response in zip(group.indices, link.sample(k, latent, lp, np.asarray(probes)[group.indices])):
+        latent = _latent(theory, link, tp, group)
+        responses = link.sample(k, latent, lp, np.asarray(probes)[group.indices], group.arrays,
+                                utterances[group.indices])
+        for i, response in zip(group.indices, responses):
             out[i] = response
     return out  # type: ignore[return-value]
 

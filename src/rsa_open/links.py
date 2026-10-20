@@ -25,6 +25,17 @@ LogNormal(0, 0.5), median 1) and then mixed with a uniform guess with probabilit
   posterior. Exact zeros are ordinary outcomes. This is the betting measure of Frank & Goodman
   (2012); the paradigm response type is ``slider``.
 
+The speaker-side links score the theory's **speaker** (`src.rsa_open.fit.TheoryModel`): its own
+``speaker(params, ctx)`` if it defines one, else the speaker derived from its listener
+(PI 2026-10-21). Their responses name a ``target`` object and an ``utterance``, an index into
+the scene's real messages (never the sink).
+
+- **production**: choose a message for a target. The tempered speaker distribution over the
+  real messages, mixed with a uniform choice among them (``lapse``).
+- **binary_judgment**: "would the speaker say this message for this one?" The rating link at
+  two points on the tempered speaker probability: P(yes) = Φ(logit(q) - ``center``), with a
+  random yes/no lapse.
+
 The choice link also has a **model-file form**: `compose` puts a theory and the link together
 into an ordinary RSA model file (``PARAMS`` and ``choice_probs``), so the closed campaign's
 fitting, cross-validation and loop code runs it unchanged. The link's parameters are appended
@@ -93,7 +104,18 @@ LINKS: Dict[str, Link] = {
         description=("Split points (or sliders) over the referents: a Dirichlet-multinomial "
                      "around the posterior mixed with a uniform guess."),
     ),
+    "production": Link(
+        name="production", response_type="production",
+        description=("Choose a message for a target: the tempered speaker distribution over the "
+                     "scene's real messages, with a uniform lapse among them."),
+    ),
+    "binary_judgment": Link(
+        name="binary_judgment", response_type="binary_judgment",
+        description=("Would the speaker say this message for this target? A probit on the logit "
+                     "of the tempered speaker probability, with a bias and a random yes/no lapse."),
+    ),
 }
+SPEAKER_LINKS = ("production", "binary_judgment")
 
 
 # --------------------------------------------------------------------------- the likelihoods
@@ -132,6 +154,11 @@ class LinkLikelihood:
     reference_params: Dict[str, float]  # typical values, for simulations and recovery tests
     options: Dict[str, int] = field(default_factory=dict)
 
+    @property
+    def side(self) -> str:
+        """'speaker' when the link scores the theory's speaker, else 'listener'."""
+        return "speaker" if self.name in SPEAKER_LINKS else "listener"
+
     # -- responses
     def encode(self, ctx, response: Mapping[str, Any], i: int) -> Dict[str, Any]:
         """Check one trial's response against its scene; its numeric fields."""
@@ -161,6 +188,26 @@ class LinkLikelihood:
             if sum(pts) != total:
                 raise ValueError(f"trial {i}: points must sum to {total}; got {sum(pts)}")
             return {"points": [int(x) for x in pts]}
+        if self.name in SPEAKER_LINKS:
+            n_utt = ctx.shape[1]
+            n_real = n_utt - (1 if ctx.needs_sink else 0)
+            t, u = response.get("target"), response.get("utterance")
+            if not isinstance(t, (int, np.integer)) or not 0 <= t < n:
+                raise ValueError(f"trial {i}: a {self.name} response needs 'target', an object index "
+                                 f"0..{n - 1}; got {dict(response)}")
+            if not isinstance(u, (int, np.integer)) or not 0 <= u < n_utt:
+                raise ValueError(f"trial {i}: a {self.name} response needs 'utterance', a message index "
+                                 f"0..{n_real - 1}; got {dict(response)}")
+            if u >= n_real:
+                raise ValueError(f"trial {i}: utterance {u} is the scene's sink ('no word applies'), "
+                                 f"which no speaker says; the real messages are 0..{n_real - 1}")
+            out = {"target": int(t), "utterance": int(u)}
+            if self.name == "binary_judgment":
+                a = response.get("answer")
+                if not isinstance(a, bool):
+                    raise ValueError(f"trial {i}: a judgment needs 'answer', true or false; got {a!r}")
+                out["answer"] = int(a)
+            return out
         raise KeyError(self.name)
 
     def stack(self, encoded: List[Dict[str, Any]]) -> Dict[str, jnp.ndarray]:
@@ -169,8 +216,10 @@ class LinkLikelihood:
 
     # -- the likelihood
     def log_lik(self, latent: jnp.ndarray, p: Mapping[str, Any], enc: Mapping[str, jnp.ndarray],
-                classes: jnp.ndarray) -> jnp.ndarray:
-        """(trials,) log-likelihood of each response, from (trials, N_OBJ) latent posteriors."""
+                arrays, classes) -> jnp.ndarray:
+        """(trials,) log-likelihood of each response. ``latent`` is (trials, N_OBJ) listener
+        posteriors, or for a speaker link (trials, N_UTT, N_OBJ) speaker distributions;
+        ``arrays`` are the trials' scene arrays and ``classes`` their choice classes."""
         if self.name == "choice":
             from src.rsa.fit import class_probs
 
@@ -184,11 +233,21 @@ class LinkLikelihood:
         if self.name == "allocation":
             return allocation_log_prob(latent, enc["points"].astype(latent.dtype),
                                        self.options["total_points"], p["kappa"], p["lapse"], p["temperature"])
+        if self.name in SPEAKER_LINKS:
+            if self.name == "production":
+                dist_u = _speaker_choice(latent, enc["target"], arrays.is_sink, p)
+                return _safe_log(jnp.take_along_axis(dist_u, enc["utterance"][:, None], axis=1)[:, 0])
+            q = jnp.take_along_axis(_tempered_speaker(latent, enc["target"], arrays.is_sink, p),
+                                    enc["utterance"][:, None], axis=1)[:, 0]
+            probs = rating_probs(q, p["center"], 1.0, p["lapse"], 2)
+            return jnp.log(jnp.take_along_axis(probs, enc["answer"][:, None], axis=1)[:, 0])
         raise KeyError(self.name)
 
     # -- simulation
-    def sample(self, key, latent: np.ndarray, p: Mapping[str, Any], probes: np.ndarray) -> List[dict]:
-        """One response per trial from (trials, N_OBJ) latent posteriors."""
+    def sample(self, key, latent: np.ndarray, p: Mapping[str, Any], probes: np.ndarray,
+               arrays=None, utterances: Optional[np.ndarray] = None) -> List[dict]:
+        """One response per trial. ``probes`` are the probed (rating) or target (speaker) objects;
+        ``utterances`` the messages judged (binary_judgment)."""
         latent = jnp.asarray(latent)
         if self.name == "choice":
             picks = jax.random.categorical(
@@ -205,7 +264,30 @@ class LinkLikelihood:
                                CONCENTRATION_FLOOR)
             pts = dist.DirichletMultinomial(conc, total_count=self.options["total_points"]).sample(key)
             return [{"points": [int(x) for x in row]} for row in np.asarray(pts)]
+        if self.name == "production":
+            dist_u = _speaker_choice(latent, jnp.asarray(probes), arrays.is_sink, p)
+            said = jax.random.categorical(key, _safe_log(dist_u), axis=-1)
+            return [{"target": int(t), "utterance": int(u)} for t, u in zip(probes, np.asarray(said))]
+        if self.name == "binary_judgment":
+            q = _tempered_speaker(latent, jnp.asarray(probes), arrays.is_sink, p)[
+                jnp.arange(latent.shape[0]), jnp.asarray(utterances)]
+            yes = jax.random.uniform(key, q.shape) < rating_probs(q, p["center"], 1.0, p["lapse"], 2)[:, 1]
+            return [{"target": int(t), "utterance": int(u), "answer": bool(a)}
+                    for t, u, a in zip(probes, utterances, np.asarray(yes))]
         raise KeyError(self.name)
+
+
+def _tempered_speaker(speaker, targets, is_sink, p) -> jnp.ndarray:
+    """(trials, N_UTT): the tempered speaker distribution over messages for each trial's target."""
+    column = jnp.take_along_axis(speaker, targets[:, None, None], axis=2)[:, :, 0]
+    return temper(column * (1.0 - is_sink), p["temperature"])
+
+
+def _speaker_choice(speaker, targets, is_sink, p) -> jnp.ndarray:
+    """(trials, N_UTT): what is said, with the lapse uniform over the real messages."""
+    real = 1.0 - is_sink
+    return ((1.0 - p["lapse"]) * _tempered_speaker(speaker, targets, is_sink, p)
+            + p["lapse"] * real / real.sum(axis=-1, keepdims=True))
 
 
 SHARED_REFERENCE = {"lapse": 0.05, "temperature": 1.0}
@@ -240,6 +322,11 @@ def likelihood(name: str, *, scale_points: Optional[int] = None,
             {"kappa": dist.LogNormal(float(np.log(10.0)), 1.0), **_shared_params()},
             {"kappa": 10.0, **SHARED_REFERENCE},
             {"total_points": int(total_points)})
+    if name == "production":
+        return LinkLikelihood(name, link.response_type, {**_shared_params()}, {**SHARED_REFERENCE})
+    if name == "binary_judgment":
+        return LinkLikelihood(name, link.response_type, {"center": dist.Normal(0.0, 2.0), **_shared_params()},
+                              {"center": 0.0, **SHARED_REFERENCE})
     raise KeyError(name)
 
 
