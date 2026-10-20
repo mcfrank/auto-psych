@@ -62,6 +62,9 @@ rsa = [
     "jax==0.7.0; python_version >= '3.12'",
     "jaxlib==0.7.0; python_version >= '3.12'",
     "numpyro==0.19.0; python_version >= '3.12'",
+    # The open campaign's simulated pilot shows LLM participants each screen's SVG
+    # materials as images (src/rsa_open/pilot.py); resvg ships manylinux2014 wheels.
+    "resvg-py>=0.5.0; python_version >= '3.12'",
 ]
 # Open-weight participant models (LLM-as-participant, --participant-backend open).
 # Heavy; install only when needed: `uv sync --group open-models`.
