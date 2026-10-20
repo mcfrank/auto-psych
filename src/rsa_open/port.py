@@ -1,19 +1,28 @@
 """Port a closed-campaign RSA model file to a paradigm-free theory (docs/auto_open/PLAN.md §3.1).
 
 A closed model file defines ``PARAMS`` and ``choice_probs(params, ctx)``, the probability of
-clicking each object. Its last step is a response process, a lapse to a uniform guess:
-``with_lapse(X, params["lapse"])``. The port keeps the theory, ``X``, and leaves the response
-process to the choice link (`src.rsa_open.links`):
+clicking each object. The port keeps the theory and leaves the response process to the link
+(`src.rsa_open.links`: a decision temperature and a uniform lapse, PI 2026-10-21). Two rules:
 
-1. every ``return`` of ``choice_probs`` must be ``with_lapse(X, params["lapse"])``, and
-   ``PARAMS["lapse"]`` the choice link's prior, ``Beta(1.0, 9.0)``;
-2. ``lapse`` leaves ``PARAMS``, each return becomes ``return X``, and the function is renamed
-   ``listener``.
+- **(a) a final uniform lapse.** Every ``return`` of ``choice_probs`` is
+  ``with_lapse(X, params["lapse"])`` and ``PARAMS["lapse"]`` is the choice link's prior,
+  ``Beta(1.0, 9.0)``: ``lapse`` leaves ``PARAMS`` and each return becomes ``return X``.
+  Composed with the choice link, the port equals the original at temperature 1.
+- **(b) no final lapse.** No return is ``with_lapse(...)``: the whole function is the theory,
+  and a parameter named ``lapse`` (a latent mixture of the theory's own, like chain 2's final's,
+  which mixes in its salience prior) is renamed ``theory_lapse`` so the link's lapse cannot
+  clash. Composed with the choice link, the port equals the original at link lapse 0 and
+  temperature 1; the theory's mixture stays only if it earns its parameter over the link's.
 
-It edits only those spans of the source text. memo parses its own source, so the memo
-definitions, and every other line, stay byte for byte as they were. A file it cannot port this
-way is refused with the reason (`PortRefused`); there is no fallback. Composed with the choice
-link, a port gives the original's choice probabilities exactly (tests/test_rsa_open_port.py).
+Either way the function is renamed ``listener``. The port edits only those spans of the source
+text: memo parses its own source, so the memo definitions, and every other line, stay byte for
+byte. A file that fits neither rule is refused with the reason (`PortRefused`); there is no
+fallback.
+
+**Hand ports** (`HAND_PORTS`, `port_file`): a decision temperature written into a theory belongs
+to the link, but no mechanical rule can find one in arbitrary code. The one model with one,
+`softmax_surprisal_isolated_costly_l4`, is ported by hand (`src/rsa_open/hand_ports/`), from an
+original whose sha256 is recorded: a changed original is refused.
 
     python -m src.rsa_open.port <model.py> ... --out <dir>
 """
@@ -31,7 +40,15 @@ import tyro
 LAPSE = "lapse"
 LINK_LAPSE_PRIOR = ("Beta", (1.0, 9.0))  # the choice link's prior on its lapse
 LISTENER = "listener"
-HEADER = "# Ported from {name} by src.rsa_open.port (docs/auto_open/PLAN.md §3.1).\n"
+THEORY_LAPSE = "theory_lapse"
+HEADER = "# Ported from {name} by src.rsa_open.port, rule ({rule}) (docs/auto_open/PLAN.md §3.1).\n"
+HAND_PORT_DIR = Path(__file__).parent / "hand_ports"
+# original file name -> (the original's sha256, why it is ported by hand)
+HAND_PORTS = {
+    "softmax_surprisal_isolated_costly_l4.py": (
+        "4b492449193eafb713a40d107fb470e60e7b7828c3c0113f12fb3d892b3759d7",
+        "its decision temperature (beta) moves to the link (PI 2026-10-21)"),
+}
 
 
 class PortRefused(ValueError):
@@ -97,54 +114,71 @@ def port(source: str, name: str) -> str:
     tree = ast.parse(source)
     params = _params_dict(tree, name)
     keys = [k.value if isinstance(k, ast.Constant) else None for k in params.keys]
-    if LAPSE not in keys:
-        raise PortRefused(f"{name}: PARAMS has no 'lapse'; the port moves a uniform lapse to the link")
-    lapse_index = keys.index(LAPSE)
-    _check_lapse_prior(params.values[lapse_index], name)
-
     fns = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "choice_probs"]
     if not fns:
         raise PortRefused(f"{name}: no module-level choice_probs(params, ctx)")
-    if any(isinstance(n, (ast.FunctionDef, ast.ClassDef, ast.Assign)) and LISTENER in
-           {getattr(n, "name", None), *[getattr(t, "id", None) for t in getattr(n, "targets", [])]}
-           for n in tree.body):
+    defined = {getattr(n, "name", None) for n in tree.body} | {
+        getattr(t, "id", None) for n in tree.body for t in getattr(n, "targets", [])}
+    if LISTENER in defined:
         raise PortRefused(f"{name}: already defines '{LISTENER}', the name the port gives choice_probs")
+    if THEORY_LAPSE in keys:
+        raise PortRefused(f"{name}: PARAMS already has '{THEORY_LAPSE}', the name rule (b) uses")
     fn = fns[0]
     returns = _own_returns(fn)
-    for ret in returns:
-        v = ret.value
-        if not (isinstance(v, ast.Call) and isinstance(v.func, ast.Name) and v.func.id == "with_lapse"
-                and len(v.args) == 2 and not v.keywords and _is_lapse_param(v.args[1])):
-            raise PortRefused(
-                f"{name}: every return of choice_probs must be with_lapse(X, params['lapse']); "
-                f"line {ret.lineno} returns {ast.unparse(v) if v is not None else 'nothing'}")
-    mentions = [n for n in ast.walk(tree) if isinstance(n, ast.Constant) and n.value == LAPSE]
-    if len(mentions) != 1 + len(returns):
-        raise PortRefused(
-            f"{name}: 'lapse' is used outside PARAMS and the final with_lapse "
-            f"({len(mentions)} mentions); the port would change the model")
 
+    def is_final_lapse(v):
+        return (isinstance(v, ast.Call) and isinstance(v.func, ast.Name) and v.func.id == "with_lapse"
+                and len(v.args) == 2 and not v.keywords and _is_lapse_param(v.args[1]))
+
+    wrapped = [is_final_lapse(r.value) for r in returns]
     starts = _line_starts(source)
     edits = []  # (start, end, replacement)
-    # 1. The PARAMS entry, with its trailing comma, and its whole line when it stands alone.
-    start, _ = _span(params.keys[lapse_index], starts)
-    _, end = _span(params.values[lapse_index], starts)
-    comma = re.match(r"[ \t]*,", source[end:])
-    if comma:
-        end += comma.end()
-    line_start = source.rfind("\n", 0, start) + 1
-    line_end = source.find("\n", end)
-    line_end = len(source) if line_end == -1 else line_end + 1
-    if not source[line_start:start].strip() and not source[end:line_end].strip():
-        start, end = line_start, line_end
-    edits.append((start, end, ""))
-    # 2. Each return's value becomes the lapse's argument.
-    for ret in returns:
-        call = ret.value
-        s, e = _span(call, starts)
-        a, b = _span(call.args[0], starts)
-        edits.append((s, e, source[a:b]))
-    # 3. The function's name.
+    mentions = [n for n in ast.walk(tree) if isinstance(n, ast.Constant) and n.value == LAPSE]
+    if returns and all(wrapped):
+        rule = "a"
+        if LAPSE not in keys:
+            raise PortRefused(f"{name}: returns with_lapse(..., params['lapse']) but PARAMS has no 'lapse'")
+        lapse_index = keys.index(LAPSE)
+        _check_lapse_prior(params.values[lapse_index], name)
+        if len(mentions) != 1 + len(returns):
+            raise PortRefused(
+                f"{name}: 'lapse' is used outside PARAMS and the final with_lapse "
+                f"({len(mentions)} mentions); the port would change the model")
+        # The PARAMS entry, with its trailing comma, and its whole line when it stands alone.
+        start, _ = _span(params.keys[lapse_index], starts)
+        _, end = _span(params.values[lapse_index], starts)
+        comma = re.match(r"[ \t]*,", source[end:])
+        if comma:
+            end += comma.end()
+        line_start = source.rfind("\n", 0, start) + 1
+        line_end = source.find("\n", end)
+        line_end = len(source) if line_end == -1 else line_end + 1
+        if not source[line_start:start].strip() and not source[end:line_end].strip():
+            start, end = line_start, line_end
+        edits.append((start, end, ""))
+        # Each return's value becomes the lapse's argument.
+        for ret in returns:
+            call = ret.value
+            s, e = _span(call, starts)
+            a, b = _span(call.args[0], starts)
+            edits.append((s, e, source[a:b]))
+    elif not any(wrapped):
+        rule = "b"
+        allowed = {id(k) for k in params.keys if isinstance(k, ast.Constant) and k.value == LAPSE}
+        allowed |= {id(n.slice) for n in ast.walk(tree) if _is_lapse_param(n)}
+        stray = [m for m in mentions if id(m) not in allowed]
+        if stray:
+            raise PortRefused(f"{name}: 'lapse' appears outside PARAMS and params['lapse'] "
+                              f"(line {stray[0].lineno}); rule (b) renames only those")
+        for m in mentions:
+            s, e = _span(m, starts)
+            quote = source[s]
+            edits.append((s, e, f"{quote}{THEORY_LAPSE}{quote}"))
+    else:
+        raise PortRefused(
+            f"{name}: some returns of choice_probs are with_lapse(X, params['lapse']) and some are "
+            f"not; neither rule applies")
+    # The function's name.
     def_start = starts[fn.lineno - 1] + fn.col_offset
     name_at = source.index("choice_probs", def_start)
     edits.append((name_at, name_at + len("choice_probs"), LISTENER))
@@ -152,9 +186,36 @@ def port(source: str, name: str) -> str:
     out = source
     for s, e, text in sorted(edits, reverse=True):
         out = out[:s] + text + out[e:]
-    result = HEADER.format(name=name) + out
+    result = HEADER.format(name=name, rule=rule) + out
     _check_theory(result, name)
     return result
+
+
+def port_rule(theory_source: str) -> str:
+    """'a', 'b' or 'hand': how a theory file was ported (from its header)."""
+    first = theory_source.splitlines()[0] if theory_source else ""
+    m = re.search(r"rule \((a|b)\)", first)
+    if m:
+        return m.group(1)
+    if first.startswith("# Hand port"):
+        return "hand"
+    raise ValueError("not a ported theory file (no port header)")
+
+
+def port_file(path: Path) -> str:
+    """The theory for one closed model file: its hand port when it has one, else `port`."""
+    import hashlib
+
+    path = Path(path)
+    source = path.read_text()
+    if path.name in HAND_PORTS:
+        sha, why = HAND_PORTS[path.name]
+        actual = hashlib.sha256(source.encode()).hexdigest()
+        if actual != sha:
+            raise PortRefused(f"{path.name} is ported by hand ({why}) from an original with sha256 "
+                              f"{sha}; this file's is {actual}: redo the hand port")
+        return (HAND_PORT_DIR / path.name).read_text()
+    return port(source, name=path.name)
 
 
 def _check_theory(source: str, name: str) -> None:
@@ -179,7 +240,7 @@ def main(args: Args) -> List[Path]:
     written = []
     for path in args.models:
         target = args.out / path.name
-        target.write_text(port(path.read_text(), name=path.name))
+        target.write_text(port_file(path))
         written.append(target)
         print(f"ported {path} -> {target}")
     return written

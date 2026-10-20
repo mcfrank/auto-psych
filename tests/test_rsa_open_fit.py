@@ -54,7 +54,7 @@ def test_rating_probabilities_over_the_scale_sum_to_one(points):
     from src.rsa_open.links import rating_probs
 
     p = jnp.asarray([0.0, 0.01, 0.2, 0.5, 0.97, 1.0])  # 0 and 1 are clipped, still finite
-    probs = rating_probs(p, beta=1.3, center=0.2, spread=0.8, lapse=0.05, points=points)
+    probs = rating_probs(p, center=0.2, spread=0.8, lapse=0.05, points=points)
     assert probs.shape == (6, points)
     np.testing.assert_allclose(np.asarray(probs.sum(axis=1)), 1.0, atol=1e-5)
     assert np.all(np.asarray(probs) > 0)
@@ -129,3 +129,15 @@ def test_each_link_recovers_known_parameters_from_simulated_data(name, theory):
     report = recovery_check(theory, link, truth, n_trials=1500, seed=0)
     assert report["converged"], report
     assert report["recovered"], report
+
+
+def test_every_link_tempers_then_lapses_and_is_the_plain_posterior_at_temperature_one():
+    from src.rsa_open.link_kit import temper
+
+    p = jnp.asarray([[0.6, 0.3, 0.1, 0.0], [0.25, 0.25, 0.25, 0.25]])
+    np.testing.assert_allclose(np.asarray(temper(p, 1.0)), np.asarray(p), rtol=1e-6, atol=1e-7)
+    sharp = np.asarray(temper(p, 3.0))
+    assert sharp[0, 0] > 0.6 and sharp[0, 3] == 0.0 and np.allclose(sharp.sum(axis=1), 1.0)
+    np.testing.assert_allclose(sharp[1], 0.25, rtol=1e-6)
+    grad = jax.grad(lambda t: temper(p, t)[0, 0])(2.0)
+    assert np.isfinite(float(grad))

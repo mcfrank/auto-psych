@@ -49,6 +49,9 @@ with the closed campaign's on paradigms neither campaign saw.
 | Budget parity | **Equal dollars** per experiment: the closed campaign's ~$133 (200 × $0.50 × Prolific's 1.33), about 600 participant-minutes at the same hourly rate. The designer chooses N and length within it | the comparison is of methods at equal cost |
 | Old-data guard | k = **4** clustered SEs, as the closed campaign's guard | |
 | Pilot participants | Gemini 3.8 Flash | cost |
+| Response process | Every link has a decision temperature and a lapse; a temperature written into a ported theory is cut (one hand port) | standard in a link; equal flexibility for every theory, old ones included |
+| Chain 2's final | Ported whole (rule b); its prior-mixing lapse stays in the theory as `theory_lapse`, and the link adds its uniform lapse | the theory's mixture must earn its parameter |
+| Speakers | Every theory must define a speaker; the default for a theory without one is to be confirmed (§10) | the charter covers what a speaker should say |
 | Designer limits | Per cycle: 2 h of wall clock, 40 tool calls, at most 3 simulated pilots. `submit` refuses a paradigm whose EIG per dollar is below half the closed campaign's paradigm's at the same budget, under the same theories. A failed cycle gets **one retry** with the reason in the brief; a second failure stops the chain and reports. Design bounds: N ≥ 100, at most 15 minutes per person | bounded cost; informative without dictating the design; fail loudly, no fallback design |
 
 ## 1. Claims
@@ -141,27 +144,54 @@ nothing in it can influence them.
 
 ### 3.1 The port, exactly (`src/rsa_open/port.py`)
 
-A closed model file defines `PARAMS` and `choice_probs(params, ctx)`. The port:
-1. requires every `return` of `choice_probs` to be `with_lapse(X, params["lapse"])`, and
-   `PARAMS["lapse"]` to be the choice link's prior, `Beta(1, 9)`;
-2. removes `lapse` from `PARAMS`, returns `X`, and renames the function `listener`. It edits
-   only those spans of the source text, so every memo line stays byte for byte as it was (memo
-   parses its own source);
-3. refuses, with the reason, any file it cannot port this way. There is no fallback.
+**Every link has a decision temperature and a lapse** (PI 2026-10-21; `src/rsa_open/link_kit.py`):
+the theory's posterior is tempered (p ** temperature, renormalized; prior LogNormal(0, 0.5),
+median 1), then mixed with a uniform guess with probability lapse (prior Beta(1, 9)), then
+mapped to the response. Every ported model gains the temperature parameter. That adds
+flexibility to the old models, and it is the standard response process; it also means no
+theory gains by writing its own.
+
+A closed model file defines `PARAMS` and `choice_probs(params, ctx)`. Two mechanical rules:
+- **(a) a final uniform lapse.** Every `return` of `choice_probs` is
+  `with_lapse(X, params["lapse"])` and `PARAMS["lapse"]` is the link's `Beta(1, 9)`: `lapse`
+  leaves `PARAMS` and each return becomes `return X`. Composed with the choice link, the port
+  equals the original at temperature 1.
+- **(b) no final lapse.** No return is `with_lapse(...)`: the whole function is the theory, and
+  a parameter named `lapse` (a latent mixture of the theory's own) is renamed `theory_lapse`.
+  Composed with the choice link, the port equals the original at link lapse 0 and temperature
+  1. The theory's own mixture stays only if it earns its parameter over the link's uniform
+  lapse (PI 2026-10-21).
+
+Either way the function is renamed `listener`, and only those spans of the source text are
+edited: every memo line stays byte for byte (memo parses its own source). A file that fits
+neither rule is refused with the reason. There is no fallback.
+
+**Hand ports.** A decision temperature written into a theory belongs to the link, but no
+mechanical rule can find one in arbitrary code. Of the 20 models, one has one, and it is
+ported by hand (`src/rsa_open/hand_ports/`, registered in `HAND_PORTS` with the original's
+sha256, so a changed original is refused).
 
 **Composing** a theory with a link gives an ordinary model file (`compose`): the theory, then
 the link's parameters and its `choice_probs`. The existing fitting, CV and loop code runs it
-unchanged. The test of a port: composed with the choice link, it gives the original's choice
-probabilities exactly, at the same parameter values.
+unchanged.
 
-Of the 20 files to port (5 starting models, 12 promoted seeds, 3 closed finals), 19 port this
-way and reproduce their originals exactly (`tests/test_rsa_open_port.py`). Two cases need a
-decision (§10):
-- `softmax_surprisal_isolated_costly_l4` (promoted) applies a decision temperature `beta` to
-  the listener posterior before its lapse. The mechanical port keeps it in the theory. The rule
-  as written puts it in the link, but a link is shared by every theory on a paradigm.
-- `competition_endpoint_binding_lapse_l2` (chain 2's final) is refused: it has no uniform
-  lapse. Its `lapse` mixes in the theory's own salience prior, on word trials only.
+**The 20 models** (5 starting models, 12 promoted seeds, 3 closed finals; `tests/test_rsa_open_port.py`):
+- 18 port by rule (a);
+- chain 2's final (`competition_endpoint_binding_lapse_l2`) ports by rule (b). Its lapse
+  mixes in its own salience prior, on word trials only;
+- `softmax_surprisal_isolated_costly_l4` (promoted) is the hand port. Its temperature `beta`
+  (heard ** beta, renormalized) is cut. It equals its original on word trials at temperature
+  = beta, and on every trial at beta = temperature = 1. On "mumble" trials the original left
+  the prior untempered, and the link tempers every trial.
+
+Each port equals its original at those values, and every port gains the link's temperature.
+
+**Speakers** (PI 2026-10-21): every theory must define a speaker, because the production and
+"would the speaker say X?" links need one. For a theory without one, the proposal is
+`speaker(r → u) ∝ listener(r | u)`, taken over the scene's messages: the speaker who expects
+this theory's own listener. It has no new parameter, because the link's temperature is its
+rationality. For an RSA listener at depth n this is the speaker at depth n + 1; for a heuristic
+listener it is the speaker that heuristic implies. The rule is to be confirmed (§10).
 
 ## 4. The designer
 
@@ -250,14 +280,7 @@ Gemini 3.8 Flash, the theorist, runs as before.
 
 ## 10. Open
 
-1. **A decision temperature** (§3.1): keep the mechanical port (the temperature is part of that
-   one seed's theory), or give the choice link a temperature for every theory (every port then
-   reproduces its original at temperature 1, but each gains a parameter).
-2. **Chain 2's final** (§3.1): its prior-mixing lapse stays in the theory, as a latent mechanism,
-   and the choice link adds the uniform lapse every other theory has (one more parameter, and
-   its predictions equal the original's at link lapse 0); or it is ported by hand.
-3. **Speakers.** The production and "would the speaker say X?" links need a theory's speaker
-   distribution. RSA theories have one; heuristic listeners (`lexical_preemption_heuristic`,
-   `oddity_heuristic_listener`) do not. Must every theory define a speaker, or is a theory
-   without one not scored on speaker-side paradigms?
-4. The bakeoff's hypotheses and power, at registration.
+1. **The default speaker** (§3.1): the derived speaker, `speaker(r → u) ∝ listener(r | u)`,
+   for every theory without one, ported or new? Or S0/S1 from the literal semantics (the same
+   for every theory)?
+2. The bakeoff's hypotheses and power, at registration.

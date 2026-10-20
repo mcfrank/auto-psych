@@ -8,17 +8,22 @@ never write links.
 
 Each link has a **likelihood** (`likelihood`): its parameters' priors, a check of each
 response, the log-likelihood of a group of trials given the theory's latent posteriors, and a
-simulator. `src.rsa_open.fit` fits any theory under any link with it. The library:
+simulator. `src.rsa_open.fit` fits any theory under any link with it.
 
-- **choice**: pick one referent. The posterior, mixed with a uniform guess with probability
-  ``lapse``, summed over classes of identical objects (the closed campaign's likelihood).
+Every link shares one response process (PI 2026-10-21; `src.rsa_open.link_kit`): the posterior
+is **tempered** (``temperature``, a decision temperature: p ** temperature, renormalized; prior
+LogNormal(0, 0.5), median 1) and then mixed with a uniform guess with probability ``lapse``
+(prior Beta(1, 9)). Then, per link:
+
+- **choice**: pick one referent; summed over classes of identical objects (the closed
+  campaign's likelihood, which is this link at temperature 1).
 - **rating**: rate how likely a probed referent is, on a ``scale_points`` scale. An ordered
-  probit on ``beta * logit(p)``, with equally spaced cutpoints (``center``, ``spread``), mixed
-  with a uniform rating with probability ``lapse``.
+  probit on the logit of the tempered probability, with equally spaced cutpoints (``center``,
+  ``spread``); the lapse is a uniform rating.
 - **allocation**: split ``total_points`` points (or sliders) over the referents. A
-  Dirichlet-multinomial with concentration ``kappa`` times the posterior mixed with a uniform
-  guess (``lapse``). Exact zeros are ordinary outcomes. This is the betting measure of Frank &
-  Goodman (2012); the paradigm response type is ``slider``.
+  Dirichlet-multinomial with concentration ``kappa`` times the tempered, lapse-mixed
+  posterior. Exact zeros are ordinary outcomes. This is the betting measure of Frank & Goodman
+  (2012); the paradigm response type is ``slider``.
 
 The choice link also has a **model-file form**: `compose` puts a theory and the link together
 into an ordinary RSA model file (``PARAMS`` and ``choice_probs``), so the closed campaign's
@@ -37,6 +42,7 @@ import jax.numpy as jnp
 import numpy as np
 import numpyro.distributions as dist
 
+from src.rsa_open.link_kit import temper, with_uniform
 from src.rsa_open.port import LISTENER
 
 RATING_CLIP = 1e-6  # logit(p) is taken at p clipped to [RATING_CLIP, 1 - RATING_CLIP]
@@ -65,20 +71,22 @@ class Link:
 LINKS: Dict[str, Link] = {
     "choice": Link(
         name="choice", response_type="choice",
-        description=("Pick one referent: the listener posterior, mixed with a uniform guess with "
-                     "probability lapse (the closed campaign's response process)."),
+        description=("Pick one referent: the tempered listener posterior, mixed with a uniform "
+                     "guess with probability lapse."),
         model_file=ModelFileForm(
-            params={"lapse": "_link_dist.Beta(1.0, 9.0)"},
+            params={"lapse": "_link_dist.Beta(1.0, 9.0)", "temperature": "_link_dist.LogNormal(0.0, 0.5)"},
             imports=("import numpyro.distributions as _link_dist\n"
-                     "from src.rsa.memo_kit import with_lapse as _link_with_lapse\n"),
+                     "from src.rsa.memo_kit import with_lapse as _link_with_lapse\n"
+                     "from src.rsa_open.link_kit import temper as _link_temper\n"),
             body=("def choice_probs(params, ctx):\n"
-                  "    return _link_with_lapse(listener(params, ctx), params[\"lapse\"])\n"),
+                  "    return _link_with_lapse(_link_temper(listener(params, ctx), params[\"temperature\"]),\n"
+                  "                            params[\"lapse\"])\n"),
         ),
     ),
     "rating": Link(
         name="rating", response_type="rating",
-        description=("Rate how likely a probed referent is: an ordered probit on beta * logit(p), "
-                     "equally spaced cutpoints, and a uniform-rating lapse."),
+        description=("Rate how likely a probed referent is: an ordered probit on the logit of its "
+                     "tempered probability, equally spaced cutpoints, and a uniform-rating lapse."),
     ),
     "allocation": Link(
         name="allocation", response_type="slider",
@@ -95,14 +103,11 @@ def _safe_log(p: jnp.ndarray) -> jnp.ndarray:
     return jnp.where(positive, jnp.log(jnp.where(positive, p, 1.0)), -jnp.inf)
 
 
-def with_uniform(p: jnp.ndarray, lapse) -> jnp.ndarray:
-    return (1.0 - lapse) * p + lapse / p.shape[-1]
-
-
-def rating_probs(p, beta, center, spread, lapse, points: int) -> jnp.ndarray:
-    """(..., points) probability of each rating 1..points given the probed referent's p."""
+def rating_probs(p, center, spread, lapse, points: int) -> jnp.ndarray:
+    """(..., points) probability of each rating 1..points given the probed referent's
+    (tempered) probability p."""
     q = jnp.clip(jnp.asarray(p), RATING_CLIP, 1.0 - RATING_CLIP)
-    eta = beta * (jnp.log(q) - jnp.log1p(-q))
+    eta = jnp.log(q) - jnp.log1p(-q)
     cuts = center + spread * (jnp.arange(1, points) - points / 2.0)
     cdf = jax.scipy.stats.norm.cdf(cuts - eta[..., None])
     zeros, ones = jnp.zeros_like(cdf[..., :1]), jnp.ones_like(cdf[..., :1])
@@ -110,9 +115,10 @@ def rating_probs(p, beta, center, spread, lapse, points: int) -> jnp.ndarray:
     return (1.0 - lapse) * probs + lapse / points
 
 
-def allocation_log_prob(latent, points, total: int, kappa, lapse) -> jnp.ndarray:
-    """log P(points | latent): Dirichlet-multinomial around the lapse-mixed posterior."""
-    conc = jnp.maximum(kappa * with_uniform(jnp.asarray(latent), lapse), CONCENTRATION_FLOOR)
+def allocation_log_prob(latent, points, total: int, kappa, lapse, temperature=1.0) -> jnp.ndarray:
+    """log P(points | latent): Dirichlet-multinomial around the tempered, lapse-mixed posterior."""
+    conc = jnp.maximum(kappa * with_uniform(temper(jnp.asarray(latent), temperature), lapse),
+                       CONCENTRATION_FLOOR)
     return dist.DirichletMultinomial(conc, total_count=total).log_prob(points)
 
 
@@ -168,16 +174,16 @@ class LinkLikelihood:
         if self.name == "choice":
             from src.rsa.fit import class_probs
 
-            cp = class_probs(with_uniform(latent, p["lapse"]), classes)
+            cp = class_probs(with_uniform(temper(latent, p["temperature"]), p["lapse"]), classes)
             return _safe_log(jnp.take_along_axis(cp, enc["cls"][:, None], axis=1)[:, 0])
         if self.name == "rating":
-            pr = jnp.take_along_axis(latent, enc["probe"][:, None], axis=1)[:, 0]
-            probs = rating_probs(pr, p["beta"], p["center"], p["spread"], p["lapse"],
-                                 self.options["scale_points"])
+            tempered = temper(latent, p["temperature"])
+            pr = jnp.take_along_axis(tempered, enc["probe"][:, None], axis=1)[:, 0]
+            probs = rating_probs(pr, p["center"], p["spread"], p["lapse"], self.options["scale_points"])
             return jnp.log(jnp.take_along_axis(probs, enc["rating"][:, None], axis=1)[:, 0])
         if self.name == "allocation":
             return allocation_log_prob(latent, enc["points"].astype(latent.dtype),
-                                       self.options["total_points"], p["kappa"], p["lapse"])
+                                       self.options["total_points"], p["kappa"], p["lapse"], p["temperature"])
         raise KeyError(self.name)
 
     # -- simulation
@@ -185,19 +191,29 @@ class LinkLikelihood:
         """One response per trial from (trials, N_OBJ) latent posteriors."""
         latent = jnp.asarray(latent)
         if self.name == "choice":
-            picks = jax.random.categorical(key, _safe_log(with_uniform(latent, p["lapse"])), axis=-1)
+            picks = jax.random.categorical(
+                key, _safe_log(with_uniform(temper(latent, p["temperature"]), p["lapse"])), axis=-1)
             return [{"choice": int(c)} for c in np.asarray(picks)]
         if self.name == "rating":
-            pr = latent[jnp.arange(latent.shape[0]), jnp.asarray(probes)]
-            probs = rating_probs(pr, p["beta"], p["center"], p["spread"], p["lapse"],
-                                 self.options["scale_points"])
+            tempered = temper(latent, p["temperature"])
+            pr = tempered[jnp.arange(latent.shape[0]), jnp.asarray(probes)]
+            probs = rating_probs(pr, p["center"], p["spread"], p["lapse"], self.options["scale_points"])
             ratings = jax.random.categorical(key, jnp.log(probs), axis=-1)
             return [{"probe": int(r), "rating": int(v) + 1} for r, v in zip(probes, np.asarray(ratings))]
         if self.name == "allocation":
-            conc = jnp.maximum(p["kappa"] * with_uniform(latent, p["lapse"]), CONCENTRATION_FLOOR)
+            conc = jnp.maximum(p["kappa"] * with_uniform(temper(latent, p["temperature"]), p["lapse"]),
+                               CONCENTRATION_FLOOR)
             pts = dist.DirichletMultinomial(conc, total_count=self.options["total_points"]).sample(key)
             return [{"points": [int(x) for x in row]} for row in np.asarray(pts)]
         raise KeyError(self.name)
+
+
+SHARED_REFERENCE = {"lapse": 0.05, "temperature": 1.0}
+
+
+def _shared_params() -> Dict[str, Any]:
+    """The response process every link shares; the choice link's model-file form says the same."""
+    return {"lapse": dist.Beta(1.0, 9.0), "temperature": dist.LogNormal(0.0, 0.5)}
 
 
 def likelihood(name: str, *, scale_points: Optional[int] = None,
@@ -207,23 +223,22 @@ def likelihood(name: str, *, scale_points: Optional[int] = None,
         raise KeyError(f"no link {name!r}; the library has {sorted(LINKS)}")
     link = LINKS[name]
     if name == "choice":
-        return LinkLikelihood(name, link.response_type, {"lapse": dist.Beta(1.0, 9.0)}, {"lapse": 0.05})
+        return LinkLikelihood(name, link.response_type, {**_shared_params()}, {**SHARED_REFERENCE})
     if name == "rating":
         if scale_points is None:
             raise ValueError("the rating link needs scale_points")
         return LinkLikelihood(
             name, link.response_type,
-            {"beta": dist.LogNormal(0.0, 1.0), "center": dist.Normal(0.0, 2.0),
-             "spread": dist.LogNormal(0.0, 1.0), "lapse": dist.Beta(1.0, 9.0)},
-            {"beta": 1.0, "center": 0.0, "spread": 0.8, "lapse": 0.05},
+            {"center": dist.Normal(0.0, 2.0), "spread": dist.LogNormal(0.0, 1.0), **_shared_params()},
+            {"center": 0.0, "spread": 0.8, **SHARED_REFERENCE},
             {"scale_points": int(scale_points)})
     if name == "allocation":
         if total_points is None:
             raise ValueError("the allocation link needs total_points")
         return LinkLikelihood(
             name, link.response_type,
-            {"kappa": dist.LogNormal(float(np.log(10.0)), 1.0), "lapse": dist.Beta(1.0, 9.0)},
-            {"kappa": 10.0, "lapse": 0.05},
+            {"kappa": dist.LogNormal(float(np.log(10.0)), 1.0), **_shared_params()},
+            {"kappa": 10.0, **SHARED_REFERENCE},
             {"total_points": int(total_points)})
     raise KeyError(name)
 
