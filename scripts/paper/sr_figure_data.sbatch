@@ -34,5 +34,5 @@ if [[ -f "$FIT_WORK_DIR/code_commit" && "$(git rev-parse HEAD)" != "$(cat "$FIT_
   echo "FATAL: the checkout is at $(git rev-parse HEAD), the setup job recorded $(cat "$FIT_WORK_DIR/code_commit")" >&2; exit 1
 fi
 echo "[paper] code $(git rev-parse HEAD) $( [[ -z "$(git status --porcelain)" ]] && echo clean || echo DIRTY)"
-uv sync --locked
+source "$REPO/scripts/paper/_venv.sh"
 "$VENV_PY" -m scripts.paper.sr_figure_data --work-dir "$FIT_WORK_DIR"

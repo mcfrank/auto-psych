@@ -8,7 +8,7 @@
 #    cd $HOME/auto-psych && bash scripts/paper/submit_figure_data.sh number_game
 #
 #  Three jobs, chained:
-#    1. setup (figure_data_setup.sbatch): syncs the venv once and records
+#    1. setup (figure_data_setup.sbatch): builds the venv once and records
 #       the checkout's commit in $FIT_WORK_DIR/code_commit;
 #    2. the shards (figure_data_shard.sbatch, an array of N_SHARDS, at most
 #       MAX_PARALLEL at once), each scoring its share of the removed models
