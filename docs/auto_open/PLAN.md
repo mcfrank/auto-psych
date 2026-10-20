@@ -100,6 +100,26 @@ Each library link has a recovery test (simulate from known parameters, refit, re
 choice link must reproduce today's forced-choice likelihood exactly. A designer-proposed link
 must pass the same recovery test automatically before it can be used.
 
+**Built so far** (`src/rsa_open/links.py`, `src/rsa_open/fit.py`). The closed fit (`src.rsa.fit`)
+knows only a choice likelihood and is left untouched, so the closed campaign's results cannot
+move. The open fit takes the likelihood from the link:
+- **choice** gives the closed fit's per-trial log-likelihood exactly (the same data and
+  parameters).
+- **rating** is an ordered probit on `beta · logit(p)` of the probed referent, with equally
+  spaced cutpoints (`center`, `spread`) and a uniform-rating lapse; the paradigm fixes
+  `scale_points`.
+- **allocation** (response type `slider`) is a Dirichlet-multinomial around the lapse-mixed
+  posterior, with concentration `kappa`; the paradigm fixes `total_points`. This is the betting
+  measure of Frank & Goodman (2012); zeros are ordinary outcomes.
+
+**The recovery test** (`recovery_check`): 3 independent datasets of 1,500 simulated responses
+from a theory at known parameters are refitted. Each true value must fall inside its 98%
+posterior interval, and each link parameter must be learned (posterior sd at most half the
+prior's), in all replicates but at most one, and every fit must converge. One replicate is
+allowed to miss because a single dataset misses a 98% interval over several parameters often
+enough to fail a sound link. That happened to the allocation link's lapse on one seed, while
+the likelihood's profile peaks at the truth. All three library links pass.
+
 **A paradigm spec** (written by the designer) is a structured file: charter fields; materials
 (SVG or text); instructions; trial structure; response type and link; the parameterized trial
 space; the mapping from each trial to an abstract scene; time estimate and pay. A schema
@@ -214,7 +234,7 @@ The existing protocol covers the rest (PI, 2026-10-20).
 | Phase | What | Where | Status |
 |---|---|---|---|
 | 0 | This plan; Gemini 4 smoke test | cloud | plan written; smoke test below |
-| 1 | Paradigm-spec schema and validator; link library with recovery tests; theory + link refactor; port the seeds and closed finals (exact-equivalence tests) | cloud | port and choice link done (`src/rsa_open/`); 19 of 20 ported exactly; the rest waits on §10. Paradigm spec and validator done (`src/rsa_open/paradigm.py`): budget, pay rate, N and length bounds, scene-pool bound (≤ 6 objects, ≤ 4 features, ≤ 6,000 scenes), SVG safety, content rules, link check; the closed paradigm written as a spec gives the closed design pool exactly. Next: the other links |
+| 1 | Paradigm-spec schema and validator; link library with recovery tests; theory + link refactor; port the seeds and closed finals (exact-equivalence tests) | cloud | port and choice link done (`src/rsa_open/`); 19 of 20 ported exactly; the rest waits on §10. Paradigm spec and validator done (`src/rsa_open/paradigm.py`): budget, pay rate, N and length bounds, scene-pool bound (≤ 6 objects, ≤ 4 features, ≤ 6,000 scenes), SVG safety, content rules, link check; the closed paradigm written as a spec gives the closed design pool exactly. Fitting path for any link (`src/rsa_open/fit.py`), leaving the closed fit untouched; choice, rating and allocation links done and each passes the recovery test (3 replicates). Next: production and binary-judgment links, once §10's speaker question is settled |
 | 2 | Designer tools as an agent CLI; designer brief; implementer; simulated pilot | cloud | |
 | 3 | Rehearsal on simulated participants with a ground-truth theory across paradigms | Sherlock | |
 | 4 | One live paradigm per chain, with PI review | live | |

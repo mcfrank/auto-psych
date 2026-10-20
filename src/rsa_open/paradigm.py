@@ -19,7 +19,8 @@ so an agent fixing a spec sees them all. It checks:
   handlers, or references outside the fragment); text materials give each feature a phrase;
 - content (PI 2026-10-20): no deception, no affectively charged stimuli or language, no URLs
   or email addresses;
-- the response's link exists in the library (`src.rsa_open.links`) and scores its type.
+- the response's link exists in the library (`src.rsa_open.links`) and scores its type; a
+  rating gives its scale points and a slider its total points.
 
 A paradigm's `sha256` is that of its canonical JSON, so formatting does not change it and any
 content does; it is recorded with every trial collected under the paradigm.
@@ -53,6 +54,8 @@ MAX_OBJECTS = 6
 MAX_FEATURES = 4
 MAX_POOL = 6000
 MAX_SVG_CHARS = 20_000
+MAX_SCALE_POINTS = 11
+MAX_TOTAL_POINTS = 1000
 RESPONSE_TYPES = ("choice", "rating", "slider", "production", "binary_judgment")
 
 SVG_NS = "http://www.w3.org/2000/svg"
@@ -134,6 +137,10 @@ class Response(_Strict):
     type: Literal["choice", "rating", "slider", "production", "binary_judgment"]
     link: str
     prompt: str
+    scale_points: Optional[int] = None
+    """rating: the number of points on the scale (2-11), frozen with the paradigm."""
+    total_points: Optional[int] = None
+    """slider: the points split over the referents (2-1000), frozen with the paradigm."""
 
 
 class Design(_Strict):
@@ -325,6 +332,17 @@ def _problems(p: Paradigm) -> List[str]:
         problems.append(f"response.link {link.name!r} scores {link.response_type!r} responses, not {p.response.type!r}")
     if not p.response.prompt.strip():
         problems.append("response.prompt is empty")
+    r = p.response
+    if r.type == "rating":
+        if r.scale_points is None or not 2 <= r.scale_points <= MAX_SCALE_POINTS:
+            problems.append(f"response.scale_points must be 2-{MAX_SCALE_POINTS} for a rating response")
+    elif r.scale_points is not None:
+        problems.append("response.scale_points applies only to rating responses")
+    if r.type == "slider":
+        if r.total_points is None or not 2 <= r.total_points <= MAX_TOTAL_POINTS:
+            problems.append(f"response.total_points must be 2-{MAX_TOTAL_POINTS} for a slider response")
+    elif r.total_points is not None:
+        problems.append("response.total_points applies only to slider responses")
 
     checks = p.instructions.comprehension_checks
     if not checks:
@@ -371,6 +389,14 @@ def scene_pool(paradigm: Paradigm) -> list:
     return context_pool([tuple(s) for s in paradigm.scene_space.sizes],
                         include_prior_queries=paradigm.scene_space.prior_queries,
                         synonyms=paradigm.scene_space.synonyms)
+
+
+def paradigm_likelihood(paradigm: Paradigm):
+    """The paradigm's link likelihood, with its frozen options (`src.rsa_open.links`)."""
+    from src.rsa_open.links import likelihood
+
+    return likelihood(paradigm.response.link, scale_points=paradigm.response.scale_points,
+                      total_points=paradigm.response.total_points)
 
 
 def main_schema(out: Path) -> dict:

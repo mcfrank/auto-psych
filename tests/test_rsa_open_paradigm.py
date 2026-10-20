@@ -200,3 +200,27 @@ def test_the_schema_for_the_designer_lists_every_field(tmp_path):
 
     schema = main_schema(tmp_path / "schema.json")
     assert {"materials", "scene_space", "response", "design", "content"} <= set(schema["properties"])
+
+
+@pytest.mark.parametrize("response, ok", [
+    ({"type": "rating", "link": "rating", "prompt": "How likely is it the speaker means this one?",
+      "scale_points": 7}, True),
+    ({"type": "rating", "link": "rating", "prompt": "How likely?"}, False),
+    ({"type": "slider", "link": "allocation", "prompt": "Split 100 points by how likely each is.",
+      "total_points": 100}, True),
+    ({"type": "slider", "link": "allocation", "prompt": "Split the points.", "total_points": 1}, False),
+    ({"type": "choice", "link": "choice", "prompt": "Which one?", "scale_points": 7}, False),
+    ({"type": "slider", "link": "rating", "prompt": "Which one?", "total_points": 100}, False),
+])
+def test_rating_and_slider_paradigms_fix_their_scale(tmp_path, response, ok):
+    from src.rsa_open.paradigm import ParadigmInvalid, load_paradigm, paradigm_likelihood
+
+    spec = closed_like_spec()
+    spec["response"] = response
+    if ok:
+        link = paradigm_likelihood(load_paradigm(write(tmp_path, spec)))
+        assert link.name == response["link"]
+        assert link.options == ({"scale_points": 7} if link.name == "rating" else {"total_points": 100})
+    else:
+        with pytest.raises(ParadigmInvalid, match="points|scores"):
+            load_paradigm(write(tmp_path, spec))
