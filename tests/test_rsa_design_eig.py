@@ -103,3 +103,18 @@ def test_impossible_quotas_are_refused():
     with pytest.raises(ValueError, match="overlap"):
         select(probs, valid, 6, n_responses=5, n_scenarios=50,
                quotas=[Quota("small", "size", small, 1), Quota("all", "size", np.ones(12, bool), 1)])
+
+
+def test_draw_groups_compare_models_within_a_group_only():
+    """The open campaign's link settings (src.rsa_open.design): model B is model A with the link
+    setting swapped. Averaged over settings they predict the same; at a known setting they differ."""
+    from src.rsa.design import eig
+
+    a = np.array([[[0.9, 0.1]], [[0.9, 0.1]], [[0.1, 0.9]], [[0.1, 0.9]]])  # draws x 1 display x 2
+    b = a[[2, 3, 0, 1]]
+    valid = np.ones((1, 2), dtype=bool)
+    groups = [np.array([0, 0, 1, 1])] * 2
+    (pooled,) = eig.power([a, b], valid, [0], [40], n_scenarios=400, seed=0)
+    (given,) = eig.power([a, b], valid, [0], [40], n_scenarios=400, seed=0, draw_groups=groups)
+    assert pooled["joint_eig_bits"] < 0.05 and given["joint_eig_bits"] > 0.95
+    assert given["p_correct"] > 0.99

@@ -221,6 +221,52 @@ write their own.
 The designer may not see participant-level data from earlier experiments, only per-paradigm
 fits, so that it designs against the theories rather than individual people.
 
+### 4.1 The EIG tool (`src/rsa_open/design.py`, built 2026-10-21)
+
+- **The design context** is written by the harness and only read by the designer: the live
+  theories, each one's posterior draws on the data so far, and a uniform prior over them.
+- **Trial units** are what a design picks:
+  - a scene (choice);
+  - a scene and a probed object (rating);
+  - a scene and a target (production);
+  - a scene, a target and a message (judgment).
+
+  A probe or target is taken once per class of identical objects.
+- **Each unit gets** `n_participants × trials_per_participant / distinct_trials` responses. The
+  paradigm spec now gives `distinct_trials` (the closed campaign's D = 52).
+- **The estimator** is the closed campaign's (`src/rsa/design/eig.py`): greedy joint-EIG
+  selection, then the joint EIG and power on fresh scenarios.
+- **The floor** is half the bits per dollar of the closed paradigm (1,597 scenes, 200 × 13 of
+  52, the choice link) under the same theories.
+- **Allocation (slider) paradigms are refused** until there is an estimator for responses that
+  are not categorical.
+
+**Link parameters, a decision for the PI.** A new paradigm's link has no data, so its parameters
+come from the link's prior. Averaging them inside each theory's evidence (the estimator as
+written) is a draw lottery: with diffuse nuisance parameters and ~1,000 responses, a theory's
+evidence is whichever single draw happens to fit. The measurements, on a rating paradigm with
+two theories:
+
+| draws | bits | correct |
+|---|---|---|
+| 32 | 0.96 | 72% |
+| 256 | 0.98 | 91% |
+| link fixed | 1.00 | 100% |
+
+Links with more nuisance parameters would be scored worse, arbitrarily.
+
+So the tool scores the information about the theories **given** the link's parameters:
+- 8 settings are drawn from the link's prior;
+- every theory's posterior draws are paired with each;
+- a simulated scenario compares the theories at its own setting (`draw_groups`, a
+  default-preserving option in the closed estimator; tests in `tests/test_rsa_design_eig.py`).
+
+On the same rating paradigm this gives 0.99 bits and 99.8% correct. The four categorical links
+score 0.90–0.99 bits with 97–100% correct.
+
+**The cost:** a theory difference the link can mimic (a sharper listener against a higher
+temperature) counts as information, though the joint fit may not separate it.
+
 ## 5. The inner loop
 
 As in the closed campaign (admission gates, grouped CV, the ledger, the critic, the 2-stale-round
@@ -270,7 +316,7 @@ The existing protocol covers the rest (PI, 2026-10-20).
 |---|---|---|---|
 | 0 | This plan; Gemini 4 smoke test | cloud | plan written; smoke test below |
 | 1 | Paradigm-spec schema and validator; link library with recovery tests; theory + link refactor; port the seeds and closed finals (exact-equivalence tests) | cloud | **done** (`src/rsa_open/`): all 20 models port (18 by rule a, chain 2's final by rule b, one by hand) and equal their originals; five links (choice, rating, allocation, production, binary judgment), each with a temperature and a lapse, each passing the recovery test; every theory has a speaker; the paradigm spec and its validator. Not yet: freezing the ported closed finals (with their derived speakers) before the campaign |
-| 2 | Designer tools as an agent CLI; designer brief; implementer; simulated pilot | cloud | |
+| 2 | Designer tools as an agent CLI; designer brief; implementer; simulated pilot | cloud | EIG tool done (§4.1: trial units, per-dollar score, floor; allocation refused); next: `link_check`, `submit`, the brief, the implementer, the simulated pilot |
 | 3 | Rehearsal on simulated participants with a ground-truth theory across paradigms | Sherlock | |
 | 4 | One live paradigm per chain, with PI review | live | |
 | 5 | Campaign: 3 chains × 3 experiments | live | |

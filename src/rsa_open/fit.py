@@ -63,6 +63,31 @@ class TheoryModel(RSAModel):
                 f"posterior over the objects, shape (N_OBJ,)")
         return fn
 
+    @property
+    def params(self) -> Dict[str, Any]:
+        """The theory's priors. Unlike a model file's, they may be empty: a theory with no free
+        parameters (the literal listener, once its lapse went to the link) is a fixed prediction."""
+        from collections.abc import Mapping as _Mapping
+
+        from numpyro.distributions import Distribution
+
+        params = getattr(self._any_module(), "PARAMS", None)
+        if not isinstance(params, _Mapping):
+            raise ModelContractViolation(f"{self.path.name} must define PARAMS, a dict of parameter "
+                                         f"name -> numpyro distribution (it may be empty)")
+        bad = [k for k, v in params.items() if not isinstance(v, Distribution)]
+        if bad:
+            raise ModelContractViolation(f"PARAMS entries {bad} in {self.path.name} are not numpyro distributions")
+        return dict(params)
+
+    def latent_draws(self, params: Mapping[str, Any], group: ShapeGroup, speaker: bool, n_draws: int) -> jnp.ndarray:
+        """(n_draws, trials, ...) listener posteriors or speakers at a batch of parameter draws; a
+        theory without parameters gives the same prediction at every draw."""
+        if not self.params:
+            one = (self.group_speaker if speaker else self.group_probs)({}, group)
+            return jnp.broadcast_to(one[None], (n_draws, *one.shape))
+        return (self.draws_speaker if speaker else self.draws_probs)(params, group)
+
     def has_own_speaker(self) -> bool:
         return callable(getattr(self._any_module(), "speaker", None))
 
@@ -101,10 +126,11 @@ class TheoryModel(RSAModel):
         return self._jitted[key](dict(params), group.arrays)
 
 
-def _latent(theory: TheoryModel, link: LinkLikelihood, params, group: ShapeGroup, draws: bool = False):
-    if link.side == "speaker":
-        return (theory.draws_speaker if draws else theory.group_speaker)(params, group)
-    return (theory.draws_probs if draws else theory.group_probs)(params, group)
+def _latent(theory: TheoryModel, link: LinkLikelihood, params, group: ShapeGroup, draws: bool = False,
+            n_draws: int = 0):
+    if draws:
+        return theory.latent_draws(params, group, link.side == "speaker", n_draws)
+    return (theory.group_speaker if link.side == "speaker" else theory.group_probs)(params, group)
 
 
 @dataclass(frozen=True)
@@ -168,7 +194,9 @@ def pointwise_log_lik(theory: RSAModel, link: LinkLikelihood, data: OpenData,
         start = 0
         for n, params in draw_batches(flat, np.arange(n_draws)):
             tp, lp = _split(theory, link, params)
-            out[start:start + n, group.indices] = np.asarray(per_draw(_latent(theory, link, tp, group, True), lp))[:n]
+            batch = len(next(iter(params.values())))
+            latent = _latent(theory, link, tp, group, True, batch)
+            out[start:start + n, group.indices] = np.asarray(per_draw(latent, lp))[:n]
             start += n
     return out
 

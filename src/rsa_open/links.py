@@ -243,6 +243,50 @@ class LinkLikelihood:
             return jnp.log(jnp.take_along_axis(probs, enc["answer"][:, None], axis=1)[:, 0])
         raise KeyError(self.name)
 
+    # -- outcomes, for the design tool (src.rsa_open.design)
+    CATEGORICAL = ("choice", "rating", "production", "binary_judgment")
+
+    def outcome_probs(self, latent: jnp.ndarray, p: Mapping[str, Any], unit: Mapping[str, jnp.ndarray],
+                      arrays, classes) -> jnp.ndarray:
+        """(units, W): the probability of each outcome of each trial unit; ``unit`` holds a
+        unit's response fields other than the outcome itself (a probe, a target, a message).
+        log of entry k is `log_lik` of the response `outcome_response(k)`."""
+        if self.name == "choice":
+            from src.rsa.fit import class_probs
+
+            return class_probs(with_uniform(temper(latent, p["temperature"]), p["lapse"]), classes)
+        if self.name == "rating":
+            tempered = temper(latent, p["temperature"])
+            pr = jnp.take_along_axis(tempered, unit["probe"][:, None], axis=1)[:, 0]
+            return rating_probs(pr, p["center"], p["spread"], p["lapse"], self.options["scale_points"])
+        if self.name == "production":
+            return _speaker_choice(latent, unit["target"], arrays.is_sink, p)
+        if self.name == "binary_judgment":
+            q = jnp.take_along_axis(_tempered_speaker(latent, unit["target"], arrays.is_sink, p),
+                                    unit["utterance"][:, None], axis=1)[:, 0]
+            return rating_probs(q, p["center"], 1.0, p["lapse"], 2)
+        raise NotImplementedError(
+            f"the {self.name!r} link's outcomes are not categorical; the design tool cannot score it yet")
+
+    def outcome_valid(self, arrays, classes, unit: Mapping[str, jnp.ndarray]) -> jnp.ndarray:
+        """(units, W) bool: the outcome slots that exist for each unit."""
+        if self.name == "choice":
+            c = jnp.asarray(classes)
+            return c == jnp.arange(c.shape[1])[None, :]  # a class sits at its first object
+        if self.name == "rating":
+            return jnp.ones((unit["probe"].shape[0], self.options["scale_points"]), dtype=bool)
+        if self.name == "production":
+            return arrays.is_sink < 0.5
+        if self.name == "binary_judgment":
+            return jnp.ones((unit["target"].shape[0], 2), dtype=bool)
+        raise NotImplementedError(self.name)
+
+    def outcome_response(self, k: int) -> Dict[str, Any]:
+        """The encoded response fields that name outcome slot ``k``."""
+        field_name = {"choice": "cls", "rating": "rating", "production": "utterance",
+                      "binary_judgment": "answer"}[self.name]
+        return {field_name: jnp.asarray([k])}
+
     # -- simulation
     def sample(self, key, latent: np.ndarray, p: Mapping[str, Any], probes: np.ndarray,
                arrays=None, utterances: Optional[np.ndarray] = None) -> List[dict]:

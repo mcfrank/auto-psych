@@ -146,6 +146,9 @@ class Response(_Strict):
 class Design(_Strict):
     n_participants: int
     trials_per_participant: int
+    distinct_trials: int
+    """D, the trial units the design picks (`src.rsa_open.design`); each participant answers a
+    balanced subset, so each unit gets n_participants x trials_per_participant / D responses."""
     catch_trials: int
     minutes: float
     pay_usd: float
@@ -262,6 +265,12 @@ def _problems(p: Paradigm) -> List[str]:
                         f"{PROLIFIC_FEE_MULTIPLIER:.4g}), over the ${BUDGET_USD:.2f} budget per experiment")
     if d.trials_per_participant < 1:
         problems.append("design.trials_per_participant must be at least 1")
+    if d.distinct_trials < max(d.trials_per_participant, 1):
+        problems.append(f"design.distinct_trials {d.distinct_trials} must be at least trials_per_participant "
+                        f"({d.trials_per_participant})")
+    elif d.n_participants * d.trials_per_participant < d.distinct_trials:
+        problems.append("design.distinct_trials is more than the responses collected "
+                        "(n_participants x trials_per_participant): some units would get none")
     if d.catch_trials < 1:
         problems.append("design.catch_trials must be at least 1 (attention is checked in every paradigm)")
 

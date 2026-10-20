@@ -91,7 +91,7 @@ class State:
     """Per-scenario, per-model, per-draw log-likelihood of the displays chosen so far."""
 
     def __init__(self, probs: Sequence[np.ndarray], valid: np.ndarray, prior: np.ndarray, scen: Scenarios,
-                 leave_one_out: bool = True):
+                 leave_one_out: bool = True, draw_groups: Optional[Sequence[np.ndarray]] = None):
         self.logp = [np.where(valid, np.log(np.maximum(p, LOG_FLOOR)), 0.0) for p in probs]  # (D_m, C, W)
         self.prior = prior
         self.scen = scen
@@ -102,6 +102,13 @@ class State:
             for m in range(len(probs)):
                 rows = np.where(scen.model == m)[0]
                 self.mask[m][rows, scen.draw[rows]] = False
+        # With ``draw_groups`` (the open campaign's link settings, src.rsa_open.design), a model's
+        # draws count in a scenario only when they share the scenario's group: information about
+        # the models given the group (e.g. a link's parameters), averaged over groups.
+        if draw_groups is not None:
+            scen_group = np.asarray([draw_groups[m][d] for m, d in zip(scen.model, scen.draw)])
+            for m in range(len(probs)):
+                self.mask[m] &= np.asarray(draw_groups[m])[None, :] == scen_group[:, None]
 
     def add(self, c: int) -> None:
         for m, lp in enumerate(self.logp):
@@ -188,7 +195,7 @@ class Selection:
 def select(probs: Sequence[np.ndarray], valid: np.ndarray, n_select: int, *, n_responses: int,
            prior: Optional[np.ndarray] = None, n_scenarios: int = 2000, seed: int = 0,
            candidates: Optional[Sequence[int]] = None, leave_one_out: bool = True,
-           quotas: Sequence[Quota] = ()) -> Selection:
+           quotas: Sequence[Quota] = (), draw_groups: Optional[Sequence[np.ndarray]] = None) -> Selection:
     """Greedy joint-EIG selection of ``n_select`` displays, each answered ``n_responses`` times.
 
     Stops at the noise floor (the best gain within two Monte Carlo SE of zero)
@@ -205,7 +212,8 @@ def select(probs: Sequence[np.ndarray], valid: np.ndarray, n_select: int, *, n_r
     h0 = float(_entropy_bits(prior))
     out = Selection([], [], [])
     for responses, source in ((n_responses, "eig"), (1, "eig_single_response_fill")):
-        state = State(probs, valid, prior, simulate(probs, prior, responses, n_scenarios, seed), leave_one_out)
+        state = State(probs, valid, prior, simulate(probs, prior, responses, n_scenarios, seed), leave_one_out,
+                      draw_groups)
         for c in out.indices:
             state.add(c)
         current = _entropy_bits(state.posterior())
@@ -230,7 +238,8 @@ def select(probs: Sequence[np.ndarray], valid: np.ndarray, n_select: int, *, n_r
 
 def power(probs: Sequence[np.ndarray], valid: np.ndarray, design: Sequence[int], n_responses: Sequence[int], *,
           prior: Optional[np.ndarray] = None, n_scenarios: int = 4000, seed: int = 1,
-          names: Optional[Sequence[str]] = None, leave_one_out: bool = True) -> List[Dict]:
+          names: Optional[Sequence[str]] = None, leave_one_out: bool = True,
+          draw_groups: Optional[Sequence[np.ndarray]] = None) -> List[Dict]:
     """For each N: the design's joint EIG and how often the generating model
     ends with the highest posterior (overall and per generating model), on
     scenarios the design was not selected on."""
@@ -240,7 +249,7 @@ def power(probs: Sequence[np.ndarray], valid: np.ndarray, design: Sequence[int],
     rows = []
     for n in n_responses:
         scen = simulate(probs, prior, n, n_scenarios, seed)
-        state = State(probs, valid, prior, scen, leave_one_out)
+        state = State(probs, valid, prior, scen, leave_one_out, draw_groups)
         for c in design:
             state.add(c)
         post = state.posterior()

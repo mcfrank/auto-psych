@@ -46,7 +46,7 @@ def closed_like_spec():
         },
         "response": {"type": "choice", "link": "choice",
                      "prompt": "Which creature is the speaker talking about?"},
-        "design": {"n_participants": 200, "trials_per_participant": 13, "catch_trials": 2,
+        "design": {"n_participants": 200, "trials_per_participant": 13, "distinct_trials": 52, "catch_trials": 2,
                    "minutes": 3, "pay_usd": 0.50},
         "content": {"deception": False, "affective_stimuli": False},
     }
@@ -224,3 +224,15 @@ def test_rating_and_slider_paradigms_fix_their_scale(tmp_path, response, ok):
     else:
         with pytest.raises(ParadigmInvalid, match="points|scores"):
             load_paradigm(write(tmp_path, spec))
+
+
+def test_the_design_says_how_many_distinct_trials_it_picks(tmp_path):
+    from src.rsa_open.paradigm import ParadigmInvalid, load_paradigm
+
+    spec = closed_like_spec()
+    spec["design"]["distinct_trials"] = 10  # fewer than each participant answers
+    with pytest.raises(ParadigmInvalid, match="distinct_trials"):
+        load_paradigm(write(tmp_path, spec))
+    spec["design"].pop("distinct_trials")
+    with pytest.raises(ParadigmInvalid, match="distinct_trials"):
+        load_paradigm(write(tmp_path, spec))

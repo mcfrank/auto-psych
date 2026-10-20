@@ -141,3 +141,20 @@ def test_every_link_tempers_then_lapses_and_is_the_plain_posterior_at_temperatur
     np.testing.assert_allclose(sharp[1], 0.25, rtol=1e-6)
     grad = jax.grad(lambda t: temper(p, t)[0, 0])(2.0)
     assert np.isfinite(float(grad))
+
+
+def test_a_theory_without_parameters_is_scored_at_every_draw(contexts, tmp_path):
+    from src.rsa_open.fit import OpenData, TheoryModel, pointwise_log_lik, trial_log_lik
+    from src.rsa_open.links import likelihood
+    from src.rsa_open.port import port
+
+    path = tmp_path / "literal_listener.py"
+    path.write_text(port((SEEDS / "literal_listener.py").read_text(), name="literal_listener.py"))
+    theory, link = TheoryModel(path), likelihood("choice")
+    assert theory.params == {}
+    data = OpenData.build(contexts, [{"choice": 0} for _ in contexts], link)
+    flat = {"lapse": np.asarray([0.05, 0.2]), "temperature": np.asarray([1.0, 2.0])}
+    ll = pointwise_log_lik(theory, link, data, flat)
+    assert ll.shape == (2, len(contexts)) and np.all(np.isfinite(ll))
+    one = np.asarray(trial_log_lik(theory, link, data, {"lapse": 0.2, "temperature": 2.0}))
+    np.testing.assert_allclose(ll[1], one, rtol=1e-5)
