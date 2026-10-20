@@ -19,12 +19,7 @@
 # cells, and it deletes the recovery datasets (setup re-simulates them from
 # the new split).
 #
-# VENV_MODE=sync: `uv sync --locked --no-build` -- the lock exactly,
-#   failing (not building from source) if a package has no glibc-2.17 wheel.
-# VENV_MODE=wheels (default; on Sherlock the locked sync fails: contourpy
-# 1.3.3 has no glibc-2.17 wheel): the subjective-randomness recipe (uv pip install
-#   --only-binary) with the RSA stack pinned to uv.lock's versions. Use it if
-#   the sync fails on a wheel.
+# VENV_MODE: sync or wheels (default), see scripts/_venv.sh.
 set -euo pipefail
 export REPO="${REPO:-$HOME/auto-psych}"
 source "$REPO/scripts/rsa/slurm/_env.sh"   # cds to $REPO
@@ -43,28 +38,7 @@ rsa_require_opencode
 [[ -n "${GOOGLE_API_KEY:-}" ]] || echo "WARNING: GOOGLE_API_KEY is not set; setup and the loop will refuse to start without it"
 
 # --- 1. venv -------------------------------------------------------------------
-echo "[prepare] venv at $UV_PROJECT_ENVIRONMENT (python $UV_PYTHON, mode ${VENV_MODE:-wheels})"
-case "${VENV_MODE:-wheels}" in
-  sync)
-    uv sync --locked --no-build ;;
-  wheels)
-    [[ -x "$VENV_PY" ]] || uv venv --python "$UV_PYTHON" "$UV_PROJECT_ENVIRONMENT"
-    uv pip install --python "$UV_PROJECT_ENVIRONMENT" --only-binary :all: \
-      "pymc==5.28.5" "pytensor==2.38.3" "arviz==0.23.4" "h5py<3.15" \
-      "memo-lang==1.3.0" "jax==0.7.0" "jaxlib==0.7.0" "numpyro==0.19.0" \
-      "numpy<2.3" "scipy<1.15" "pandas<2.3" \
-      pyyaml tyro pyprojroot matplotlib requests threadpoolctl ;;
-  *) echo "ERROR: VENV_MODE must be sync or wheels" >&2; exit 1 ;;
-esac
-"$VENV_PY" - <<'PY'
-import sys
-import jax, jax.numpy as jnp, numpyro, memo, pymc, arviz, pandas  # noqa: F401
-assert sys.version_info[:2] == (3, 12), sys.version
-assert jax.__version__ == "0.7.0", jax.__version__
-print(f"[prepare] venv OK: python {sys.version.split()[0]}, jax {jax.__version__}, "
-      f"numpyro {numpyro.__version__}, pymc {pymc.__version__}, arviz {arviz.__version__}; "
-      f"jnp check {float(jnp.ones(3).sum())}")
-PY
+build_shared_venv
 
 # --- 2. fetch + rebuild ------------------------------------------------------
 # Run exactly as the committed provenance records it (no --cache-dir: its

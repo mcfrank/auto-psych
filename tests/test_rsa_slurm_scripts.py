@@ -567,10 +567,10 @@ def test_the_check_refuses_a_secrets_backup_in_a_tree(scrubbed_tree):
     assert result.returncode != 0 and "secrets" in (result.stdout + result.stderr)
 
 
-def test_every_rsa_job_shares_run_2s_venv_and_node_24(tmp_path):
+def test_every_rsa_job_shares_the_one_venv_and_node_24(tmp_path):
     env = {"GROUP_HOME": "/g", "PATH": "/usr/bin:/bin"}
     out = _run(["bash", "-c", f'source "{SLURM / "_cells.sh"}"; rsa_default_venv /scratch/x/rsa_live'], env=env)
-    assert out.stdout.strip() == "/g/venvs/auto-psych_rsa_run2"
+    assert out.stdout.strip() == "/g/venvs/auto-psych"
     assert 'NODEJS_MODULE:-nodejs/24.13.0' in (SLURM / "_env.sh").read_text()
 
 

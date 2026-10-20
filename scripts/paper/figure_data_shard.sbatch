@@ -8,6 +8,8 @@
 # ============================================================================
 set -euo pipefail
 : "${FIT_WORK_DIR:?set by submit_figure_data.sh}" "${MODULE:?}" "${N_SHARDS:?}"
+source "$REPO/scripts/_venv.sh"
+export UV_PROJECT_ENVIRONMENT="$(shared_venv_path)"
 source "$REPO/scripts/subjective_randomness/slurm/_env.sh"
 export PYTENSOR_FLAGS="base_compiledir=${L_SCRATCH:-/tmp}/pytensor/job_${SLURM_JOB_ID}"
 

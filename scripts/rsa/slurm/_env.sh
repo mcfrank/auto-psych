@@ -8,7 +8,7 @@
 # Honors, if already exported:
 #   REPO            the auto-psych checkout on branch auto-rsa ($HOME/auto-psych)
 #   WORK_ROOT       the sweep root ($SCRATCH/auto-psych/$RSA_SWEEP_NAME, _cells.sh)
-#   UV_PROJECT_ENVIRONMENT  the venv ($GROUP_HOME/venvs/auto-psych_<sweep>; rsa_default_venv)
+#   UV_PROJECT_ENVIRONMENT  the venv ($GROUP_HOME/venvs/auto-psych, scripts/_venv.sh; rsa_default_venv)
 #   SSL_CERT_FILE   CA bundle (el7's /etc/pki/tls/certs/ca-bundle.crt when it exists)
 #   OPENCODE_BIN_DIR  bin/ of an npm-installed opencode-ai (see below; default
 #                   $GROUP_HOME/software/npm-global/bin when it holds opencode)

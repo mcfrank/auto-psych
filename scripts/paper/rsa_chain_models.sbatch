@@ -7,8 +7,9 @@
 #  paper's Figure 2. Descriptive only: the pre-registered data are spent.
 #  Submit all three stages with scripts/paper/submit_rsa_chain_models.sh:
 #
-#    STAGE=setup  stage the code once ($WORK_ROOT/code, code_commit) and copy
-#                 the pre-registration's pooled data
+#    STAGE=setup  build the shared venv (scripts/_venv.sh), stage
+#                 the code once ($WORK_ROOT/code, code_commit) and copy the
+#                 pre-registration's pooled data
 #    STAGE=fit    one shard of the ~220 chain models (an array task): each
 #                 fitted on the pooled data with the bar's settings, its
 #                 frozen pool predictions saved as a record
@@ -33,6 +34,7 @@ COMMON=(--live-root "$D/live" --chain-seeds "$D/live_seeds/chains/chains.json"
         --prereg-analysis "$D/prereg/run/prereg_analysis.json" --work-dir "$WORK_ROOT/work")
 case "$STAGE" in
   setup)
+    build_shared_venv
     mkdir -p "$CODE_ROOT"
     # _env.sh exported HARNESS_REPO and AGENT_SRC under WORK_ROOT; name this job's own.
     WORK_ROOT="$CODE_ROOT" HARNESS_REPO="$CODE_ROOT/harness_repo" AGENT_SRC="$CODE_ROOT/agent_src" \

@@ -98,9 +98,6 @@ rsa_loop_cli_has_seed() {
   grep -qE -- '(^|[[:space:]])--seed[[:space:]]' <<< "$help"
 }
 
-# The sweep's venv: $GROUP_HOME/venvs/auto-psych_<sweep> (Sherlock's rule:
-# Python environments live in $GROUP_HOME, not on $SCRATCH), else
-# $WORK_ROOT/venv. UV_PROJECT_ENVIRONMENT, if exported, wins.
 # The sweep root every script defaults to. One place: after run 1, three
 # scripts still defaulted to rsa_run1 and run 2's first submit went there.
 RSA_SWEEP_NAME="rsa_run2"
@@ -110,15 +107,12 @@ rsa_default_work_root() {
   echo "$base/auto-psych/$RSA_SWEEP_NAME"
 }
 
+# The venv: the shared one (scripts/_venv.sh), else $WORK_ROOT/venv.
+source "$(dirname "${BASH_SOURCE[0]}")/../../_venv.sh"
 rsa_default_venv() {
-  local work_root="$1"
-  if [[ -n "${UV_PROJECT_ENVIRONMENT:-}" ]]; then
-    echo "$UV_PROJECT_ENVIRONMENT"
-  elif [[ -n "${GROUP_HOME:-}" ]]; then
-    # One venv for every RSA job: run 2's, built by its prepare step. A venv named
-    # after each WORK_ROOT (rehearsals, live) was never built (live stage 1, 2026-10-10).
-    echo "$GROUP_HOME/venvs/auto-psych_$RSA_SWEEP_NAME"
-  else
-    echo "$work_root/venv"
-  fi
+  # One venv for every RSA job. A venv named after each WORK_ROOT (rehearsals,
+  # live) was never built (live stage 1, 2026-10-10).
+  local venv
+  venv="$(shared_venv_path)"
+  echo "${venv:-$1/venv}"
 }

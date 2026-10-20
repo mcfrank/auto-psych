@@ -25,6 +25,8 @@
 set -euo pipefail
 export REPO="${REPO:-$HOME/auto-psych}"
 export WORK_ROOT="${WORK_ROOT:-$SCRATCH/auto-psych/paper}"
+source "$REPO/scripts/_venv.sh"
+export UV_PROJECT_ENVIRONMENT="$(shared_venv_path)"
 source "$REPO/scripts/subjective_randomness/slurm/_env.sh"
 FIT_WORK_DIR="${FIT_WORK_DIR:-$WORK_ROOT/sr_figure_data}"
 export PYTENSOR_FLAGS="base_compiledir=${L_SCRATCH:-/tmp}/pytensor/job_${SLURM_JOB_ID}"
@@ -34,5 +36,5 @@ if [[ -f "$FIT_WORK_DIR/code_commit" && "$(git rev-parse HEAD)" != "$(cat "$FIT_
   echo "FATAL: the checkout is at $(git rev-parse HEAD), the setup job recorded $(cat "$FIT_WORK_DIR/code_commit")" >&2; exit 1
 fi
 echo "[paper] code $(git rev-parse HEAD) $( [[ -z "$(git status --porcelain)" ]] && echo clean || echo DIRTY)"
-source "$REPO/scripts/paper/_venv.sh"
+build_shared_venv
 "$VENV_PY" -m scripts.paper.sr_figure_data --work-dir "$FIT_WORK_DIR"
