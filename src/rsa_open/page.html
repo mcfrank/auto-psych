@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A short study</title>
+    <script src="https://unpkg.com/jspsych@8.2.3"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
+    <style>
+      /* One light theme on purpose: every participant sees the materials on the same
+         ground. The system font (no web font request) and no external stylesheet. */
+      :root {
+        --page: #f3f4f6; --surface: #ffffff; --ink: #1b1d22; --muted: #5b6270; --line: #d7dbe1;
+        --accent: #2b5fab; --accent-dark: #224c8a; --accent-soft: #e8eef8; --mark: #d9822b;
+        --focus: #f2a900; --error: #b00020;
+        --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        color-scheme: light;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; background: var(--page); color: var(--ink); }
+      body { font-family: var(--font); font-size: 18px; line-height: 1.5; }
+      #ro-app { min-height: 100vh; padding: 24px 16px 48px; }
+      #ro-status:empty { display: none; }
+      .jspsych-display-element { font-family: var(--font); font-size: 18px; outline: none; }
+      .jspsych-content-wrapper { display: flex; justify-content: center; width: 100%; }
+      .jspsych-content { width: 100%; max-width: 920px; margin: 0 auto; text-align: center; }
+      #jspsych-progressbar-container { max-width: 920px; margin: 0 auto 28px; display: flex; align-items: center;
+                                       gap: 12px; font-size: 13px; color: var(--muted); }
+      #jspsych-progressbar-outer { flex: 1; height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; }
+      #jspsych-progressbar-inner { height: 100%; background: var(--accent); border-radius: 999px; }
+      .ro-prose { max-width: 38em; margin: 0 auto; padding: 28px 32px; text-align: left; background: var(--surface);
+                  border: 1px solid var(--line); border-radius: 16px; }
+      .ro-prose h1 { font-size: 1.5em; line-height: 1.2; margin: 0 0 0.6em; text-align: center; }
+      .ro-prose p { margin: 0 0 0.8em; white-space: pre-line; }
+      .ro-placeholder { border: 2px dashed #b35c00; background: #fff7ec; padding: 8px 12px; border-radius: 8px; }
+      #jspsych-html-button-response-btngroup { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px;
+                                               margin-top: 24px; }
+      .ro-next, .ro-btn { font: inherit; font-weight: 700; padding: 12px 28px; border-radius: 10px; border: none;
+                          cursor: pointer; background: var(--accent); color: #fff; min-width: 6em; }
+      .ro-next:hover, .ro-btn:hover { background: var(--accent-dark); }
+      .ro-btn:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
+      .ro-next:focus-visible, .ro-btn:focus-visible, .ro-item:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+      .ro-option { font: inherit; padding: 10px 18px; border-radius: 10px; border: 2px solid var(--line);
+                   background: var(--surface); cursor: pointer; min-width: 9em; text-align: left; }
+      .ro-option:hover { border-color: var(--accent); }
+
+      .ro-trial { display: grid; gap: 20px; justify-items: center; }
+      .ro-tag { display: inline-block; font-size: 0.75em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+                color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 2px 12px; }
+      .ro-prompt { max-width: 34em; margin: 0; font-weight: 600; }
+      .ro-word { font-size: 1.3em; font-weight: 800; white-space: nowrap; }
+      .ro-items { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
+      .ro-item { --per-row: var(--n); width: min(180px, calc((100vw - 32px - (var(--per-row) - 1) * 16px) / var(--per-row)));
+                 padding: 10px; border: 3px solid var(--line); border-radius: 16px; background: var(--surface);
+                 display: grid; gap: 6px; justify-items: center; font: inherit; color: inherit; }
+      .ro-item.ro-text-item { width: min(220px, 100%); min-height: 5em; align-content: center; }
+      button.ro-item { cursor: pointer; }
+      button.ro-item:hover { border-color: var(--accent); }
+      .ro-item.ro-marked { border-color: var(--mark); box-shadow: 0 0 0 3px var(--mark); }
+      .ro-marker { font-size: 0.8em; font-weight: 700; color: var(--mark); min-height: 1.4em; }
+      .ro-svg { width: 100%; aspect-ratio: 1 / 1; display: block; }
+      .ro-response { display: grid; gap: 10px; justify-items: center; width: 100%; max-width: 640px; }
+      .ro-scale { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+      .ro-scale .ro-btn { min-width: 3em; padding: 10px 14px; }
+      .ro-rating { display: inline-grid; gap: 6px; min-width: min(360px, 100%); }
+      .ro-ends { gap: 16px; display: flex; justify-content: space-between; width: 100%; font-size: 0.85em; color: var(--muted); }
+      .ro-slider { width: 100%; }
+      .ro-bet { width: 5em; font: inherit; text-align: center; padding: 4px; border: 2px solid var(--line); border-radius: 8px; }
+      .ro-total { font-size: 0.9em; color: var(--muted); }
+      .ro-total.ro-ok { color: var(--accent); font-weight: 700; }
+      .ro-error { color: var(--error); font-weight: 700; }
+      pre.ro-json { text-align: left; font-size: 11px; max-height: 360px; overflow: auto; background: var(--page); padding: 8px; }
+      @media (max-width: 600px) {
+        body { font-size: 17px; }
+        .ro-prose { padding: 20px; }
+        .ro-item[data-n="4"] { --per-row: 2; }
+        .ro-item[data-n="5"], .ro-item[data-n="6"] { --per-row: 3; }
+      }
+    </style>
+  </head>
+  <body>
+  <div id="ro-app"><div id="ro-status"></div><div id="ro-jspsych"></div></div>
+  <script>
+    // ---- Injected by `python -m src.rsa_open.page` -----------------------------------------
+    // LISTS: built by src/rsa_open/screens.py; every trial is concrete (rendered objects, screen
+    // order, prompt, widget), the page randomises nothing.
+    const LISTS = {{LISTS_JSON}};
+    const PREVIEW = {{PREVIEW_JSON}};
+    // null: the deployment shows its own consent gate (the IRB text).
+    const CONSENT_HTML = {{CONSENT_HTML_JSON}};
+
+    // DATA SUBMISSION HOOK, as in the closed page (src/rsa/experiment/template.html):
+    // window.submitData(json, meta) returns a Promise; the default keeps the data on window.__roData.
+    if (typeof window.submitData !== 'function') {
+      window.submitData = function () { return Promise.resolve(); };
+    }
+
+    function urlParam(name) { return new URLSearchParams(window.location.search).get(name); }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function setStatus(h) { document.getElementById('ro-status').innerHTML = h; }
+    function fail(message) {
+      document.getElementById('ro-jspsych').innerHTML = '';
+      setStatus('<div class="ro-prose"><p class="ro-error">' + escapeHtml(message) + '</p></div>');
+      throw new Error(message);
+    }
+    function chooseList() {
+      const n = LISTS.lists.length;
+      const raw = urlParam('list');
+      if (raw !== null) {
+        const k = Number(raw);
+        if (!Number.isInteger(k) || k < 0 || k >= n) fail('Invalid list parameter "' + raw + '" (0..' + (n - 1) + ').');
+        return Promise.resolve({ index: k, assignment: 'url' });
+      }
+      if (typeof window.assignList === 'function') {
+        return Promise.resolve(window.assignList(n)).then(function (k) {
+          if (!Number.isInteger(k) || k < 0 || k >= n) throw new Error('the server assigned list ' + k + ' of ' + n);
+          return { index: k, assignment: 'server' };
+        });
+      }
+      return Promise.resolve({ index: Math.floor(Math.random() * n), assignment: 'random' });
+    }
+    const participantId = urlParam('participant_id') || urlParam('PROLIFIC_PID');
+
+    // ---- One trial of any response type ----------------------------------------------------
+    // The response is recorded in the link's form, with objects and words as scene indices
+    // (src/rsa_open/links.py LinkLikelihood.encode); display_order maps screen positions.
+    const ParameterType = jsPsychModule.ParameterType;
+    class OpenTrialPlugin {
+      constructor(jsPsych) { this.jsPsych = jsPsych; }
+      trial(el, par) {
+        const t = par.trial, w = t.widget, start = performance.now(), self = this;
+        const n = t.items_html.length;
+        const clickable = w.type === 'choice';
+        let h = '<div class="ro-trial">';
+        if (t.phase === 'practice') h += '<span class="ro-tag">Practice</span>';
+        h += t.prompt_html + '<div class="ro-items">';
+        t.items_html.forEach(function (item, p) {
+          const marked = w.marked === p;
+          const cls = 'ro-item' + (marked ? ' ro-marked' : '') + (LISTS_KIND === 'text' ? ' ro-text-item' : '');
+          const tag = clickable ? 'button type="button"' : 'div';
+          h += '<' + tag + ' class="' + cls + '" data-position="' + p + '" data-n="' + n + '" style="--n:' + n + '">' +
+               item + (w.type === 'bet' ? '<input class="ro-bet" type="number" min="0" max="' + w.total + '" step="1" value="0" data-position="' + p + '" aria-label="points">' : '') +
+               (w.marked !== undefined ? '<span class="ro-marker">' + (marked ? '&#9650; this one' : '') + '</span>' : '') +
+               '</' + (clickable ? 'button' : 'div') + '>';
+        });
+        h += '</div><div class="ro-response">';
+        if (w.type === 'rating') {
+          h += '<div class="ro-rating"><div class="ro-scale">';
+          for (let v = 1; v <= w.points; v++) h += '<button type="button" class="ro-btn ro-rate" data-value="' + v + '">' + v + '</button>';
+          h += '</div><div class="ro-ends"><span>1 = ' + escapeHtml(w.labels[0]) + '</span><span>' + w.points + ' = ' + escapeHtml(w.labels[1]) + '</span></div></div>';
+        } else if (w.type === 'slider') {
+          h += '<input class="ro-slider" type="range" min="0" max="' + w.max + '" step="1" value="' + Math.round(w.max / 2) + '" aria-label="slider">' +
+               '<div class="ro-ends"><span>' + escapeHtml(w.labels[0]) + '</span><span>' + escapeHtml(w.labels[1]) + '</span></div>' +
+               '<button type="button" class="ro-btn ro-continue" disabled>Continue</button>';
+        } else if (w.type === 'bet') {
+          h += '<span class="ro-total">0 of ' + w.total + ' points given</span>' +
+               '<button type="button" class="ro-btn ro-continue" disabled>Continue</button>';
+        } else if (w.type === 'production') {
+          h += '<div class="ro-scale">' + w.options.map(function (o, i) {
+            return '<button type="button" class="ro-btn ro-word-btn" data-i="' + i + '">' + escapeHtml(o.label) + '</button>';
+          }).join('') + '</div>';
+        } else if (w.type === 'binary_judgment') {
+          h += '<div class="ro-scale"><button type="button" class="ro-btn ro-answer" data-answer="1">Yes</button>' +
+               '<button type="button" class="ro-btn ro-answer" data-answer="0">No</button></div>';
+        }
+        h += '</div></div>';
+        el.innerHTML = h;
+
+        function finish(response) {
+          self.jsPsych.finishTrial({ response: response, rt: Math.round(performance.now() - start) });
+        }
+        const at = function (sel) { return Array.from(el.querySelectorAll(sel)); };
+        if (w.type === 'choice') {
+          at('button.ro-item').forEach(function (b) {
+            b.addEventListener('click', function () { finish({ choice: t.display_order[Number(b.dataset.position)] }); });
+          });
+        } else if (w.type === 'rating') {
+          at('.ro-rate').forEach(function (b) {
+            b.addEventListener('click', function () { finish({ probe: t.probe, rating: Number(b.dataset.value) }); });
+          });
+        } else if (w.type === 'slider') {
+          const s = el.querySelector('.ro-slider'), go = el.querySelector('.ro-continue');
+          // The slider must be touched before Continue (a value nobody chose is not a response).
+          ['input', 'change', 'pointerdown'].forEach(function (ev) { s.addEventListener(ev, function () { go.disabled = false; }); });
+          go.addEventListener('click', function () { finish({ probe: t.probe, value: Number(s.value) }); });
+        } else if (w.type === 'bet') {
+          const inputs = at('.ro-bet'), total = el.querySelector('.ro-total'), go = el.querySelector('.ro-continue');
+          const points = function () {
+            return inputs.map(function (i) { const v = Number(i.value); return Number.isInteger(v) && v >= 0 ? v : NaN; });
+          };
+          const update = function () {
+            const p = points(), sum = p.reduce(function (a, b) { return a + b; }, 0);
+            const ok = p.every(function (v) { return !Number.isNaN(v); }) && sum === w.total;
+            total.textContent = (Number.isNaN(sum) ? '?' : sum) + ' of ' + w.total + ' points given';
+            total.classList.toggle('ro-ok', ok);
+            go.disabled = !ok;
+          };
+          inputs.forEach(function (i) { i.addEventListener('input', update); });
+          go.addEventListener('click', function () {
+            const p = points(), byObject = new Array(n).fill(0);
+            p.forEach(function (v, pos) { byObject[t.display_order[pos]] = v; });
+            finish({ points: byObject });
+          });
+        } else if (w.type === 'production') {
+          at('.ro-word-btn').forEach(function (b) {
+            b.addEventListener('click', function () {
+              finish({ target: t.target, utterance: w.options[Number(b.dataset.i)].utterance });
+            });
+          });
+        } else if (w.type === 'binary_judgment') {
+          at('.ro-answer').forEach(function (b) {
+            b.addEventListener('click', function () {
+              finish({ target: t.target, utterance: t.utterance, answer: b.dataset.answer === '1' });
+            });
+          });
+        }
+      }
+    }
+    OpenTrialPlugin.info = {
+      name: 'rsa-open-trial', version: '1',
+      parameters: { trial: { type: ParameterType.OBJECT, default: undefined } },
+      data: { response: { type: ParameterType.OBJECT }, rt: { type: ParameterType.INT } }
+    };
+    const LISTS_KIND = LISTS.materials_kind;
+
+    function nextButton(label) { return function () { return '<button type="button" class="ro-next">' + escapeHtml(label) + '</button>'; }; }
+    function prose(inner) { return '<div class="ro-prose">' + inner + '</div>'; }
+
+    function start(chosen) {
+      const LIST = LISTS.lists[chosen.index];
+      const jsPsych = initJsPsych({
+        display_element: 'ro-jspsych',
+        show_progress_bar: true,
+        on_finish: function () {
+          const json = jsPsych.data.get().json();
+          window.__roData = json;
+          const meta = { list_index: LIST.list_index, paradigm_sha256: LISTS.paradigm_sha256,
+                         design_sha256: LISTS.design_sha256, participant_id: participantId };
+          jsPsych.getDisplayElement().innerHTML = prose('<p>Submitting your responses...</p>');
+          Promise.resolve().then(function () { return window.submitData(json, meta); })
+            .then(function () { end(json, null); })
+            .catch(function (e) { end(json, String(e && e.message ? e.message : e)); });
+        }
+      });
+      function end(json, error) {
+        let h = error ? prose('<p class="ro-error">Your responses could not be submitted: ' + escapeHtml(error) +
+                              '. Please contact the researchers.</p>')
+                      : prose('<h1>Thank you!</h1><p>Your responses have been recorded. You can close this window.</p>');
+        if (PREVIEW) h += prose('<details open><summary>Recorded data (preview only)</summary><pre class="ro-json">' +
+                                escapeHtml(JSON.stringify(JSON.parse(json), null, 1)) + '</pre></details>');
+        jsPsych.getDisplayElement().innerHTML = '<div id="ro-end">' + h + '</div>';
+        window.__roDone = true;
+      }
+      jsPsych.data.addProperties({
+        participant_id: participantId, list_index: LIST.list_index, list_assignment: chosen.assignment,
+        paradigm_sha256: LISTS.paradigm_sha256, design_sha256: LISTS.design_sha256
+      });
+
+      const intro = LISTS.intro, timeline = [];
+      timeline.push({ type: jsPsychHtmlButtonResponse, stimulus: prose('<h1>Welcome</h1><p>' + escapeHtml(intro.welcome) +
+                      '</p><p>It takes about ' + LISTS.minutes + ' minutes.</p>'),
+                      choices: ['Start'], button_html: nextButton('Start'), data: { task: 'welcome' } });
+      if (CONSENT_HTML !== null) timeline.push({ type: jsPsychHtmlButtonResponse, stimulus: prose(CONSENT_HTML),
+                      choices: ['I agree'], button_html: nextButton('I agree'), data: { task: 'consent' } });
+      // Instructions and comprehension checks; a wrong answer shows them once more.
+      const shown = function () { return jsPsych.data.get().filter({ task: 'instructions' }).count(); };
+      const checkBlock = [{ type: jsPsychHtmlButtonResponse,
+                            stimulus: function () { return prose((shown() > 0 ? '<p class="ro-error">Not quite: please read the instructions again.</p>' : '') +
+                                                                 '<h1>Instructions</h1><p>' + escapeHtml(intro.task) + '</p>'); },
+                            choices: ['Next'], button_html: nextButton('Next'), data: { task: 'instructions' } }];
+      intro.checks.forEach(function (c, i) {
+        checkBlock.push({
+          type: jsPsychHtmlButtonResponse, stimulus: prose('<p><strong>' + escapeHtml(c.question) + '</strong></p>'),
+          choices: c.options, button_html: function (label) { return '<button type="button" class="ro-option">' + escapeHtml(label) + '</button>'; },
+          data: { task: 'comprehension', check: i },
+          on_finish: function (d) { d.correct = d.response === c.correct; d.attempt = shown(); }
+        });
+      });
+      timeline.push({ timeline: checkBlock, loop_function: function (data) {
+        const wrong = data.filter({ task: 'comprehension' }).values().some(function (d) { return !d.correct; });
+        return wrong && shown() < 2;
+      } });
+      const trialNode = function (t) {
+        return { type: OpenTrialPlugin, trial: t, post_trial_gap: 300,
+                 data: { task: 'rsa_open_trial', phase: t.phase, unit: t.unit, trial_number: t.trial_number,
+                         objects: t.objects, heard: t.heard, probe: t.probe, target: t.target, utterance: t.utterance,
+                         expect: t.expect, domain: t.domain, words: t.words, display_order: t.display_order } };
+      };
+      const practice = LIST.trials.filter(function (t) { return t.phase === 'practice'; });
+      const rest = LIST.trials.filter(function (t) { return t.phase !== 'practice'; });
+      practice.forEach(function (t) { timeline.push(trialNode(t)); });
+      timeline.push({ type: jsPsychHtmlButtonResponse, stimulus: prose('<p>Now the real questions begin. There are ' +
+                      rest.length + ' of them.</p>'), choices: ['Begin'], button_html: nextButton('Begin'), data: { task: 'practice_done' } });
+      rest.forEach(function (t) { timeline.push(trialNode(t)); });
+      setStatus('');
+      jsPsych.run(timeline);
+    }
+    chooseList().then(start).catch(function (e) {
+      document.getElementById('ro-jspsych').innerHTML = '';
+      setStatus(prose('<p class="ro-error">The study could not start: ' + escapeHtml(e && e.message ? e.message : e) +
+                      '. Please contact the researchers.</p>'));
+    });
+  </script>
+  </body>
+</html>
