@@ -104,6 +104,10 @@ must pass the same recovery test automatically before it can be used.
 (SVG or text); instructions; trial structure; response type and link; the parameterized trial
 space; the mapping from each trial to an abstract scene; time estimate and pay. A schema
 validator checks it, and its sha256 is recorded with every trial collected under it.
+`src/rsa_open/paradigm.py` is the format and its validator. The scene space is a set of
+display sizes (objects × features, as in the closed campaign's pool); every trial is a
+`src.rsa.context.Context`. The validator reports every problem at once, so the designer can fix
+them in one pass.
 
 **Data** generalize the RSA trial schema: `paradigm_id`, the abstract scene as JSON, the response
 as JSON, participant and trial ids. Theories see only the scene.
@@ -210,7 +214,7 @@ The existing protocol covers the rest (PI, 2026-10-20).
 | Phase | What | Where | Status |
 |---|---|---|---|
 | 0 | This plan; Gemini 4 smoke test | cloud | plan written; smoke test below |
-| 1 | Paradigm-spec schema and validator; link library with recovery tests; theory + link refactor; port the seeds and closed finals (exact-equivalence tests) | cloud | port and choice link done (`src/rsa_open/`); 19 of 20 ported exactly; the rest waits on §10 |
+| 1 | Paradigm-spec schema and validator; link library with recovery tests; theory + link refactor; port the seeds and closed finals (exact-equivalence tests) | cloud | port and choice link done (`src/rsa_open/`); 19 of 20 ported exactly; the rest waits on §10. Paradigm spec and validator done (`src/rsa_open/paradigm.py`): budget, pay rate, N and length bounds, scene-pool bound (≤ 6 objects, ≤ 4 features, ≤ 6,000 scenes), SVG safety, content rules, link check; the closed paradigm written as a spec gives the closed design pool exactly. Next: the other links |
 | 2 | Designer tools as an agent CLI; designer brief; implementer; simulated pilot | cloud | |
 | 3 | Rehearsal on simulated participants with a ground-truth theory across paradigms | Sherlock | |
 | 4 | One live paradigm per chain, with PI review | live | |

@@ -30,6 +30,7 @@ class LinkClash(ValueError):
 @dataclass(frozen=True)
 class Link:
     name: str
+    response_type: str  # the paradigm response type it scores (src.rsa_open.paradigm)
     description: str
     params: Dict[str, str]  # name -> numpyro prior, as source over ``_link_dist``
     imports: str
@@ -38,6 +39,7 @@ class Link:
 
 CHOICE = Link(
     name="choice",
+    response_type="choice",
     description=("Pick one referent: the listener posterior, mixed with a uniform guess with "
                  "probability lapse (the closed campaign's response process)."),
     params={"lapse": "_link_dist.Beta(1.0, 9.0)"},
