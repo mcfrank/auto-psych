@@ -13,7 +13,8 @@ refused.
 a scene (choice); a scene and a probed object (rating); a scene and a target (production); a
 scene, a target and a real message (binary judgment); a scene and a probed object (slider:
 the ordered-beta link, its responses binned into 12 outcomes, so the score is a lower bound). A probe or target is taken once per class
-of identical objects, since probing either gives the same predictions. Bets (the allocation
+of identical objects, since probing either gives the same predictions. A speaker's trial shows
+no heard message, so its units are taken from the first scene of each game only. Bets (the allocation
 link) are not categorical, and the tool refuses them (`NotImplementedError`) until it has an
 estimator for them.
 
@@ -161,7 +162,12 @@ def trial_units(scenes: Sequence[Context], link: LinkLikelihood) -> List[Unit]:
             f"the design tool cannot score {link.name!r} ({link.response_type}) paradigms yet: its "
             f"responses are not categorical. Use choice, rating, production or binary_judgment.")
     units: List[Unit] = []
+    games = set()
     for i, ctx in enumerate(scenes):
+        if link.side == "speaker":  # a speaker's trial has no heard message: one unit set per game
+            if ctx.objects in games:
+                continue
+            games.add(ctx.objects)
         reps = sorted(set(ctx.choice_classes()))
         n_real = ctx.shape[1] - (1 if ctx.needs_sink else 0)
         if link.name == "choice":
@@ -299,8 +305,12 @@ def reference_report(ctx: DesignContext, *, n_draws: int, n_scenarios: int, seed
 
 
 def score_paradigm(paradigm, ctx: DesignContext, *, n_draws: int = DEFAULT_DRAWS,
-                   n_scenarios: int = DEFAULT_SCENARIOS, seed: int = 0, reference: bool = True) -> Dict[str, Any]:
-    """The paradigm's design under the context's theories, its bits per dollar and the floor."""
+                   n_scenarios: int = DEFAULT_SCENARIOS, seed: int = 0, reference: bool = True,
+                   reference_seed: int = 0) -> Dict[str, Any]:
+    """The paradigm's design under the context's theories, its bits per dollar and the floor.
+
+    The reference has a seed of its own (``reference_seed``), so every paradigm scored in one
+    context meets the same floor, computed once (`reference_report`)."""
     from src.rsa_open.paradigm import paradigm_likelihood, scene_pool
 
     d = paradigm.design
@@ -311,7 +321,7 @@ def score_paradigm(paradigm, ctx: DesignContext, *, n_draws: int = DEFAULT_DRAWS
                        n_scenarios=n_scenarios, seed=seed),
               "settings": {"n_draws": n_draws, "n_scenarios": n_scenarios, "seed": seed}}
     if reference:
-        ref = reference_report(ctx, n_draws=n_draws, n_scenarios=n_scenarios, seed=seed)
+        ref = reference_report(ctx, n_draws=n_draws, n_scenarios=n_scenarios, seed=reference_seed)
         report["reference"] = ref
         report["floor_bits_per_dollar"] = FLOOR_SHARE * ref["bits_per_dollar"]
         report["meets_floor"] = bool(report["bits_per_dollar"] >= report["floor_bits_per_dollar"])

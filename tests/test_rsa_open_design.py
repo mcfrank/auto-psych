@@ -66,6 +66,10 @@ def test_trial_units_are_one_per_distinguishable_question():
     assert len(trial_units(scenes, likelihood("production"))) == 5
     # Judgments: each target with each real message (2 real messages in each scene).
     assert len(trial_units(scenes, likelihood("binary_judgment"))) == 10
+    # A speaker's trial ignores the heard message: the same game heard otherwise adds nothing.
+    reheard = Context(objects=SCENE.objects, feature_names=SCENE.feature_names, utterance=1)
+    assert len(trial_units([SCENE, reheard], likelihood("production"))) == 3
+    assert len(trial_units([SCENE, reheard], likelihood("choice"))) == 2
 
 
 def test_the_tool_refuses_allocation_until_it_can_score_it():
@@ -108,6 +112,15 @@ def test_a_context_with_draws_that_do_not_match_its_theory_is_refused(context, t
         load_context(bad)
 
 
+def response_block(kind):
+    from tests.test_rsa_open_paradigm import response
+
+    block = response(kind)
+    if kind in ("production", "binary_judgment"):
+        block.pop("prior_prompt", None)
+    return block
+
+
 def small_paradigm(response):
     from tests.test_rsa_open_paradigm import closed_like_spec
     from src.rsa_open.paradigm import parse_paradigm
@@ -120,13 +133,9 @@ def small_paradigm(response):
     return parse_paradigm(spec)
 
 
-@pytest.mark.parametrize("response", [
-    {"type": "choice", "link": "choice", "prompt": "Which one?"},
-    {"type": "rating", "link": "rating", "prompt": "How likely?", "scale_points": 5},
-    {"type": "production", "link": "production", "prompt": "Which word would you use?"},
-    {"type": "binary_judgment", "link": "binary_judgment", "prompt": "Would the speaker say it?"},
-    {"type": "slider", "link": "ordered_beta", "prompt": "How likely?", "total_points": 100},
-], ids=lambda r: r["type"])
+@pytest.mark.parametrize("response", [response_block(k) for k in
+                                      ("choice", "rating", "production", "binary_judgment", "slider")],
+                         ids=lambda r: r["type"])
 def test_the_tool_designs_a_paradigm_and_reports_its_information_per_dollar(context, response, tmp_path):
     from src.rsa_open.design import load_context, score_paradigm
 
@@ -145,7 +154,7 @@ def test_the_tool_designs_a_paradigm_and_reports_its_information_per_dollar(cont
 def test_the_floor_is_half_the_closed_paradigm_s_information_per_dollar(context):
     from src.rsa_open.design import FLOOR_SHARE, load_context, score_paradigm
 
-    paradigm = small_paradigm({"type": "choice", "link": "choice", "prompt": "Which one?"})
+    paradigm = small_paradigm(response_block("choice"))
     report = score_paradigm(paradigm, load_context(context), n_draws=16, n_scenarios=200, seed=0)
     ref = report["reference"]
     assert ref["design_size"] == 52 and ref["responses_per_unit"] == 50

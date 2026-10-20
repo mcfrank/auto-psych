@@ -44,12 +44,35 @@ def closed_like_spec():
             "prior_queries": True,
             "synonyms": True,
         },
-        "response": {"type": "choice", "link": "choice",
-                     "prompt": "Which creature is the speaker talking about?"},
+        "response": response("choice"),
         "design": {"n_participants": 200, "trials_per_participant": 13, "distinct_trials": 52, "catch_trials": 2,
                    "minutes": 3, "pay_usd": 0.50},
         "content": {"deception": False, "affective_stimuli": False},
     }
+
+
+LISTENER_PROMPT = "The speaker said {message}. Which creature is the speaker talking about?"
+PRIOR_PROMPT = "The speaker said a word you could not hear. Which creature is the speaker talking about?"
+LINK_OF = {"choice": "choice", "rating": "rating", "slider": "ordered_beta", "bet": "allocation",
+           "production": "production", "binary_judgment": "binary_judgment"}
+
+
+def response(kind, **extra):
+    """A valid response block of each type, for a scene space with prior queries."""
+    out = {"type": kind, "link": LINK_OF[kind]}
+    if kind in ("choice", "rating", "slider", "bet"):
+        out.update(prompt=LISTENER_PROMPT, prior_prompt=PRIOR_PROMPT)
+    elif kind == "production":
+        out["prompt"] = "Which word would you use to point out the marked creature?"
+    else:
+        out["prompt"] = "Would a speaker say {message} to point out the marked creature?"
+    if kind == "rating":
+        out.update(scale_points=5, scale_labels=["not at all", "certainly"])
+    if kind == "slider":
+        out.update(total_points=100, scale_labels=["not at all", "certainly"])
+    if kind == "bet":
+        out["total_points"] = 100
+    return {**out, **extra}
 
 
 def write(tmp_path, spec, name="paradigm.json"):
@@ -122,7 +145,7 @@ def test_a_response_type_without_a_link_in_the_library_is_refused(tmp_path):
 
 @pytest.mark.parametrize("field, text", [
     (("instructions", "task"), "Click the creature covered in blood."),
-    (("response", "prompt"), "Which one would you kill first?"),
+    (("response", "prompt"), "The speaker said {message}. Which one would you kill first?"),
 ])
 def test_charged_language_is_refused(tmp_path, field, text):
     from src.rsa_open.paradigm import ParadigmInvalid, load_paradigm
@@ -191,7 +214,7 @@ def test_the_paradigm_hash_ignores_formatting_but_not_content(tmp_path):
     (tmp_path / "b.json").write_text(json.dumps(reordered))
     assert load_paradigm(tmp_path / "b.json").sha256 == a
     changed = copy.deepcopy(spec)
-    changed["response"]["prompt"] = "Which creature does the speaker mean?"
+    changed["response"]["prompt"] = "The speaker said {message}. Which creature does the speaker mean?"
     assert load_paradigm(write(tmp_path, changed, "c.json")).sha256 != a
 
 
@@ -202,28 +225,26 @@ def test_the_schema_for_the_designer_lists_every_field(tmp_path):
     assert {"materials", "scene_space", "response", "design", "content"} <= set(schema["properties"])
 
 
-@pytest.mark.parametrize("response, ok", [
-    ({"type": "rating", "link": "rating", "prompt": "How likely is it the speaker means this one?",
-      "scale_points": 7}, True),
-    ({"type": "rating", "link": "rating", "prompt": "How likely?"}, False),
-    ({"type": "bet", "link": "allocation", "prompt": "Split 100 points by how likely each is.",
-      "total_points": 100}, True),
-    ({"type": "slider", "link": "ordered_beta", "prompt": "How likely is it the speaker means this one?",
-      "total_points": 100}, True),
-    ({"type": "slider", "link": "ordered_beta", "prompt": "Move the slider.", "total_points": 1}, False),
-    ({"type": "slider", "link": "allocation", "prompt": "Split the points.", "total_points": 100}, False),
-    ({"type": "choice", "link": "choice", "prompt": "Which one?", "scale_points": 7}, False),
-    ({"type": "slider", "link": "rating", "prompt": "Which one?", "total_points": 100}, False),
-])
-def test_rating_and_slider_paradigms_fix_their_scale(tmp_path, response, ok):
+@pytest.mark.parametrize("block, ok", [
+    (response("rating", scale_points=7), True),
+    (response("rating", scale_points=None), False),
+    (response("bet"), True),
+    (response("slider"), True),
+    (response("slider", total_points=1), False),
+    (response("slider", link="allocation"), False),
+    (response("choice", scale_points=7), False),
+    (response("slider", link="rating"), False),
+], ids=lambda x: str(x) if isinstance(x, bool) else f"{x['type']}-{x['link']}")
+def test_rating_and_slider_paradigms_fix_their_scale(tmp_path, block, ok):
     from src.rsa_open.paradigm import ParadigmInvalid, load_paradigm, paradigm_likelihood
 
     spec = closed_like_spec()
-    spec["response"] = response
+    spec["response"] = block
     if ok:
         link = paradigm_likelihood(load_paradigm(write(tmp_path, spec)))
-        assert link.name == response["link"]
-        assert link.options == ({"scale_points": 7} if link.name == "rating" else {"total_points": 100})
+        assert link.name == block["link"]
+        expected = {"rating": {"scale_points": block.get("scale_points")}}.get(link.name, {"total_points": 100})
+        assert link.options == expected
     else:
         with pytest.raises(ParadigmInvalid, match="points|scores"):
             load_paradigm(write(tmp_path, spec))
@@ -238,4 +259,57 @@ def test_the_design_says_how_many_distinct_trials_it_picks(tmp_path):
         load_paradigm(write(tmp_path, spec))
     spec["design"].pop("distinct_trials")
     with pytest.raises(ParadigmInvalid, match="distinct_trials"):
+        load_paradigm(write(tmp_path, spec))
+
+
+@pytest.mark.parametrize("kind", ["choice", "rating", "slider", "bet", "production", "binary_judgment"])
+def test_a_valid_response_block_of_each_type(tmp_path, kind):
+    from src.rsa_open.paradigm import load_paradigm
+
+    spec = closed_like_spec()
+    spec["response"] = response(kind)
+    if kind in ("production", "binary_judgment"):
+        spec["response"].pop("prior_prompt", None)
+    assert load_paradigm(write(tmp_path, spec)).response.type == kind
+
+
+@pytest.mark.parametrize("change, problem", [
+    ({"prompt": "Which creature is the speaker talking about?"}, "once"),
+    ({"prompt": "The speaker said {message} or {message}."}, "once"),
+    ({"prompt": "The speaker said {word}. Which one?"}, "unknown placeholders"),
+    ({"prior_prompt": None}, "prior_prompt is required"),
+    ({"prior_prompt": "The speaker said {message}."}, "no message"),
+])
+def test_prompts_show_the_message_where_they_say_so(tmp_path, change, problem):
+    from src.rsa_open.paradigm import ParadigmInvalid, load_paradigm
+
+    spec = closed_like_spec()
+    spec["response"].update(change)
+    with pytest.raises(ParadigmInvalid, match=problem):
+        load_paradigm(write(tmp_path, spec))
+
+
+def test_a_production_prompt_has_no_message_and_needs_no_prior_prompt(tmp_path):
+    from src.rsa_open.paradigm import ParadigmInvalid, load_paradigm
+
+    spec = closed_like_spec()
+    spec["response"] = response("production", prompt="The speaker said {message}.")
+    with pytest.raises(ParadigmInvalid, match="no message to show"):
+        load_paradigm(write(tmp_path, spec))
+    spec["response"] = response("production", prior_prompt="Which one?")
+    with pytest.raises(ParadigmInvalid, match="prior_prompt applies only"):
+        load_paradigm(write(tmp_path, spec))
+
+
+def test_ratings_and_sliders_label_their_ends(tmp_path):
+    from src.rsa_open.paradigm import ParadigmInvalid, load_paradigm
+
+    for kind in ("rating", "slider"):
+        spec = closed_like_spec()
+        spec["response"] = response(kind, scale_labels=["low"])
+        with pytest.raises(ParadigmInvalid, match="scale_labels"):
+            load_paradigm(write(tmp_path, spec))
+    spec = closed_like_spec()
+    spec["response"]["scale_labels"] = ["a", "b"]
+    with pytest.raises(ParadigmInvalid, match="scale_labels applies only"):
         load_paradigm(write(tmp_path, spec))

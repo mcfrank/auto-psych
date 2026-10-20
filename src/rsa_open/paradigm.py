@@ -57,6 +57,9 @@ MAX_SVG_CHARS = 20_000
 MAX_SCALE_POINTS = 11
 MAX_TOTAL_POINTS = 1000
 RESPONSE_TYPES = ("choice", "rating", "slider", "bet", "production", "binary_judgment")
+LISTENER_TYPES = ("choice", "rating", "slider", "bet")
+MESSAGE = "{message}"
+PLACEHOLDER = re.compile(r"\{[^{}]*\}")
 
 SVG_NS = "http://www.w3.org/2000/svg"
 SVG_ELEMENTS = {
@@ -107,7 +110,8 @@ class Instructions(_Strict):
 class Feature(_Strict):
     word: str
     svg: Optional[str] = None
-    """An SVG fragment drawn over the domain's base (materials.kind 'svg')."""
+    """An SVG fragment drawn over the domain's base, in the same 100 x 100 box (materials.kind
+    'svg')."""
     phrase: Optional[str] = None
     """How the feature is written (materials.kind 'text'), e.g. 'with a garden'."""
 
@@ -115,7 +119,8 @@ class Feature(_Strict):
 class Domain(_Strict):
     name: str
     base: str
-    """The object without features: an SVG fragment, or a noun phrase for text."""
+    """The object without features: an SVG fragment drawn in a 100 x 100 box (viewBox
+    "0 0 100 100"), or a noun phrase for text."""
     features: List[Feature]
 
 
@@ -137,6 +142,13 @@ class Response(_Strict):
     type: Literal["choice", "rating", "slider", "bet", "production", "binary_judgment"]
     link: str
     prompt: str
+    """Shown on every trial. A listener trial (choice, rating, slider, bet) and a judgment show
+    the message where the prompt says ``{message}`` (required); a production trial shows none."""
+    prior_prompt: Optional[str] = None
+    """A listener trial with no informative message (scene_space.prior_queries): its prompt,
+    without ``{message}``. Required exactly when such trials exist."""
+    scale_labels: Optional[List[str]] = None
+    """rating and slider: the labels of the scale's two ends, [low, high]."""
     scale_points: Optional[int] = None
     """rating: the number of points on the scale (2-11), frozen with the paradigm."""
     total_points: Optional[int] = None
@@ -216,6 +228,9 @@ def _texts(p: Paradigm) -> List[tuple]:
     out = [("name", p.name), ("summary", p.summary), ("charter.question", p.charter.question),
            ("instructions.welcome", p.instructions.welcome), ("instructions.task", p.instructions.task),
            ("response.prompt", p.response.prompt)]
+    if p.response.prior_prompt:
+        out.append(("response.prior_prompt", p.response.prior_prompt))
+    out += [(f"response.scale_labels[{i}]", x) for i, x in enumerate(p.response.scale_labels or [])]
     for i, check in enumerate(p.instructions.comprehension_checks):
         out.append((f"instructions.comprehension_checks[{i}].question", check.question))
         out += [(f"instructions.comprehension_checks[{i}].options[{j}]", o) for j, o in enumerate(check.options)]
@@ -343,6 +358,30 @@ def _problems(p: Paradigm) -> List[str]:
     if not p.response.prompt.strip():
         problems.append("response.prompt is empty")
     r = p.response
+    listener = r.type in LISTENER_TYPES
+    for field in ("prompt", "prior_prompt"):
+        text = getattr(r, field) or ""
+        other = sorted(set(PLACEHOLDER.findall(text)) - {MESSAGE})
+        if other:
+            problems.append(f"response.{field}: unknown placeholders {other}; the only one is {MESSAGE}")
+    wants_message = listener or r.type == "binary_judgment"
+    if wants_message and r.prompt.count(MESSAGE) != 1:
+        problems.append(f"response.prompt must show the message once, where it says {MESSAGE}")
+    if not wants_message and MESSAGE in r.prompt:
+        problems.append(f"response.prompt: a {r.type} trial has no message to show ({MESSAGE})")
+    if listener and p.scene_space.prior_queries:
+        if not (r.prior_prompt or "").strip():
+            problems.append("response.prior_prompt is required: scene_space.prior_queries gives trials with "
+                            "no informative message")
+        elif MESSAGE in r.prior_prompt:
+            problems.append(f"response.prior_prompt: those trials have no message to show ({MESSAGE})")
+    elif r.prior_prompt is not None:
+        problems.append("response.prior_prompt applies only to listener responses with scene_space.prior_queries")
+    if r.type in ("rating", "slider"):
+        if r.scale_labels is None or len(r.scale_labels) != 2 or not all(x.strip() for x in r.scale_labels):
+            problems.append(f"response.scale_labels must be [low, high] for a {r.type} response")
+    elif r.scale_labels is not None:
+        problems.append("response.scale_labels applies only to rating and slider responses")
     if r.type == "rating":
         if r.scale_points is None or not 2 <= r.scale_points <= MAX_SCALE_POINTS:
             problems.append(f"response.scale_points must be 2-{MAX_SCALE_POINTS} for a rating response")
