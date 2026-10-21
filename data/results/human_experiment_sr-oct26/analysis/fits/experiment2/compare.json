@@ -1,0 +1,72 @@
+{
+  "most_lopsided_stretch_aversion": {
+    "rank": 0,
+    "elpd_loo": -2255.3826518538976,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "dse_clustered": 0.0,
+    "loo_unreliable": false,
+    "n_bad_k": 28,
+    "frac_bad_k": 0.00546875,
+    "max_pareto_k": 2.1956768740693926,
+    "convergence_problems": [],
+    "not_converged": false,
+    "random_seed": 20261003
+  },
+  "local_representativeness": {
+    "rank": 1,
+    "elpd_loo": -3001.9743310149206,
+    "elpd_diff": 746.5916791610227,
+    "dse": 34.501973046529315,
+    "dse_clustered": 48.57656509774127,
+    "loo_unreliable": false,
+    "n_bad_k": 0,
+    "frac_bad_k": 0.0,
+    "max_pareto_k": 0.07336746100924835,
+    "convergence_problems": [],
+    "not_converged": false,
+    "random_seed": 20261003
+  },
+  "motif_stack": {
+    "rank": 2,
+    "elpd_loo": -3076.7571113849544,
+    "elpd_diff": 821.3744595310568,
+    "dse": 35.60631667795916,
+    "dse_clustered": 51.94395377397625,
+    "loo_unreliable": false,
+    "n_bad_k": 0,
+    "frac_bad_k": 0.0,
+    "max_pareto_k": 0.10553577293370721,
+    "convergence_problems": [],
+    "not_converged": false,
+    "random_seed": 6
+  },
+  "falk_konold_dp": {
+    "rank": 3,
+    "elpd_loo": -3279.5641401915655,
+    "elpd_diff": 1024.1814883376678,
+    "dse": 36.03028539286635,
+    "dse_clustered": 59.27925004806119,
+    "loo_unreliable": false,
+    "n_bad_k": 0,
+    "frac_bad_k": 0.0,
+    "max_pareto_k": -0.023899107099790498,
+    "convergence_problems": [],
+    "not_converged": false,
+    "random_seed": 20261003
+  },
+  "finite_experience_occurrence": {
+    "rank": 4,
+    "elpd_loo": -3507.480834959041,
+    "elpd_diff": 1252.098183105143,
+    "dse": 36.29752029026082,
+    "dse_clustered": 84.33302597851578,
+    "loo_unreliable": false,
+    "n_bad_k": 0,
+    "frac_bad_k": 0.0,
+    "max_pareto_k": -0.0012388909318994013,
+    "convergence_problems": [],
+    "not_converged": false,
+    "random_seed": 20261003
+  }
+}

@@ -44,9 +44,10 @@ import json
 import shutil
 import sys
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any
 
 import numpy as np
 import tyro
@@ -54,24 +55,24 @@ from pyprojroot import here
 
 sys.path.insert(0, str(here()))
 
-from src.models.eig_selection import (  # noqa: E402
+from src.models.eig_selection import (
     _entropy_bits,
     _model_prior,
     scenario_posterior_entropies,
     select_n_joint_eig,
 )
-from src.pipelines.outer_loop import eig as eig_mod  # noqa: E402
-from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS  # noqa: E402
-from src.models.mcmc_defaults import (  # noqa: E402
+from src.models.mcmc_defaults import (
     DESIGN_TWIN_CHAINS,
     DESIGN_TWIN_DRAWS,
     DESIGN_TWIN_TARGET_ACCEPT,
     DESIGN_TWIN_TUNE,
 )
-from src.models.pymc_inference import model_sampler_settings  # noqa: E402
+from src.models.pymc_inference import model_sampler_settings
+from src.pipelines.outer_loop import eig as eig_mod
+from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
 
 
-def _design_time_fit_kwargs(name: str, models_dir: Path) -> Dict[str, Any]:
+def _design_time_fit_kwargs(name: str, models_dir: Path) -> dict[str, Any]:
     """The settings the September 2026 designs fitted at (design-time fits,
     replaced on 2026-10-08 by the model loop's own): DESIGN_TWIN_* and the
     model's declared target_accept, else DESIGN_TWIN_TARGET_ACCEPT."""
@@ -84,7 +85,8 @@ def _design_time_fit_kwargs(name: str, models_dir: Path) -> Dict[str, Any]:
         ),
     }
 
-Picks = List[Tuple[int, float, str]]
+
+Picks = list[tuple[int, float, str]]
 
 
 @dataclass
@@ -97,7 +99,7 @@ class Args:
     """Where the inputs are copied and the results written."""
     experiment: int = 2
     """The design to rebuild (>= 2: a posterior design)."""
-    lengths: Tuple[int, ...] = (2, 3, 4, 5, 6, 7, 8)
+    lengths: tuple[int, ...] = (2, 3, 4, 5, 6, 7, 8)
     """Sequence lengths of the design pool (the outer loop's default)."""
     n_select: int = 64
     """Stimuli per design."""
@@ -125,7 +127,7 @@ class Args:
     """Run exact float64 greedy on the whole pool (the slowest run)."""
     timing: bool = True
     """Time one full scoring pass in float64/float32 on 1 and on all CPUs."""
-    threads: Optional[int] = None
+    threads: int | None = None
     """Threads for the selections (None: every allocated CPU)."""
 
 
@@ -175,10 +177,10 @@ def stage_inputs(cell: Path, work_dir: Path, experiment: int) -> Path:
 def design_draws(
     staged: Path,
     experiment: int,
-    rows: List[Dict[str, Any]],
+    rows: list[dict[str, Any]],
     n_samples: int,
     cache: Path,
-) -> Dict[str, np.ndarray]:
+) -> dict[str, np.ndarray]:
     """The design's per-draw posterior-predictive ``p_left`` over ``rows``.
 
     Rebuilt from the copied fit cache exactly as the design built them
@@ -225,8 +227,8 @@ def design_draws(
 
 
 def pool_index_of(
-    pool: Sequence[Dict[str, str]], stimuli: Sequence[Dict[str, Any]]
-) -> List[int]:
+    pool: Sequence[dict[str, str]], stimuli: Sequence[dict[str, Any]]
+) -> list[int]:
     """Pool indices of ``stimuli`` (the sweep's chosen pairs), in their order."""
     index = {(p["sequence_a"], p["sequence_b"]): i for i, p in enumerate(pool)}
     missing = [s for s in stimuli if (s["sequence_a"], s["sequence_b"]) not in index]
@@ -243,15 +245,15 @@ def pool_index_of(
 
 
 def run_selection(
-    draws: Dict[str, np.ndarray],
-    weights: Optional[Dict[str, float]],
+    draws: dict[str, np.ndarray],
+    weights: dict[str, float] | None,
     args: Args,
     *,
     lazy: bool,
     dtype: str,
     seed: int,
     threads: int,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """The design's selection under one search setting, timed."""
     start = time.perf_counter()
     picks: Picks = eig_mod.select_design_picks(
@@ -280,9 +282,9 @@ def run_selection(
 
 
 def score_sets(
-    draws: Dict[str, np.ndarray],
-    weights: Optional[Dict[str, float]],
-    sets: Dict[str, Dict[str, Any]],
+    draws: dict[str, np.ndarray],
+    weights: dict[str, float] | None,
+    sets: dict[str, dict[str, Any]],
     reference: str,
     args: Args,
 ) -> None:
@@ -326,7 +328,7 @@ def score_sets(
 
 
 def time_full_pass(
-    draws: Dict[str, np.ndarray], args: Args, *, dtype: str, threads: int
+    draws: dict[str, np.ndarray], args: Args, *, dtype: str, threads: int
 ) -> float:
     """Seconds for one exact full scoring pass over the pool (one pick)."""
     start = time.perf_counter()
@@ -344,14 +346,14 @@ def time_full_pass(
 
 def compare(
     label: str,
-    draws: Dict[str, np.ndarray],
-    weights: Optional[Dict[str, float]],
+    draws: dict[str, np.ndarray],
+    weights: dict[str, float] | None,
     args: Args,
     threads: int,
     *,
     exact_float64: bool,
-    extra_sets: Optional[Dict[str, Tuple[List[int], List[Dict[str, Any]]]]] = None,
-) -> Dict[str, Any]:
+    extra_sets: dict[str, tuple[list[int], list[dict[str, Any]]]] | None = None,
+) -> dict[str, Any]:
     """Every search setting on one pool, scored against exact float64 greedy
     (or exact float32 greedy when ``exact_float64`` is off). ``extra_sets``
     are sets chosen elsewhere (``name -> (pool indices, stimuli.json
@@ -364,7 +366,7 @@ def compare(
     ]
     if exact_float64:
         runs.insert(0, ("exact_float64", False, "float64", args.selection_seed))
-    sets: Dict[str, Dict[str, Any]] = {}
+    sets: dict[str, dict[str, Any]] = {}
     for name, lazy, dtype, seed in runs:
         print(f"[{label}] {name} ...", flush=True)
         sets[name] = run_selection(
@@ -397,7 +399,7 @@ def compare(
 # ---------------------------------------------------------------------------
 
 
-def markdown(results: Dict[str, Any]) -> str:
+def markdown(results: dict[str, Any]) -> str:
     lines = [f"# Lazy vs exact greedy joint-EIG selection: {results['cell']}", ""]
     lines.append(
         f"Experiment {results['experiment']} design, {results['n_models']} models, "
@@ -457,7 +459,7 @@ def main(args: Args) -> None:
         or None
     )
     threads = args.threads or allocated_cpus()
-    results: Dict[str, Any] = {
+    results: dict[str, Any] = {
         "cell": str(args.cell),
         "experiment": args.experiment,
         "n_models": len(draws),

@@ -1,0 +1,6 @@
+models:
+  - name: falk_konold_dp
+  - name: finite_experience_occurrence
+  - name: local_representativeness
+  - name: motif_stack
+  - name: most_lopsided_stretch_aversion

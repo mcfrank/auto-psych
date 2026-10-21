@@ -73,6 +73,29 @@ def removed_models(run_dir: Path, final_dir: Path, *, live: Sequence[str],
     return removed
 
 
+def admission_order(final_dir: Path) -> Dict[str, int]:
+    """Each model's place in the order the run admitted models (0 first),
+    from its first ``admitted`` entry in the final experiment's ledger, which
+    continues every earlier experiment's in the order things happened. Figure
+    2 draws the removed models in this order."""
+    from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
+
+    order: Dict[str, int] = {}
+    for e in HypothesisLedger(final_dir / "model_loop" / "attempted_hypotheses.jsonl").entries():
+        if e.outcome == "admitted" and e.name not in order:
+            order[e.name] = len(order)
+    return order
+
+
+def pruned_order(final_dir: Path, names: Sequence[str]) -> Dict[str, int]:
+    """``admission_order`` of ``names`` (every one must have been admitted)."""
+    order = admission_order(final_dir)
+    missing = [n for n in names if n not in order]
+    if missing:
+        raise RuntimeError(f"{final_dir}'s ledger never admitted {missing}")
+    return {n: order[n] for n in names}
+
+
 RETIRED_MARK = "retired to keep the live set"  # in the ledger detail of a cap retirement
 
 

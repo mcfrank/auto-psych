@@ -27,6 +27,15 @@ first, in shards (``--removed-shard``); ``pruned_source`` says which. One
 that did not converge or whose PSIS-LOO is unreliable is listed in
 ``pruned_unscored`` with the reason instead.
 
+Figure 2 draws subjective randomness from all runs pooled (each run is
+scored on its own data, so the runs' differences are not on one scale): the
+pooled record also has each winner's and seed's paired difference from the
+best seed with its stimulus-clustered SE (``vs_best_seed``), and every run's
+other live and removed models fitted on the pooled data at the pooled
+settings, labelled ``<run>__<name>`` (names repeat across runs with different
+code): ``others_at_end``, ``pruned_during_run``, ``extras_unscored``. The 254
+of them are fitted in the same shards.
+
 The seeds were pruned in experiment 1, so no seed has an ELPD on the final
 data without these fits. Fits are cached under ``--work-dir``, and each run's
 (and the pooled) result is saved there as ``scored.json``; a rerun reuses
@@ -313,7 +322,8 @@ def score_pooled(
     **compare_kwargs: Any,
 ) -> Dict[str, Any]:
     """ELPD-LOO of every run's winner (``winners``: name -> its run) and every
-    seed on all runs pooled; the best of each by ELPD-LOO. Raises if any of
+    seed on all runs pooled; the best of each by ELPD-LOO; and each one's
+    paired difference from the best seed with its stimulus-clustered SE. Raises if any of
     them did not converge or has an unreliable PSIS-LOO, except a failed
     convergence gate ``accepted`` names (see ``require_trusted_fits``)."""
     names = [*winners, *seeds]
@@ -322,11 +332,20 @@ def score_pooled(
     accepted_fit_problems = require_trusted_fits(table, names, accepted)
     best_model = max(winners, key=elpd.get)
     best_seed = max(seeds, key=elpd.get)
+    vs_best_seed = {best_seed: {"diff": 0.0, "se": 0.0}}
+    for name in names:
+        if name == best_seed:
+            continue
+        pair = compare(responses, models_dir, names=[name, best_seed], **compare_kwargs)
+        lower = min((name, best_seed), key=elpd.get)
+        vs_best_seed[name] = {"diff": elpd[name] - elpd[best_seed],
+                              "se": float(pair[lower]["dse_clustered"])}
     return {
         "best_model": best_model,
         "best_seed": best_seed,
         "winner_runs": dict(winners),
         "elpd": elpd,
+        "vs_best_seed": {n: vs_best_seed[n] for n in names},
         "accepted_fit_problems": accepted_fit_problems,
     }
 
@@ -483,6 +502,7 @@ def run_removed(args: Args, run: str, fit_kwargs: Dict[str, Any]) -> Dict[str, A
         "responses": responses,
         "inputs": lambda name: run_inputs(responses, {name: removed[name]["file"]}, fit_kwargs),
         "records_dir": args.work_dir / run / "removed",
+        "final_dir": final_dir,
     }
 
 
@@ -492,8 +512,26 @@ def score_removed_shard(args: Args, fit_kwargs: Dict[str, Any]) -> None:
     from scripts.paper import removed_models as rm
 
     by_run = {run: run_removed(args, run, fit_kwargs) for run in args.runs}
+    extras = pooled_extras(args, fit_kwargs)
     items = [(run, name) for run in args.runs for name in by_run[run]["to_fit"]]
+    items += [(POOLED_DIR, label) for label in sorted(extras)]
     mine = rm.shard_of(items, args.removed_shard, args.removed_shards)
+    pooled_labels = [label for group, label in mine if group == POOLED_DIR]
+    if pooled_labels:
+        responses = write_pooled_responses(args)
+        pooled_fit = pooled_fit_settings(args, fit_kwargs)
+        models_dir = args.work_dir / POOLED_DIR / "shards" / f"shard_{args.removed_shard}" / "models"
+        cache_dir = args.work_dir / POOLED_DIR / "fit_cache"
+        print(f"[pooled] scoring {len(pooled_labels)} models on all runs pooled", flush=True)
+        rm.score_shard(
+            {label: extras[label]["file"] for label in pooled_labels},
+            models_dir=models_dir, records_dir=args.work_dir / POOLED_DIR / "removed",
+            inputs=lambda label: run_inputs(responses, {label: extras[label]["file"]}, pooled_fit),
+            training_files=[("all runs pooled", responses)],
+            score=lambda label: score_removed_model(label, models_dir, responses,
+                                                    cache_dir=cache_dir, **pooled_fit),
+            cache_dir=cache_dir, fit_kwargs=pooled_fit,
+        )
     for run in args.runs:
         names = [name for r, name in mine if r == run]
         if not names:
@@ -514,7 +552,10 @@ def score_removed_shard(args: Args, fit_kwargs: Dict[str, Any]) -> None:
 
 def pruned_fields(info: Dict[str, Any], scored: Dict[str, Any], record: Dict[str, Any]) -> Dict[str, Any]:
     """A run's removed models in its figure record: each scored one as its
-    ELPD-LOO difference from the run's best seed."""
+    ELPD-LOO difference from the run's best seed, and its place in the order
+    the run admitted models (``pruned_order``)."""
+    from scripts.paper import removed_models as rm
+
     best_seed = record["elpd"][record["best_seed"]]
     elpd = {**scored["elpd"], **info["recorded"]}
     return {
@@ -523,6 +564,7 @@ def pruned_fields(info: Dict[str, Any], scored: Dict[str, Any], record: Dict[str
         "pruned_unscored": scored["unscored"],
         "pruned_outcome": {n: r["outcome"] for n, r in info["removed"].items()},
         "pruned_source": {n: "loop" if n in info["recorded"] else "refit" for n in info["removed"]},
+        "pruned_order": rm.pruned_order(info["final_dir"], sorted(elpd)),
     }
 
 
@@ -580,6 +622,69 @@ def score_run(args: Args, run: str, fit_kwargs: Dict[str, Any]) -> Dict[str, Any
     return {"record": {**record, "others_at_end": others_at_end(posterior, record)}, **sources}
 
 
+POOLED_RECORD_VERSION = 2  # 2: the pooled record has vs_best_seed (2026-10-20)
+POOLED_LABEL_SEP = "__"  # a pooled extra model is <run>__<name>: names repeat across runs
+
+
+def write_pooled_responses(args: Args) -> Path:
+    """Every run's final responses in one CSV (``pool_responses``), written
+    atomically under the work directory; its path."""
+    responses = args.work_dir / POOLED_DIR / "responses.csv"
+    responses.parent.mkdir(parents=True, exist_ok=True)
+    pool_responses({run: final_experiment_dir(args.runs_root / run / "subjective_randomness")
+                    / "model_loop" / "responses.csv" for run in args.runs}, responses)
+    return responses
+
+
+def pooled_fit_settings(args: Args, fit_kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    return {**fit_kwargs, "draws": args.pooled_draws, "tune": args.pooled_tune,
+            "target_accept": args.pooled_target_accept, "random_seed": args.pooled_random_seed,
+            "method": args.pooled_fit_method}
+
+
+def pooled_extras(args: Args, fit_kwargs: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    """Every run's other models live at the end and its removed models, for
+    Figure 2's pooled view: ``<run>__<name>`` -> ``file``, ``run``, ``name``,
+    ``role`` (``live`` / ``removed``) and a removed model's ``outcome``."""
+    from scripts.paper import removed_models as rm
+
+    extras: Dict[str, Dict[str, Any]] = {}
+    for run in args.runs:
+        info = run_removed(args, run, fit_kwargs)
+        order = rm.admission_order(info["final_dir"])
+        loop = info["final_dir"] / "model_loop"
+        posterior = json.loads((loop / "model_posterior.json").read_text())
+        for name in posterior["elpd_loo"]:
+            if name != posterior["best_model"]:
+                extras[f"{run}{POOLED_LABEL_SEP}{name}"] = {
+                    "file": loop / "models" / f"{name}.py", "run": run, "name": name, "role": "live"}
+        for name, entry in info["removed"].items():
+            extras[f"{run}{POOLED_LABEL_SEP}{name}"] = {
+                "file": entry["file"], "run": run, "name": name, "role": "removed",
+                "outcome": entry["outcome"], "order": order[name]}
+    return extras
+
+
+def pooled_extras_fields(extras: Dict[str, Dict[str, Any]], scored: Dict[str, Any],
+                         pooled: Dict[str, Any]) -> Dict[str, Any]:
+    """The pooled extras in the pooled record, as ELPD-LOO differences from
+    the best seed on the pooled data."""
+    best_seed = pooled["elpd"][pooled["best_seed"]]
+
+    def diffs(role: str) -> Dict[str, float]:
+        return {label: e - best_seed for label, e in scored["elpd"].items() if extras[label]["role"] == role}
+
+    return {
+        "others_at_end": diffs("live"),
+        "pruned_during_run": diffs("removed"),
+        "extras_unscored": scored["unscored"],
+        "pruned_outcome": {label: x["outcome"] for label, x in extras.items() if x["role"] == "removed"},
+        # Each removed model's place in the order its own run admitted models.
+        "pruned_order": {label: extras[label]["order"] for label in scored["elpd"]
+                         if extras[label]["role"] == "removed"},
+    }
+
+
 def score_all_runs_pooled(args: Args, scored_runs: Sequence[Dict[str, Any]],
                           fit_kwargs: Dict[str, Any]) -> Dict[str, Any]:
     """Figure 3's data: every run's winner and the seeds fitted on all runs'
@@ -588,9 +693,7 @@ def score_all_runs_pooled(args: Args, scored_runs: Sequence[Dict[str, Any]],
     from src.models.pymc_inference import clear_fit_cache
 
     work = args.work_dir / POOLED_DIR
-    work.mkdir(parents=True, exist_ok=True)
-    responses = work / "responses.csv"
-    pool_responses({r["record"]["run"]: r["responses"] for r in scored_runs}, responses)
+    responses = write_pooled_responses(args)
     files = pooled_model_files({r["record"]["run"]: r["files"] for r in scored_runs})
     winners = {r["winner"]: r["record"]["run"] for r in scored_runs}
     if len(winners) != len(scored_runs):
@@ -599,11 +702,10 @@ def score_all_runs_pooled(args: Args, scored_runs: Sequence[Dict[str, Any]],
     if any(r["seeds"] != seeds for r in scored_runs):
         raise RuntimeError(f"the runs started from different seeds: {[r['seeds'] for r in scored_runs]}")
 
-    pooled_fit = {**fit_kwargs, "draws": args.pooled_draws, "tune": args.pooled_tune,
-                  "target_accept": args.pooled_target_accept, "random_seed": args.pooled_random_seed,
-                  "method": args.pooled_fit_method}
+    pooled_fit = pooled_fit_settings(args, fit_kwargs)
     inputs = run_inputs(responses, files, pooled_fit, prediction_draws=args.prediction_draws,
-                        accepted_fit_problems=args.pooled_accepted_fit_problems)
+                        accepted_fit_problems=args.pooled_accepted_fit_problems,
+                        record_version=POOLED_RECORD_VERSION)
     scored_path = work / "scored.json"
     saved = load_scored(scored_path, inputs)
     if saved is not None:
@@ -663,11 +765,18 @@ def main(args: Args) -> None:
         run: rm.collect(info["to_fit"], records_dir=info["records_dir"], inputs=info["inputs"])
         for run, info in removed.items()
     }
+    extras = pooled_extras(args, fit_kwargs)
+    pooled_responses = write_pooled_responses(args)
+    pooled_fit = pooled_fit_settings(args, fit_kwargs)
+    extras_scored = rm.collect(
+        sorted(extras), records_dir=args.work_dir / POOLED_DIR / "removed",
+        inputs=lambda label: run_inputs(pooled_responses, {label: extras[label]["file"]}, pooled_fit))
     scored_runs = [score_run(args, run, fit_kwargs) for run in args.runs]
     for r in scored_runs:
         run = r["record"]["run"]
         r["record"].update(pruned_fields(removed[run], removed_scored[run], r["record"]))
     pooled = score_all_runs_pooled(args, scored_runs, fit_kwargs)
+    pooled["pooled"].update(pooled_extras_fields(extras, extras_scored, pooled["pooled"]))
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(

@@ -307,6 +307,7 @@ def main(args: Args) -> None:
         "pruned_unscored": removed_scored["unscored"],
         "pruned_outcome": {n: r["outcome"] for n, r in removed.items()},
         "pruned_source": {n: "loop" if n in recorded else "refit" for n in removed},
+        "pruned_order": rm.pruned_order(final_dir, sorted(removed_scored["elpd"])),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(

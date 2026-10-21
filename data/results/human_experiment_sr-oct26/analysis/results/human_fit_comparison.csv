@@ -1,0 +1,16 @@
+experiment,model,model_label,kind,elpd_loo,elpd_rel,dse,dse_clustered,xmin,xmax,loo_unreliable,not_converged
+experiment 1,individual_streak_aversion_lapse,best discovered model,best discovered model,-931.4674769342842,-0.0,0.0,0.0,-0.0,0.0,False,False
+experiment 1,falk_konold_dp,Falk & Konold DP,seed model,-1579.3655395482433,-647.8980626139592,27.0161638051697,44.776589624305075,-674.9142264191289,-620.8818988087894,False,False
+experiment 1,finite_experience_occurrence,Finite experience,seed model,-1748.247838907965,-816.7803619736808,26.600957489716645,65.60185840518338,-843.3813194633974,-790.1794044839642,False,False
+experiment 1,local_representativeness,Local representativeness,seed model,-1398.476574615729,-467.009097681445,26.29513953871069,37.51105530849426,-493.3042372201557,-440.71395814273427,False,False
+experiment 1,motif_stack,Motif stack,seed model,-1416.5607001473654,-485.09322321308116,26.79515683239607,40.629673589291805,-511.8883800454772,-458.2980663806851,False,False
+experiment 2,most_lopsided_stretch_aversion,best discovered model,best discovered model,-2255.3826518538976,-0.0,0.0,0.0,-0.0,0.0,False,False
+experiment 2,falk_konold_dp,Falk & Konold DP,seed model,-3279.5641401915655,-1024.1814883376678,36.03028539286635,59.27925004806119,-1060.211773730534,-988.1512029448015,False,False
+experiment 2,finite_experience_occurrence,Finite experience,seed model,-3507.480834959041,-1252.098183105143,36.29752029026082,84.33302597851578,-1288.3957033954039,-1215.8006628148823,False,False
+experiment 2,local_representativeness,Local representativeness,seed model,-3001.9743310149206,-746.5916791610227,34.501973046529315,48.57656509774127,-781.093652207552,-712.0897061144934,False,False
+experiment 2,motif_stack,Motif stack,seed model,-3076.7571113849544,-821.3744595310568,35.60631667795916,51.94395377397625,-856.980776209016,-785.7681428530976,False,False
+experiment 3,personal_pattern_detection_gain,best discovered model,best discovered model,-3450.2476206438914,-0.0,0.0,0.0,-0.0,0.0,False,False
+experiment 3,falk_konold_dp,Falk & Konold DP,seed model,-4865.790280774265,-1415.542660130373,43.78939006968942,69.31590511758449,-1459.3320502000624,-1371.7532700606835,False,False
+experiment 3,finite_experience_occurrence,Finite experience,seed model,-5227.032045934457,-1776.784425290565,44.71461439333122,97.97213813706682,-1821.4990396838962,-1732.0698108972338,False,False
+experiment 3,local_representativeness,Local representativeness,seed model,-4538.716245967818,-1088.468625323927,41.72307016598195,60.29152965336386,-1130.1916954899089,-1046.745555157945,False,False
+experiment 3,motif_stack,Motif stack,seed model,-4608.777534430654,-1158.5299137867626,42.491042639575994,60.73711027136042,-1201.0209564263387,-1116.0388711471865,False,False

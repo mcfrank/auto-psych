@@ -1,0 +1,13 @@
+{
+  "n_stimuli": 190,
+  "responses_per_stimulus": [
+    40,
+    80
+  ],
+  "split_half_r": 0.8718697839985782,
+  "spearman_brown": 0.9315496103966603,
+  "variance_decomposition": 0.9310594442366485,
+  "best_model": "personal_pattern_detection_gain",
+  "best_r2_stimulus": 0.9368471867593805,
+  "best_share_of_explainable_variance": 1.0056868429803374
+}

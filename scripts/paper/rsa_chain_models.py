@@ -234,9 +234,11 @@ def fit_shard(args: Args) -> None:
 
 
 def score(args: Args) -> None:
+    import pandas as pd
+
     from src.rsa.dataset import load_forced_choice
     from src.rsa.loop.novelty import plain_pool, pool_digest, pool_record
-    from src.rsa.prereg.analysis import trial_lpd
+    from src.rsa.prereg.analysis import trial_lpd, versus
     from src.rsa.prereg.predictions import PoolPredictions, load_predictions
 
     if args.test is None:
@@ -264,7 +266,8 @@ def score(args: Args) -> None:
     # This scoring reproduces the pre-registered lpd of the finals and the bar.
     frozen = load_predictions([args.live_root / "finals_pool_preds_final.json",
                                args.live_root / "bar_pool_preds.json"])
-    reproduced = dict(zip(frozen.names, trial_lpd(frozen, trials.contexts, trials.choices).sum(axis=1)))
+    frozen_lp = dict(zip(frozen.names, trial_lpd(frozen, trials.contexts, trials.choices)))
+    reproduced = {n: lp.sum() for n, lp in frozen_lp.items()}
     off = {n: (float(v), prereg["lpd"][n]) for n, v in reproduced.items()
            if abs(float(v) - prereg["lpd"][n]) > 1e-6}
     if off:
@@ -293,6 +296,14 @@ def score(args: Args) -> None:
             unscored[label] = str(exc)
 
     best_promoted = prereg["best_promoted"]
+    # Every bar model and final against the best promoted seed, as the
+    # pre-registered analysis compares (clustered by display): Figure 2's CIs.
+    units = pd.factorize(trials.frame["condition"].astype(str).to_numpy())[0]
+    bar_vs_best_promoted = {}
+    for name, lp in frozen_lp.items():
+        if name != best_promoted:
+            row = versus(lp, frozen_lp[best_promoted], units)
+            bar_vs_best_promoted[name] = {"diff": row["diff"], "se": row["se"]}
     chains: Dict[str, Any] = {}
     for chain in args.chains:
         mine = {label: info for label, info in models.items() if info["chain"] == chain}
@@ -318,6 +329,7 @@ def score(args: Args) -> None:
         "fit_settings": fit_settings_record(),
         "best_promoted": best_promoted,
         "best_promoted_lpd": prereg["lpd"][best_promoted],
+        "bar_vs_best_promoted": bar_vs_best_promoted,
         "chains": chains,
     }, indent=1))
     print(f"wrote {args.out}: {len(lpd)} scored, {len(unscored)} unscored", flush=True)

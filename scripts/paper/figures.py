@@ -1,13 +1,13 @@
 """The paper's Figures 2-4, one column (or row) per domain.
 
-- Figure 2 (``fig2_elpd``): per domain, a column per run of ELPD
-  differences from the best starting model (subjective randomness: the
-  run's own seeds; reference games: the best promoted seed, the
-  pre-registered bar): its starting models (dashes), the models it pruned
-  (grey dots; the number game only), its other models live at the end (small
-  dots) and its best discovered model (±2 SE of the paired difference,
-  labelled). How each domain is scored
-  is for the caption (the figure data's ``scoring``).
+- Figure 2 (``fig2_elpd``): per domain, a forest plot of ELPD differences
+  from the best starting model, the runs collapsed (subjective randomness:
+  all runs pooled; reference games: every chain on the pre-registered test,
+  against the best promoted seed; the number game's one run): the best
+  discovered models and the starting models as named points with ±2 SE of
+  the paired difference (names from ``model_names.yaml``), the other models
+  live at the end and the models pruned during the runs as strips. How each
+  domain is scored is for the caption (the figure data's ``scoring``).
 - Figure 3 (``fig3_conditions``): per domain, all runs' data pooled: each
   condition's observed choice proportion against the prediction of the best
   starting model (top row) and of the best discovered model (bottom row), both fitted
@@ -44,6 +44,7 @@ import numpy as np  # noqa: E402
 import tyro  # noqa: E402
 import yaml  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
+from matplotlib.ticker import MaxNLocator  # noqa: E402
 from pyprojroot import here  # noqa: E402
 
 DOMAINS = ["subjective_randomness", "rsa", "number_game"]
@@ -76,10 +77,12 @@ class Args:
     figure_data: Path = here() / "data" / "paper" / "figure_data"
     """Directory with one ``<domain>.json`` per domain."""
     pseudocode: Path = here() / "scripts" / "paper" / "pseudocode"
+    model_names: Path = here() / "scripts" / "paper" / "model_names.yaml"
+    """Human-readable names of the models Figure 2 labels, per domain."""
     """Directory with one ``<domain>.yaml`` pseudocode spec per domain."""
     out_dir: Path = here() / "data" / "paper" / "figures"
     domains: List[str] = field(default_factory=lambda: list(DOMAINS))
-    pending_domains: List[str] = field(default_factory=lambda: ["number_game"])
+    pending_domains: List[str] = field(default_factory=list)
     """Domains drawn as a 'pending' placeholder (their data are not in yet)."""
     mock_domains: List[str] = field(default_factory=list)
     """Domains whose figure data are mock (for drafting the figures' look):
@@ -188,73 +191,371 @@ def _save(fig, out_dir: Path, name: str) -> None:
     plt.close(fig)
 
 
-def elpd_columns(domain: str, data: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Figure 2's columns, one per run, each as differences from the best
-    starting model: the run's starting models, the models it pruned (only a
-    run whose figure data score them has ``pruned_during_run``), its other
-    models live at the end and its winner with the SE of its paired
-    difference."""
-    columns = []
-    for run in data["runs"]:
-        seeds = [v["diff"] for name, v in run["vs_best_seed"].items() if name != run["best_model"]]
-        columns.append({"label": run_label(domain, run["run"]), "seeds": seeds,
-                        "pruned": list(run["pruned_during_run"].values()) if "pruned_during_run" in run else [],
-                        "others": list(run["others_at_end"].values()),
-                        "winner": run["vs_best_seed"][run["best_model"]]})
-    return columns
+# Figure 2 collapses each domain's runs into one comparison. Subjective
+# randomness scores each run on its own data, so it is drawn from all runs
+# pooled (the figure data's ``pooled``); the other domains score every run on
+# one test (reference games: the pre-registered experiment; the number game
+# has one run), so their runs are drawn together.
+POOLED_VIEW = {"subjective_randomness"}
+
+
+def _model_name(names: Dict[str, str], domain: str, model: str) -> str:
+    if model not in names:
+        raise KeyError(f"{domain}: {model!r} has no name in model_names.yaml")
+    return names[model]
+
+
+def _in_run_order(domain: str, by_run: Dict[str, Dict[str, float]],
+                  order: Dict[str, int]) -> Tuple[List[float], List[float]]:
+    """The pruned models' values and their progress through their own run
+    (rank in admission order, scaled to 0..1), run by run."""
+    values: List[float] = []
+    progress: List[float] = []
+    for run, models in by_run.items():
+        missing = sorted(set(models) - set(order))
+        if missing:
+            raise RuntimeError(f"{domain} {run}: no admission order for {missing}")
+        ranked = sorted(models, key=order.get)
+        for i, label in enumerate(ranked):
+            values.append(models[label])
+            progress.append(i / (len(ranked) - 1) if len(ranked) > 1 else 0.5)
+    return values, progress
+
+
+def forest_rows(domain: str, data: Dict[str, Any], names: Dict[str, str]) -> List[Dict[str, Any]]:
+    """Figure 2's rows for one domain, top to bottom: the best discovered
+    models (named, with their run when there are several), the other models
+    live at the end and the models pruned during the runs (unnamed strips),
+    then the starting models (named), each against the best starting model.
+
+    A labelled row has ``diff`` and ``se`` (``None``: its paired SE is not
+    computed yet; drawn hollow, without a CI). A strip has ``values``, or
+    ``None`` when its models are not scored yet (drawn as "pending"); the
+    pruned strip also has each model's ``progress`` through its own run, 0
+    for the first it admitted to 1 for the last (``pruned_order``, ranked
+    within each run, so collapsed runs overlay)."""
+    if domain in POOLED_VIEW:
+        pooled = data["pooled"]
+        best_seed = pooled["best_seed"]
+        paired = pooled.get("vs_best_seed")
+        top = pooled["elpd"][best_seed]
+        winners = [(m, run) for m, run in pooled["winner_runs"].items()]
+        seeds = [m for m in pooled["elpd"] if m not in pooled["winner_runs"]]
+
+        def value(m: str) -> Dict[str, Any]:
+            if paired is not None:
+                return {"diff": paired[m]["diff"], "se": paired[m]["se"]}
+            return {"diff": pooled["elpd"][m] - top, "se": 0.0 if m == best_seed else None}
+
+        scored = "pruned_during_run" in pooled
+        others = list(pooled["others_at_end"].values()) if scored else None
+        pruned = progress = None
+        if scored:
+            by_run = {run: {label: v for label, v in pooled["pruned_during_run"].items()
+                            if label.startswith(f"{run}__")} for run in pooled["runs"]}
+            pruned, progress = _in_run_order(domain, by_run, pooled["pruned_order"])
+    else:
+        runs = data["runs"]
+        if len({r["best_seed"] for r in runs}) != 1:
+            raise RuntimeError(f"{domain}: the runs are scored against different best starting models")
+        winners = [(r["best_model"], r["run"]) for r in runs]
+        seed_values: Dict[str, Dict[str, Any]] = {}
+        for r in runs:
+            for m, v in r["vs_best_seed"].items():
+                if m == r["best_model"]:
+                    continue
+                if m in seed_values and abs(seed_values[m]["diff"] - v["diff"]) > 1e-6:
+                    raise RuntimeError(f"{domain}: {m!r} differs between runs on one test")
+                seed_values[m] = {"diff": v["diff"], "se": v["se"]}
+        seeds = list(seed_values)
+        by_winner = {r["best_model"]: r["vs_best_seed"][r["best_model"]] for r in runs}
+
+        def value(m: str) -> Dict[str, Any]:
+            v = by_winner.get(m, seed_values.get(m))
+            return {"diff": v["diff"], "se": v["se"]}
+
+        has_pruned = {"pruned_during_run" in r for r in runs}
+        if len(has_pruned) != 1:
+            raise RuntimeError(f"{domain}: some runs score their pruned models and some do not")
+        scored = has_pruned.pop()
+        others = [v for r in runs for v in r["others_at_end"].values()] if scored else None
+        pruned = progress = None
+        if scored:
+            order = {f"{r['run']}__{n}": i for r in runs for n, i in r["pruned_order"].items()}
+            by_run = {r["run"]: {f"{r['run']}__{n}": v for n, v in r["pruned_during_run"].items()}
+                      for r in runs}
+            pruned, progress = _in_run_order(domain, by_run, order)
+
+    several = len(winners) > 1
+    rows = [{"kind": "winner", "model": m,
+             "label": _model_name(names, domain, m)
+             + (f" ({run_label(domain, run).split()[-1]})" if several else ""),
+             **value(m)} for m, run in winners]
+    rows.sort(key=lambda r: -r["diff"])
+    rows.append({"kind": "others", "label": "Other live models", "values": others})
+    rows.append({"kind": "pruned", "label": "Pruned during the run", "values": pruned,
+                 "progress": progress})
+    seed_rows = [{"kind": "seed", "model": m, "label": _model_name(names, domain, m), **value(m)}
+                 for m in seeds]
+    return rows + sorted(seed_rows, key=lambda r: -r["diff"])
+
+
+PRUNED_SPAN = 3.0  # the pruned strip's width in columns: its dots spread by progress
+FIG2_HEIGHT_IN = 2.3
+
+
+SEED_WIDTH = 0.4  # a starting model's column width (the others' is 1)
+
+
+def _column_width(column: Dict[str, Any]) -> float:
+    return {"pruned": PRUNED_SPAN, "seed": SEED_WIDTH}.get(column["kind"], 1.0)
+
+
+def _column_positions(columns: List[Dict[str, Any]]) -> List[float]:
+    """Each column's centre, left to right (``_column_width`` each)."""
+    centres, edge = [], 0.0
+    for column in columns:
+        width = _column_width(column)
+        centres.append(edge + width / 2)
+        edge += width
+    return centres
+
+
+def _strip_label(row: Dict[str, Any]) -> str:
+    name = "Pruned during the run" if row["kind"] == "pruned" else "Other live models"
+    return name if row["values"] is None else f"{name} ({len(row['values'])})"
+
+
+NAME_GAP_PT = 1.5  # the least gap around a name, in points
+MARK_RADIUS_PT = 2.5  # the space a point or dot takes, in points
+
+
+def _place_names(ax, fig, names: List[Tuple[str, float, float, str]],
+                 marks: List[Tuple[float, float, float]], texts: Sequence[Any] = (),
+                 boxes: Sequence[Any] = ()) -> None:
+    """Write each (text, x, y, side) name beside its point, horizontally: to
+    the left of it (``side`` "left") or to the left just above it
+    ("above-left", for the best starting model on the zero line: the starting
+    models are all at or below it, so the space above them is free), tried
+    upwards first, at the nearest height where it covers no mark
+    (``marks``: each (x, low, high) point, CI or dot of the panel) and no
+    other name or text (``texts``); on each side the names keep their
+    points' top-to-bottom order. A name moved off its point gets a thin
+    leader line back to it."""
+    from matplotlib.transforms import Bbox
+
+    renderer = fig.canvas.get_renderer()
+    to_px = fig.dpi / 72.0
+    r, gap = MARK_RADIUS_PT * to_px, NAME_GAP_PT * to_px
+    taken = []
+    for x, low, high in marks:
+        (px, p_low), (_, p_high) = ax.transData.transform([(x, low), (x, high)])
+        taken.append(Bbox([[px - r, p_low - r], [px + r, p_high + r]]))
+    taken += [text.get_window_extent(renderer) for text in texts]
+    taken += list(boxes)
+    frame = ax.get_window_extent(renderer)
+    lowest: Dict[str, float] = {}  # each side's lowest name so far (its bottom edge)
+
+    def annotate(text, x, y, side, dy, leader):
+        name = ax.annotate(
+            text, (x, y), xytext=(-2 if side == "above-left" else 2, 4 + dy),
+            textcoords="offset points", ha="right" if side == "above-left" else "left",
+            va="bottom", fontsize=5, color=INK,
+            annotation_clip=False, zorder=4,
+            arrowprops=(dict(arrowstyle="-", color=INK_SECONDARY, linewidth=0.4, shrinkA=0,
+                             shrinkB=2.5, relpos=(1.0, 0.0) if side == "above-left" else (0.0, 0.0))
+                        if leader else None))
+        name.set_in_layout(False)
+        return name
+
+    for text, x, y, side in sorted(names, key=lambda n: -n[2]):
+        trial = annotate(text, x, y, side, 0, False)
+        base = trial.get_window_extent(renderer)
+        trial.remove()
+        if side == "above-left" and base.x0 < frame.x0:  # it would cross the y-axis
+            side = "above-right"
+            trial = annotate(text, x, y, side, 0, False)
+            base = trial.get_window_extent(renderer)
+            trial.remove()
+        first = 1
+        lowest.setdefault(side, frame.y1)
+        shift = 0.0
+        for step in range(0, 120):
+            found = False
+            for sign in ((first, -first) if step else (1,)):
+                box = base.translated(0, sign * step * to_px)
+                padded = Bbox([[box.x0 - gap, box.y0 - gap], [box.x1 + gap, box.y1 + gap]])
+                if box.y0 < frame.y0 or box.y1 > frame.y1:
+                    continue
+                if box.y1 > lowest[side] - gap:
+                    continue  # keep the side's names in their points' order (and below the band)
+                if any(padded.overlaps(other) for other in taken):
+                    continue
+                shift, found = sign * step, True
+                break
+            if found:
+                break
+        annotate(text, x, y, side, shift, True)  # several points can share its height
+        taken.append(base.translated(0, shift * to_px))
+        lowest[side] = taken[-1].y0
+
+
+NAME_LINE_PT = 7.0  # one line of the winners' header band
+
+
+def _name_winners(ax, fig, winners: List[Tuple[str, float, float]]) -> List[Any]:
+    """Name the best discovered models in a band at the top of the panel,
+    best on top, each name ending at its point's column (or further right,
+    where it would cross the y-axis) with a leader line down to it; the
+    panel's range grows to hold the band, whose ticks are hidden. Returns
+    what the names take up, as display boxes (the texts and the lines)."""
+    from matplotlib.text import Text
+    from matplotlib.transforms import Bbox
+
+    height_pt = ax.bbox.height * 72.0 / fig.dpi
+    band_pt = len(winners) * NAME_LINE_PT + 4.0
+    lo, hi = ax.get_ylim()
+    ax.set_yticks([v for v in ax.get_yticks() if lo <= v <= hi])
+    share = band_pt / height_pt
+    top = (hi - lo * share) / (1 - share)
+    ax.set_ylim(lo, top)
+    per_pt = (top - lo) / height_pt
+    renderer = fig.canvas.get_renderer()
+    frame = ax.get_window_extent(renderer)
+    to_data = ax.transData.inverted()
+    taken = []
+    for k, (text, x, y) in enumerate(sorted(winners, key=lambda w: -w[2])):
+        y_text = top - (k + 0.5) * NAME_LINE_PT * per_pt
+        probe = ax.text(x, y_text, text, ha="right", va="center", fontsize=5)
+        box = probe.get_window_extent(renderer)
+        probe.remove()
+        x_text = x if box.x0 >= frame.x0 else to_data.transform((box.x1 + frame.x0 - box.x0, 0))[0]
+        name = ax.annotate(text, (x, y), xytext=(x_text, y_text), textcoords="data", ha="right",
+                           va="center", fontsize=5, color=INK, annotation_clip=False, zorder=4,
+                           arrowprops=dict(arrowstyle="-", color=INK_SECONDARY, linewidth=0.4,
+                                           shrinkA=0, shrinkB=2.5, relpos=(1.0, 0.5)))
+        name.set_in_layout(False)
+        taken.append(Text.get_window_extent(name, renderer))
+        (px, p_point), (qx, p_text) = ax.transData.transform([(x, y), (x_text, y_text)])
+        taken.append(Bbox([[min(px, qx) - 1, p_point], [max(px, qx) + 1, p_text]]))
+    return taken
 
 
 def draw_elpd(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path,
-              mock_domains: List[str]) -> None:
-    """Per domain, a column per run: its starting models (dashes), its other
-    models live at the end (small dots) and its best discovered model (±2 SE,
-    labelled with its difference), all from the best starting model."""
-    fig, axes = plt.subplots(1, len(domain_data), figsize=(FULL_WIDTH_IN, 2.9))
+              mock_domains: List[str], names: Dict[str, Dict[str, str]]) -> None:
+    """Per domain, side by side, ELPD differences from the best starting model
+    (up is a better fit), left to right: the starting models (worst first),
+    the models pruned during the run (left to right in the order each run
+    admitted them), the other live models, and the best discovered models;
+    starting and best discovered models as points with ±2 SE. Only the best
+    discovered models and the best starting model are named, beside their
+    points (the others are for the caption). Thin rules separate the groups."""
+    rows_by_domain = {d: None if data is None else forest_rows(d, data, names[d])[::-1]
+                      for d, data in domain_data.items()}
+    widths = [6.0 if cols is None else _column_positions(cols)[-1] + 0.5
+              for cols in rows_by_domain.values()]
+    fig, axes = plt.subplots(1, len(widths), figsize=(FULL_WIDTH_IN, FIG2_HEIGHT_IN),
+                             gridspec_kw={"width_ratios": widths})
     jitter = np.random.default_rng(0)
-    for i, (ax, (domain, data)) in enumerate(zip(np.atleast_1d(axes), domain_data.items())):
-        if data is None:
+    hollow = []
+    drawn = []
+    to_name: Dict[Any, List[Tuple[str, float, float, str]]] = {}
+    marks_by_ax: Dict[Any, List[Tuple[float, float, float]]] = {}
+    texts_by_ax: Dict[Any, List[Any]] = {}
+    winners_by_ax: Dict[Any, List[Tuple[str, float, float]]] = {}
+    for ax, (domain, columns) in zip(np.atleast_1d(axes), rows_by_domain.items()):
+        if columns is None:
             _pending(ax, domain)
             continue
+        drawn.append(ax)
         _style(ax)
+        ax.spines["bottom"].set_visible(False)
+        ax.set_xticks([])
         ax.axhline(0.0, color=INK_SECONDARY, linewidth=0.8, zorder=0)
-        columns = elpd_columns(domain, data)
-        for x, column in enumerate(columns):
-            for value in column["seeds"]:
-                ax.plot([x - 0.40, x - 0.22], [value, value], color=COLOR_SEED, linewidth=1.1,
-                        solid_capstyle="butt", zorder=2)
-            pruned = np.asarray(column["pruned"], dtype=float)
-            ax.scatter(x - 0.08 + jitter.uniform(-0.07, 0.07, pruned.size), pruned, s=8,
-                       color=COLOR_PRUNED, linewidths=0, alpha=0.8, zorder=1)
-            others = np.asarray(column["others"], dtype=float)
-            ax.scatter(x + 0.09 + jitter.uniform(-0.05, 0.05, others.size), others, s=12,
-                       color=COLOR_OTHERS, linewidths=0, alpha=0.8, zorder=2)
-            win = column["winner"]
-            ax.errorbar(x + 0.25, win["diff"], yerr=2 * win["se"], fmt="o", markersize=6,
-                        color=COLOR_DISCOVERED, ecolor=COLOR_DISCOVERED, elinewidth=1.4,
-                        capsize=0, markeredgecolor="white", markeredgewidth=0.8, zorder=3)
-            ax.annotate(f"{win['diff']:+,.0f}", (x + 0.25, win["diff"] + 2 * win["se"]),
-                        xytext=(0, 2), textcoords="offset points", ha="center", va="bottom",
-                        fontsize=6.5, color=INK)
-        ax.set_xticks(range(len(columns)), [c["label"] for c in columns], fontsize=6.5)
-        ax.set_xlim(-0.6, len(columns) - 0.4)
-        ax.margins(y=0.12)
-        if i == 0:
-            ax.set_ylabel("ΔELPD vs. best starting model (nats)", fontsize=7, color=INK)
-        ax.set_title(panel_title(domain, mock_domains=mock_domains), fontsize=8.5, color=INK,
-                     loc="left")
+        xs = _column_positions(columns)
+        pending_strips = []
+        best_seed = max((c for c in columns if c["kind"] == "seed"), key=lambda c: c["diff"])
+        names_here = []
+        winners_here: List[Tuple[str, float, float]] = []
+        marks_here: List[Tuple[float, float, float]] = []
+        for x, col in zip(xs, columns):
+            if col["kind"] in ("others", "pruned"):
+                if col["values"] is None:
+                    pending_strips.append(x)
+                    continue
+                values = np.asarray(col["values"], dtype=float)
+                if col["kind"] == "pruned":
+                    # Left to right in the order each run admitted them.
+                    across = x + (np.asarray(col["progress"]) - 0.5) * (PRUNED_SPAN - 0.5)
+                    ax.scatter(across, values, s=5, color=COLOR_PRUNED, linewidths=0,
+                               alpha=0.85, zorder=2)
+                else:
+                    across = x + jitter.uniform(-0.15, 0.15, values.size)
+                    ax.scatter(across, values, s=8, color=COLOR_OTHERS, linewidths=0,
+                               alpha=0.85, zorder=2)
+                marks_here += [(float(a), float(v), float(v)) for a, v in zip(across, values)]
+                continue
+            color = COLOR_DISCOVERED if col["kind"] == "winner" else COLOR_SEED
+            half = 2 * (col["se"] or 0.0)
+            if col["se"] is None:
+                hollow.append(f"{domain}:{col['model']}")
+                ax.plot(x, col["diff"], "o", markersize=3.6, markerfacecolor="white",
+                        markeredgecolor=color, markeredgewidth=0.9, zorder=3)
+            else:
+                ax.errorbar(x, col["diff"], yerr=half, fmt="o", markersize=3.6, color=color,
+                            ecolor=color, elinewidth=1.0, capsize=0, markeredgecolor="white",
+                            markeredgewidth=0.4, zorder=3)
+            marks_here.append((x, col["diff"] - half, col["diff"] + half))
+            if col["kind"] == "winner":
+                winners_here.append((f"{col['label']}  {col['diff']:+,.0f}", x, col["diff"]))
+            elif col is best_seed:
+                names_here.append((col["label"], x, col["diff"], "above-left"))
+        to_name[ax] = names_here
+        winners_by_ax[ax] = winners_here
+        marks_by_ax[ax] = marks_here
+        texts_by_ax[ax] = []
+        if pending_strips:
+            texts_by_ax[ax].append(ax.text(float(np.mean(pending_strips)), 0.0, "pending",
+                                           ha="center", va="bottom", fontsize=5,
+                                           color=INK_SECONDARY, style="italic"))
+        # Rules between the starting models, the strips and the best discovered models.
+        groups = ["winner" if c["kind"] == "winner" else "seed" if c["kind"] == "seed" else "strip"
+                  for c in columns]
+        lefts = [x - _column_width(c) / 2 for x, c in zip(xs, columns)]
+        for i in range(1, len(columns)):
+            if groups[i] != groups[i - 1]:
+                ax.axvline(lefts[i], color=GRID, linewidth=0.6, zorder=0)
+        ax.set_xlim(-0.2, xs[-1] + 0.7)
+        ax.margins(y=0.08)
+        ax.autoscale_view(scalex=False)
+        ax.yaxis.set_major_locator(MaxNLocator(4, steps=[1, 2, 2.5, 5, 10]))
+        ax.tick_params(axis="y", labelsize=5.5, pad=1.5)
+        ax.set_title(panel_title(domain, mock_domains=mock_domains), fontsize=7.5, color=INK,
+                     loc="left", pad=3)
+    drawn[0].set_ylabel("ΔELPD vs. best starting model (nats)", fontsize=6.5, color=INK,
+                        labelpad=2)
     handles = [
-        Line2D([], [], color=COLOR_SEED, linewidth=1.1, label="Starting models"),
-        Line2D([], [], marker="o", color=COLOR_PRUNED, linestyle="none", markersize=3,
-               label="Pruned during the run"),
-        Line2D([], [], marker="o", color=COLOR_OTHERS, linestyle="none", markersize=3.5,
-               label="Other models live at the end of the run"),
-        Line2D([], [], marker="o", color=COLOR_DISCOVERED, linestyle="none", markersize=6,
-               label="Best discovered model (±2 SE)"),
+        Line2D([], [], marker="o", color=COLOR_SEED, linestyle="none", markersize=3.6,
+               label="Starting models"),
+        Line2D([], [], marker="o", color=COLOR_PRUNED, linestyle="none", markersize=2.6,
+               label="Pruned during the run (left to right as tried)"),
+        Line2D([], [], marker="o", color=COLOR_OTHERS, linestyle="none", markersize=3,
+               label="Other live models"),
+        Line2D([], [], marker="o", color=COLOR_DISCOVERED, linestyle="none", markersize=3.6,
+               label="Best discovered (±2 SE)"),
     ]
-    fig.legend(handles=handles, loc="lower center", ncol=len(handles), frameon=False, fontsize=6.5,
-               bbox_to_anchor=(0.5, -0.01), handlelength=1.4, handletextpad=0.5,
-               columnspacing=1.4)
-    fig.tight_layout(w_pad=2.0, rect=(0, 0.07, 1, 1))
+    fig.legend(handles=handles, loc="upper left", ncol=len(handles), frameon=False, fontsize=5.5,
+               bbox_to_anchor=(0.0, 1.0), handlelength=1.0, handletextpad=0.4, columnspacing=1.2)
+    if hollow:
+        print(f"[fig2] drawn without a CI (paired SE not computed yet): {hollow}", flush=True)
+        fig.text(0.995, 0.99, "Open markers: paired SE not yet computed.", ha="right", va="top",
+                 fontsize=5, color=INK_SECONDARY)
+    fig.tight_layout(w_pad=0.8, rect=(0, 0, 0.97, 0.93))
+    fig.canvas.draw()  # the final layout, so names are placed in its coordinates
+    for ax, names_here in to_name.items():
+        band = _name_winners(ax, fig, winners_by_ax[ax])
+        fig.canvas.draw()
+        _place_names(ax, fig, names_here, marks_by_ax[ax], texts_by_ax[ax], band)
     _save(fig, out_dir, "fig2_elpd")
 
 
@@ -332,7 +633,9 @@ def main(args: Args) -> None:
         d: (None if data is None else load_pseudocode(args.pseudocode, d, data))
         for d, data in domain_data.items()
     }
-    draw_elpd(domain_data, args.out_dir, args.mock_domains)
+    names = yaml.safe_load(args.model_names.read_text())
+    draw_elpd(domain_data, args.out_dir, args.mock_domains,
+              {d: names[d] for d, data in domain_data.items() if data is not None})
     draw_conditions(domain_data, args.out_dir, args.mock_domains)
     draw_pseudocode(specs, args.out_dir, args.mock_domains)
     print(f"wrote figures 2-4 to {args.out_dir}", flush=True)

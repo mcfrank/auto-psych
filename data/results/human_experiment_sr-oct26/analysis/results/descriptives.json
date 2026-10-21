@@ -1,0 +1,98 @@
+{
+  "n_trials": 7680,
+  "n_participant_experiments": 120,
+  "n_distinct_participant_ids": 118,
+  "trials_per_participant": [
+    64
+  ],
+  "collection": [
+    {
+      "experiment": 1,
+      "target": 40,
+      "completed": 40,
+      "minutes": 29.2
+    },
+    {
+      "experiment": 2,
+      "target": 40,
+      "completed": 40,
+      "minutes": 30.8
+    },
+    {
+      "experiment": 3,
+      "target": 40,
+      "completed": 40,
+      "minutes": 31.8
+    }
+  ],
+  "stimulus_pairs": {
+    "pairs_shown": 192,
+    "distinct_pairs_ht_consolidated": 152,
+    "fraction_distinct": 0.7916666666666666,
+    "per_experiment_shown_and_distinct": {
+      "1": {
+        "shown": 64,
+        "distinct_ht_consolidated": 50
+      },
+      "2": {
+        "shown": 64,
+        "distinct_ht_consolidated": 48
+      },
+      "3": {
+        "shown": 64,
+        "distinct_ht_consolidated": 56
+      }
+    },
+    "pairs_in_more_than_one_experiment": [
+      "HHHHTHHH | HHHHTTTT",
+      "HHHHTHHH | TTTTHHHH"
+    ],
+    "different_length_pairs": 0
+  },
+  "sequence_lengths_by_experiment": {
+    "1": {
+      "count": 51.0,
+      "min": 3.0,
+      "median": 8.0,
+      "max": 8.0
+    },
+    "2": {
+      "count": 48.0,
+      "min": 5.0,
+      "median": 8.0,
+      "max": 8.0
+    },
+    "3": {
+      "count": 69.0,
+      "min": 2.0,
+      "median": 8.0,
+      "max": 8.0
+    }
+  },
+  "biases_topline": {
+    "side": {
+      "n_participants": 120,
+      "estimate": 0.5088541666666667,
+      "ci_lo": 0.49540730112422604,
+      "ci_hi": 0.5223010322091074
+    },
+    "n_heads": {
+      "n_participants": 120,
+      "estimate": 0.5147748246585456,
+      "ci_lo": 0.5011759534315068,
+      "ci_hi": 0.5283736958855845
+    },
+    "length": {
+      "n_participants": 0,
+      "estimate": null,
+      "ci_lo": null,
+      "ci_hi": null
+    },
+    "alternation": {
+      "n_participants": 120,
+      "estimate": 0.65614155672733,
+      "ci_lo": 0.6224786234252155,
+      "ci_hi": 0.6898044900294444
+    }
+  }
+}

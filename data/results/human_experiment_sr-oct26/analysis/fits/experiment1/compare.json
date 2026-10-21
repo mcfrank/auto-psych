@@ -1,0 +1,72 @@
+{
+  "individual_streak_aversion_lapse": {
+    "rank": 0,
+    "elpd_loo": -931.4674769342842,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "dse_clustered": 0.0,
+    "loo_unreliable": false,
+    "n_bad_k": 1,
+    "frac_bad_k": 0.000390625,
+    "max_pareto_k": 0.8176630651755555,
+    "convergence_problems": [],
+    "not_converged": false,
+    "random_seed": 20261003
+  },
+  "local_representativeness": {
+    "rank": 1,
+    "elpd_loo": -1398.476574615729,
+    "elpd_diff": 467.009097681445,
+    "dse": 26.29513953871069,
+    "dse_clustered": 37.51105530849426,
+    "loo_unreliable": false,
+    "n_bad_k": 0,
+    "frac_bad_k": 0.0,
+    "max_pareto_k": 0.02481823564940134,
+    "convergence_problems": [],
+    "not_converged": false,
+    "random_seed": 20261003
+  },
+  "motif_stack": {
+    "rank": 2,
+    "elpd_loo": -1416.5607001473654,
+    "elpd_diff": 485.09322321308116,
+    "dse": 26.79515683239607,
+    "dse_clustered": 40.629673589291805,
+    "loo_unreliable": false,
+    "n_bad_k": 0,
+    "frac_bad_k": 0.0,
+    "max_pareto_k": 0.10236201737907362,
+    "convergence_problems": [],
+    "not_converged": false,
+    "random_seed": 6
+  },
+  "falk_konold_dp": {
+    "rank": 3,
+    "elpd_loo": -1579.3655395482433,
+    "elpd_diff": 647.8980626139592,
+    "dse": 27.0161638051697,
+    "dse_clustered": 44.776589624305075,
+    "loo_unreliable": false,
+    "n_bad_k": 0,
+    "frac_bad_k": 0.0,
+    "max_pareto_k": -0.031214951921286215,
+    "convergence_problems": [],
+    "not_converged": false,
+    "random_seed": 20261003
+  },
+  "finite_experience_occurrence": {
+    "rank": 4,
+    "elpd_loo": -1748.247838907965,
+    "elpd_diff": 816.7803619736808,
+    "dse": 26.600957489716645,
+    "dse_clustered": 65.60185840518338,
+    "loo_unreliable": false,
+    "n_bad_k": 0,
+    "frac_bad_k": 0.0,
+    "max_pareto_k": 0.03207969337163381,
+    "convergence_problems": [],
+    "not_converged": false,
+    "random_seed": 20261003
+  }
+}

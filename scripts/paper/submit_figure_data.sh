@@ -27,12 +27,13 @@ DOMAIN="${1:?usage: submit_figure_data.sh sr|number_game}"
 export REPO="${REPO:-$HOME/auto-psych}"
 export WORK_ROOT="${WORK_ROOT:-$SCRATCH/auto-psych/paper}"
 case "$DOMAIN" in
-  sr)  # 176 removed models to fit, one PSIS-LOO fit each at 3,000 draws x 4 chains
+  sr)  # 176 removed models on each run's data (one fit each at 3,000 draws x 4 chains) and
+       # 254 other models on all runs pooled (23k trials, 1,500 draws after 4,000 tuning steps)
     MODULE=scripts.paper.sr_figure_data
     ASSEMBLY=scripts/paper/sr_figure_data.sbatch
     export FIT_WORK_DIR="${FIT_WORK_DIR:-$WORK_ROOT/sr_figure_data}"
-    N_SHARDS="${N_SHARDS:-44}" SHARD_CPUS="${SHARD_CPUS:-16}"
-    SHARD_MEM="${SHARD_MEM:-48G}" SHARD_TIME="${SHARD_TIME:-12:00:00}" ;;
+    N_SHARDS="${N_SHARDS:-86}" SHARD_CPUS="${SHARD_CPUS:-16}"
+    SHARD_MEM="${SHARD_MEM:-64G}" SHARD_TIME="${SHARD_TIME:-24:00:00}" ;;
   number_game)  # 52 removed models to fit, 5 fits each (all data + 4 CV folds)
     MODULE=scripts.paper.number_game_figure_data
     ASSEMBLY=scripts/paper/number_game_figure_data.sbatch

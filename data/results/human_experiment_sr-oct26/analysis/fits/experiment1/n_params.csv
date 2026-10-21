@@ -1,0 +1,6 @@
+model,n_free_rvs,n_population_params,n_person_level_vectors
+falk_konold_dp,2,2,0
+finite_experience_occurrence,2,2,0
+local_representativeness,5,5,0
+motif_stack,7,7,0
+individual_streak_aversion_lapse,13,9,4

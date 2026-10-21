@@ -46,6 +46,7 @@ from pyprojroot import here
 DEFAULT_PREREG = here() / "data" / "rsa" / "prereg" / "run" / "prereg_analysis.json"
 DEFAULT_PANELS = here() / "data" / "rsa" / "viz" / "panels.json"
 DEFAULT_CHAIN_SEEDS = here() / "data" / "rsa" / "live_seeds" / "chains" / "chains.json"
+DEFAULT_LIVE_ROOT = here() / "data" / "rsa" / "live"
 DEFAULT_CHAIN_MODELS = here() / "data" / "rsa" / "prereg" / "chain_models_lpd.json"
 DEFAULT_OUT = here() / "data" / "paper" / "figure_data" / "rsa.json"
 
@@ -62,6 +63,9 @@ class Args:
     chains: List[str] = field(default_factory=lambda: ["c0", "c1", "c2"])
     """panels.json keys of the live chains' finals (``c<k>`` is chain k)."""
     chain_models: Optional[Path] = DEFAULT_CHAIN_MODELS
+    live_root: Path = DEFAULT_LIVE_ROOT
+    """The chains' run trees (``live_rsa_c<k>/outputs``): their ledgers give
+    the order the removed models were admitted in."""
     """Every other chain model's lpd on the pre-registered experiment
     (``rsa_chain_models.py``); ``None`` leaves them out."""
     out: Path = DEFAULT_OUT
@@ -100,7 +104,8 @@ def _chain_starting_models(chain_seeds: Dict[str, Any], chain: str) -> List[str]
 
 
 def chain_record(chain: str, final: str, starting: List[str], prereg: Dict[str, Any],
-                 best_promoted: str, chain_models: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+                 best_promoted: str, chain_models: Optional[Dict[str, Any]] = None,
+                 live_root: Path = DEFAULT_LIVE_ROOT) -> Dict[str, Any]:
     if final not in prereg["primary"]:
         raise RuntimeError(f"{chain}'s final {final!r} is not in the pre-registered test")
     promoted = _lpds(prereg, PROMOTED_PREFIX)
@@ -138,13 +143,30 @@ def chain_record(chain: str, final: str, starting: List[str], prereg: Dict[str, 
                            f"not the best promoted seed {best_promoted!r}")
     bar = promoted[best_promoted]
     mine = chain_models["chains"][chain]
+    # The starting models' paired SEs against the bar (the chain-model job's).
+    paired = chain_models["bar_vs_best_promoted"]
+    for model in starting:
+        if model != best_promoted:
+            row = paired[f"{PROMOTED_PREFIX}{model}"]
+            if abs(row["diff"] - record["vs_best_seed"][model]["diff"]) > 1e-6:
+                raise RuntimeError(f"{chain}: {model}'s paired difference {row['diff']} is not "
+                                   f"the totals' {record['vs_best_seed'][model]['diff']}")
+            record["vs_best_seed"][model]["se"] = row["se"]
     return {
         **record,
         "others_at_end": {n: v - bar for n, v in mine["others_at_end"].items()},
         "pruned_during_run": {n: v - bar for n, v in mine["pruned_during_run"].items()},
         "pruned_outcome": mine["removed_outcome"],
         "pruned_unscored": mine["unscored"],
+        "pruned_order": _pruned_order(live_root, chain, sorted(mine["pruned_during_run"])),
     }
+
+
+def _pruned_order(live_root: Path, chain: str, names: List[str]) -> Dict[str, int]:
+    from scripts.paper.removed_models import pruned_order
+    from scripts.paper.rsa_chain_models import _experiments
+
+    return pruned_order(_experiments(live_root / f"live_rsa_{chain}" / "outputs")[-1], names)
 
 
 def condition_table(panels: Dict[str, Any], chain: str) -> List[Dict[str, Any]]:
@@ -192,7 +214,7 @@ def main(args: Args) -> None:
         )
     runs = [
         chain_record(c, panels["models"][c]["model"], _chain_starting_models(chain_seeds, c),
-                     prereg, best_promoted, chain_models)
+                     prereg, best_promoted, chain_models, args.live_root)
         for c in args.chains
     ]
     best = max(runs, key=lambda r: r["elpd"][r["best_model"]])

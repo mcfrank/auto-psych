@@ -1,0 +1,6 @@
+experiment,model,model_label,kind,elpd_loo,elpd_rel,dse,dse_clustered,xmin,xmax,loo_unreliable,not_converged
+experiment 3,personal_pattern_detection_gain,best discovered model,best discovered model,-3450.2476206438914,-0.0,0.0,0.0,-0.0,0.0,False,False
+experiment 3,falk_konold_dp,Falk & Konold DP,seed model,-4865.790280774265,-1415.542660130373,43.78939006968942,69.31590511758449,-1459.3320502000624,-1371.7532700606835,False,False
+experiment 3,finite_experience_occurrence,Finite experience,seed model,-5227.032045934457,-1776.784425290565,44.71461439333122,97.97213813706682,-1821.4990396838962,-1732.0698108972338,False,False
+experiment 3,local_representativeness,Local representativeness,seed model,-4538.716245967818,-1088.468625323927,41.72307016598195,60.29152965336386,-1130.1916954899089,-1046.745555157945,False,False
+experiment 3,motif_stack,Motif stack,seed model,-4608.777534430654,-1158.5299137867626,42.491042639575994,60.73711027136042,-1201.0209564263387,-1116.0388711471865,False,False

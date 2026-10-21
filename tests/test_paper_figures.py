@@ -15,14 +15,15 @@ from scripts.paper import figures
 
 
 def _domain_data(domain, winner="w", seed="s1"):
+    winners = [winner, f"{winner}_b"]  # each run's own winner
     return {
         "domain": domain,
         "scoring": "ELPD on the final data",
         "runs": [
             {
-                "run": run, "n_trials": 100, "best_model": winner, "best_seed": seed,
+                "run": run, "n_trials": 100, "best_model": winners[k], "best_seed": seed,
                 "vs_best_seed": {
-                    winner: {"diff": 12.0 + k, "se": 3.0},
+                    winners[k]: {"diff": 12.0 + k, "se": 3.0},
                     seed: {"diff": 0.0, "se": 0.0},
                     "s2": {"diff": -8.0, "se": None},
                 },
@@ -30,7 +31,10 @@ def _domain_data(domain, winner="w", seed="s1"):
             }
             for k, run in enumerate(["r1", "r2"])
         ],
-        "pooled": {"best_model": winner, "best_seed": seed},
+        # All runs pooled: Figure 3, and Figure 2's view of subjective randomness.
+        "pooled": {"best_model": winner, "best_seed": seed,
+                   "winner_runs": {winners[0]: "r1", winners[1]: "r2"},
+                   "elpd": {winners[0]: -80.0, winners[1]: -95.0, seed: -100.0, "s2": -130.0}},
         "conditions": [
             {"n": 10, "observed": o, "best_model": o + 0.05, "best_seed": 0.5}
             for o in (0.2, 0.5, 0.8)
@@ -53,7 +57,13 @@ def _setup(tmp_path, *, winner_in_spec="w", corrupt_sha=False):
             "sha256": "0" * 64 if corrupt_sha else sha, "title": f"{domain} title",
             "lines": [{"code": "for each x:", "note": "a note"}, {"code": "  y = f(x)"}],
         }, allow_unicode=True))
-    return figures.Args(figure_data=data_dir, pseudocode=spec_dir, out_dir=tmp_path / "out")
+    names = tmp_path / "model_names.yaml"
+    names.write_text(yaml.safe_dump({d: NAMES for d in ("subjective_randomness", "rsa")}))
+    return figures.Args(figure_data=data_dir, pseudocode=spec_dir, out_dir=tmp_path / "out",
+                        model_names=names, pending_domains=["number_game"])
+
+
+NAMES = {"w": "Winner one", "w_b": "Winner two", "s1": "Seed one", "s2": "Seed two"}
 
 
 def test_all_three_figures_are_drawn_with_the_number_game_pending(tmp_path):
@@ -112,18 +122,52 @@ def test_mock_domains_must_be_drawn_domains(tmp_path):
         figures.main(args)
 
 
-def test_each_run_is_a_column_of_its_seeds_its_other_models_and_its_winner():
-    columns = figures.elpd_columns("subjective_randomness", _domain_data("subjective_randomness"))
-    assert [c["label"] for c in columns] == ["r1", "r2"]  # the fixture's run names
-    run1 = columns[0]
-    assert run1["seeds"] == [0.0, -8.0]
-    assert run1["others"] == [9.0]
-    assert run1["winner"] == {"diff": 12.0, "se": 3.0}
+def _labelled(rows):
+    return [(r["kind"], r["label"], r["diff"], r["se"]) for r in rows if "diff" in r]
 
 
-def test_a_run_that_scores_its_pruned_models_has_them_in_its_column():
+def test_runs_on_one_test_collapse_into_one_forest():
+    rows = figures.forest_rows("rsa", _domain_data("rsa"), NAMES)
+    # Winners first (best first, with their run), then the strips, then the seeds.
+    assert _labelled(rows) == [
+        ("winner", "Winner two (r2)", 13.0, 3.0),
+        ("winner", "Winner one (r1)", 12.0, 3.0),
+        ("seed", "Seed one", 0.0, 0.0),
+        ("seed", "Seed two", -8.0, None),  # no paired SE recorded: drawn hollow
+    ]
+    strips = {r["kind"]: r["values"] for r in rows if "values" in r}
+    assert strips == {"others": None, "pruned": None}  # pruned not scored: both pending
+
+
+def test_pruned_models_of_every_run_share_one_strip():
     data = _domain_data("number_game")
-    data["runs"][0]["pruned_during_run"] = {"gone": 4.0, "gone_too": -30.0}
-    columns = figures.elpd_columns("number_game", data)
-    assert columns[0]["pruned"] == [4.0, -30.0]
-    assert columns[1]["pruned"] == []  # its figure data score no pruned model
+    for k, run in enumerate(data["runs"]):
+        run["pruned_during_run"] = {f"late_{k}": 4.0 - k, f"early_{k}": -k}
+        run["pruned_order"] = {f"late_{k}": 9, f"early_{k}": 2}
+    rows = figures.forest_rows("number_game", data, NAMES)
+    strips = {r["kind"]: r["values"] for r in rows if "values" in r}
+    assert strips == {"others": [9.0, 10.0], "pruned": [0.0, 4.0, -1.0, 3.0]}
+    # Each run's models in admission order, from 0 (first) to 1 (last).
+    assert next(r for r in rows if r["kind"] == "pruned")["progress"] == [0.0, 1.0, 0.0, 1.0]
+
+
+def test_subjective_randomness_is_drawn_from_all_runs_pooled():
+    data = _domain_data("subjective_randomness")
+    rows = figures.forest_rows("subjective_randomness", data, NAMES)
+    # Before the pooled paired SEs exist: differences from the pooled ELPDs.
+    assert _labelled(rows) == [("winner", "Winner one (r1)", 20.0, None),
+                               ("winner", "Winner two (r2)", 5.0, None),
+                               ("seed", "Seed one", 0.0, 0.0), ("seed", "Seed two", -30.0, None)]
+    data["pooled"]["vs_best_seed"] = {"w": {"diff": 20.0, "se": 4.0}, "w_b": {"diff": 5.0, "se": 2.0},
+                                      "s1": {"diff": 0.0, "se": 0.0}, "s2": {"diff": -30.0, "se": 6.0}}
+    data["pooled"].update(runs=["r1", "r2"], others_at_end={"r1__x": 15.0},
+                          pruned_during_run={"r2__y": -3.0}, pruned_order={"r2__y": 4})
+    rows = figures.forest_rows("subjective_randomness", data, NAMES)
+    assert [r["se"] for r in rows if "se" in r] == [4.0, 2.0, 0.0, 6.0]
+    assert {r["kind"]: r["values"] for r in rows if "values" in r} == {"others": [15.0],
+                                                                         "pruned": [-3.0]}
+
+
+def test_a_labelled_model_without_a_name_raises():
+    with pytest.raises(KeyError, match="'w_b' has no name"):
+        figures.forest_rows("rsa", _domain_data("rsa"), {"w": "Winner one", "s1": "x", "s2": "y"})

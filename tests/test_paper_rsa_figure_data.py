@@ -60,28 +60,48 @@ def _run(tmp_path, prereg, panels, chains=None, chain_models=None):
     (tmp_path / "chains.json").write_text(json.dumps(chains or _chains()))
     if chain_models is not None:
         (tmp_path / "chain_models.json").write_text(json.dumps(chain_models))
+        _write_ledgers(tmp_path / "live", chain_models)
     out = tmp_path / "rsa.json"
     main(Args(prereg=tmp_path / "prereg.json", panels=tmp_path / "panels.json",
               chain_seeds=tmp_path / "chains.json", chains=["c0", "c1"], out=out,
-              chain_models=None if chain_models is None else tmp_path / "chain_models.json"))
+              chain_models=None if chain_models is None else tmp_path / "chain_models.json",
+              live_root=tmp_path / "live"))
     return json.loads(out.read_text())
+
+
+def _write_ledgers(live_root, chain_models):
+    """Each chain's ledger: its removed models admitted in reverse name order."""
+    for chain, scores in chain_models["chains"].items():
+        loop = live_root / f"live_rsa_{chain}" / "outputs" / "experiment1" / "model_loop"
+        loop.mkdir(parents=True)
+        names = sorted(scores["pruned_during_run"], reverse=True)
+        (loop / "attempted_hypotheses.jsonl").write_text("".join(
+            json.dumps({"name": n, "outcome": "admitted", "detail": "", "hypothesis": "h",
+                        "context": f"round {i} candidate 0 explore"}) + "\n"
+            for i, n in enumerate(names)))
 
 
 def _chain_models(best_promoted="promoted:p1"):
     """``rsa_chain_models.py``'s sums: each chain's other models, scored the same way."""
-    chain = {"others_at_end": {"live_x": -80.0}, "pruned_during_run": {"gone_y": -120.0},
+    chain = {"others_at_end": {"live_x": -80.0}, "pruned_during_run": {"gone_y": -120.0, "gone_z": -90.0},
              "removed_outcome": {"gone_y": "pruned", "broken": "pruned"},
              "unscored": {"broken": "not converged (r_hat)"}}
     return {"best_promoted": best_promoted, "best_promoted_lpd": -100.0,
+            "bar_vs_best_promoted": {"promoted:p2": {"diff": -5.0, "se": 2.5},
+                                     "promoted:p3": {"diff": -8.0, "se": 3.0}},
             "chains": {"c0": chain, "c1": {**chain, "others_at_end": {}}}}
 
 
 def test_each_chains_other_models_are_against_the_same_bar(tmp_path):
     c0, c1 = _run(tmp_path, _prereg(), _panels(), chain_models=_chain_models())["runs"]
     assert c0["others_at_end"] == {"live_x": 20.0}  # -80 against the bar's -100
-    assert c0["pruned_during_run"] == {"gone_y": -20.0}
+    assert c0["pruned_during_run"] == {"gone_y": -20.0, "gone_z": 10.0}
+    assert c0["pruned_order"] == {"gone_z": 0, "gone_y": 1}  # the ledger's order
     assert c0["pruned_unscored"] == {"broken": "not converged (r_hat)"}
     assert c1["others_at_end"] == {}
+    # The starting models get their paired SEs from the chain-model job.
+    assert c0["vs_best_seed"]["p2"] == {"diff": -5.0, "se": 2.5}
+    assert c0["vs_best_seed"]["p3"] == {"diff": -8.0, "se": 3.0}
 
 
 def test_chain_models_scored_against_another_bar_raise(tmp_path):

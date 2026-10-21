@@ -1,0 +1,8 @@
+model,base_model,structure,person_level,trial_loo_elpd,new_participant_score,n_people,mc_samples_per_person,pop_rmse_stimulus,pop_r2_stimulus,loo_unreliable,convergence_problems,random_seed,new_participant_diff,new_participant_dse
+most_lopsided_stretch_aversion,most_lopsided_stretch_aversion,discovered,full,,-1372.4980961209894,40,21000,0.1905567236425262,0.4906695703705005,False,,20261003,0.0,0.0
+motif_stack,motif_stack,seed,none,,-1589.1793531726476,40,3000,0.1939915968588025,0.47214224622192813,False,,6,216.68125705165804,33.93258764215582
+falk_konold_dp,falk_konold_dp,seed,none,,-1592.6340028800487,40,3000,0.19496482860557474,0.4668325669709801,False,,20261003,220.13590675905928,35.71476417374119
+most_lopsided_stretch_aversion__pooled,most_lopsided_stretch_aversion,discovered,none,,-1624.645288023477,40,21000,0.21493924712653226,0.35198879417503137,False,,20261003,252.14719190248746,34.76427987503375
+local_representativeness,local_representativeness,seed,none,,-1629.297589002403,40,3000,0.20971691507712786,0.38309542549012343,False,,20261003,256.79949288141336,43.058265753667364
+most_lopsided_stretch_aversion__sens_lapse,most_lopsided_stretch_aversion,discovered,sensitivity+lapse,,-1647.1902866612913,40,21000,0.2422938217379406,0.17655281402472134,False,,20261003,274.69219054030185,41.983762082813726
+most_lopsided_stretch_aversion__lapse_only,most_lopsided_stretch_aversion,discovered,lapse,,-1656.638680150791,40,21000,0.24144371581812568,0.18232092887779172,False,,20261003,284.1405840298016,40.03609283769347

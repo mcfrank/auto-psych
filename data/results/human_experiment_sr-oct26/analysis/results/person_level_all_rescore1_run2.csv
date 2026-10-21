@@ -1,0 +1,4 @@
+model,base_model,structure,person_level,trial_loo_elpd,new_participant_score,n_people,mc_samples_per_person,pop_rmse_stimulus,pop_r2_stimulus,loo_unreliable,convergence_problems,random_seed,new_participant_diff,new_participant_dse,trial_loo_diff,trial_loo_dse_clustered
+edge_streak_primacy_recency_pattern_rule,edge_streak_primacy_recency_pattern_rule,discovered,full,-3259.678645933178,-3456.3483967830557,120,6000,0.08898242518579508,0.8804757929509383,False,,2,0.0,0.0,0.0,0.0
+tally_span_switch_ideal_periodic_unit__sens,tally_span_switch_ideal_periodic_unit,discovered,sensitivity,-3898.4950797986203,-3964.4928593922136,120,6000,0.11004891592723239,0.8171820088792775,False,,1,508.14446260915764,66.63928593761057,638.816433865442,47.55848243741386
+motif_stack__personal,motif_stack,seed,sensitivity+lapse,-4169.923045803087,-4242.503061946365,120,6000,0.15989870085385202,0.614044472299311,False,,1,786.1546651633093,75.74980971888938,910.2443998699094,79.2452800605465

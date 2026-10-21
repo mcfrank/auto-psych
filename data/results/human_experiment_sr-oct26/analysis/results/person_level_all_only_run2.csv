@@ -1,0 +1,2 @@
+model,base_model,structure,person_level,trial_loo_elpd,new_participant_score,n_people,mc_samples_per_person,pop_rmse_stimulus,pop_r2_stimulus,loo_unreliable,convergence_problems,random_seed,new_participant_diff,new_participant_dse,trial_loo_diff,trial_loo_dse_clustered
+edge_streak_primacy_recency_pattern_rule__sens,edge_streak_primacy_recency_pattern_rule,discovered,sensitivity,-3838.525033161754,-3906.1605579747807,120,6000,0.09727078312532018,0.8571723733289026,False,,5,0.0,0.0,0.0,0.0

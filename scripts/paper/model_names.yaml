@@ -1,0 +1,40 @@
+# Human-readable names of the models Figure 2 labels: every starting model
+# and every best discovered model, per domain. Drafted from each model's
+# docstring (2026-10-20) and kept to about 30 characters so each fits on one
+# line beside its panel; edit freely. scripts/paper/figures.py raises if a
+# labelled model has no name here.
+subjective_randomness:
+  # starting models (the literature seeds)
+  falk_konold_dp: Falk & Konold difficulty
+  finite_experience_occurrence: Hahn & Warren finite experience
+  local_representativeness: Local representativeness
+  motif_stack: Griffiths et al. motif model
+  # best discovered models (each run's final winner)
+  personal_pattern_detection_gain: Personal pattern-detection gain
+  edge_streak_primacy_recency_pattern_rule: Edge-streak primacy/recency
+  mild_symmetric_trick_coin_streak_weary: Streak-weary trick coin
+rsa:
+  # starting models (the promoted seeds, each chain's share)
+  rsa_l1: RSA, depth 1
+  rsa_l2: RSA, depth 2
+  rsa_l2_singleton_distinct_feat_color_l0: RSA-2 + salience, distinctiveness
+  rsa_l2_singleton_feat_color_familiar_l0: RSA-2 + salience, familiarity
+  rsa_l2_singleton_feat_color_valence_l0: RSA-2 + salience, valence
+  competitor_confusion_speaker: Confusion-averse speaker
+  isolated_graded_costly_l3: Isolation + costs (depth 3)
+  softmax_surprisal_isolated_costly_l4: Surprisal + isolation (depth 4)
+  familiar_isolated_graded_costly_l2: Familiarity + isolation (depth 2)
+  evaluative_prominence_l2: Evaluative prominence
+  oddity_heuristic_listener: Perceptual-oddity heuristic
+  lexical_preemption_heuristic: Lexical-preemption heuristic
+  # best discovered models (each chain's final)
+  boundary_avoidable_ambiguity_listener: Avoidable-ambiguity listener
+  feature_surprisal_ensemble_listener: Feature-surprisal ensemble
+  competition_endpoint_binding_lapse_l2: Competition + endpoint binding
+number_game:
+  # starting models (the literature seeds)
+  bigelow_piantadosi_independent: Bigelow & Piantadosi, rules
+  bigelow_piantadosi_interval: Bigelow & Piantadosi, intervals
+  tenenbaum_rules_similarity: Tenenbaum rules and similarity
+  # best discovered model
+  even_rule_digit_size_principle_counting: Digit similarity + even rule

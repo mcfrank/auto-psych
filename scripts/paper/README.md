@@ -7,7 +7,7 @@ run), then the assembly.
 
 | step | on Sherlock | writes | cost |
 |---|---|---|---|
-| SR data | `bash scripts/paper/submit_figure_data.sh sr` | `data/paper/figure_data/subjective_randomness.json` | 176 removed models, one fit each (44 shards), then 15 MCMC fits at ~7,700 trials and 7 on all runs pooled (~23,000) |
+| SR data | `bash scripts/paper/submit_figure_data.sh sr` | `data/paper/figure_data/subjective_randomness.json` | 176 removed models on each run's data and 254 other models on all runs pooled (86 shards), then 15 MCMC fits at ~7,700 trials and 7 on all runs pooled (~23,000) |
 | number-game data | `bash scripts/paper/submit_figure_data.sh number_game` | `data/paper/figure_data/number_game.json` | 52 removed models × 5 fits (8 shards), then 7 models × 5 |
 | RSA chain models | `bash scripts/paper/submit_rsa_chain_models.sh` | `data/rsa/prereg/chain_models_lpd.json` (sums only) | 224 numpyro fits on the pooled data (28 shards of 8) |
 | RSA data | `uv run python -m scripts.paper.rsa_figure_data` (anywhere) | `data/paper/figure_data/rsa.json` | seconds: reads aggregates, the chain models' sums included (`--chain-models None` leaves them out) |
@@ -24,10 +24,16 @@ it to four decimals).
 
 What each figure shows:
 
-- **Figure 2** (`fig2_elpd`): per domain, a column per run, in ELPD
-  difference from the best starting model: the run's starting models
-  (dashes), its other models live at the end (small dots) and its best
-  discovered model (±2 SE of the paired difference, labelled).
+- **Figure 2** (`fig2_elpd`): per domain, a forest plot in ELPD difference
+  from the best starting model, the runs collapsed: the best discovered
+  models and the starting models as named points with ±2 SE of the paired
+  difference (names: `model_names.yaml`), the other models live at the end
+  and the models pruned during the runs as strips. A point whose paired SE
+  is not computed yet is drawn hollow, a strip not scored yet "pending".
+  Subjective randomness is drawn from all runs pooled (each run is scored on
+  its own data); reference games from every chain on the pre-registered
+  test; the number game from its one run. The per-run records below are
+  still written.
   - Subjective randomness: PSIS-LOO on each run's final pooled data; the
     starting models are the run's seeds, refitted there by
     `sr_figure_data.py` (they were pruned in experiment 1) with the live

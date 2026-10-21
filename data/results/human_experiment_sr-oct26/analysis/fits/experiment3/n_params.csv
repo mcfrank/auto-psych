@@ -1,0 +1,11 @@
+model,n_free_rvs,n_population_params,n_person_level_vectors
+falk_konold_dp,2,2,0
+finite_experience_occurrence,2,2,0
+local_representativeness,5,5,0
+motif_stack,7,7,0
+individual_streak_aversion_lapse,13,9,4
+most_lopsided_stretch_aversion,19,14,5
+personal_pattern_detection_gain,23,17,6
+capacity_blur_pattern_gain,26,19,7
+returns_to_balance_expectation,24,18,6
+sensitivity_linked_consistency,25,19,6

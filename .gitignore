@@ -112,6 +112,9 @@ data/results/**/analysis/logs/
 data/results/**/analysis/paper_update/fitlogs/
 *.local
 
+# The paper draft is kept outside the repository (its notes in paper/*.md are tracked)
+paper/auto-psych-pnas/
+
 # LaTeX build files of the paper drafts
 paper/**/*.aux
 paper/**/*.log

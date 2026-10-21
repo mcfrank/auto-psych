@@ -232,12 +232,14 @@ def test_a_loop_record_without_the_winner_raises():
 
 
 def _pooled_with(problems, accepted):
-    compare = _fake_compare({"w1": -300.0, "w2": -290.0, "s1": -310.0}, {})
+    compare = _fake_compare({"w1": -300.0, "w2": -290.0, "s1": -310.0},
+                            {frozenset(("w1", "s1")): 5.0, frozenset(("w2", "s1")): 6.0})
 
     def flagged(*args, **kwargs):
         table = compare(*args, **kwargs)
         for problem in problems:
-            table["w2"][problem] = True
+            if "w2" in table:  # the pairwise comparisons without it are clean
+                table["w2"][problem] = True
         return table
 
     return sr.score_pooled("pooled.csv", "models", winners={"w1": "run1", "w2": "run2"},
@@ -247,6 +249,9 @@ def _pooled_with(problems, accepted):
 def test_an_accepted_convergence_failure_is_scored_and_recorded():
     pooled = _pooled_with(["not_converged"], {"w2": "one person's two-humped posterior"})
     assert pooled["best_model"] == "w2"
+    # Figure 2's pooled view: each against the best seed, with its paired SE.
+    assert pooled["vs_best_seed"] == {"w1": {"diff": 10.0, "se": 5.0}, "w2": {"diff": 20.0, "se": 6.0},
+                                      "s1": {"diff": 0.0, "se": 0.0}}
     assert pooled["accepted_fit_problems"] == {
         "w2": {"problems": ["not converged"], "reason": "one person's two-humped posterior"}}
 

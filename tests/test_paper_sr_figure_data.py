@@ -73,6 +73,7 @@ def _write_run(run_root: Path, *, winner_source: str, winner: str) -> None:
     loop = sr / "experiment2" / "model_loop"
     (loop / "models").mkdir(parents=True)
     (loop / "models" / f"{winner}.py").write_text(MODEL_SOURCES[winner_source])
+    (loop / "models" / "rival.py").write_text(MODEL_SOURCES["seed_lapse"])
     _write_responses(loop / "responses.csv")
     # The loop's own ELPD-LOO of every model live at the end, on these data.
     (loop / "model_posterior.json").write_text(json.dumps({
@@ -189,6 +190,15 @@ def test_figure_data_compares_each_winner_with_the_seeds_and_tabulates_all_runs_
     winners = ["winner_one", "winner_two"]
     assert pooled["best_model"] == max(winners, key=pooled["elpd"].get)
     assert pooled["best_seed"] == max(SEEDS, key=pooled["elpd"].get)
+    # Figure 2's pooled view: winners and seeds against the best seed with
+    # their clustered SEs, and every run's other models on the pooled data.
+    assert pooled["vs_best_seed"][pooled["best_seed"]] == {"diff": 0.0, "se": 0.0}
+    for name, row in pooled["vs_best_seed"].items():
+        assert row["diff"] == pytest.approx(pooled["elpd"][name] - pooled["elpd"][pooled["best_seed"]])
+        assert row["se"] > 0 or name == pooled["best_seed"]
+    assert set(pooled["others_at_end"]) == {"run1__rival", "run2__rival"}
+    assert set(pooled["pruned_during_run"]) | set(pooled["extras_unscored"]) == {
+        f"{run}__{m}" for run in ("run1", "run2") for m in (REMOVED, LATE)}
 
     conditions = data["conditions"]
     assert sum(c["n"] for c in conditions) == 2 * n_trials
