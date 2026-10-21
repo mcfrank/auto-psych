@@ -57,6 +57,8 @@ preprocess.py
 /scripts/
 /analysis/
 /diagrams/
+# The paper drafts and notes name every seed and ground truth.
+/paper/
 /README.md
 /SUMMARY.md
 /HERO_RUN_DESIDERATA.md

@@ -104,3 +104,18 @@ data/rsa/*/round_*/candidate_*/.home/
 data/number-game/
 # Paper figure fits and comparison sets (scripts/paper/); rebuildable, large
 data/paper/work/
+
+# Local analysis byproducts: PyTensor compile dirs (analysis/paper_update/ptc),
+# the analyses' fit logs, and local variants of scripts (*.local)
+data/**/ptc/
+data/results/**/analysis/logs/
+data/results/**/analysis/paper_update/fitlogs/
+*.local
+
+# LaTeX build files of the paper drafts
+paper/**/*.aux
+paper/**/*.log
+paper/**/*.fls
+paper/**/*.fdb_latexmk
+paper/**/*.synctex.gz
+paper/**/*.blg
