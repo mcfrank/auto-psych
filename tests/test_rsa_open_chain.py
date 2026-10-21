@@ -104,6 +104,11 @@ def test_two_experiments_run_end_to_end_and_carry_their_theories(chain):
     assert "1_paradigm.json" in brief2
     fits_md = (c.exp(2) / "design" / "cycle_1" / "inputs" / "history" / "1_fits.md").read_text()
     assert all(name in fits_md for name in live1)
+    # Experiment 2's design scored the bar too: a seed the loop pruned is still in its context.
+    context2 = json.loads((c.exp(2) / "design" / "cycle_1" / "context" / "context.json").read_text())
+    assert set(context2["theories"]) == {"literal_listener", "rsa_l1"}
+    if live1 != {"literal_listener", "rsa_l1"}:
+        assert "kept in every design as the bar" in brief2
     standing = json.loads((c.exp(2) / "loop" / "history.json").read_text())[-1]["standing"]
     assert all(set(s["by_block"]) == {"E", "exp1", "exp2"} for s in standing.values() if s["by_block"])
 

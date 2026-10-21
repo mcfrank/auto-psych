@@ -216,7 +216,11 @@ write their own.
    design the experiment most important for arriving at generalizable theories.
 2. **Tools** (a sandboxed CLI, like `check_candidate`; the harness computes every score):
    - `eig` scores a paradigm's trial space under the live theories and the bar (with quotas
-     inside, as now), and reports EIG per participant-minute;
+     inside, as now), and reports EIG per participant-minute. The chain driver
+     (`src/rsa_open/chain.py`, `ChainConfig.bar_dir`) fits the bar to the data so far even after
+     the loop has pruned it, and the brief labels a pruned bar theory as such. Without that, a
+     loop that pruned down to one theory left the next design zero bits and no paradigm above the
+     floor; the first two-experiment dry run hit exactly this;
    - `power` simulates the experiment;
    - `link_check` runs a proposed link's recovery test;
    - `pilot` builds the page and runs LLM participants through it;

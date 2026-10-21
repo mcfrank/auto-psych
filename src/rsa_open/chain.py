@@ -12,9 +12,13 @@
 
 Each stage is skipped when its output exists, so a chain resumes where it stopped:
 
-1. **design**: the carried theories are fitted to the data so far; their posterior draws (theory
-   parameters only) and hypotheses, the chain's earlier paradigms with each theory's standing on
-   them, and the timing records go to the designer, whose frozen paradigm runs;
+1. **design**: the carried theories and **the bar** (the chain's starting theories, `bar_dir`, kept
+   in every design although the loop may prune them, as the closed campaign's design kept its
+   seeds) are fitted to the data so far; their posterior draws (theory parameters only) and
+   hypotheses, the chain's earlier paradigms with each theory's standing on them, and the timing
+   records go to the designer, whose frozen paradigm runs. Without the bar a loop that pruned all
+   but one theory would leave the next design nothing to tell apart (zero bits, no paradigm
+   above the floor: the first two-experiment dry run);
 2. **collect**: simulated participants (`GroundTruth`: a theory at fixed parameters, each link at
    its reference values) answer every list of the frozen paradigm; the live path (Prolific) is
    Phase 4's and is not here;
@@ -72,6 +76,8 @@ class ChainConfig:
     timing: Sequence[TimingRecord] = CLOSED_CAMPAIGN
     code_commit: Optional[str] = None
     seed: int = 0
+    bar_dir: Optional[Path] = None
+    """The bar: theories every design scores beside the carried ones (default: the seeds)."""
 
 
 def _hypotheses(models_dir: Path) -> Dict[str, str]:
@@ -120,13 +126,23 @@ class Chain:
         return dst
 
     # ---------- 1. design ----------
-    def design_context(self, n: int) -> Dict[str, tuple]:
-        """Each carried theory with posterior draws of its parameters on the data so far."""
+    def design_theories(self, n: int) -> Dict[str, tuple]:
+        """name -> (theory file, hypothesis) for the design: the carried theories, then every bar
+        theory not carried (labelled as the bar in its hypothesis)."""
         models = self.models_input(n)
+        out = {name: (models / f"{name}.py", h) for name, h in _hypotheses(models).items()}
+        bar = Path(self.cfg.bar_dir or self.cfg.seeds_dir)
+        for name, h in _hypotheses(bar).items():
+            if name not in out:
+                out[name] = (bar / f"{name}.py", "(Not in the live set: one of the theories the chain started from, "
+                                                 f"kept in every design as the bar.) {h}")
+        return out
+
+    def design_context(self, n: int) -> Dict[str, tuple]:
+        """Each design theory (`design_theories`) with posterior draws of its parameters on the data so far."""
         corpus = write_corpus(self.exp(n) / "prior_corpus.json", self.blocks_before(n))
         theories = {}
-        for name in _hypotheses(models):
-            path = models / f"{name}.py"
+        for name, (path, _) in self.design_theories(n).items():
             fitted = loop_fit(path, name, corpus, self.cfg.settings, self.exp(n) / ".fit_cache", time_limit_sec=math.inf)
             flat = fitted.flat()
             theory = TheoryModel(path, name=name)
@@ -158,9 +174,9 @@ class Chain:
         frozen = self.exp(n) / "design" / "frozen"
         if (frozen / "record.json").exists():
             return frozen
-        models = self.models_input(n)
         run_designer(self.exp(n) / "design", chain=self.cfg.chain, experiment=n, theories=self.design_context(n),
-                     hypotheses=_hypotheses(models), history=self.history(n), spawn=self.designer_spawn,
+                     hypotheses={k: h for k, (_, h) in self.design_theories(n).items()}, history=self.history(n),
+                     spawn=self.designer_spawn,
                      pilot_participants=self.cfg.pilot_participants, participant_factory=self.participant_factory,
                      code_commit=self.cfg.code_commit, timing=self.cfg.timing)
         return frozen
