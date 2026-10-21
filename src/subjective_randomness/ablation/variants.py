@@ -13,20 +13,22 @@ variation goes before the parameter it varies (personal -> shared -> off).
 from __future__ import annotations
 
 import hashlib
+import importlib
 from pathlib import Path
 from types import ModuleType
 from typing import Dict, Iterable, List, Optional, Tuple
 
-from src.subjective_randomness.ablation.finals import run1, run2, run3
-
-FINALS: Dict[str, ModuleType] = {"run1": run1, "run2": run2, "run3": run3}
+# The finals import pymc, and so arviz, so they are imported only when first
+# asked for: a fit child re-imports the script it was started from
+# (`eliminate.py`) and refuses to fit when arviz is already loaded.
+FINALS: Dict[str, str] = {f"run{r}": f"src.subjective_randomness.ablation.finals.run{r}" for r in (1, 2, 3)}
 PREFIX = {"run1": "r1", "run2": "r2", "run3": "r3"}
 
 
 def spec(final: str) -> ModuleType:
     if final not in FINALS:
         raise ValueError(f"unknown final {final!r}; known: {list(FINALS)}")
-    return FINALS[final]
+    return importlib.import_module(FINALS[final])
 
 
 def canonical(final: str, mechanisms: Iterable[str]) -> Tuple[str, ...]:

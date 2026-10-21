@@ -286,3 +286,15 @@ def test_plan_and_workers_run_the_elimination_to_a_lean_model(tmp_path):
     assert fold["converged"] and [a["seed"] for a in fold["attempts"]] == [1]
     with pytest.raises(ValueError, match="another configuration"):
         plan(replace(args, draws=301))
+
+
+def test_eliminate_imports_no_arviz():
+    """A fit child re-imports the script it was started from (``python -m ...eliminate``)
+    before it gets a cache directory of its own, and refuses to fit when arviz is
+    already loaded: on 2026-10-20 every worker task died that way."""
+    import subprocess
+    import sys
+
+    check = "import sys, src.subjective_randomness.ablation.eliminate; print('arviz' in sys.modules)"
+    result = subprocess.run([sys.executable, "-c", check], cwd=here(), capture_output=True, text=True, check=True)
+    assert result.stdout.strip() == "False"
