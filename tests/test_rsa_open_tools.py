@@ -193,3 +193,22 @@ def test_the_link_check_simulates_from_the_theory_with_the_most_parameters(ws):
     ctx = load_context(ws.context)
     assert len(ctx.theories["literal_listener"].params) == 0
     assert default_theory(ctx) == "rsa_l1"  # never the literal listener, which cannot move a temperature
+
+
+def test_a_quick_eig_is_saved_apart_and_does_not_count_for_submit(ws, monkeypatch, capsys):
+    import src.rsa_open.design as design
+    from src.rsa_open.paradigm import load_paradigm
+    from src.rsa_open.tools import main
+
+    monkeypatch.setattr(design, "reference_report", lambda ctx, **kw: {"bits_per_dollar": 1e-9})
+    spec = write_spec(ws)
+    sha = load_paradigm(spec).sha256
+    assert main(["eig", "--workspace", str(ws.root), "--spec", str(spec), "--quick"]) == 0
+    out = capsys.readouterr().out
+    assert "QUICK" in out and f"eig-quick_{sha[:12]}.json" in out
+    report = json.loads(ws.report_path("eig-quick", sha).read_text())
+    assert report["quick"] and report["settings"]["n_draws"] == 16 and report["settings"]["n_scenarios"] == 200
+    assert not ws.report_path("eig", sha).exists()
+    _report(ws, "link-check", sha, converged=True, recovered=True, misses={})
+    assert main(["submit", "--workspace", str(ws.root), "--spec", str(spec)]) == 1
+    assert "no eig report" in capsys.readouterr().out

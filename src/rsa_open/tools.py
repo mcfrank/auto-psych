@@ -19,7 +19,9 @@
   against the EIG tool's limit, and the pilot's time estimate against the declared minutes, on a
   random design from the scene space;
 - ``eig``: the paradigm's design under the live theories, its bits per dollar and the floor, and
-  the time estimate on that design;
+  the time estimate on that design; ``--quick`` scores it with ``QUICK_DRAWS`` draws and
+  ``QUICK_SCENARIOS`` scenarios, for exploring (saved as ``eig-quick_<sha12>.json``, never
+  read by ``submit``);
 - ``link-check``: the recovery test (`src.rsa_open.fit.recovery_check`) of the spec's link **in
   this paradigm**: its scene space, its number of responses, its scale, simulated from a live
   theory at its posterior mean and the link at its reference values. The theory is the one with
@@ -57,6 +59,10 @@ SUBMISSION = "submission.json"
 # Link check: NUTS settings and the replicates of the library's recovery test.
 LINK_CHECK_WARMUP = 500
 LINK_CHECK_SAMPLES = 500
+# eig --quick: about a twentieth of the full score's draws x scenarios (2026-10-21: a full eig took
+# ~6.5 min of the first designer's 114, its greedy selection most of that).
+QUICK_DRAWS = 16
+QUICK_SCENARIOS = 200
 
 
 class ToolRefused(RuntimeError):
@@ -266,6 +272,10 @@ class Validate(_Common):
 class Eig(_Common):
     """Score the paradigm's design under the live theories: bits, bits per dollar, the floor."""
 
+    quick: bool = False
+    """An approximate score (fewer draws and scenarios; minutes less): for exploring. Its report
+    is saved apart, and submit needs a full eig of the spec."""
+
 
 @dataclass
 class LinkCheck(_Common):
@@ -289,6 +299,11 @@ Command = Union[
 NAMES = {Validate: "validate", Eig: "eig", LinkCheck: "link-check", Submit: "submit"}
 
 
+def report_name(command: str, report: Dict[str, Any]) -> str:
+    """A quick eig's report is saved apart: submit reads only the full one."""
+    return "eig-quick" if command == "eig" and report.get("quick") else command
+
+
 def _summary(command: str, report: Dict[str, Any]) -> str:
     t = report.get("time") if command in ("validate", "eig") else None
     timing = "" if t is None else (
@@ -303,6 +318,8 @@ def _summary(command: str, report: Dict[str, Any]) -> str:
         line = (f"{report['joint_eig_bits']:.3f} of {report['max_bits']:.3f} bits "
                 f"(p_correct {report['p_correct']:.2f}), ${report['cost_usd']:.2f}, "
                 f"{report['bits_per_dollar']:.5f} bits/$")
+        if report.get("quick"):
+            line = "QUICK (approximate; submit needs a full eig): " + line
         if "floor_bits_per_dollar" in report:
             line += (f"; floor {report['floor_bits_per_dollar']:.5f}: "
                      f"{'MEETS' if report['meets_floor'] else 'BELOW'}")
@@ -331,6 +348,9 @@ def run(cmd: Any) -> Dict[str, Any]:
     try:
         if command == "validate":
             report = validate(ws, cmd.spec)
+        elif command == "eig" and cmd.quick:
+            report = eig_report(ws, cmd.spec, n_draws=QUICK_DRAWS, n_scenarios=QUICK_SCENARIOS)
+            report["quick"] = True
         elif command == "eig":
             report = eig_report(ws, cmd.spec)
         elif command == "link-check":
@@ -342,7 +362,7 @@ def run(cmd: Any) -> Dict[str, Any]:
         raise
     _log(ws, command, cmd.spec, sha, "ok")
     if command in ("eig", "link-check"):
-        _write_report(ws, command, report["paradigm_sha256"], report)
+        _write_report(ws, report_name(command, report), report["paradigm_sha256"], report)
     report["calls_left"] = MAX_TOOL_CALLS - used - 1
     return report
 
@@ -359,7 +379,8 @@ def main(argv: Optional[list] = None) -> int:
         return 1
     print(f"{command}: {_summary(command, report)} ({report['calls_left']} tool calls left)")
     if command in ("eig", "link-check"):
-        print(f"report: {Workspace(Path(cmd.workspace)).report_path(command, report['paradigm_sha256'])}")
+        path = Workspace(Path(cmd.workspace)).report_path(report_name(command, report), report["paradigm_sha256"])
+        print(f"report: {path}")
     return 0
 
 

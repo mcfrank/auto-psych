@@ -233,12 +233,14 @@ Their files (read-only) are in `{ws.context / 'theories'}`, their posterior draw
 
     {tool.format(command="validate")}     # every problem with the spec, at once; the time estimate
     {tool.format(command="eig")}          # bits per dollar under the theories, the floor; the time estimate
+    {tool.format(command="eig")} --quick  # the same, approximate, in a fraction of the time: for exploring
     {tool.format(command="link-check")}   # can the link's parameters be recovered in this paradigm?
     {tool.format(command="submit")}       # submit (needs a passing eig and link-check of this exact spec)
 
 - Give the shell tool a timeout of {TOOL_SHELL_TIMEOUT_MS} ms for `eig` and `link-check`: `eig` takes
-  minutes, `link-check` fits three models (5-20 minutes). With the default timeout they are killed
-  before they print anything.
+  5-15 minutes, `link-check` fits three models (5-20 minutes). With the default timeout they are
+  killed before they print anything. Compare candidate paradigms with `eig --quick` (1-2
+  minutes) and run the full `eig` on the one you mean to submit.
 - `link-check` simulates from the live theory with the most parameters; `--theory <name>` names
   another. A theory that cannot move a link parameter (the literal listener is flat over the
   objects a word is true of, so a listener link's temperature changes nothing) cannot recover it.
