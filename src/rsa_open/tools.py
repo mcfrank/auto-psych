@@ -9,17 +9,22 @@
 (`src.rsa_open.designer`):
 - ``context/``: the design context (`src.rsa_open.design`), with the closed paradigm's reference
   score already computed; read-only to the agent;
-- ``inputs/``: the brief, the spec's JSON schema, the link library and the chain's earlier
-  paradigms; read-only;
+- ``inputs/``: the brief, the spec's JSON schema, the link library, the chain's earlier
+  paradigms and the timing records (``timing.json``, `src.rsa_open.timing`); read-only;
 - ``work/``: the agent's own directory (its specs, ``reports/``, ``tool_log.jsonl`` and
   ``submission.json``).
 
 **The commands:**
-- ``validate``: the spec's problems, all at once (`src.rsa_open.paradigm`);
-- ``eig``: the paradigm's design under the live theories, its bits per dollar and the floor;
+- ``validate``: the spec's problems, all at once (`src.rsa_open.paradigm`), and the pilot's time
+  estimate against the declared minutes, on a random design from the scene space;
+- ``eig``: the paradigm's design under the live theories, its bits per dollar and the floor, and
+  the time estimate on that design;
 - ``link-check``: the recovery test (`src.rsa_open.fit.recovery_check`) of the spec's link **in
   this paradigm**: its scene space, its number of responses, its scale, simulated from a live
-  theory at its posterior mean and the link at its reference values;
+  theory at its posterior mean and the link at its reference values. The theory is the one with
+  the most parameters unless named (`default_theory`): under the literal listener, which is flat
+  over the true objects, a listener link's temperature changes nothing, so no paradigm could
+  recover it (the 2026-10-21 smoke failed every choice paradigm that way);
 - ``submit``: records the spec as the session's submission, once it has an ``eig`` report that
   meets the floor and a ``link-check`` report that recovers, both of this exact spec (sha256).
 
@@ -85,6 +90,17 @@ class Workspace:
     def submission(self) -> Path:
         return self.work / SUBMISSION
 
+    @property
+    def timing(self) -> Path:
+        return self.inputs / "timing.json"
+
+    def timing_records(self) -> list:
+        from src.rsa_open.timing import read_records
+
+        if not self.timing.exists():
+            raise ToolRefused(f"{self.root}: no inputs/timing.json (the harness writes it)")
+        return read_records(self.timing)
+
     def check(self) -> None:
         missing = [p.name for p in (self.context, self.inputs, self.work) if not p.is_dir()]
         if missing:
@@ -120,12 +136,45 @@ def _write_report(ws: Workspace, command: str, sha: str, report: Dict[str, Any])
 
 # --------------------------------------------------------------------------- commands
 
+def preview_units(paradigm, seed: int = 0) -> list:
+    """``distinct_trials`` random units of the paradigm's scene space, for a time estimate before
+    there is a design."""
+    from src.rsa_open.design import describe_unit, trial_units
+    from src.rsa_open.paradigm import paradigm_likelihood, scene_pool
+
+    rng = np.random.default_rng(seed)
+    scenes = scene_pool(paradigm)
+    scenes = [scenes[i] for i in rng.permutation(len(scenes))[:2000]]
+    if paradigm.response.type == "bet":
+        units = [{"objects": [list(o) for o in s.objects], "heard": s.utterance} for s in scenes]
+    else:
+        units = [describe_unit(scenes, u) for u in trial_units(scenes, paradigm_likelihood(paradigm))]
+    need = paradigm.design.distinct_trials
+    if len(units) < need:
+        raise ToolRefused(f"the scene space gives {len(units)} trial units; distinct_trials is {need}")
+    return [units[i] for i in rng.choice(len(units), need, replace=False)]
+
+
+def time_report(ws: Workspace, paradigm, units: list) -> Dict[str, Any]:
+    """The pilot's time estimate for these units, calibrated on the workspace's timing records."""
+    from src.rsa_open.pilot import TIME_TOLERANCE
+    from src.rsa_open.screens import design_units, trial_lists
+    from src.rsa_open.timing import estimate
+
+    lists = trial_lists(paradigm, design_units({"design": units}), seed=0, n_lists=20)
+    t = estimate(lists, ws.timing_records())
+    ratio = t["estimated_minutes"] / paradigm.design.minutes
+    return {"estimated_minutes": t["estimated_minutes"], "declared_minutes": paradigm.design.minutes,
+            "within_tolerance": abs(ratio - 1.0) <= TIME_TOLERANCE, "calibration_basis": t["calibration_basis"]}
+
+
 def validate(ws: Workspace, spec: Path) -> Dict[str, Any]:
     from src.rsa_open.paradigm import load_paradigm, scene_pool
 
     p = load_paradigm(spec)
     return {"valid": True, "sha256": p.sha256, "scenes": len(scene_pool(p)), "cost_usd": p.cost_usd,
-            "response": p.response.type, "link": p.response.link}
+            "response": p.response.type, "link": p.response.link,
+            "time": time_report(ws, p, preview_units(p, seed_for(p.sha256, "preview")))}
 
 
 def eig_report(ws: Workspace, spec: Path, *, n_draws: Optional[int] = None,
@@ -134,9 +183,16 @@ def eig_report(ws: Workspace, spec: Path, *, n_draws: Optional[int] = None,
     from src.rsa_open.paradigm import load_paradigm
 
     p = load_paradigm(spec)
-    return score_paradigm(p, load_context(ws.context), n_draws=n_draws or DEFAULT_DRAWS,
-                          n_scenarios=n_scenarios or DEFAULT_SCENARIOS,
-                          seed=seed_for(p.sha256, "eig") if seed is None else seed)
+    report = score_paradigm(p, load_context(ws.context), n_draws=n_draws or DEFAULT_DRAWS,
+                            n_scenarios=n_scenarios or DEFAULT_SCENARIOS,
+                            seed=seed_for(p.sha256, "eig") if seed is None else seed)
+    report["time"] = time_report(ws, p, report["design"])
+    return report
+
+
+def default_theory(ctx) -> str:
+    """The live theory a link check simulates from: the one with the most parameters (ties by name)."""
+    return sorted(ctx.names, key=lambda n: (-len(ctx.theories[n].params), n))[0]
 
 
 def link_check_report(ws: Workspace, spec: Path, *, theory: Optional[str] = None,
@@ -149,7 +205,7 @@ def link_check_report(ws: Workspace, spec: Path, *, theory: Optional[str] = None
 
     p = load_paradigm(spec)
     ctx = load_context(ws.context)
-    name = theory or ctx.names[0]
+    name = theory or default_theory(ctx)
     if name not in ctx.theories:
         raise ToolRefused(f"no live theory {name!r}; the live theories are {ctx.names}")
     link = paradigm_likelihood(p)
@@ -228,9 +284,14 @@ NAMES = {Validate: "validate", Eig: "eig", LinkCheck: "link-check", Submit: "sub
 
 
 def _summary(command: str, report: Dict[str, Any]) -> str:
+    t = report.get("time") if command in ("validate", "eig") else None
+    timing = "" if t is None else (
+        f"; time: estimated {t['estimated_minutes']:.1f} min against your {t['declared_minutes']:g} "
+        f"({'within' if t['within_tolerance'] else 'NOT within'} the pilot's 30%; calibrated on "
+        f"{t['calibration_basis']})")
     if command == "validate":
         return (f"valid: {report['scenes']} scenes, {report['response']} via {report['link']}, "
-                f"${report['cost_usd']:.2f}; sha256 {report['sha256'][:12]}")
+                f"${report['cost_usd']:.2f}; sha256 {report['sha256'][:12]}{timing}")
     if command == "eig":
         line = (f"{report['joint_eig_bits']:.3f} of {report['max_bits']:.3f} bits "
                 f"(p_correct {report['p_correct']:.2f}), ${report['cost_usd']:.2f}, "
@@ -238,7 +299,7 @@ def _summary(command: str, report: Dict[str, Any]) -> str:
         if "floor_bits_per_dollar" in report:
             line += (f"; floor {report['floor_bits_per_dollar']:.5f}: "
                      f"{'MEETS' if report['meets_floor'] else 'BELOW'}")
-        return line
+        return line + timing
     if command == "link-check":
         return (f"link {report['link']} in this paradigm ({report['n_trials']} responses, theory "
                 f"{report['theory']}): converged={report['converged']}, recovered={report['recovered']}, "

@@ -110,9 +110,9 @@ def pilot_lists(monkeypatch):
 
     real = pilot.run_pilot
 
-    def run_pilot(paradigm, lists, out, *, n_participants, participant_factory=None, max_workers=6):
+    def run_pilot(paradigm, lists, out, *, n_participants, participant_factory=None, max_workers=6, timing=None):
         return real(paradigm, lists, out, n_participants=n_participants,
-                    participant_factory=lambda i: Scripted(lists, i), max_workers=1)
+                    participant_factory=lambda i: Scripted(lists, i), max_workers=1, timing=timing)
 
     monkeypatch.setattr(pilot, "run_pilot", run_pilot)
 
@@ -140,7 +140,8 @@ def test_the_brief_states_the_charter_the_theories_the_tools_and_the_bounds(tmp_
     run(tmp_path, theories, designer)
     prompt = designer.prompts[0]
     for text in ("Grice (1975)", "rsa_l1", HYPOTHESES["rsa_l1"], "-m src.rsa_open.tools", "link-check",
-                 "$133.33", "first experiment", "rationale.md", "no internet", "floor"):
+                 "$133.33", "first experiment", "rationale.md", "no internet", "floor", "timing.md",
+                 "--theory", "do not\nadd your own"):
         assert text in prompt, text
 
 
@@ -205,10 +206,31 @@ def test_a_workspace_is_laid_out_once_with_its_inputs(tmp_path, theories, fast):
 
     earlier = tmp_path / "earlier.json"
     earlier.write_text(json.dumps(spec_for()))
+    from src.rsa_open.timing import CLOSED_CAMPAIGN, read_records
+
     ws = prepare_workspace(tmp_path / "ws", theories=theories,
-                           history=[EarlierParadigm("forced choice", earlier, "| theory | elpd |\n")])
+                           history=[EarlierParadigm("forced choice", earlier, "| theory | elpd |\n")],
+                           timing=CLOSED_CAMPAIGN)
+    assert read_records(ws.timing) == list(CLOSED_CAMPAIGN)
+    assert "closed campaign, chain 2, experiment 3" in (ws.inputs / "timing.md").read_text()
     assert (ws.inputs / "history" / "1_paradigm.json").exists() and (ws.inputs / "history" / "1_fits.md").exists()
     assert "ordered_beta" in (ws.inputs / "links.md").read_text()
     parse_paradigm(json.loads((ws.inputs / "format_example.json").read_text()))  # the example is valid
     with pytest.raises(FileExistsError):
-        prepare_workspace(tmp_path / "ws", theories=theories, history=[])
+        prepare_workspace(tmp_path / "ws", theories=theories, history=[], timing=CLOSED_CAMPAIGN)
+
+
+def test_a_session_cut_off_by_its_time_limit_is_reported_as_such(tmp_path, theories, fast, pilot_lists, monkeypatch):
+    import time
+
+    import src.rsa_open.designer as designer_mod
+    from src.rsa_open.designer import DesignerFailed
+
+    monkeypatch.setattr(designer_mod, "MIN_SESSION_SECONDS", 0)
+
+    def slow(ws, prompt, timeout_sec, log):
+        time.sleep(timeout_sec + 0.1)  # works until the harness's limit, never submits
+        return False
+
+    with pytest.raises(DesignerFailed, match="reached its time limit"):
+        run(tmp_path, theories, slow, cycle_seconds=1)

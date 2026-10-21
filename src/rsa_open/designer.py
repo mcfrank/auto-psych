@@ -41,6 +41,7 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
+from src.rsa_open.timing import CLOSED_CAMPAIGN, TimingRecord, digest_md, write_records
 from src.rsa_open.tools import MAX_TOOL_CALLS, Workspace, seed_for
 
 DESIGNER_MODEL = "google/gemini-4-argon"
@@ -106,7 +107,7 @@ def format_example() -> Dict[str, Any]:
 
 
 def prepare_workspace(root: Path, *, theories: Mapping[str, Tuple[Path, Mapping[str, np.ndarray]]],
-                      history: Sequence[EarlierParadigm]) -> Workspace:
+                      history: Sequence[EarlierParadigm], timing: Sequence[TimingRecord]) -> Workspace:
     """Lay out a designer workspace; the floor's reference is scored here, once."""
     from src.rsa_open.design import DEFAULT_DRAWS, DEFAULT_SCENARIOS, load_context, reference_report, write_context
     from src.rsa_open.paradigm import Paradigm
@@ -120,6 +121,8 @@ def prepare_workspace(root: Path, *, theories: Mapping[str, Tuple[Path, Mapping[
     (ws.inputs / "paradigm_schema.json").write_text(json.dumps(Paradigm.model_json_schema(), indent=2))
     (ws.inputs / "links.md").write_text(links_md())
     (ws.inputs / "format_example.json").write_text(json.dumps(format_example(), indent=2))
+    write_records(ws.timing, timing)  # the tools' time estimates and the pilot's read these
+    (ws.inputs / "timing.md").write_text(digest_md(timing))
     hist = ws.inputs / "history"
     hist.mkdir()
     for k, item in enumerate(history):
@@ -187,6 +190,8 @@ give each feature its word and its drawing (an SVG fragment in a 100 x 100 box, 
 domain's base) or its phrase (text materials). The response types and the links that score them:
 `{ws.inputs / 'links.md'}`. The theories are written over abstract scenes and never see your
 words or drawings; your materials decide whether people perceive the scene the theories assume.
+The page shows the speaker's word in quotation marks where your prompt says `{{message}}`: do not
+add your own.
 
 The harness builds the page from your spec: one list per participant (balanced over your design),
 a practice trial, your comprehension checks (shown again once after a wrong answer), catch trials
@@ -213,14 +218,20 @@ Their files (read-only) are in `{ws.context / 'theories'}`, their posterior draw
 
 ## Your tools ({calls_left} calls left; each command is one call)
 
-    {tool.format(command="validate")}     # every problem with the spec, at once
-    {tool.format(command="eig")}          # bits per dollar under the theories, and the floor
+    {tool.format(command="validate")}     # every problem with the spec, at once; the time estimate
+    {tool.format(command="eig")}          # bits per dollar under the theories, the floor; the time estimate
     {tool.format(command="link-check")}   # can the link's parameters be recovered in this paradigm?
     {tool.format(command="submit")}       # submit (needs a passing eig and link-check of this exact spec)
 
 - Give the shell tool a timeout of {TOOL_SHELL_TIMEOUT_MS} ms for `eig` and `link-check`: `eig` takes
   minutes, `link-check` fits three models (5-20 minutes). With the default timeout they are killed
   before they print anything.
+- `link-check` simulates from the live theory with the most parameters; `--theory <name>` names
+  another. A theory that cannot move a link parameter (the literal listener is flat over the
+  objects a word is true of, so a listener link's temperature changes nothing) cannot recover it.
+- **Time:** how long people took in finished experiments, and how many trials fit in a minute:
+  `{ws.inputs / 'timing.md'}`. `validate` and `eig` report the pilot's time estimate for your spec
+  against your declared minutes; the pilot's check uses the same estimate.
 - **The floor:** `eig` reports your paradigm's expected information gain about the theories per
   dollar; `submit` needs at least {FLOOR_SHARE:.0%} of what the closed campaign's forced-choice
   paradigm gives under the same theories.
@@ -296,7 +307,7 @@ def check_submission(ws: Workspace, submitted: Path, out: Path, *, pilot_partici
     lists = trial_lists(paradigm, units, seed=seed_for(sha, "lists"))
     (out / "lists.json").write_text(json.dumps(lists))
     pilot = run_pilot(paradigm, lists, out / "pilot", n_participants=pilot_participants,
-                      participant_factory=participant_factory)
+                      participant_factory=participant_factory, timing=ws.timing_records())
     if not pilot["passed"]:
         return SubmissionResult(sha, False, [f"pilot: {p}" for p in pilot["problems"]], out,
                                 {"eig": eig, "link": link, "pilot": pilot})
@@ -344,12 +355,15 @@ def run_designer(root: Path, *, chain: str, experiment: int,
                  theories: Mapping[str, Tuple[Path, Mapping[str, np.ndarray]]], hypotheses: Mapping[str, str],
                  history: Sequence[EarlierParadigm], spawn: SpawnFn, pilot_participants: int = 12,
                  participant_factory=None, code_commit: Optional[str] = None,
-                 cycle_seconds: int = CYCLE_SECONDS) -> Dict[str, Any]:
-    """Design one experiment: up to ``MAX_CYCLES`` cycles; returns the frozen record."""
+                 cycle_seconds: int = CYCLE_SECONDS,
+                 timing: Sequence[TimingRecord] = CLOSED_CAMPAIGN) -> Dict[str, Any]:
+    """Design one experiment: up to ``MAX_CYCLES`` cycles; returns the frozen record. ``timing``
+    is every finished experiment's completion times (`src.rsa_open.timing`): the closed
+    campaign's, plus this campaign's from every chain."""
     root = Path(root)
     failures: List[str] = []
     for cycle in range(MAX_CYCLES):
-        ws = prepare_workspace(root / f"cycle_{cycle + 1}", theories=theories, history=history)
+        ws = prepare_workspace(root / f"cycle_{cycle + 1}", theories=theories, history=history, timing=timing)
         feedback = ""
         if failures:
             feedback = ("\n## The previous attempt failed\n\nA previous designer cycle for this experiment "
@@ -368,10 +382,17 @@ def run_designer(root: Path, *, chain: str, experiment: int,
                            feedback=feedback, submissions_left=MAX_SUBMISSIONS - k, seconds_left=left)
             (ws.root / "logs" / f"brief_{k + 1}.md").write_text(prompt)
             started = time.monotonic()
-            spawn(ws, prompt, left, ws.root / "logs" / f"agent_{k + 1}.jsonl")
-            spent += time.monotonic() - started
+            ok = spawn(ws, prompt, left, ws.root / "logs" / f"agent_{k + 1}.jsonl")
+            took = time.monotonic() - started
+            spent += took
             if not ws.submission.exists():
-                reason = "the designer's session ended without a submission"
+                if took >= left - 5:
+                    reason = (f"the designer's session reached its time limit ({left // 60} min) without a "
+                              f"submission")
+                elif not ok:
+                    reason = "the designer's session failed (the agent exited with an error) without a submission"
+                else:
+                    reason = "the designer's session ended without a submission"
                 break
             submitted = ws.root / "submissions" / f"{k + 1}.json"
             submitted.parent.mkdir(exist_ok=True)

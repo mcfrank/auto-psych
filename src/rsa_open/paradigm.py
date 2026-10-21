@@ -60,6 +60,7 @@ RESPONSE_TYPES = ("choice", "rating", "slider", "bet", "production", "binary_jud
 LISTENER_TYPES = ("choice", "rating", "slider", "bet")
 MESSAGE = "{message}"
 PLACEHOLDER = re.compile(r"\{[^{}]*\}")
+QUOTED_MESSAGE = re.compile(r"[\"'“”‘’«»]\s*\{message\}|\{message\}\s*[\"'“”‘’«»]")
 
 SVG_NS = "http://www.w3.org/2000/svg"
 SVG_ELEMENTS = {
@@ -143,7 +144,8 @@ class Response(_Strict):
     link: str
     prompt: str
     """Shown on every trial. A listener trial (choice, rating, slider, bet) and a judgment show
-    the message where the prompt says ``{message}`` (required); a production trial shows none."""
+    the message where the prompt says ``{message}`` (required), in quotation marks the page adds;
+    a production trial shows none."""
     prior_prompt: Optional[str] = None
     """A listener trial with no informative message (scene_space.prior_queries): its prompt,
     without ``{message}``. Required exactly when such trials exist."""
@@ -367,6 +369,9 @@ def _problems(p: Paradigm) -> List[str]:
     wants_message = listener or r.type == "binary_judgment"
     if wants_message and r.prompt.count(MESSAGE) != 1:
         problems.append(f"response.prompt must show the message once, where it says {MESSAGE}")
+    if QUOTED_MESSAGE.search(r.prompt):
+        problems.append(f"response.prompt: no quotation marks around {MESSAGE}: the page shows the word in "
+                        f"quotation marks itself")
     if not wants_message and MESSAGE in r.prompt:
         problems.append(f"response.prompt: a {r.type} trial has no message to show ({MESSAGE})")
     if listener and p.scene_space.prior_queries:

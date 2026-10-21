@@ -18,8 +18,8 @@ no); an unreadable reply is asked once more, then recorded as unreadable.
 - attention: at least ``FLOORS['catch']`` of catch trials are passed (`screens.catch_passed`);
 - readability: at least ``FLOORS['readable']`` of trials get a usable answer;
 - the test responses parse as the paradigm's link's data (`src.rsa_open.fit.OpenData.build`);
-- the time estimate (`estimated_minutes`: reading at ``READING_WPM`` and a fixed time per
-  response) is within ``TIME_TOLERANCE`` of the paradigm's declared minutes;
+- the time estimate (`estimated_minutes`: `src.rsa_open.timing`'s model, calibrated on people's
+  real times in finished experiments) is within ``TIME_TOLERANCE`` of the declared minutes;
 - the test answers are not all one answer.
 LLM participants are not people: the pilot finds instructions, prompts and materials that a
 capable reader cannot follow, and data that do not parse; it says nothing about effect sizes.
@@ -42,13 +42,6 @@ PILOT_MODEL = "gemini-3.8-flash"
 PILOT_PARTICIPANTS = 12
 FLOORS = {"comprehension": 0.8, "catch": 0.8, "readable": 0.95}
 TIME_TOLERANCE = 0.30
-READING_WPM = 200
-# Seconds per trial beyond reading: looking at each object, then answering.
-SECONDS_PER_OBJECT = 1.5
-SECONDS_TO_ANSWER = {"choice": 2.0, "rating": 3.0, "slider": 4.0, "bet": 3.0, "production": 3.0,
-                     "binary_judgment": 2.0}
-SECONDS_PER_BET_OBJECT = 3.0
-SECONDS_OVERHEAD = 30.0  # consent, page loads, the end screen
 SYSTEM = ("You are taking part in an online research study. Read each screen carefully and respond as a "
           "thoughtful participant would. End every reply with one line of the form `ANSWER: ...`, in the "
           "format the screen asks for.")
@@ -264,27 +257,22 @@ def run_participant(lists: Mapping[str, Any], index: int, participant: Participa
 
 # --------------------------------------------------------------------------- the gate
 
-def estimated_minutes(lists: Mapping[str, Any]) -> float:
-    """A participant's time: reading at `READING_WPM`, a look at each object and an answer per trial."""
-    def words(s: str) -> int:
-        return len(_plain(s).split())
+def _records(timing: Optional[Sequence]) -> Sequence:
+    from src.rsa_open.timing import CLOSED_CAMPAIGN
 
-    intro = lists["intro"]
-    reading = words(intro["welcome"]) + words(intro["task"]) + sum(
-        words(c["question"]) + sum(words(o) for o in c["options"]) for c in intro["checks"])
-    trials = lists["lists"][0]["trials"]
-    seconds = SECONDS_OVERHEAD + 60.0 * reading / READING_WPM
-    for t in trials:
-        n = len(t["objects"])
-        kind = t["widget"]["type"]
-        seconds += 60.0 * words(t["prompt_html"]) / READING_WPM + SECONDS_PER_OBJECT * n
-        seconds += SECONDS_TO_ANSWER[kind] + (SECONDS_PER_BET_OBJECT * n if kind == "bet" else 0.0)
-        if lists["materials_kind"] == "text":
-            seconds += 60.0 * sum(len(label.split()) for label in t["item_labels"]) / READING_WPM
-    return seconds / 60.0
+    return CLOSED_CAMPAIGN if timing is None else timing
 
 
-def gate(paradigm, lists: Mapping[str, Any], sessions: Sequence[Session]) -> Dict[str, Any]:
+def estimated_minutes(lists: Mapping[str, Any], timing: Optional[Sequence] = None) -> float:
+    """A participant's minutes under these lists, calibrated on ``timing`` records (default: the
+    closed campaign's; `src.rsa_open.timing.estimate`)."""
+    from src.rsa_open.timing import estimate
+
+    return estimate(lists, _records(timing))["estimated_minutes"]
+
+
+def gate(paradigm, lists: Mapping[str, Any], sessions: Sequence[Session],
+         timing: Optional[Sequence] = None) -> Dict[str, Any]:
     from src.rsa_open.fit import OpenData
     from src.rsa_open.paradigm import paradigm_likelihood
     from src.rsa_open.screens import catch_passed, scenes_and_responses
@@ -303,8 +291,13 @@ def gate(paradigm, lists: Mapping[str, Any], sessions: Sequence[Session]) -> Dic
                           / max(sum(r["phase"] == "practice" for r in rows), 1)),
         "readable": len(readable) / max(len(rows), 1),
         "unreadable_examples": [r["unreadable"] for r in rows if r["response"] is None][:5],
-        "estimated_minutes": estimated_minutes(lists), "declared_minutes": paradigm.design.minutes,
+        "declared_minutes": paradigm.design.minutes,
     }
+    from src.rsa_open.timing import estimate
+
+    t = estimate(lists, _records(timing))
+    report.update(estimated_minutes=t["estimated_minutes"], time_model_minutes=t["model_minutes"],
+                  time_calibration=t["calibration"], time_calibration_basis=t["calibration_basis"])
     problems = []
     if report["comprehension_final"] < FLOORS["comprehension"]:
         problems.append(f"comprehension: {report['comprehension_final']:.0%} answered every check right by the "
@@ -338,7 +331,7 @@ def gate(paradigm, lists: Mapping[str, Any], sessions: Sequence[Session]) -> Dic
 
 def run_pilot(paradigm, lists: Mapping[str, Any], out: Path, *, n_participants: int = PILOT_PARTICIPANTS,
               participant_factory: Optional[Callable[[int], Participant]] = None,
-              max_workers: int = 6) -> Dict[str, Any]:
+              max_workers: int = 6, timing: Optional[Sequence] = None) -> Dict[str, Any]:
     """Pilot ``n_participants`` lists (the first ones) and gate the paradigm; writes the record to ``out``."""
     if lists["paradigm_sha256"] != paradigm.sha256:
         raise ValueError("the lists were not built from this paradigm")
@@ -355,7 +348,7 @@ def run_pilot(paradigm, lists: Mapping[str, Any], out: Path, *, n_participants: 
         for s in sessions:
             for r in s.rows:
                 f.write(json.dumps({"list_index": s.list_index, **r}) + "\n")
-    report = gate(paradigm, lists, sessions)
+    report = gate(paradigm, lists, sessions, timing)
     report["participant_model"] = participants[0].name
     (out / "pilot.json").write_text(json.dumps(report, indent=2))
     return report

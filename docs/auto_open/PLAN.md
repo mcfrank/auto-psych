@@ -53,6 +53,7 @@ with the closed campaign's on paradigms neither campaign saw.
 | Response process | Every link has a decision temperature and a lapse; a temperature written into a ported theory is cut (one hand port) | standard in a link; equal flexibility for every theory, old ones included |
 | Chain 2's final | Ported whole (rule b); its prior-mixing lapse stays in the theory as `theory_lapse`, and the link adds its uniform lapse | the theory's mixture must earn its parameter |
 | Sliders and bets (PI 2026-10-21) | A one-referent slider or bet uses the ordered-beta link (a discrete Beta between point masses at 0 and max); a bet over all referents (F&G 2012) keeps the Dirichlet-multinomial, response type `bet` | sliders and bets are prominent in the RSA literature; endpoints pile up in real slider data |
+| Timing digest (PI 2026-10-21) | The designer's brief carries how long finished experiments took people (aggregates only), the closed campaign's 9 live experiments and every chain's of this campaign; the pilot's time estimate is calibrated on the same records | helps the designer judge how many trials fit in its minutes; durations are not response data, so this is not closed-campaign data in the sense of the drift rule |
 | Speakers | Every theory has a speaker: its own `speaker(params, ctx)`, or the one derived from its listener, `speaker(u | r) ∝ listener(r | u)` over the scene's real messages (§3.1) | the charter covers what a speaker should say; a derived speaker is specific to each theory, where S0/S1 would give every listener-only theory the same one |
 | Designer limits | Per cycle: 2 h of wall clock, 40 tool calls, at most 3 simulated pilots. `submit` refuses a paradigm whose EIG per dollar is below half the closed campaign's paradigm's at the same budget, under the same theories. A failed cycle gets **one retry** with the reason in the brief; a second failure stops the chain and reports. Design bounds: N ≥ 100, at most 15 minutes per person | bounded cost; informative without dictating the design; fail loudly, no fallback design |
 
@@ -314,10 +315,18 @@ chat each; an SVG trial is one image (resvg), the marked object framed. The gate
 | catch trials passed | ≥ 80% |
 | usable answers | ≥ 95% |
 | test data | parse as the link's data |
-| time estimate | within 30% of the declared minutes |
+| time estimate (`src/rsa_open/timing.py`: a reading-and-answering model, scaled by people's median times in finished experiments of the same response type, else of every type) | within 30% of the declared minutes |
 | test answers | not all identical |
 
 A first live run passed: 3 participants, choice, SVG creatures, every check and catch trial right.
+
+**Timing** (`src/rsa_open/timing.py`). The uncalibrated model predicted 4.9 minutes for the closed
+paradigm, where people's median was 2.1 (9 experiments, about 1,800 people), so the estimate is
+scaled by people's real times: by finished experiments of the same response type when there
+are any, else by all. Until this campaign has run a type, it is calibrated on the closed
+campaign's forced choices. `validate` and `eig` report the estimate against the declared
+minutes, so the designer sees the pilot's time check before submitting. The brief's
+`inputs/timing.md` lists every record.
 
 ### 4.3 The designer cycle (`src/rsa_open/designer.py`)
 
@@ -337,6 +346,22 @@ A first live run passed: 3 participants, choice, SVG creatures, every check and 
 
 **Limits:** 2 h of agent time, 40 tool calls. A session without a submission ends the cycle. A
 failed cycle gets one retry with its reason; then `DesignerFailed` stops the chain.
+
+**The first real cycles (2026-10-21, smoke, 20-minute sessions).** Gemini 4 scored forced-choice
+and production paradigms (all above the floor), switched to production when its choice
+paradigm's link check failed, submitted, and passed the harness's re-score, link re-check and the
+pilot's comprehension, catch, readability and parse checks. It failed only the time check
+(estimated 12.0 minutes against 4.4 declared), and the smoke's short sessions ended the cycle.
+What it found:
+
+| problem | fix |
+|---|---|
+| the link check simulated from the first theory by name, the literal listener, under which a listener link's temperature changes nothing: every choice paradigm failed | the theory with the most parameters, unless named (`--theory`) |
+| no tool showed the time estimate before the pilot | `validate` and `eig` report it |
+| the estimate was an uncalibrated guess, about twice too slow | calibrated on completion times (above) |
+| a session cut off by its time limit was reported as "ended without a submission" | reported as reaching its limit |
+| a prompt with quotation marks around `{message}` shows the word twice-quoted | the validator refuses it; the brief says so |
+| opencode without its provider's key read as two empty sessions | a failed login, raised (`src/runtime/usage_limits.py`) |
 
 **Freezing** writes the spec, design, lists, a preview page, the link check, the pilot and
 `record.json`. The record holds the hashes, `review_required` for a chain's first experiment,

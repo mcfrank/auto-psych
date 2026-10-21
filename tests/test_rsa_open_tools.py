@@ -28,6 +28,9 @@ def base_workspace(tmp_path_factory):
     ws = root / "ws"
     write_context(ws / "context", theories)
     (ws / "inputs").mkdir()
+    from src.rsa_open.timing import CLOSED_CAMPAIGN, write_records
+
+    write_records(ws / "inputs" / "timing.json", CLOSED_CAMPAIGN)
     (ws / "work").mkdir()
     return ws
 
@@ -57,6 +60,7 @@ def test_validate_reports_a_valid_spec_and_logs_the_call(ws, capsys):
     assert main(["validate", "--workspace", str(ws.root), "--spec", str(spec)]) == 0
     out = capsys.readouterr().out
     assert "valid" in out and "39 tool calls left" in out
+    assert "time: estimated" in out and "9 choice experiment(s)" in out
     assert [c["command"] for c in ws.calls()] == ["validate"]
 
 
@@ -156,3 +160,36 @@ def test_link_check_runs_the_recovery_test_in_the_paradigm(ws):
     assert report["n_trials"] == 1400 and report["theory"] == "rsa_l1"
     assert report["converged"] and report["recovered"], report["misses"]
     assert ws.report_path("link-check", report["paradigm_sha256"]).exists()
+
+
+def test_validate_and_eig_report_the_pilot_s_time_estimate(ws, monkeypatch):
+    import src.rsa_open.design as design
+    from src.rsa_open.pilot import TIME_TOLERANCE
+    from src.rsa_open.tools import Eig, Validate, run
+
+    monkeypatch.setattr(design, "reference_report", lambda ctx, **kw: {"bits_per_dollar": 1e-9})
+    monkeypatch.setattr(design, "DEFAULT_DRAWS", 16)
+    monkeypatch.setattr(design, "DEFAULT_SCENARIOS", 100)
+    spec = write_spec(ws)
+    for command in (Validate, Eig):
+        t = run(command(workspace=ws.root, spec=spec))["time"]
+        assert t["declared_minutes"] == 4 and t["estimated_minutes"] > 0
+        assert t["within_tolerance"] == (abs(t["estimated_minutes"] / 4 - 1) <= TIME_TOLERANCE)
+
+
+def test_a_workspace_without_timing_records_is_refused(ws, capsys):
+    from src.rsa_open.tools import main
+
+    ws.timing.unlink()
+    spec = write_spec(ws)
+    assert main(["validate", "--workspace", str(ws.root), "--spec", str(spec)]) == 1
+    assert "timing.json" in capsys.readouterr().out
+
+
+def test_the_link_check_simulates_from_the_theory_with_the_most_parameters(ws):
+    from src.rsa_open.design import load_context
+    from src.rsa_open.tools import default_theory
+
+    ctx = load_context(ws.context)
+    assert len(ctx.theories["literal_listener"].params) == 0
+    assert default_theory(ctx) == "rsa_l1"  # never the literal listener, which cannot move a temperature

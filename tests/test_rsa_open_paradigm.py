@@ -277,6 +277,8 @@ def test_a_valid_response_block_of_each_type(tmp_path, kind):
     ({"prompt": "Which creature is the speaker talking about?"}, "once"),
     ({"prompt": "The speaker said {message} or {message}."}, "once"),
     ({"prompt": "The speaker said {word}. Which one?"}, "unknown placeholders"),
+    ({"prompt": 'The speaker says: "{message}". Which one?'}, "quotation marks"),
+    ({"prompt": "The speaker says “{message}”. Which one?"}, "quotation marks"),
     ({"prior_prompt": None}, "prior_prompt is required"),
     ({"prior_prompt": "The speaker said {message}."}, "no message"),
 ])
