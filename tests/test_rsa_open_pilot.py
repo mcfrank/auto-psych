@@ -37,6 +37,19 @@ def reply_for(trial, good=True, rng=None):
     return f"ANSWER: {'yes' if answer else 'no'}"
 
 
+def legible_answer(item, wrong=False):
+    """The answer a reader gives to a materials question: the right one, or a wrong one."""
+    if item.kind == "name":
+        return "box" if wrong else item.expected
+    if item.kind == "choice":
+        k = item.options.index(item.expected)
+        return str((k + 1) % len(item.options) + 1 if wrong else k + 1)
+    nums = sorted(item.expected)
+    if wrong:
+        return "none" if nums else "1"
+    return ", ".join(map(str, nums)) or "none"
+
+
 class Scripted:
     """Answers the screens of one list in order: checks (``check_errors`` readings wrong), then trials."""
 
@@ -47,18 +60,17 @@ class Scripted:
 
         self.lists, self.trials = lists, lists["lists"][index % len(lists["lists"])]["trials"]
         # The materials check: right answers looked up by the question and its image (a script
-        # cannot see), except for the items in ``misread``.
+        # cannot see), wrong ones for the items in ``misread``.
         self.legible = {} if paradigm is None else {
-            (it.text, it.image): it.correct + (1 if it.key in misread else 0) for it in legibility_items(paradigm)}
+            (it.text, it.image): legible_answer(it, it.key in misread) for it in legibility_items(paradigm, lists)}
         self.good, self.check_errors, self.mumble = good, check_errors, mumble
         self.readings, self.check_i, self.trial_i = 0, 0, 0
         self.seen = []
 
     def reply(self, text, images=()):
         self.seen.append((text, len(images)))
-        if "number of your choice" in text:
-            k = self.legible[(text, images[0])] % text.count(") ")
-            return f"ANSWER: {k + 1}"
+        if images and (text, images[0]) in self.legible:
+            return f"ANSWER: {self.legible[(text, images[0])]}"
         checks = self.lists["intro"]["checks"]
         if "option's number" in text:
             c = checks[self.check_i % len(checks)]
@@ -196,18 +208,26 @@ def test_run_pilot_writes_transcripts_rows_and_the_report(tmp_path):
         run_pilot(paradigm_of("rating"), lists, tmp_path, participant_factory=lambda i: Scripted(lists, i))
 
 
-def test_the_materials_check_asks_about_each_base_and_each_feature():
-    from src.rsa_open.pilot import legibility_items
+def test_the_materials_check_names_bases_freely_names_parts_and_reads_real_trials():
+    from src.rsa_open.pilot import TRUTH_ITEMS, legibility_items
+    from src.rsa_open.screens import trial_lists
 
     p = paradigm_of("choice")
-    items = legibility_items(p)
+    lists = trial_lists(p, units_of(p), seed=0, n_lists=10)
+    items = legibility_items(p, lists)
     domains = p.materials.domains
-    assert len(items) == sum(1 + len(d.features) for d in domains)
-    base = next(it for it in items if it.key.endswith("the base"))
-    assert base.options[base.correct] == domains[0].name and len(base.options) == 5
-    feature = next(it for it in items if not it.key.endswith("the base"))
+    kinds = [it.kind for it in items]
+    assert kinds.count("name") == len(domains) and kinds.count("choice") == sum(len(d.features) for d in domains)
+    assert 0 < kinds.count("truth") <= TRUTH_ITEMS
+    base = next(it for it in items if it.kind == "name")
+    assert base.expected == domains[0].name and not base.options and "Name it" in base.text  # no options to eliminate
+    feature = next(it for it in items if it.kind == "choice")
     assert sorted(feature.options) == sorted(f.word for f in domains[0].features)
+    for it in (it for it in items if it.kind == "truth"):
+        n = int(it.text.split(" objects")[0].split()[-1])
+        assert it.expected and set(it.expected) < set(range(1, n + 1))  # some but not all of the objects
     assert all(it.image[:8] == b"\x89PNG\r\n\x1a\n" for it in items)
+    assert legibility_items(p) == [it for it in items if it.kind != "truth"]  # without lists, no trials
 
 
 def test_text_materials_have_no_materials_check():
@@ -237,3 +257,36 @@ def test_a_misread_feature_fails_the_pilot_and_names_the_drawing(tmp_path):
     assert not report["passed"]
     (problem,) = [x for x in report["problems"] if x.startswith("legibility")]
     assert f"creatures: {word} (0 of 3 chose '{word}'" in problem
+
+
+def test_a_base_named_otherwise_goes_to_the_judge_and_a_misread_trial_fails(tmp_path):
+    from src.rsa_open.pilot import legibility_items, materials_check
+    from src.rsa_open.screens import trial_lists
+
+    p = paradigm_of("choice")
+    lists = trial_lists(p, units_of(p), seed=0, n_lists=10)
+    items = legibility_items(p, lists)
+    truth = next(it.key for it in items if it.kind == "truth")
+
+    class Judge:
+        name = "judge"
+
+        def __init__(self, verdict):
+            self.verdict, self.asked = verdict, []
+
+        def reply(self, text, images=()):
+            self.asked.append(text)
+            return f"ANSWER: {self.verdict}"
+
+    checkers = [Scripted(lists, i, paradigm=p, misread=("creatures: the base", truth)) for i in range(3)]
+    lenient = Judge("yes")
+    report = materials_check(p, checkers, lists=lists, judge=lenient)
+    by = {r["item"]: r for r in report["by_item"]}
+    assert by["creatures: the base"]["right"] == 3 and '"box"' in lenient.asked[0]  # the judge accepted "box"
+    assert by[truth]["right"] == 0 and by[truth]["wrong_answers"] and by[truth] in report["illegible"]
+    checkers = [Scripted(lists, i, paradigm=p, misread=("creatures: the base",)) for i in range(3)]
+    strict = materials_check(p, checkers, lists=lists, judge=Judge("no"))
+    assert {"item": "creatures: the base", "kind": "name", "right": 0, "of": 3, "answer": "creatures",
+            "wrong_answers": ["box"]} in strict["illegible"]
+    exact = [Scripted(lists, i, paradigm=p) for i in range(3)]
+    assert materials_check(p, exact, lists=lists, judge=Judge("no"))["legibility"] == 1.0  # its own name: no judge

@@ -202,9 +202,9 @@ objects with every feature, so:
   alongside any other features without hiding them;
 - each word is a common, concrete word that a person would use for that part of the drawing;
 - make them engaging: colour and a little character, nothing cluttered or abstract.
-The pilot checks this: its participants are shown each domain's base alone and asked what it is,
-and the base with each single feature and asked which word names the added part (see "After you
-submit").
+The pilot checks this (see "After you submit"): fresh participants name each domain's base in
+their own words (no options to choose from), say which of your words names the part each single
+feature adds, and say exactly which objects of real trial screens a word is true of.
 
 The harness builds the page from your spec: one list per participant (balanced over your design),
 a practice trial, your comprehension checks (shown again once after a wrong answer), catch trials

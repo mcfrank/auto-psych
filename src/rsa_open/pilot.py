@@ -21,11 +21,13 @@ no); an unreadable reply is asked once more, then recorded as unreadable.
 - the time estimate (`estimated_minutes`: `src.rsa_open.timing`'s model, calibrated on people's
   real times in finished experiments) is within ``TIME_TOLERANCE`` of the declared minutes;
 - the test answers are not all one answer;
-- legibility (SVG materials, `materials_check`): ``LEGIBILITY_CHECKERS`` fresh chats are shown each
-  domain's base alone ("what is pictured?", among four other kinds of thing) and the base beside
-  the base with one feature added ("which word names the added part?", among the domain's
-  words); at least ``FLOORS['legibility']`` of answers are right, and no item is misread by half
-  or more of them (PI 2026-10-21: a bare box drawn for "robot" read as nothing).
+- legibility (SVG materials, `materials_check`): ``LEGIBILITY_CHECKERS`` fresh chats name each
+  domain's base freely (a name other than the domain's goes to a judge chat: "is 'box' a
+  reasonable name for robots?"), pick which of the domain's words names the part a single
+  feature adds, and say exactly which objects of ``TRUTH_ITEMS`` real test trials a word is true
+  of; at least ``FLOORS['legibility']`` of answers are right, and no item is misread by half of
+  them or more (PI 2026-10-21: the first designer drew a bare box for a featureless robot, and
+  a multiple-choice naming question passed it by elimination).
 LLM participants are not people: the pilot finds instructions, prompts and materials that a
 capable reader cannot follow, and data that do not parse; it says nothing about effect sizes.
 """
@@ -48,8 +50,9 @@ PILOT_PARTICIPANTS = 12
 FLOORS = {"comprehension": 0.8, "catch": 0.8, "readable": 0.95, "legibility": 0.9}
 LEGIBILITY_CHECKERS = 3
 CHOICE_ASK = "Reply ANSWER: <the number of your choice>."
-DISTRACTOR_KINDS = ("animals", "vehicles", "plants", "tools", "buildings", "robots", "flowers", "houses", "boats",
-                    "badges", "cups", "hats", "fish", "trees", "cars", "clocks", "lamps", "chairs", "kites", "shells")
+NAME_ASK = "Reply ANSWER: <your name for it>."
+TRUTH_ASK = "Reply ANSWER: <their numbers, separated by commas>, or ANSWER: none."
+TRUTH_ITEMS = 6
 TIME_TOLERANCE = 0.30
 SYSTEM = ("You are taking part in an online research study. Read each screen carefully and respond as a "
           "thoughtful participant would. End every reply with one line of the form `ANSWER: ...`, in the "
@@ -217,17 +220,32 @@ def parse_answer(trial: Mapping[str, Any], reply: str) -> Tuple[Optional[dict], 
 
 @dataclass(frozen=True)
 class LegibilityItem:
-    """One question about the materials: what a domain's base shows, or which word names a feature."""
+    """One question about the materials (`legibility_items`)."""
 
-    key: str  # "houses: the base" / "houses: chimney"
+    key: str  # "houses: the base" / "houses: chimney" / "trial 3: chimney"
+    kind: str  # "name": free naming; "choice": one of ``options``; "truth": the objects a word is true of
     text: str
     image: bytes
-    options: Tuple[str, ...]
-    correct: int
+    expected: Any  # the domain's name; the right option; the set of object numbers
+    options: Tuple[str, ...] = ()
 
 
-def legibility_items(paradigm, seed: int = 0) -> List[LegibilityItem]:
-    """The materials check's questions (SVG materials; text materials say what they are)."""
+def _plural_key(word: str) -> str:
+    w = word.strip().lower().strip("\"'“”.!")
+    for suffix in ("ies", "es", "s"):
+        if w.endswith(suffix) and len(w) > len(suffix) + 2:
+            return w[: -len(suffix)] + ("y" if suffix == "ies" else "")
+    return w
+
+
+def legibility_items(paradigm, lists: Optional[Mapping[str, Any]] = None, seed: int = 0) -> List[LegibilityItem]:
+    """The materials check's questions (SVG materials; text materials say what they are):
+
+    - each domain's base alone, named freely ("name");
+    - the base beside the base with one feature, which of the domain's words names the added part
+      ("choice");
+    - with ``lists``, up to ``TRUTH_ITEMS`` real test trials, unmarked: which objects have a word
+      true of some but not all of them ("truth", exact)."""
     import numpy as np
 
     from src.rsa_open.screens import _object_html
@@ -235,57 +253,103 @@ def legibility_items(paradigm, seed: int = 0) -> List[LegibilityItem]:
     if paradigm.materials.kind != "svg":
         return []
     rng = np.random.default_rng(seed)
-    names = [d.name.lower() for d in paradigm.materials.domains]
     items: List[LegibilityItem] = []
     for domain in paradigm.materials.domains:
         base = _object_html(paradigm, domain, [], domain.name)
-        others = [k for k in DISTRACTOR_KINDS if not any(k[:4] == n[:4] for n in names)]
-        options = [domain.name] + [others[i] for i in rng.choice(len(others), 4, replace=False)]
-        order = [int(i) for i in rng.permutation(len(options))]
-        shown = tuple(options[i] for i in order)
-        listing = "\n".join(f"{i + 1}) {o}" for i, o in enumerate(shown))
-        items.append(LegibilityItem(f"{domain.name}: the base", f"What is pictured? Choose the best description.\n"
-                                    f"{listing}\n{CHOICE_ASK}", row_png([base]), shown, order.index(0)))
+        items.append(LegibilityItem(f"{domain.name}: the base", "name",
+                                    f"What is pictured? Name it in one or two words.\n{NAME_ASK}",
+                                    row_png([base]), domain.name))
         words = [f.word for f in domain.features]
         for j, feature in enumerate(domain.features):
             order = [int(i) for i in rng.permutation(len(words))]
             shown = tuple(words[i] for i in order)
             listing = "\n".join(f"{i + 1}) {o}" for i, o in enumerate(shown))
-            image = row_png([base, _object_html(paradigm, domain, [j], domain.name)])
             items.append(LegibilityItem(
-                f"{domain.name}: {feature.word}",
+                f"{domain.name}: {feature.word}", "choice",
                 f"Object 2 is object 1 with one part added. Which word names the added part?\n{listing}\n{CHOICE_ASK}",
-                image, shown, order.index(j)))
+                row_png([base, _object_html(paradigm, domain, [j], domain.name)]), feature.word, shown))
+    if lists is not None:
+        trials = [t for lst in lists["lists"] for t in lst["trials"] if t["phase"] == "test"]
+        seen = set()
+        for k in rng.permutation(len(trials)):
+            t = trials[int(k)]
+            n = len(t["objects"])
+            mixed = [j for j in range(len(t["words"])) if 0 < sum(row[j] for row in t["objects"]) < n]
+            key = (json.dumps(t["objects"]), t["domain"])
+            if not mixed or key in seen:
+                continue
+            seen.add(key)
+            j = mixed[int(rng.integers(len(mixed)))]
+            word = t["words"][j]
+            having = {p + 1 for p, obj in enumerate(t["display_order"]) if t["objects"][obj][j]}
+            items.append(LegibilityItem(
+                f"trial {len(seen)} ({t['domain_name']}): {word}", "truth",
+                f"The picture shows {n} objects, numbered 1 to {n} from left to right. Which of them have "
+                f"{word}?\n{TRUTH_ASK}", row_png(t["items_html"]), frozenset(having)))
+            if len(seen) == TRUTH_ITEMS:
+                break
     return items
 
 
-def materials_check(paradigm, checkers: Sequence[Participant], out: Optional[Path] = None) -> Dict[str, Any]:
-    """Each checker (a fresh chat) answers every legibility question; an item fails when fewer
-    than half of them get it right."""
-    items = legibility_items(paradigm)
+def _answer(reply: str) -> Optional[str]:
+    found = ANSWER.findall(reply)
+    return found[-1].strip().strip("`*").strip().rstrip(".") if found else None
+
+
+def _judge_name(judge: Participant, given: str, intended: str) -> bool:
+    reply = judge.reply(f"Someone shown a simple drawing named it \"{given}\". The drawing was meant to show one of "
+                        f"the {intended}. Is \"{given}\" a reasonable name for that kind of thing (the same kind of "
+                        f"object, a synonym, or a more specific kind)? Reply ANSWER: yes or ANSWER: no.")
+    return (_answer(reply) or "").lower() == "yes"
+
+
+def materials_check(paradigm, checkers: Sequence[Participant], out: Optional[Path] = None, *,
+                    lists: Optional[Mapping[str, Any]] = None, judge: Optional[Participant] = None) -> Dict[str, Any]:
+    """Each checker (a fresh chat) answers every legibility question; an item fails when no more
+    than half of them get it right. A free name that is not the domain's name (singular or
+    plural) goes to ``judge`` (a fresh chat); without a judge it is wrong."""
+    items = legibility_items(paradigm, lists)
     if not items:
         return {"items": 0, "legibility": None, "illegible": []}
-    answers: Dict[str, List[Optional[str]]] = {it.key: [] for it in items}
+    given: Dict[str, List[Optional[str]]] = {it.key: [] for it in items}
+    right: Dict[str, List[bool]] = {it.key: [] for it in items}
     for c, checker in enumerate(checkers):
         transcript = []
         for it in items:
             reply = checker.reply(it.text, [it.image])
             transcript += [f"## {it.key}\n\n{it.text}", f"## Reply\n\n{reply}"]
-            found = ANSWER.findall(reply)
-            try:
-                k = int(found[-1].strip().strip("`*").rstrip(".")) - 1 if found else -1
-            except ValueError:
-                k = -1
-            answers[it.key].append(it.options[k] if 0 <= k < len(it.options) else None)
+            a = _answer(reply)
+            if it.kind == "name":
+                ok = a is not None and (_plural_key(a) == _plural_key(it.expected) or
+                                        (judge is not None and _judge_name(judge, a, it.expected)))
+                shown = a
+            elif it.kind == "choice":
+                try:
+                    k = int(a) - 1 if a is not None else -1
+                except ValueError:
+                    k = -1
+                shown = it.options[k] if 0 <= k < len(it.options) else a
+                ok = shown == it.expected
+            else:
+                nums = set()
+                if a is not None and a.lower() != "none":
+                    try:
+                        nums = {int(x) for x in re.split(r"[,\s]+", a) if x}
+                    except ValueError:
+                        nums = {-1}
+                shown = ", ".join(map(str, sorted(nums))) or "none"
+                ok = nums == set(it.expected)
+            given[it.key].append(shown)
+            right[it.key].append(ok)
         if out is not None:
             (out / "legibility").mkdir(parents=True, exist_ok=True)
             (out / "legibility" / f"checker_{c}.md").write_text("\n\n".join(transcript))
     rows = []
     for it in items:
-        given = answers[it.key]
-        right = sum(a == it.options[it.correct] for a in given)
-        rows.append({"item": it.key, "right": right, "of": len(given), "answer": it.options[it.correct],
-                     "wrong_answers": sorted({a for a in given if a != it.options[it.correct] and a})})
+        expected = (", ".join(map(str, sorted(it.expected))) or "none") if it.kind == "truth" else it.expected
+        rows.append({"item": it.key, "kind": it.kind, "right": sum(right[it.key]), "of": len(right[it.key]),
+                     "answer": expected,
+                     "wrong_answers": sorted({g for g, ok in zip(given[it.key], right[it.key]) if not ok and g})})
     total = sum(r["of"] for r in rows)
     illegible = [r for r in rows if r["right"] * 2 <= r["of"]]
     return {"items": len(items), "legibility": sum(r["right"] for r in rows) / total, "illegible": illegible,
@@ -443,7 +507,8 @@ def run_pilot(paradigm, lists: Mapping[str, Any], out: Path, *, n_participants: 
         sessions = list(pool.map(lambda i: run_participant(lists, i, participants[i]), range(n)))
     out = Path(out)
     # The materials check: fresh chats, so no participant's trials colour it.
-    legibility = materials_check(paradigm, [factory(n + c) for c in range(LEGIBILITY_CHECKERS)], out)
+    legibility = materials_check(paradigm, [factory(n + c) for c in range(LEGIBILITY_CHECKERS)], out, lists=lists,
+                                 judge=factory(n + LEGIBILITY_CHECKERS))
     (out / "transcripts").mkdir(parents=True, exist_ok=True)
     for s in sessions:
         (out / "transcripts" / f"participant_{s.list_index:03d}.md").write_text("\n\n".join(s.transcript))
