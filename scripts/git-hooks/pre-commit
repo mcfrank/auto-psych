@@ -15,8 +15,10 @@ hex24=$(printf '[0-9a-f]%.0s' {1..24})
 id_re="(^|[^0-9A-Za-z])${hex24}([^0-9A-Za-z]|\$)"
 
 names=$(git diff --cached --name-only --diff-filter=ACR | grep -E "$id_re" || true)
+# Byte-wise (C locale): --text passes binary files (figures) through, and macOS
+# awk in a UTF-8 locale aborts on their invalid multibyte sequences.
 lines=$(git diff --cached --text -U0 --no-color --no-ext-diff --diff-filter=ACMR |
-  awk -v re="$id_re" '
+  LC_ALL=C awk -v re="$id_re" '
     /^diff --git / { header = 1; next }
     header && /^\+\+\+ / { file = substr($0, 7); next }
     /^@@/ { header = 0; split($3, a, ","); line = substr(a[1], 2) + 0; next }
