@@ -574,6 +574,14 @@ submitted with `submit_dataset_run.sh`, which skips the test-retest analysis,
 General settings these runs introduced: `fit.method: warm_start_nuts`,
 `inner_loop.selection` (grouped CV; no PSIS-LOO then), `hide_participant_id`.
 
+### Ablating the sr-oct26 finals
+
+`src/subjective_randomness/ablation/` (`docs/sr_ablation.md`): each live run's final
+rewritten with switchable mechanisms (`finals/run{1,2,3}.py`; with all on, a variant *is*
+the final, tested), and backward elimination by 5-fold CV grouped by stimulus pair on all
+runs pooled, the RSA consolidation's rule per final. It runs as Slurm plan/worker arrays
+(`scripts/subjective_randomness/slurm/submit_ablation.sh`).
+
 ### Inspecting results
 
 - `src/viewer/` — Flask + static SPA explorer over finished runs on disk
