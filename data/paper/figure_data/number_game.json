@@ -1,0 +1,7143 @@
+{
+  "domain": "number_game",
+  "scoring": "ELPD from grouped cross-validation (4 folds of whole example sets) on the run's final data (7,560 responses)",
+  "fit_settings": {
+    "method": "warm_start_nuts",
+    "tune": 200,
+    "draws": 500,
+    "chains": 4
+  },
+  "selection": {
+    "criterion": "grouped_cv",
+    "cv_group": [
+      "number_set"
+    ],
+    "cv_folds": 4,
+    "cv_seed": 0
+  },
+  "runs": [
+    {
+      "run": "run1",
+      "final_experiment": "experiment3",
+      "n_trials": 7560,
+      "best_model": "even_rule_digit_size_principle_counting",
+      "recorded_elpd": {
+        "digit_reversal_mirror_concept": -4687.8029,
+        "even_rule_digit_size_principle_counting": -4677.1668,
+        "parity_and_digit_size_principle": -4687.5487,
+        "bayesian_digit_veto_counting_up": -4680.7579
+      },
+      "elpd": {
+        "even_rule_digit_size_principle_counting": -4677.166807883959,
+        "bigelow_piantadosi_independent": -6269.000953824825,
+        "bigelow_piantadosi_interval": -6281.252770659756,
+        "tenenbaum_rules_similarity": -7063.183114764895,
+        "digit_reversal_mirror_concept": -4687.802913591964,
+        "parity_and_digit_size_principle": -4687.54872620052,
+        "bayesian_digit_veto_counting_up": -4680.757877646937
+      },
+      "best_seed": "bigelow_piantadosi_independent",
+      "vs_best_seed": {
+        "even_rule_digit_size_principle_counting": {
+          "diff": 1591.8341459408657,
+          "se": 132.76944206530692
+        },
+        "bigelow_piantadosi_independent": {
+          "diff": 0.0,
+          "se": 0.0
+        },
+        "bigelow_piantadosi_interval": {
+          "diff": -12.25181683493065,
+          "se": 20.57781855506854
+        },
+        "tenenbaum_rules_similarity": {
+          "diff": -794.1821609400704,
+          "se": 96.31075440926465
+        }
+      },
+      "others_at_end": {
+        "digit_reversal_mirror_concept": 1581.1980402328609,
+        "parity_and_digit_size_principle": 1581.4522276243051,
+        "bayesian_digit_veto_counting_up": 1588.2430761778878
+      },
+      "pruned_during_run": {
+        "accumulated_digit_mismatch_evidence": 1472.6349156329825,
+        "arithmetic_progression_step_inference": 1207.2342062066764,
+        "attention_shift_magnitude_to_digit": 1464.1743553930746,
+        "bayesian_concepts_log_odds_distortion": 1269.28690675311,
+        "bigelow_piantadosi_inferred_noise": 1293.371534842121,
+        "common_factor_digit_range_similarity": 1414.2626106996013,
+        "decade_band_digit_common_factor": 1467.4868863946049,
+        "decade_digit_range_factor_similarity": 1425.4102987716624,
+        "decade_digit_similarity_common_factor": 1436.5451498342527,
+        "digit_similarity_with_common_factor": 1423.208618527222,
+        "digit_similarity_with_range_extension": 1378.571248312266,
+        "digit_similarity_with_span_falloff": 1370.0660965837906,
+        "digitwise_common_feature_matching": 1375.1508777983308,
+        "diminishing_similarity_decade_band": 1461.5447408934233,
+        "divisor_lattice_size_principle": 1437.7568619097765,
+        "erlang_size_noisy_concept_learning": 1258.7504643036664,
+        "example_count_diluted_decade_familiarity": 1466.90942653183,
+        "exemplar_feature_similarity_gcm": 1188.9044825137898,
+        "final_digit_rule_suppresses_parity": 1468.3474742322123,
+        "final_digit_similarity_gradient": 1355.584443113249,
+        "in_range_nearest_decade_digit_factor": 1450.9057868775453,
+        "iter0_candidate0": 1411.0192795203238,
+        "iter3_candidate4": 1466.2938274086564,
+        "log_compressed_decade_band": 1459.5453563426217,
+        "nearest_decade_digit_common_factor": 1442.553561312794,
+        "nearest_decade_digit_factor_span_fill": 1455.8590123977574,
+        "nearest_exemplar_luce_similarity": 1224.34042167181,
+        "order_weighted_concept_learning": -125.42962087581691,
+        "place_value_grid_similarity": 1383.292004600201,
+        "prototype_abstraction_similarity": 1373.5636604848496,
+        "proximity_cued_digit_retrieval": 1385.919234203694,
+        "random_program_inference_ruleless": 1525.6510318019737,
+        "range_extension_by_spacing": 1016.4703077450886,
+        "recency_faded_magnitude_anchor": 1362.2603194645253,
+        "relational_step_extrapolation": 1067.738553924979,
+        "rule_matching_with_range_extension": 1315.7916118674839,
+        "rule_matching_with_range_fill": 1317.4339506822698,
+        "salience_weighted_rule_matching": 1313.5074913922044,
+        "sequential_delta_rule_property_learning": 1341.7791874121758,
+        "serial_position_digit_similarity": 1356.3809899108937,
+        "set_specific_yes_criterion": 1091.678167246413,
+        "shared_digit_rule_preempts_parity": 1481.1686422663397,
+        "shared_digit_sharpened_decade_band": 1476.4061375512138,
+        "shared_feature_attention_gcm": 1186.323990709252,
+        "shared_property_rule_matching": 1304.2380041757897,
+        "size_principle_decade_band": 1463.5266702681702,
+        "size_weighted_interval_learning": 1182.1899184652539,
+        "span_filled_nearest_exemplar": 1225.1947833483691,
+        "variability_tuned_exemplar_gradient": 1475.504407796937,
+        "win_stay_lose_shift_concept": 1047.573381220156,
+        "mixed_parity_loosens_criterion": 1462.327353824825,
+        "rule_gated_decade_familiarity": 1528.2687538248247,
+        "position_weighted_rule_gated_digits": 1526.105653824825,
+        "mutual_similarity_contrast_standard": 1532.613353824825,
+        "ruleless_set_anything_goes_floor": 1525.2318538248246,
+        "rule_gated_mixed_parity_criterion": 1523.3929538248249,
+        "coincidence_graded_rule_preemption": 1514.1761538248247,
+        "attentional_lapse_biased_guess": 1531.4578538248252,
+        "contains_digit_concept": 1538.7430538248254,
+        "coherence_tuned_attention_gcm": 1423.1168538248248,
+        "shortfall_from_mutual_similarity": 1543.4823538248247,
+        "recognized_example_contrast_standard": 1531.3338538248254,
+        "round_digit_kinship_rule_gated": 1531.3339538248247,
+        "mental_simulation_example_mutation": 1339.2294538248252,
+        "round_counting_privileged_factor": 1561.250953824825,
+        "even_numbers_privileged_rule": 1557.7589538248249,
+        "round_kin_shortfall_standard": 1554.041853824825,
+        "example_count_sharpens_decision": 1547.6354538248252,
+        "comparison_load_decision_noise": 1548.2619538248255,
+        "counting_up_from_single_example": 1571.766253824825,
+        "conservative_bayesian_concept_updating": 1287.8346538248252,
+        "factor_seed_visible_counting": 1570.3821538248249,
+        "round_counting_sequence_membership": 1529.3881538248252,
+        "privileged_named_number_concepts": 1572.8351538248253,
+        "sequential_digit_streak_confirmation": 1567.5410538248252,
+        "accumulating_similarity_standard": 1577.2631538248252,
+        "digit_rule_size_principle": 1574.6316538248248,
+        "digit_rule_size_principle_counting": 1579.6094538248253,
+        "conjunctive_example_verification": 844.5104538248252,
+        "bayesian_digit_rule_veto": 1577.0806538248253,
+        "smoothed_feature_prototype_typicality": 1372.636753824825,
+        "intrinsic_number_plausibility": 1579.3882538248254
+      },
+      "pruned_elpd": {
+        "accumulated_digit_mismatch_evidence": -4796.366038191843,
+        "arithmetic_progression_step_inference": -5061.766747618149,
+        "attention_shift_magnitude_to_digit": -4804.82659843175,
+        "bayesian_concepts_log_odds_distortion": -4999.714047071715,
+        "bigelow_piantadosi_inferred_noise": -4975.629418982704,
+        "common_factor_digit_range_similarity": -4854.738343125224,
+        "decade_band_digit_common_factor": -4801.51406743022,
+        "decade_digit_range_factor_similarity": -4843.590655053163,
+        "decade_digit_similarity_common_factor": -4832.455803990572,
+        "digit_similarity_with_common_factor": -4845.792335297603,
+        "digit_similarity_with_range_extension": -4890.429705512559,
+        "digit_similarity_with_span_falloff": -4898.9348572410345,
+        "digitwise_common_feature_matching": -4893.850076026494,
+        "diminishing_similarity_decade_band": -4807.456212931402,
+        "divisor_lattice_size_principle": -4831.244091915049,
+        "erlang_size_noisy_concept_learning": -5010.250489521159,
+        "example_count_diluted_decade_familiarity": -4802.091527292995,
+        "exemplar_feature_similarity_gcm": -5080.096471311035,
+        "final_digit_rule_suppresses_parity": -4800.653479592613,
+        "final_digit_similarity_gradient": -4913.416510711576,
+        "in_range_nearest_decade_digit_factor": -4818.09516694728,
+        "iter0_candidate0": -4857.981674304501,
+        "iter3_candidate4": -4802.707126416169,
+        "log_compressed_decade_band": -4809.455597482203,
+        "nearest_decade_digit_common_factor": -4826.447392512031,
+        "nearest_decade_digit_factor_span_fill": -4813.141941427068,
+        "nearest_exemplar_luce_similarity": -5044.660532153015,
+        "order_weighted_concept_learning": -6394.430574700642,
+        "place_value_grid_similarity": -4885.708949224624,
+        "prototype_abstraction_similarity": -4895.437293339975,
+        "proximity_cued_digit_retrieval": -4883.081719621131,
+        "random_program_inference_ruleless": -4743.349922022851,
+        "range_extension_by_spacing": -5252.5306460797365,
+        "recency_faded_magnitude_anchor": -4906.7406343603,
+        "relational_step_extrapolation": -5201.262399899846,
+        "rule_matching_with_range_extension": -4953.209341957341,
+        "rule_matching_with_range_fill": -4951.567003142555,
+        "salience_weighted_rule_matching": -4955.493462432621,
+        "sequential_delta_rule_property_learning": -4927.221766412649,
+        "serial_position_digit_similarity": -4912.619963913931,
+        "set_specific_yes_criterion": -5177.322786578412,
+        "shared_digit_rule_preempts_parity": -4787.832311558485,
+        "shared_digit_sharpened_decade_band": -4792.594816273611,
+        "shared_feature_attention_gcm": -5082.676963115573,
+        "shared_property_rule_matching": -4964.762949649035,
+        "size_principle_decade_band": -4805.474283556655,
+        "size_weighted_interval_learning": -5086.811035359571,
+        "span_filled_nearest_exemplar": -5043.806170476456,
+        "variability_tuned_exemplar_gradient": -4793.496546027888,
+        "win_stay_lose_shift_concept": -5221.427572604669,
+        "mixed_parity_loosens_criterion": -4806.6736,
+        "rule_gated_decade_familiarity": -4740.7322,
+        "position_weighted_rule_gated_digits": -4742.8953,
+        "mutual_similarity_contrast_standard": -4736.3876,
+        "ruleless_set_anything_goes_floor": -4743.7691,
+        "rule_gated_mixed_parity_criterion": -4745.608,
+        "coincidence_graded_rule_preemption": -4754.8248,
+        "attentional_lapse_biased_guess": -4737.5431,
+        "contains_digit_concept": -4730.2579,
+        "coherence_tuned_attention_gcm": -4845.8841,
+        "shortfall_from_mutual_similarity": -4725.5186,
+        "recognized_example_contrast_standard": -4737.6671,
+        "round_digit_kinship_rule_gated": -4737.667,
+        "mental_simulation_example_mutation": -4929.7715,
+        "round_counting_privileged_factor": -4707.75,
+        "even_numbers_privileged_rule": -4711.242,
+        "round_kin_shortfall_standard": -4714.9591,
+        "example_count_sharpens_decision": -4721.3655,
+        "comparison_load_decision_noise": -4720.739,
+        "counting_up_from_single_example": -4697.2347,
+        "conservative_bayesian_concept_updating": -4981.1663,
+        "factor_seed_visible_counting": -4698.6188,
+        "round_counting_sequence_membership": -4739.6128,
+        "privileged_named_number_concepts": -4696.1658,
+        "sequential_digit_streak_confirmation": -4701.4599,
+        "accumulating_similarity_standard": -4691.7378,
+        "digit_rule_size_principle": -4694.3693,
+        "digit_rule_size_principle_counting": -4689.3915,
+        "conjunctive_example_verification": -5424.4905,
+        "bayesian_digit_rule_veto": -4691.9203,
+        "smoothed_feature_prototype_typicality": -4896.3642,
+        "intrinsic_number_plausibility": -4689.6127
+      },
+      "pruned_unscored": {
+        "bayesian_digit_feature_concepts": "fit failed on CV fold 2 (RuntimeError: warm-start NUTS: the Hessian at the posterior mode is not positive definite (some parameter direction is pinned down by neither the data nor the prior))",
+        "inferred_noise_concept_learning": "fit failed on CV fold 3 (RuntimeError: warm-start NUTS: the Hessian at the posterior mode is not positive definite (some parameter direction is pinned down by neither the data nor the prior))"
+      },
+      "pruned_outcome": {
+        "exemplar_feature_similarity_gcm": "pruned",
+        "range_extension_by_spacing": "pruned",
+        "order_weighted_concept_learning": "pruned",
+        "bigelow_piantadosi_inferred_noise": "pruned",
+        "inferred_noise_concept_learning": "pruned",
+        "size_weighted_interval_learning": "pruned",
+        "win_stay_lose_shift_concept": "pruned",
+        "bayesian_concepts_log_odds_distortion": "pruned",
+        "shared_property_rule_matching": "pruned",
+        "shared_feature_attention_gcm": "pruned",
+        "erlang_size_noisy_concept_learning": "pruned",
+        "nearest_exemplar_luce_similarity": "pruned",
+        "sequential_delta_rule_property_learning": "pruned",
+        "final_digit_similarity_gradient": "pruned",
+        "set_specific_yes_criterion": "pruned",
+        "rule_matching_with_range_extension": "pruned",
+        "rule_matching_with_range_fill": "pruned",
+        "span_filled_nearest_exemplar": "pruned",
+        "arithmetic_progression_step_inference": "pruned",
+        "prototype_abstraction_similarity": "pruned",
+        "relational_step_extrapolation": "pruned",
+        "digit_similarity_with_range_extension": "pruned",
+        "digit_similarity_with_span_falloff": "pruned",
+        "salience_weighted_rule_matching": "pruned",
+        "place_value_grid_similarity": "pruned",
+        "proximity_cued_digit_retrieval": "pruned",
+        "serial_position_digit_similarity": "pruned",
+        "digit_similarity_with_common_factor": "pruned",
+        "common_factor_digit_range_similarity": "pruned",
+        "iter0_candidate0": "pruned",
+        "digitwise_common_feature_matching": "pruned",
+        "recency_faded_magnitude_anchor": "pruned",
+        "decade_digit_similarity_common_factor": "pruned",
+        "nearest_decade_digit_common_factor": "pruned",
+        "decade_digit_range_factor_similarity": "pruned",
+        "decade_band_digit_common_factor": "pruned",
+        "divisor_lattice_size_principle": "pruned",
+        "nearest_decade_digit_factor_span_fill": "pruned",
+        "in_range_nearest_decade_digit_factor": "pruned",
+        "diminishing_similarity_decade_band": "pruned",
+        "variability_tuned_exemplar_gradient": "pruned",
+        "accumulated_digit_mismatch_evidence": "pruned",
+        "shared_digit_rule_preempts_parity": "pruned",
+        "final_digit_rule_suppresses_parity": "pruned",
+        "shared_digit_sharpened_decade_band": "pruned",
+        "log_compressed_decade_band": "pruned",
+        "example_count_diluted_decade_familiarity": "pruned",
+        "attention_shift_magnitude_to_digit": "pruned",
+        "size_principle_decade_band": "pruned",
+        "iter3_candidate4": "pruned",
+        "mixed_parity_loosens_criterion": "pruned",
+        "rule_gated_decade_familiarity": "pruned",
+        "random_program_inference_ruleless": "pruned",
+        "position_weighted_rule_gated_digits": "pruned",
+        "mutual_similarity_contrast_standard": "pruned",
+        "ruleless_set_anything_goes_floor": "pruned",
+        "rule_gated_mixed_parity_criterion": "pruned",
+        "coincidence_graded_rule_preemption": "pruned",
+        "attentional_lapse_biased_guess": "pruned",
+        "contains_digit_concept": "pruned",
+        "coherence_tuned_attention_gcm": "pruned",
+        "shortfall_from_mutual_similarity": "pruned",
+        "recognized_example_contrast_standard": "pruned",
+        "round_digit_kinship_rule_gated": "pruned",
+        "mental_simulation_example_mutation": "pruned",
+        "round_counting_privileged_factor": "pruned",
+        "even_numbers_privileged_rule": "pruned",
+        "round_kin_shortfall_standard": "pruned",
+        "example_count_sharpens_decision": "pruned",
+        "comparison_load_decision_noise": "pruned",
+        "counting_up_from_single_example": "pruned",
+        "conservative_bayesian_concept_updating": "pruned",
+        "bayesian_digit_feature_concepts": "dropped",
+        "factor_seed_visible_counting": "pruned",
+        "round_counting_sequence_membership": "pruned",
+        "privileged_named_number_concepts": "pruned",
+        "sequential_digit_streak_confirmation": "pruned",
+        "accumulating_similarity_standard": "pruned",
+        "digit_rule_size_principle": "pruned",
+        "digit_rule_size_principle_counting": "pruned",
+        "conjunctive_example_verification": "pruned",
+        "bayesian_digit_rule_veto": "pruned",
+        "smoothed_feature_prototype_typicality": "pruned",
+        "intrinsic_number_plausibility": "pruned"
+      },
+      "pruned_source": {
+        "exemplar_feature_similarity_gcm": "refit",
+        "range_extension_by_spacing": "refit",
+        "order_weighted_concept_learning": "refit",
+        "bigelow_piantadosi_inferred_noise": "refit",
+        "inferred_noise_concept_learning": "refit",
+        "size_weighted_interval_learning": "refit",
+        "win_stay_lose_shift_concept": "refit",
+        "bayesian_concepts_log_odds_distortion": "refit",
+        "shared_property_rule_matching": "refit",
+        "shared_feature_attention_gcm": "refit",
+        "erlang_size_noisy_concept_learning": "refit",
+        "nearest_exemplar_luce_similarity": "refit",
+        "sequential_delta_rule_property_learning": "refit",
+        "final_digit_similarity_gradient": "refit",
+        "set_specific_yes_criterion": "refit",
+        "rule_matching_with_range_extension": "refit",
+        "rule_matching_with_range_fill": "refit",
+        "span_filled_nearest_exemplar": "refit",
+        "arithmetic_progression_step_inference": "refit",
+        "prototype_abstraction_similarity": "refit",
+        "relational_step_extrapolation": "refit",
+        "digit_similarity_with_range_extension": "refit",
+        "digit_similarity_with_span_falloff": "refit",
+        "salience_weighted_rule_matching": "refit",
+        "place_value_grid_similarity": "refit",
+        "proximity_cued_digit_retrieval": "refit",
+        "serial_position_digit_similarity": "refit",
+        "digit_similarity_with_common_factor": "refit",
+        "common_factor_digit_range_similarity": "refit",
+        "iter0_candidate0": "refit",
+        "digitwise_common_feature_matching": "refit",
+        "recency_faded_magnitude_anchor": "refit",
+        "decade_digit_similarity_common_factor": "refit",
+        "nearest_decade_digit_common_factor": "refit",
+        "decade_digit_range_factor_similarity": "refit",
+        "decade_band_digit_common_factor": "refit",
+        "divisor_lattice_size_principle": "refit",
+        "nearest_decade_digit_factor_span_fill": "refit",
+        "in_range_nearest_decade_digit_factor": "refit",
+        "diminishing_similarity_decade_band": "refit",
+        "variability_tuned_exemplar_gradient": "refit",
+        "accumulated_digit_mismatch_evidence": "refit",
+        "shared_digit_rule_preempts_parity": "refit",
+        "final_digit_rule_suppresses_parity": "refit",
+        "shared_digit_sharpened_decade_band": "refit",
+        "log_compressed_decade_band": "refit",
+        "example_count_diluted_decade_familiarity": "refit",
+        "attention_shift_magnitude_to_digit": "refit",
+        "size_principle_decade_band": "refit",
+        "iter3_candidate4": "refit",
+        "mixed_parity_loosens_criterion": "loop",
+        "rule_gated_decade_familiarity": "loop",
+        "random_program_inference_ruleless": "refit",
+        "position_weighted_rule_gated_digits": "loop",
+        "mutual_similarity_contrast_standard": "loop",
+        "ruleless_set_anything_goes_floor": "loop",
+        "rule_gated_mixed_parity_criterion": "loop",
+        "coincidence_graded_rule_preemption": "loop",
+        "attentional_lapse_biased_guess": "loop",
+        "contains_digit_concept": "loop",
+        "coherence_tuned_attention_gcm": "loop",
+        "shortfall_from_mutual_similarity": "loop",
+        "recognized_example_contrast_standard": "loop",
+        "round_digit_kinship_rule_gated": "loop",
+        "mental_simulation_example_mutation": "loop",
+        "round_counting_privileged_factor": "loop",
+        "even_numbers_privileged_rule": "loop",
+        "round_kin_shortfall_standard": "loop",
+        "example_count_sharpens_decision": "loop",
+        "comparison_load_decision_noise": "loop",
+        "counting_up_from_single_example": "loop",
+        "conservative_bayesian_concept_updating": "loop",
+        "bayesian_digit_feature_concepts": "refit",
+        "factor_seed_visible_counting": "loop",
+        "round_counting_sequence_membership": "loop",
+        "privileged_named_number_concepts": "loop",
+        "sequential_digit_streak_confirmation": "loop",
+        "accumulating_similarity_standard": "loop",
+        "digit_rule_size_principle": "loop",
+        "digit_rule_size_principle_counting": "loop",
+        "conjunctive_example_verification": "loop",
+        "bayesian_digit_rule_veto": "loop",
+        "smoothed_feature_prototype_typicality": "loop",
+        "intrinsic_number_plausibility": "loop"
+      }
+    }
+  ],
+  "pooled": {
+    "runs": [
+      "run1"
+    ],
+    "n_trials": 7560,
+    "best_model": "even_rule_digit_size_principle_counting",
+    "best_seed": "bigelow_piantadosi_independent",
+    "winner_runs": {
+      "even_rule_digit_size_principle_counting": "run1"
+    },
+    "selected_by": "one run: its winner, and the seed with the highest ELPD-CV"
+  },
+  "conditions": [
+    {
+      "number_set": "1",
+      "target": 1,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.7412820161949872,
+      "best_seed": 0.7706595189068373
+    },
+    {
+      "number_set": "1",
+      "target": 2,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.3814070600803764,
+      "best_seed": 0.2279533490730207
+    },
+    {
+      "number_set": "1",
+      "target": 4,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.3814070600803764,
+      "best_seed": 0.10801871750043864
+    },
+    {
+      "number_set": "1",
+      "target": 6,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.3814070600803764,
+      "best_seed": 0.11622396882590855
+    },
+    {
+      "number_set": "1",
+      "target": 8,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.3814070600803764,
+      "best_seed": 0.1610733730289236
+    },
+    {
+      "number_set": "1",
+      "target": 16,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.2492912502050887,
+      "best_seed": 0.3162428538861481
+    },
+    {
+      "number_set": "1",
+      "target": 19,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.543656318351173
+    },
+    {
+      "number_set": "1",
+      "target": 27,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.40306697342180287,
+      "best_seed": 0.283245162280672
+    },
+    {
+      "number_set": "1",
+      "target": 29,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.40306697342180287,
+      "best_seed": 0.3417844072407391
+    },
+    {
+      "number_set": "1",
+      "target": 41,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5796795751234527,
+      "best_seed": 0.6851683516973153
+    },
+    {
+      "number_set": "1",
+      "target": 61,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5792729573893198,
+      "best_seed": 0.6835614896670683
+    },
+    {
+      "number_set": "1",
+      "target": 64,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.22856936575037481,
+      "best_seed": 0.16771971274122877
+    },
+    {
+      "number_set": "1",
+      "target": 81,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5792310583819679,
+      "best_seed": 0.5419969458019008
+    },
+    {
+      "number_set": "1",
+      "target": 91,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.579227171010857,
+      "best_seed": 0.5326934913383595
+    },
+    {
+      "number_set": "1",
+      "target": 94,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.2285371973563483,
+      "best_seed": 0.05954274553193203
+    },
+    {
+      "number_set": "1",
+      "target": 95,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3971239274911327,
+      "best_seed": 0.19205126817857504
+    },
+    {
+      "number_set": "1",
+      "target": 96,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.2285371973563483,
+      "best_seed": 0.07629609833703832
+    },
+    {
+      "number_set": "1",
+      "target": 97,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3971239274911327,
+      "best_seed": 0.28722400106123575
+    },
+    {
+      "number_set": "1",
+      "target": 98,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.2285371973563483,
+      "best_seed": 0.04992699365048167
+    },
+    {
+      "number_set": "1",
+      "target": 99,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.3971239274911327,
+      "best_seed": 0.17980712435867072
+    },
+    {
+      "number_set": "1",
+      "target": 100,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.22853617920278207,
+      "best_seed": 0.26072345461343704
+    },
+    {
+      "number_set": "10",
+      "target": 8,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.3210030919713551
+    },
+    {
+      "number_set": "10",
+      "target": 10,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.9306889885127867,
+      "best_seed": 0.9439126120687809
+    },
+    {
+      "number_set": "10",
+      "target": 28,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.28175805813989163
+    },
+    {
+      "number_set": "10",
+      "target": 38,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.40306697342180287,
+      "best_seed": 0.2641435947350731
+    },
+    {
+      "number_set": "10",
+      "target": 40,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.9053261679114326,
+      "best_seed": 0.6451144590000365
+    },
+    {
+      "number_set": "10",
+      "target": 90,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.8839808124636552,
+      "best_seed": 0.588912324832498
+    },
+    {
+      "number_set": "10",
+      "target": 100,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.8817158067977809,
+      "best_seed": 0.7642026732896542
+    },
+    {
+      "number_set": "10,3",
+      "target": 4,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.6654314215611277
+    },
+    {
+      "number_set": "10,3",
+      "target": 5,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.6717498813581151
+    },
+    {
+      "number_set": "10,3",
+      "target": 6,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.6302449884228432,
+      "best_seed": 0.6763445744706834
+    },
+    {
+      "number_set": "10,3",
+      "target": 7,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.6424343599478787
+    },
+    {
+      "number_set": "10,3",
+      "target": 8,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.6847486613916579
+    },
+    {
+      "number_set": "10,3",
+      "target": 93,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.396970831548042,
+      "best_seed": 0.06470261443603643
+    },
+    {
+      "number_set": "10,3",
+      "target": 100,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.42765268984025034,
+      "best_seed": 0.2678147661498267
+    },
+    {
+      "number_set": "10,80",
+      "target": 40,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.9165085205331819,
+      "best_seed": 0.9827584690533528
+    },
+    {
+      "number_set": "10,80",
+      "target": 50,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.9111532103842505,
+      "best_seed": 0.9814935751104722
+    },
+    {
+      "number_set": "10,80",
+      "target": 100,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.8794789313567716,
+      "best_seed": 0.9802315396145711
+    },
+    {
+      "number_set": "100",
+      "target": 1,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.13086662309002575,
+      "best_seed": 0.07835091405685346
+    },
+    {
+      "number_set": "100",
+      "target": 2,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.3971225138401224,
+      "best_seed": 0.21469694476433235
+    },
+    {
+      "number_set": "100",
+      "target": 3,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.13086662309002575,
+      "best_seed": 0.008657522638304029
+    },
+    {
+      "number_set": "100",
+      "target": 4,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.3971225138401224,
+      "best_seed": 0.2659880230817556
+    },
+    {
+      "number_set": "100",
+      "target": 5,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.13086662309002575,
+      "best_seed": 0.13430370035573624
+    },
+    {
+      "number_set": "100",
+      "target": 6,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.3971225138401224,
+      "best_seed": 0.22179778458474594
+    },
+    {
+      "number_set": "100",
+      "target": 8,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3971225138401224,
+      "best_seed": 0.2681882262692494
+    },
+    {
+      "number_set": "100",
+      "target": 10,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.579227171010857,
+      "best_seed": 0.8561636893217929
+    },
+    {
+      "number_set": "100",
+      "target": 49,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.13088817461818836,
+      "best_seed": 0.029811038113450452
+    },
+    {
+      "number_set": "100",
+      "target": 60,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5796795751234527,
+      "best_seed": 0.7174188468013565
+    },
+    {
+      "number_set": "11",
+      "target": 9,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.2771908941676169
+    },
+    {
+      "number_set": "11",
+      "target": 11,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9086714226209305
+    },
+    {
+      "number_set": "11",
+      "target": 29,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.2637495495811641
+    },
+    {
+      "number_set": "11",
+      "target": 39,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.40306697342180287,
+      "best_seed": 0.18811499177593285
+    },
+    {
+      "number_set": "11",
+      "target": 88,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.4070653523102723,
+      "best_seed": 0.3971087145946275
+    },
+    {
+      "number_set": "11,26,74,2",
+      "target": 2,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5762021817964873,
+      "best_seed": 0.9266963980777958
+    },
+    {
+      "number_set": "11,26,74,2",
+      "target": 12,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5762021817964873,
+      "best_seed": 0.964137843767702
+    },
+    {
+      "number_set": "11,26,74,2",
+      "target": 22,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.712902692261712,
+      "best_seed": 0.9655053642149432
+    },
+    {
+      "number_set": "11,26,74,2",
+      "target": 32,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5762021817964873,
+      "best_seed": 0.9267664039174591
+    },
+    {
+      "number_set": "11,26,74,2",
+      "target": 42,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5762021817964873,
+      "best_seed": 0.8963955283081518
+    },
+    {
+      "number_set": "11,26,74,2",
+      "target": 52,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.712902692261712,
+      "best_seed": 0.8802529687035047
+    },
+    {
+      "number_set": "11,26,74,2",
+      "target": 62,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5762021817964873,
+      "best_seed": 0.8732091808847932
+    },
+    {
+      "number_set": "11,26,74,2",
+      "target": 72,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.5762021817964873,
+      "best_seed": 0.8667525361056565
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 1,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.420326085932449,
+      "best_seed": 0.20122491848869772
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 2,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.3755477341806877,
+      "best_seed": 0.16120980363395826
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 11,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5740252318715561,
+      "best_seed": 0.6756431334960181
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 12,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.6294149301338314
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 21,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5740252318715561,
+      "best_seed": 0.6915109169456916
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 22,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.6713153859239211,
+      "best_seed": 0.6249623009863386
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 31,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5740252318715561,
+      "best_seed": 0.7912844083325018
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 32,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.704333031410494
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 41,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5740252318715561,
+      "best_seed": 0.9126631400048227
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 42,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.7690826432112098
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 51,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5740252318715561,
+      "best_seed": 0.6237283500263011
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 52,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.5327238098158459
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 61,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5740252318715561,
+      "best_seed": 0.5313007895496349
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 62,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.42400976454406636
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 71,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5740252318715561,
+      "best_seed": 0.46541320519920415
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 72,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.3621025339442178
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 81,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5740252318715561,
+      "best_seed": 0.4009866630666192
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 82,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.6713153859239211,
+      "best_seed": 0.3209857761010392
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 91,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5740252318715561,
+      "best_seed": 0.37444048626202014
+    },
+    {
+      "number_set": "11,41,38,92",
+      "target": 92,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.2964507806785534
+    },
+    {
+      "number_set": "12",
+      "target": 12,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9387697091654776
+    },
+    {
+      "number_set": "12",
+      "target": 36,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6752962972451763,
+      "best_seed": 0.5039395092709027
+    },
+    {
+      "number_set": "13",
+      "target": 13,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.8797811632440588
+    },
+    {
+      "number_set": "13",
+      "target": 39,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6752962972451763,
+      "best_seed": 0.4250485039980964
+    },
+    {
+      "number_set": "13",
+      "target": 53,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5796795751234527,
+      "best_seed": 0.48209189973447913
+    },
+    {
+      "number_set": "13",
+      "target": 63,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5793681933655289,
+      "best_seed": 0.3909973597517871
+    },
+    {
+      "number_set": "14",
+      "target": 14,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9130353104443117
+    },
+    {
+      "number_set": "14,47",
+      "target": 36,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.2945138825310607
+    },
+    {
+      "number_set": "14,47",
+      "target": 37,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5740931599159403,
+      "best_seed": 0.2847901450206172
+    },
+    {
+      "number_set": "14,47",
+      "target": 38,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.29607288180088454
+    },
+    {
+      "number_set": "14,47",
+      "target": 39,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.27160916186620104
+    },
+    {
+      "number_set": "14,47",
+      "target": 50,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.3340729391666632,
+      "best_seed": 0.2836043891840212
+    },
+    {
+      "number_set": "14,47",
+      "target": 94,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5425125715460773,
+      "best_seed": 0.6584697257671299
+    },
+    {
+      "number_set": "14,98,91",
+      "target": 21,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5331018535674719,
+      "best_seed": 0.4379297500489918
+    },
+    {
+      "number_set": "14,98,91",
+      "target": 24,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.20880964092157125
+    },
+    {
+      "number_set": "14,98,91",
+      "target": 34,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.2090243691366051
+    },
+    {
+      "number_set": "14,98,91",
+      "target": 44,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.2105997827375085
+    },
+    {
+      "number_set": "14,98,91",
+      "target": 54,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.21332699049843468
+    },
+    {
+      "number_set": "14,98,91",
+      "target": 64,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.21804527970147883
+    },
+    {
+      "number_set": "14,98,91",
+      "target": 74,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.2264657701409037
+    },
+    {
+      "number_set": "14,98,91",
+      "target": 91,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5331018535674719,
+      "best_seed": 0.7985822805065727
+    },
+    {
+      "number_set": "14,98,91",
+      "target": 94,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.5648165478809536
+    },
+    {
+      "number_set": "15",
+      "target": 15,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.9306889885127867,
+      "best_seed": 0.9078554960946763
+    },
+    {
+      "number_set": "15",
+      "target": 45,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.9127866911204217,
+      "best_seed": 0.5928043555647793
+    },
+    {
+      "number_set": "15,11",
+      "target": 41,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.48931512894069545,
+      "best_seed": 0.4691257487371813
+    },
+    {
+      "number_set": "15,11",
+      "target": 51,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.48817544876050206,
+      "best_seed": 0.4403931329661224
+    },
+    {
+      "number_set": "15,17,21,5",
+      "target": 51,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.5589128153249844,
+      "best_seed": 0.2845647578539507
+    },
+    {
+      "number_set": "15,39,35",
+      "target": 38,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.27065102061341906,
+      "best_seed": 0.6008776333964578
+    },
+    {
+      "number_set": "15,39,35",
+      "target": 80,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.15138657900087252,
+      "best_seed": 0.11091274915989328
+    },
+    {
+      "number_set": "15,39,35",
+      "target": 82,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.15138657900087252,
+      "best_seed": 0.0420975378826361
+    },
+    {
+      "number_set": "15,39,35",
+      "target": 86,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.15138657900087252,
+      "best_seed": 0.030974332951280728
+    },
+    {
+      "number_set": "15,39,35",
+      "target": 90,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.1894545461903628,
+      "best_seed": 0.08678812145185048
+    },
+    {
+      "number_set": "15,39,35",
+      "target": 92,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.15133734529437914,
+      "best_seed": 0.0183258096540893
+    },
+    {
+      "number_set": "15,39,35",
+      "target": 94,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.15133734529437914,
+      "best_seed": 0.014189176174597383
+    },
+    {
+      "number_set": "15,39,35",
+      "target": 96,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.15133734529437914,
+      "best_seed": 0.0118924281082104
+    },
+    {
+      "number_set": "15,39,35",
+      "target": 98,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.15133734529437914,
+      "best_seed": 0.00668988313696859
+    },
+    {
+      "number_set": "15,39,35",
+      "target": 100,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.15132131718023445,
+      "best_seed": 0.06519014943137867
+    },
+    {
+      "number_set": "15,85,45",
+      "target": 50,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.31345959901400766,
+      "best_seed": 0.5530576786037023
+    },
+    {
+      "number_set": "15,85,45",
+      "target": 100,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.27897001190907433,
+      "best_seed": 0.28000402965678256
+    },
+    {
+      "number_set": "15,93",
+      "target": 11,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.5716820501582649
+    },
+    {
+      "number_set": "16",
+      "target": 16,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9453115857987293
+    },
+    {
+      "number_set": "16",
+      "target": 96,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.7740989408388117,
+      "best_seed": 0.5966779826776376
+    },
+    {
+      "number_set": "16,8",
+      "target": 8,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.6837352745961426,
+      "best_seed": 0.9444368114988954
+    },
+    {
+      "number_set": "16,8",
+      "target": 16,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.7975300751465666,
+      "best_seed": 0.9758142043180607
+    },
+    {
+      "number_set": "16,8",
+      "target": 96,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.7034839069597011,
+      "best_seed": 0.5696949848499175
+    },
+    {
+      "number_set": "16,8",
+      "target": 100,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.3905410651337636,
+      "best_seed": 0.4766433839590378
+    },
+    {
+      "number_set": "17",
+      "target": 17,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.8777724173101402
+    },
+    {
+      "number_set": "17,11,65,53",
+      "target": 17,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.621814073592518,
+      "best_seed": 0.9787346492054083
+    },
+    {
+      "number_set": "17,11,65,53",
+      "target": 19,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5716736296353201,
+      "best_seed": 0.9769683637838737
+    },
+    {
+      "number_set": "17,11,65,53",
+      "target": 27,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.621814073592518,
+      "best_seed": 0.8751454183616947
+    },
+    {
+      "number_set": "17,11,65,53",
+      "target": 29,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5716736296353201,
+      "best_seed": 0.9679262400887705
+    },
+    {
+      "number_set": "17,11,65,53",
+      "target": 37,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.621814073592518,
+      "best_seed": 0.968381833796172
+    },
+    {
+      "number_set": "17,11,65,53",
+      "target": 39,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5716736296353201,
+      "best_seed": 0.8754472971433156
+    },
+    {
+      "number_set": "17,11,65,53",
+      "target": 47,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.621814073592518,
+      "best_seed": 0.970321420846791
+    },
+    {
+      "number_set": "17,11,65,53",
+      "target": 49,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5716736296353201,
+      "best_seed": 0.8778976822956662
+    },
+    {
+      "number_set": "17,11,65,53",
+      "target": 52,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.2968885398045638,
+      "best_seed": 0.18927011952146772
+    },
+    {
+      "number_set": "17,11,65,53",
+      "target": 57,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.621814073592518,
+      "best_seed": 0.8856102936912253
+    },
+    {
+      "number_set": "17,11,65,53",
+      "target": 59,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5716736296353201,
+      "best_seed": 0.9768114247648738
+    },
+    {
+      "number_set": "17,11,65,53",
+      "target": 67,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.621814073592518,
+      "best_seed": 0.9428681144176968
+    },
+    {
+      "number_set": "17,11,65,53",
+      "target": 69,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5716736296353201,
+      "best_seed": 0.8317699265484527
+    },
+    {
+      "number_set": "18",
+      "target": 18,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9312612911225018
+    },
+    {
+      "number_set": "18",
+      "target": 20,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.5358905588917285
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 1,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.15021975803291088,
+      "best_seed": 0.0003470377650103848
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 4,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5754961604742457
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 6,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5780936742034148
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 10,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5764556531448877
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 14,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5765660658790035
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 16,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.6735191518702446,
+      "best_seed": 0.5777426821505532
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 17,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.15021975803291088,
+      "best_seed": 0.003275076774824698
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 20,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.577262729005819
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 24,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.645353257831317,
+      "best_seed": 0.5799575499013303
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 26,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5761672492482612
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 29,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.15021975803291088,
+      "best_seed": 0.00271475429740171
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 30,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5786239236920938
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 34,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5759414115806312
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 36,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.6735191518702446,
+      "best_seed": 0.5792993272853844
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 40,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.6080932563581622,
+      "best_seed": 0.57695688159323
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 44,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5765709639134515
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 46,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.575791218903326
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 50,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5757667203088351
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 54,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.645353257831317,
+      "best_seed": 0.5783688757969861
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 56,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5855765621226441,
+      "best_seed": 0.5768541621749262
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 60,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5791068741985789
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 64,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5775602615737911,
+      "best_seed": 0.576878407205826
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 66,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5783482234834671
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 70,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5757973863168543
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 74,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5756634180692772
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 76,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5762890613408947
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 79,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.15021975803291088,
+      "best_seed": 0.001985200405256161
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 80,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.565630819257387,
+      "best_seed": 0.5882377746735354
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 84,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.590279580243335
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 90,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.6080932563581622,
+      "best_seed": 0.5774586430692467
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 94,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5746870048155946
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 96,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5573688276076734,
+      "best_seed": 0.5783261382039881
+    },
+    {
+      "number_set": "18,8,72,98",
+      "target": 100,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.37804320874191244,
+      "best_seed": 0.5745518470092235
+    },
+    {
+      "number_set": "2",
+      "target": 1,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.23836018192737374,
+      "best_seed": 0.11303812702892355
+    },
+    {
+      "number_set": "2",
+      "target": 2,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.7412820161949872,
+      "best_seed": 0.886374949589683
+    },
+    {
+      "number_set": "2",
+      "target": 3,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.23836018192737374,
+      "best_seed": 0.15127839139180668
+    },
+    {
+      "number_set": "2",
+      "target": 5,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.23836018192737374,
+      "best_seed": 0.1444736441403724
+    },
+    {
+      "number_set": "2",
+      "target": 7,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.23836018192737374,
+      "best_seed": 0.13133059581009562
+    },
+    {
+      "number_set": "2",
+      "target": 92,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.579227171010857,
+      "best_seed": 0.7338887199959849
+    },
+    {
+      "number_set": "2",
+      "target": 95,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.1308672910222958,
+      "best_seed": 0.025112190549947545
+    },
+    {
+      "number_set": "2",
+      "target": 96,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3971239274911327,
+      "best_seed": 0.35753677530513067
+    },
+    {
+      "number_set": "2",
+      "target": 97,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.1308672910222958,
+      "best_seed": 0.07843686168389777
+    },
+    {
+      "number_set": "2",
+      "target": 98,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.3971239274911327,
+      "best_seed": 0.34255425979142584
+    },
+    {
+      "number_set": "2",
+      "target": 99,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.1308672910222958,
+      "best_seed": 0.017869710103589943
+    },
+    {
+      "number_set": "2",
+      "target": 100,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.3971225138401224,
+      "best_seed": 0.34802140912817114
+    },
+    {
+      "number_set": "2,8",
+      "target": 64,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.4372595190857554,
+      "best_seed": 0.7240190772639508
+    },
+    {
+      "number_set": "2,8",
+      "target": 92,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.4877122279823115,
+      "best_seed": 0.5709044909635802
+    },
+    {
+      "number_set": "2,8",
+      "target": 98,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.4877122279823115,
+      "best_seed": 0.5476376517164792
+    },
+    {
+      "number_set": "2,8",
+      "target": 100,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.3905413038442471,
+      "best_seed": 0.5364011229869635
+    },
+    {
+      "number_set": "20,32,92",
+      "target": 22,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.561008232727151,
+      "best_seed": 0.6379773369919488
+    },
+    {
+      "number_set": "20,32,92",
+      "target": 42,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.561008232727151,
+      "best_seed": 0.6287165387000997
+    },
+    {
+      "number_set": "20,32,92",
+      "target": 62,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.561008232727151,
+      "best_seed": 0.6206485922333101
+    },
+    {
+      "number_set": "22",
+      "target": 22,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9475262270884025
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 1,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.08013330824498525,
+      "best_seed": 0.0005306157828808837
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 3,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.08013330824498525,
+      "best_seed": 0.0016577931641082763
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 4,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.35730802822778246,
+      "best_seed": 0.3215061340502402
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 5,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.08013330824498525,
+      "best_seed": 0.0028865353942213864
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 7,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.08013330824498525,
+      "best_seed": 0.004227275831500166
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 8,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.35730802822778246,
+      "best_seed": 0.32419602871290587
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 9,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.08013330824498525,
+      "best_seed": 0.005698161912867197
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 10,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.37804320874191244,
+      "best_seed": 0.32573572884277796
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 20,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5662187059004956
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 24,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5694766493929552
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 28,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5692889571811092
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 30,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.33921121371739366
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 40,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.3386281582111255
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 48,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.3384891404273189
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 60,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.3404088313381583
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 80,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.33576674582837124
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 90,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.37804320874191244,
+      "best_seed": 0.3268858251129244
+    },
+    {
+      "number_set": "22,62,26,82",
+      "target": 100,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.35730802822778246,
+      "best_seed": 0.3198034228654709
+    },
+    {
+      "number_set": "23",
+      "target": 23,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.8907632097599181
+    },
+    {
+      "number_set": "23,35,95,83",
+      "target": 25,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.6632277602382082,
+      "best_seed": 0.6487854075873158
+    },
+    {
+      "number_set": "23,35,95,83",
+      "target": 27,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.5461511602936266,
+      "best_seed": 0.6251719781067104
+    },
+    {
+      "number_set": "23,35,95,83",
+      "target": 29,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5461511602936266,
+      "best_seed": 0.6279777242819434
+    },
+    {
+      "number_set": "23,35,95,83",
+      "target": 45,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6632277602382082,
+      "best_seed": 0.6479319433570109
+    },
+    {
+      "number_set": "23,35,95,83",
+      "target": 55,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.6632277602382082,
+      "best_seed": 0.646549009546109
+    },
+    {
+      "number_set": "23,35,95,83",
+      "target": 65,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.6632277602382082,
+      "best_seed": 0.6459552497673714
+    },
+    {
+      "number_set": "23,35,95,83",
+      "target": 75,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.6632277602382082,
+      "best_seed": 0.6460295012960295
+    },
+    {
+      "number_set": "25",
+      "target": 24,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3814070600803764,
+      "best_seed": 0.4400004255325406
+    },
+    {
+      "number_set": "25",
+      "target": 25,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.9306889885127867,
+      "best_seed": 0.917355064081666
+    },
+    {
+      "number_set": "25",
+      "target": 26,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3814070600803764,
+      "best_seed": 0.4487746574923526
+    },
+    {
+      "number_set": "25",
+      "target": 100,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.6721942812920266,
+      "best_seed": 0.17934947701480444
+    },
+    {
+      "number_set": "26",
+      "target": 26,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9419263817838088
+    },
+    {
+      "number_set": "27,37,67",
+      "target": 71,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.14603307754228495,
+      "best_seed": 0.29808855399434997
+    },
+    {
+      "number_set": "29,62,98",
+      "target": 8,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.4002155214314269,
+      "best_seed": 0.3092140543734726
+    },
+    {
+      "number_set": "29,62,98",
+      "target": 58,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.7123409330556906,
+      "best_seed": 0.47955442814841703
+    },
+    {
+      "number_set": "29,62,98",
+      "target": 60,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5143394662391355,
+      "best_seed": 0.4855084570570685
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 19,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5987005770320688,
+      "best_seed": 0.6333237132429393
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 29,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5987005770320688,
+      "best_seed": 0.6439800039305378
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 31,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.6434308062734172
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 39,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.5987005770320688,
+      "best_seed": 0.5745341466565614
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 49,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5987005770320688,
+      "best_seed": 0.5439094366899497
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 51,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.645353257831317,
+      "best_seed": 0.5401527684192042
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 59,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5987005770320688,
+      "best_seed": 0.5875998480995402
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 61,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5855594554349576
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 69,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5987005770320688,
+      "best_seed": 0.522340297106852
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 75,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5303578397224525,
+      "best_seed": 0.5969057680804574
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 90,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.14629997255845484,
+      "best_seed": 0.028151368461441277
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 91,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.35730802822778246,
+      "best_seed": 0.4573618191379525
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 92,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.14629997255845484,
+      "best_seed": 0.02204261645461307
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 93,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.35730802822778246,
+      "best_seed": 0.45153595203193625
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 94,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.14629997255845484,
+      "best_seed": 0.016432393883167314
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 95,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.35730802822778246,
+      "best_seed": 0.4460729860032473
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 96,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.14629997255845484,
+      "best_seed": 0.011304243991941985
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 98,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.14629997255845484,
+      "best_seed": 0.006572788582826748
+    },
+    {
+      "number_set": "29,77,37,17",
+      "target": 100,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.1440135424775964,
+      "best_seed": 0.002155394998307815
+    },
+    {
+      "number_set": "29,9,3,31",
+      "target": 81,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.47954079450221304,
+      "best_seed": 0.5589559578912958
+    },
+    {
+      "number_set": "3",
+      "target": 2,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.3814070600803764,
+      "best_seed": 0.2662630852831758
+    },
+    {
+      "number_set": "3",
+      "target": 3,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.7948540785351232
+    },
+    {
+      "number_set": "3",
+      "target": 6,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6825694352960449,
+      "best_seed": 0.2198586346171239
+    },
+    {
+      "number_set": "3",
+      "target": 8,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.3814070600803764,
+      "best_seed": 0.18039503581953983
+    },
+    {
+      "number_set": "3",
+      "target": 12,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.4829919937257695,
+      "best_seed": 0.18720013383039297
+    },
+    {
+      "number_set": "3",
+      "target": 27,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.603474748541392,
+      "best_seed": 0.2790252047545056
+    },
+    {
+      "number_set": "3",
+      "target": 33,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.7497365006353458,
+      "best_seed": 0.5616945138236316
+    },
+    {
+      "number_set": "3",
+      "target": 81,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5631239170211612,
+      "best_seed": 0.22133418147662118
+    },
+    {
+      "number_set": "3",
+      "target": 84,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.3666200336431164,
+      "best_seed": 0.09074053600841495
+    },
+    {
+      "number_set": "3",
+      "target": 90,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.36587605919231475,
+      "best_seed": 0.09186508363374245
+    },
+    {
+      "number_set": "3",
+      "target": 93,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.7278578302660154,
+      "best_seed": 0.48423602379139574
+    },
+    {
+      "number_set": "3",
+      "target": 96,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3652706385935908,
+      "best_seed": 0.08320307121325678
+    },
+    {
+      "number_set": "3",
+      "target": 97,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.3971239274911327,
+      "best_seed": 0.2632156414202075
+    },
+    {
+      "number_set": "3",
+      "target": 98,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.2285371973563483,
+      "best_seed": 0.046488519580852226
+    },
+    {
+      "number_set": "3",
+      "target": 99,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5609452463953305,
+      "best_seed": 0.17645161871377893
+    },
+    {
+      "number_set": "3",
+      "target": 100,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.22853617920278207,
+      "best_seed": 0.05506151770030655
+    },
+    {
+      "number_set": "3,31",
+      "target": 93,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.6055390533863371,
+      "best_seed": 0.6985963873648767
+    },
+    {
+      "number_set": "3,33,99",
+      "target": 39,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6719704769943982,
+      "best_seed": 0.48734539490616363
+    },
+    {
+      "number_set": "3,33,99",
+      "target": 60,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.29760169538049136,
+      "best_seed": 0.07073447496059317
+    },
+    {
+      "number_set": "3,33,99",
+      "target": 63,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.7176168857345266,
+      "best_seed": 0.5146763834664
+    },
+    {
+      "number_set": "3,33,99",
+      "target": 93,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.7128960965089164,
+      "best_seed": 0.5136477215647056
+    },
+    {
+      "number_set": "3,33,99",
+      "target": 96,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.2916259586021675,
+      "best_seed": 0.06908965156932585
+    },
+    {
+      "number_set": "3,63",
+      "target": 1,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.2499027802037942,
+      "best_seed": 0.1320351420825749
+    },
+    {
+      "number_set": "3,63",
+      "target": 5,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.2499027802037942,
+      "best_seed": 0.1466256065486168
+    },
+    {
+      "number_set": "3,63",
+      "target": 31,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.2499027802037942,
+      "best_seed": 0.6717421502255443
+    },
+    {
+      "number_set": "3,63",
+      "target": 33,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.7747322232005859,
+      "best_seed": 0.9280892563011071
+    },
+    {
+      "number_set": "3,63",
+      "target": 38,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.14088664556867334,
+      "best_seed": 0.5519454867509215
+    },
+    {
+      "number_set": "3,63",
+      "target": 39,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.41098048597957454,
+      "best_seed": 0.6875114281893017
+    },
+    {
+      "number_set": "3,63",
+      "target": 67,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.2499027802037942,
+      "best_seed": 0.19409212736717266
+    },
+    {
+      "number_set": "3,63",
+      "target": 72,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.21841972353194494,
+      "best_seed": 0.056084703483962786
+    },
+    {
+      "number_set": "3,63",
+      "target": 84,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.21328290087638424,
+      "best_seed": 0.0370700065834826
+    },
+    {
+      "number_set": "3,63",
+      "target": 90,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.2119869078506862,
+      "best_seed": 0.030033653055565563
+    },
+    {
+      "number_set": "3,63",
+      "target": 96,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.21155123125574427,
+      "best_seed": 0.042944344288838074
+    },
+    {
+      "number_set": "3,7",
+      "target": 4,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.2968885398045638,
+      "best_seed": 0.517405225165331
+    },
+    {
+      "number_set": "3,7",
+      "target": 6,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.4364129158884584,
+      "best_seed": 0.525277590573681
+    },
+    {
+      "number_set": "3,7",
+      "target": 8,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.2968885398045638,
+      "best_seed": 0.4431122291417204
+    },
+    {
+      "number_set": "3,7",
+      "target": 23,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.49390885377277044,
+      "best_seed": 0.5549187631546398
+    },
+    {
+      "number_set": "3,7",
+      "target": 37,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.48931512894069545,
+      "best_seed": 0.5045348643898429
+    },
+    {
+      "number_set": "3,7",
+      "target": 43,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.48817544876050206,
+      "best_seed": 0.48593460421352663
+    },
+    {
+      "number_set": "3,7",
+      "target": 47,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.48817544876050206,
+      "best_seed": 0.46902091056646394
+    },
+    {
+      "number_set": "3,7",
+      "target": 49,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.445821437921018,
+      "best_seed": 0.22996799328922535
+    },
+    {
+      "number_set": "3,7",
+      "target": 53,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.4878564693712679,
+      "best_seed": 0.4707035790348823
+    },
+    {
+      "number_set": "3,7",
+      "target": 73,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.48772718280209315,
+      "best_seed": 0.45606809728454867
+    },
+    {
+      "number_set": "3,7",
+      "target": 93,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.4919408805582577,
+      "best_seed": 0.20281305139581599
+    },
+    {
+      "number_set": "3,7",
+      "target": 97,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.4877122279823115,
+      "best_seed": 0.42669523406621834
+    },
+    {
+      "number_set": "3,81",
+      "target": 5,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.32221562374223306
+    },
+    {
+      "number_set": "3,81",
+      "target": 7,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.3198156427946747
+    },
+    {
+      "number_set": "3,81",
+      "target": 17,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.3397400088420925
+    },
+    {
+      "number_set": "3,81",
+      "target": 19,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.34101544896017
+    },
+    {
+      "number_set": "3,81",
+      "target": 25,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.31351131559125095
+    },
+    {
+      "number_set": "3,81",
+      "target": 29,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.32523185590703657
+    },
+    {
+      "number_set": "3,81",
+      "target": 35,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.3431684167531768
+    },
+    {
+      "number_set": "3,81",
+      "target": 37,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.3535654056180116
+    },
+    {
+      "number_set": "3,81",
+      "target": 47,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.3346137984774879
+    },
+    {
+      "number_set": "3,81",
+      "target": 49,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.3261561746666303
+    },
+    {
+      "number_set": "3,81",
+      "target": 55,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.3315132005366822
+    },
+    {
+      "number_set": "3,81",
+      "target": 59,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.3449925098011094
+    },
+    {
+      "number_set": "3,81",
+      "target": 67,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.35351030037834363
+    },
+    {
+      "number_set": "3,81",
+      "target": 89,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.3415700990549345
+    },
+    {
+      "number_set": "3,87",
+      "target": 11,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.6359580379409135
+    },
+    {
+      "number_set": "3,87",
+      "target": 19,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.6367957431405685
+    },
+    {
+      "number_set": "3,87",
+      "target": 25,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.6178620836581904
+    },
+    {
+      "number_set": "3,87",
+      "target": 27,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.7181429981353508,
+      "best_seed": 0.7251959640235329
+    },
+    {
+      "number_set": "3,87",
+      "target": 31,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.6912059215572894
+    },
+    {
+      "number_set": "3,87",
+      "target": 35,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.6739167870526848
+    },
+    {
+      "number_set": "3,87",
+      "target": 57,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6942482646260305,
+      "best_seed": 0.743779311591327
+    },
+    {
+      "number_set": "30",
+      "target": 28,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.424233264180075
+    },
+    {
+      "number_set": "30",
+      "target": 30,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.9306889885127867,
+      "best_seed": 0.9595673558751674
+    },
+    {
+      "number_set": "30",
+      "target": 48,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.4099160205065828
+    },
+    {
+      "number_set": "30",
+      "target": 58,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.40306697342180287,
+      "best_seed": 0.2797623959176346
+    },
+    {
+      "number_set": "30",
+      "target": 60,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.9219856141277997,
+      "best_seed": 0.6964950083666501
+    },
+    {
+      "number_set": "31",
+      "target": 29,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.5685265335944573
+    },
+    {
+      "number_set": "31",
+      "target": 31,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9158330281758514
+    },
+    {
+      "number_set": "31",
+      "target": 49,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.34001867191739543
+    },
+    {
+      "number_set": "31",
+      "target": 59,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.40306697342180287,
+      "best_seed": 0.32314077485676174
+    },
+    {
+      "number_set": "31,19,49,100",
+      "target": 1,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.42218986458704116,
+      "best_seed": 0.7661532598172994
+    },
+    {
+      "number_set": "31,19,49,100",
+      "target": 29,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6204947238451294,
+      "best_seed": 0.32468127408111463
+    },
+    {
+      "number_set": "31,3,1",
+      "target": 21,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.7365724737451199,
+      "best_seed": 0.35815847348923247
+    },
+    {
+      "number_set": "31,3,1",
+      "target": 31,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.6912682703358132,
+      "best_seed": 0.9747642727299257
+    },
+    {
+      "number_set": "31,3,1",
+      "target": 71,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5185789385635204,
+      "best_seed": 0.8880757639275676
+    },
+    {
+      "number_set": "31,3,1",
+      "target": 80,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.15138657900087252,
+      "best_seed": 0.003562476406646407
+    },
+    {
+      "number_set": "31,3,1",
+      "target": 83,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.4504798273591233,
+      "best_seed": 0.8465224057847611
+    },
+    {
+      "number_set": "31,3,1",
+      "target": 84,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.15421615695142024,
+      "best_seed": 0.002815812643728878
+    },
+    {
+      "number_set": "31,3,1",
+      "target": 90,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.15373929230513259,
+      "best_seed": 0.0018444337869628054
+    },
+    {
+      "number_set": "31,3,1",
+      "target": 92,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.15133734529437914,
+      "best_seed": 0.0014359076487266166
+    },
+    {
+      "number_set": "31,3,1",
+      "target": 94,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.15133734529437914,
+      "best_seed": 0.0011195070577739287
+    },
+    {
+      "number_set": "31,3,1",
+      "target": 96,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.15339087215746092,
+      "best_seed": 0.0009739495318650356
+    },
+    {
+      "number_set": "31,3,1",
+      "target": 98,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.15133734529437914,
+      "best_seed": 0.0005604437015089849
+    },
+    {
+      "number_set": "31,3,1",
+      "target": 100,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.15132131718023445,
+      "best_seed": 0.03863166654079327
+    },
+    {
+      "number_set": "31,3,1,15",
+      "target": 81,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.49338946896750024,
+      "best_seed": 0.7990252983357244
+    },
+    {
+      "number_set": "31,3,1,15",
+      "target": 91,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.48745252795786725,
+      "best_seed": 0.7964563866966632
+    },
+    {
+      "number_set": "32,4,16",
+      "target": 100,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5574247466133454,
+      "best_seed": 0.41785440708794425
+    },
+    {
+      "number_set": "33",
+      "target": 33,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.930705088320262
+    },
+    {
+      "number_set": "33,17,5,9",
+      "target": 1,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5716736296353201,
+      "best_seed": 0.5738586750694424
+    },
+    {
+      "number_set": "33,17,5,9",
+      "target": 3,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.621814073592518,
+      "best_seed": 0.7525214556372474
+    },
+    {
+      "number_set": "33,17,5,9",
+      "target": 11,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5716736296353201,
+      "best_seed": 0.9948652210671267
+    },
+    {
+      "number_set": "33,17,5,9",
+      "target": 13,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.621814073592518,
+      "best_seed": 0.9943400667674188
+    },
+    {
+      "number_set": "33,17,5,9",
+      "target": 21,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5716736296353201,
+      "best_seed": 0.959199426648886
+    },
+    {
+      "number_set": "33,17,5,9",
+      "target": 31,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5716736296353201,
+      "best_seed": 0.9299500171043168
+    },
+    {
+      "number_set": "33,17,5,9",
+      "target": 33,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.621814073592518,
+      "best_seed": 0.9257225742038584
+    },
+    {
+      "number_set": "33,17,5,9",
+      "target": 63,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.49875220648739116,
+      "best_seed": 0.546014504323795
+    },
+    {
+      "number_set": "33,17,5,9",
+      "target": 65,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.4666380394566381,
+      "best_seed": 0.5402955556586281
+    },
+    {
+      "number_set": "33,17,5,9",
+      "target": 67,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.4427145399047698,
+      "best_seed": 0.5367428110222672
+    },
+    {
+      "number_set": "33,17,5,9",
+      "target": 81,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.4307528231076087,
+      "best_seed": 0.5112939380117301
+    },
+    {
+      "number_set": "33,17,5,9",
+      "target": 95,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.4533299820965013,
+      "best_seed": 0.49917581415754597
+    },
+    {
+      "number_set": "33,3",
+      "target": 54,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.21888180645219296,
+      "best_seed": 0.0554097703696558
+    },
+    {
+      "number_set": "33,3",
+      "target": 60,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.21637636884138065,
+      "best_seed": 0.04877386744200507
+    },
+    {
+      "number_set": "33,3",
+      "target": 66,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.32665648712992595,
+      "best_seed": 0.07374009703896572
+    },
+    {
+      "number_set": "33,3",
+      "target": 72,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.2138106624990986,
+      "best_seed": 0.0364369298583372
+    },
+    {
+      "number_set": "33,3",
+      "target": 78,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.21298719561086127,
+      "best_seed": 0.03133196832988
+    },
+    {
+      "number_set": "34,86,30,94",
+      "target": 2,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3815482111874287,
+      "best_seed": 0.9573236227029176
+    },
+    {
+      "number_set": "34,86,30,94",
+      "target": 6,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.4399446590795195,
+      "best_seed": 0.9598523957351921
+    },
+    {
+      "number_set": "34,86,30,94",
+      "target": 100,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.46655311531931976,
+      "best_seed": 0.9595413214922637
+    },
+    {
+      "number_set": "35",
+      "target": 35,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.9306889885127867,
+      "best_seed": 0.9318266376550695
+    },
+    {
+      "number_set": "36",
+      "target": 36,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9674104597502132
+    },
+    {
+      "number_set": "36,45,54,81",
+      "target": 31,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.39004258843951006,
+      "best_seed": 0.2129074721906223
+    },
+    {
+      "number_set": "36,45,54,81",
+      "target": 36,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5500229580267914,
+      "best_seed": 0.9746879267809678
+    },
+    {
+      "number_set": "36,45,54,81",
+      "target": 41,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.39004258843951006,
+      "best_seed": 0.316757268797684
+    },
+    {
+      "number_set": "36,45,54,81",
+      "target": 46,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.39004258843951006,
+      "best_seed": 0.3264220178721081
+    },
+    {
+      "number_set": "36,45,54,81",
+      "target": 51,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.39004258843951006,
+      "best_seed": 0.4420008918640354
+    },
+    {
+      "number_set": "36,45,54,81",
+      "target": 56,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.39004258843951006,
+      "best_seed": 0.31110258081268427
+    },
+    {
+      "number_set": "36,45,54,81",
+      "target": 61,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.39004258843951006,
+      "best_seed": 0.27524841557260166
+    },
+    {
+      "number_set": "36,45,54,81",
+      "target": 63,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5026625009915855,
+      "best_seed": 0.924632483202313
+    },
+    {
+      "number_set": "36,45,54,81",
+      "target": 66,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.39004258843951006,
+      "best_seed": 0.3869688078007667
+    },
+    {
+      "number_set": "36,45,54,81",
+      "target": 71,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.39004258843951006,
+      "best_seed": 0.245853027717152
+    },
+    {
+      "number_set": "36,45,54,81",
+      "target": 76,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.39004258843951006,
+      "best_seed": 0.2407002398208994
+    },
+    {
+      "number_set": "36,45,54,81",
+      "target": 81,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5500229580267914,
+      "best_seed": 0.8878267558954741
+    },
+    {
+      "number_set": "36,45,54,81",
+      "target": 86,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.39004258843951006,
+      "best_seed": 0.14963265854487323
+    },
+    {
+      "number_set": "38,18,3",
+      "target": 19,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.41826426748856815,
+      "best_seed": 0.29938225594642853
+    },
+    {
+      "number_set": "38,18,3",
+      "target": 20,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5082074455320724,
+      "best_seed": 0.42417148154748263
+    },
+    {
+      "number_set": "38,18,3",
+      "target": 58,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.4604026590148049,
+      "best_seed": 0.627396321247518
+    },
+    {
+      "number_set": "38,18,3",
+      "target": 68,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.45583862489777904,
+      "best_seed": 0.5884029347631666
+    },
+    {
+      "number_set": "38,18,3",
+      "target": 73,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3290694452968357,
+      "best_seed": 0.20479672187354014
+    },
+    {
+      "number_set": "38,18,3",
+      "target": 83,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.3287897858781875,
+      "best_seed": 0.20283467029760405
+    },
+    {
+      "number_set": "38,18,3",
+      "target": 93,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.3324727508311639,
+      "best_seed": 0.16933432544336197
+    },
+    {
+      "number_set": "39",
+      "target": 11,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.40306697342180287,
+      "best_seed": 0.16180897139257158
+    },
+    {
+      "number_set": "39",
+      "target": 21,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.2622681275353537
+    },
+    {
+      "number_set": "39",
+      "target": 39,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9270887201143285
+    },
+    {
+      "number_set": "39",
+      "target": 41,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.5127685280760583
+    },
+    {
+      "number_set": "39,60,12,45",
+      "target": 40,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.39004258843951006,
+      "best_seed": 0.6443887534984377
+    },
+    {
+      "number_set": "39,60,12,45",
+      "target": 41,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.3458333983320166,
+      "best_seed": 0.6128830249318117
+    },
+    {
+      "number_set": "39,60,12,45",
+      "target": 43,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.3458333983320166,
+      "best_seed": 0.6139389655839897
+    },
+    {
+      "number_set": "39,60,12,45",
+      "target": 44,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.3458333983320166,
+      "best_seed": 0.6285670733324241
+    },
+    {
+      "number_set": "39,60,12,45",
+      "target": 46,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.3458333983320166,
+      "best_seed": 0.6186506297325622
+    },
+    {
+      "number_set": "4",
+      "target": 1,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.23836018192737374,
+      "best_seed": 0.0451204780749485
+    },
+    {
+      "number_set": "4",
+      "target": 3,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.23836018192737374,
+      "best_seed": 0.12638518631231516
+    },
+    {
+      "number_set": "4",
+      "target": 4,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.8848051814967337
+    },
+    {
+      "number_set": "4",
+      "target": 5,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.23836018192737374,
+      "best_seed": 0.16448865971159674
+    },
+    {
+      "number_set": "4",
+      "target": 7,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.23836018192737374,
+      "best_seed": 0.13671027741885322
+    },
+    {
+      "number_set": "4",
+      "target": 9,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.23836018192737374,
+      "best_seed": 0.12738173306605785
+    },
+    {
+      "number_set": "4",
+      "target": 24,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.7783529534792036,
+      "best_seed": 0.7410544043207977
+    },
+    {
+      "number_set": "4",
+      "target": 28,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.6176759756606617,
+      "best_seed": 0.5058571331322002
+    },
+    {
+      "number_set": "4",
+      "target": 34,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.5807898648386653,
+      "best_seed": 0.6456662534556066
+    },
+    {
+      "number_set": "4",
+      "target": 84,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.7324340177908378,
+      "best_seed": 0.683345412336012
+    },
+    {
+      "number_set": "4",
+      "target": 92,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5655482840524252,
+      "best_seed": 0.4483964165351424
+    },
+    {
+      "number_set": "4",
+      "target": 94,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.579227171010857,
+      "best_seed": 0.5864200604547876
+    },
+    {
+      "number_set": "4",
+      "target": 96,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5648360342754836,
+      "best_seed": 0.4515778111047365
+    },
+    {
+      "number_set": "4",
+      "target": 97,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.1308672910222958,
+      "best_seed": 0.018639499762360057
+    },
+    {
+      "number_set": "4",
+      "target": 98,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.3971239274911327,
+      "best_seed": 0.35398402400461715
+    },
+    {
+      "number_set": "4",
+      "target": 99,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.1308672910222958,
+      "best_seed": 0.018830487218883262
+    },
+    {
+      "number_set": "4",
+      "target": 100,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5641986555615421,
+      "best_seed": 0.44094152679492443
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 5,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.10912965139955372,
+      "best_seed": 0.25347813266854163
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 6,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.4998947697381626,
+      "best_seed": 0.5995628520060832
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 7,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.10912965139955372,
+      "best_seed": 0.25815994325714603
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 9,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.10912965139955372,
+      "best_seed": 0.264198530273797
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 10,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.6248074402942779
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 11,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.10912965139955372,
+      "best_seed": 0.28752512137068553
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 12,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.7546458858735137,
+      "best_seed": 0.9519611962609373
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 13,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.10912965139955372,
+      "best_seed": 0.2920420114693903
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 14,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.4998947697381626,
+      "best_seed": 0.6336325056002751
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 15,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.10912965139955372,
+      "best_seed": 0.2907276411374529
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 28,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6118769287580249,
+      "best_seed": 0.7375182641730932
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 36,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.722650352385919,
+      "best_seed": 0.7059653777887472
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 48,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.6641089260291395,
+      "best_seed": 0.6821670693265223
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 64,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.702816064467656,
+      "best_seed": 0.7144313707883065
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 88,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5595801146000939,
+      "best_seed": 0.6598166066345668
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 92,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.6242940473092864,
+      "best_seed": 0.6600096407095696
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 96,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.6770111352851017,
+      "best_seed": 0.660471398260763
+    },
+    {
+      "number_set": "4,16,12",
+      "target": 100,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5574205952193626,
+      "best_seed": 0.6726635109475011
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 1,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.24386628979677172
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 4,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5740252318715561,
+      "best_seed": 0.7903652156599734
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 11,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.23142886887067884
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 14,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5740252318715561,
+      "best_seed": 0.4582211941860444
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 21,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.29209676778070987
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 24,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6371318848884426,
+      "best_seed": 0.5580997684133385
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 31,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.3226573570498938
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 34,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5740252318715561,
+      "best_seed": 0.5328079463656751
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 41,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.3877445798649002
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 44,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.6039725287867485,
+      "best_seed": 0.5699105488720576
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 51,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.33628462672294546
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 54,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.5740252318715561,
+      "best_seed": 0.5501985376033297
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 61,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.3549623791112433
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 64,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5903595461628445,
+      "best_seed": 0.9542896035882626
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 71,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.3431756331175095
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 74,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5740252318715561,
+      "best_seed": 0.5471132971845851
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 81,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5277678849705505,
+      "best_seed": 0.5083016700829277
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 84,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.5837558461908195,
+      "best_seed": 0.5044562106525051
+    },
+    {
+      "number_set": "4,64,25,81",
+      "target": 94,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.420326085932449,
+      "best_seed": 0.3101514205886182
+    },
+    {
+      "number_set": "4,66,78,96",
+      "target": 70,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5607728958852982,
+      "best_seed": 0.7874391861170748
+    },
+    {
+      "number_set": "4,66,78,96",
+      "target": 74,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6191689779534223,
+      "best_seed": 0.7875790470203616
+    },
+    {
+      "number_set": "4,66,78,96",
+      "target": 76,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6751985179725454,
+      "best_seed": 0.802662729327298
+    },
+    {
+      "number_set": "42,35,21,84",
+      "target": 22,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.39004258843951006,
+      "best_seed": 0.23521729992112053
+    },
+    {
+      "number_set": "42,62",
+      "target": 43,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.07696311002756212,
+      "best_seed": 0.13201662255029856
+    },
+    {
+      "number_set": "43",
+      "target": 43,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9199404894256263
+    },
+    {
+      "number_set": "43,4,91,9",
+      "target": 81,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.6156707373281826,
+      "best_seed": 0.5612535948908636
+    },
+    {
+      "number_set": "44",
+      "target": 44,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9548766554329445
+    },
+    {
+      "number_set": "47",
+      "target": 47,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9128277691558184
+    },
+    {
+      "number_set": "48",
+      "target": 20,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.40306697342180287,
+      "best_seed": 0.3465209429695893
+    },
+    {
+      "number_set": "48",
+      "target": 30,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.47424078091568805
+    },
+    {
+      "number_set": "48",
+      "target": 48,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9529083959968878
+    },
+    {
+      "number_set": "48",
+      "target": 50,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.548922812315758
+    },
+    {
+      "number_set": "48,63,53",
+      "target": 13,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.45583862489777904,
+      "best_seed": 0.12324792285827374
+    },
+    {
+      "number_set": "48,63,53",
+      "target": 18,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.3300728512508063,
+      "best_seed": 0.10480680863930879
+    },
+    {
+      "number_set": "48,63,53",
+      "target": 23,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.4604026590148049,
+      "best_seed": 0.20546819481785125
+    },
+    {
+      "number_set": "48,63,53",
+      "target": 33,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.48256336145006323,
+      "best_seed": 0.35068773220390387
+    },
+    {
+      "number_set": "48,63,53",
+      "target": 83,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.4604026590148049,
+      "best_seed": 0.2308336776553264
+    },
+    {
+      "number_set": "48,63,53",
+      "target": 93,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.45583862489777904,
+      "best_seed": 0.11784279608851395
+    },
+    {
+      "number_set": "48,78,38,98",
+      "target": 30,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.10666286375333058,
+      "best_seed": 0.015468995255625109
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 3,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5966023829873837,
+      "best_seed": 0.7531217386153086
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 8,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.3739622634551466,
+      "best_seed": 0.10447884633748057
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 13,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.221273283638133
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 23,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.23148122513765626
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 28,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3739622634551466,
+      "best_seed": 0.12356017600492236
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 33,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.6261230832289337,
+      "best_seed": 0.8161182836882669
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 38,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.3739622634551466,
+      "best_seed": 0.14615169286678362
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 43,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.2763909619513952
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 53,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.26401795020481295
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 58,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.3739622634551466,
+      "best_seed": 0.12944190536409075
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 63,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.606234695804248,
+      "best_seed": 0.7709363863537542
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 68,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.3739622634551466,
+      "best_seed": 0.11787255587921222
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 73,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.22434116010938926
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 83,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.21362441383570793
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 88,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.3739622634551466,
+      "best_seed": 0.1347073929488591
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 93,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6006801106324635,
+      "best_seed": 0.7510222097144374
+    },
+    {
+      "number_set": "48,99,3",
+      "target": 98,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.3739622634551466,
+      "best_seed": 0.096786179582186
+    },
+    {
+      "number_set": "49",
+      "target": 21,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.40306697342180287,
+      "best_seed": 0.1997843286717684
+    },
+    {
+      "number_set": "49",
+      "target": 31,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.2848535466454646
+    },
+    {
+      "number_set": "49",
+      "target": 51,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.498466426305618
+    },
+    {
+      "number_set": "5",
+      "target": 2,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.3814070600803764,
+      "best_seed": 0.15606036363465484
+    },
+    {
+      "number_set": "5",
+      "target": 4,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3814070600803764,
+      "best_seed": 0.17372741757773183
+    },
+    {
+      "number_set": "5",
+      "target": 5,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.9306889885127867,
+      "best_seed": 0.8760524605187451
+    },
+    {
+      "number_set": "5",
+      "target": 6,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.3814070600803764,
+      "best_seed": 0.21215207260527846
+    },
+    {
+      "number_set": "5",
+      "target": 25,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.9009659469927739,
+      "best_seed": 0.7048713453090463
+    },
+    {
+      "number_set": "5",
+      "target": 35,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.8905641462554852,
+      "best_seed": 0.6379311948578857
+    },
+    {
+      "number_set": "5",
+      "target": 80,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5988297626766299,
+      "best_seed": 0.2616413070688604
+    },
+    {
+      "number_set": "5",
+      "target": 85,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.8729079251116211,
+      "best_seed": 0.5770985738357614
+    },
+    {
+      "number_set": "5",
+      "target": 90,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5956592745005583,
+      "best_seed": 0.2527556884227723
+    },
+    {
+      "number_set": "5",
+      "target": 95,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.8716231590467927,
+      "best_seed": 0.5664972355347424
+    },
+    {
+      "number_set": "5",
+      "target": 99,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.3971239274911327,
+      "best_seed": 0.10586963426067307
+    },
+    {
+      "number_set": "5",
+      "target": 100,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.5932322054134055,
+      "best_seed": 0.23466569175694005
+    },
+    {
+      "number_set": "5,65",
+      "target": 35,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.9032972811059946,
+      "best_seed": 0.9611306381448202
+    },
+    {
+      "number_set": "5,65",
+      "target": 50,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.47094401886732573,
+      "best_seed": 0.6511517648815583
+    },
+    {
+      "number_set": "5,65",
+      "target": 80,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.4116216300896577,
+      "best_seed": 0.3443490000130924
+    },
+    {
+      "number_set": "5,65",
+      "target": 90,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.40733735007088595,
+      "best_seed": 0.33643552614895267
+    },
+    {
+      "number_set": "5,65",
+      "target": 100,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.40463554966822063,
+      "best_seed": 0.3297608005781819
+    },
+    {
+      "number_set": "5,77,89",
+      "target": 5,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.6365710506589181,
+      "best_seed": 0.8387340106712581
+    },
+    {
+      "number_set": "5,9",
+      "target": 6,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.2968885398045638,
+      "best_seed": 0.7124055046554554
+    },
+    {
+      "number_set": "5,9",
+      "target": 7,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.5716736296353201,
+      "best_seed": 0.8870790697753324
+    },
+    {
+      "number_set": "5,9",
+      "target": 8,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.2968885398045638,
+      "best_seed": 0.7162011638044532
+    },
+    {
+      "number_set": "5,9",
+      "target": 45,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5673319186124305,
+      "best_seed": 0.29092867250508025
+    },
+    {
+      "number_set": "5,9",
+      "target": 49,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.48817544876050206,
+      "best_seed": 0.269118535092539
+    },
+    {
+      "number_set": "5,9",
+      "target": 81,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.4306157821356356,
+      "best_seed": 0.18930232077988696
+    },
+    {
+      "number_set": "5,9",
+      "target": 95,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.4999692606383148,
+      "best_seed": 0.24130192461860553
+    },
+    {
+      "number_set": "5,9",
+      "target": 99,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5188434265064535,
+      "best_seed": 0.20755074012294442
+    },
+    {
+      "number_set": "50",
+      "target": 48,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.49160851565714836
+    },
+    {
+      "number_set": "50",
+      "target": 68,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.337767907001331
+    },
+    {
+      "number_set": "50",
+      "target": 78,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.40306697342180287,
+      "best_seed": 0.27607910552615383
+    },
+    {
+      "number_set": "51",
+      "target": 49,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.5699846200949716
+    },
+    {
+      "number_set": "51",
+      "target": 79,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.40306697342180287,
+      "best_seed": 0.23402820977592884
+    },
+    {
+      "number_set": "53,2",
+      "target": 92,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.39334776696126394,
+      "best_seed": 0.18665519765807456
+    },
+    {
+      "number_set": "54,14,94,34",
+      "target": 36,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.10666286375333058,
+      "best_seed": 0.030303994703295176
+    },
+    {
+      "number_set": "55,15,75,45",
+      "target": 10,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.21486815528690179,
+      "best_seed": 0.19964485167271762
+    },
+    {
+      "number_set": "55,15,75,45",
+      "target": 20,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.21486815528690179,
+      "best_seed": 0.20022188278560693
+    },
+    {
+      "number_set": "55,15,75,45",
+      "target": 30,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.33239596384039105,
+      "best_seed": 0.2004162332275367
+    },
+    {
+      "number_set": "55,15,75,45",
+      "target": 40,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.21486815528690179,
+      "best_seed": 0.20057612296825733
+    },
+    {
+      "number_set": "55,15,75,45",
+      "target": 50,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.21486815528690179,
+      "best_seed": 0.4028108805323277
+    },
+    {
+      "number_set": "55,15,75,45",
+      "target": 90,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.29718423098669366,
+      "best_seed": 0.1994170104445116
+    },
+    {
+      "number_set": "55,60,25,100",
+      "target": 5,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.7536068197203607,
+      "best_seed": 0.9940977510721373
+    },
+    {
+      "number_set": "59,89,79",
+      "target": 90,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.07757041502181555,
+      "best_seed": 0.3076236882782225
+    },
+    {
+      "number_set": "59,89,79",
+      "target": 91,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.14603307754228495,
+      "best_seed": 0.3233432471401493
+    },
+    {
+      "number_set": "59,89,79",
+      "target": 92,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.07757041502181555,
+      "best_seed": 0.3024479372963234
+    },
+    {
+      "number_set": "59,89,79",
+      "target": 93,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.14603307754228495,
+      "best_seed": 0.3185147753333343
+    },
+    {
+      "number_set": "59,89,79",
+      "target": 95,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.14603307754228495,
+      "best_seed": 0.31437461791365817
+    },
+    {
+      "number_set": "6",
+      "target": 1,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.23836018192737374,
+      "best_seed": 0.02324392484425962
+    },
+    {
+      "number_set": "6",
+      "target": 3,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.23836018192737374,
+      "best_seed": 0.06601457487883483
+    },
+    {
+      "number_set": "6",
+      "target": 6,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9393567662660247
+    },
+    {
+      "number_set": "6",
+      "target": 36,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.7752080974721992,
+      "best_seed": 0.8634345143014704
+    },
+    {
+      "number_set": "6",
+      "target": 90,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5759566846301456,
+      "best_seed": 0.32187199828565716
+    },
+    {
+      "number_set": "6",
+      "target": 96,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.7377435746673607,
+      "best_seed": 0.6416538277265846
+    },
+    {
+      "number_set": "6",
+      "target": 100,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.3971225138401224,
+      "best_seed": 0.20572343952403802
+    },
+    {
+      "number_set": "6,51,66,27",
+      "target": 50,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.34138532894953233,
+      "best_seed": 0.31809961730758934
+    },
+    {
+      "number_set": "6,51,66,27",
+      "target": 87,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.5079813088095564,
+      "best_seed": 0.5825161010080175
+    },
+    {
+      "number_set": "6,66",
+      "target": 36,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.7983158439168664,
+      "best_seed": 0.9796448189326247
+    },
+    {
+      "number_set": "60,54",
+      "target": 30,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.6467325824256637,
+      "best_seed": 0.6267256395360752
+    },
+    {
+      "number_set": "60,54",
+      "target": 54,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.6837352745961426,
+      "best_seed": 0.9597689091811576
+    },
+    {
+      "number_set": "60,54",
+      "target": 57,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.10912965139955372,
+      "best_seed": 0.457675331370316
+    },
+    {
+      "number_set": "60,54",
+      "target": 60,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6837352745961426,
+      "best_seed": 0.9800894275851019
+    },
+    {
+      "number_set": "60,54",
+      "target": 78,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5574150441598978,
+      "best_seed": 0.6261103072397459
+    },
+    {
+      "number_set": "60,54",
+      "target": 84,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.6467325824256637,
+      "best_seed": 0.5921423618513073
+    },
+    {
+      "number_set": "61",
+      "target": 89,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.40306697342180287,
+      "best_seed": 0.20692457031960898
+    },
+    {
+      "number_set": "63,27,99,33",
+      "target": 30,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.30184298254881925,
+      "best_seed": 0.2658677391515926
+    },
+    {
+      "number_set": "63,27,99,33",
+      "target": 32,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.18440644109097304,
+      "best_seed": 0.07604442556819427
+    },
+    {
+      "number_set": "63,27,99,33",
+      "target": 48,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.30184298254881925,
+      "best_seed": 0.2498190356171851
+    },
+    {
+      "number_set": "63,27,99,33",
+      "target": 60,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.30184298254881925,
+      "best_seed": 0.24803019746764077
+    },
+    {
+      "number_set": "63,43",
+      "target": 44,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.14088664556867334,
+      "best_seed": 0.32478656008799045
+    },
+    {
+      "number_set": "64,44",
+      "target": 20,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.3496681126628302,
+      "best_seed": 0.3488238326463624
+    },
+    {
+      "number_set": "65,26,2",
+      "target": 30,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.5143394662391355,
+      "best_seed": 0.4115212231944683
+    },
+    {
+      "number_set": "65,26,2",
+      "target": 34,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5143394662391355,
+      "best_seed": 0.3994602897243628
+    },
+    {
+      "number_set": "65,26,2",
+      "target": 38,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.5143394662391355,
+      "best_seed": 0.3964535361606923
+    },
+    {
+      "number_set": "65,26,2",
+      "target": 92,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.3958096768596976,
+      "best_seed": 0.3090379286761111
+    },
+    {
+      "number_set": "65,26,2",
+      "target": 95,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.3358586530603375,
+      "best_seed": 0.036526982783020016
+    },
+    {
+      "number_set": "65,47,55,13",
+      "target": 54,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.28357805053657703,
+      "best_seed": 0.3396922699509389
+    },
+    {
+      "number_set": "66,78",
+      "target": 30,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5509611107425876,
+      "best_seed": 0.6841315657709391
+    },
+    {
+      "number_set": "66,78",
+      "target": 42,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5520950100953226,
+      "best_seed": 0.7240297877210942
+    },
+    {
+      "number_set": "66,78",
+      "target": 69,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.10912965139955372,
+      "best_seed": 0.3263518457962785
+    },
+    {
+      "number_set": "66,78",
+      "target": 71,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.10912965139955372,
+      "best_seed": 0.30807854409884783
+    },
+    {
+      "number_set": "66,78",
+      "target": 78,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.6837352745961426,
+      "best_seed": 0.9444695931007083
+    },
+    {
+      "number_set": "66,93,51",
+      "target": 3,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.5545014524957431,
+      "best_seed": 0.25745376864807334
+    },
+    {
+      "number_set": "66,93,51",
+      "target": 6,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.490040683548423,
+      "best_seed": 0.24879775943613186
+    },
+    {
+      "number_set": "66,93,51",
+      "target": 12,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.42291829058833397,
+      "best_seed": 0.2685376552117692
+    },
+    {
+      "number_set": "66,93,51",
+      "target": 18,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.42291829058833397,
+      "best_seed": 0.30922802839192026
+    },
+    {
+      "number_set": "66,93,51",
+      "target": 21,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5548727063431758,
+      "best_seed": 0.3709600191829097
+    },
+    {
+      "number_set": "66,93,51",
+      "target": 24,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.4232009361305352,
+      "best_seed": 0.35583109889894954
+    },
+    {
+      "number_set": "66,93,51",
+      "target": 36,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.4915578861961483,
+      "best_seed": 0.5214165735193343
+    },
+    {
+      "number_set": "66,93,51",
+      "target": 56,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3739622634551466,
+      "best_seed": 0.6873161448223075
+    },
+    {
+      "number_set": "66,93,51",
+      "target": 61,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.7267841310629213
+    },
+    {
+      "number_set": "66,93,51",
+      "target": 65,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.3767450224692932,
+      "best_seed": 0.7351069350308489
+    },
+    {
+      "number_set": "66,93,51",
+      "target": 71,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.6656855862609721
+    },
+    {
+      "number_set": "66,93,51",
+      "target": 81,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5966023829873837,
+      "best_seed": 0.770124482375204
+    },
+    {
+      "number_set": "66,93,51",
+      "target": 91,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.43624269051520015,
+      "best_seed": 0.5390787884443357
+    },
+    {
+      "number_set": "67,31,17,61",
+      "target": 1,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5144056094338382,
+      "best_seed": 0.9301381335385108
+    },
+    {
+      "number_set": "67,31,17,61",
+      "target": 2,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.16664640417812676,
+      "best_seed": 0.7140065571698845
+    },
+    {
+      "number_set": "67,31,17,61",
+      "target": 18,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.27065102061341906,
+      "best_seed": 0.11998707237278144
+    },
+    {
+      "number_set": "67,31,17,61",
+      "target": 54,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.27065102061341906,
+      "best_seed": 0.0642611791871844
+    },
+    {
+      "number_set": "67,31,17,61",
+      "target": 58,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.27065102061341906,
+      "best_seed": 0.06483966685537883
+    },
+    {
+      "number_set": "67,31,17,61",
+      "target": 60,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.27065102061341906,
+      "best_seed": 0.06869907577909169
+    },
+    {
+      "number_set": "68,14,8,26",
+      "target": 100,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.38047661532768484,
+      "best_seed": 0.9249654702089338
+    },
+    {
+      "number_set": "68,58",
+      "target": 59,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.07696311002756212,
+      "best_seed": 0.2913193103034824
+    },
+    {
+      "number_set": "68,58",
+      "target": 61,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.07696311002756212,
+      "best_seed": 0.29310983541360686
+    },
+    {
+      "number_set": "68,58",
+      "target": 63,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.07696311002756212,
+      "best_seed": 0.2925903840393293
+    },
+    {
+      "number_set": "69",
+      "target": 41,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.40306697342180287,
+      "best_seed": 0.23064024574963607
+    },
+    {
+      "number_set": "69",
+      "target": 71,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.4453573007214238
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 5,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.39198796282937165,
+      "best_seed": 0.2646814218895106
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 7,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.39198796282937165,
+      "best_seed": 0.2749174172374543
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 13,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.39198796282937165,
+      "best_seed": 0.2881719938811831
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 17,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.39198796282937165,
+      "best_seed": 0.29012567007850815
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 23,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.39198796282937165,
+      "best_seed": 0.2924272116876264
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 25,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.39198796282937165,
+      "best_seed": 0.29225404999270616
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 35,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.39198796282937165,
+      "best_seed": 0.2922407432986249
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 37,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.39198796282937165,
+      "best_seed": 0.2922986734789548
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 43,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.39198796282937165,
+      "best_seed": 0.2893147239896796
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 47,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.39198796282937165,
+      "best_seed": 0.28699911689397034
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 53,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.39198796282937165,
+      "best_seed": 0.28464207585413803
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 55,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.39198796282937165,
+      "best_seed": 0.28395777089953056
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 65,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.39198796282937165,
+      "best_seed": 0.28179367364743746
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 67,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.39198796282937165,
+      "best_seed": 0.2814645026950605
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 87,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5105828836346126,
+      "best_seed": 0.32345126744620883
+    },
+    {
+      "number_set": "69,9,39,21",
+      "target": 93,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5094398687760895,
+      "best_seed": 0.5179335591097532
+    },
+    {
+      "number_set": "7",
+      "target": 4,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3814070600803764,
+      "best_seed": 0.2043172028607871
+    },
+    {
+      "number_set": "7",
+      "target": 7,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.8250234121732744
+    },
+    {
+      "number_set": "7",
+      "target": 37,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5807898648386653,
+      "best_seed": 0.4865254023714811
+    },
+    {
+      "number_set": "7",
+      "target": 91,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.5809489151568432,
+      "best_seed": 0.1619417066395927
+    },
+    {
+      "number_set": "7",
+      "target": 97,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.579227171010857,
+      "best_seed": 0.35942714739601944
+    },
+    {
+      "number_set": "7",
+      "target": 98,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.38155132368517714,
+      "best_seed": 0.045146386626517605
+    },
+    {
+      "number_set": "7,63",
+      "target": 84,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.303461017974318,
+      "best_seed": 0.13575684903198207
+    },
+    {
+      "number_set": "7,63",
+      "target": 98,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.2974134478101203,
+      "best_seed": 0.05758298883324978
+    },
+    {
+      "number_set": "70,10,88,40",
+      "target": 68,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5987005770320688,
+      "best_seed": 0.3473254538545687
+    },
+    {
+      "number_set": "70,15",
+      "target": 5,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.7578465993497755,
+      "best_seed": 0.7942087813098225
+    },
+    {
+      "number_set": "70,15",
+      "target": 68,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.3472906791657335,
+      "best_seed": 0.1385445009988733
+    },
+    {
+      "number_set": "70,15",
+      "target": 69,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.3472906791657335,
+      "best_seed": 0.12119853970957682
+    },
+    {
+      "number_set": "70,15",
+      "target": 90,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.7997652387730773,
+      "best_seed": 0.8382228088770344
+    },
+    {
+      "number_set": "70,15",
+      "target": 95,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.7538635564915233,
+      "best_seed": 0.782564375950663
+    },
+    {
+      "number_set": "70,15",
+      "target": 100,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.7530056208026604,
+      "best_seed": 0.819378276258956
+    },
+    {
+      "number_set": "71,31,21",
+      "target": 18,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.07757041502181555,
+      "best_seed": 0.2784607641886362
+    },
+    {
+      "number_set": "71,61,26,81",
+      "target": 68,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.3637509818392592,
+      "best_seed": 0.2325430692975337
+    },
+    {
+      "number_set": "75,27",
+      "target": 23,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.45279073521644214
+    },
+    {
+      "number_set": "75,4",
+      "target": 94,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.3988359227664951,
+      "best_seed": 0.31331649637652026
+    },
+    {
+      "number_set": "75,95",
+      "target": 5,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.8627246197276396,
+      "best_seed": 0.8995529114799543
+    },
+    {
+      "number_set": "75,95",
+      "target": 10,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.39400678715483256,
+      "best_seed": 0.31747631897670586
+    },
+    {
+      "number_set": "75,95",
+      "target": 30,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.39411000814463454,
+      "best_seed": 0.3276747539474738
+    },
+    {
+      "number_set": "75,95",
+      "target": 40,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.3943853078430722,
+      "best_seed": 0.33420278722732777
+    },
+    {
+      "number_set": "75,95",
+      "target": 50,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.3954697357933436,
+      "best_seed": 0.6274394124285797
+    },
+    {
+      "number_set": "77,17,8",
+      "target": 98,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.3341514777217042,
+      "best_seed": 0.048750624671918104
+    },
+    {
+      "number_set": "78",
+      "target": 50,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.40306697342180287,
+      "best_seed": 0.3950407413399571
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 2,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.35018365724139916,
+      "best_seed": 0.07550706908532633
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 8,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.35018365724139916,
+      "best_seed": 0.09238634567794386
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 9,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.35018365724139916,
+      "best_seed": 0.13902325334805996
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 18,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.351218012493804,
+      "best_seed": 0.17067809221679925
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 19,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.351218012493804,
+      "best_seed": 0.23695280302239682
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 28,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.35541822353543123,
+      "best_seed": 0.2910869289744631
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 29,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.35541822353543123,
+      "best_seed": 0.3631158072185669
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 38,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.3761253434281744,
+      "best_seed": 0.4905183302165953
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 39,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.3761253434281744,
+      "best_seed": 0.557603584069807
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 48,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5283810579864108,
+      "best_seed": 0.8128011968832228
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 49,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5283810579864108,
+      "best_seed": 0.8551302067260244
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 58,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5283810579864108,
+      "best_seed": 0.8429443054348614
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 59,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.5283810579864108,
+      "best_seed": 0.9039873531995839
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 68,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5283810579864108,
+      "best_seed": 0.8490610407749135
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 69,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5283810579864108,
+      "best_seed": 0.8871667031371315
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 78,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5283810579864108,
+      "best_seed": 0.84946452864645
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 79,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5283810579864108,
+      "best_seed": 0.9053181293193722
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 88,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5283810579864108,
+      "best_seed": 0.6303279224153766
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 89,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.5283810579864108,
+      "best_seed": 0.6703195406692659
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 98,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5283810579864108,
+      "best_seed": 0.5703090696288526
+    },
+    {
+      "number_set": "79,47,62,98",
+      "target": 99,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5283810579864108,
+      "best_seed": 0.37764460148946644
+    },
+    {
+      "number_set": "8",
+      "target": 8,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.9024928750990333
+    },
+    {
+      "number_set": "8",
+      "target": 10,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.5186949401321245
+    },
+    {
+      "number_set": "8",
+      "target": 88,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.7485409769641287,
+      "best_seed": 0.606090677520781
+    },
+    {
+      "number_set": "8",
+      "target": 96,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5840990240049273,
+      "best_seed": 0.41080657465703596
+    },
+    {
+      "number_set": "8",
+      "target": 98,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.579227171010857,
+      "best_seed": 0.5006440247449969
+    },
+    {
+      "number_set": "8",
+      "target": 100,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.3971225138401224,
+      "best_seed": 0.3842398969955866
+    },
+    {
+      "number_set": "8,16",
+      "target": 8,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.6837352745961426,
+      "best_seed": 0.9444368114988954
+    },
+    {
+      "number_set": "8,16",
+      "target": 16,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.7975300751465666,
+      "best_seed": 0.9758142043180607
+    },
+    {
+      "number_set": "8,16",
+      "target": 96,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.7034839069597011,
+      "best_seed": 0.5696949848499175
+    },
+    {
+      "number_set": "8,16",
+      "target": 100,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.3905410651337636,
+      "best_seed": 0.4766433839590378
+    },
+    {
+      "number_set": "8,24,48,63",
+      "target": 83,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.2966174289038131,
+      "best_seed": 0.06855157415726437
+    },
+    {
+      "number_set": "8,24,48,63",
+      "target": 93,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.29279518678050886,
+      "best_seed": 0.0360022929457297
+    },
+    {
+      "number_set": "8,64",
+      "target": 1,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.10912965139955372,
+      "best_seed": 0.205952319596354
+    },
+    {
+      "number_set": "8,64",
+      "target": 16,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.7263657499958016,
+      "best_seed": 0.38006974036499314
+    },
+    {
+      "number_set": "8,64",
+      "target": 27,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.10912965139955372,
+      "best_seed": 0.22384792094083122
+    },
+    {
+      "number_set": "8,64",
+      "target": 32,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.681653914247376,
+      "best_seed": 0.3724128720120801
+    },
+    {
+      "number_set": "8,80,48",
+      "target": 56,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.62160787363755,
+      "best_seed": 0.8336795449567896
+    },
+    {
+      "number_set": "8,80,48",
+      "target": 58,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.561008232727151,
+      "best_seed": 0.4759919250385468
+    },
+    {
+      "number_set": "8,80,48",
+      "target": 64,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.6138295478225461,
+      "best_seed": 0.8335110666390948
+    },
+    {
+      "number_set": "8,80,48",
+      "target": 72,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.6074712048585318,
+      "best_seed": 0.8331242465668546
+    },
+    {
+      "number_set": "8,80,48",
+      "target": 98,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.52504809205227,
+      "best_seed": 0.462465101382558
+    },
+    {
+      "number_set": "8,92",
+      "target": 12,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6837352745961426,
+      "best_seed": 0.9116205575533479
+    },
+    {
+      "number_set": "8,92",
+      "target": 32,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.7607060247275866,
+      "best_seed": 0.908299265413117
+    },
+    {
+      "number_set": "8,92",
+      "target": 48,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.7380790587602147,
+      "best_seed": 0.8910380380324318
+    },
+    {
+      "number_set": "8,92",
+      "target": 52,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6837352745961426,
+      "best_seed": 0.9049381992134998
+    },
+    {
+      "number_set": "8,92",
+      "target": 88,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.7099506439861631,
+      "best_seed": 0.8992361391139794
+    },
+    {
+      "number_set": "81,9",
+      "target": 27,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.7010256783607423,
+      "best_seed": 0.6335228800007399
+    },
+    {
+      "number_set": "82,67,72",
+      "target": 2,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.45429540761461584,
+      "best_seed": 0.1979957811386288
+    },
+    {
+      "number_set": "82,67,72",
+      "target": 12,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.4543919528110021,
+      "best_seed": 0.2161142839956659
+    },
+    {
+      "number_set": "82,67,72",
+      "target": 22,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.4547081236460321,
+      "best_seed": 0.23882237550351818
+    },
+    {
+      "number_set": "82,67,72",
+      "target": 32,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.45583862489777904,
+      "best_seed": 0.27566406652667813
+    },
+    {
+      "number_set": "82,67,72",
+      "target": 42,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.4604026590148049,
+      "best_seed": 0.3355970843723766
+    },
+    {
+      "number_set": "82,67,72",
+      "target": 69,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.41826426748856815,
+      "best_seed": 0.7832212633177544
+    },
+    {
+      "number_set": "82,67,72",
+      "target": 74,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5082074455320724,
+      "best_seed": 0.8159572774818282
+    },
+    {
+      "number_set": "83,11",
+      "target": 1,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.516114348401439,
+      "best_seed": 0.699503625735141
+    },
+    {
+      "number_set": "83,38,58,68",
+      "target": 3,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.2679189285271448,
+      "best_seed": 0.003989794553077762
+    },
+    {
+      "number_set": "83,38,58,68",
+      "target": 8,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.48712760966669894,
+      "best_seed": 0.9127002632141828
+    },
+    {
+      "number_set": "83,38,58,68",
+      "target": 18,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.49171963426532933,
+      "best_seed": 0.9253319366480306
+    },
+    {
+      "number_set": "83,38,58,68",
+      "target": 48,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.6627579460329406,
+      "best_seed": 0.9895217496188439
+    },
+    {
+      "number_set": "83,38,58,68",
+      "target": 59,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3637509818392592,
+      "best_seed": 0.09155018294499154
+    },
+    {
+      "number_set": "83,38,58,68",
+      "target": 78,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.6627579460329406,
+      "best_seed": 0.9897504865045624
+    },
+    {
+      "number_set": "83,38,58,68",
+      "target": 87,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.3637509818392592,
+      "best_seed": 0.5606576310108965
+    },
+    {
+      "number_set": "83,38,58,68",
+      "target": 89,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.3637509818392592,
+      "best_seed": 0.5498203043246005
+    },
+    {
+      "number_set": "83,38,58,68",
+      "target": 98,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.5139209878329799,
+      "best_seed": 0.9144030775824916
+    },
+    {
+      "number_set": "83,77",
+      "target": 23,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.4878564693712679,
+      "best_seed": 0.18832844405906146
+    },
+    {
+      "number_set": "83,77",
+      "target": 33,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.48817544876050206,
+      "best_seed": 0.24995830143067804
+    },
+    {
+      "number_set": "83,77",
+      "target": 35,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.390981283744389,
+      "best_seed": 0.22307273426659918
+    },
+    {
+      "number_set": "83,77",
+      "target": 37,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.48817544876050206,
+      "best_seed": 0.2420285170650477
+    },
+    {
+      "number_set": "83,77",
+      "target": 43,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.48931512894069545,
+      "best_seed": 0.26769099793463796
+    },
+    {
+      "number_set": "83,77",
+      "target": 47,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.48931512894069545,
+      "best_seed": 0.2847957703572851
+    },
+    {
+      "number_set": "83,77",
+      "target": 49,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.39206410799816843,
+      "best_seed": 0.28770374078735345
+    },
+    {
+      "number_set": "83,77",
+      "target": 53,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.49390885377277044,
+      "best_seed": 0.33642098784258445
+    },
+    {
+      "number_set": "83,77",
+      "target": 82,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.2968885398045638,
+      "best_seed": 0.8020822645057001
+    },
+    {
+      "number_set": "84",
+      "target": 54,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.5807898648386653,
+      "best_seed": 0.6403442477253058
+    },
+    {
+      "number_set": "84,56",
+      "target": 57,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.10912965139955372,
+      "best_seed": 0.24530359439210597
+    },
+    {
+      "number_set": "84,56",
+      "target": 59,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.10912965139955372,
+      "best_seed": 0.2412838722291028
+    },
+    {
+      "number_set": "84,56",
+      "target": 83,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.10912965139955372,
+      "best_seed": 0.21897624122675743
+    },
+    {
+      "number_set": "85",
+      "target": 25,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5792729573893198,
+      "best_seed": 0.5456078249150603
+    },
+    {
+      "number_set": "85",
+      "target": 35,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5793681933655289,
+      "best_seed": 0.5746990485908423
+    },
+    {
+      "number_set": "85,19,91",
+      "target": 17,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5716736296353201,
+      "best_seed": 0.6718768941323313
+    },
+    {
+      "number_set": "85,19,91",
+      "target": 19,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.6365710506589181,
+      "best_seed": 0.8533173040448369
+    },
+    {
+      "number_set": "85,19,91",
+      "target": 21,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.6365710506589181,
+      "best_seed": 0.6808700281963154
+    },
+    {
+      "number_set": "85,19,91",
+      "target": 29,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.6365710506589181,
+      "best_seed": 0.7651191830454122
+    },
+    {
+      "number_set": "85,19,91",
+      "target": 31,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.6365710506589181,
+      "best_seed": 0.6833751609438938
+    },
+    {
+      "number_set": "85,19,91",
+      "target": 85,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.6365710506589181,
+      "best_seed": 0.7257095788536883
+    },
+    {
+      "number_set": "85,19,91",
+      "target": 86,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.2968885398045638,
+      "best_seed": 0.18960500964186955
+    },
+    {
+      "number_set": "85,19,91",
+      "target": 87,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5716736296353201,
+      "best_seed": 0.7160466156964188
+    },
+    {
+      "number_set": "85,19,91",
+      "target": 88,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.2968885398045638,
+      "best_seed": 0.18773177725153836
+    },
+    {
+      "number_set": "85,7",
+      "target": 7,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.6647560270299738,
+      "best_seed": 0.6980885654929567
+    },
+    {
+      "number_set": "86",
+      "target": 46,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5796795751234527,
+      "best_seed": 0.7119997866952049
+    },
+    {
+      "number_set": "89",
+      "target": 19,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5792418118231843,
+      "best_seed": 0.5418873570073383
+    },
+    {
+      "number_set": "89",
+      "target": 29,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.5792729573893198,
+      "best_seed": 0.562064174201871
+    },
+    {
+      "number_set": "89",
+      "target": 39,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5793681933655289,
+      "best_seed": 0.5247584024290893
+    },
+    {
+      "number_set": "89",
+      "target": 49,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5796795751234527,
+      "best_seed": 0.5487605294112871
+    },
+    {
+      "number_set": "89",
+      "target": 71,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.3422411597184074
+    },
+    {
+      "number_set": "89",
+      "target": 88,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.3814070600803764,
+      "best_seed": 0.3851378860906141
+    },
+    {
+      "number_set": "9",
+      "target": 9,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.8454057780554387,
+      "best_seed": 0.8632706583259084
+    },
+    {
+      "number_set": "9",
+      "target": 11,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.42467914655013606,
+      "best_seed": 0.40269724213174074
+    },
+    {
+      "number_set": "9",
+      "target": 90,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.39529304465156556,
+      "best_seed": 0.3093758088217305
+    },
+    {
+      "number_set": "9",
+      "target": 99,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.7485379879750108,
+      "best_seed": 0.5107868154924408
+    },
+    {
+      "number_set": "9,33,73,99",
+      "target": 35,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5461511602936266,
+      "best_seed": 0.8856663107267861
+    },
+    {
+      "number_set": "9,65,28",
+      "target": 98,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.3358586530603375,
+      "best_seed": 0.07553419670689972
+    },
+    {
+      "number_set": "90,100,5",
+      "target": 8,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.37100507739478794,
+      "best_seed": 0.014470951281409251
+    },
+    {
+      "number_set": "90,100,5",
+      "target": 10,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.8941707112049629,
+      "best_seed": 0.9952678918924917
+    },
+    {
+      "number_set": "90,100,5",
+      "target": 15,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.8149589793231476,
+      "best_seed": 0.8855811642525006
+    },
+    {
+      "number_set": "90,100,5",
+      "target": 20,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.8723351870326791,
+      "best_seed": 0.9946792977689252
+    },
+    {
+      "number_set": "90,100,5",
+      "target": 30,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.858329720957092,
+      "best_seed": 0.9949389889050652
+    },
+    {
+      "number_set": "90,100,5",
+      "target": 35,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.7739835035017544,
+      "best_seed": 0.8853820850472855
+    },
+    {
+      "number_set": "90,100,5",
+      "target": 40,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.8491047074390881,
+      "best_seed": 0.9947787892659393
+    },
+    {
+      "number_set": "90,100,5",
+      "target": 45,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.7634109047955845,
+      "best_seed": 0.8854748331344598
+    },
+    {
+      "number_set": "90,100,5",
+      "target": 50,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.8427856587132503,
+      "best_seed": 0.995057938818745
+    },
+    {
+      "number_set": "90,100,5",
+      "target": 60,
+      "n": 9,
+      "observed": 1.0,
+      "best_model": 0.8383108203806213,
+      "best_seed": 0.9954068123297033
+    },
+    {
+      "number_set": "90,100,5",
+      "target": 70,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.8350539538493434,
+      "best_seed": 0.9950351318859352
+    },
+    {
+      "number_set": "90,100,5",
+      "target": 75,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.7470395783374947,
+      "best_seed": 0.8860299981992934
+    },
+    {
+      "number_set": "90,100,5",
+      "target": 85,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.7441679419986436,
+      "best_seed": 0.8866401331308065
+    },
+    {
+      "number_set": "90,100,5",
+      "target": 95,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.7419762349017259,
+      "best_seed": 0.8874080815221715
+    },
+    {
+      "number_set": "90,45",
+      "target": 41,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.3472906791657335,
+      "best_seed": 0.12362139951546089
+    },
+    {
+      "number_set": "90,45",
+      "target": 55,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.43482259179718735,
+      "best_seed": 0.8284806596867897
+    },
+    {
+      "number_set": "90,45",
+      "target": 63,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.3472906791657335,
+      "best_seed": 0.13855981998244474
+    },
+    {
+      "number_set": "90,45",
+      "target": 65,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.43482259179718735,
+      "best_seed": 0.8201916508645645
+    },
+    {
+      "number_set": "91",
+      "target": 1,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.579227171010857,
+      "best_seed": 0.3075831756893744
+    },
+    {
+      "number_set": "91",
+      "target": 19,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3971276902266911,
+      "best_seed": 0.48592469550177103
+    },
+    {
+      "number_set": "91",
+      "target": 29,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.397138118694014,
+      "best_seed": 0.3836370142194352
+    },
+    {
+      "number_set": "91",
+      "target": 88,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.2492912502050887,
+      "best_seed": 0.3080354100745004
+    },
+    {
+      "number_set": "91,25,61,31",
+      "target": 2,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.14629997255845484,
+      "best_seed": 0.0042112715199979864
+    },
+    {
+      "number_set": "91,25,61,31",
+      "target": 3,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.35730802822778246,
+      "best_seed": 0.3794614029674973
+    },
+    {
+      "number_set": "91,25,61,31",
+      "target": 4,
+      "n": 9,
+      "observed": 0.0,
+      "best_model": 0.14629997255845484,
+      "best_seed": 0.005832318815358373
+    },
+    {
+      "number_set": "91,25,61,31",
+      "target": 6,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.14629997255845484,
+      "best_seed": 0.009288001840709973
+    },
+    {
+      "number_set": "91,25,61,31",
+      "target": 7,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.35730802822778246,
+      "best_seed": 0.38594406424409855
+    },
+    {
+      "number_set": "91,25,61,31",
+      "target": 8,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.14629997255845484,
+      "best_seed": 0.012688162830366235
+    },
+    {
+      "number_set": "91,25,61,31",
+      "target": 9,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.35730802822778246,
+      "best_seed": 0.3884110824318207
+    },
+    {
+      "number_set": "92,14,20,5",
+      "target": 40,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.712902692261712,
+      "best_seed": 0.7045482009513753
+    },
+    {
+      "number_set": "92,14,20,5",
+      "target": 42,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6865633016939546,
+      "best_seed": 0.6446008276646407
+    },
+    {
+      "number_set": "92,14,20,5",
+      "target": 44,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.5762021817964873,
+      "best_seed": 0.646941958596326
+    },
+    {
+      "number_set": "92,14,20,5",
+      "target": 46,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5299838773027562,
+      "best_seed": 0.6268029678637187
+    },
+    {
+      "number_set": "92,14,20,5",
+      "target": 48,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5299838773027562,
+      "best_seed": 0.6351974839180892
+    },
+    {
+      "number_set": "92,14,20,5",
+      "target": 50,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.6104661480550049,
+      "best_seed": 0.6603598460477692
+    },
+    {
+      "number_set": "92,14,20,5",
+      "target": 52,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5762021817964873,
+      "best_seed": 0.6315486585116445
+    },
+    {
+      "number_set": "92,14,20,5",
+      "target": 56,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.6239036811596775,
+      "best_seed": 0.6196561928521259
+    },
+    {
+      "number_set": "92,14,20,5",
+      "target": 60,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.6865633016939546,
+      "best_seed": 0.6564547718475872
+    },
+    {
+      "number_set": "92,14,20,5",
+      "target": 70,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.6512379448191515,
+      "best_seed": 0.6324204675100329
+    },
+    {
+      "number_set": "92,14,20,5",
+      "target": 80,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.6665848512319699,
+      "best_seed": 0.6392750515354024
+    },
+    {
+      "number_set": "92,14,20,5",
+      "target": 90,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5893559752101831,
+      "best_seed": 0.6219935063083918
+    },
+    {
+      "number_set": "92,68,20",
+      "target": 62,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.4998947697381626,
+      "best_seed": 0.5300470717188777
+    },
+    {
+      "number_set": "92,68,20",
+      "target": 82,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.4998947697381626,
+      "best_seed": 0.5276868115553914
+    },
+    {
+      "number_set": "92,82,27,42",
+      "target": 20,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5065610032271526,
+      "best_seed": 0.3676330905279305
+    },
+    {
+      "number_set": "92,82,27,42",
+      "target": 21,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.3637509818392592,
+      "best_seed": 0.34365377412277004
+    },
+    {
+      "number_set": "92,82,27,42",
+      "target": 23,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3637509818392592,
+      "best_seed": 0.345082141840409
+    },
+    {
+      "number_set": "92,82,27,42",
+      "target": 24,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5065610032271526,
+      "best_seed": 0.3706883526740511
+    },
+    {
+      "number_set": "92,82,27,42",
+      "target": 25,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.3637509818392592,
+      "best_seed": 0.3467167282248713
+    },
+    {
+      "number_set": "92,82,27,42",
+      "target": 26,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5065610032271526,
+      "best_seed": 0.37229143437115103
+    },
+    {
+      "number_set": "93",
+      "target": 3,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.579227171010857,
+      "best_seed": 0.3274001751548888
+    },
+    {
+      "number_set": "93",
+      "target": 9,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.3971239274911327,
+      "best_seed": 0.3645811599799231
+    },
+    {
+      "number_set": "93",
+      "target": 19,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.3971276902266911,
+      "best_seed": 0.38021479661316476
+    },
+    {
+      "number_set": "93",
+      "target": 23,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5792418118231843,
+      "best_seed": 0.35838461773015184
+    },
+    {
+      "number_set": "93",
+      "target": 29,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.397138118694014,
+      "best_seed": 0.39624086528715485
+    },
+    {
+      "number_set": "93",
+      "target": 33,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5792729573893198,
+      "best_seed": 0.3880414475395754
+    },
+    {
+      "number_set": "93",
+      "target": 39,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.3971683807517026,
+      "best_seed": 0.5888977359497983
+    },
+    {
+      "number_set": "93",
+      "target": 43,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.5793681933655289,
+      "best_seed": 0.39706344844703606
+    },
+    {
+      "number_set": "93",
+      "target": 49,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.3972611145870913,
+      "best_seed": 0.4332040671868652
+    },
+    {
+      "number_set": "93",
+      "target": 59,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.39756518329467355,
+      "best_seed": 0.4558758967619364
+    },
+    {
+      "number_set": "93",
+      "target": 88,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.2492912502050887,
+      "best_seed": 0.25615978781317483
+    },
+    {
+      "number_set": "93",
+      "target": 92,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.3814070600803764,
+      "best_seed": 0.5457261424215694
+    },
+    {
+      "number_set": "94,7",
+      "target": 7,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5740931599159403,
+      "best_seed": 0.3683667011132118
+    },
+    {
+      "number_set": "94,7",
+      "target": 87,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5740931599159403,
+      "best_seed": 0.23353697125438805
+    },
+    {
+      "number_set": "94,7",
+      "target": 88,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.32783694233602434
+    },
+    {
+      "number_set": "94,7",
+      "target": 90,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.45837804758605505
+    },
+    {
+      "number_set": "94,7",
+      "target": 91,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.5064893280659659,
+      "best_seed": 0.3194636215034877
+    },
+    {
+      "number_set": "94,7",
+      "target": 92,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.4663153596865255
+    },
+    {
+      "number_set": "94,7",
+      "target": 93,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.3334491738075546
+    },
+    {
+      "number_set": "94,7",
+      "target": 95,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.3159617123738983
+    },
+    {
+      "number_set": "94,70",
+      "target": 71,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.17654219669996885,
+      "best_seed": 0.2329316281833054
+    },
+    {
+      "number_set": "95",
+      "target": 1,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.3971239274911327,
+      "best_seed": 0.08787582308207577
+    },
+    {
+      "number_set": "95",
+      "target": 5,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.579227171010857,
+      "best_seed": 0.5010770600154337
+    },
+    {
+      "number_set": "95",
+      "target": 9,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.3971239274911327,
+      "best_seed": 0.29107432235377256
+    },
+    {
+      "number_set": "95",
+      "target": 19,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.3971276902266911,
+      "best_seed": 0.30850194184235624
+    },
+    {
+      "number_set": "95",
+      "target": 25,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5792418118231843,
+      "best_seed": 0.5270787354404748
+    },
+    {
+      "number_set": "95",
+      "target": 29,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.397138118694014,
+      "best_seed": 0.31909536388936843
+    },
+    {
+      "number_set": "95",
+      "target": 35,
+      "n": 9,
+      "observed": 0.8888888888888888,
+      "best_model": 0.5792729573893198,
+      "best_seed": 0.5416830622477766
+    },
+    {
+      "number_set": "95",
+      "target": 45,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.5793681933655289,
+      "best_seed": 0.5528047982452803
+    },
+    {
+      "number_set": "95",
+      "target": 94,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.3814070600803764,
+      "best_seed": 0.39959275818670986
+    },
+    {
+      "number_set": "96,48",
+      "target": 12,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.39093233211798933,
+      "best_seed": 0.8644000169860476
+    },
+    {
+      "number_set": "96,48",
+      "target": 32,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.3971587478100199,
+      "best_seed": 0.41570327007445684
+    },
+    {
+      "number_set": "96,48",
+      "target": 40,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.42881563282137874
+    },
+    {
+      "number_set": "96,48",
+      "target": 56,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5308772229528802,
+      "best_seed": 0.45100617464107984
+    },
+    {
+      "number_set": "96,48",
+      "target": 64,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.43962839405310167
+    },
+    {
+      "number_set": "96,48",
+      "target": 80,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.4204331265489091
+    },
+    {
+      "number_set": "96,48",
+      "target": 84,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.4323804490790697,
+      "best_seed": 0.8871202640152522
+    },
+    {
+      "number_set": "96,48",
+      "target": 88,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.5308772229528802,
+      "best_seed": 0.425882129544118
+    },
+    {
+      "number_set": "98,83",
+      "target": 8,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.39291114790491,
+      "best_seed": 0.37872196862977203
+    },
+    {
+      "number_set": "98,83",
+      "target": 18,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.39292156387310934,
+      "best_seed": 0.39650479875103006
+    },
+    {
+      "number_set": "98,83",
+      "target": 28,
+      "n": 9,
+      "observed": 0.1111111111111111,
+      "best_model": 0.39295177869598025,
+      "best_seed": 0.4160728483796094
+    },
+    {
+      "number_set": "98,83",
+      "target": 38,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.39304434004485794,
+      "best_seed": 0.4760535966626057
+    },
+    {
+      "number_set": "98,83",
+      "target": 48,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.39334776696126394,
+      "best_seed": 0.4722324876612532
+    },
+    {
+      "number_set": "98,83",
+      "target": 58,
+      "n": 9,
+      "observed": 0.2222222222222222,
+      "best_model": 0.3944344636042647,
+      "best_seed": 0.5141014287147686
+    },
+    {
+      "number_set": "98,83",
+      "target": 68,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.3988359227664951,
+      "best_seed": 0.5816851188562876
+    },
+    {
+      "number_set": "98,83",
+      "target": 90,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.5396218649503033
+    },
+    {
+      "number_set": "98,83",
+      "target": 91,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.4721345513472585
+    },
+    {
+      "number_set": "98,83",
+      "target": 92,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.5276477982873573
+    },
+    {
+      "number_set": "98,83",
+      "target": 93,
+      "n": 9,
+      "observed": 0.5555555555555556,
+      "best_model": 0.5740931599159403,
+      "best_seed": 0.5076776421352316
+    },
+    {
+      "number_set": "98,83",
+      "target": 94,
+      "n": 9,
+      "observed": 0.3333333333333333,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.5180206942489374
+    },
+    {
+      "number_set": "98,83",
+      "target": 95,
+      "n": 9,
+      "observed": 0.7777777777777778,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.455173042312085
+    },
+    {
+      "number_set": "98,83",
+      "target": 96,
+      "n": 9,
+      "observed": 0.6666666666666666,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.5138162401323133
+    },
+    {
+      "number_set": "98,83",
+      "target": 97,
+      "n": 9,
+      "observed": 0.4444444444444444,
+      "best_model": 0.48242781401503787,
+      "best_seed": 0.46333681209920324
+    }
+  ]
+}
