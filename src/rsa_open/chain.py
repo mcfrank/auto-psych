@@ -161,18 +161,32 @@ class Chain:
                                                  f"kept in every design as the bar.) {h}")
         return out
 
+    def design_cache(self, n: int) -> Path:
+        """Where the design's fits are cached: the previous experiment's loop cache (its corpus is this
+        design's data so far, byte for byte, so the theories it carried are hits), else the
+        experiment's own."""
+        return self.exp(n - 1) / "loop" / ".fit_cache" if n > 1 else self.exp(n) / ".fit_cache"
+
     def design_context(self, n: int) -> Dict[str, tuple]:
-        """Each design theory (`design_theories`) with posterior draws of its parameters on the data so far."""
+        """Each design theory (`design_theories`) with posterior draws of its parameters on the data
+        so far, fitted concurrently (each in a child of its own, as the loop's)."""
+        from concurrent.futures import ThreadPoolExecutor
+
+        from src.rsa.loop.orchestrator import default_fit_workers
+
         corpus = write_corpus(self.exp(n) / "prior_corpus.json", self.blocks_before(n))
-        theories = {}
-        for name, (path, _) in self.design_theories(n).items():
-            fitted = loop_fit(path, name, corpus, self.cfg.settings, self.exp(n) / ".fit_cache", time_limit_sec=math.inf)
+        items = list(self.design_theories(n).items())
+
+        def one(item):
+            name, (path, _) = item
+            fitted = loop_fit(path, name, corpus, self.cfg.settings, self.design_cache(n), time_limit_sec=math.inf)
             flat = fitted.flat()
-            theory = TheoryModel(path, name=name)
             total = len(next(iter(flat.values())))
             take = np.unique(np.linspace(0, total - 1, min(total, DESIGN_DRAWS)).round().astype(int))
-            theories[name] = (path, {k: flat[k][take] for k in theory.params})
-        return theories
+            return name, (path, {k: flat[k][take] for k in TheoryModel(path, name=name).params})
+
+        with ThreadPoolExecutor(max_workers=max(1, min(len(items), default_fit_workers()))) as pool:
+            return dict(pool.map(one, items))
 
     def history(self, n: int) -> List[EarlierParadigm]:
         """The chain's earlier paradigms, each with the theories' standing on its block at the end of

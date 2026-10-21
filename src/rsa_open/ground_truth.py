@@ -92,12 +92,21 @@ def _check_contracts(theory, literature: Block) -> None:
         raise GroundTruthRefused(f"contract: {exc}") from exc
 
 
+def _checkout_of(path: Path) -> Path:
+    """The repository a file under its data/ belongs to."""
+    parts = Path(path).resolve().parts
+    if "data" not in parts:
+        raise ValueError(f"{path} is not under a repository's data/")
+    return Path(*parts[:len(parts) - 1 - parts[::-1].index("data")])
+
+
 def rehearsal_truth(record: Path = REHEARSAL_RECORD) -> Path:
-    """The closed rehearsals' truth file in this checkout."""
+    """The closed rehearsals' truth file, in the checkout that holds ``record`` (the staged
+    harness copy has no data/)."""
     recorded = Path(json.loads(Path(record).read_text())["ground_truth_file"])
     if "data" not in recorded.parts:
         raise ValueError(f"{record}: {recorded} is not under the repository's data/")
-    path = here().joinpath(*recorded.parts[recorded.parts.index("data"):])
+    path = _checkout_of(record).joinpath(*recorded.parts[recorded.parts.index("data"):])
     if not path.exists():
         raise FileNotFoundError(f"{path} (from {record}) is missing")
     return path
@@ -178,6 +187,8 @@ class Args:
     Sherlock), not the committed pragmods trials alone."""
     model: Optional[Path] = None
     """A closed-campaign model file (default: the closed rehearsals' coherent truth, `rehearsal_truth`)."""
+    record: Path = REHEARSAL_RECORD
+    """The closed rehearsals' record, which names their truth (in a checkout with data/)."""
     num_warmup: int = 1000
     num_samples: int = 1000
     num_chains: int = 4
@@ -186,11 +197,11 @@ class Args:
 
 def main(args: Args) -> dict:
     provenance = {}
-    model = args.model or rehearsal_truth()
+    model = args.model or rehearsal_truth(args.record)
     if args.model is None:
-        closed = json.loads(REHEARSAL_RECORD.read_text())
+        closed = json.loads(Path(args.record).read_text())
         provenance = {k: closed[k] for k in ("ground_truth_key", "rule")}
-        provenance["record"] = str(REHEARSAL_RECORD.relative_to(here()))
+        provenance["record"] = str(Path(args.record).resolve().relative_to(_checkout_of(args.record)))
     settings = FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains,
                            seed=args.seed, dense_mass=True)
     record = make_ground_truth(model, bar=args.bar, out=args.out, cache=args.cache, settings=settings,

@@ -104,6 +104,9 @@ def test_two_experiments_run_end_to_end_and_carry_their_theories(chain):
     assert "1_paradigm.json" in brief2
     fits_md = (c.exp(2) / "design" / "cycle_1" / "inputs" / "history" / "1_fits.md").read_text()
     assert all(name in fits_md for name in live1)
+    # Experiment 2's design reads experiment 1's loop fits: same corpus file, so the carried theories are hits.
+    assert (c.exp(2) / "prior_corpus.json").read_bytes() == (c.exp(1) / "loop" / "corpus.json").read_bytes()
+    assert c.design_cache(2) == c.exp(1) / "loop" / ".fit_cache" and not (c.exp(2) / ".fit_cache").exists()
     # Experiment 2's design scored the bar too: a seed the loop pruned is still in its context.
     context2 = json.loads((c.exp(2) / "design" / "cycle_1" / "context" / "context.json").read_text())
     assert set(context2["theories"]) == {"literal_listener", "rsa_l1"}
@@ -132,3 +135,19 @@ def test_an_unfinished_stage_is_set_aside_with_its_fit_cache_carried(tmp_path):
         assert aside == tmp_path / f"loop.abandoned_{attempt}" and (aside / "round_0").is_dir()
         assert (tmp_path / "loop" / ".fit_cache" / "a.nc").read_text() == "fit"
         assert not (tmp_path / "loop" / "round_0").exists()
+
+
+def test_the_chain_command_starts_from_its_chain_s_seeds_and_designs_against_the_bar(tmp_path, monkeypatch):
+    import src.rsa_open.run_chain as run_chain
+    from src.rsa_open.chain import GroundTruth
+    from src.rsa_open.seeds import OUT
+
+    monkeypatch.setattr(run_chain, "load_ground_truth", lambda d: GroundTruth(tmp_path / "gt.py", {"alpha": 1.0}))
+    monkeypatch.setattr(run_chain, "literature_block", lambda path: ("E from", path))
+    args = run_chain.Args(chain=1, run_dir=tmp_path / "run", private_dir=tmp_path / "private",
+                          agent_root=tmp_path, literature=tmp_path / "all_trials.csv", no_sandbox=True)
+    c = run_chain.build(args)
+    assert c.cfg.seeds_dir == OUT / "chain_1" and c.cfg.bar_dir == OUT / "bar"
+    assert c.cfg.literature == ("E from", tmp_path / "all_trials.csv") and c.cfg.chain == "chain_1"
+    assert c.cfg.loop == {"max_iterations": 5, "candidate_count": 6}
+    assert callable(c.theorist_spawn(tmp_path / "run" / "experiment1" / "loop"))
