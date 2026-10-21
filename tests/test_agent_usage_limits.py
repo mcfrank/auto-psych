@@ -396,6 +396,13 @@ def test_ordinary_output_is_not_a_limit():
     assert detect_login_failure(["Invalid API key · Please run /login"]) is not None
 
 
+def test_opencode_without_its_provider_key_is_a_failed_login():
+    event = ('{"name":"ProviderAuthError","data":{"providerID":"google","message":"Google Generative AI '
+             "API key is missing. Pass it using the 'apiKey' parameter or the GOOGLE_GENERATIVE_AI_API_KEY "
+             'environment variable."}}')
+    assert detect_login_failure([event]) is not None
+
+
 def test_claude_limit_is_read_only_from_the_start_of_the_result_text():
     class Stream:
         final_result = "x" * 250 + " You've hit your session limit · resets 3pm"

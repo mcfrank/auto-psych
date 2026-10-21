@@ -83,7 +83,10 @@ RESET_JUST_PASSED = timedelta(minutes=15)
 
 # No wait cures these: the account cannot pay for the call, or the key is bad.
 _LOGIN_FAILURE_RE = re.compile(
-    r"Credit balance is too low|Invalid API key", re.IGNORECASE
+    # The last two: opencode with no key for its provider (ProviderAuthError), which it
+    # reports as an error event and exits from at once; the 2026-10-21 designer smoke read it
+    # as two empty sessions.
+    r"Credit balance is too low|Invalid API key|API key is missing|ProviderAuthError", re.IGNORECASE
 )
 
 
