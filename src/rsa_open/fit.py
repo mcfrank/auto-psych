@@ -233,15 +233,18 @@ def fit(theory: RSAModel, link: LinkLikelihood, data: OpenData,
 
 
 def simulate(theory: RSAModel, link: LinkLikelihood, contexts: Sequence[Context],
-             params: Mapping[str, Any], key, probes: Optional[Sequence[int]] = None) -> List[dict]:
+             params: Mapping[str, Any], key, probes: Optional[Sequence[int]] = None,
+             utterances: Optional[Sequence[int]] = None) -> List[dict]:
     """One simulated response per scene, in input order. ``probes`` (the probed object of a
     rating, the target of a speaker link) default to a random object per trial; a judgment's
-    message is a random real message of the scene."""
+    message (``utterances``) to a random real message of the scene."""
     tp, lp = _split(theory, link, {k: jnp.asarray(np.asarray(v).reshape(())) for k, v in params.items()})
     rng = np.random.default_rng(np.asarray(jax.random.randint(key, (), 0, 2**31 - 1)).item())
     if probes is None:
         probes = [int(rng.integers(ctx.shape[0])) for ctx in contexts]
-    utterances = np.asarray([int(rng.integers(ctx.shape[1] - (1 if ctx.needs_sink else 0))) for ctx in contexts])
+    if utterances is None:
+        utterances = [int(rng.integers(ctx.shape[1] - (1 if ctx.needs_sink else 0))) for ctx in contexts]
+    utterances = np.asarray(utterances)
     out: List[Optional[dict]] = [None] * len(contexts)
     for k, group in zip(jax.random.split(key, len(contexts) or 1), group_by_shape(contexts).values()):
         latent = _latent(theory, link, tp, group)
