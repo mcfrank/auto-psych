@@ -59,6 +59,16 @@ Two more prerequisites:
 
 If run 2's root is elsewhere, pass `RUN2_ROOT=<its root>`.
 
+**The shared venv needs the open campaign's packages** (google-genai, pydantic, resvg-py; the
+first submission failed without them). Once, on a login node:
+
+```bash
+source scripts/rsa/slurm/_env.sh && source scripts/_venv.sh && build_shared_venv
+(cd ~/auto-psych && "$VENV_PY" -m src.rsa_open.env_check)   # should print "[env_check] OK"
+```
+
+The job runs the same check first and stops before any staging, fit or agent if it fails.
+
 ## 2. Run A: the dry run
 
 ```bash

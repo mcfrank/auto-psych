@@ -724,3 +724,32 @@ def test_the_consolidation_array_chains_rounds_and_stops_on_a_stuck_round():
     assert '--partition="$WORKER_PARTITION" --requeue' in text and 'WORKER_PARTITION="${WORKER_PARTITION:-mcfrank,owners}"' in text
     assert '--dependency="afterany:$ARRAY"' in text and "MAX_ATTEMPTS" in text
     assert "modelled.csv" not in text  # the pre-registered data are read only when scoring
+
+
+def test_the_shared_venv_installs_the_open_campaign_s_packages_at_the_lock_s_versions():
+    """The first open rehearsal failed on Sherlock: the shared venv lacked google-genai, pydantic and resvg-py."""
+    import re
+
+    text = (REPO / "scripts" / "_venv.sh").read_text()
+    lock = (REPO / "uv.lock").read_text()
+    for package, module in (("google-genai", "google.genai"), ("pydantic", "pydantic"), ("resvg-py", "resvg_py")):
+        locked = re.search(rf'^name = "{package}"\nversion = "([^"]+)"', lock, re.M).group(1)
+        assert f'"{package}=={locked}"' in text, package
+        assert module in text  # and the venv check imports it
+
+
+def test_the_open_rehearsal_checks_its_environment_before_anything_else():
+    text = (SLURM / "open_rehearsal.sbatch").read_text()
+    check = text.index("-m src.rsa_open.env_check")
+    assert check < text.index("stage_code.sh") < text.index("-m src.rsa_open.ground_truth")
+    assert check < text.index("-m src.rsa_open.run_chain")
+
+
+def test_the_environment_check_names_what_is_missing(monkeypatch):
+    import src.rsa_open.env_check as env_check
+
+    assert env_check.problems() == []
+    monkeypatch.setattr(env_check, "THIRD_PARTY", env_check.THIRD_PARTY + ("no_such_package_xyz",))
+    (problem,) = env_check.problems()
+    assert problem.startswith("no_such_package_xyz: ModuleNotFoundError")
+    assert env_check.main() == 1

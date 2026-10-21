@@ -39,6 +39,11 @@ rsa_require_opencode
 rsa_require_gemini_key
 command -v bwrap >/dev/null || { echo "FATAL: no bwrap (sandboxed agents need it)" >&2; exit 1; }
 command -v flock >/dev/null || { echo "FATAL: no flock" >&2; exit 1; }
+# Before any staging, fit or agent: the venv has every package and module a chain uses (the first
+# submission failed on google-genai, pydantic and resvg-py, missing from the shared venv).
+(cd "$REPO" && "$VENV_PY" -m src.rsa_open.env_check) || {
+  echo "FATAL: the venv cannot run the open campaign; on a login node: source scripts/rsa/slurm/_env.sh &&" \
+       "source scripts/_venv.sh && build_shared_venv" >&2; exit 1; }
 
 TASK="${SLURM_ARRAY_TASK_ID:?run as an array task}"
 read -r -a CHAIN_LIST <<< "${CHAINS:-0}"
