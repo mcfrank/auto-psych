@@ -250,12 +250,19 @@ fits, so that it designs against the theories rather than individual people.
 - **Each unit gets** `n_participants × trials_per_participant / distinct_trials` responses. The
   paradigm spec now gives `distinct_trials` (the closed campaign's D = 52).
 - **The estimator** is the closed campaign's (`src/rsa/design/eig.py`): greedy joint-EIG
-  selection, then the joint EIG and power on fresh scenarios.
+  selection, then the joint EIG and power on fresh scenarios. The open campaign runs its greedy
+  search lazily, as main's design does (`design.LAZY_FULL_EVERY`: a full pass every 16 picks, in
+  between only the candidates whose last gain could still win; the closed campaign's designs stay
+  exact). On the smoke run's context (4,940 units, 40 picks): 142 s instead of 820–860 s, joint
+  EIG 1.912 and 1.914 bits (two seeds) against exact greedy's 1.913.
 - **The floor** is half the bits per dollar of the closed paradigm (1,597 scenes, 200 × 13 of
   52, the choice link) under the same theories.
 - **Sliders** (the ordered-beta link) are scored on their responses binned into 12 outcomes
   (0, ten interior bins, max). Coarsening can only lose information, so the score is a lower
-  bound. **Bets** (allocation) are refused until there is an estimator for them.
+  bound. **Bets** (allocation, built 2026-10-21) are scored as a sub-bet of at most 10 points
+  with at most 300 splits (`links.design_bet_total`: 10 points for up to 4 objects, 6 for 5, 5
+  for 6). A random part of a Dirichlet-multinomial bet is a smaller one (a Pólya urn; tested by
+  simulation), so the sub-bet is a garbling of the bet and its score again a lower bound.
 
 **Link parameters (approved by the PI, 2026-10-21).** A new paradigm's link has no data, so its parameters
 come from the link's prior. Averaging them inside each theory's evidence (the estimator as
@@ -385,6 +392,13 @@ stop, carry-forward of at most 8 distinct theories), with three changes:
   new paradigm *and* not more than k clustered SEs worse on each earlier paradigm, the
   literature data E included.
 
+**The critic** (`src/rsa_open/loop/critique.py`, built 2026-10-21): the closed critic's rules
+(8 statistics, 1,000 replicates, p ≤ 0.05 with BH q, one retry, "no critique" recorded) on the
+newest paradigm's trials, the rows selection ranks on. Each replicate redraws only the response,
+through that paradigm's frozen link, from one posterior draw of the incumbent's theory and link
+parameters; the trial's design (a probed object, a target, a judged message) stays as presented.
+1,000 replicates of 2,400 trials take 20–30 s.
+
 ## 6. Parity with the closed campaign
 
 The same seeds and chain split, the same literature data, the same theorist model and sandbox,
@@ -423,8 +437,8 @@ The existing protocol covers the rest (PI, 2026-10-20).
 |---|---|---|---|
 | 0 | This plan; Gemini 4 smoke test | cloud | plan written; smoke test below |
 | 1 | Paradigm-spec schema and validator; link library with recovery tests; theory + link refactor; port the seeds and closed finals (exact-equivalence tests) | cloud | **done** (`src/rsa_open/`): all 20 models port (18 by rule a, chain 2's final by rule b, one by hand) and equal their originals; five links (choice, rating, allocation, production, binary judgment), each with a temperature and a lapse, each passing the recovery test; every theory has a speaker; the paradigm spec and its validator. Not yet: freezing the ported closed finals (with their derived speakers) before the campaign |
-| 2 | Designer tools as an agent CLI; designer brief; the page; simulated pilot | cloud | **built** (§4.1–4.3): the EIG tool; the tools CLI (`validate`, `eig`, `link-check`, `submit`, 40 calls); spec-driven trial lists and one page for all six response types (tested in Chromium); the pilot with Gemini 3.8 Flash participants and its gate (a live 3-participant run passed); the designer cycle (brief, the harness's own re-checks, up to 3 pilots, one retry, freeze). Not yet: a real Gemini 4 designer cycle end to end; EIG for bets; designer-proposed links |
-| 2b | Fitting across paradigms (shared theory parameters, each paradigm its own link parameters, E included); the open inner loop (theorists; grouped CV within paradigm; the k = 4 SE accountability rule; carry-forward); the chain driver (context → designer → frozen paradigm → simulated collection → inner loop → timing record); rehearsal ground truths; Sherlock jobs | cloud | **built**, the gate for Phase 3 except its last piece: corpus fits and grouped CV across paradigms (`corpus.py`); the open inner loop (`loop/`); the chain driver (`chain.py`, designs against the bar as well as the live set; an interrupted stage restarts); a two-experiment dry run with a fake designer and theorist passes; a real Gemini 4 designer cycle froze a paradigm (§4.3); the ported seeds and bar (`seeds.py`, `data/rsa_open/seeds`); the ground truth (`ground_truth.py`: the closed rehearsals' coherent truth, ported, fixed at its posterior means on E); the job (`scripts/rsa/slurm/open_rehearsal.sbatch`, `HANDOFF_rehearsal.md`). **Not yet:** the one-experiment dry run with real agents on Sherlock (run A of the handoff); the open loop's critique step; timing records from live experiments into the chain |
+| 2 | Designer tools as an agent CLI; designer brief; the page; simulated pilot | cloud | **built** (§4.1–4.3): the EIG tool; the tools CLI (`validate`, `eig`, `link-check`, `submit`, 40 calls); spec-driven trial lists and one page for all six response types (tested in Chromium); the pilot with Gemini 3.8 Flash participants and its gate (a live 3-participant run passed); the designer cycle (brief, the harness's own re-checks, up to 3 pilots, one retry, freeze); a real Gemini 4 designer cycle froze a paradigm (§4.3); EIG for bets (2026-10-21). Not yet: designer-proposed links |
+| 2b | Fitting across paradigms (shared theory parameters, each paradigm its own link parameters, E included); the open inner loop (theorists; grouped CV within paradigm; the k = 4 SE accountability rule; carry-forward); the chain driver (context → designer → frozen paradigm → simulated collection → inner loop → timing record); rehearsal ground truths; Sherlock jobs | cloud | **built**, the gate for Phase 3 except its last piece: corpus fits and grouped CV across paradigms (`corpus.py`); the open inner loop (`loop/`); the chain driver (`chain.py`, designs against the bar as well as the live set; an interrupted stage restarts); a two-experiment dry run with a fake designer and theorist passes; a real Gemini 4 designer cycle froze a paradigm (§4.3); the ported seeds and bar (`seeds.py`, `data/rsa_open/seeds`); the ground truth (`ground_truth.py`: the closed rehearsals' coherent truth, ported, fixed at its posterior means on E); the job (`scripts/rsa/slurm/open_rehearsal.sbatch`, `HANDOFF_rehearsal.md`). Since: the critic (§5); lazy greedy EIG (§4.1); EIG for bets; the pilot sends only the current screen's picture (a tenth of the tokens); each design reads every finished live experiment's timing, this chain's and the others' (`Chain.record_timing`, `ChainConfig.other_chains`). **Not yet:** the one-experiment dry run with real agents on Sherlock (run A of the handoff, on the code before those) |
 | 3 | Rehearsal on simulated participants with a ground-truth theory across paradigms | Sherlock | |
 | 4 | One live paradigm per chain, with PI review | live | |
 | 5 | Campaign: 3 chains × 3 experiments | live | |

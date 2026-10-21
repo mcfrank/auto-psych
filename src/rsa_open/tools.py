@@ -182,8 +182,8 @@ def validate(ws: Workspace, spec: Path) -> Dict[str, Any]:
     p = load_paradigm(spec)
     scenes = scene_pool(p)
     # The EIG tool's limit on trial units, checked here so a spec eig cannot score fails at once
-    # (trial_units raises past it); bets have no units yet.
-    n_units = None if p.response.type == "bet" else len(trial_units(scenes, paradigm_likelihood(p)))
+    # (trial_units raises past it).
+    n_units = len(trial_units(scenes, paradigm_likelihood(p)))
     return {"valid": True, "sha256": p.sha256, "scenes": len(scenes), "units": n_units, "cost_usd": p.cost_usd,
             "response": p.response.type, "link": p.response.link,
             "time": time_report(ws, p, preview_units(p, seed_for(p.sha256, "preview")))}

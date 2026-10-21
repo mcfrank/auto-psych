@@ -59,6 +59,8 @@ from src.rsa.loop.orchestrator import NAME_RE, _read, default_fit_workers, prune
 from src.rsa_open.corpus import DEFAULT_FOLDS, GUARD_K, CorpusCV, CorpusFit, assign_folds, heldout_lpd, standing
 from src.rsa_open.fit import TheoryModel
 from src.rsa_open.loop import brief as briefs
+from src.rsa_open.loop import critique as critique_mod
+from src.rsa_open.loop.critique import CRITIQUE_N_PROPOSALS, CRITIQUE_PPC_REPLICATES, CRITIQUE_SIGNIFICANCE_ALPHA
 from src.rsa_open.loop.fitting import loop_fit, read_corpus, write_corpus
 from src.rsa_open.loop.gates import GateConfig, admit, pool_predictions
 
@@ -88,6 +90,12 @@ class OpenLoopConfig:
     agent_network: bool = False
     fit_workers: int = 0
     stop_after_stale_rounds: int = 2
+    critique: bool = True
+    """Critique the incumbent on the newest block before every round (`src.rsa_open.loop.critique`,
+    the closed loop's critic); its critiques.md goes into every theorist's brief."""
+    n_critique_proposals: int = CRITIQUE_N_PROPOSALS
+    critique_alpha: float = CRITIQUE_SIGNIFICANCE_ALPHA
+    n_critique_replicates: int = CRITIQUE_PPC_REPLICATES
 
 
 @dataclass
@@ -252,10 +260,10 @@ class OpenLoop:
                 return max(pool, key=lambda n: s[n]["sel_elpd"])
         raise RuntimeError("no theories")
 
-    def score(self, round_index: int, events: List[dict]) -> dict:
+    def score(self, round_index: int, events: List[dict], critique: Optional[dict] = None) -> dict:
         s = self.standing()
         best = self.incumbent(s)
-        entry = dict(step=self.step, round=round_index, best_model=best, events=events,
+        entry = dict(step=self.step, round=round_index, best_model=best, events=events, critique=critique,
                      standing={n: {k: v for k, v in d.items()} for n, d in s.items()},
                      live=[dict(name=m.name, hypothesis=m.hypothesis, source=m.source) for m in self.live.values()],
                      ledger_entries=len(self.ledger.entries()))
@@ -281,7 +289,7 @@ class OpenLoop:
         return text
 
     def _docs_for(self, cdir: Path, role: str, lens: Optional[str], round_index: int, s: Mapping[str, dict],
-                  incumbent: str, note: Optional[str]) -> str:
+                  incumbent: str, note: Optional[str], critiques: Optional[str] = None) -> str:
         def behind(n):
             return s[n]["sel_diff"] if n in s else float("inf")
         live = [closed_brief.ZooModel(n, self.live[n].hypothesis, self.models_dir / f"{n}.py", self._describe(n, s))
@@ -295,8 +303,33 @@ class OpenLoop:
                                     round_index=round_index, n_rounds=self.cfg.max_iterations,
                                     network=self.cfg.agent_network)
         docs = briefs.write_docs(cdir, role=role, lens=lens, context=context, live=live, pruned=pruned,
-                                 incumbent=incumbent, ledger=self.ledger, attempt_note=note)
+                                 incumbent=incumbent, ledger=self.ledger, attempt_note=note, critiques=critiques)
         return briefs.build_prompt(cdir, docs)
+
+    def _critique(self, rdir: Path, incumbent: str) -> "critique_mod.CritiqueOutcome":
+        """The round's critique of the incumbent on the newest block, or a disabled record. A
+        critique that fails for any reason but the agents' own infrastructure is recorded and the
+        round runs without one (the closed loop's rule: a critique failure must not end a run)."""
+        if not self.cfg.critique:
+            return critique_mod.CritiqueOutcome(None, critique_mod.disabled_status())
+        from src.runtime.coding_agent import AgentPermissionDenied
+        from src.runtime.usage_limits import AgentInfrastructureError
+
+        m, newest = self.live[incumbent], self.blocks[-1]
+        try:
+            return critique_mod.run_critique(
+                rdir, spawn=self.spawn, incumbent=incumbent, theory=m.theory, fitted=m.fit, hypothesis=m.hypothesis,
+                incumbent_file=self.models_dir / f"{incumbent}.py", block=newest,
+                paradigm_note=self.cfg.paradigm_notes.get(newest.name, ""), data_path=self.data_paths[newest.name],
+                n_proposals=self.cfg.n_critique_proposals, alpha=self.cfg.critique_alpha,
+                n_replicates=self.cfg.n_critique_replicates, seed=self.cfg.settings.seed + self.step)
+        except (AgentPermissionDenied, AgentInfrastructureError):
+            raise
+        except Exception as exc:  # recorded, never swallowed silently
+            reason = f"{type(exc).__name__}: {exc}"
+            print(f"  [critique] NO CRITIQUE this round: {reason}", flush=True)
+            return critique_mod.CritiqueOutcome(None, dict(
+                status=critique_mod.CRITIQUE_STATUS_NONE, incumbent=incumbent, reason=reason))
 
     def _spawn_all(self, jobs) -> List[bool]:
         if not jobs:
@@ -354,6 +387,8 @@ class OpenLoop:
         roles = slot_roles(self.cfg.candidate_count)
         per_round = exploratory_slots_per_round(self.cfg.candidate_count)
         rdir = self.dir / f"round_{round_index + 1}"
+        crit = self._critique(rdir, incumbent)
+        critiques = crit.critiques_md
         slots, explore_i = [], 0
         for i, role in enumerate(roles):
             lens = None
@@ -363,15 +398,15 @@ class OpenLoop:
             context = f"round {round_index + 1} candidate {i + 1} {role}" + (
                 f" {incumbent}" if role == SLOT_REFINE_INCUMBENT else "")
             slots.append(dict(i=i, role=role, lens=lens, dir=rdir / f"candidate_{i + 1}", context=context))
-        self._spawn_all([(sl["dir"], self._docs_for(sl["dir"], sl["role"], sl["lens"], round_index, s, incumbent, None))
-                         for sl in slots])
+        self._spawn_all([(sl["dir"], self._docs_for(sl["dir"], sl["role"], sl["lens"], round_index, s, incumbent, None,
+                                                    critiques)) for sl in slots])
         retry = []
         for sl in slots:
             if not (sl["dir"] / "candidate.py").exists():
                 sl["dir"] = sl["dir"].with_name(sl["dir"].name + "_retry_1")
                 sl["context"] += " retry 1"
                 retry.append((sl["dir"], self._docs_for(sl["dir"], sl["role"], sl["lens"], round_index, s, incumbent,
-                                                        briefs.retry_note())))
+                                                        briefs.retry_note(), critiques)))
         self._spawn_all(retry)
         events = []
         for sl in slots:
@@ -394,13 +429,13 @@ class OpenLoop:
                     shutil.copyfile(sl["dir"] / f, rd / f)
             sl["repair"] = rd
             jobs.append((rd, self._docs_for(rd, sl["role"], sl["lens"], round_index, s, incumbent,
-                                            briefs.repair_note(reason))))
+                                            briefs.repair_note(reason), critiques)))
         self._spawn_all(jobs)
         for sl, ok, reason in self._admit_all([sl for sl, _ in repairs], "repair", round_index, " repair 1"):
             events.append(dict(slot=sl["i"] + 1, role=sl["role"], name=sl["repair_name"],
                                outcome="admitted" if ok else "rejected", reason=reason,
                                hypothesis=_read(sl["repair"] / "hypothesis.md"), repair=True))
-        return self.score(round_index, events)
+        return self.score(round_index, events, crit.status)
 
     # ---------- the end ----------
     def _retire(self, name: str, outcome: str, detail: str) -> None:

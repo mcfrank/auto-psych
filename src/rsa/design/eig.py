@@ -195,13 +195,20 @@ class Selection:
 def select(probs: Sequence[np.ndarray], valid: np.ndarray, n_select: int, *, n_responses: int,
            prior: Optional[np.ndarray] = None, n_scenarios: int = 2000, seed: int = 0,
            candidates: Optional[Sequence[int]] = None, leave_one_out: bool = True,
-           quotas: Sequence[Quota] = (), draw_groups: Optional[Sequence[np.ndarray]] = None) -> Selection:
+           quotas: Sequence[Quota] = (), draw_groups: Optional[Sequence[np.ndarray]] = None,
+           lazy_full_every: Optional[int] = None) -> Selection:
     """Greedy joint-EIG selection of ``n_select`` displays, each answered ``n_responses`` times.
 
     Stops at the noise floor (the best gain within two Monte Carlo SE of zero)
     and fills the rest by single-response EIG conditioned on the picks, as
     main's design does (user decision 2026-09-26). With ``quotas``, each pick
     is the best among the displays that keep every quota reachable.
+
+    ``lazy_full_every`` (off by default, so the closed campaign's designs are as they ran; the
+    open campaign's design sets it, `src.rsa_open.design.LAZY_FULL_EVERY`): lazy greedy, as main's
+    design (`DESIGN_LAZY_SEARCH`). Every that many picks every candidate is scored; in between,
+    candidates are re-scored in order of their last gain only while that gain could still beat
+    the best fresh one. Joint EIG is not submodular, so this is an approximation.
     """
     _validate(probs, valid)
     prior = np.full(len(probs), 1 / len(probs)) if prior is None else np.asarray(prior, float) / np.sum(prior)
@@ -217,12 +224,24 @@ def select(probs: Sequence[np.ndarray], valid: np.ndarray, n_select: int, *, n_r
         for c in out.indices:
             state.add(c)
         current = _entropy_bits(state.posterior())
+        last: Dict[int, float] = {}  # lazy greedy: each candidate's gain when it was last scored
+        picks_since_full = 0
         while len(out.indices) < n_select:
             left = _allowed(quotas, out.indices, [c for c in pool if c not in out.indices], n_select)
             if not left:
                 raise ValueError(f"no display keeps the quotas reachable after {len(out.indices)} picks")
-            ents = {c: state.entropies_with(c) for c in left}
-            best = min(left, key=lambda c: ents[c].mean())
+            if lazy_full_every is None or picks_since_full % lazy_full_every == 0 or any(c not in last for c in left):
+                ents = {c: state.entropies_with(c) for c in left}
+                picks_since_full = 0
+            else:
+                ents = {}
+                for c in sorted(left, key=lambda c: -last[c]):
+                    if ents and current.mean() - min(e.mean() for e in ents.values()) >= last[c]:
+                        break
+                    ents[c] = state.entropies_with(c)
+            last.update({c: float(current.mean() - e.mean()) for c, e in ents.items()})
+            picks_since_full += 1
+            best = min(ents, key=lambda c: ents[c].mean())
             gain = current - ents[best]
             se = gain.std(ddof=1) / np.sqrt(len(gain))
             if source == "eig" and (gain.mean() <= 2 * se or gain.mean() <= NEGLIGIBLE_GAIN_BITS):

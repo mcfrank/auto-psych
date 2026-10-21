@@ -6,6 +6,7 @@
       prior_corpus.json    the data so far: E and every earlier experiment's block
       design/              the designer's cycles and frozen/ (`src.rsa_open.designer.run_designer`)
       data/rows.jsonl      every participant's trials and responses
+      data/timing.json     a live experiment's completion times (`record_timing`; none when simulated)
       data/block.json      the experiment's test trials as a corpus block
       corpus.json          E, every earlier block and this one
       loop/                the inner loop (`src.rsa_open.loop.orchestrator.OpenLoop`) and its export
@@ -49,7 +50,7 @@ from src.rsa_open.designer import EarlierParadigm, SpawnFn as DesignerSpawn, run
 from src.rsa_open.fit import TheoryModel, simulate
 from src.rsa_open.loop.fitting import loop_fit, read_corpus, write_corpus
 from src.rsa_open.loop.orchestrator import OpenLoop, OpenLoopConfig
-from src.rsa_open.timing import CLOSED_CAMPAIGN, TimingRecord
+from src.rsa_open.timing import CLOSED_CAMPAIGN, TimingRecord, read_records, record_from_sessions, write_records
 
 DESIGN_DRAWS = 200
 
@@ -81,6 +82,9 @@ class ChainConfig:
     seed: int = 0
     bar_dir: Optional[Path] = None
     """The bar: theories every design scores beside the carried ones (default: the seeds)."""
+    other_chains: Sequence[Path] = ()
+    """The campaign's other chains' run directories, whose finished experiments' timing every
+    design reads too (PLAN.md, "Timing digest")."""
 
 
 def _hypotheses(models_dir: Path) -> Dict[str, str]:
@@ -147,6 +151,32 @@ class Chain:
             raise FileNotFoundError(f"experiment {n - 1}'s inner loop has not finished (no export.json)")
         _copy_models(src, dst)
         return dst
+
+    # ---------- timing ----------
+    def record_timing(self, n: int, seconds: Sequence[float]) -> TimingRecord:
+        """A live experiment's completion times as its timing record (written once, after
+        collection; simulated people take no time, so a simulated experiment has none)."""
+        path = self.exp(n) / "data" / "timing.json"
+        if path.exists():
+            raise FileExistsError(f"{path} exists: an experiment's timing is recorded once")
+        lists = json.loads((self.exp(n) / "design" / "frozen" / "lists.json").read_text())
+        record = record_from_sessions(f"{self.cfg.chain}, experiment {n}", lists, seconds)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        write_records(path, [record])
+        return record
+
+    def timing(self, n: int) -> List[TimingRecord]:
+        """What experiment n's designer reads: the configured records (the closed campaign's), this
+        chain's earlier experiments' and every finished experiment of the other chains."""
+        records = list(self.cfg.timing)
+        for k in range(1, n):
+            path = self.exp(k) / "data" / "timing.json"
+            if path.exists():
+                records += read_records(path)
+        for other in self.cfg.other_chains:
+            for path in sorted(Path(other).glob("experiment*/data/timing.json")):
+                records += read_records(path)
+        return records
 
     # ---------- 1. design ----------
     def design_theories(self, n: int) -> Dict[str, tuple]:
@@ -217,7 +247,7 @@ class Chain:
                      hypotheses={k: h for k, (_, h) in self.design_theories(n).items()}, history=self.history(n),
                      spawn=self.designer_spawn,
                      pilot_participants=self.cfg.pilot_participants, participant_factory=self.participant_factory,
-                     code_commit=self.cfg.code_commit, timing=self.cfg.timing)
+                     code_commit=self.cfg.code_commit, timing=self.timing(n))
         return frozen
 
     # ---------- 2. collect ----------

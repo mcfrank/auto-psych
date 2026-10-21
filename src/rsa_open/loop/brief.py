@@ -87,10 +87,12 @@ def context_md(*, candidate_dir: Path, corpus_path: Path, blocks: Sequence[Block
 
 
 def write_docs(candidate_dir: Path, *, role: str, lens: Optional[str], context: str, live, pruned,
-               incumbent: Optional[str], ledger, attempt_note: Optional[str] = None) -> Dict[str, Optional[str]]:
-    """The closed loop's documents (`src.rsa.loop.brief.write_docs`), for a theory."""
+               incumbent: Optional[str], ledger, attempt_note: Optional[str] = None,
+               critiques: Optional[str] = None) -> Dict[str, Optional[str]]:
+    """The closed loop's documents (`src.rsa.loop.brief.write_docs`), for a theory; ``critiques``
+    is the round's critiques.md (`src.rsa_open.loop.critique`), or None."""
     docs = closed.write_docs(candidate_dir, role=role, lens=lens, context=context, live=live, pruned=pruned,
-                             incumbent=incumbent, ledger=ledger, attempt_note=attempt_note)
+                             incumbent=incumbent, ledger=ledger, attempt_note=attempt_note, critiques=critiques)
     docs = {k: (_api(v) if isinstance(v, str) and k in ("brief", "existing_hypotheses", "menu") else v)
             for k, v in docs.items()}
     for fname, key in (("CANDIDATE_BRIEF.md", "brief"), ("existing_hypotheses.md", "existing_hypotheses"),

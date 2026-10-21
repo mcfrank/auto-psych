@@ -82,8 +82,9 @@ def links_md() -> str:
         priors = ", ".join(f"`{k}` ~ {type(d).__name__}" for k, d in lk.params.items())
         lines += [f"## `{name}` (response type `{link.response_type}`)", "", link.description, "",
                   f"Parameters: {priors}.", ""]
-    lines += ["The EIG tool scores choice, rating, slider (binned: a lower bound), production and "
-              "binary_judgment paradigms; it cannot yet score bets (allocation).", ""]
+    lines += ["The EIG tool scores every response type. Two are scored on a coarser view of the response, "
+              "so their score is a lower bound: a slider binned into 12 outcomes, and a bet as a bet of at "
+              "most 10 points (a random part of a bet is a smaller bet).", ""]
     return "\n".join(lines)
 
 

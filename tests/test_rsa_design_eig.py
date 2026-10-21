@@ -118,3 +118,41 @@ def test_draw_groups_compare_models_within_a_group_only():
     (given,) = eig.power([a, b], valid, [0], [40], n_scenarios=400, seed=0, draw_groups=groups)
     assert pooled["joint_eig_bits"] < 0.05 and given["joint_eig_bits"] > 0.95
     assert given["p_correct"] > 0.99
+
+
+def _many_models(n_models=4, n_displays=120, n_draws=30, seed=3):
+    """Models that disagree a little everywhere and a lot on a few displays."""
+    rng = np.random.default_rng(seed)
+    out = []
+    for m in range(n_models):
+        logits = rng.normal(scale=0.4, size=(n_displays, 3))
+        logits[rng.choice(n_displays, 6, replace=False)] += rng.normal(scale=2.5, size=(6, 3))
+        draws = logits[None] + 0.3 * rng.normal(size=(n_draws, n_displays, 3))
+        p = np.exp(draws)
+        out.append(p / p.sum(-1, keepdims=True))
+    return out
+
+
+def test_lazy_greedy_scores_far_fewer_candidates_and_loses_almost_no_information(monkeypatch):
+    import src.rsa.design.eig as eig
+
+    probs = _many_models()
+    valid = np.ones((120, 3), dtype=bool)
+    calls = {"n": 0}
+    real = eig.State.entropies_with
+
+    def counted(self, c):
+        calls["n"] += 1
+        return real(self, c)
+
+    monkeypatch.setattr(eig.State, "entropies_with", counted)
+    exact = select(probs, valid, 24, n_responses=4, n_scenarios=300, seed=2)
+    n_exact, calls["n"] = calls["n"], 0
+    lazy = select(probs, valid, 24, n_responses=4, n_scenarios=300, seed=2, lazy_full_every=16)
+    assert calls["n"] < n_exact / 3
+    assert lazy.indices[0] == exact.indices[0]  # the first pick is always a full pass
+    e = power(probs, valid, exact.indices, [4], n_scenarios=2000, seed=7)[0]["joint_eig_bits"]
+    z = power(probs, valid, lazy.indices, [4], n_scenarios=2000, seed=7)[0]["joint_eig_bits"]
+    assert z >= e - 0.03
+    # Off by default: the closed campaign's designs are exact greedy, as they ran.
+    assert select(probs, valid, 24, n_responses=4, n_scenarios=300, seed=2).indices == exact.indices

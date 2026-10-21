@@ -30,8 +30,9 @@ Start B only after the driver has reviewed A.
    - no copy of the ported truth anywhere.
 3. **Runs `src.rsa_open.run_chain`.** Each experiment has three stages.
    - **Design (about 6 h at most).** Up to two designer cycles. Each cycle is up to 2 h of agent
-     time, plus the harness's checks of each submission: EIG about 12 min, the link check about
-     7 min, then a 12-person simulated pilot with its legibility check.
+     time, plus the harness's checks of each submission: EIG about 12 min (about 3 min from run
+     B on), the link check about 7 min, then a 12-person simulated pilot with its legibility
+     check.
    - **Collection.** The simulated people answer every list of the frozen paradigm from the
      truth.
    - **The inner loop.** Six theorists per round.
@@ -97,6 +98,14 @@ Do not bring back `private/ground_truth/ground_truth.py` under any name the agen
 pick up later. `data/` is excluded from every agent tree, so `data/rsa_open/dry/` is safe.
 
 ## 3. Run B: the rehearsal (after the driver's review of A)
+
+Run B's fresh work root stages the branch as it is then. That includes what was built after run
+A was submitted, all of which A lacks:
+
+- the critic before every inner-loop round;
+- the lazy EIG search (about 6× faster);
+- a pilot that sends only the current screen's picture (about a tenth of the tokens);
+- bets in the EIG tool.
 
 ```bash
 export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_rehearsal

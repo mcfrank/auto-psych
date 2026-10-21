@@ -65,6 +65,8 @@ LINK_SETTINGS = 8
 MAX_UNITS = 20_000
 DEFAULT_DRAWS = 64
 DEFAULT_SCENARIOS = 1000
+# Lazy greedy (`src.rsa.design.eig.select`): a full pass every 16 picks, as main's design.
+LAZY_FULL_EVERY = 16
 # The closed campaign's paradigm: forced choice over the 1,597-display plain pool, 200 people
 # answering 13 of 52 designed displays each, at the per-experiment budget.
 REFERENCE = {"sizes": ((2, 2), (2, 3), (2, 4), (3, 2), (3, 3), (3, 4), (4, 2), (4, 3), (4, 4)),
@@ -176,6 +178,8 @@ def trial_units(scenes: Sequence[Context], link: LinkLikelihood) -> List[Unit]:
             units += [Unit(i, (("probe", r),)) for r in reps]
         elif link.name == "production":
             units += [Unit(i, (("target", r),)) for r in reps]
+        elif link.name == "allocation":  # the whole split is the response: one unit per scene
+            units.append(Unit(i, ()))
         else:
             units += [Unit(i, (("target", r), ("utterance", u))) for r in reps for u in range(n_real)]
     if len(units) > MAX_UNITS:
@@ -213,6 +217,11 @@ def outcome_prob_draws(theory: TheoryModel, link: LinkLikelihood, theory_draws: 
         from src.rsa_open.links import slider_bin_edges
 
         width = max(width, len(slider_bin_edges(link.options["total_points"])) + 1)
+    if link.name == "allocation":
+        from src.rsa_open.links import bet_compositions, design_bet_total
+
+        width = max(len(bet_compositions(n, design_bet_total(n, link.options["total_points"])))
+                    for n in {s[0] for s in by_group})
     width = max(width, 2)
     probs = np.zeros((n_draws, len(units), width), dtype=np.float64)
     valid = np.zeros((len(units), width), dtype=bool)
@@ -251,7 +260,7 @@ def _theory_draws(draws: Mapping[str, np.ndarray], n: int) -> Dict[str, np.ndarr
 
 def _score(ctx: DesignContext, scenes: Sequence[Context], link: LinkLikelihood, *, n_participants: int,
            trials_per_participant: int, distinct_trials: int, cost_usd: float, n_draws: int, n_scenarios: int,
-           seed: int) -> Dict[str, Any]:
+           seed: int, lazy_full_every: Optional[int] = LAZY_FULL_EVERY) -> Dict[str, Any]:
     units = trial_units(scenes, link)
     if distinct_trials > len(units):
         raise ValueError(f"the design picks {distinct_trials} trial units but the scene space gives {len(units)}")
@@ -269,7 +278,8 @@ def _score(ctx: DesignContext, scenes: Sequence[Context], link: LinkLikelihood, 
         probs.append(p)
     draw_groups = [groups] * len(probs)
     selection = eig.select(probs, valid, distinct_trials, n_responses=responses, prior=ctx.prior,
-                           n_scenarios=n_scenarios, seed=seed, draw_groups=draw_groups)
+                           n_scenarios=n_scenarios, seed=seed, draw_groups=draw_groups,
+                           lazy_full_every=lazy_full_every)
     (row,) = eig.power(probs, valid, selection.indices, [responses], prior=ctx.prior,
                        n_scenarios=n_scenarios, seed=seed + 1, names=ctx.names, draw_groups=draw_groups)
     return {
@@ -286,7 +296,7 @@ def reference_report(ctx: DesignContext, *, n_draws: int, n_scenarios: int, seed
     from src.rsa.design_space import context_pool
     from src.rsa_open.paradigm import BUDGET_USD
 
-    key = f"reference_{ctx.sha256[:12]}_{n_draws}_{n_scenarios}_{seed}.json"
+    key = f"reference_{ctx.sha256[:12]}_{n_draws}_{n_scenarios}_{seed}_lazy{LAZY_FULL_EVERY}.json"
     cached = ctx.root / key
     if cached.exists():
         return json.loads(cached.read_text())

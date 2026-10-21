@@ -17,7 +17,7 @@ import json
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
 import tyro
 
@@ -54,6 +54,9 @@ class Args:
     theorist_model: str = THEORIST_MODEL
     theorist_timeout_sec: int = 2400
     seed: int = 0
+    other_chains: Tuple[Path, ...] = ()
+    """The campaign's other chains' run directories: their finished live experiments' timing goes
+    into every design's brief (none in a simulated rehearsal)."""
     no_sandbox: bool = False
     code_commit: Optional[str] = None
 
@@ -73,7 +76,7 @@ def build(args: Args) -> Chain:
     cfg = ChainConfig(chain=f"chain_{args.chain}", seeds_dir=Path(args.seeds) / f"chain_{args.chain}",
                       bar_dir=Path(args.seeds) / "bar", literature=literature_block(args.literature), out_dir=run_dir,
                       ground_truth=gt, n_experiments=args.n_experiments, settings=FitSettings(dense_mass=True),
-                      pilot_participants=args.pilot_participants, seed=args.seed,
+                      pilot_participants=args.pilot_participants, seed=args.seed, other_chains=args.other_chains,
                       code_commit=args.code_commit or _commit(),
                       loop=dict(max_iterations=args.max_iterations, candidate_count=args.candidate_count))
     designer = designer_spawner(agent_root=args.agent_root, model=args.designer_model, sandbox=not args.no_sandbox,

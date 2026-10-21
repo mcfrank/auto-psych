@@ -151,3 +151,32 @@ def test_the_chain_command_starts_from_its_chain_s_seeds_and_designs_against_the
     assert c.cfg.literature == ("E from", tmp_path / "all_trials.csv") and c.cfg.chain == "chain_1"
     assert c.cfg.loop == {"max_iterations": 5, "candidate_count": 6}
     assert callable(c.theorist_spawn(tmp_path / "run" / "experiment1" / "loop"))
+
+
+def test_each_design_reads_the_timing_of_every_finished_live_experiment(tmp_path):
+    """PLAN.md, "Timing digest": the closed campaign's records plus every finished experiment's, this
+    chain's and the other chains' (simulated collection records none: simulated people take no time)."""
+    from src.rsa_open.chain import Chain, ChainConfig, GroundTruth
+    from src.rsa_open.screens import trial_lists
+    from src.rsa_open.timing import CLOSED_CAMPAIGN
+    from tests.test_rsa_open_screens import paradigm_of, units_of
+
+    def chain(name, others=()):
+        cfg = ChainConfig(chain=name, seeds_dir=tmp_path, literature=None, out_dir=tmp_path / name,
+                          ground_truth=GroundTruth(tmp_path / "gt.py", {}), other_chains=tuple(others))
+        return Chain(cfg, designer_spawn=None, theorist_spawn=None)
+
+    p = paradigm_of("choice")
+    lists = trial_lists(p, units_of(p), seed=0, n_lists=2)
+    a, b = chain("chain_0", [tmp_path / "chain_1"]), chain("chain_1", [tmp_path / "chain_0"])
+    for c in (a, b):
+        frozen = c.exp(1) / "design" / "frozen"
+        frozen.mkdir(parents=True)
+        (frozen / "lists.json").write_text(json.dumps(lists))
+    assert a.timing(1) == list(CLOSED_CAMPAIGN)
+    rec = a.record_timing(1, [100.0, 150.0, 200.0])
+    assert rec.n_people == 3 and rec.median_s == 150.0 and rec.source == "chain_0, experiment 1"
+    assert a.timing(2) == list(CLOSED_CAMPAIGN) + [rec]
+    assert b.timing(1) == list(CLOSED_CAMPAIGN) + [rec]  # another chain's finished experiment counts
+    with pytest.raises(FileExistsError):
+        a.record_timing(1, [1.0])  # once

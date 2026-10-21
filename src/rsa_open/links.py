@@ -154,6 +154,36 @@ def rating_probs(p, center, spread, lapse, points: int) -> jnp.ndarray:
     return (1.0 - lapse) * probs + lapse / points
 
 
+# The design tool scores a bet on a sub-bet of at most BET_DESIGN_POINTS points with at most
+# MAX_BET_OUTCOMES splits (`design_bet_total`): n points drawn at random from a Dirichlet-
+# multinomial bet are themselves Dirichlet-multinomial with n points (a Polya urn), so the sub-bet
+# is a garbling of the bet and its EIG a lower bound on the bet's (the data-processing inequality).
+BET_DESIGN_POINTS = 10
+MAX_BET_OUTCOMES = 300
+
+
+def bet_compositions(n_objects: int, total: int) -> np.ndarray:
+    """(splits, n_objects): every way to put ``total`` points on ``n_objects`` objects, in a fixed order."""
+    return np.asarray(_compositions(n_objects, total), dtype=np.int32)
+
+
+def _compositions(n: int, total: int) -> list:
+    if n == 1:
+        return [(total,)]
+    return [(k,) + rest for k in range(total + 1) for rest in _compositions(n - 1, total - k)]
+
+
+def design_bet_total(n_objects: int, total: int) -> int:
+    """The sub-bet's points for a scene of ``n_objects``: the most, up to the bet's own and
+    ``BET_DESIGN_POINTS``, with at most ``MAX_BET_OUTCOMES`` splits."""
+    from math import comb
+
+    t = min(total, BET_DESIGN_POINTS)
+    while t > 1 and comb(t + n_objects - 1, n_objects - 1) > MAX_BET_OUTCOMES:
+        t -= 1
+    return t
+
+
 def allocation_log_prob(latent, points, total: int, kappa, lapse, temperature=1.0) -> jnp.ndarray:
     """log P(points | latent): Dirichlet-multinomial around the tempered, lapse-mixed posterior."""
     conc = jnp.maximum(kappa * with_uniform(temper(jnp.asarray(latent), temperature), lapse),
@@ -313,7 +343,8 @@ class LinkLikelihood:
         raise KeyError(self.name)
 
     # -- outcomes, for the design tool (src.rsa_open.design)
-    CATEGORICAL = ("choice", "rating", "production", "binary_judgment", "ordered_beta")  # ordered_beta: binned
+    # ordered_beta: binned; allocation: a sub-bet (`design_bet_total`)
+    CATEGORICAL = ("choice", "rating", "production", "binary_judgment", "ordered_beta", "allocation")
 
     def outcome_probs(self, latent: jnp.ndarray, p: Mapping[str, Any], unit: Mapping[str, jnp.ndarray],
                       arrays, classes) -> jnp.ndarray:
@@ -337,6 +368,12 @@ class LinkLikelihood:
             q = jnp.take_along_axis(_tempered_speaker(latent, unit["target"], arrays.is_sink, p),
                                     unit["utterance"][:, None], axis=1)[:, 0]
             return rating_probs(q, p["center"], 1.0, p["lapse"], 2)
+        if self.name == "allocation":
+            n = latent.shape[1]
+            t = design_bet_total(n, self.options["total_points"])
+            comps = jnp.asarray(bet_compositions(n, t), dtype=latent.dtype)  # (W, n)
+            ll = allocation_log_prob(latent[:, None, :], comps[None], t, p["kappa"], p["lapse"], p["temperature"])
+            return jnp.exp(ll)
         raise NotImplementedError(
             f"the {self.name!r} link's outcomes are not categorical; the design tool cannot score it yet")
 
@@ -354,6 +391,10 @@ class LinkLikelihood:
             return arrays.is_sink < 0.5
         if self.name == "binary_judgment":
             return jnp.ones((unit["target"].shape[0], 2), dtype=bool)
+        if self.name == "allocation":
+            n = jnp.asarray(classes).shape[1]
+            w = len(bet_compositions(n, design_bet_total(n, self.options["total_points"])))
+            return jnp.ones((jnp.asarray(classes).shape[0], w), dtype=bool)
         raise NotImplementedError(self.name)
 
     def outcome_response(self, k: int) -> Dict[str, Any]:

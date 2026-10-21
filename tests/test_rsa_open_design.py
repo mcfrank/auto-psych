@@ -72,12 +72,49 @@ def test_trial_units_are_one_per_distinguishable_question():
     assert len(trial_units([SCENE, reheard], likelihood("choice"))) == 2
 
 
-def test_the_tool_refuses_allocation_until_it_can_score_it():
+def test_a_bet_is_scored_on_a_sub_bet_whose_outcomes_are_its_likelihood():
     from src.rsa_open.design import trial_units
-    from src.rsa_open.links import likelihood
+    from src.rsa_open.links import MAX_BET_OUTCOMES, allocation_log_prob, bet_compositions, design_bet_total, likelihood
 
-    with pytest.raises(NotImplementedError, match="allocation"):
-        trial_units([SCENE], likelihood("allocation", total_points=100))  # a bet
+    link = likelihood("allocation", total_points=100)
+    assert len(trial_units([SCENE, SCENE], link)) == 2  # one unit per scene: the whole split is the response
+    assert [design_bet_total(n, 100) for n in (2, 3, 4, 5, 6)] == [10, 10, 10, 6, 5]
+    assert design_bet_total(3, 4) == 4  # never more points than the bet has
+    assert all(len(bet_compositions(n, design_bet_total(n, 100))) <= MAX_BET_OUTCOMES for n in range(2, 7))
+    group = group_by_shape([SCENE])[SCENE.shape]
+    latent = jnp.asarray([[0.6, 0.3, 0.1]])
+    params = {"kappa": 7.0, "temperature": 1.4, "lapse": 0.08}
+    classes = jnp.asarray(group.classes)
+    probs = np.asarray(link.outcome_probs(latent, params, {}, group.arrays, classes))[0]
+    valid = np.asarray(link.outcome_valid(group.arrays, classes, {}))[0]
+    comps = bet_compositions(3, 10)
+    assert valid.sum() == len(comps) == 66 and probs.sum() == pytest.approx(1.0, abs=1e-5)
+    for k, c in enumerate(comps):
+        ll = float(allocation_log_prob(latent, jnp.asarray(c, dtype=jnp.float32)[None], 10, 7.0, 0.08, 1.4)[0])
+        assert np.exp(ll) == pytest.approx(probs[k], rel=1e-4)
+
+
+def test_a_random_part_of_a_bet_is_a_smaller_bet():
+    """The Polya urn: n points drawn without replacement from a Dirichlet-multinomial bet of T
+    points follow the Dirichlet-multinomial with n points, so the sub-bet is a garbling of the bet
+    and its EIG a lower bound on the bet's (the data-processing inequality)."""
+    import numpyro.distributions as dist
+
+    from src.rsa_open.links import bet_compositions
+
+    rng = np.random.default_rng(0)
+    conc = np.array([2.0, 1.0, 0.5])
+    bets = np.asarray(dist.DirichletMultinomial(jnp.asarray(conc), total_count=100).sample(
+        jax.random.PRNGKey(0), (20000,)))
+    comps = [tuple(c) for c in bet_compositions(3, 4)]
+    counts = dict.fromkeys(comps, 0)
+    for b in bets:
+        part = rng.choice(np.repeat(np.arange(3), b.astype(int)), size=4, replace=False)
+        counts[tuple(np.bincount(part, minlength=3))] += 1
+    pmf = np.exp(np.asarray(dist.DirichletMultinomial(jnp.asarray(conc), total_count=4).log_prob(
+        jnp.asarray(comps, dtype=jnp.float32))))
+    freq = np.array([counts[c] for c in comps]) / len(bets)
+    np.testing.assert_allclose(freq, pmf, atol=0.01)
 
 
 @pytest.fixture(scope="module")
@@ -134,7 +171,7 @@ def small_paradigm(response):
 
 
 @pytest.mark.parametrize("response", [response_block(k) for k in
-                                      ("choice", "rating", "production", "binary_judgment", "slider")],
+                                      ("choice", "rating", "production", "binary_judgment", "slider", "bet")],
                          ids=lambda r: r["type"])
 def test_the_tool_designs_a_paradigm_and_reports_its_information_per_dollar(context, response, tmp_path):
     from src.rsa_open.design import load_context, score_paradigm

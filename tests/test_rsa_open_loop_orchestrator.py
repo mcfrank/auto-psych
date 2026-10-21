@@ -27,7 +27,12 @@ class FakeTheorist:
     def __call__(self, cdir, prompt):
         self.calls.append((cdir.name, prompt))
         cdir.mkdir(parents=True, exist_ok=True)
-        if cdir.name == "candidate_1":
+        if cdir.name == "critique":  # the round's critic: one statistic on the newest block's responses
+            (cdir / "test_stats").mkdir()
+            (cdir / "test_stats" / "mean_word.py").write_text(
+                "# name: mean_word\n# description: the mean index of the chosen word.\n"
+                "def test_statistic(df):\n    return float(df['utterance'].mean())\n")
+        elif cdir.name == "candidate_1":
             (cdir / "candidate.py").write_text(ported("rsa_l1_salience"))
             (cdir / "hypothesis.md").write_text("Listeners expect speakers to talk about salient, feature-rich objects.")
             (cdir / "model_name.txt").write_text("salient_prior_listener\n")
@@ -89,7 +94,11 @@ def test_a_round_admits_refuses_repairs_retries_and_exports(run):
     s = final["standing"]
     assert all({"sel_elpd", "eligible", "by_block", "trusted"} <= set(d) for d in s.values())
     assert set(next(iter(s.values()))["by_block"]) == {"E", "exp1"}
-    assert [h["round"] for h in json.loads((loop.dir / "history.json").read_text())] == [-1, 0, 1]
+    history = json.loads((loop.dir / "history.json").read_text())
+    assert [h["round"] for h in history] == [-1, 0, 1]
+    # The round was critiqued on the newest block (exp1, a production paradigm) before its theorists ran.
+    assert history[1]["critique"]["status"] == "critiqued" and history[1]["critique"]["block"] == "exp1"
+    assert [c for c, _ in theorist.calls][0] == "critique"
 
 
 @pytest.mark.slow
@@ -101,4 +110,5 @@ def test_the_theorist_s_prompt_describes_every_paradigm_and_the_theory_api(run):
                  "People chose the word to say for a marked object."):
         assert text in prompt, text
     assert "def choice_probs(params, ctx):\n    ..." not in prompt
+    assert "## critiques.md" in prompt and "mean_word" in prompt
     assert (loop.dir / "data" / "exp1.jsonl").exists()
