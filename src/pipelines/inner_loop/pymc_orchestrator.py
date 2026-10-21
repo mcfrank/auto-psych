@@ -80,6 +80,7 @@ from src.pipelines.inner_loop.model_zoo import (
     slot_roles,
 )
 from src.model_comparison.cv import LOO, Selection
+from src.runtime.pytensor_threads import make_change_flags_thread_local
 from src.tasks import task_of_file
 
 from src.pipelines.inner_loop.critique_round import (
@@ -281,6 +282,7 @@ def run_pymc_inner_loop(
     Returns a dict with ``best_model``, ``posteriors``, ``elpd_loo``,
     ``live_models`` (the surviving zoo, in manifest order) and paths.
     """
+    make_change_flags_thread_local()  # this loop builds model graphs in several threads
     responses_path = Path(responses_path)
     results_dir = Path(results_dir)
     results_dir.mkdir(parents=True, exist_ok=True)

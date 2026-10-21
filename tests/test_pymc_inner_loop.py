@@ -30,6 +30,10 @@ def test_inner_loop_seeds_fits_and_selects_best(tmp_path, monkeypatch):
         }
 
     monkeypatch.setattr(pymc_orchestrator, "_compare", comparison_for_export_test)
+    installed = []
+    monkeypatch.setattr(
+        pymc_orchestrator, "make_change_flags_thread_local", lambda: installed.append(True)
+    )
     results_dir = tmp_path / "model_loop"
 
     result = run_pymc_inner_loop(
@@ -40,6 +44,8 @@ def test_inner_loop_seeds_fits_and_selects_best(tmp_path, monkeypatch):
         fit_kwargs={"draws": 300, "tune": 300, "chains": 2},
     )
 
+    # The loop builds graphs in threads, so PyTensor's change_flags must be per-thread.
+    assert installed == [True]
     posterior = json.loads((results_dir / "model_posterior.json").read_text())
     assert set(posterior["posteriors"]) == {"bayesian_fair_coin", "representativeness"}
     assert abs(sum(posterior["posteriors"].values()) - 1.0) < 1e-4
