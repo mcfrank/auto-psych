@@ -286,7 +286,31 @@ def test_a_base_named_otherwise_goes_to_the_judge_and_a_misread_trial_fails(tmp_
     assert by[truth]["right"] == 0 and by[truth]["wrong_answers"] and by[truth] in report["illegible"]
     checkers = [Scripted(lists, i, paradigm=p, misread=("creatures: the base",)) for i in range(3)]
     strict = materials_check(p, checkers, lists=lists, judge=Judge("no"))
-    assert {"item": "creatures: the base", "kind": "name", "right": 0, "of": 3, "answer": "creatures",
-            "wrong_answers": ["box"]} in strict["illegible"]
+    # An unrecognised base is a warning, not a misread item (PI 2026-10-21: "circle" for a plain badge).
+    assert strict["unrecognised_bases"] == [{"item": "creatures: the base", "kind": "name", "right": 0, "of": 3,
+                                             "answer": "creatures", "wrong_answers": ["box"]}]
+    assert strict["illegible"] == [] and strict["legibility"] < 1.0
     exact = [Scripted(lists, i, paradigm=p) for i in range(3)]
     assert materials_check(p, exact, lists=lists, judge=Judge("no"))["legibility"] == 1.0  # its own name: no judge
+
+
+def _timed_choice():
+    from src.rsa_open.pilot import estimated_minutes
+    from src.rsa_open.screens import trial_lists
+
+    p = paradigm_of("choice")
+    minutes = round(estimated_minutes(trial_lists(p, units_of(p), seed=0, n_lists=6)), 1)
+    p = paradigm_of("choice", minutes=minutes, pay_usd=round(minutes * 0.18, 2))
+    return p, trial_lists(p, units_of(p), seed=0, n_lists=6)
+
+
+def test_an_unrecognised_base_warns_but_passes_while_the_rate_holds(tmp_path):
+    from src.rsa_open.pilot import FLOORS, run_pilot
+
+    p, lists = _timed_choice()
+    report = run_pilot(p, lists, tmp_path, n_participants=4,
+                       participant_factory=lambda i: Scripted(lists, i, paradigm=p, misread=("creatures: the base",)))
+    assert report["legibility"]["legibility"] >= FLOORS["legibility"]  # one item of many
+    assert report["passed"], report["problems"]
+    (warning,) = report["warnings"]
+    assert warning.startswith("legibility: the base of creatures was not recognised") and "box" in warning

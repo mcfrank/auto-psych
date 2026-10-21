@@ -25,9 +25,12 @@ no); an unreadable reply is asked once more, then recorded as unreadable.
   domain's base freely (a name other than the domain's goes to a judge chat: "is 'box' a
   reasonable name for robots?"), pick which of the domain's words names the part a single
   feature adds, and say exactly which objects of ``TRUTH_ITEMS`` real test trials a word is true
-  of; at least ``FLOORS['legibility']`` of answers are right, and no item is misread by half of
-  them or more (PI 2026-10-21: the first designer drew a bare box for a featureless robot, and
-  a multiple-choice naming question passed it by elimination).
+  of; at least ``FLOORS['legibility']`` of answers are right, and no feature or trial is misread
+  by half of them or more (PI 2026-10-21: the first designer drew a bare box for a featureless
+  robot, and a multiple-choice naming question passed it by elimination). A base named otherwise
+  by half or more counts against the rate but alone is a warning, not a failure (PI 2026-10-21:
+  a plain badge is fairly called a circle; the features and the words' truth carry the
+  inference).
 LLM participants are not people: the pilot finds instructions, prompts and materials that a
 capable reader cannot follow, and data that do not parse; it says nothing about effect sizes.
 """
@@ -305,12 +308,13 @@ def _judge_name(judge: Participant, given: str, intended: str) -> bool:
 
 def materials_check(paradigm, checkers: Sequence[Participant], out: Optional[Path] = None, *,
                     lists: Optional[Mapping[str, Any]] = None, judge: Optional[Participant] = None) -> Dict[str, Any]:
-    """Each checker (a fresh chat) answers every legibility question; an item fails when no more
-    than half of them get it right. A free name that is not the domain's name (singular or
-    plural) goes to ``judge`` (a fresh chat); without a judge it is wrong."""
+    """Each checker (a fresh chat) answers every legibility question; an item is misread when no
+    more than half of them get it right: ``illegible`` for a feature or a trial, and
+    ``unrecognised_bases`` (a warning) for a base. A free name that is not the domain's name
+    (singular or plural) goes to ``judge`` (a fresh chat); without a judge it is wrong."""
     items = legibility_items(paradigm, lists)
     if not items:
-        return {"items": 0, "legibility": None, "illegible": []}
+        return {"items": 0, "legibility": None, "illegible": [], "unrecognised_bases": []}
     given: Dict[str, List[Optional[str]]] = {it.key: [] for it in items}
     right: Dict[str, List[bool]] = {it.key: [] for it in items}
     for c, checker in enumerate(checkers):
@@ -351,9 +355,10 @@ def materials_check(paradigm, checkers: Sequence[Participant], out: Optional[Pat
                      "answer": expected,
                      "wrong_answers": sorted({g for g, ok in zip(given[it.key], right[it.key]) if not ok and g})})
     total = sum(r["of"] for r in rows)
-    illegible = [r for r in rows if r["right"] * 2 <= r["of"]]
-    return {"items": len(items), "legibility": sum(r["right"] for r in rows) / total, "illegible": illegible,
-            "by_item": rows}
+    misread = [r for r in rows if r["right"] * 2 <= r["of"]]
+    return {"items": len(items), "legibility": sum(r["right"] for r in rows) / total,
+            "illegible": [r for r in misread if r["kind"] != "name"],
+            "unrecognised_bases": [r for r in misread if r["kind"] == "name"], "by_item": rows}
 
 
 # --------------------------------------------------------------------------- one participant
@@ -456,7 +461,7 @@ def gate(paradigm, lists: Mapping[str, Any], sessions: Sequence[Session],
                   time_calibration=t["calibration"], time_calibration_basis=t["calibration_basis"])
     if legibility is not None:
         report["legibility"] = legibility
-    problems = []
+    problems, warnings = [], []
     if report["comprehension_final"] < FLOORS["comprehension"]:
         problems.append(f"comprehension: {report['comprehension_final']:.0%} answered every check right by the "
                         f"second reading (floor {FLOORS['comprehension']:.0%})")
@@ -483,13 +488,21 @@ def gate(paradigm, lists: Mapping[str, Any], sessions: Sequence[Session],
         bad = "; ".join(f"{r['item']} ({r['right']} of {r['of']} chose '{r['answer']}'"
                         + (f"; others chose {', '.join(r['wrong_answers'])}" if r["wrong_answers"] else "") + ")"
                         for r in legibility["illegible"])
+        bases = "; ".join(f"the base of {r['item'].split(':')[0]} was not recognised ({r['right']} of {r['of']} "
+                          f"named it '{r['answer']}' or a fair synonym"
+                          + (f"; others said {', '.join(r['wrong_answers'])}" if r["wrong_answers"] else "") + ")"
+                          for r in legibility.get("unrecognised_bases", []))
         if legibility["legibility"] < FLOORS["legibility"] or legibility["illegible"]:
             problems.append(f"legibility: {legibility['legibility']:.0%} of the materials questions answered right "
-                            f"(floor {FLOORS['legibility']:.0%})" + (f"; misread: {bad}" if bad else ""))
+                            f"(floor {FLOORS['legibility']:.0%})" + (f"; misread: {bad}" if bad else "")
+                            + (f"; {bases}" if bases else ""))
+        elif bases:
+            warnings.append(f"legibility: {bases}")
     distinct = {json.dumps(r["response"], sort_keys=True) for r in tests}
     if len(tests) > 1 and len(distinct) == 1:
         problems.append(f"degenerate: every test answer was {distinct.pop()}")
     report["problems"] = problems
+    report["warnings"] = warnings
     report["passed"] = not problems
     return report
 

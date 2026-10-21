@@ -260,7 +260,8 @@ link, builds the page and pilots it with LLM participants. The pilot passes when
 {FLOORS['comprehension']:.0%} of them understand the instructions (by their second reading), at least
 {FLOORS['catch']:.0%} of catch trials are passed, {FLOORS['readable']:.0%} of answers are usable, the data parse, its
 time estimate is within {TIME_TOLERANCE:.0%} of your declared minutes, and (SVG materials) at least {FLOORS['legibility']:.0%} of
-its materials questions are answered right, with no base or feature misread by half of them. If anything fails you get the report
+its materials questions are answered right, with no feature or trial screen misread by half of them (a base
+named otherwise counts against that rate). If anything fails you get the report
 and may revise: {submissions_left} submission(s) left in this cycle, about {seconds_left // 60} minutes of your time.
 
 ## What to write
