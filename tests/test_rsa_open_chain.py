@@ -74,7 +74,7 @@ def chain(tmp_path_factory):
     cfg = ChainConfig(chain="dry", seeds_dir=seeds, literature=literature, out_dir=root / "chain",
                       ground_truth=GroundTruth(gt_path, truth), n_experiments=2, settings=SETTINGS,
                       pilot_participants=3, loop=dict(max_iterations=1, candidate_count=1, fit_time_limit_sec=None))
-    c = Chain(cfg, designer_spawn=designer, theorist_spawn=theorist)
+    c = Chain(cfg, designer_spawn=designer, theorist_spawn=lambda loop_dir: theorist)
     exports = c.run()
     yield c, exports, designer, theorist_calls
     mp.undo()
@@ -118,3 +118,17 @@ def test_a_finished_chain_resumes_without_redoing_anything(chain):
     c, exports, designer, _ = chain
     sessions = designer.sessions
     assert c.run() == exports and designer.sessions == sessions
+
+
+def test_an_unfinished_stage_is_set_aside_with_its_fit_cache_carried(tmp_path):
+    from src.rsa_open.chain import set_aside
+
+    assert set_aside(tmp_path / "loop") is None
+    for attempt in (1, 2):
+        (tmp_path / "loop" / ".fit_cache").mkdir(parents=True, exist_ok=True)
+        (tmp_path / "loop" / ".fit_cache" / "a.nc").write_text("fit")
+        (tmp_path / "loop" / "round_0").mkdir()
+        aside = set_aside(tmp_path / "loop", keep=(".fit_cache",))
+        assert aside == tmp_path / f"loop.abandoned_{attempt}" and (aside / "round_0").is_dir()
+        assert (tmp_path / "loop" / ".fit_cache" / "a.nc").read_text() == "fit"
+        assert not (tmp_path / "loop" / "round_0").exists()

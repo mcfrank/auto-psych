@@ -47,6 +47,11 @@ FORBIDDEN = [
     "src/rsa/simulate.py",
     "src/rsa/recovery.py",
     "src/rsa/evaluate_heldout.py",
+    "src/rsa_open/chain.py",
+    "src/rsa_open/ground_truth.py",
+    "src/rsa_open/run_chain.py",
+    "src/rsa_open/seeds.py",
+    "data/rsa_open/rehearsal/ground_truth/ground_truth.py",
     "docs",
     "docs/auto_rsa/PLAN.md",
     "tests",
@@ -61,6 +66,9 @@ FORBIDDEN = [
 # the pyprojroot sentinel and opencode's config.
 NEEDED = [
     "src/rsa/loop/check_candidate.py",
+    "src/rsa_open/loop/check_candidate.py",
+    "src/rsa_open/tools.py",
+    "src/rsa_open/loop/gates.py",
     "src/rsa/loop/gates.py",
     "src/rsa/fit.py",
     "src/rsa/model_file.py",
@@ -342,6 +350,21 @@ def test_the_self_check_imports_from_the_tree_through_the_uv_shim(scrubbed_tree)
     # The documented command parses (its --help needs no data).
     result = _run(["uv", "run", "python", "-m", "src.rsa.loop.check_candidate", "--help"], cwd=tree, env=env)
     assert result.returncode == 0 and "--responses" in result.stdout, result.stderr
+
+
+
+@pytest.mark.parametrize("module", ["src.rsa_open.loop.check_candidate", "src.rsa_open.tools"])
+def test_the_open_campaign_s_agent_commands_run_in_the_tree(scrubbed_tree, module):
+    """The theorists' self-check and the designer's tools, without the harness-only modules."""
+    env = dict(os.environ, PATH=f"{scrubbed_tree / '.agent_bin'}:{os.environ['PATH']}")
+    result = _run(["uv", "run", "python", "-m", module, "--help"], cwd=scrubbed_tree, env=env)
+    assert result.returncode == 0, result.stderr
+    assert not (scrubbed_tree / "src" / "rsa_open" / "ground_truth.py").exists()
+    # The tools import their work lazily: those modules load in the tree too.
+    code = ("import src.rsa_open.design, src.rsa_open.fit, src.rsa_open.paradigm, src.rsa_open.pilot, "
+            "src.rsa_open.screens, src.rsa_open.timing, src.rsa_open.loop.gates")
+    result = _run(["uv", "run", "python", "-c", code], cwd=scrubbed_tree, env=env)
+    assert result.returncode == 0, result.stderr
 
 
 @pytest.mark.parametrize("command", [["pip", "install", "numpy"], ["sync"], ["add", "x"], ["run", "--with", "x", "python"],

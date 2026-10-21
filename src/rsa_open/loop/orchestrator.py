@@ -118,6 +118,8 @@ class OpenLoop:
         self.blocks = read_corpus(self.cfg.corpus_path)
         write_corpus(self.corpus, self.blocks)
         self.data_paths = briefs.write_block_data(self.dir / "data", self.blocks)
+        # The theorists' copy, for their self-check: they read data/ and models/, never the loop's own files.
+        self.agent_corpus = write_corpus(self.dir / "data" / "corpus.json", self.blocks)
         self.pool = plain_pool()
         self.folds = {b.name: assign_folds(b, self.cfg.cv_folds, seed=self.cfg.settings.seed) for b in self.blocks}
         self.fold_paths = [
@@ -288,7 +290,7 @@ class OpenLoop:
         pruned = [closed_brief.ZooModel(e.name, e.hypothesis, pruned_dir / f"{e.name}.py", f"pruned: {e.detail}")
                   for e in sorted(self.ledger.pruned(self.live), key=lambda e: prune_margin(e.detail))
                   if (pruned_dir / f"{e.name}.py").exists()]
-        context = briefs.context_md(candidate_dir=cdir, corpus_path=self.corpus, blocks=self.blocks,
+        context = briefs.context_md(candidate_dir=cdir, corpus_path=self.agent_corpus, blocks=self.blocks,
                                     data_paths=self.data_paths, paradigm_notes=self.cfg.paradigm_notes,
                                     round_index=round_index, n_rounds=self.cfg.max_iterations,
                                     network=self.cfg.agent_network)

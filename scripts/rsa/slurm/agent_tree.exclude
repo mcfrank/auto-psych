@@ -57,6 +57,14 @@ data
 # and picks a hidden ground truth) and its records; agents need none of it.
 /src/rsa/promote.py
 /src/rsa/outer/
+# The open campaign's harness (docs/auto_open/PLAN.md): the chain driver simulates people from a
+# hidden ground truth, ground_truth.py builds that truth, run_chain.py runs it, seeds.py builds the
+# chains' starting sets. Agents run the designer tools and the theorists' self-check, which import
+# none of them.
+/src/rsa_open/chain.py
+/src/rsa_open/ground_truth.py
+/src/rsa_open/run_chain.py
+/src/rsa_open/seeds.py
 
 # --- instruction files agent CLIs load into every session ------------------------
 # (claude: CLAUDE.md; codex and opencode: AGENTS.md.) The project CLAUDE.md

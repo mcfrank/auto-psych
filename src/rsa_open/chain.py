@@ -10,7 +10,10 @@
       corpus.json          E, every earlier block and this one
       loop/                the inner loop (`src.rsa_open.loop.orchestrator.OpenLoop`) and its export
 
-Each stage is skipped when its output exists, so a chain resumes where it stopped:
+Each stage is skipped when its output exists, so a chain resumes where it stopped. A design or
+loop that stopped part way starts again from scratch (as main's model-loop stage does); the
+abandoned attempt is kept beside it as ``design.abandoned_<i>`` / ``loop.abandoned_<i>`` (no agent
+reads it), and a loop's fit cache moves to the new attempt, so no fit is repeated:
 
 1. **design**: the carried theories and **the bar** (the chain's starting theories, `bar_dir`, kept
    in every design although the loop may prune them, as the closed campaign's design kept its
@@ -84,6 +87,24 @@ def _hypotheses(models_dir: Path) -> Dict[str, str]:
     return {e["name"]: e.get("rationale", "") for e in read_manifest_entries(models_dir)}
 
 
+def set_aside(stage_dir: Path, keep: Sequence[str] = ()) -> Optional[Path]:
+    """Move an unfinished stage's directory to ``<name>.abandoned_<i>``, carrying the entries
+    named in ``keep`` (e.g. its fit cache) into a fresh ``stage_dir``; None if there was none."""
+    stage_dir = Path(stage_dir)
+    if not stage_dir.exists():
+        return None
+    i = 1
+    while stage_dir.with_name(f"{stage_dir.name}.abandoned_{i}").exists():
+        i += 1
+    aside = stage_dir.with_name(f"{stage_dir.name}.abandoned_{i}")
+    stage_dir.rename(aside)
+    stage_dir.mkdir()
+    for name in keep:
+        if (aside / name).exists():
+            (aside / name).rename(stage_dir / name)
+    return aside
+
+
 def _copy_models(src: Path, dst: Path) -> None:
     """A models directory (theories + manifest), copied once."""
     if (dst / "models_manifest.yaml").exists():
@@ -99,8 +120,10 @@ def _copy_models(src: Path, dst: Path) -> None:
 
 
 class Chain:
-    def __init__(self, cfg: ChainConfig, *, designer_spawn: DesignerSpawn, theorist_spawn: Callable[[Path, str], bool],
-                 participant_factory=None) -> None:
+    def __init__(self, cfg: ChainConfig, *, designer_spawn: DesignerSpawn,
+                 theorist_spawn: Callable[[Path], Callable[[Path, str], bool]], participant_factory=None) -> None:
+        """``theorist_spawn(loop_dir)`` is an experiment's theorist spawner (theorists read that
+        loop's ``models/`` and ``data/``)."""
         self.cfg = cfg
         self.designer_spawn = designer_spawn
         self.theorist_spawn = theorist_spawn
@@ -174,6 +197,8 @@ class Chain:
         frozen = self.exp(n) / "design" / "frozen"
         if (frozen / "record.json").exists():
             return frozen
+        if set_aside(self.exp(n) / "design") is not None:
+            shutil.rmtree(self.exp(n) / "design")  # run_designer lays its directory out itself
         run_designer(self.exp(n) / "design", chain=self.cfg.chain, experiment=n, theories=self.design_context(n),
                      hypotheses={k: h for k, (_, h) in self.design_theories(n).items()}, history=self.history(n),
                      spawn=self.designer_spawn,
@@ -226,6 +251,7 @@ class Chain:
         loop_dir = self.exp(n) / "loop"
         if (loop_dir / "export.json").exists():
             return json.loads((loop_dir / "export.json").read_text())
+        set_aside(loop_dir, keep=(".fit_cache",))
         corpus = write_corpus(self.exp(n) / "corpus.json", self.blocks_before(n + 1))
         notes = {}
         for k in range(1, n + 1):
@@ -235,7 +261,7 @@ class Chain:
         cfg = OpenLoopConfig(corpus_path=corpus, seed_models_dir=self.models_input(n), results_dir=loop_dir,
                              settings=self.cfg.settings, paradigm_notes=notes, inherit_ledger=prev_ledger,
                              **self.cfg.loop)
-        OpenLoop(cfg, self.theorist_spawn).run()
+        OpenLoop(cfg, self.theorist_spawn(loop_dir)).run()
         return json.loads((loop_dir / "export.json").read_text())
 
     def run(self) -> List[dict]:
