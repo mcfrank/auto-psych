@@ -226,6 +226,19 @@ def _fit_in_child(theory_path, name, corpus_path, settings, nc_path, meta_path, 
     raise RuntimeError(f"{name}: infrastructure failure while fitting: {message}\n{tb}")
 
 
+def cached_loop_fit(theory_path: Path, name: str, corpus_path: Path, settings: FitSettings,
+                    cache_dir: Path) -> Optional[CorpusFit]:
+    """What `loop_fit` would return, if the cache already holds it; never fits (None otherwise)."""
+    nc, meta = cache_paths(cache_dir, name, fingerprint(theory_path, corpus_path, settings))
+    if not (nc.exists() and meta.exists()):
+        return None
+    first = _read(nc, meta)
+    if first.converged:
+        return first
+    nc, meta = cache_paths(cache_dir, name, fingerprint(theory_path, corpus_path, refit_settings(settings)))
+    return _read(nc, meta) if nc.exists() and meta.exists() else None
+
+
 def loop_fit(theory_path: Path, name: str, corpus_path: Path, settings: FitSettings, cache_dir: Path, *,
              time_limit_sec: Optional[float] = None) -> CorpusFit:
     """The fit the loop uses: at ``settings``, or the one refit when that fails the convergence

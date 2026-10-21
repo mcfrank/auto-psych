@@ -5,6 +5,7 @@ link check (each has its own tests); every fit and simulation is real."""
 import json
 import math
 
+import numpy as np
 import pytest
 import yaml
 
@@ -73,7 +74,7 @@ def chain(tmp_path_factory):
 
     cfg = ChainConfig(chain="dry", seeds_dir=seeds, literature=literature, out_dir=root / "chain",
                       ground_truth=GroundTruth(gt_path, truth), n_experiments=2, settings=SETTINGS,
-                      pilot_participants=3, loop=dict(max_iterations=1, candidate_count=1, fit_time_limit_sec=None))
+                      pilot_participants=3, design_settings=SETTINGS, loop=dict(max_iterations=1, candidate_count=1, fit_time_limit_sec=None))
     c = Chain(cfg, designer_spawn=designer, theorist_spawn=lambda loop_dir: theorist)
     exports = c.run()
     yield c, exports, designer, theorist_calls
@@ -106,7 +107,9 @@ def test_two_experiments_run_end_to_end_and_carry_their_theories(chain):
     assert all(name in fits_md for name in live1)
     # Experiment 2's design reads experiment 1's loop fits: same corpus file, so the carried theories are hits.
     assert (c.exp(2) / "prior_corpus.json").read_bytes() == (c.exp(1) / "loop" / "corpus.json").read_bytes()
-    assert c.design_cache(2) == c.exp(1) / "loop" / ".fit_cache" and not (c.exp(2) / ".fit_cache").exists()
+    record = json.loads((c.exp(2) / "design_screened_out.json").read_text())
+    assert record["screened_out"] == [] and set(record["fits"].values()) == {"the previous loop's fit"}
+    assert not (c.exp(2) / ".fit_cache").exists()  # nothing refitted for the design
     # Experiment 2's design scored the bar too: a seed the loop pruned is still in its context.
     context2 = json.loads((c.exp(2) / "design" / "cycle_1" / "context" / "context.json").read_text())
     assert set(context2["theories"]) == {"literal_listener", "rsa_l1"}
@@ -180,3 +183,36 @@ def test_each_design_reads_the_timing_of_every_finished_live_experiment(tmp_path
     assert b.timing(1) == list(CLOSED_CAMPAIGN) + [rec]  # another chain's finished experiment counts
     with pytest.raises(FileExistsError):
         a.record_timing(1, [1.0])  # once
+
+
+def test_a_design_leaves_out_a_theory_whose_fit_fails_or_runs_out_of_time_on_record(tmp_path, monkeypatch):
+    from src.rsa.loop.fitting import FitTimeLimitExceeded, ModelFailure
+    from src.rsa_open.chain import Chain, ChainConfig, GroundTruth
+    from tests.test_rsa_open_loop_critique import FakeFit
+
+    cfg = ChainConfig(chain="c", seeds_dir=tmp_path, literature=None, out_dir=tmp_path / "chain",
+                      ground_truth=GroundTruth(tmp_path / "gt.py", {}))
+    c = Chain(cfg, designer_spawn=None, theorist_spawn=None)
+    names = ["literal_listener", "rsa_l1", "slow", "broken"]
+    for name in names:
+        (tmp_path / f"{name}.py").write_text(ported("rsa_l1" if name in ("slow", "broken") else name))
+    monkeypatch.setattr(Chain, "blocks_before", lambda self, n: [])
+    monkeypatch.setattr("src.rsa_open.chain.write_corpus", lambda path, blocks: path)
+    monkeypatch.setattr(Chain, "design_theories", lambda self, n: {k: (tmp_path / f"{k}.py", "h") for k in names})
+
+    def fit(self, n, path, name, corpus):
+        if name == "slow":
+            raise FitTimeLimitExceeded("slow: the fit did not finish within 120 minutes")
+        if name == "broken":
+            raise ModelFailure("ValueError: nan")
+        return FakeFit({"alpha": np.ones(50)}), "a design fit"
+
+    monkeypatch.setattr(Chain, "design_fit", fit)
+    context = c.design_context(1)
+    assert set(context) == {"literal_listener", "rsa_l1"}
+    record = json.loads((c.exp(1) / "design_screened_out.json").read_text())
+    assert [s["theory"] for s in record["screened_out"]] == ["slow", "broken"]
+    assert "120 minutes" in record["screened_out"][0]["reason"]
+    names[:] = ["rsa_l1", "slow"]
+    with pytest.raises(RuntimeError, match="needs two"):
+        c.design_context(1)

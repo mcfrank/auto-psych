@@ -35,9 +35,9 @@ from __future__ import annotations
 import json
 import math
 import shutil
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import jax
 import numpy as np
@@ -48,11 +48,19 @@ from src.rsa.fit import FitSettings
 from src.rsa_open.corpus import Block
 from src.rsa_open.designer import EarlierParadigm, SpawnFn as DesignerSpawn, run_designer
 from src.rsa_open.fit import TheoryModel, simulate
-from src.rsa_open.loop.fitting import loop_fit, read_corpus, write_corpus
+from src.rsa_open.loop.fitting import cached_loop_fit, fit_cached, read_corpus, write_corpus
 from src.rsa_open.loop.orchestrator import OpenLoop, OpenLoopConfig
 from src.rsa_open.timing import CLOSED_CAMPAIGN, TimingRecord, read_records, record_from_sessions, write_records
 
 DESIGN_DRAWS = 200
+# The design's own fits (a theory the previous loop did not fit on the same data): the design needs
+# DESIGN_DRAWS posterior draws, not the loop's 4 x 1,000, and no convergence gate (main's design
+# twin until 2026-10-08). A fit not back within DESIGN_FIT_LIMIT_SEC, or failing, leaves its
+# theory out of that design, on record (`design_screened_out.json`): run A's design waited 6 h+
+# on one bar theory's fit, which had no time limit.
+DESIGN_SETTINGS = FitSettings(num_warmup=500, num_samples=250, num_chains=2, dense_mass=True)
+DESIGN_FIT_LIMIT_SEC = 2 * 3600
+SCREENED_OUT = "design_screened_out.json"
 
 
 @dataclass(frozen=True)
@@ -82,6 +90,8 @@ class ChainConfig:
     seed: int = 0
     bar_dir: Optional[Path] = None
     """The bar: theories every design scores beside the carried ones (default: the seeds)."""
+    design_settings: FitSettings = DESIGN_SETTINGS
+    design_fit_limit_sec: float = DESIGN_FIT_LIMIT_SEC
     other_chains: Sequence[Path] = ()
     """The campaign's other chains' run directories, whose finished experiments' timing every
     design reads too (PLAN.md, "Timing digest")."""
@@ -191,17 +201,29 @@ class Chain:
                                                  f"kept in every design as the bar.) {h}")
         return out
 
-    def design_cache(self, n: int) -> Path:
-        """Where the design's fits are cached: the previous experiment's loop cache (its corpus is this
-        design's data so far, byte for byte, so the theories it carried are hits), else the
-        experiment's own."""
-        return self.exp(n - 1) / "loop" / ".fit_cache" if n > 1 else self.exp(n) / ".fit_cache"
+    def design_fit(self, n: int, path: Path, name: str, corpus: Path) -> Tuple[Optional[Any], str]:
+        """(fit, where it came from): the previous loop's fit on the same data if it has one (its
+        corpus is this design's data so far, byte for byte), else a design fit at
+        ``design_settings`` within ``design_fit_limit_sec``. Raises ModelFailure (the theory's
+        failure, or the time limit)."""
+        if n > 1:
+            cached = cached_loop_fit(path, name, corpus, self.cfg.settings, self.exp(n - 1) / "loop" / ".fit_cache")
+            if cached is not None:
+                return cached, "the previous loop's fit"
+        settings = replace(self.cfg.design_settings, seed=self.cfg.settings.seed)
+        fitted = fit_cached(path, name, corpus, settings, self.exp(n) / ".fit_cache",
+                            time_limit_sec=self.cfg.design_fit_limit_sec)
+        return fitted, "a design fit" + ("" if fitted.converged else
+                                          f" (not converged: {'; '.join(fitted.convergence_problems)})")
 
     def design_context(self, n: int) -> Dict[str, tuple]:
         """Each design theory (`design_theories`) with posterior draws of its parameters on the data
-        so far, fitted concurrently (each in a child of its own, as the loop's)."""
+        so far, fitted concurrently (each in a child of its own, as the loop's). A theory whose fit
+        fails or runs out of time is left out of this design and recorded in
+        ``design_screened_out.json`` (an empty list: none was); fewer than two left raises."""
         from concurrent.futures import ThreadPoolExecutor
 
+        from src.rsa.loop.fitting import ModelFailure
         from src.rsa.loop.orchestrator import default_fit_workers
 
         corpus = write_corpus(self.exp(n) / "prior_corpus.json", self.blocks_before(n))
@@ -209,14 +231,28 @@ class Chain:
 
         def one(item):
             name, (path, _) = item
-            fitted = loop_fit(path, name, corpus, self.cfg.settings, self.design_cache(n), time_limit_sec=math.inf)
+            try:
+                fitted, source = self.design_fit(n, path, name, corpus)
+            except ModelFailure as exc:
+                return name, None, f"{type(exc).__name__}: {exc}"
             flat = fitted.flat()
             total = len(next(iter(flat.values())))
             take = np.unique(np.linspace(0, total - 1, min(total, DESIGN_DRAWS)).round().astype(int))
-            return name, (path, {k: flat[k][take] for k in TheoryModel(path, name=name).params})
+            return name, (path, {k: flat[k][take] for k in TheoryModel(path, name=name).params}), source
 
         with ThreadPoolExecutor(max_workers=max(1, min(len(items), default_fit_workers()))) as pool:
-            return dict(pool.map(one, items))
+            results = list(pool.map(one, items))
+        screened = [{"theory": name, "reason": why} for name, ctx, why in results if ctx is None]
+        sources = {name: why for name, ctx, why in results if ctx is not None}
+        (self.exp(n)).mkdir(parents=True, exist_ok=True)
+        (self.exp(n) / SCREENED_OUT).write_text(json.dumps({"screened_out": screened, "fits": sources}, indent=1))
+        for s in screened:
+            print(f"[chain] experiment {n}'s design leaves out {s['theory']}: {s['reason']}", flush=True)
+        context = {name: ctx for name, ctx, _ in results if ctx is not None}
+        if len(context) < 2:
+            raise RuntimeError(f"experiment {n}: {len(context)} theory left for the design after screening "
+                               f"({screened}); a design needs two to tell apart")
+        return context
 
     def history(self, n: int) -> List[EarlierParadigm]:
         """The chain's earlier paradigms, each with the theories' standing on its block at the end of
@@ -243,8 +279,10 @@ class Chain:
             return frozen
         if set_aside(self.exp(n) / "design") is not None:
             shutil.rmtree(self.exp(n) / "design")  # run_designer lays its directory out itself
-        run_designer(self.exp(n) / "design", chain=self.cfg.chain, experiment=n, theories=self.design_context(n),
-                     hypotheses={k: h for k, (_, h) in self.design_theories(n).items()}, history=self.history(n),
+        context = self.design_context(n)
+        run_designer(self.exp(n) / "design", chain=self.cfg.chain, experiment=n, theories=context,
+                     hypotheses={k: h for k, (_, h) in self.design_theories(n).items() if k in context},
+                     history=self.history(n),
                      spawn=self.designer_spawn,
                      pilot_participants=self.cfg.pilot_participants, participant_factory=self.participant_factory,
                      code_commit=self.cfg.code_commit, timing=self.timing(n))
