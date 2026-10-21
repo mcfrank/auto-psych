@@ -52,6 +52,11 @@ FORBIDDEN = [
     "src/rsa_open/run_chain.py",
     "src/rsa_open/seeds.py",
     "data/rsa_open/rehearsal/ground_truth/ground_truth.py",
+    "src/rsa/consolidate",
+    "src/rsa/consolidate/superset.py",
+    "src/rsa/prereg",
+    "src/rsa/viz",
+    "data/rsa/live/finals",
     "docs",
     "docs/auto_rsa/PLAN.md",
     "tests",
@@ -351,6 +356,20 @@ def test_the_self_check_imports_from_the_tree_through_the_uv_shim(scrubbed_tree)
     result = _run(["uv", "run", "python", "-m", "src.rsa.loop.check_candidate", "--help"], cwd=tree, env=env)
     assert result.returncode == 0 and "--responses" in result.stdout, result.stderr
 
+
+
+def test_no_agent_sees_the_closed_campaign_s_finals(scrubbed_tree):
+    """PLAN.md, "Data": the closed finals were chosen on the closed live data, so neither their
+    files, nor their names, nor code built from them reach an agent (an open theorist reading
+    them would carry the closed experiments into the open campaign)."""
+    finals = sorted((REPO / "data" / "rsa" / "live" / "finals").glob("*.py"))
+    assert len(finals) == 3
+    names = [p.stem for p in finals]
+    texts = {p: p.read_text(errors="ignore") for p in scrubbed_tree.rglob("*")
+             if p.is_file() and p.suffix not in (".pyc", ".nc")}
+    assert not [str(p) for p, t in texts.items() if any(n in t for n in names)]
+    bodies = {p.read_text() for p in finals}
+    assert not [str(p) for p, t in texts.items() if t in bodies]
 
 
 @pytest.mark.parametrize("module", ["src.rsa_open.loop.check_candidate", "src.rsa_open.tools"])

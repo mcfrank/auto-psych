@@ -65,6 +65,13 @@ data
 /src/rsa_open/ground_truth.py
 /src/rsa_open/run_chain.py
 /src/rsa_open/seeds.py
+# Everything built from the closed campaign's live or pre-registered data (PLAN.md, "Data": the
+# open campaign's agents never see it, or the comparison is asymmetric): the consolidation of the
+# closed finals (their mechanisms, as code), the pre-registration (it names the finals) and the
+# campaign figures. No agent command imports them.
+/src/rsa/consolidate/
+/src/rsa/prereg/
+/src/rsa/viz/
 
 # --- instruction files agent CLIs load into every session ------------------------
 # (claude: CLAUDE.md; codex and opencode: AGENTS.md.) The project CLAUDE.md

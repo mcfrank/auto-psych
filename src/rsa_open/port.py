@@ -9,8 +9,8 @@ clicking each object. The port keeps the theory and leaves the response process 
   ``Beta(1.0, 9.0)``: ``lapse`` leaves ``PARAMS`` and each return becomes ``return X``.
   Composed with the choice link, the port equals the original at temperature 1.
 - **(b) no final lapse.** No return is ``with_lapse(...)``: the whole function is the theory,
-  and a parameter named ``lapse`` (a latent mixture of the theory's own, like chain 2's final's,
-  which mixes in its salience prior) is renamed ``theory_lapse`` so the link's lapse cannot
+  and a parameter named ``lapse`` (a latent mixture of the theory's own) is renamed
+  ``theory_lapse`` so the link's lapse cannot
   clash. Composed with the choice link, the port equals the original at link lapse 0 and
   temperature 1; the theory's mixture stays only if it earns its parameter over the link's.
 
