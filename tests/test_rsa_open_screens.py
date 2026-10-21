@@ -116,7 +116,9 @@ def test_objects_are_drawn_with_their_features_in_the_trial_s_words():
     for pos, obj in enumerate(t["display_order"]):
         n_feats = sum(t["objects"][obj])
         assert t["items_html"][pos].startswith("<svg") and domain.base in t["items_html"][pos]
-        assert t["items_html"][pos].count("<rect") == n_feats  # each feature's fragment, once
+        drawn = [j for j in range(len(t["words"])) if domain.features[t["feature_map"][j]].svg in t["items_html"][pos]]
+        assert drawn == [j for j, v in enumerate(t["objects"][obj]) if v]  # exactly the object's features
+        assert n_feats == len(drawn)
         named = [t["words"][j] for j, v in enumerate(t["objects"][obj]) if v]
         assert all(w in t["item_labels"][pos] for w in named)
 

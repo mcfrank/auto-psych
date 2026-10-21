@@ -20,7 +20,12 @@ no); an unreadable reply is asked once more, then recorded as unreadable.
 - the test responses parse as the paradigm's link's data (`src.rsa_open.fit.OpenData.build`);
 - the time estimate (`estimated_minutes`: `src.rsa_open.timing`'s model, calibrated on people's
   real times in finished experiments) is within ``TIME_TOLERANCE`` of the declared minutes;
-- the test answers are not all one answer.
+- the test answers are not all one answer;
+- legibility (SVG materials, `materials_check`): ``LEGIBILITY_CHECKERS`` fresh chats are shown each
+  domain's base alone ("what is pictured?", among four other kinds of thing) and the base beside
+  the base with one feature added ("which word names the added part?", among the domain's
+  words); at least ``FLOORS['legibility']`` of answers are right, and no item is misread by half
+  or more of them (PI 2026-10-21: a bare box drawn for "robot" read as nothing).
 LLM participants are not people: the pilot finds instructions, prompts and materials that a
 capable reader cannot follow, and data that do not parse; it says nothing about effect sizes.
 """
@@ -40,7 +45,11 @@ import tyro
 
 PILOT_MODEL = "gemini-3.8-flash"
 PILOT_PARTICIPANTS = 12
-FLOORS = {"comprehension": 0.8, "catch": 0.8, "readable": 0.95}
+FLOORS = {"comprehension": 0.8, "catch": 0.8, "readable": 0.95, "legibility": 0.9}
+LEGIBILITY_CHECKERS = 3
+CHOICE_ASK = "Reply ANSWER: <the number of your choice>."
+DISTRACTOR_KINDS = ("animals", "vehicles", "plants", "tools", "buildings", "robots", "flowers", "houses", "boats",
+                    "badges", "cups", "hats", "fish", "trees", "cars", "clocks", "lamps", "chairs", "kites", "shells")
 TIME_TOLERANCE = 0.30
 SYSTEM = ("You are taking part in an online research study. Read each screen carefully and respond as a "
           "thoughtful participant would. End every reply with one line of the form `ANSWER: ...`, in the "
@@ -102,11 +111,15 @@ def _plain(fragment: str) -> str:
 
 def screen_png(trial: Mapping[str, Any]) -> bytes:
     """One image of an SVG trial's objects, left to right, the marked one framed in orange."""
+    return row_png(trial["items_html"], trial["widget"].get("marked"))
+
+
+def row_png(items_html: Sequence[str], marked: Optional[int] = None) -> bytes:
+    """SVG objects drawn in a row of cards, as the page shows them."""
     import resvg_py
 
-    marked = trial["widget"].get("marked")
     cells = []
-    for p, item in enumerate(trial["items_html"]):
+    for p, item in enumerate(items_html):
         inner = re.sub(r"^<svg[^>]*>", "", item)
         inner = inner[: inner.rfind("</svg>")]
         x = 10 + p * 120
@@ -200,6 +213,85 @@ def parse_answer(trial: Mapping[str, Any], reply: str) -> Tuple[Optional[dict], 
         return None, "the answer is not in the form asked for"
 
 
+# --------------------------------------------------------------------------- legibility
+
+@dataclass(frozen=True)
+class LegibilityItem:
+    """One question about the materials: what a domain's base shows, or which word names a feature."""
+
+    key: str  # "houses: the base" / "houses: chimney"
+    text: str
+    image: bytes
+    options: Tuple[str, ...]
+    correct: int
+
+
+def legibility_items(paradigm, seed: int = 0) -> List[LegibilityItem]:
+    """The materials check's questions (SVG materials; text materials say what they are)."""
+    import numpy as np
+
+    from src.rsa_open.screens import _object_html
+
+    if paradigm.materials.kind != "svg":
+        return []
+    rng = np.random.default_rng(seed)
+    names = [d.name.lower() for d in paradigm.materials.domains]
+    items: List[LegibilityItem] = []
+    for domain in paradigm.materials.domains:
+        base = _object_html(paradigm, domain, [], domain.name)
+        others = [k for k in DISTRACTOR_KINDS if not any(k[:4] == n[:4] for n in names)]
+        options = [domain.name] + [others[i] for i in rng.choice(len(others), 4, replace=False)]
+        order = [int(i) for i in rng.permutation(len(options))]
+        shown = tuple(options[i] for i in order)
+        listing = "\n".join(f"{i + 1}) {o}" for i, o in enumerate(shown))
+        items.append(LegibilityItem(f"{domain.name}: the base", f"What is pictured? Choose the best description.\n"
+                                    f"{listing}\n{CHOICE_ASK}", row_png([base]), shown, order.index(0)))
+        words = [f.word for f in domain.features]
+        for j, feature in enumerate(domain.features):
+            order = [int(i) for i in rng.permutation(len(words))]
+            shown = tuple(words[i] for i in order)
+            listing = "\n".join(f"{i + 1}) {o}" for i, o in enumerate(shown))
+            image = row_png([base, _object_html(paradigm, domain, [j], domain.name)])
+            items.append(LegibilityItem(
+                f"{domain.name}: {feature.word}",
+                f"Object 2 is object 1 with one part added. Which word names the added part?\n{listing}\n{CHOICE_ASK}",
+                image, shown, order.index(j)))
+    return items
+
+
+def materials_check(paradigm, checkers: Sequence[Participant], out: Optional[Path] = None) -> Dict[str, Any]:
+    """Each checker (a fresh chat) answers every legibility question; an item fails when fewer
+    than half of them get it right."""
+    items = legibility_items(paradigm)
+    if not items:
+        return {"items": 0, "legibility": None, "illegible": []}
+    answers: Dict[str, List[Optional[str]]] = {it.key: [] for it in items}
+    for c, checker in enumerate(checkers):
+        transcript = []
+        for it in items:
+            reply = checker.reply(it.text, [it.image])
+            transcript += [f"## {it.key}\n\n{it.text}", f"## Reply\n\n{reply}"]
+            found = ANSWER.findall(reply)
+            try:
+                k = int(found[-1].strip().strip("`*").rstrip(".")) - 1 if found else -1
+            except ValueError:
+                k = -1
+            answers[it.key].append(it.options[k] if 0 <= k < len(it.options) else None)
+        if out is not None:
+            (out / "legibility").mkdir(parents=True, exist_ok=True)
+            (out / "legibility" / f"checker_{c}.md").write_text("\n\n".join(transcript))
+    rows = []
+    for it in items:
+        given = answers[it.key]
+        right = sum(a == it.options[it.correct] for a in given)
+        rows.append({"item": it.key, "right": right, "of": len(given), "answer": it.options[it.correct],
+                     "wrong_answers": sorted({a for a in given if a != it.options[it.correct] and a})})
+    total = sum(r["of"] for r in rows)
+    illegible = [r for r in rows if r["right"] * 2 <= r["of"]]
+    return {"items": len(items), "legibility": sum(r["right"] for r in rows) / total, "illegible": illegible,
+            "by_item": rows}
+
+
 # --------------------------------------------------------------------------- one participant
 
 @dataclass
@@ -272,7 +364,7 @@ def estimated_minutes(lists: Mapping[str, Any], timing: Optional[Sequence] = Non
 
 
 def gate(paradigm, lists: Mapping[str, Any], sessions: Sequence[Session],
-         timing: Optional[Sequence] = None) -> Dict[str, Any]:
+         timing: Optional[Sequence] = None, legibility: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
     from src.rsa_open.fit import OpenData
     from src.rsa_open.paradigm import paradigm_likelihood
     from src.rsa_open.screens import catch_passed, scenes_and_responses
@@ -298,6 +390,8 @@ def gate(paradigm, lists: Mapping[str, Any], sessions: Sequence[Session],
     t = estimate(lists, _records(timing))
     report.update(estimated_minutes=t["estimated_minutes"], time_model_minutes=t["model_minutes"],
                   time_calibration=t["calibration"], time_calibration_basis=t["calibration_basis"])
+    if legibility is not None:
+        report["legibility"] = legibility
     problems = []
     if report["comprehension_final"] < FLOORS["comprehension"]:
         problems.append(f"comprehension: {report['comprehension_final']:.0%} answered every check right by the "
@@ -321,6 +415,13 @@ def gate(paradigm, lists: Mapping[str, Any], sessions: Sequence[Session],
         problems.append(f"time: estimated {report['estimated_minutes']:.1f} minutes against the declared "
                         f"{paradigm.design.minutes:g} (more than {TIME_TOLERANCE:.0%} apart): change the trials or "
                         f"the minutes (and the pay)")
+    if legibility is not None and legibility["legibility"] is not None:
+        bad = "; ".join(f"{r['item']} ({r['right']} of {r['of']} chose '{r['answer']}'"
+                        + (f"; others chose {', '.join(r['wrong_answers'])}" if r["wrong_answers"] else "") + ")"
+                        for r in legibility["illegible"])
+        if legibility["legibility"] < FLOORS["legibility"] or legibility["illegible"]:
+            problems.append(f"legibility: {legibility['legibility']:.0%} of the materials questions answered right "
+                            f"(floor {FLOORS['legibility']:.0%})" + (f"; misread: {bad}" if bad else ""))
     distinct = {json.dumps(r["response"], sort_keys=True) for r in tests}
     if len(tests) > 1 and len(distinct) == 1:
         problems.append(f"degenerate: every test answer was {distinct.pop()}")
@@ -341,6 +442,8 @@ def run_pilot(paradigm, lists: Mapping[str, Any], out: Path, *, n_participants: 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         sessions = list(pool.map(lambda i: run_participant(lists, i, participants[i]), range(n)))
     out = Path(out)
+    # The materials check: fresh chats, so no participant's trials colour it.
+    legibility = materials_check(paradigm, [factory(n + c) for c in range(LEGIBILITY_CHECKERS)], out)
     (out / "transcripts").mkdir(parents=True, exist_ok=True)
     for s in sessions:
         (out / "transcripts" / f"participant_{s.list_index:03d}.md").write_text("\n\n".join(s.transcript))
@@ -348,7 +451,7 @@ def run_pilot(paradigm, lists: Mapping[str, Any], out: Path, *, n_participants: 
         for s in sessions:
             for r in s.rows:
                 f.write(json.dumps({"list_index": s.list_index, **r}) + "\n")
-    report = gate(paradigm, lists, sessions, timing)
+    report = gate(paradigm, lists, sessions, timing, legibility)
     report["participant_model"] = participants[0].name
     (out / "pilot.json").write_text(json.dumps(report, indent=2))
     return report

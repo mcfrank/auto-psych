@@ -32,10 +32,12 @@ def closed_like_spec():
                 "name": "creatures",
                 "base": '<circle cx="50" cy="50" r="40" fill="#e1e0d9"/>',
                 "features": [
-                    {"word": "hat", "svg": SQUARE},
-                    {"word": "scarf", "svg": SQUARE},
-                    {"word": "glasses", "svg": SQUARE},
-                    {"word": "boots", "svg": SQUARE},
+                    {"word": "hat", "svg": '<path d="M30 28 L70 28 L62 8 L38 8 Z" fill="#3b3b98"/>'},
+                    {"word": "scarf", "svg": '<path d="M28 70 Q50 82 72 70 L72 77 Q50 89 28 77 Z" fill="#c0392b"/>'},
+                    {"word": "glasses", "svg": '<g fill="none" stroke="#222222" stroke-width="3">'
+                                               '<circle cx="40" cy="48" r="7"/><circle cx="60" cy="48" r="7"/></g>'},
+                    {"word": "boots", "svg": '<rect x="34" y="88" width="12" height="8" fill="#5d4037"/>'
+                                             '<rect x="54" y="88" width="12" height="8" fill="#5d4037"/>'},
                 ],
             }],
         },

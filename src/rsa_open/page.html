@@ -64,7 +64,10 @@
       .ro-scale .ro-btn { min-width: 3em; padding: 10px 14px; }
       .ro-rating { display: inline-grid; gap: 6px; min-width: min(360px, 100%); }
       .ro-ends { gap: 16px; display: flex; justify-content: space-between; width: 100%; font-size: 0.85em; color: var(--muted); }
-      .ro-slider { width: 100%; }
+      .ro-slider { width: 100%; cursor: pointer; }
+      .ro-slider.ro-unset::-webkit-slider-thumb { opacity: 0; }
+      .ro-slider.ro-unset::-moz-range-thumb { opacity: 0; }
+      .ro-hint { font-size: 0.85em; color: var(--muted); }
       .ro-bet { width: 5em; font: inherit; text-align: center; padding: 4px; border: 2px solid var(--line); border-radius: 8px; }
       .ro-total { font-size: 0.9em; color: var(--muted); }
       .ro-total.ro-ok { color: var(--accent); font-weight: 700; }
@@ -153,7 +156,10 @@
           for (let v = 1; v <= w.points; v++) h += '<button type="button" class="ro-btn ro-rate" data-value="' + v + '">' + v + '</button>';
           h += '</div><div class="ro-ends"><span>1 = ' + escapeHtml(w.labels[0]) + '</span><span>' + w.points + ' = ' + escapeHtml(w.labels[1]) + '</span></div></div>';
         } else if (w.type === 'slider') {
-          h += '<input class="ro-slider" type="range" min="0" max="' + w.max + '" step="1" value="' + Math.round(w.max / 2) + '" aria-label="slider">' +
+          // Click-to-place: no handle until the first click (or key), which puts it there: a visible
+          // default draws answers to itself on a 0-100 slider (Liu & Conrad, 2019).
+          h += '<span class="ro-hint">Click on the line to answer, then drag to adjust.</span>' +
+               '<input class="ro-slider ro-unset" type="range" min="0" max="' + w.max + '" step="1" value="' + Math.round(w.max / 2) + '" aria-label="slider">' +
                '<div class="ro-ends"><span>' + escapeHtml(w.labels[0]) + '</span><span>' + escapeHtml(w.labels[1]) + '</span></div>' +
                '<button type="button" class="ro-btn ro-continue" disabled>Continue</button>';
         } else if (w.type === 'bet') {
@@ -184,8 +190,10 @@
           });
         } else if (w.type === 'slider') {
           const s = el.querySelector('.ro-slider'), go = el.querySelector('.ro-continue');
-          // The slider must be touched before Continue (a value nobody chose is not a response).
-          ['input', 'change', 'pointerdown'].forEach(function (ev) { s.addEventListener(ev, function () { go.disabled = false; }); });
+          // The slider must be placed before Continue (a value nobody chose is not a response).
+          ['input', 'change', 'pointerdown', 'keydown'].forEach(function (ev) {
+            s.addEventListener(ev, function () { s.classList.remove('ro-unset'); go.disabled = false; });
+          });
           go.addEventListener('click', function () { finish({ probe: t.probe, value: Number(s.value) }); });
         } else if (w.type === 'bet') {
           const inputs = at('.ro-bet'), total = el.querySelector('.ro-total'), go = el.querySelector('.ro-continue');

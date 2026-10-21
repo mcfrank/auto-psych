@@ -62,7 +62,14 @@ def answer_everything(page, timeout_ms=15000):
                 page.locator(".ro-rate").last.click()
             elif page.locator(".ro-slider").count():
                 assert page.locator(".ro-continue").is_disabled()  # untouched, no answer
+                assert page.locator(".ro-slider.ro-unset").count() == 1  # no handle until placed
+                hidden = page.locator(".ro-slider").screenshot()
+                page.evaluate("document.querySelector('.ro-slider').classList.remove('ro-unset')")
+                assert page.locator(".ro-slider").screenshot() != hidden  # the same value, its handle now drawn
+                page.evaluate("document.querySelector('.ro-slider').classList.add('ro-unset')")
+                assert page.locator(".ro-continue").is_disabled()
                 page.locator(".ro-slider").fill("73")
+                assert page.locator(".ro-slider.ro-unset").count() == 0
                 page.locator(".ro-continue").click()
             elif page.locator(".ro-bet").count():
                 total = int(page.locator(".ro-total").inner_text().split(" of ")[1].split()[0])

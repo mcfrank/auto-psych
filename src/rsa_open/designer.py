@@ -193,6 +193,19 @@ words or drawings; your materials decide whether people perceive the scene the t
 The page shows the speaker's word in quotation marks where your prompt says `{{message}}`: do not
 add your own.
 
+**Materials people can read, and want to look at.** Scenes include objects with no features, and
+objects with every feature, so:
+- the base must be a complete, recognisable object on its own (a robot with a face and a body,
+  not a bare box): it is what an object with no features looks like;
+- each feature is a separate, nameable part, clearly visible at card size (about 180 px), that does
+  not look like part of the base or like another feature, and that can be added to the base
+  alongside any other features without hiding them;
+- each word is a common, concrete word that a person would use for that part of the drawing;
+- make them engaging: colour and a little character, nothing cluttered or abstract.
+The pilot checks this: its participants are shown each domain's base alone and asked what it is,
+and the base with each single feature and asked which word names the added part (see "After you
+submit").
+
 The harness builds the page from your spec: one list per participant (balanced over your design),
 a practice trial, your comprehension checks (shown again once after a wrong answer), catch trials
 with one right answer, objects in a random screen order, words mapped to features at random per
@@ -243,8 +256,9 @@ Their files (read-only) are in `{ws.context / 'theories'}`, their posterior draw
 The harness re-scores your spec with its own seed (the design that runs is its), re-checks the
 link, builds the page and pilots it with LLM participants. The pilot passes when at least
 {FLOORS['comprehension']:.0%} of them understand the instructions (by their second reading), at least
-{FLOORS['catch']:.0%} of catch trials are passed, {FLOORS['readable']:.0%} of answers are usable, the data parse, and its
-time estimate is within {TIME_TOLERANCE:.0%} of your declared minutes. If anything fails you get the report
+{FLOORS['catch']:.0%} of catch trials are passed, {FLOORS['readable']:.0%} of answers are usable, the data parse, its
+time estimate is within {TIME_TOLERANCE:.0%} of your declared minutes, and (SVG materials) at least {FLOORS['legibility']:.0%} of
+its materials questions are answered right, with no base or feature misread by half of them. If anything fails you get the report
 and may revise: {submissions_left} submission(s) left in this cycle, about {seconds_left // 60} minutes of your time.
 
 ## What to write

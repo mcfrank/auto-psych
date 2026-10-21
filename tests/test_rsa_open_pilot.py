@@ -42,14 +42,23 @@ class Scripted:
 
     name = "scripted"
 
-    def __init__(self, lists, index, *, good=True, check_errors=0, mumble=0):
-        self.lists, self.trials = lists, lists["lists"][index]["trials"]
+    def __init__(self, lists, index, *, good=True, check_errors=0, mumble=0, paradigm=None, misread=()):
+        from src.rsa_open.pilot import legibility_items
+
+        self.lists, self.trials = lists, lists["lists"][index % len(lists["lists"])]["trials"]
+        # The materials check: right answers looked up by the question and its image (a script
+        # cannot see), except for the items in ``misread``.
+        self.legible = {} if paradigm is None else {
+            (it.text, it.image): it.correct + (1 if it.key in misread else 0) for it in legibility_items(paradigm)}
         self.good, self.check_errors, self.mumble = good, check_errors, mumble
         self.readings, self.check_i, self.trial_i = 0, 0, 0
         self.seen = []
 
     def reply(self, text, images=()):
         self.seen.append((text, len(images)))
+        if "number of your choice" in text:
+            k = self.legible[(text, images[0])] % text.count(") ")
+            return f"ANSWER: {k + 1}"
         checks = self.lists["intro"]["checks"]
         if "option's number" in text:
             c = checks[self.check_i % len(checks)]
@@ -175,10 +184,56 @@ def test_run_pilot_writes_transcripts_rows_and_the_report(tmp_path):
     minutes = round(estimated_minutes(lists), 1)
     p = paradigm_of("choice", minutes=minutes, pay_usd=round(minutes * 0.18, 2))
     lists = trial_lists(p, units_of(p), seed=0, n_lists=6)
-    report = run_pilot(p, lists, tmp_path, n_participants=4, participant_factory=lambda i: Scripted(lists, i))
-    assert report["passed"] and report["participant_model"] == "scripted" and report["n_participants"] == 4
+    report = run_pilot(p, lists, tmp_path, n_participants=4,
+                       participant_factory=lambda i: Scripted(lists, i, paradigm=p))
+    assert report["passed"], report["problems"]
+    assert report["participant_model"] == "scripted" and report["n_participants"] == 4
+    assert report["legibility"]["legibility"] == 1.0 and len(list((tmp_path / "legibility").glob("*.md"))) == 3
     assert len(list((tmp_path / "transcripts").glob("*.md"))) == 4
     assert json.loads((tmp_path / "pilot.json").read_text())["passed"]
     assert len((tmp_path / "rows.jsonl").read_text().splitlines()) == 4 * 9
     with pytest.raises(ValueError, match="not built from this paradigm"):
         run_pilot(paradigm_of("rating"), lists, tmp_path, participant_factory=lambda i: Scripted(lists, i))
+
+
+def test_the_materials_check_asks_about_each_base_and_each_feature():
+    from src.rsa_open.pilot import legibility_items
+
+    p = paradigm_of("choice")
+    items = legibility_items(p)
+    domains = p.materials.domains
+    assert len(items) == sum(1 + len(d.features) for d in domains)
+    base = next(it for it in items if it.key.endswith("the base"))
+    assert base.options[base.correct] == domains[0].name and len(base.options) == 5
+    feature = next(it for it in items if not it.key.endswith("the base"))
+    assert sorted(feature.options) == sorted(f.word for f in domains[0].features)
+    assert all(it.image[:8] == b"\x89PNG\r\n\x1a\n" for it in items)
+
+
+def test_text_materials_have_no_materials_check():
+    from src.rsa_open.paradigm import parse_paradigm
+    from src.rsa_open.pilot import legibility_items, materials_check
+
+    spec = paradigm_of("choice").model_dump(mode="json")
+    spec["materials"] = {"kind": "text", "domains": [{
+        "name": "houses", "base": "a house",
+        "features": [{"word": w, "phrase": f"with a {w}"} for w in ("garden", "garage", "porch", "pool")]}]}
+    p = parse_paradigm(spec)
+    assert legibility_items(p) == [] and materials_check(p, [])["legibility"] is None
+
+
+def test_a_misread_feature_fails_the_pilot_and_names_the_drawing(tmp_path):
+    from src.rsa_open.pilot import estimated_minutes, run_pilot
+    from src.rsa_open.screens import trial_lists
+
+    p = paradigm_of("choice")
+    lists = trial_lists(p, units_of(p), seed=0, n_lists=6)
+    minutes = round(estimated_minutes(lists), 1)
+    p = paradigm_of("choice", minutes=minutes, pay_usd=round(minutes * 0.18, 2))
+    lists = trial_lists(p, units_of(p), seed=0, n_lists=6)
+    word = p.materials.domains[0].features[1].word
+    report = run_pilot(p, lists, tmp_path, n_participants=4,
+                       participant_factory=lambda i: Scripted(lists, i, paradigm=p, misread=(f"creatures: {word}",)))
+    assert not report["passed"]
+    (problem,) = [x for x in report["problems"] if x.startswith("legibility")]
+    assert f"creatures: {word} (0 of 3 chose '{word}'" in problem

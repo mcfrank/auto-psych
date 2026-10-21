@@ -15,8 +15,9 @@
   ``submission.json``).
 
 **The commands:**
-- ``validate``: the spec's problems, all at once (`src.rsa_open.paradigm`), and the pilot's time
-  estimate against the declared minutes, on a random design from the scene space;
+- ``validate``: the spec's problems, all at once (`src.rsa_open.paradigm`), the trial units
+  against the EIG tool's limit, and the pilot's time estimate against the declared minutes, on a
+  random design from the scene space;
 - ``eig``: the paradigm's design under the live theories, its bits per dollar and the floor, and
   the time estimate on that design;
 - ``link-check``: the recovery test (`src.rsa_open.fit.recovery_check`) of the spec's link **in
@@ -169,10 +170,15 @@ def time_report(ws: Workspace, paradigm, units: list) -> Dict[str, Any]:
 
 
 def validate(ws: Workspace, spec: Path) -> Dict[str, Any]:
-    from src.rsa_open.paradigm import load_paradigm, scene_pool
+    from src.rsa_open.design import trial_units
+    from src.rsa_open.paradigm import load_paradigm, paradigm_likelihood, scene_pool
 
     p = load_paradigm(spec)
-    return {"valid": True, "sha256": p.sha256, "scenes": len(scene_pool(p)), "cost_usd": p.cost_usd,
+    scenes = scene_pool(p)
+    # The EIG tool's limit on trial units, checked here so a spec eig cannot score fails at once
+    # (trial_units raises past it); bets have no units yet.
+    n_units = None if p.response.type == "bet" else len(trial_units(scenes, paradigm_likelihood(p)))
+    return {"valid": True, "sha256": p.sha256, "scenes": len(scenes), "units": n_units, "cost_usd": p.cost_usd,
             "response": p.response.type, "link": p.response.link,
             "time": time_report(ws, p, preview_units(p, seed_for(p.sha256, "preview")))}
 
@@ -290,7 +296,8 @@ def _summary(command: str, report: Dict[str, Any]) -> str:
         f"({'within' if t['within_tolerance'] else 'NOT within'} the pilot's 30%; calibrated on "
         f"{t['calibration_basis']})")
     if command == "validate":
-        return (f"valid: {report['scenes']} scenes, {report['response']} via {report['link']}, "
+        units = "" if report["units"] is None else f" ({report['units']} trial units)"
+        return (f"valid: {report['scenes']} scenes{units}, {report['response']} via {report['link']}, "
                 f"${report['cost_usd']:.2f}; sha256 {report['sha256'][:12]}{timing}")
     if command == "eig":
         line = (f"{report['joint_eig_bits']:.3f} of {report['max_bits']:.3f} bits "

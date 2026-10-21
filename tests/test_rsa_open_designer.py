@@ -112,7 +112,7 @@ def pilot_lists(monkeypatch):
 
     def run_pilot(paradigm, lists, out, *, n_participants, participant_factory=None, max_workers=6, timing=None):
         return real(paradigm, lists, out, n_participants=n_participants,
-                    participant_factory=lambda i: Scripted(lists, i), max_workers=1, timing=timing)
+                    participant_factory=lambda i: Scripted(lists, i, paradigm=paradigm), max_workers=1, timing=timing)
 
     monkeypatch.setattr(pilot, "run_pilot", run_pilot)
 
