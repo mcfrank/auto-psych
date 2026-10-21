@@ -60,6 +60,7 @@ TIME_TOLERANCE = 0.30
 SYSTEM = ("You are taking part in an online research study. Read each screen carefully and respond as a "
           "thoughtful participant would. End every reply with one line of the form `ANSWER: ...`, in the "
           "format the screen asks for.")
+IMAGE_DROPPED = "(The picture shown with this screen is no longer shown.)"
 ANSWER = re.compile(r"ANSWER:\s*(.+)", re.IGNORECASE)
 FRAME, MARK = "#d7dbe1", "#d9822b"
 
@@ -72,27 +73,38 @@ class Participant(Protocol):
 
 
 class GeminiParticipant:
-    """One chat with a Gemini model; usage is recorded per call (`src.runtime.token_usage`)."""
+    """One conversation with a Gemini model; usage is recorded per call (`src.runtime.token_usage`).
 
-    def __init__(self, model: str = PILOT_MODEL, temperature: float = 1.0, retries: int = 3):
-        from google import genai
+    Only the current screen's picture is sent: an earlier turn keeps its words and the reply,
+    with ``IMAGE_DROPPED`` where its picture was. A chat that resent every earlier picture made
+    each call's input grow with the trial count (a 3-person pilot: 4.1M input tokens for 195
+    calls); a person, too, remembers the task, not every earlier screen."""
+
+    def __init__(self, model: str = PILOT_MODEL, temperature: float = 1.0, retries: int = 3, client=None):
         from google.genai import types
 
-        from src.pipelines.outer_loop.llm import resolve_google_api_key
-
         self.name, self._types, self.retries = model, types, retries
-        # Held: a client nothing refers to is closed when collected, under its chat.
-        self._client = client = genai.Client(api_key=resolve_google_api_key(require=True))
-        self._chat = client.chats.create(model=model, config=types.GenerateContentConfig(
-            system_instruction=SYSTEM, temperature=temperature))
+        if client is None:
+            from google import genai
+
+            from src.pipelines.outer_loop.llm import resolve_google_api_key
+
+            client = genai.Client(api_key=resolve_google_api_key(require=True))
+        # Held: a client nothing refers to is closed when collected, under its calls.
+        self._client = client
+        self._config = types.GenerateContentConfig(system_instruction=SYSTEM, temperature=temperature)
+        self._history: List[Any] = []
 
     def reply(self, text: str, images: Sequence[bytes] = ()) -> str:
         from src.runtime.token_usage import record_usage
 
-        parts = [self._types.Part.from_bytes(data=png, mime_type="image/png") for png in images] + [text]
+        t = self._types
+        pictures = [t.Part.from_bytes(data=png, mime_type="image/png") for png in images]
+        turn = t.Content(role="user", parts=pictures + [t.Part.from_text(text=text)])
         for attempt in range(self.retries):
             try:
-                response = self._chat.send_message(parts)
+                response = self._client.models.generate_content(model=self.name, contents=self._history + [turn],
+                                                                config=self._config)
                 break
             except Exception as err:  # an API error is the run's, not the paradigm's
                 if attempt == self.retries - 1:
@@ -106,7 +118,10 @@ class GeminiParticipant:
                          input_tokens=int(usage.prompt_token_count or 0),
                          output_tokens=int(usage.candidates_token_count or 0),
                          reasoning_tokens=int(getattr(usage, "thoughts_token_count", 0) or 0))
-        return response.text or ""
+        answer = response.text or ""
+        kept = [t.Part.from_text(text=text)] + ([t.Part.from_text(text=IMAGE_DROPPED)] if images else [])
+        self._history += [t.Content(role="user", parts=kept), t.Content(role="model", parts=[t.Part.from_text(text=answer)])]
+        return answer
 
 
 # --------------------------------------------------------------------------- screens as text

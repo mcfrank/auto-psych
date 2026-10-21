@@ -314,3 +314,42 @@ def test_an_unrecognised_base_warns_but_passes_while_the_rate_holds(tmp_path):
     assert report["passed"], report["problems"]
     (warning,) = report["warnings"]
     assert warning.startswith("legibility: the base of creatures was not recognised") and "box" in warning
+
+
+class _FakeModels:
+    """client.models.generate_content, recording what each call sends."""
+
+    def __init__(self):
+        self.calls = []
+
+    def generate_content(self, *, model, contents, config):
+        from types import SimpleNamespace
+
+        self.calls.append(contents)
+        n = len(self.calls)
+        return SimpleNamespace(text=f"ANSWER: {n}", usage_metadata=SimpleNamespace(
+            prompt_token_count=10 * n, candidates_token_count=1, thoughts_token_count=0))
+
+
+def test_a_gemini_participant_sends_only_the_current_screen_s_picture():
+    from types import SimpleNamespace
+
+    from src.rsa_open.pilot import IMAGE_DROPPED, SYSTEM, GeminiParticipant
+
+    models = _FakeModels()
+    p = GeminiParticipant(client=SimpleNamespace(models=models))
+    assert p.reply("Welcome. Read the instructions.") == "ANSWER: 1"
+    p.reply("Screen 1", [b"png-1"])
+    p.reply("Screen 2", [b"png-2", b"png-3"])
+
+    def images(contents):
+        return [part.inline_data.data for c in contents for part in c.parts if part.inline_data is not None]
+
+    def texts(contents):
+        return [part.text for c in contents for part in c.parts if part.text is not None]
+
+    assert [images(c) for c in models.calls] == [[], [b"png-1"], [b"png-2", b"png-3"]]
+    last = models.calls[-1]
+    assert [c.role for c in last] == ["user", "model", "user", "model", "user"]
+    # Earlier screens keep their words, the participant's answers and a note that the picture is gone.
+    assert texts(last)[:5] == ["Welcome. Read the instructions.", "ANSWER: 1", "Screen 1", IMAGE_DROPPED, "ANSWER: 2"]
