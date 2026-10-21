@@ -100,3 +100,16 @@ def test_a_critic_that_writes_nothing_leaves_the_round_without_a_critique(settin
                        theory=theory, fitted=fit, hypothesis="", incumbent_file=root / "rsa_l1_salience.py",
                        block=block, paradigm_note="", data_path=tmp_path / "exp1.jsonl", n_replicates=10)
     assert out.critiques_md is None and out.status["status"] == CRITIQUE_STATUS_NONE and calls == ["critique", "critique_retry_1"]
+
+
+def test_the_round_s_critique_is_in_every_theorist_s_prompt(tmp_path):
+    from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
+    from src.rsa_open.loop import brief
+
+    ledger = HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
+    critique = "# Critique of `rsa_l1`\n\n1 of 3 evaluated test statistics show a significant discrepancy.\n"
+    docs = brief.write_docs(tmp_path / "c1", role="explore", lens="a lens", context="# Context", live=[], pruned=[],
+                            incumbent="rsa_l1", ledger=ledger, critiques=critique)
+    prompt = brief.build_prompt(tmp_path / "c1", docs)
+    assert f"## critiques.md\n\n{critique}" in prompt and (tmp_path / "c1" / "critiques.md").read_text() == critique
+    assert "addresses one of the significant discrepancies" in prompt

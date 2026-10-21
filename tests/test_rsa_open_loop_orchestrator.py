@@ -110,5 +110,6 @@ def test_the_theorist_s_prompt_describes_every_paradigm_and_the_theory_api(run):
                  "People chose the word to say for a marked object."):
         assert text in prompt, text
     assert "def choice_probs(params, ctx):\n    ..." not in prompt
-    assert "## critiques.md" in prompt and "mean_word" in prompt
+    # The round's critique reaches every theorist (it names only significant statistics).
+    assert "## critiques.md" in prompt and "# Critique of `" in prompt and "evaluated test statistics" in prompt
     assert (loop.dir / "data" / "exp1.jsonl").exists()
