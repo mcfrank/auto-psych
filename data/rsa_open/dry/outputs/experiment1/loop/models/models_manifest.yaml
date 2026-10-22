@@ -1,0 +1,24 @@
+models:
+- name: qud_attribution_listener
+  rationale: 'Speakers choose utterances to address one of two communicative goals
+    (Questions Under Discussion): uniquely identifying the target referent, or truthfully
+    attributing a property to it. Listeners perform joint Bayesian inference over
+    the speaker''s referent and communicative goal, expecting uniquely identifying
+    descriptions when the speaker aims to identify, but retaining graded credibility
+    for competitors that share the named property when the speaker merely describes
+    an attribute. Prior expectations favor contextually unique singletons and feature-distinctive
+    items.'
+- name: rsa_l2_duplicate_suppression_l0
+  rationale: 'RSA pragmatic listener at depth 2 with duplicate distractor suppression,
+    contextual distinctiveness, visual feature complexity, evaluative valence framing,
+    visual color contrast, and literal L0. Refining rsa_l2_singleton_feat_color_valence_l0
+    by replacing discrete binary singleton salience with linear duplicate suppression:
+    speakers and listeners reason at depth 2 (L2 inverting an S2 who simulates an
+    L1 listener over an unbiased literal L0) with an object prior combining duplicate
+    distractor suppression (penalizing objects by their duplicate count minus one,
+    with w_duplicate replacing w_singleton), continuous contextual distinctiveness
+    (w_distinct), visual feature complexity modulated by evaluative valence framing
+    (w_features and w_valence), and visual color contrast (w_color). Scaling distractor
+    suppression with the number of identical competitors reflects Gestalt background
+    grouping, predicting heightened pop-out on displays with three identical duplicates
+    and reducing excessive bias against sparse singletons.'

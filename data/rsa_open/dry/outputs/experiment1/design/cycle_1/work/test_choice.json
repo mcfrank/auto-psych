@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "name": "pragmatic_reference_scene_battery",
+  "summary": "Referent choice across multi-object scenes with and without informative messages.",
+  "charter": {
+    "question": "How do listeners combine recursive pragmatic reasoning about alternative utterances with perceptual singleton pop-out, relational distinctiveness, and feature complexity across diverse scene sizes?"
+  },
+  "instructions": {
+    "welcome": "Welcome! In this short study, you will see groups of simple drawings and figure out which one a speaker is talking about.",
+    "task": "On each page, you will see several objects (such as robots or houses) that can have different extra parts. Usually, a speaker who sees the exact same screen says a single word to help you pick out one specific object. Click on the object you think the speaker means. On some pages, you will not hear which word the speaker said; on those pages, click on the object you think the speaker is most likely to talk about.",
+    "comprehension_checks": [
+      {
+        "question": "What is your task when the speaker says a word?",
+        "options": [
+          "Click on the object you think the speaker is referring to.",
+          "Click on every object that has the named part.",
+          "Click on the object with the most parts."
+        ],
+        "correct": 0
+      },
+      {
+        "question": "Does the speaker see the same objects on the screen as you do?",
+        "options": [
+          "Yes, the speaker sees the exact same group of objects.",
+          "No, the speaker only sees one object.",
+          "No, the speaker sees a different set of objects."
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "robots",
+        "base": "<g><rect x=\"28\" y=\"36\" width=\"44\" height=\"42\" rx=\"8\" fill=\"#b0bec5\" stroke=\"#37474f\" stroke-width=\"2.5\"/><rect x=\"33\" y=\"20\" width=\"34\" height=\"20\" rx=\"5\" fill=\"#cfd8dc\" stroke=\"#37474f\" stroke-width=\"2.5\"/><circle cx=\"43\" cy=\"29\" r=\"3\" fill=\"#263238\"/><circle cx=\"57\" cy=\"29\" r=\"3\" fill=\"#263238\"/><line x1=\"43\" y1=\"35\" x2=\"57\" y2=\"35\" stroke=\"#263238\" stroke-width=\"2\"/><rect x=\"35\" y=\"78\" width=\"10\" height=\"12\" rx=\"2\" fill=\"#78909c\" stroke=\"#37474f\" stroke-width=\"2\"/><rect x=\"55\" y=\"78\" width=\"10\" height=\"12\" rx=\"2\" fill=\"#78909c\" stroke=\"#37474f\" stroke-width=\"2\"/></g>",
+        "features": [
+          {
+            "word": "antenna",
+            "svg": "<g><line x1=\"50\" y1=\"20\" x2=\"50\" y2=\"7\" stroke=\"#d32f2f\" stroke-width=\"3\"/><circle cx=\"50\" cy=\"6\" r=\"4.5\" fill=\"#ff5252\" stroke=\"#b71c1c\" stroke-width=\"1.5\"/></g>"
+          },
+          {
+            "word": "belt",
+            "svg": "<g><rect x=\"27\" y=\"62\" width=\"46\" height=\"8\" fill=\"#5d4037\" stroke=\"#3e2723\" stroke-width=\"1.5\"/><rect x=\"45\" y=\"61\" width=\"10\" height=\"10\" fill=\"#ffd54f\" stroke=\"#f57f17\" stroke-width=\"1.5\"/></g>"
+          },
+          {
+            "word": "flag",
+            "svg": "<g><line x1=\"18\" y1=\"55\" x2=\"28\" y2=\"55\" stroke=\"#37474f\" stroke-width=\"3\"/><line x1=\"18\" y1=\"58\" x2=\"18\" y2=\"18\" stroke=\"#455a64\" stroke-width=\"2.5\"/><polygon points=\"18,18 3,25 18,32\" fill=\"#2e7d32\" stroke=\"#1b5e20\" stroke-width=\"1.5\"/></g>"
+          },
+          {
+            "word": "heart",
+            "svg": "<g><path d=\"M 50 56 C 50 56 41 49 41 44 C 41 41 44 39 47 41 C 48.5 42 50 44 50 44 C 50 44 51.5 42 53 41 C 56 39 59 41 59 44 C 59 49 50 56 50 56 Z\" fill=\"#e91e63\" stroke=\"#880e4f\" stroke-width=\"1.5\"/></g>"
+          }
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [3, 3],
+      [4, 3]
+    ],
+    "prior_queries": true,
+    "synonyms": false
+  },
+  "response": {
+    "type": "choice",
+    "link": "choice",
+    "prompt": "The speaker says: {message}. Which object do they mean?",
+    "prior_prompt": "You do not hear the speaker's word. Which object are they most likely talking about?"
+  },
+  "design": {
+    "n_participants": 150,
+    "trials_per_participant": 24,
+    "distinct_trials": 48,
+    "catch_trials": 2,
+    "minutes": 3.0,
+    "pay_usd": 0.65
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "name": "graded_belief_allocation_reference",
+  "summary": "Graded belief allocation (10-point bet) across referents with and without heard messages.",
+  "charter": {
+    "question": "Do theories of pragmatic reference fitted to discrete forced choices generalize when listeners report their full graded probability distribution across candidate referents via point allocation?"
+  },
+  "instructions": {
+    "welcome": "Welcome! In this study, you will see groups of simple drawings and judge which object a speaker is talking about.",
+    "task": "On each page, you will see between 2 and 4 objects that can have different extra parts. A speaker who sees the exact same screen is talking about one of the objects. You have 10 points to split among the objects on each page: give more points to objects you think the speaker is more likely to mean, and 0 points to objects you think they could not mean. Your points on each page must add up to 10. On most pages, you will see the word the speaker said; on a few pages, you will not hear the word and should split the 10 points based on which object you think the speaker is most likely to talk about.",
+    "comprehension_checks": [
+      {
+        "question": "How do you answer on each page?",
+        "options": [
+          "Split 10 points across the objects based on how likely each one is to be what the speaker means.",
+          "Give 10 points to every object that has the named part.",
+          "Click on a single object without using points."
+        ],
+        "correct": 0
+      },
+      {
+        "question": "What must the points you assign on a page add up to?",
+        "options": [
+          "Exactly 10 points in total.",
+          "At most 10 points per object.",
+          "100 points in total."
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "robots",
+        "base": "<g><rect x=\"28\" y=\"36\" width=\"44\" height=\"42\" rx=\"8\" fill=\"#b0bec5\" stroke=\"#37474f\" stroke-width=\"2.5\"/><rect x=\"33\" y=\"20\" width=\"34\" height=\"20\" rx=\"5\" fill=\"#cfd8dc\" stroke=\"#37474f\" stroke-width=\"2.5\"/><circle cx=\"43\" cy=\"29\" r=\"3\" fill=\"#263238\"/><circle cx=\"57\" cy=\"29\" r=\"3\" fill=\"#263238\"/><line x1=\"43\" y1=\"35\" x2=\"57\" y2=\"35\" stroke=\"#263238\" stroke-width=\"2\"/><rect x=\"35\" y=\"78\" width=\"10\" height=\"12\" rx=\"2\" fill=\"#78909c\" stroke=\"#37474f\" stroke-width=\"2\"/><rect x=\"55\" y=\"78\" width=\"10\" height=\"12\" rx=\"2\" fill=\"#78909c\" stroke=\"#37474f\" stroke-width=\"2\"/></g>",
+        "features": [
+          {
+            "word": "antenna",
+            "svg": "<g><line x1=\"50\" y1=\"20\" x2=\"50\" y2=\"7\" stroke=\"#d32f2f\" stroke-width=\"3\"/><circle cx=\"50\" cy=\"6\" r=\"4.5\" fill=\"#ff5252\" stroke=\"#b71c1c\" stroke-width=\"1.5\"/></g>"
+          },
+          {
+            "word": "belt",
+            "svg": "<g><rect x=\"27\" y=\"62\" width=\"46\" height=\"8\" fill=\"#5d4037\" stroke=\"#3e2723\" stroke-width=\"1.5\"/><rect x=\"45\" y=\"61\" width=\"10\" height=\"10\" fill=\"#ffd54f\" stroke=\"#f57f17\" stroke-width=\"1.5\"/></g>"
+          },
+          {
+            "word": "flag",
+            "svg": "<g><line x1=\"18\" y1=\"55\" x2=\"28\" y2=\"55\" stroke=\"#37474f\" stroke-width=\"3\"/><line x1=\"18\" y1=\"58\" x2=\"18\" y2=\"18\" stroke=\"#455a64\" stroke-width=\"2.5\"/><polygon points=\"18,18 3,25 18,32\" fill=\"#2e7d32\" stroke=\"#1b5e20\" stroke-width=\"1.5\"/></g>"
+          },
+          {
+            "word": "heart",
+            "svg": "<g><path d=\"M 50 56 C 50 56 41 49 41 44 C 41 41 44 39 47 41 C 48.5 42 50 44 50 44 C 50 44 51.5 42 53 41 C 56 39 59 41 59 44 C 59 49 50 56 50 56 Z\" fill=\"#e91e63\" stroke=\"#880e4f\" stroke-width=\"1.5\"/></g>"
+          }
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [2, 2], [2, 3], [2, 4],
+      [3, 2], [3, 3], [3, 4],
+      [4, 2], [4, 3], [4, 4]
+    ],
+    "prior_queries": true,
+    "synonyms": true
+  },
+  "response": {
+    "type": "bet",
+    "link": "allocation",
+    "total_points": 10,
+    "prompt": "The speaker says: {message}. Split 10 points across the objects to show how likely each one is to be what the speaker means.",
+    "prior_prompt": "You do not hear the speaker's word. Split 10 points across the objects to show how likely each one is to be what the speaker is talking about."
+  },
+  "design": {
+    "n_participants": 100,
+    "trials_per_participant": 18,
+    "distinct_trials": 45,
+    "catch_trials": 2,
+    "minutes": 4.2,
+    "pay_usd": 0.70
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}
