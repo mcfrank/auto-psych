@@ -153,8 +153,10 @@ pick up later. `data/` is excluded from every agent tree, so `data/rsa_open/dry/
 
 ## Redeploy run B with the faster fitting (2026-10-22, PI)
 
-> **HOLD: do not redeploy yet.** The driver is checking that warm-started folds give the same
-> held-out scores as cold ones. This line goes when that check passes; until then, let run B run.
+> **Cleared (2026-10-22).** Warm-started folds give the cold folds' held-out scores. On pragmods
+> with 3 folds: `rsa_l1_salience` −5,081.5 against −5,083.8, `rsa_l2` −5,005.9 against −5,006.1,
+> all converged, in 372 and 385 s against 569 and 655 s. On all of E sampling dominates the fixed
+> compile cost, so the saving should be nearer 2.5×. Redeploy now.
 
 Three speedups, none of which changes what is fitted or admitted (PLAN.md, Decisions 2026-10-22):
 1. **Cross-validation folds start at their theory's full fit** (posterior medians) and run 300
