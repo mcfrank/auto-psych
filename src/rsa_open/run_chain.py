@@ -49,6 +49,8 @@ class Args:
     n_experiments: int = 3
     max_iterations: int = 5
     candidate_count: int = 6
+    cv_folds: int = 5
+    """Grouped CV folds per block (fewer for a dry run)."""
     pilot_participants: int = PILOT_PARTICIPANTS
     designer_model: str = DESIGNER_MODEL
     theorist_model: str = THEORIST_MODEL
@@ -78,7 +80,8 @@ def build(args: Args) -> Chain:
                       ground_truth=gt, n_experiments=args.n_experiments, settings=FitSettings(dense_mass=True),
                       pilot_participants=args.pilot_participants, seed=args.seed, other_chains=args.other_chains,
                       code_commit=args.code_commit or _commit(),
-                      loop=dict(max_iterations=args.max_iterations, candidate_count=args.candidate_count))
+                      loop=dict(max_iterations=args.max_iterations, candidate_count=args.candidate_count,
+                                cv_folds=args.cv_folds))
     designer = designer_spawner(agent_root=args.agent_root, model=args.designer_model, sandbox=not args.no_sandbox,
                                 shell_dir=run_dir / ".agent_shell")
 

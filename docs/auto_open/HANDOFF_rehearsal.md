@@ -28,9 +28,22 @@ Locally, on pragmods, the stalled model's two-chain fit takes 77 s with the temp
 2. **Delete the ground truth:** `rm -r $SCRATCH/auto-psych/rsa_open_dry2/private/ground_truth`.
    It was fitted with E's temperature free, so its parameters sit on that ridge (`alpha` small,
    temperature about 2.5). The job refits it under the new convention (15–60 min).
-3. Restart run A in `rsa_open_dry2` with
-   `RESTAGE_REASON='E reference block and design-fit limit, PI 2026-10-22'`. Every fit is redone:
-   the corpus changed.
+3. **Restart run A, trimmed** (PI 2026-10-22: run A tests the machinery with real agents; run B
+   is the rehearsal). It fits the pragmods trials alone (6,703 of E's ~49k), runs one round of 3
+   theorists (one exploratory slot, one refining the incumbent, one refining the agent's pick; the
+   critic first), a 4-person pilot and 3 CV folds. The designer keeps its full budget, since it is
+   the part we most need to see. Expect about 4–6 h, mostly the designer:
+
+   ```bash
+   cd ~/auto-psych && git pull
+   export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_dry2
+   sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%A_%a.out" --time=12:00:00 \
+     --export=ALL,WORK_ROOT=$WORK_ROOT,RESTAGE_REASON='E reference block, design-fit limit, trimmed run A; PI 2026-10-22',LITERATURE=pragmods,N_EXPERIMENTS=1,MAX_ITERATIONS=1,CANDIDATES=3,PILOT_PARTICIPANTS=4,CV_FOLDS=3 \
+     scripts/rsa/slurm/open_rehearsal.sbatch
+   ```
+
+   Every fit is redone: the corpus changed. Its ground truth is then fitted on pragmods alone, so
+   **run B must not copy it** (§3 now says so).
 4. **Submit the audit alongside it.** It runs no agents and spends no API money:
 
    ```bash
@@ -140,18 +153,15 @@ pick up later. `data/` is excluded from every agent tree, so `data/rsa_open/dry/
 
 ## 3. Run B: the rehearsal (after the driver's review of A)
 
-Run B's fresh work root stages the branch as it is then. That includes what was built after run
-A was submitted, all of which A lacks:
-
-- the critic before every inner-loop round;
-- the lazy EIG search (about 6× faster);
-- a pilot that sends only the current screen's picture (about a tenth of the tokens);
-- bets in the EIG tool.
+Run B's fresh work root stages the branch as it is then. Unlike the trimmed run A, it fits all of E
+(its own ground truth included), with the full rounds, theorists, pilot and folds. The restarted
+run A already has everything built through 2026-10-22: the critic, the lazy EIG search, the
+lighter pilot, bets, E's fixed temperature and the design-fit limit.
 
 ```bash
 export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_rehearsal
 mkdir -p "$WORK_ROOT/logs" "$WORK_ROOT/private"
-cp -r "$SCRATCH/auto-psych/rsa_open_dry/private/ground_truth" "$WORK_ROOT/private/"   # same truth, no refit
+# No ground truth copied: the trimmed run A's was fitted on pragmods alone; run B fits its own on all of E.
 sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%A_%a.out" \
   --export=ALL,WORK_ROOT=$WORK_ROOT scripts/rsa/slurm/open_rehearsal.sbatch
 ```

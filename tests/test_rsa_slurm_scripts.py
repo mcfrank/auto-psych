@@ -753,3 +753,11 @@ def test_the_environment_check_names_what_is_missing(monkeypatch):
     (problem,) = env_check.problems()
     assert problem.startswith("no_such_package_xyz: ModuleNotFoundError")
     assert env_check.main() == 1
+
+
+def test_a_dry_run_can_fit_the_pragmods_trials_alone():
+    """Run A, trimmed (PI 2026-10-22): LITERATURE=pragmods and fewer folds, rounds and pilot people."""
+    text = (SLURM / "open_rehearsal.sbatch").read_text()
+    assert 'pragmods) EXISTING="$REPO/src/pipelines/outer_loop/projects/rsa_reference/data/pragmods_trials.csv"' in text
+    assert (REPO / "src/pipelines/outer_loop/projects/rsa_reference/data/pragmods_trials.csv").is_file()
+    assert '--cv-folds "$CV_FOLDS"' in text and "must be all or pragmods" in text

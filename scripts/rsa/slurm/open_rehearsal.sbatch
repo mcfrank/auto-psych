@@ -30,7 +30,9 @@
 # environment variables that point outside the tree are withheld from the agents.
 #
 # Overrides: CHAINS ("0"), N_EXPERIMENTS (3), MAX_ITERATIONS (5), CANDIDATES (6),
-# PILOT_PARTICIPANTS (12), THEORIST_TIMEOUT_SEC (2400), SEED (0), RUN2_ROOT (run 2's sweep root).
+# PILOT_PARTICIPANTS (12), CV_FOLDS (5), THEORIST_TIMEOUT_SEC (2400), SEED (0), RUN2_ROOT (run 2's
+# sweep root), LITERATURE ("all": E, run 2's all_trials.csv; "pragmods": the committed pragmods
+# trials alone, about 7x fewer, for a dry run that tests the machinery, not the science).
 set -euo pipefail
 export REPO="${REPO:-${SLURM_SUBMIT_DIR:-$HOME/auto-psych}}"
 export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/rsa_open_rehearsal}"
@@ -55,7 +57,12 @@ PILOT_PARTICIPANTS="${PILOT_PARTICIPANTS:-12}"
 THEORIST_TIMEOUT_SEC="${THEORIST_TIMEOUT_SEC:-2400}"
 SEED="${SEED:-0}"
 RUN2_ROOT="${RUN2_ROOT:-$(rsa_default_work_root)}"  # the run-2 sweep (_cells.sh)
-EXISTING="$RUN2_ROOT/promote_work/all_trials.csv"   # E: every literature trial
+CV_FOLDS="${CV_FOLDS:-5}"
+case "${LITERATURE:-all}" in
+  all) EXISTING="$RUN2_ROOT/promote_work/all_trials.csv" ;;   # E: every literature trial
+  pragmods) EXISTING="$REPO/src/pipelines/outer_loop/projects/rsa_reference/data/pragmods_trials.csv" ;;
+  *) echo "ERROR: LITERATURE must be all or pragmods, not ${LITERATURE}" >&2; exit 1 ;;
+esac
 SEEDS_SRC="$REPO/data/rsa_open/seeds"
 CLOSED_RECORD="$REPO/data/rsa/rehearsal2/ground_truth.json"
 PRIVATE="$WORK_ROOT/private"
@@ -124,13 +131,14 @@ done
 UNSET_ARGS=()
 for name in ${WITHHELD[@]+"${WITHHELD[@]}"}; do UNSET_ARGS+=(-u "$name"); done
 echo "[open rehearsal] withheld from the agents' environment: ${WITHHELD[*]:-}"
-echo "[open rehearsal] chain $CHAIN, $N_EXPERIMENTS experiments, $MAX_ITERATIONS rounds of $CANDIDATES theorists -> $RUN_DIR"
+echo "[open rehearsal] chain $CHAIN, $N_EXPERIMENTS experiments, $MAX_ITERATIONS rounds of $CANDIDATES theorists," \
+     "$CV_FOLDS folds, literature ${LITERATURE:-all} ($EXISTING) -> $RUN_DIR"
 cd "$HARNESS_REPO"
 env ${UNSET_ARGS[@]+"${UNSET_ARGS[@]}"} PATH="$RUN_REPO/.agent_bin:$PATH" \
   "$AGENT_PY" -m src.rsa_open.run_chain --chain "$CHAIN" --run-dir "$RUN_DIR" --private-dir "$GT_DIR" \
     --agent-root "$RUN_REPO" --literature "$EXISTING" --seeds "$WORK_ROOT/open_seeds" \
     --n-experiments "$N_EXPERIMENTS" --max-iterations "$MAX_ITERATIONS" --candidate-count "$CANDIDATES" \
-    --pilot-participants "$PILOT_PARTICIPANTS" --theorist-timeout-sec "$THEORIST_TIMEOUT_SEC" --seed "$SEED" \
+    --pilot-participants "$PILOT_PARTICIPANTS" --cv-folds "$CV_FOLDS" --theorist-timeout-sec "$THEORIST_TIMEOUT_SEC" --seed "$SEED" \
     --code-commit "$(cat "$WORK_ROOT/code_commit")"
 
 # --- outputs: the run without fit caches; where agents' files name the truth ----------
