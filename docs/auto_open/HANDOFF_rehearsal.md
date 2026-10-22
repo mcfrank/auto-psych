@@ -151,23 +151,57 @@ Expect about 6–14 h: the design, then 2 loop rounds.
 Do not bring back `private/ground_truth/ground_truth.py` under any name the agents' trees could
 pick up later. `data/` is excluded from every agent tree, so `data/rsa_open/dry/` is safe.
 
-## 3. Run B: the rehearsal (after the driver's review of A)
+## 3. Run B: the rehearsal (reviewed and cleared, 2026-10-22)
 
-Run B's fresh work root stages the branch as it is then. Unlike the trimmed run A, it fits all of E
-(its own ground truth included), with the full rounds, theorists, pilot and folds. The restarted
-run A already has everything built through 2026-10-22: the critic, the lazy EIG search, the
-lighter pilot, bets, E's fixed temperature and the design-fit limit.
+The driver reviewed run A (`DRY_RUN_A_REPORT.md`) and the temperature audit. Both are clear
+(PLAN.md, phases table). The code run B stages adds two things run A's report asked for:
+- **Spend:** the chain writes every agent's and the pilot's spend to
+  `chain_0/token_usage.jsonl` and `token_usage_summary.json`.
+- **Restarts:** a restart after a data change sets the stale corpus aside instead of failing (§7
+  of the report).
+
+Run B's fresh work root stages the branch as it is then. Unlike the trimmed run A, it fits all of
+E (its own ground truth included), with the full rounds, theorists, pilot and folds.
 
 ```bash
+cd ~/auto-psych && git pull
 export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_rehearsal
 mkdir -p "$WORK_ROOT/logs" "$WORK_ROOT/private"
-# No ground truth copied: the trimmed run A's was fitted on pragmods alone; run B fits its own on all of E.
+# No ground truth copied: run A's was fitted on pragmods alone; run B fits its own on all of E.
 sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%A_%a.out" \
   --export=ALL,WORK_ROOT=$WORK_ROOT scripts/rsa/slurm/open_rehearsal.sbatch
 ```
 
-The defaults are 3 experiments, 5 rounds of 6 theorists, a 12-person pilot, and a 5-day limit
-on the `mcfrank` partition. Bring the run back to `data/rsa_open/rehearsal/`, as for A.
+The defaults are 3 experiments, 5 rounds of 6 theorists, a 12-person pilot, 5 CV folds, all of E
+(`LITERATURE=all`), and a 5-day limit on `mcfrank`.
+
+**Expect about 2–3 days.** These are estimates from run A and the audit, not measurements. Per
+experiment:
+- the truth fit: once, 0.5–1 h;
+- the design fits: about 1 h; the slowest bar theory is about 50 min at the design's settings;
+- the designer and its checks: 1–6 h;
+- the loop's starting fits and their 5 folds on all of E: 3–6 h. The slowest starting theory,
+  `isolated_graded_costly_l3`, took 2.7 h per fit in the audit;
+- 5 rounds: 2–3 h each, plus the critic.
+
+**Spend:** run A's one round of 3 cost $9.28 for 5 agent sessions, roughly $1.3–1.7 a session.
+Run B has 3 designer sessions (or up to 6 with retries) and 3 × 5 × (6 theorists + critic) ≈ 105
+loop sessions, so on the order of $150–250 plus the pilot. The chain's
+`token_usage_summary.json` now records it.
+
+**What to watch** (none blocks the run):
+- `experiment<n>/design_screened_out.json`: a bar theory left out of a design;
+- the loop's `attempted_hypotheses.jsonl`: candidates rejected as too slow. The admission fit's
+  30-minute limit is the closed campaign's. On all of E it may reject refinements of the heaviest
+  theories, as the closed campaign's log noted; that's parity, but count them;
+- the critic's `critiques.md` in each round;
+- `gt_name_mentions.txt`, which should be empty.
+
+**Bring back** to `data/rsa_open/rehearsal/`, as for A:
+- `outputs/` without caches;
+- `private/ground_truth/ground_truth.json`, but not `ground_truth.py`;
+- `gt_name_mentions.txt`, `code_history` and the job log;
+- the chain's `token_usage_summary.json`.
 
 ## 4. If something fails
 

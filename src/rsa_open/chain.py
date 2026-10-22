@@ -119,6 +119,21 @@ def set_aside(stage_dir: Path, keep: Sequence[str] = ()) -> Optional[Path]:
     return aside
 
 
+def fresh_corpus(path: Path, blocks: Sequence[Block]) -> Path:
+    """Write an unfinished stage's corpus; one left by an earlier attempt on other data (a restart
+    after the data or their convention changed) is set aside as ``<stem>.abandoned_<i>.json``
+    rather than refused (run A's restart, 2026-10-22, had to move them by hand)."""
+    path = Path(path)
+    try:
+        return write_corpus(path, blocks)
+    except FileExistsError:
+        i = 1
+        while path.with_name(f"{path.stem}.abandoned_{i}.json").exists():
+            i += 1
+        path.rename(path.with_name(f"{path.stem}.abandoned_{i}.json"))
+        return write_corpus(path, blocks)
+
+
 def _copy_models(src: Path, dst: Path) -> None:
     """A models directory (theories + manifest), copied once."""
     if (dst / "models_manifest.yaml").exists():
@@ -226,7 +241,7 @@ class Chain:
         from src.rsa.loop.fitting import ModelFailure
         from src.rsa.loop.orchestrator import default_fit_workers
 
-        corpus = write_corpus(self.exp(n) / "prior_corpus.json", self.blocks_before(n))
+        corpus = fresh_corpus(self.exp(n) / "prior_corpus.json", self.blocks_before(n))
         items = list(self.design_theories(n).items())
 
         def one(item):
@@ -334,7 +349,7 @@ class Chain:
         if (loop_dir / "export.json").exists():
             return json.loads((loop_dir / "export.json").read_text())
         set_aside(loop_dir, keep=(".fit_cache",))
-        corpus = write_corpus(self.exp(n) / "corpus.json", self.blocks_before(n + 1))
+        corpus = fresh_corpus(self.exp(n) / "corpus.json", self.blocks_before(n + 1))
         notes = {}
         for k in range(1, n + 1):
             p = load_paradigm(self.exp(k) / "design" / "frozen" / "paradigm.json")

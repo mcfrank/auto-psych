@@ -216,3 +216,47 @@ def test_a_design_leaves_out_a_theory_whose_fit_fails_or_runs_out_of_time_on_rec
     names[:] = ["rsa_l1", "slow"]
     with pytest.raises(RuntimeError, match="needs two"):
         c.design_context(1)
+
+
+def test_a_restart_on_other_data_sets_the_old_corpus_aside(tmp_path):
+    from src.rsa_open.chain import fresh_corpus
+    from src.rsa_open.loop.fitting import read_corpus
+
+    a, b = _two_blocks()
+    path = fresh_corpus(tmp_path / "prior_corpus.json", [a])
+    assert fresh_corpus(path, [a]) == path  # the same data: kept as is
+    fresh_corpus(path, [b])  # other data (run A's restart): the old file moves aside
+    assert [blk.name for blk in read_corpus(path)] == ["exp9"]
+    assert [blk.name for blk in read_corpus(tmp_path / "prior_corpus.abandoned_1.json")] == ["E"]
+
+
+def _two_blocks():
+    from src.rsa_open.fit import TheoryModel
+    from src.rsa_open.links import likelihood
+    from tests.test_rsa_open_corpus import simulated_block
+    import tempfile
+    from pathlib import Path
+
+    path = Path(tempfile.mkdtemp()) / "rsa_l1.py"
+    path.write_text(ported("rsa_l1_salience"))
+    th = TheoryModel(path)
+    return (simulated_block(th, "E", likelihood("choice"), 20, 1, {"temperature": 1.0, "lapse": 0.05}),
+            simulated_block(th, "exp9", likelihood("choice"), 20, 2, {"temperature": 1.0, "lapse": 0.05}))
+
+
+def test_the_chain_command_records_every_agent_s_spend(tmp_path, monkeypatch):
+    import src.rsa_open.run_chain as run_chain
+    from src.runtime.token_usage import record_usage
+
+    class Fake:
+        def run(self):
+            record_usage(source="rsa_open:pilot", backend="google-genai", model="m", input_tokens=10, output_tokens=2)
+            raise RuntimeError("the chain stopped")
+
+    monkeypatch.setattr(run_chain, "build", lambda args: Fake())
+    args = run_chain.Args(chain=0, run_dir=tmp_path / "run", private_dir=tmp_path, agent_root=tmp_path,
+                          literature=tmp_path / "E.csv")
+    with pytest.raises(RuntimeError, match="stopped"):
+        run_chain.main(args)
+    assert '"rsa_open:pilot"' in (tmp_path / "run" / "token_usage.jsonl").read_text()
+    assert json.loads((tmp_path / "run" / "token_usage_summary.json").read_text())["n_calls"] >= 1

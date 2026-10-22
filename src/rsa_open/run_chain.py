@@ -95,7 +95,18 @@ def build(args: Args) -> Chain:
 
 
 def main(args: Args) -> list:
-    exports = build(args).run()
+    from src.runtime.token_usage import read_usage_log, start_usage_log, write_usage_report
+
+    # Every agent's and the pilot's spend, in the run directory (run A's were kept only in memory);
+    # written in a finally so an aborted chain still accounts for it, and over the whole log, so a
+    # resumed chain's summary includes its earlier attempts.
+    usage_log = Path(args.run_dir) / "token_usage.jsonl"
+    marker = start_usage_log(usage_log)
+    try:
+        exports = build(args).run()
+    finally:
+        write_usage_report(Path(args.run_dir), marker, heading="RSA open chain",
+                           records=read_usage_log(usage_log) if usage_log.exists() else [])
     print(json.dumps([{k: e.get(k) for k in ("best_model", "live")} for e in exports], indent=1))
     return exports
 
