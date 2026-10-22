@@ -155,3 +155,31 @@ def test_a_joint_fit_recovers_the_shared_theory_and_each_block_s_link(theory, bl
         assert lo[name] <= true <= hi[name], (name, lo[name], hi[name])
     assert hi["temperature@E"] < lo["temperature@exp1"] or np.mean(flat["temperature@exp1"]) > np.mean(flat["temperature@E"])
     assert fitted.pointwise("exp1").shape[1] == 400
+
+
+def test_the_literature_is_the_reference_block_its_temperature_fixed_at_1(theory, blocks, tmp_path):
+    """PI 2026-10-22: on E the link's temperature is fixed at 1 (its lapse stays free); every new
+    paradigm's temperature is free, relative to E. On E alone a free temperature trades off against
+    a theory's own sharpness (run A: rsa_l1_shared_prior's fit stalled; alpha 0.15 against 1.4)."""
+    from numpyro import handlers
+
+    from src.rsa_open.corpus import Block, _corpus_model, block_draws, literature_block
+    from src.rsa_open.loop.fitting import read_corpus, write_corpus
+
+    E = literature_block()
+    assert E.fixed_params == {"temperature": 1.0} and set(E.free_link_params) == {"lapse"}
+    E_sim = Block("E", blocks[0].link, blocks[0].contexts, blocks[0].responses, blocks[0].units,
+                  fixed=(("temperature", 1.0),))
+    corpus = [E_sim, blocks[1]]
+    trace = handlers.trace(handlers.seed(_corpus_model, 0)).get_trace(theory, corpus)
+    sampled = {k for k, v in trace.items() if v["type"] == "sample" and not v.get("is_observed")}
+    assert "temperature@E" not in sampled and {"lapse@E", "temperature@exp1", "lapse@exp1"} <= sampled
+    flat = {"alpha": np.ones(3), "w_features": np.zeros(3), "w_familiar": np.zeros(3), "lapse@E": np.full(3, 0.1)}
+    assert block_draws(flat, theory, E_sim)["temperature"].tolist() == [1.0, 1.0, 1.0]
+    # The corpus file keeps it (and a block without fixed parameters is written as before).
+    (back_E, back_1) = read_corpus(write_corpus(tmp_path / "c.json", corpus))
+    assert back_E.fixed_params == {"temperature": 1.0} and back_1.fixed_params == {}
+    assert '"fixed"' not in write_corpus(tmp_path / "one.json", [blocks[1]]).read_text()
+    assert E_sim.subset([0, 1]).fixed_params == {"temperature": 1.0}
+    with pytest.raises(ValueError, match="not a parameter of the choice link"):
+        Block("E", blocks[0].link, blocks[0].contexts, blocks[0].responses, blocks[0].units, fixed=(("kappa", 1.0),))

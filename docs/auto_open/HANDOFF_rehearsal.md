@@ -13,6 +13,37 @@ experiment. Theories must predict every paradigm with one set of parameters. Two
 
 Start B only after the driver has reviewed A.
 
+## Restart, 2026-10-22 (answers `DRY_RUN_STATUS.md`)
+
+The stalled fit (`rsa_l1_shared_prior`) was the link's temperature trading off against the
+theory's own sharpness on E. The PI decided (PLAN.md, Decisions 2026-10-22):
+- **E's link temperature is fixed at 1.** Its lapse and every new paradigm's temperature stay free.
+- **Design fits** take the previous loop's fit, else a cheaper fit within 2 h. A theory whose fit
+  fails or runs out of time is left out of that design, recorded in
+  `experiment<n>/design_screened_out.json`.
+
+Locally, on pragmods, the stalled model's two-chain fit takes 77 s with the temperature fixed.
+
+1. Cancel 48820332_0 and pull `auto-psych-open`.
+2. **Delete the ground truth:** `rm -r $SCRATCH/auto-psych/rsa_open_dry2/private/ground_truth`.
+   It was fitted with E's temperature free, so its parameters sit on that ridge (`alpha` small,
+   temperature about 2.5). The job refits it under the new convention (15–60 min).
+3. Restart run A in `rsa_open_dry2` with
+   `RESTAGE_REASON='E reference block and design-fit limit, PI 2026-10-22'`. Every fit is redone:
+   the corpus changed.
+4. **Submit the audit alongside it.** It runs no agents and spends no API money:
+
+   ```bash
+   mkdir -p "$SCRATCH/auto-psych/rsa_open_audit/logs"
+   sbatch --chdir="$HOME/auto-psych" -o "$SCRATCH/auto-psych/rsa_open_audit/logs/%x_%j.out" \
+     scripts/rsa/slurm/open_temperature_audit.sbatch
+   ```
+
+   It fits all 15 bar theories on the full E with the temperature fixed and free, and reports
+   each one's fit time, divergences, temperature and the difference in held-out fit (PSIS-LOO,
+   with an SE clustered by display). Bring back `temperature_audit/audit.{json,md}` and the log
+   to `data/rsa_open/temperature_audit/`.
+
 ## 0. What the job does (`scripts/rsa/slurm/open_rehearsal.sbatch`)
 
 1. **Once per work root:**

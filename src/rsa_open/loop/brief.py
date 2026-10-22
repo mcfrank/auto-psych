@@ -73,6 +73,10 @@ def context_md(*, candidate_dir: Path, corpus_path: Path, blocks: Sequence[Block
         opts = ", ".join(f"{k} {v}" for k, v in b.link.options.items())
         lines += [f"### {b.name}: {b.n} trials, people {resp}",
                   f"- link `{b.link.name}`{f' ({opts})' if opts else ''}; data `{data_paths[b.name]}`"]
+        if b.fixed:
+            held = ", ".join(f"`{k}` = {v:g}" for k, v in b.fixed_params.items())
+            lines.append(f"- the reference paradigm: its link's {held} (not fitted); later paradigms' are "
+                         "fitted relative to it")
         if paradigm_notes.get(b.name):
             lines.append(f"- {paradigm_notes[b.name]}")
         lines.append("")

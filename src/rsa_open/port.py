@@ -19,10 +19,11 @@ text: memo parses its own source, so the memo definitions, and every other line,
 byte. A file that fits neither rule is refused with the reason (`PortRefused`); there is no
 fallback.
 
-**Hand ports** (`HAND_PORTS`, `port_file`): a decision temperature written into a theory belongs
-to the link, but no mechanical rule can find one in arbitrary code. The one model with one,
-`softmax_surprisal_isolated_costly_l4`, is ported by hand (`src/rsa_open/hand_ports/`), from an
-original whose sha256 is recorded: a changed original is refused.
+**No hand ports** (PI 2026-10-22): a decision temperature written into a closed theory stays in
+it, under its own name (`softmax_surprisal_isolated_costly_l4`'s ``beta``). E, the literature, is
+the reference paradigm and its link's temperature is fixed at 1 (`src.rsa_open.corpus`), so such a
+parameter is the theory's own sharpness, shared by every paradigm. (From 2026-10-21 to 10-22 that
+``beta`` was cut by hand and left to the link.)
 
     python -m src.rsa_open.port <model.py> ... --out <dir>
 """
@@ -42,13 +43,6 @@ LINK_LAPSE_PRIOR = ("Beta", (1.0, 9.0))  # the choice link's prior on its lapse
 LISTENER = "listener"
 THEORY_LAPSE = "theory_lapse"
 HEADER = "# Ported from {name} by src.rsa_open.port, rule ({rule}) (docs/auto_open/PLAN.md §3.1).\n"
-HAND_PORT_DIR = Path(__file__).parent / "hand_ports"
-# original file name -> (the original's sha256, why it is ported by hand)
-HAND_PORTS = {
-    "softmax_surprisal_isolated_costly_l4.py": (
-        "4b492449193eafb713a40d107fb470e60e7b7828c3c0113f12fb3d892b3759d7",
-        "its decision temperature (beta) moves to the link (PI 2026-10-21)"),
-}
 
 
 class PortRefused(ValueError):
@@ -192,30 +186,18 @@ def port(source: str, name: str) -> str:
 
 
 def port_rule(theory_source: str) -> str:
-    """'a', 'b' or 'hand': how a theory file was ported (from its header)."""
+    """'a' or 'b': how a theory file was ported (from its header)."""
     first = theory_source.splitlines()[0] if theory_source else ""
     m = re.search(r"rule \((a|b)\)", first)
     if m:
         return m.group(1)
-    if first.startswith("# Hand port"):
-        return "hand"
     raise ValueError("not a ported theory file (no port header)")
 
 
 def port_file(path: Path) -> str:
-    """The theory for one closed model file: its hand port when it has one, else `port`."""
-    import hashlib
-
+    """The theory for one closed model file (`port`)."""
     path = Path(path)
-    source = path.read_text()
-    if path.name in HAND_PORTS:
-        sha, why = HAND_PORTS[path.name]
-        actual = hashlib.sha256(source.encode()).hexdigest()
-        if actual != sha:
-            raise PortRefused(f"{path.name} is ported by hand ({why}) from an original with sha256 "
-                              f"{sha}; this file's is {actual}: redo the hand port")
-        return (HAND_PORT_DIR / path.name).read_text()
-    return port(source, name=path.name)
+    return port(path.read_text(), name=path.name)
 
 
 def _check_theory(source: str, name: str) -> None:

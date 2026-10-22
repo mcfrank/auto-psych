@@ -37,9 +37,16 @@ Your theory says what is in the person's head, once, for every paradigm:
 Each paradigm's **link** turns those into responses, with parameters of its own that the
 pipeline fits per paradigm: a decision temperature (how sharply a person's responses follow
 the theory's probabilities), a lapse (random responding), and for ratings and sliders their
-cutpoints. **The response process is the link's, not the theory's**: a theory with a lapse,
-a decision temperature or cutpoints is refused, and a theory need not guard against
-responses it gives probability zero (the link's lapse does).
+cutpoints. **The response process is the link's, not the theory's**: a theory with a lapse
+or cutpoints is refused, and a theory need not guard against responses it gives probability
+zero (the link's lapse does).
+
+**E is the reference paradigm: its temperature is fixed at 1.** On E the theory's listener
+probabilities are the choice probabilities (with E's lapse), and each later paradigm's
+temperature is measured relative to E. So if you hold that people sharpen or soften their
+beliefs into a choice (they maximize rather than probability-match, say), that is a claim
+about people, not about one task: put it in the theory as a parameter of its own (any name
+but the links', e.g. `beta`), and it then applies, and is tested, in every paradigm.
 
 A theory that fits one paradigm by giving up on another is not progress. A theory is ranked
 on the newest paradigm, and it may lead only while, on **every earlier paradigm, E
@@ -192,8 +199,9 @@ is refused before your code runs.
 
 The fit must pass a convergence gate: at most 0.1% divergent transitions, R-hat ≤ 1.05, bulk
 ESS ≥ 100. Give every parameter a proper, weakly informative prior on a sensible scale. Avoid
-parameters the data cannot identify, above all a theory parameter that only rescales the
-probabilities a link's temperature already rescales.
+parameters the data cannot identify: two of the theory's own that rescale the same
+probabilities (a speaker's rationality and a listener's sharpness can trade off on
+forced-choice data alone) need a reason in the data, or one of them should go.
 
 ## What the pipeline checks (in order)
 

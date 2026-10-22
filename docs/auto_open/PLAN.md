@@ -50,7 +50,7 @@ with the closed campaign's on paradigms neither campaign saw.
 | Budget parity | **Equal dollars** per experiment: the closed campaign's ~$133 (200 × $0.50 × Prolific's 1.33), about 600 participant-minutes at the same hourly rate. The designer chooses N and length within it | the comparison is of methods at equal cost |
 | Old-data guard | k = **4** clustered SEs, as the closed campaign's guard | |
 | Pilot participants | Gemini 3.8 Flash | cost |
-| Response process | Every link has a decision temperature and a lapse; a temperature written into a ported theory is cut (one hand port) | standard in a link; equal flexibility for every theory, old ones included |
+| Response process | Every link has a decision temperature and a lapse; ~~a temperature written into a ported theory is cut (one hand port)~~ superseded 2026-10-22 (below): E's temperature is fixed at 1 and a theory's own temperature stays | standard in a link; equal flexibility for every theory, old ones included |
 | Chain 2's final | Ported whole (rule b); its prior-mixing lapse stays in the theory as `theory_lapse`, and the link adds its uniform lapse | the theory's mixture must earn its parameter |
 | Sliders and bets (PI 2026-10-21) | A one-referent slider or bet uses the ordered-beta link (a discrete Beta between point masses at 0 and max); a bet over all referents (F&G 2012) keeps the Dirichlet-multinomial, response type `bet` | sliders and bets are prominent in the RSA literature; endpoints pile up in real slider data |
 | Timing digest (PI 2026-10-21) | The designer's brief carries how long finished experiments took people (aggregates only), the closed campaign's 9 live experiments and every chain's of this campaign; the pilot's time estimate is calibrated on the same records | helps the designer judge how many trials fit in its minutes; durations are not response data, so this is not closed-campaign data in the sense of the drift rule |
@@ -58,6 +58,13 @@ with the closed campaign's on paradigms neither campaign saw.
 | Materials legibility (PI 2026-10-21) | The brief asks for recognisable bases, nameable features and engaging drawings; the pilot gates it: fresh chats name each base freely, name each single added feature, and say which objects of real trial screens a word is true of; ≥ 90% right and no feature or trial screen misread by half; a base named otherwise by half counts against the 90% but alone is only a warning (PI, same day) | the first designer drew a bare box as a featureless robot, and a multiple-choice naming question (the domain among four unrelated kinds) passed it by elimination; then real Gemini named a plain badge "circle" and a plain robot "square" (0 of 3 each, 90.5% overall), a fair reading of an abstract base that the features and the words' truth still have to carry |
 | Speakers | Every theory has a speaker: its own `speaker(params, ctx)`, or the one derived from its listener, `speaker(u | r) ∝ listener(r | u)` over the scene's real messages (§3.1) | the charter covers what a speaker should say; a derived speaker is specific to each theory, where S0/S1 would give every listener-only theory the same one |
 | Designer limits | Per cycle: 2 h of wall clock, 40 tool calls, at most 3 simulated pilots. `submit` refuses a paradigm whose EIG per dollar is below half the closed campaign's paradigm's at the same budget, under the same theories. A failed cycle gets **one retry** with the reason in the brief; a second failure stops the chain and reports. Design bounds: N ≥ 100, at most 15 minutes per person | bounded cost; informative without dictating the design; fail loudly, no fallback design |
+
+## Decisions (PI, 2026-10-22)
+
+| Decision | Choice | Why |
+|---|---|---|
+| E is the reference paradigm | The literature block's link temperature is fixed at 1; its lapse, and every new paradigm's temperature and lapse, are fitted (`corpus.LITERATURE_FIXED`). A theory in which people sharpen or soften their beliefs into a choice says so with a parameter of its own, shared by every paradigm; the theorists' prompt says so. The one hand port is undone (`beta` stays in its theory) | On E alone a free temperature traded off against a theory's own sharpness: on pragmods, `rsa_l1_salience` had `alpha` 0.15 ± 0.065 at temperature 2.5 free, 1.47 ± 0.10 at 1 fixed, and `rsa_l1_shared_prior`'s two-chain fit stalled for over an hour free, against 77 s fixed (run A's design waited 6 h+ on it). That cost fell on theories with their own sharpness parameter, most RSA theories, and not on heuristics. With E fixed, every open theory is its closed original on E, and each new paradigm's temperature is its noise relative to E. The worry (PI): a theory that rightly re-attributes `alpha` to the listener's choice is squashed; the answer is that the claim moves into the theory, where every paradigm tests it, and **the audit** (`temperature_audit.py`, `open_temperature_audit.sbatch`) measures what fixing costs each bar theory on the full E. If many fit E clearly better free, a tight prior around 1 replaces the fixed value |
+| Design fits | A design theory takes the previous loop's fit on the same data, else a cheaper fit (2 chains × 500 + 250) within 2 h; a fit that fails or runs out is left out of that design, recorded in `design_screened_out.json` | the same stalled fit; no single fit may hold a chain without limit, and no theory leaves a design silently |
 
 ## 1. Claims
 
@@ -176,23 +183,20 @@ Either way the function is renamed `listener`, and only those spans of the sourc
 edited: every memo line stays byte for byte (memo parses its own source). A file that fits
 neither rule is refused with the reason. There is no fallback.
 
-**Hand ports.** A decision temperature written into a theory belongs to the link, but no
-mechanical rule can find one in arbitrary code. Of the 20 models, one has one, and it is
-ported by hand (`src/rsa_open/hand_ports/`, registered in `HAND_PORTS` with the original's
-sha256, so a changed original is refused).
+**No hand ports (2026-10-22).** From 10-21 to 10-22 the one model with its own decision
+temperature (`softmax_surprisal_isolated_costly_l4`'s `beta`) was ported by hand with `beta`
+cut, left to the link. Since E's link temperature is fixed at 1 (Decisions, 2026-10-22), such a
+parameter is the theory's own sharpness, shared by every paradigm, and the model ports by rule
+(a) with `beta` kept.
 
 **Composing** a theory with a link gives an ordinary model file (`compose`): the theory, then
 the link's parameters and its `choice_probs`. The existing fitting, CV and loop code runs it
 unchanged.
 
 **The 20 models** (5 starting models, 12 promoted seeds, 3 closed finals; `tests/test_rsa_open_port.py`):
-- 18 port by rule (a);
+- 19 port by rule (a), `softmax_surprisal_isolated_costly_l4` with its own `beta` kept;
 - chain 2's final (`competition_endpoint_binding_lapse_l2`) ports by rule (b). Its lapse
-  mixes in its own salience prior, on word trials only;
-- `softmax_surprisal_isolated_costly_l4` (promoted) is the hand port. Its temperature `beta`
-  (heard ** beta, renormalized) is cut. It equals its original on word trials at temperature
-  = beta, and on every trial at beta = temperature = 1. On "mumble" trials the original left
-  the prior untempered, and the link tempers every trial.
+  mixes in its own salience prior, on word trials only.
 
 Each port equals its original at those values, and every port gains the link's temperature.
 
@@ -436,7 +440,7 @@ The existing protocol covers the rest (PI, 2026-10-20).
 | Phase | What | Where | Status |
 |---|---|---|---|
 | 0 | This plan; Gemini 4 smoke test | cloud | plan written; smoke test below |
-| 1 | Paradigm-spec schema and validator; link library with recovery tests; theory + link refactor; port the seeds and closed finals (exact-equivalence tests) | cloud | **done** (`src/rsa_open/`): all 20 models port (18 by rule a, chain 2's final by rule b, one by hand) and equal their originals; five links (choice, rating, allocation, production, binary judgment), each with a temperature and a lapse, each passing the recovery test; every theory has a speaker; the paradigm spec and its validator. Not yet: freezing the ported closed finals (with their derived speakers) before the campaign |
+| 1 | Paradigm-spec schema and validator; link library with recovery tests; theory + link refactor; port the seeds and closed finals (exact-equivalence tests) | cloud | **done** (`src/rsa_open/`): all 20 models port (19 by rule a, chain 2's final by rule b; one by hand until 2026-10-22) and equal their originals; five links (choice, rating, allocation, production, binary judgment), each with a temperature and a lapse, each passing the recovery test; every theory has a speaker; the paradigm spec and its validator. Not yet: freezing the ported closed finals (with their derived speakers) before the campaign |
 | 2 | Designer tools as an agent CLI; designer brief; the page; simulated pilot | cloud | **built** (§4.1–4.3): the EIG tool; the tools CLI (`validate`, `eig`, `link-check`, `submit`, 40 calls); spec-driven trial lists and one page for all six response types (tested in Chromium); the pilot with Gemini 3.8 Flash participants and its gate (a live 3-participant run passed); the designer cycle (brief, the harness's own re-checks, up to 3 pilots, one retry, freeze); a real Gemini 4 designer cycle froze a paradigm (§4.3); EIG for bets (2026-10-21). Not yet: designer-proposed links |
 | 2b | Fitting across paradigms (shared theory parameters, each paradigm its own link parameters, E included); the open inner loop (theorists; grouped CV within paradigm; the k = 4 SE accountability rule; carry-forward); the chain driver (context → designer → frozen paradigm → simulated collection → inner loop → timing record); rehearsal ground truths; Sherlock jobs | cloud | **built**, the gate for Phase 3 except its last piece: corpus fits and grouped CV across paradigms (`corpus.py`); the open inner loop (`loop/`); the chain driver (`chain.py`, designs against the bar as well as the live set; an interrupted stage restarts); a two-experiment dry run with a fake designer and theorist passes; a real Gemini 4 designer cycle froze a paradigm (§4.3); the ported seeds and bar (`seeds.py`, `data/rsa_open/seeds`); the ground truth (`ground_truth.py`: the closed rehearsals' coherent truth, ported, fixed at its posterior means on E); the job (`scripts/rsa/slurm/open_rehearsal.sbatch`, `HANDOFF_rehearsal.md`). Since: the critic (§5); lazy greedy EIG (§4.1); EIG for bets; the pilot sends only the current screen's picture (a tenth of the tokens); each design reads every finished live experiment's timing, this chain's and the others' (`Chain.record_timing`, `ChainConfig.other_chains`). **Not yet:** the one-experiment dry run with real agents on Sherlock (run A of the handoff, on the code before those) |
 | 3 | Rehearsal on simulated participants with a ground-truth theory across paradigms | Sherlock | |

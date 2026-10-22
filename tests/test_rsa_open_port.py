@@ -1,7 +1,6 @@
 """Porting closed RSA model files to theory + link (docs/auto_open/PLAN.md §3.1)."""
 
 import ast
-import hashlib
 
 import numpy as np
 import pytest
@@ -57,9 +56,7 @@ def theory_names(original_params, rule):
     names = list(original_params)
     if rule == "a":
         return [k for k in names if k != "lapse"]
-    if rule == "b":
-        return ["theory_lapse" if k == "lapse" else k for k in names]
-    return [k for k in names if k not in ("lapse", "beta")]  # the hand port
+    return ["theory_lapse" if k == "lapse" else k for k in names]
 
 
 def assert_same_choice_probs(original, theory, composed, sample, n_draws=3):
@@ -71,14 +68,10 @@ def assert_same_choice_probs(original, theory, composed, sample, n_draws=3):
     renamed = {"theory_lapse": "lapse"} if rule == "b" else {}
     for name in theory_names(a.params, rule):
         assert same_distribution(b.params[name], a.params[renamed.get(name, name)]), name
-    if rule in ("a", "hand"):
+    if rule == "a":
         assert same_distribution(b.params["lapse"], a.params["lapse"])
     for draw in prior_draws(a.params, n_draws, 3):
-        if rule == "hand":
-            draw = {**draw, "beta": 1.0}
-            ours = {**{k: v for k, v in draw.items() if k != "beta"}, "temperature": 1.0}
-        else:
-            ours = composed_params(draw, rule)
+        ours = composed_params(draw, rule)
         for group in sample.values():
             np.testing.assert_allclose(np.asarray(b.group_probs(ours, group)),
                                        np.asarray(a.group_probs(draw, group)), rtol=1e-5, atol=1e-6)
@@ -145,24 +138,14 @@ def test_the_port_refuses_a_lapse_used_anywhere_but_the_final_mixture():
         port(source, name="rsa_l1.py")
 
 
-def test_the_softmax_seed_is_ported_by_hand_without_its_temperature():
-    from src.rsa_open.port import HAND_PORTS, port_file, port_rule
+def test_a_decision_temperature_in_a_closed_theory_stays_the_theory_s_own():
+    """PI 2026-10-22: E's link temperature is fixed at 1, so the softmax seed's beta is its own
+    sharpness, shared by every paradigm (from 10-21 to 10-22 it was cut by hand and left to the link)."""
+    from src.rsa_open.port import port_file, port_rule
 
-    sha, _ = HAND_PORTS[SOFTMAX.name]
-    assert hashlib.sha256(SOFTMAX.read_bytes()).hexdigest() == sha
     theory = port_file(SOFTMAX)
-    assert port_rule(theory) == "hand"
-    tree = ast.parse(theory)
-    assert not any(isinstance(n, ast.Constant) and n.value in ("beta", "lapse") for n in ast.walk(tree))
-
-
-def test_a_changed_original_of_a_hand_port_is_refused(tmp_path):
-    from src.rsa_open.port import PortRefused, port_file
-
-    changed = tmp_path / SOFTMAX.name
-    changed.write_text(SOFTMAX.read_text() + "\n# edited\n")
-    with pytest.raises(PortRefused, match="redo the hand port"):
-        port_file(changed)
+    assert port_rule(theory) == "a" and '"beta": dist.' in theory
+    assert not any(isinstance(n, ast.Constant) and n.value == "lapse" for n in ast.walk(ast.parse(theory)))
 
 
 def test_a_theory_may_not_name_a_link_parameter():
@@ -185,15 +168,3 @@ def test_composing_with_an_unknown_link_fails_loudly():
 def test_every_seed_and_final_ports_and_reproduces_its_choice_probabilities(original, sample, tmp_path):
     theory, composed = ported_and_composed(original, tmp_path)
     assert_same_choice_probs(original, theory, composed, sample)
-
-
-@pytest.mark.slow  # compiles the depth-4 seed
-def test_the_hand_port_equals_its_original_on_word_trials_at_temperature_beta(sample, tmp_path):
-    theory, composed = ported_and_composed(SOFTMAX, tmp_path)
-    a, b = RSAModel(SOFTMAX), RSAModel(composed)
-    for draw in prior_draws(a.params, 3, 5):
-        ours = {**{k: v for k, v in draw.items() if k != "beta"}, "temperature": draw["beta"]}
-        for group in sample.values():
-            words = np.asarray(group.arrays.is_prior) == 0
-            np.testing.assert_allclose(np.asarray(b.group_probs(ours, group))[words],
-                                       np.asarray(a.group_probs(draw, group))[words], rtol=2e-4, atol=1e-6)

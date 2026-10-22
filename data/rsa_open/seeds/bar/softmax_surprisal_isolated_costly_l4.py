@@ -1,9 +1,4 @@
-# Hand port of softmax_surprisal_isolated_costly_l4.py (docs/auto_open/PLAN.md §3.1, PI 2026-10-21):
-# the mechanical port, then its decision temperature (beta: heard ** beta, renormalized) cut out,
-# because every link now has one. Composed with the choice link, it equals the original on word
-# trials at temperature = beta, and on every trial at beta = temperature = 1
-# (tests/test_rsa_open_port.py). Made from the original with sha256
-# 4b492449193eafb713a40d107fb470e60e7b7828c3c0113f12fb3d892b3759d7.
+# Ported from softmax_surprisal_isolated_costly_l4.py by src.rsa_open.port, rule (a) (docs/auto_open/PLAN.md §3.1).
 """Pragmatic listener at depth 4 with perceptual isolation, feature surprisal prior, graded semantics, utterance extension costs, and softmax belief choice rule."""
 
 import jax.numpy as jnp
@@ -18,6 +13,7 @@ PARAMS = {
     "w_surprisal": dist.Normal(0.0, 1.0),
     "gamma": dist.Normal(0.0, 1.0),
     "cost_weight": dist.Normal(0.0, 1.0),
+    "beta": dist.LogNormal(0.0, 1.0),
 }
 
 
@@ -121,4 +117,9 @@ def listener(params, ctx):
     ext = jnp.sum(ctx.lex, axis=-1) / ctx.lex.shape[-1]
     cost = params["cost_weight"] * ext
     heard = L4(params["alpha"], graded_lex, prior, cost)[ctx.utterance]
-    return jnp.where(ctx.is_prior > 0, prior, heard)
+    safe_heard = jnp.where(heard > 0, heard, 1.0)
+    logits = params["beta"] * jnp.log(safe_heard)
+    logits = logits - jnp.max(logits)
+    weights = jnp.where(heard > 0, jnp.exp(logits), 0.0)
+    choice = weights / (jnp.sum(weights) + EPS)
+    return jnp.where(ctx.is_prior > 0, prior, choice)

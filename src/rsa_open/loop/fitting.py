@@ -58,6 +58,7 @@ def write_corpus(path: Path, blocks: Sequence[Block]) -> Path:
     check_blocks(blocks)
     doc = {"format": CORPUS_FORMAT, "blocks": [{
         "name": b.name, "link": {"name": b.link.name, **b.link.options},
+        **({"fixed": b.fixed_params} if b.fixed else {}),
         "trials": [{"scene": _context_json(c), "response": dict(r), "unit": u,
                     "source": b.sources[i] if b.sources else None}
                    for i, (c, r, u) in enumerate(zip(b.contexts, b.responses, b.units))]} for b in blocks]}
@@ -87,7 +88,8 @@ def read_corpus(path: Path) -> List[Block]:
         trials = b["trials"]
         sources = tuple(t["source"] for t in trials) if trials and trials[0]["source"] is not None else ()
         blocks.append(Block(b["name"], link, tuple(Context(**t["scene"]) for t in trials),
-                            tuple(t["response"] for t in trials), tuple(t["unit"] for t in trials), sources))
+                            tuple(t["response"] for t in trials), tuple(t["unit"] for t in trials), sources,
+                            tuple(sorted(b.get("fixed", {}).items()))))
     return blocks
 
 

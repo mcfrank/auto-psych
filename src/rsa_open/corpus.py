@@ -47,7 +47,9 @@ MAX_HELDOUT_DRAWS = 400  # as the closed loop's held-out score
 @dataclass(frozen=True)
 class Block:
     """One paradigm's trials under its frozen link. ``units`` are the cross-validation and
-    standard-error units (one per trial), ``sources`` the data sources within the block."""
+    standard-error units (one per trial), ``sources`` the data sources within the block, ``fixed``
+    the link parameters held at a value instead of fitted (the literature's temperature,
+    `literature_block`)."""
 
     name: str
     link: LinkLikelihood
@@ -55,6 +57,7 @@ class Block:
     responses: Tuple[Mapping[str, Any], ...]
     units: Tuple[str, ...]
     sources: Tuple[str, ...] = ()
+    fixed: Tuple[Tuple[str, float], ...] = ()
 
     def __post_init__(self) -> None:
         n = len(self.contexts)
@@ -66,6 +69,18 @@ class Block:
             raise ValueError(f"block {self.name}: {n} scenes, {len(self.responses)} responses, {len(self.units)} units")
         if self.sources and len(self.sources) != n:
             raise ValueError(f"block {self.name}: {len(self.sources)} sources for {n} trials")
+        for k, _ in self.fixed:
+            if k not in self.link.params:
+                raise ValueError(f"block {self.name}: fixed {k!r} is not a parameter of the {self.link.name} link")
+
+    @property
+    def fixed_params(self) -> Dict[str, float]:
+        return {k: float(v) for k, v in self.fixed}
+
+    @property
+    def free_link_params(self) -> Dict[str, Any]:
+        """The link parameters fitted for this block (name -> prior)."""
+        return {k: d for k, d in self.link.params.items() if k not in self.fixed_params}
 
     @property
     def n(self) -> int:
@@ -83,7 +98,7 @@ class Block:
         rows = list(rows)
         return Block(self.name, self.link, tuple(self.contexts[i] for i in rows),
                      tuple(self.responses[i] for i in rows), tuple(self.units[i] for i in rows),
-                     tuple(self.sources[i] for i in rows) if self.sources else ())
+                     tuple(self.sources[i] for i in rows) if self.sources else (), self.fixed)
 
 
 def check_blocks(blocks: Sequence[Block]) -> None:
@@ -94,8 +109,18 @@ def check_blocks(blocks: Sequence[Block]) -> None:
         raise ValueError("no blocks")
 
 
+# E is the reference block (PI 2026-10-22): its link's temperature is 1, so on E every theory is its
+# closed original (the port equals it at temperature 1) and each new paradigm's temperature is
+# relative to E. Fitted on E alone, a free temperature traded off against a theory's own sharpness
+# (rsa_l1_shared_prior: alpha 0.15 at temperature 2.5, against 1.4 at 1) and one fit stalled for
+# hours; a theory in which people sharpen or soften their beliefs into a choice says so with a
+# parameter of its own, which every paradigm then tests.
+LITERATURE_FIXED = (("temperature", 1.0),)
+
+
 def literature_block(path=None, name: str = "E") -> Block:
-    """The literature's forced-choice trials (the closed loader) as a choice-link block."""
+    """The literature's forced-choice trials (the closed loader) as a choice-link block, its
+    temperature fixed (`LITERATURE_FIXED`)."""
     from src.rsa.dataset import DEFAULT_TRIALS_CSV, load_forced_choice
     from src.rsa.split import unit_keys
     from src.rsa_open.links import likelihood
@@ -104,7 +129,7 @@ def literature_block(path=None, name: str = "E") -> Block:
     frame = trials.frame
     sources = frame["source"].astype(str) if "source" in frame.columns else ["pragmods"] * len(frame)
     return Block(name, likelihood("choice"), tuple(trials.contexts), tuple({"choice": int(c)} for c in trials.choices),
-                 tuple(unit_keys(frame).astype(str)), tuple(str(s) for s in sources))
+                 tuple(unit_keys(frame).astype(str)), tuple(str(s) for s in sources), LITERATURE_FIXED)
 
 
 def paradigm_block(name: str, paradigm, rows: Sequence[Mapping[str, Any]]) -> Block:
@@ -126,7 +151,9 @@ def _corpus_model(theory: TheoryModel, blocks: Sequence[Block]):
     total = 0.0
     for block in blocks:
         link = block.link
-        lp = {k: numpyro.sample(block.param(k), prior) for k, prior in link.params.items()}
+        fixed = block.fixed_params
+        lp = {k: jnp.asarray(fixed[k]) if k in fixed else numpyro.sample(block.param(k), prior)
+              for k, prior in link.params.items()}
         tp = {k: params[k] for k in theory.params}
         for group, enc in zip(block.data.groups, block.data.encoded):
             total = total + jnp.sum(link.log_lik(_latent(theory, link, tp, group), lp, enc, group.arrays,
@@ -137,7 +164,9 @@ def _corpus_model(theory: TheoryModel, blocks: Sequence[Block]):
 def block_draws(flat: Mapping[str, np.ndarray], theory: TheoryModel, block: Block) -> Dict[str, np.ndarray]:
     """One block's view of flat posterior draws: the theory's parameters and its link's, unsuffixed."""
     out = {k: flat[k] for k in theory.params}
-    out.update({k: flat[block.param(k)] for k in block.link.params})
+    n = len(next(iter(flat.values())))
+    fixed = block.fixed_params
+    out.update({k: np.full(n, fixed[k]) if k in fixed else flat[block.param(k)] for k in block.link.params})
     return out
 
 
@@ -187,7 +216,7 @@ def fit_corpus(theory: TheoryModel, blocks: Sequence[Block],
     idata = az.from_dict(
         posterior=samples, log_likelihood={OBSERVED_SITE: ll.reshape(chains, draws, -1)},
         sample_stats={"diverging": np.asarray(mcmc.get_extra_fields(group_by_chain=True)["diverging"])})
-    names = [*theory.params, *(b.param(k) for b in blocks for k in b.link.params)]
+    names = [*theory.params, *(b.param(k) for b in blocks for k in b.free_link_params)]
     return CorpusFit(theory.name, [b.name for b in blocks], idata, names, convergence_problems(idata, names), offsets)
 
 

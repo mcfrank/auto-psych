@@ -4,7 +4,7 @@ again the 5 starting models plus the 12 promoted seeds).
 
     uv run python -m src.rsa_open.seeds            # writes data/rsa_open/seeds/{bar,chain_0,...}
 
-Every theory is `src.rsa_open.port.port_file` of the closed file (hand ports included), with the
+Every theory is `src.rsa_open.port.port_file` of the closed file, with the
 closed manifest's rationale. A name in both the starting models and the promoted seeds (the
 references, rsa_l1 and rsa_l2) is one theory: its two originals must be the same file, else the
 build raises. The output is deterministic; rebuilding over it rewrites it.

@@ -43,7 +43,7 @@ from pyprojroot import here
 from src.models.model_manifest import read_manifest_entries
 from src.rsa.fit import FitSettings
 from src.rsa_open.chain import GroundTruth
-from src.rsa_open.corpus import Block, literature_block
+from src.rsa_open.corpus import Block, block_draws, literature_block
 from src.rsa_open.links import LINKS
 from src.rsa_open.port import port_file
 
@@ -144,7 +144,8 @@ def make_ground_truth(model: Path, *, bar: Path, out: Path, cache: Path, setting
                                  + "; ".join(fitted.convergence_problems))
     flat = fitted.flat()
     theory_params = {k: float(np.mean(flat[k])) for k in theory.params}
-    shared = {k: float(np.mean(flat[literature.param(k)])) for k in SHARED_LINK_PARAMS}
+    on_e = block_draws(flat, theory, literature)  # E's temperature is fixed (corpus.LITERATURE_FIXED)
+    shared = {k: float(np.mean(on_e[k])) for k in SHARED_LINK_PARAMS}
     record = {
         "ground_truth": name, "original": str(model), "original_sha256": _sha(original),
         "theory_file": TRUTH_FILE, "theory_sha256": _sha(source),
