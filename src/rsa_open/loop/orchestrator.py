@@ -90,6 +90,12 @@ class OpenLoopConfig:
     agent_network: bool = False
     fit_workers: int = 0
     stop_after_stale_rounds: int = 2
+    cv_warmup: int = 300
+    cv_samples: int = 500
+    """A cross-validation fold starts at its theory's full fit (posterior medians) and runs
+    ``cv_warmup`` + ``cv_samples`` iterations per chain instead of the full fit's 1,000 + 1,000: the
+    folds are 5/6 of the loop's fitting, and a held-out score needs predictions, not a fresh
+    posterior exploration (PI 2026-10-22)."""
     critique: bool = True
     """Critique the incumbent on the newest block before every round (`src.rsa_open.loop.critique`,
     the closed loop's critic); its critiques.md goes into every theorist's brief."""
@@ -128,6 +134,8 @@ class OpenLoop:
         self.data_paths = briefs.write_block_data(self.dir / "data", self.blocks)
         # The theorists' copy, for their self-check: they read data/ and models/, never the loop's own files.
         self.agent_corpus = write_corpus(self.dir / "data" / "corpus.json", self.blocks)
+        # The self-check's corpus: large blocks on a fixed fraction of their displays (brief.self_check_blocks).
+        self.check_corpus = write_corpus(self.dir / "data" / "check_corpus.json", briefs.self_check_blocks(self.blocks))
         self.pool = plain_pool()
         self.folds = {b.name: assign_folds(b, self.cfg.cv_folds, seed=self.cfg.settings.seed) for b in self.blocks}
         self.fold_paths = [
@@ -219,9 +227,13 @@ class OpenLoop:
         path = self.models_dir / f"{name}.py"
         theory = self.live[name].theory
 
+        full = self.live[name].fit.flat()
+        start = {k: float(np.median(v)) for k, v in full.items()}
+        fold_settings = replace(self.cfg.settings, num_warmup=self.cfg.cv_warmup, num_samples=self.cfg.cv_samples)
+
         def fold_fit(f: int) -> CorpusFit:
-            return loop_fit(path, name, self.fold_paths[f], self.cfg.settings, self.dir / ".fit_cache",
-                            time_limit_sec=self.live_cfg.time_limit_sec)
+            return loop_fit(path, name, self.fold_paths[f], fold_settings, self.dir / ".fit_cache",
+                            time_limit_sec=self.live_cfg.time_limit_sec, init=start)
 
         workers = self.cfg.cv_folds if self.live_cfg.time_limit_sec is not None else 1
         try:
@@ -298,7 +310,7 @@ class OpenLoop:
         pruned = [closed_brief.ZooModel(e.name, e.hypothesis, pruned_dir / f"{e.name}.py", f"pruned: {e.detail}")
                   for e in sorted(self.ledger.pruned(self.live), key=lambda e: prune_margin(e.detail))
                   if (pruned_dir / f"{e.name}.py").exists()]
-        context = briefs.context_md(candidate_dir=cdir, corpus_path=self.agent_corpus, blocks=self.blocks,
+        context = briefs.context_md(candidate_dir=cdir, corpus_path=self.check_corpus, blocks=self.blocks,
                                     data_paths=self.data_paths, paradigm_notes=self.cfg.paradigm_notes,
                                     round_index=round_index, n_rounds=self.cfg.max_iterations,
                                     network=self.cfg.agent_network)

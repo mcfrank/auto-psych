@@ -195,12 +195,19 @@ class CorpusFit:
 
 
 def fit_corpus(theory: TheoryModel, blocks: Sequence[Block],
-               settings: FitSettings = FitSettings(dense_mass=True)) -> CorpusFit:
+               settings: FitSettings = FitSettings(dense_mass=True),
+               init: Optional[Mapping[str, float]] = None) -> CorpusFit:
+    """NUTS on the corpus; with ``init`` (constrained values of sampled sites) every chain starts
+    there instead of at random."""
     check_blocks(blocks)
     clash = sorted(set(theory.params) & {b.param(k) for b in blocks for k in b.link.params})
     if clash:
         raise ValueError(f"theory parameters {clash} collide with block link parameters")
-    kernel = NUTS(_corpus_model, target_accept_prob=settings.target_accept, dense_mass=settings.dense_mass)
+    from numpyro.infer import init_to_uniform, init_to_value
+
+    strategy = init_to_value(values={k: float(v) for k, v in init.items()}) if init else init_to_uniform
+    kernel = NUTS(_corpus_model, target_accept_prob=settings.target_accept, dense_mass=settings.dense_mass,
+                  init_strategy=strategy)
     mcmc = MCMC(kernel, num_warmup=settings.num_warmup, num_samples=settings.num_samples,
                 num_chains=settings.num_chains, chain_method="vectorized", progress_bar=False)
     mcmc.run(jax.random.PRNGKey(settings.seed), theory, list(blocks), extra_fields=("diverging",))

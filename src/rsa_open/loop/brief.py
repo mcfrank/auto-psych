@@ -42,6 +42,29 @@ def _api(text: str) -> str:
     return text.replace("choice_probs", "listener").replace("Models in the set", "Theories in the set")
 
 
+# The theorists' self-check fits a fixed fraction of each large block's displays (the literature),
+# whole displays at a time, and every other block whole: a quick smoke fit for their feedback.
+# Admission fits all the data (PI 2026-10-22).
+CHECK_LARGE_BLOCK = 5000
+CHECK_FRACTION = 0.2
+
+
+def self_check_blocks(blocks: Sequence[Block], seed: int = 0) -> List[Block]:
+    import numpy as np
+
+    out = []
+    for b in blocks:
+        if b.n <= CHECK_LARGE_BLOCK:
+            out.append(b)
+            continue
+        units = sorted(set(b.units))
+        rng = np.random.default_rng(seed)
+        keep = set(rng.choice(len(units), max(1, round(CHECK_FRACTION * len(units))), replace=False).tolist())
+        kept = {units[i] for i in keep}
+        out.append(b.subset([i for i, u in enumerate(b.units) if u in kept]))
+    return out
+
+
 def write_block_data(directory: Path, blocks: Sequence[Block]) -> Dict[str, Path]:
     """One JSON-lines file per block for the theorists to analyse: every trial's scene (objects
     as 0/1 feature rows, the heard word's index or null), its response in the link's form, its
@@ -82,8 +105,10 @@ def context_md(*, candidate_dir: Path, corpus_path: Path, blocks: Sequence[Block
         lines.append("")
     lines += ["## Self-check", "",
               f"`{CHECK_COMMAND.format(candidate_dir=candidate_dir, corpus=corpus_path)}`",
-              f"It takes 3-15 minutes (it compiles and fits your theory on every paradigm). Give the shell tool a "
-              f"timeout of {CHECK_SHELL_TIMEOUT_MS} milliseconds for it. Run it once per change.", ""]
+              f"It compiles your theory and fits it briefly on every paradigm, the literature (E) on a fixed "
+              f"{CHECK_FRACTION:.0%} of its displays, in a few minutes; the loop's admission fit uses all the "
+              f"data. Give the shell tool a timeout of {CHECK_SHELL_TIMEOUT_MS} milliseconds for it. Run it once "
+              f"per change.", ""]
     if not network:
         lines.append(NO_NETWORK_NOTE.rstrip())
     lines.append("- Write and test your files **in your candidate directory only**.")

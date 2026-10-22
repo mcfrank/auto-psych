@@ -2,8 +2,8 @@
 #SBATCH --job-name=rsa_open_rehearsal
 #SBATCH --partition=mcfrank
 #SBATCH --array=0
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=64GB
+#SBATCH --cpus-per-task=24
+#SBATCH --mem=96GB
 #SBATCH --time=5-00:00:00
 #SBATCH --output=%x_%A_%a.out
 #

@@ -99,12 +99,15 @@ def _sha_file(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def fingerprint(theory_path: Path, corpus_path: Path, settings: FitSettings) -> str:
+def fingerprint(theory_path: Path, corpus_path: Path, settings: FitSettings,
+                init: Optional[Dict[str, float]] = None) -> str:
     h = hashlib.sha256()
     h.update(f"open-format{FIT_FORMAT}".encode())
     h.update(_sha_file(theory_path).encode())
     h.update(_sha_file(corpus_path).encode())
     h.update(json.dumps(asdict(settings), sort_keys=True).encode())
+    if init:  # a warm-started fit is keyed by where it started (a cold fit's key is unchanged)
+        h.update(json.dumps({k: round(float(v), 6) for k, v in sorted(init.items())}).encode())
     return h.hexdigest()[:20]
 
 
@@ -145,11 +148,12 @@ def _read(nc_path: Path, meta_path: Path) -> CorpusFit:
                      {k: tuple(v) for k, v in meta["offsets"].items()})
 
 
-def _fit_now(theory_path: Path, name: str, corpus_path: Path, settings: FitSettings) -> CorpusFit:
+def _fit_now(theory_path: Path, name: str, corpus_path: Path, settings: FitSettings,
+             init: Optional[Dict[str, float]] = None) -> CorpusFit:
     from src.rsa_open.corpus import fit_corpus
     from src.rsa_open.fit import TheoryModel
 
-    fitted = fit_corpus(TheoryModel(theory_path, name=name), read_corpus(corpus_path), settings)
+    fitted = fit_corpus(TheoryModel(theory_path, name=name), read_corpus(corpus_path), settings, init=init)
     ll = np.asarray(fitted.idata.log_likelihood["response"])
     if not np.all(np.isfinite(ll)):
         bad = int(np.sum(~np.all(np.isfinite(ll.reshape(-1, ll.shape[-1])), axis=0)))
@@ -157,10 +161,10 @@ def _fit_now(theory_path: Path, name: str, corpus_path: Path, settings: FitSetti
     return fitted
 
 
-def _child(theory_path, name, corpus_path, settings, nc_path, meta_path, queue) -> None:
+def _child(theory_path, name, corpus_path, settings, nc_path, meta_path, queue, init=None) -> None:
     os.environ["XLA_FLAGS"] = (os.environ.get("XLA_FLAGS", "") + " " + SINGLE_THREAD_XLA_FLAGS).strip()
     try:
-        _write(_fit_now(Path(theory_path), name, Path(corpus_path), settings), Path(nc_path), Path(meta_path))
+        _write(_fit_now(Path(theory_path), name, Path(corpus_path), settings, init), Path(nc_path), Path(meta_path))
         queue.put(("ok", None, None))
     except BaseException as exc:
         queue.put(("model" if _is_model_failure(exc, Path(theory_path)) else "infrastructure",
@@ -172,11 +176,12 @@ _FAILURES_LOCK = threading.Lock()
 
 
 def fit_cached(theory_path: Path, name: str, corpus_path: Path, settings: FitSettings, cache_dir: Path, *,
-               time_limit_sec: Optional[float] = None) -> CorpusFit:
+               time_limit_sec: Optional[float] = None, init: Optional[Dict[str, float]] = None) -> CorpusFit:
     """The theory's fit to the corpus, from the cache or fitted now (in a time-limited child with
-    ``time_limit_sec``). Raises `ModelFailure` for the theory's failure (remembered), and
-    RuntimeError for any other."""
-    fp = fingerprint(theory_path, corpus_path, settings)
+    ``time_limit_sec``). ``init``: start every chain there (the constrained values of the sampled
+    sites; a cross-validation fold starts at its full fit's posterior). Raises `ModelFailure` for
+    the theory's failure (remembered), and RuntimeError for any other."""
+    fp = fingerprint(theory_path, corpus_path, settings, init)
     nc_path, meta_path = cache_paths(cache_dir, name, fp)
     with _FAILURES_LOCK:
         failed = _FAILURES.get(str(nc_path))
@@ -187,25 +192,26 @@ def fit_cached(theory_path: Path, name: str, corpus_path: Path, settings: FitSet
             return _read(nc_path, meta_path)
         if time_limit_sec is None:
             try:
-                fitted = _fit_now(theory_path, name, corpus_path, settings)
+                fitted = _fit_now(theory_path, name, corpus_path, settings, init)
             except Exception as exc:
                 if _is_model_failure(exc, theory_path):
                     raise ModelFailure(f"{type(exc).__name__}: {exc}") from exc
                 raise
             _write(fitted, nc_path, meta_path)
             return fitted
-        return _fit_in_child(theory_path, name, corpus_path, settings, nc_path, meta_path, time_limit_sec)
+        return _fit_in_child(theory_path, name, corpus_path, settings, nc_path, meta_path, time_limit_sec, init)
     except ModelFailure as exc:
         with _FAILURES_LOCK:
             _FAILURES[str(nc_path)] = exc
         raise
 
 
-def _fit_in_child(theory_path, name, corpus_path, settings, nc_path, meta_path, time_limit_sec) -> CorpusFit:
+def _fit_in_child(theory_path, name, corpus_path, settings, nc_path, meta_path, time_limit_sec,
+                  init=None) -> CorpusFit:
     ctx = mp.get_context("spawn")
     queue = ctx.Queue()
     proc = ctx.Process(target=_child, args=(str(theory_path), name, str(corpus_path), settings, str(nc_path),
-                                            str(meta_path), queue))
+                                            str(meta_path), queue, init))
     core = CORES.take()
     try:
         with tempfile.TemporaryDirectory(prefix="rsa-open-fit-cache-") as own_cache:
@@ -242,11 +248,11 @@ def cached_loop_fit(theory_path: Path, name: str, corpus_path: Path, settings: F
 
 
 def loop_fit(theory_path: Path, name: str, corpus_path: Path, settings: FitSettings, cache_dir: Path, *,
-             time_limit_sec: Optional[float] = None) -> CorpusFit:
+             time_limit_sec: Optional[float] = None, init: Optional[Dict[str, float]] = None) -> CorpusFit:
     """The fit the loop uses: at ``settings``, or the one refit when that fails the convergence
-    gate (`src.rsa.loop.fitting.refit_settings`)."""
-    fitted = fit_cached(theory_path, name, corpus_path, settings, cache_dir, time_limit_sec=time_limit_sec)
+    gate (`src.rsa.loop.fitting.refit_settings`), from ``init`` if given."""
+    fitted = fit_cached(theory_path, name, corpus_path, settings, cache_dir, time_limit_sec=time_limit_sec, init=init)
     if fitted.converged:
         return fitted
     return fit_cached(theory_path, name, corpus_path, refit_settings(settings), cache_dir,
-                      time_limit_sec=time_limit_sec)
+                      time_limit_sec=time_limit_sec, init=init)

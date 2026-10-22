@@ -151,6 +151,41 @@ Expect about 6–14 h: the design, then 2 loop rounds.
 Do not bring back `private/ground_truth/ground_truth.py` under any name the agents' trees could
 pick up later. `data/` is excluded from every agent tree, so `data/rsa_open/dry/` is safe.
 
+## Redeploy run B with the faster fitting (2026-10-22, PI)
+
+> **HOLD: do not redeploy yet.** The driver is checking that warm-started folds give the same
+> held-out scores as cold ones. This line goes when that check passes; until then, let run B run.
+
+Three speedups, none of which changes what is fitted or admitted (PLAN.md, Decisions 2026-10-22):
+1. **Cross-validation folds start at their theory's full fit** (posterior medians) and run 300
+   warm-up + 500 draws per chain instead of 1,000 + 1,000. The folds were about 85% of the loop's
+   fitting. The full fits, the admission fits and the 30-minute admission limit are unchanged.
+2. **24 cores** for the job, not 16. It needs the whole `mcfrank` node: check nothing else is
+   running there.
+3. **The theorists' self-check** fits a fixed fifth of E's displays. Admission still fits all of
+   E.
+
+Expect roughly 1–1.5 days instead of 2–3. That's an estimate, not a measurement.
+
+**Redeploy in the same work root.** What run B has done so far is kept:
+- the ground truth (`private/ground_truth`) and every full fit keep their cache keys, so nothing
+  is refitted;
+- a frozen design is kept; an unfinished one restarts, its attempt kept as `design.abandoned_<i>`;
+- an unfinished loop restarts, its attempt kept as `loop.abandoned_<i>` and its fit cache carried
+  over, so only the fold fits are redone.
+
+```bash
+scancel <run B's job id>
+cd ~/auto-psych && git pull
+export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_rehearsal
+export RESTAGE_REASON='Faster fitting: warm-started CV folds, 24 cores, self-check on a fifth of E; PI 2026-10-22'
+sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%A_%a.out" \
+  --export=ALL,WORK_ROOT=$WORK_ROOT scripts/rsa/slurm/open_rehearsal.sbatch
+```
+
+Set `RESTAGE_REASON` in the environment, not in `--export=`: its commas would split it. Everything
+else is as in §3.
+
 ## 3. Run B: the rehearsal (reviewed and cleared, 2026-10-22)
 
 The driver reviewed run A (`DRY_RUN_A_REPORT.md`) and the temperature audit. Both are clear
