@@ -183,9 +183,12 @@ def admit(candidate_dir: Path, name: str, *, cfg: GateConfig, blocks: Sequence[B
     except ModelFailure as exc:
         return _refuse(f"fitting failed: {exc}")
     if not fitted.converged:
-        return _refuse("the fit did not converge even at target_accept 0.95: " + "; ".join(fitted.convergence_problems)
-                       + ". Reparameterise (sample on an unconstrained scale, tighten priors) rather than relying "
-                       "on smaller steps.", fit=fitted)
+        report = fitted.sampler_report()
+        return _refuse("the fit did not converge (a near miss, R-hat ≤ 1.2, bulk ESS ≥ 20 and at most 2% divergent, "
+                       "is refitted once at target_accept 0.95; a fit further off is not): "
+                       + "; ".join(fitted.convergence_problems) + ". " + (report.text() + ". " if report else "")
+                       + "Reparameterise (remove parameters the data cannot separate, sample on an unconstrained "
+                       "scale, tighten priors) rather than relying on smaller steps.", fit=fitted)
     try:
         preds = pool_predictions(theory, fitted, pool)
     except ValueError as exc:

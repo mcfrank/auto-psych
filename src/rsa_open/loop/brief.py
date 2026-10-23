@@ -19,12 +19,14 @@ from typing import Dict, List, Mapping, Optional, Sequence
 
 from src.rsa.loop import brief as closed
 from src.rsa_open.corpus import Block
+from src.rsa_open.sampler import CORRELATION_FLAG
 
 PROMPTS = Path(__file__).with_name("prompts")
 THEORY_PROMPT = PROMPTS / "open_theory.md"
 HANDBOOK = closed.HANDBOOK
 LENSES = [lens.replace("click", "response") for lens in closed.PLAIN_RSA_LENSES]
-CHECK_COMMAND = sys.executable + " -m src.rsa_open.loop.check_candidate {candidate_dir} --corpus {corpus}"
+CHECK_COMMAND = (sys.executable + " -m src.rsa_open.loop.check_candidate {candidate_dir} --corpus {corpus}"
+                 " --full-corpus {full_corpus}")
 CHECK_SHELL_TIMEOUT_MS = 1_200_000
 NO_NETWORK_NOTE = closed.NO_NETWORK_NOTE
 
@@ -83,7 +85,7 @@ def write_block_data(directory: Path, blocks: Sequence[Block]) -> Dict[str, Path
     return paths
 
 
-def context_md(*, candidate_dir: Path, corpus_path: Path, blocks: Sequence[Block], data_paths: Mapping[str, Path],
+def context_md(*, candidate_dir: Path, corpus_path: Path, full_corpus_path: Path, blocks: Sequence[Block], data_paths: Mapping[str, Path],
                paradigm_notes: Mapping[str, str], round_index: int, n_rounds: int, network: bool = False) -> str:
     lines = ["# Context", "", f"- Candidate directory (write your three files here): `{candidate_dir}`",
              f"- Inner-loop round {round_index + 1} of {n_rounds}.", "", "## The paradigms of this chain", "",
@@ -104,10 +106,12 @@ def context_md(*, candidate_dir: Path, corpus_path: Path, blocks: Sequence[Block
             lines.append(f"- {paradigm_notes[b.name]}")
         lines.append("")
     lines += ["## Self-check", "",
-              f"`{CHECK_COMMAND.format(candidate_dir=candidate_dir, corpus=corpus_path)}`",
+              f"`{CHECK_COMMAND.format(candidate_dir=candidate_dir, corpus=corpus_path, full_corpus=full_corpus_path)}`",
               f"It compiles your theory and fits it briefly on every paradigm, the literature (E) on a fixed "
               f"{CHECK_FRACTION:.0%} of its displays, in a few minutes; the loop's admission fit uses all the "
-              f"data. Give the shell tool a timeout of {CHECK_SHELL_TIMEOUT_MS} milliseconds for it. Run it once "
+              f"data. It reports how hard the posterior was to sample (steps per draw, step size, and any pair "
+              f"of parameters correlated above {CORRELATION_FLAG}) and projects the admission fit's time from "
+              f"the short fit. Give the shell tool a timeout of {CHECK_SHELL_TIMEOUT_MS} milliseconds for it. Run it once "
               f"per change.", ""]
     if not network:
         lines.append(NO_NETWORK_NOTE.rstrip())

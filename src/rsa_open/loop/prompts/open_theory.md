@@ -43,10 +43,11 @@ zero (the link's lapse does).
 
 **E is the reference paradigm: its temperature is fixed at 1.** On E the theory's listener
 probabilities are the choice probabilities (with E's lapse), and each later paradigm's
-temperature is measured relative to E. So if you hold that people sharpen or soften their
-beliefs into a choice (they maximize rather than probability-match, say), that is a claim
-about people, not about one task: put it in the theory as a parameter of its own (any name
-but the links', e.g. `beta`), and it then applies, and is tested, in every paradigm.
+temperature is measured relative to E. How sharp people's choices are is therefore carried
+by the theory's own parameters, chiefly the speaker's rationality. Do not add a parameter
+that only sharpens or softens the listener's output (an exponent on its posterior, a softmax
+temperature of your own): on these data it does the same work as the rationality, and the fit
+cannot tell them apart (see **Parameters and identification**).
 
 A theory that fits one paradigm by giving up on another is not progress. A theory is ranked
 on the newest paradigm, and it may lead only while, on **every earlier paradigm, E
@@ -195,13 +196,34 @@ repository **only** `src.rsa.memo_kit`. No file access, no `open`, no
 `eval`/`exec`, no `getattr`, no reading the data inside the model. Anything else
 is refused before your code runs.
 
-### Parameters and convergence
+### Parameters and identification
 
-The fit must pass a convergence gate: at most 0.1% divergent transitions, R-hat ≤ 1.05, bulk
-ESS ≥ 100. Give every parameter a proper, weakly informative prior on a sensible scale. Avoid
-parameters the data cannot identify: two of the theory's own that rescale the same
-probabilities (a speaker's rationality and a listener's sharpness can trade off on
-forced-choice data alone) need a reason in the data, or one of them should go.
+The fit must pass a convergence gate (at most 0.1% divergent transitions, R-hat ≤ 1.05, bulk
+ESS ≥ 100) within 30 minutes on all the data. Give every parameter a proper, weakly
+informative prior on a sensible scale.
+
+Most theories that fail this gate, or are rejected as too slow, fail for one reason: two
+parameters do the same work on these data. The data then pin down a combination of the two,
+not each one; the posterior is a long, thin ridge, and the sampler crosses it in many tiny
+steps or not at all. Each step costs the same; the number of steps is what grows. In RSA
+three pairs do this:
+
+- **rationality and cost**: the speaker weighs informativeness against cost through
+  `alpha × (informativeness − cost)`. Unless the data hold scenes where cost changes and
+  informativeness does not, they constrain only the product: in one cost-weighted theory,
+  `alpha` and the cost weight are correlated at 0.92 on the pragmods data.
+- **rationality and listener sharpness**: an exponent or temperature on the listener's
+  posterior sharpens the same choice probabilities as a higher `alpha`.
+- **prior weights and lapse**: a flatter prior over objects and the link's lapse both pull
+  choices toward uniform.
+
+Adding a parameter to an existing theory adds its interactions with every parameter there.
+So a theory may keep both members of such a pair only when (a) its `hypothesis.md` says what
+in the data separates them (which scenes or paradigms move one and not the other), and (b)
+the self-check does not name the pair. The self-check prints the sampler's steps per draw,
+its step size, and **every pair of parameters correlated above 0.85**, and it projects the
+admission fit's time; read those lines. If it names a pair, drop or fix one of them, or
+reparameterise so that one parameter carries the combination the data measure.
 
 ## What the pipeline checks (in order)
 
@@ -222,7 +244,9 @@ forced-choice data alone) need a reason in the data, or one of them should go.
 Run the self-check with the exact command your `CONTEXT.md` gives (the pipeline's own Python;
 `uv` is not available to you). It runs gates 1–4 with a short fit and prints what fails. It
 compiles and fits your theory on every paradigm, which takes 3–15 minutes: **give the shell
-tool a timeout of 1200000 milliseconds**. Run it once per change and read its PASS/FAIL line.
+tool a timeout of 1200000 milliseconds**. Run it once per change and read its PASS/FAIL line
+and its sampling lines. A projected admission fit over 30 minutes is a FAIL: the loop would
+reject the theory as too slow.
 
 Write, edit and check your three files **in your candidate directory**, from the start. The
 loop reads only that directory. A candidate that fails a gate is sent back once for repair

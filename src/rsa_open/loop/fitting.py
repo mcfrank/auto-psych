@@ -6,7 +6,11 @@ options) and trials (scene, response, unit, source). A fit is content-addressed 
 sha, corpus file sha, sampler settings) and stored as ``<cache>/<name>.<fingerprint>.nc`` with a
 sidecar ``.json``, written under a temporary name and ``os.replace``d into place; a cached fit is
 reused, never recomputed. With a time limit the fit runs in a spawned child (one core) that is
-killed at the limit. Failures are classified as the closed loop's: the theory's own (its code
+killed at the limit; the child records its warmup's sampler report beside the fit
+(``<fit>.warmup.json``), so a fit killed while sampling is rejected with what its geometry was
+(`src.rsa_open.sampler`). A fit that fails the convergence gate is refitted once at smaller
+steps only when it is a near miss (main's rule, `src.models.mcmc_defaults` NEAR_MISS_*): a fit
+far from converging has a geometry problem that a refit repeats at twice the cost. Failures are classified as the closed loop's: the theory's own (its code
 raised, memo refused it, it broke the contract, it gives an observed response probability
 zero) is a `ModelFailure`, remembered for the process; anything else is infrastructure and
 raises.
@@ -132,7 +136,7 @@ def _write(fitted: CorpusFit, nc_path: Path, meta_path: Path) -> None:
     os.replace(tmp, nc_path)
     meta = dict(theory_name=fitted.theory_name, blocks=fitted.blocks, param_names=fitted.param_names,
                 convergence_problems=fitted.convergence_problems,
-                offsets={k: list(v) for k, v in fitted.offsets.items()})
+                offsets={k: list(v) for k, v in fitted.offsets.items()}, timing=fitted.timing)
     tmp_meta = meta_path.with_suffix(f".tmp{os.getpid()}.json")
     tmp_meta.write_text(json.dumps(meta))
     os.replace(tmp_meta, meta_path)
@@ -145,15 +149,26 @@ def _read(nc_path: Path, meta_path: Path) -> CorpusFit:
     idata = az.from_netcdf(str(nc_path))
     idata.load()
     return CorpusFit(meta["theory_name"], meta["blocks"], idata, meta["param_names"], meta["convergence_problems"],
-                     {k: tuple(v) for k, v in meta["offsets"].items()})
+                     {k: tuple(v) for k, v in meta["offsets"].items()}, meta.get("timing", {}))
+
+
+def warmup_path(nc_path: Path) -> Path:
+    return Path(nc_path).with_suffix(".warmup.json")
 
 
 def _fit_now(theory_path: Path, name: str, corpus_path: Path, settings: FitSettings,
-             init: Optional[Dict[str, float]] = None) -> CorpusFit:
+             init: Optional[Dict[str, float]] = None, progress: Optional[Path] = None) -> CorpusFit:
     from src.rsa_open.corpus import fit_corpus
     from src.rsa_open.fit import TheoryModel
 
-    fitted = fit_corpus(TheoryModel(theory_path, name=name), read_corpus(corpus_path), settings, init=init)
+    def on_warmup(record: Dict[str, Any]) -> None:
+        progress.parent.mkdir(parents=True, exist_ok=True)
+        tmp = progress.with_suffix(f".tmp{os.getpid()}")
+        tmp.write_text(json.dumps(record))
+        os.replace(tmp, progress)
+
+    fitted = fit_corpus(TheoryModel(theory_path, name=name), read_corpus(corpus_path), settings, init=init,
+                        on_warmup=on_warmup if progress is not None else None)
     ll = np.asarray(fitted.idata.log_likelihood["response"])
     if not np.all(np.isfinite(ll)):
         bad = int(np.sum(~np.all(np.isfinite(ll.reshape(-1, ll.shape[-1])), axis=0)))
@@ -164,7 +179,8 @@ def _fit_now(theory_path: Path, name: str, corpus_path: Path, settings: FitSetti
 def _child(theory_path, name, corpus_path, settings, nc_path, meta_path, queue, init=None) -> None:
     os.environ["XLA_FLAGS"] = (os.environ.get("XLA_FLAGS", "") + " " + SINGLE_THREAD_XLA_FLAGS).strip()
     try:
-        _write(_fit_now(Path(theory_path), name, Path(corpus_path), settings, init), Path(nc_path), Path(meta_path))
+        _write(_fit_now(Path(theory_path), name, Path(corpus_path), settings, init, warmup_path(Path(nc_path))),
+               Path(nc_path), Path(meta_path))
         queue.put(("ok", None, None))
     except BaseException as exc:
         queue.put(("model" if _is_model_failure(exc, Path(theory_path)) else "infrastructure",
@@ -220,7 +236,8 @@ def _fit_in_child(theory_path, name, corpus_path, settings, nc_path, meta_path, 
             if proc.is_alive():
                 proc.kill()
                 proc.join()
-                raise FitTimeLimitExceeded(f"{name}: the fit did not finish within {time_limit_sec / 60:.0f} minutes")
+                raise FitTimeLimitExceeded(f"{name}: the fit did not finish within {time_limit_sec / 60:.0f} minutes"
+                                           + _warmup_note(Path(nc_path)))
             if queue.empty():
                 raise RuntimeError(f"{name}: the fit process exited with code {proc.exitcode} without reporting "
                                    f"(killed? out of memory?): an infrastructure failure, not the theory's")
@@ -234,6 +251,19 @@ def _fit_in_child(theory_path, name, corpus_path, settings, nc_path, meta_path, 
     raise RuntimeError(f"{name}: infrastructure failure while fitting: {message}\n{tb}")
 
 
+def _warmup_note(nc_path: Path) -> str:
+    """What a killed fit's warmup said (`src.rsa_open.sampler`), or that warmup never ended."""
+    from src.rsa_open.sampler import SamplerReport
+
+    path = warmup_path(nc_path)
+    if not path.exists():
+        return " (it was still in warmup, adapting its step size: the posterior is hard to explore)"
+    record = json.loads(path.read_text())
+    report = SamplerReport.from_json(record["report"])
+    return (f" (warmup took {record['timing']['warmup_sec'] / 60:.0f} minutes and it was killed while sampling. "
+            f"{report.text()})")
+
+
 def cached_loop_fit(theory_path: Path, name: str, corpus_path: Path, settings: FitSettings,
                     cache_dir: Path) -> Optional[CorpusFit]:
     """What `loop_fit` would return, if the cache already holds it; never fits (None otherwise)."""
@@ -241,7 +271,7 @@ def cached_loop_fit(theory_path: Path, name: str, corpus_path: Path, settings: F
     if not (nc.exists() and meta.exists()):
         return None
     first = _read(nc, meta)
-    if first.converged:
+    if first.converged or not first.near_miss:
         return first
     nc, meta = cache_paths(cache_dir, name, fingerprint(theory_path, corpus_path, refit_settings(settings)))
     return _read(nc, meta) if nc.exists() and meta.exists() else None
@@ -249,10 +279,11 @@ def cached_loop_fit(theory_path: Path, name: str, corpus_path: Path, settings: F
 
 def loop_fit(theory_path: Path, name: str, corpus_path: Path, settings: FitSettings, cache_dir: Path, *,
              time_limit_sec: Optional[float] = None, init: Optional[Dict[str, float]] = None) -> CorpusFit:
-    """The fit the loop uses: at ``settings``, or the one refit when that fails the convergence
-    gate (`src.rsa.loop.fitting.refit_settings`), from ``init`` if given."""
+    """The fit the loop uses: at ``settings``, or, when that fails the convergence gate as a near
+    miss (`CorpusFit.near_miss`), the one refit (`src.rsa.loop.fitting.refit_settings`), from
+    ``init`` if given. A fit far from converging is returned as it is."""
     fitted = fit_cached(theory_path, name, corpus_path, settings, cache_dir, time_limit_sec=time_limit_sec, init=init)
-    if fitted.converged:
+    if fitted.converged or not fitted.near_miss:
         return fitted
     return fit_cached(theory_path, name, corpus_path, refit_settings(settings), cache_dir,
                       time_limit_sec=time_limit_sec, init=init)

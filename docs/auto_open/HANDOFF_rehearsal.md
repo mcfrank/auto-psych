@@ -175,6 +175,56 @@ model only 1 of run A's 8 statistics is significant. Its "8 of 8" reflects real 
 2. **Then cancel run B** (49021326_0). Its replacement, run B′ (below), comes after the driver's
    fixes.
 
+## Run B′: two experiments on the fixed inference (2026-10-23, PI)
+
+> **Hold: not cleared yet.** The driver first profiles run B's too-slow candidates (brought back
+> above) on the fixed code. It will replace this line with "Cleared" once the diagnosis holds.
+
+Run B′ replaces the rest of run B. It is shorter: all of E (so fit times and too-slow rates are
+realistic), **2 experiments of 3 rounds of 6 theorists**, everything else at full settings. Three
+changes to the inference (PLAN.md, Decisions 2026-10-23):
+1. **The self-check reports the sampler.** It prints steps per draw, step size, every parameter
+   pair correlated above 0.85, and a projected admission-fit time on all of E (within about 40% of
+   real full fits on pragmods). A projection over 30 minutes is a FAIL. A non-convergence rejection carries the same report, and so does a
+   too-slow one when its warmup finished.
+2. **The theorists' prompt** no longer invites a listener-sharpness parameter (`beta`). It names
+   RSA's three identification pairs: rationality vs cost, rationality vs listener sharpness, prior
+   weights vs lapse. A theory keeps both members of a pair only with a stated reason in the data
+   and a self-check that does not flag them.
+3. **Refits and folds.**
+   - A fit that fails the convergence gate is refitted only when it is a near miss (main's rule:
+     R-hat ≤ 1.2, bulk ESS ≥ 20, ≤ 2% divergent).
+   - Each cross-validation fold of a theory in play is limited to 3× its own full fit (at least
+     10 min). A failed fold leaves the theory unscored and untrusted, with the reason in
+     `history.json` (`cv_problem`). Run B's fifth fold of `feature_parsimony_listener` ran
+     5 h 50 min to R-hat 1.55, then started an unlimited refit.
+
+**Same work root.** This keeps run B's ground truth, its experiment-1 design and simulated data,
+and every cached fit. Experiment 1's loop restarts as `loop.abandoned_<i>`, after the bring-back
+above. Fits cached by run B carry no timing, so their folds are limited at 3 × 30 min.
+
+```bash
+scancel 49021326_0          # if the bring-back above has not already stopped it
+cd ~/auto-psych && git pull
+export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_rehearsal
+export RESTAGE_REASON='Run B-prime: sampler diagnostics, identification prompt, near-miss refits, bounded folds; PI 2026-10-23'
+sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%A_%a.out" --time=3-00:00:00 \
+  --export=ALL,WORK_ROOT=$WORK_ROOT,N_EXPERIMENTS=2,MAX_ITERATIONS=3,CANDIDATES=6 \
+  scripts/rsa/slurm/open_rehearsal.sbatch
+```
+
+**Expect about 1–1.5 days and $60–80.** Experiment 1's loop is 3 rounds on cached starting fits.
+Experiment 2 is a full design, collection and loop. Roughly 45 agent sessions at about $1.5
+each.
+
+**What to watch:**
+- In `attempted_hypotheses.jsonl`: how many candidates are rejected as too slow or not
+  converged (run B: 16 of 27 too slow), and whether their reasons name correlated pairs.
+- In the theorists' `agent.jsonl`: whether their self-check output shows the sampling lines.
+- In `history.json`: any `cv_problem`.
+
+**Bring back** to `data/rsa_open/rehearsal_bprime/`, as §3 says for run B.
+
 ## Redeploy run B with the faster fitting (2026-10-22, PI)
 
 > **Cleared (2026-10-22).** Warm-started folds give the cold folds' held-out scores. On pragmods

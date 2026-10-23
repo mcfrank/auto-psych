@@ -22,9 +22,10 @@ theory. So:
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import arviz as az
 import jax
@@ -178,10 +179,33 @@ class CorpusFit:
     param_names: List[str]
     convergence_problems: List[str]
     offsets: Dict[str, Tuple[int, int]] = field(default_factory=dict)  # block -> (start, stop) in log_likelihood
+    timing: Dict[str, float] = field(default_factory=dict)
+    """warmup_sec (compilation included), sampling_sec, and the leapfrog steps of each phase
+    (per iteration, the most any chain took); empty for a fit recorded before they were kept."""
 
     @property
     def converged(self) -> bool:
         return not self.convergence_problems
+
+    @property
+    def diagnostics(self):
+        """Convergence numbers (`src.models.pymc_inference.ConvergenceDiagnostics`) over the free parameters."""
+        from src.models.pymc_inference import convergence_diagnostics
+
+        return convergence_diagnostics(self.idata, self.param_names)
+
+    @property
+    def near_miss(self) -> bool:
+        """A failed fit close enough to the gate that a refit at smaller steps may pass (main's rule)."""
+        from src.models.pymc_inference import is_near_miss
+
+        return not self.converged and is_near_miss(self.diagnostics)
+
+    def sampler_report(self):
+        """Steps per draw, step size and correlated parameters (`src.rsa_open.sampler`), or None."""
+        from src.rsa_open.sampler import report_of
+
+        return report_of(self.idata, self.param_names)
 
     def flat(self) -> Dict[str, np.ndarray]:
         post = self.idata.posterior
@@ -196,9 +220,13 @@ class CorpusFit:
 
 def fit_corpus(theory: TheoryModel, blocks: Sequence[Block],
                settings: FitSettings = FitSettings(dense_mass=True),
-               init: Optional[Mapping[str, float]] = None) -> CorpusFit:
+               init: Optional[Mapping[str, float]] = None,
+               on_warmup: Optional[Callable[[Dict[str, Any]], None]] = None) -> CorpusFit:
     """NUTS on the corpus; with ``init`` (constrained values of sampled sites) every chain starts
-    there instead of at random."""
+    there instead of at random. Warmup and sampling run as two calls (sampling reuses warmup's
+    compiled kernel), each timed with its leapfrog steps; ``on_warmup`` receives the warmup's
+    `src.rsa_open.sampler.warmup_report` (as JSON) and timing once warmup ends, so a fit killed
+    while sampling still says what its geometry was."""
     check_blocks(blocks)
     clash = sorted(set(theory.params) & {b.param(k) for b in blocks for k in b.link.params})
     if clash:
@@ -210,7 +238,25 @@ def fit_corpus(theory: TheoryModel, blocks: Sequence[Block],
                   init_strategy=strategy)
     mcmc = MCMC(kernel, num_warmup=settings.num_warmup, num_samples=settings.num_samples,
                 num_chains=settings.num_chains, chain_method="vectorized", progress_bar=False)
-    mcmc.run(jax.random.PRNGKey(settings.seed), theory, list(blocks), extra_fields=("diverging",))
+    names = [*theory.params, *(b.param(k) for b in blocks for k in b.free_link_params)]
+    t0 = time.perf_counter()
+    mcmc.warmup(jax.random.PRNGKey(settings.seed), theory, list(blocks), collect_warmup=True,
+                extra_fields=("num_steps", "adapt_state.step_size"))
+    warm = mcmc.get_extra_fields(group_by_chain=True)
+    warm_steps = np.asarray(warm["num_steps"])
+    timing = dict(warmup_sec=time.perf_counter() - t0, warmup_steps=float(warm_steps.max(axis=0).sum()))
+    if on_warmup is not None:
+        from src.rsa_open.sampler import warmup_report
+
+        warm_samples = {k: np.asarray(v) for k, v in mcmc.get_samples(group_by_chain=True).items()}
+        on_warmup(dict(report=warmup_report(warm_samples, warm_steps, np.asarray(warm["adapt_state.step_size"]),
+                                            names).to_json(), timing=timing))
+    t1 = time.perf_counter()
+    mcmc.run(mcmc.post_warmup_state.rng_key, theory, list(blocks),
+             extra_fields=("diverging", "num_steps", "adapt_state.step_size"))
+    extra = mcmc.get_extra_fields(group_by_chain=True)
+    n_steps = np.asarray(extra["num_steps"])
+    timing.update(sampling_sec=time.perf_counter() - t1, sampling_steps=float(n_steps.max(axis=0).sum()))
     samples = {k: np.asarray(v) for k, v in mcmc.get_samples(group_by_chain=True).items()}
     chains, draws = next(iter(samples.values())).shape[:2]
     flat = {k: v.reshape(chains * draws) for k, v in samples.items()}
@@ -222,9 +268,10 @@ def fit_corpus(theory: TheoryModel, blocks: Sequence[Block],
     ll = np.concatenate(lls, axis=1)
     idata = az.from_dict(
         posterior=samples, log_likelihood={OBSERVED_SITE: ll.reshape(chains, draws, -1)},
-        sample_stats={"diverging": np.asarray(mcmc.get_extra_fields(group_by_chain=True)["diverging"])})
-    names = [*theory.params, *(b.param(k) for b in blocks for k in b.free_link_params)]
-    return CorpusFit(theory.name, [b.name for b in blocks], idata, names, convergence_problems(idata, names), offsets)
+        sample_stats={"diverging": np.asarray(extra["diverging"]), "n_steps": n_steps,
+                      "step_size": np.asarray(extra["adapt_state.step_size"])})
+    return CorpusFit(theory.name, [b.name for b in blocks], idata, names, convergence_problems(idata, names), offsets,
+                     timing)
 
 
 def heldout_lpd(theory: TheoryModel, fitted: CorpusFit, block: Block,

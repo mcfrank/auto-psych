@@ -67,6 +67,14 @@ from src.rsa_open.loop.gates import GateConfig, admit, pool_predictions
 SpawnFn = Callable[[Path, str], bool]
 DEFAULT_PRUNE_DSE_MULTIPLIER = 2.0
 MAX_LIVE_MODELS = 8  # the closed campaign's carry-forward cap
+FOLD_TIME_FACTOR = 3.0
+FOLD_MIN_SEC = 10 * 60
+"""A theory in play is never time-limited, but each of its cross-validation folds is: at
+``FOLD_TIME_FACTOR`` times its own full fit's time (at least ``FOLD_MIN_SEC``; the admission limit
+stands in for a full fit recorded without its time). A warm-started fold runs 800 iterations to
+the full fit's 2,000, so a fold past the bound is stuck, not slow: run B's fifth fold of one
+theory sampled 5 h 50 min to R-hat 1.55 while the round waited (PI 2026-10-23). A fold that fails
+leaves the theory unscored and untrusted, with the reason in its standing (``cv_problem``)."""
 
 
 @dataclass
@@ -123,6 +131,7 @@ class OpenLoop:
         self.corpus = self.dir / "corpus.json"
         self.live: Dict[str, Live] = {}
         self.cv: Dict[str, Optional[CorpusCV]] = {}
+        self.cv_problems: Dict[str, str] = {}
         self.history: List[dict] = []
         self.step = 0
 
@@ -223,9 +232,18 @@ class OpenLoop:
         return name
 
     # ---------- scoring ----------
+    def fold_time_limit(self, name: str) -> Optional[float]:
+        """The bound on each of ``name``'s fold fits (`FOLD_TIME_FACTOR`); None when nothing is limited."""
+        if self.live_cfg.time_limit_sec is None:
+            return None
+        t = self.live[name].fit.timing
+        full = t["warmup_sec"] + t["sampling_sec"] if t else self.cfg.fit_time_limit_sec
+        return max(FOLD_MIN_SEC, FOLD_TIME_FACTOR * full)
+
     def _cv_one(self, name: str) -> Optional[CorpusCV]:
         path = self.models_dir / f"{name}.py"
         theory = self.live[name].theory
+        limit = self.fold_time_limit(name)
 
         full = self.live[name].fit.flat()
         start = {k: float(np.median(v)) for k, v in full.items()}
@@ -233,14 +251,18 @@ class OpenLoop:
 
         def fold_fit(f: int) -> CorpusFit:
             return loop_fit(path, name, self.fold_paths[f], fold_settings, self.dir / ".fit_cache",
-                            time_limit_sec=self.live_cfg.time_limit_sec, init=start)
+                            time_limit_sec=limit, init=start)
 
         workers = self.cfg.cv_folds if self.live_cfg.time_limit_sec is not None else 1
         try:
             with ThreadPoolExecutor(max_workers=workers) as pool:
                 fits = list(pool.map(fold_fit, range(self.cfg.cv_folds)))
-        except ModelFailure:
+        except ModelFailure as exc:
+            self.cv_problems[name] = f"a cross-validation fold failed, so it is unscored: {exc}"
             return None
+        bad = [f"fold {f + 1}: " + "; ".join(fit.convergence_problems) for f, fit in enumerate(fits) if not fit.converged]
+        if bad:
+            self.cv_problems[name] = "cross-validation folds did not converge, so it is untrusted: " + " | ".join(bad)
         out = {b.name: np.empty(b.n) for b in self.blocks}
         for f, fitted in enumerate(fits):
             for b in self.blocks:
@@ -264,6 +286,8 @@ class OpenLoop:
                 out[n] = dict(sel_elpd=-math.inf, sel_diff=math.inf, sel_dse=0.0, eligible=False, guard_failures=[],
                               by_block={}, cv_converged=False)
             out[n]["trusted"] = bool(self.live[n].fit.converged and out[n]["cv_converged"])
+            if n in self.cv_problems:
+                out[n]["cv_problem"] = self.cv_problems[n]
         return out
 
     def incumbent(self, s: Mapping[str, dict]) -> str:
@@ -289,12 +313,16 @@ class OpenLoop:
         if name not in s:
             return "admitted this round, not yet scored"
         d, newest = s[name], self.blocks[-1].name
+        if math.isinf(d["sel_elpd"]):
+            return d.get("cv_problem", "not scored")
         text = ("best" if d["sel_diff"] == 0 else f"{d['sel_diff']:.1f} ± {d['sel_dse']:.1f} nats behind the best") + \
             f" on {newest} (held out, grouped CV)"
         parts = [("best" if v["behind"] == 0 else f"{v['behind']:.1f} ± {v['dse']:.1f} behind") + f" on {b}"
                  for b, v in d["by_block"].items() if b != newest]
         if parts:
             text += "; " + ", ".join(parts)
+        if d.get("cv_problem"):
+            text += f"; {d['cv_problem']}"
         if d["guard_failures"]:
             text += (f"; NOT eligible to lead: more than {self.cfg.guard_k:g} SEs behind the best on "
                      + ", ".join(d["guard_failures"]))
@@ -310,7 +338,8 @@ class OpenLoop:
         pruned = [closed_brief.ZooModel(e.name, e.hypothesis, pruned_dir / f"{e.name}.py", f"pruned: {e.detail}")
                   for e in sorted(self.ledger.pruned(self.live), key=lambda e: prune_margin(e.detail))
                   if (pruned_dir / f"{e.name}.py").exists()]
-        context = briefs.context_md(candidate_dir=cdir, corpus_path=self.check_corpus, blocks=self.blocks,
+        context = briefs.context_md(candidate_dir=cdir, corpus_path=self.check_corpus,
+                                    full_corpus_path=self.agent_corpus, blocks=self.blocks,
                                     data_paths=self.data_paths, paradigm_notes=self.cfg.paradigm_notes,
                                     round_index=round_index, n_rounds=self.cfg.max_iterations,
                                     network=self.cfg.agent_network)
