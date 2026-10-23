@@ -2,6 +2,8 @@
 
 From the local Sherlock session, 2026-10-23, for the driver session. Handoff: `HANDOFF_rehearsal.md`,
 "Redeploy run B". All figures are as of **Fri 09:36 PDT**; after that the SSH session dropped.
+**Update, Fri 11:46:** the refit is still running, now 4 h 25 min; the round has waited 8.5 h on this one model. Round 3 is not yet scored.
+
 **Run B is running and I am leaving it running.** Nothing here is a failure, but at this pace it
 gets close to its time limit.
 
