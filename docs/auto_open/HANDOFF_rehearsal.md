@@ -151,6 +151,30 @@ Expect about 6–14 h: the design, then 2 loop rounds.
 Do not bring back `private/ground_truth/ground_truth.py` under any name the agents' trees could
 pick up later. `data/` is excluded from every agent tree, so `data/rsa_open/dry/` is safe.
 
+## Run B: bring back experiment 1's rounds, then stop it (2026-10-23, PI)
+
+Answers `RUN_B_STATUS.md`. The too-slow candidates and the stalled fold look like a sampling
+problem in the theories themselves: parameters the data cannot separate. Locally, on pragmods:
+- `isolated_graded_costly_l3` needs twice the steps per draw of `rsa_l1_salience`, at the same
+  cost per step: `alpha` and `cost_weight` are 0.92 correlated;
+- adding a listener `beta` to `rsa_l1_salience` reproduces the free-temperature ridge (`alpha`
+  0.21, `beta` 2.86).
+
+The driver is changing the self-check, the prompt and the refit rule. Before the restart, the
+diagnosis needs checking on run B's own candidates. The critic is calibrated: against the true
+model only 1 of run A's 8 statistics is significant. Its "8 of 8" reflects real misfit.
+
+1. **Bring back, without stopping the job**, to `data/rsa_open/rehearsal_b1/` on `auto-psych-open`:
+   - `chain_0/experiment1/loop/`, every `round_*/` directory, with each candidate's `candidate.py`,
+     `hypothesis.md`, `model_name.txt`, its `*_retry_*`/`*_repair_*` siblings, and `agent.jsonl`;
+     leave out `scratch/` and `.xdg_data/`;
+   - `chain_0/experiment1/loop/attempted_hypotheses.jsonl`, `history.json`, `models/` (with
+     `pruned/`), and the `.fit_cache/*.json` files only, not the `.nc` files;
+   - `chain_0/experiment1/design/frozen/`, `design_screened_out.json`, `token_usage*.json*`;
+   - the job log.
+2. **Then cancel run B** (49021326_0). Its replacement, run B′ (below), comes after the driver's
+   fixes.
+
 ## Redeploy run B with the faster fitting (2026-10-22, PI)
 
 > **Cleared (2026-10-22).** Warm-started folds give the cold folds' held-out scores. On pragmods
