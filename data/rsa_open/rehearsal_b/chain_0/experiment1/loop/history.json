@@ -1,0 +1,2048 @@
+[
+ {
+  "step": 0,
+  "round": -1,
+  "best_model": "rsa_l2_singleton_feat_color_valence_l0",
+  "events": [
+   {
+    "outcome": "seeded",
+    "name": "competitor_confusion_speaker"
+   },
+   {
+    "outcome": "seeded",
+    "name": "isolated_graded_costly_l3"
+   },
+   {
+    "outcome": "seeded",
+    "name": "oddity_heuristic_listener"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l2_singleton_feat_color_valence_l0"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l2"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1"
+   }
+  ],
+  "critique": null,
+  "standing": {
+   "competitor_confusion_speaker": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20974.72106528282,
+      "behind": 326.7796244621277,
+      "dse": 98.10829637525575
+     },
+     "exp1": {
+      "elpd_cv": -7677.376606702805,
+      "behind": 594.7782280445099,
+      "dse": 142.71393578172112
+     }
+    },
+    "sel_elpd": -7677.376606702805,
+    "sel_diff": 594.7782280445099,
+    "sel_dse": 142.71393578172112,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "isolated_graded_costly_l3": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21067.523241519928,
+      "behind": 419.581800699234,
+      "dse": 100.26954959533897
+     },
+     "exp1": {
+      "elpd_cv": -7366.449519634247,
+      "behind": 283.85114097595215,
+      "dse": 83.2233353754274
+     }
+    },
+    "sel_elpd": -7366.449519634247,
+    "sel_diff": 283.85114097595215,
+    "sel_dse": 83.2233353754274,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "oddity_heuristic_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -22420.95824623108,
+      "behind": 1773.0168054103851,
+      "dse": 255.07692694629498
+     },
+     "exp1": {
+      "elpd_cv": -7895.212638378143,
+      "behind": 812.6142597198486,
+      "dse": 138.39023451977272
+     }
+    },
+    "sel_elpd": -7895.212638378143,
+    "sel_diff": 812.6142597198486,
+    "sel_dse": 138.39023451977272,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "rsa_l2_singleton_feat_color_valence_l0": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20647.941440820694,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -7082.598378658295,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": -7082.598378658295,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "rsa_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21218.76720070839,
+      "behind": 570.8257598876953,
+      "dse": 145.62388920569887
+     },
+     "exp1": {
+      "elpd_cv": -8075.131056308746,
+      "behind": 992.5326776504517,
+      "dse": 149.3333414190498
+     }
+    },
+    "sel_elpd": -8075.131056308746,
+    "sel_diff": 992.5326776504517,
+    "sel_dse": 149.3333414190498,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "rsa_l1": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21268.463663101196,
+      "behind": 620.5222222805023,
+      "dse": 152.01524835582754
+     },
+     "exp1": {
+      "elpd_cv": -8053.0649263858795,
+      "behind": 970.4665477275848,
+      "dse": 146.8632953868232
+     }
+    },
+    "sel_elpd": -8053.0649263858795,
+    "sel_diff": 970.4665477275848,
+    "sel_dse": 146.8632953868232,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "competitor_confusion_speaker",
+    "hypothesis": "Pragmatic listener reasoning about a competitor-confusion-averse speaker. Speakers in reference games actively avoid referring expressions that are shared with visually similar or confusable distractors in the context. Candidate words are penalized proportionally to their feature overlap with alternative referents that also satisfy the word. Pragmatic listeners invert this confusion-averse speaker, expecting words to target referents whose competitors are visually distinct rather than near-identical clones.",
+    "source": "seed"
+   },
+   {
+    "name": "isolated_graded_costly_l3",
+    "hypothesis": "Pragmatic listener at depth 3 with perceptual isolation, graded semantics, and utterance extension costs. Refines isolated_graded_costly_l2 by increasing the recursion depth from depth 2 to depth 3. Listeners reason at depth 3, inverting a speaker who simulates a depth-2 pragmatic listener. Visual pop-out is determined by an object's perceptual isolation (minimum Hamming distance to any other context object), semantic applicability diminishes with additional competing features (graded truth), and speakers evaluate communicative utility trade-offs with utterance extension costs proportional to the fraction of display objects sharing each feature. On uninformative prior trials, choice follows the perceptual isolation prior. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "oddity_heuristic_listener",
+    "hypothesis": "Perceptual oddity heuristic listener. Listeners interpret referring expressions using a perceptual oddity heuristic rather than recursive Theory of Mind. When hearing a word that applies to multiple referents, listeners select the contextually unique singleton that lacks identical duplicates in the visual display. On uninformative trials without an informative word, listeners spontaneously choose the unique singleton, defaulting to uniform choice when all items are distinct or no oddity contrast exists. A lapse parameter captures random clicking.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_singleton_feat_color_valence_l0",
+    "hypothesis": "RSA pragmatic listener at depth 2 with singleton salience, contextual distinctiveness, visual feature complexity, evaluative valence framing, visual color contrast, and literal L0. Refining rsa_l2_singleton_distinct_feat_color_l0 by incorporating the evaluative valence framing component from polarity_congruence_listener: speakers and listeners reason at depth 2 (inverting a speaker who simulates a depth-1 pragmatic listener) with common knowledge of an object prior combining discrete visual singleton salience (favoring unique objects with no duplicates in the scene), continuous contextual distinctiveness (favoring objects with greater feature contrast relative to the rest of the display), visual feature complexity modulated by evaluative framing valence (favoring feature-rich items under neutral/positive framing but inverting to favor sparse, featureless items when referring to a least favorite object), and visual color contrast (favoring fully colored objects over desaturated grayscale distractors). Crucially, the foundational simulated literal listener L0 operates purely on truth-conditional semantics without perceptual bias, preventing redundant prior compounding across reasoning tiers. On prior trials with no informative word, choices are governed directly by the combined perceptual prior. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "RSA pragmatic listener at depth 2, uniform prior over objects. One more level of recursion than the vanilla model: a speaker S2 chooses words by how well the depth-1 pragmatic listener L1 would recover the object (exp(alpha * log L1)), and the listener L2 inverts S2. Depth-2 reasoning is what the pragmods \"complex\" game needs to single out the object described by the twice-implicated word. One rationality alpha at every level; uniform choice with no informative word; a lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Vanilla RSA pragmatic listener (depth 1), uniform prior over objects. The listener reasons about a speaker who chooses a true word with probability proportional to exp(alpha * log L0(object | word)), where L0 is the literal listener; the listener inverts that speaker with a uniform prior over objects (Frank & Goodman, 2012). With no informative word the choice is uniform. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   }
+  ],
+  "ledger_entries": 0
+ },
+ {
+  "step": 1,
+  "round": 0,
+  "best_model": "rsa_l2_singleton_feat_color_valence_l0",
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "grammatical_exhaustification",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "People resolve referring expressions using grammatical exhaustification over unasserted alternative descriptions rather than recursive Theory of Mind. When hearing a word, listeners rule out referents proportionally to the informativeness of any truer or more specific features of that referent that the speaker left unmentioned. On uninformative trials, visual attention defaults to contextually unique singletons."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "decoupled_salience_listener",
+    "outcome": "rejected",
+    "reason": "fitting failed: decoupled_salience_listener: the fit did not finish within 30 minutes",
+    "hypothesis": "Listeners rely on visual singleton salience during spontaneous visual exploration on uninformative trials, but interpret informative utterances by inverting a speaker who communicates under an unbiased, uniform target prior. In displays where a heard word is true of all objects but some are minimal duplicate targets and others are multi-feature singletons, this mechanism predicts that listeners strongly favor the minimal targets because the speaker would have chosen distinguishing features for the multi-feature singletons, sharply disagreeing with models that project visual singleton biases into communicative intent."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "costly_ambiguity_fallback_speaker",
+    "outcome": "rejected",
+    "reason": "fitting failed: costly_ambiguity_fallback_speaker: the fit did not finish within 30 minutes",
+    "hypothesis": "Speakers select referring expressions to maximize informativeness while penalizing utterance ambiguity, falling back to silence when a referent cannot be named. Pragmatic listeners invert this cost-sensitive speaker, attributing informative words to referents that lack more specific alternatives and attributing silence to unnameable or minimally featured referents."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "rsa_l2_unique_singleton_l0",
+    "outcome": "rejected",
+    "reason": "fitting failed: rsa_l2_unique_singleton_l0: the fit did not finish within 30 minutes",
+    "hypothesis": "RSA depth-2 pragmatic listener refining rsa_l2_singleton_feat_color_valence_l0 by restricting visual singleton salience to unique oddity displays where exactly one object in the scene lacks duplicates. Keeping the same depth-2 recursion (L2 inverting S2 which evaluates L1 over literal L0) and the identical parameter set (alpha, w_singleton, w_distinct, w_features, w_valence, w_color without additions or removals), singleton salience is modified so that multiple co-occurring distinct items do not receive spurious singleton bonuses over duplicate targets. This resolves the severe empirical under-allocation to minimal targets when a message is universal by ensuring perceptual pop-out applies only to genuine odd-one-out items."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "rsa_l2_uncompounded_prior",
+    "outcome": "rejected",
+    "reason": "fitting failed: rsa_l2_uncompounded_prior: the fit did not finish within 30 minutes",
+    "hypothesis": "RSA pragmatic listener at depth 2 with uncompounded perceptual prior, refining rsa_l2_singleton_feat_color_valence_l0 by setting the simulated intermediate listener's prior to uniform rather than compounding the perceptual prior across reasoning tiers. Listeners and speakers reason at depth 2, where intermediate pragmatic reasoning (L1 and S2) tracks communicative informativeness without perceptual bias, and the contextual perceptual prior (combining singleton salience, contextual distinctiveness, feature complexity modulated by valence framing, and color contrast) is integrated once by the outer listener L2 and directly on uninformative prior trials. Differences from rsa_l2_singleton_feat_color_valence_l0: recursion depth remains depth 2 (L2), no parameters are added or removed (retaining alpha, w_singleton, w_distinct, w_features, w_valence, and w_color), L1 replaces the prior vector parameter with a uniform object prior (wpp=1), and L2 calls L1 without the prior argument."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "competitor_confusion_l2",
+    "outcome": "rejected",
+    "reason": "fitting failed: competitor_confusion_l2: the fit did not finish within 30 minutes",
+    "hypothesis": "Pragmatic listener reasoning at depth 2 about a competitor-confusion-averse speaker, refining competitor_confusion_speaker by extending pragmatic recursion from depth 1 to depth 2. Listeners interpret utterances by inverting a speaker who selects words to optimize informativeness for a pragmatic listener while actively penalizing expressions shared with visually confusable competitors in the context. Differences from competitor_confusion_speaker: recursion depth increases from depth 1 (L1) to depth 2 (L2), adding a depth-2 listener memo L2 that inverts speaker S2 evaluating pragmatic listener L1 with competitor confusion penalties, with no parameters added or removed."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "decoupled_salience_listener_2",
+    "outcome": "rejected",
+    "reason": "fitting failed: decoupled_salience_listener_2: the fit did not finish within 30 minutes",
+    "hypothesis": "Listeners rely on visual singleton salience during spontaneous visual exploration on uninformative trials, but interpret informative utterances by inverting a speaker who communicates under an unbiased, uniform target prior. In displays where a heard word is true of all objects but some are minimal duplicate targets and others are multi-feature singletons, this mechanism predicts that listeners strongly favor the minimal targets because the speaker would have chosen distinguishing features for the multi-feature singletons, sharply disagreeing with models that project visual singleton biases into communicative intent.",
+    "repair": true
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "costly_ambiguity_fallback_speaker_2",
+    "outcome": "rejected",
+    "reason": "fitting failed: costly_ambiguity_fallback_speaker_2: the fit did not finish within 30 minutes",
+    "hypothesis": "Speakers select referring expressions to maximize informativeness while penalizing utterance ambiguity, falling back to silence when a referent cannot be named. Pragmatic listeners invert this cost-sensitive speaker, attributing informative words to referents that lack more specific alternatives and attributing silence to unnameable or minimally featured referents.",
+    "repair": true
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "rsa_l2_unique_singleton_l0_2",
+    "outcome": "rejected",
+    "reason": "fitting failed: rsa_l2_unique_singleton_l0_2: the fit did not finish within 30 minutes",
+    "hypothesis": "RSA depth-2 pragmatic listener refining rsa_l2_singleton_feat_color_valence_l0 by restricting visual singleton salience to unique oddity displays where exactly one object in the scene lacks duplicates. Keeping the same depth-2 recursion (L2 inverting S2 which evaluates L1 over literal L0) and the identical parameter set (alpha, w_singleton, w_distinct, w_features, w_valence, w_color without additions or removals), singleton salience is modified so that multiple co-occurring distinct items do not receive spurious singleton bonuses over duplicate targets. This resolves the severe empirical under-allocation to minimal targets when a message is universal by ensuring perceptual pop-out applies only to genuine odd-one-out items.",
+    "repair": true
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "rsa_l2_uncompounded_prior_2",
+    "outcome": "rejected",
+    "reason": "fitting failed: rsa_l2_uncompounded_prior_2: the fit did not finish within 30 minutes",
+    "hypothesis": "RSA pragmatic listener at depth 2 with uncompounded perceptual prior, refining rsa_l2_singleton_feat_color_valence_l0 by setting the simulated intermediate listener's prior to uniform rather than compounding the perceptual prior across reasoning tiers. Listeners and speakers reason at depth 2, where intermediate pragmatic reasoning (L1 and S2) tracks communicative informativeness without perceptual bias, and the contextual perceptual prior (combining singleton salience, contextual distinctiveness, feature complexity modulated by valence framing, and color contrast) is integrated once by the outer listener L2 and directly on uninformative prior trials. Differences from rsa_l2_singleton_feat_color_valence_l0: recursion depth remains depth 2 (L2), no parameters are added or removed (retaining alpha, w_singleton, w_distinct, w_features, w_valence, and w_color), L1 replaces the prior vector parameter with a uniform object prior (wpp=1), and L2 calls L1 without the prior argument.",
+    "repair": true
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "competitor_confusion_l2_2",
+    "outcome": "rejected",
+    "reason": "fitting failed: competitor_confusion_l2_2: the fit did not finish within 30 minutes",
+    "hypothesis": "Pragmatic listener reasoning at depth 2 about a competitor-confusion-averse speaker, refining competitor_confusion_speaker by extending pragmatic recursion from depth 1 to depth 2. Listeners interpret utterances by inverting a speaker who selects words to optimize informativeness for a pragmatic listener while actively penalizing expressions shared with visually confusable competitors in the context. Differences from competitor_confusion_speaker: recursion depth increases from depth 1 (L1) to depth 2 (L2), adding a depth-2 listener memo L2 that inverts speaker S2 evaluating pragmatic listener L1 with competitor confusion penalties, with no parameters added or removed.",
+    "repair": true
+   }
+  ],
+  "critique": {
+   "status": "critiqued",
+   "incumbent": "rsa_l2_singleton_feat_color_valence_l0",
+   "attempts": 1,
+   "dir": "/scratch/users/mcfrank/auto-psych/agent_trees/e6344f63e5fb0046/repo/_runs/chain_0/experiment1/loop/round_1/critique",
+   "block": "exp1",
+   "n_statistics": 8,
+   "n_evaluated": 8,
+   "n_significant": 8,
+   "n_significant_fdr": 8
+  },
+  "standing": {
+   "competitor_confusion_speaker": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20974.72106528282,
+      "behind": 326.7796244621277,
+      "dse": 98.10829637525575
+     },
+     "exp1": {
+      "elpd_cv": -7677.376606702805,
+      "behind": 594.7782280445099,
+      "dse": 142.71393578172112
+     }
+    },
+    "sel_elpd": -7677.376606702805,
+    "sel_diff": 594.7782280445099,
+    "sel_dse": 142.71393578172112,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "isolated_graded_costly_l3": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21067.523241519928,
+      "behind": 419.581800699234,
+      "dse": 100.26954959533897
+     },
+     "exp1": {
+      "elpd_cv": -7366.449519634247,
+      "behind": 283.85114097595215,
+      "dse": 83.2233353754274
+     }
+    },
+    "sel_elpd": -7366.449519634247,
+    "sel_diff": 283.85114097595215,
+    "sel_dse": 83.2233353754274,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "oddity_heuristic_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -22420.95824623108,
+      "behind": 1773.0168054103851,
+      "dse": 255.07692694629498
+     },
+     "exp1": {
+      "elpd_cv": -7895.212638378143,
+      "behind": 812.6142597198486,
+      "dse": 138.39023451977272
+     }
+    },
+    "sel_elpd": -7895.212638378143,
+    "sel_diff": 812.6142597198486,
+    "sel_dse": 138.39023451977272,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "rsa_l2_singleton_feat_color_valence_l0": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20647.941440820694,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -7082.598378658295,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": -7082.598378658295,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "rsa_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21218.76720070839,
+      "behind": 570.8257598876953,
+      "dse": 145.62388920569887
+     },
+     "exp1": {
+      "elpd_cv": -8075.131056308746,
+      "behind": 992.5326776504517,
+      "dse": 149.3333414190498
+     }
+    },
+    "sel_elpd": -8075.131056308746,
+    "sel_diff": 992.5326776504517,
+    "sel_dse": 149.3333414190498,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "rsa_l1": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21268.463663101196,
+      "behind": 620.5222222805023,
+      "dse": 152.01524835582754
+     },
+     "exp1": {
+      "elpd_cv": -8053.0649263858795,
+      "behind": 970.4665477275848,
+      "dse": 146.8632953868232
+     }
+    },
+    "sel_elpd": -8053.0649263858795,
+    "sel_diff": 970.4665477275848,
+    "sel_dse": 146.8632953868232,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "grammatical_exhaustification": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21012.16299176216,
+      "behind": 364.2215509414673,
+      "dse": 77.14698499277993
+     },
+     "exp1": {
+      "elpd_cv": -7185.972606658936,
+      "behind": 103.37422800064087,
+      "dse": 67.49094592156627
+     }
+    },
+    "sel_elpd": -7185.972606658936,
+    "sel_diff": 103.37422800064087,
+    "sel_dse": 67.49094592156627,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "competitor_confusion_speaker",
+    "hypothesis": "Pragmatic listener reasoning about a competitor-confusion-averse speaker. Speakers in reference games actively avoid referring expressions that are shared with visually similar or confusable distractors in the context. Candidate words are penalized proportionally to their feature overlap with alternative referents that also satisfy the word. Pragmatic listeners invert this confusion-averse speaker, expecting words to target referents whose competitors are visually distinct rather than near-identical clones.",
+    "source": "seed"
+   },
+   {
+    "name": "isolated_graded_costly_l3",
+    "hypothesis": "Pragmatic listener at depth 3 with perceptual isolation, graded semantics, and utterance extension costs. Refines isolated_graded_costly_l2 by increasing the recursion depth from depth 2 to depth 3. Listeners reason at depth 3, inverting a speaker who simulates a depth-2 pragmatic listener. Visual pop-out is determined by an object's perceptual isolation (minimum Hamming distance to any other context object), semantic applicability diminishes with additional competing features (graded truth), and speakers evaluate communicative utility trade-offs with utterance extension costs proportional to the fraction of display objects sharing each feature. On uninformative prior trials, choice follows the perceptual isolation prior. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "oddity_heuristic_listener",
+    "hypothesis": "Perceptual oddity heuristic listener. Listeners interpret referring expressions using a perceptual oddity heuristic rather than recursive Theory of Mind. When hearing a word that applies to multiple referents, listeners select the contextually unique singleton that lacks identical duplicates in the visual display. On uninformative trials without an informative word, listeners spontaneously choose the unique singleton, defaulting to uniform choice when all items are distinct or no oddity contrast exists. A lapse parameter captures random clicking.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_singleton_feat_color_valence_l0",
+    "hypothesis": "RSA pragmatic listener at depth 2 with singleton salience, contextual distinctiveness, visual feature complexity, evaluative valence framing, visual color contrast, and literal L0. Refining rsa_l2_singleton_distinct_feat_color_l0 by incorporating the evaluative valence framing component from polarity_congruence_listener: speakers and listeners reason at depth 2 (inverting a speaker who simulates a depth-1 pragmatic listener) with common knowledge of an object prior combining discrete visual singleton salience (favoring unique objects with no duplicates in the scene), continuous contextual distinctiveness (favoring objects with greater feature contrast relative to the rest of the display), visual feature complexity modulated by evaluative framing valence (favoring feature-rich items under neutral/positive framing but inverting to favor sparse, featureless items when referring to a least favorite object), and visual color contrast (favoring fully colored objects over desaturated grayscale distractors). Crucially, the foundational simulated literal listener L0 operates purely on truth-conditional semantics without perceptual bias, preventing redundant prior compounding across reasoning tiers. On prior trials with no informative word, choices are governed directly by the combined perceptual prior. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "RSA pragmatic listener at depth 2, uniform prior over objects. One more level of recursion than the vanilla model: a speaker S2 chooses words by how well the depth-1 pragmatic listener L1 would recover the object (exp(alpha * log L1)), and the listener L2 inverts S2. Depth-2 reasoning is what the pragmods \"complex\" game needs to single out the object described by the twice-implicated word. One rationality alpha at every level; uniform choice with no informative word; a lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Vanilla RSA pragmatic listener (depth 1), uniform prior over objects. The listener reasons about a speaker who chooses a true word with probability proportional to exp(alpha * log L0(object | word)), where L0 is the literal listener; the listener inverts that speaker with a uniform prior over objects (Frank & Goodman, 2012). With no informative word the choice is uniform. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "grammatical_exhaustification",
+    "hypothesis": "People resolve referring expressions using grammatical exhaustification over unasserted alternative descriptions rather than recursive Theory of Mind. When hearing a word, listeners rule out referents proportionally to the informativeness of any truer or more specific features of that referent that the speaker left unmentioned. On uninformative trials, visual attention defaults to contextually unique singletons.",
+    "source": "round 1 candidate 1 explore"
+   }
+  ],
+  "ledger_entries": 11
+ },
+ {
+  "step": 2,
+  "round": 1,
+  "best_model": "bounded_depth_listener",
+  "events": [
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": null,
+    "outcome": "no file",
+    "reason": ""
+   },
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "contextual_oddity_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "People interpret referring expressions by integrating communicative informativeness with contextual oddity salience. Before hearing an utterance, visual attention is captured by a solitary odd-one-out that breaks the homogeneous background of duplicate distractors, establishing a default referential prior over objects. Pragmatic listeners invert an informative speaker using this oddity-grounded referent prior, defaulting to uniform expectations when multiple distinct items or no oddities exist."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "bounded_depth_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referring expressions with a strictly bounded reasoning depth, inverting a communicative speaker who reasons about literal semantics rather than engaging in higher-order recursive mental simulation. This bounded depth prevents over-implicature, naturally preserving non-zero probability for multi-feature scalar competitors while strongly favoring minimal referents when words are universally shared. On uninformative displays without an informative word, visual attention defaults to contextually unique singletons."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "graded_truth_listener",
+    "outcome": "rejected",
+    "reason": "fitting failed: graded_truth_listener: the fit did not finish within 30 minutes",
+    "hypothesis": "People interpret referring expressions using graded semantic truth values that scale inversely with a referent's feature complexity. When hearing a word, listeners evaluate an object's applicability not as a rigid binary match, but as graded truth that diminishes as the object possesses more competing visual features. On uninformative trials without an informative word, visual attention defaults to contextually unique singletons."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "test_model",
+    "outcome": "rejected",
+    "reason": "fitting failed: test_model: the fit did not finish within 30 minutes",
+    "hypothesis": "Test hypothesis."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "grammatical_exhaustification_distinct",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Refining grammatical_exhaustification by incorporating continuous contextual distinctiveness into the visual attention prior: listeners interpret referring expressions through grammatical exhaustification over unasserted alternative features, ruling out referents proportionally to the informativeness of any more specific descriptions the speaker omitted, while spontaneous visual attention weights referents by combining discrete singleton salience with continuous feature contrast (contextual distinctiveness) relative to display competitors. This directly improves the representation of displays lacking identical duplicates as well as empty singletons in full-duplicate contexts, addressing the empirical discrepancy where humans allocate substantial prior belief to empty singleton objects among identical full-feature duplicates. Differences from grammatical_exhaustification: recursion depth remains unchanged (depth 0, L_exh); parameter w_distinct is added with prior dist.Normal(0.0, 1.0); no parameters are removed; and the visual prior is extended by adding w_distinct times the total contextual feature contrast (summed Hamming distance across all context objects)."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "graded_truth_listener_2",
+    "outcome": "rejected",
+    "reason": "fitting failed: graded_truth_listener_2: the fit did not finish within 30 minutes",
+    "hypothesis": "People interpret referring expressions using graded semantic truth values that scale inversely with a referent's feature complexity. When hearing a word, listeners evaluate an object's applicability not as a rigid binary match, but as graded truth that diminishes as the object possesses more competing visual features. On uninformative trials without an informative word, visual attention defaults to contextually unique singletons.",
+    "repair": true
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "rsa_l1_singleton_feat_color_valence_l0",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "RSA pragmatic listener at depth 1 with singleton salience, contextual distinctiveness, visual feature complexity, evaluative valence framing, visual color contrast, and literal L0. Refining rsa_l2_singleton_feat_color_valence_l0 by reducing pragmatic recursion depth from depth 2 to depth 1: listeners interpret referring expressions by inverting an informative speaker who evaluates literal semantics, rather than engaging in higher-order recursive mental simulation. This bounded depth eliminates over-implicature in scalar implicature and prevents multiplicative prior compounding across reasoning tiers, preserving appropriate probability on multi-feature competitors while maintaining common knowledge of visual singleton salience, continuous contextual distinctiveness, valence-modulated feature complexity, and color contrast. Differences from rsa_l2_singleton_feat_color_valence_l0: recursion depth is reduced from depth 2 to depth 1 (listener calls L1 instead of L2), the depth-2 listener memo L2 is removed, and all parameters (alpha, w_singleton, w_distinct, w_features, w_valence, w_color) are preserved without addition or removal.",
+    "repair": true
+   }
+  ],
+  "critique": {
+   "status": "critiqued",
+   "incumbent": "rsa_l2_singleton_feat_color_valence_l0",
+   "attempts": 1,
+   "dir": "/scratch/users/mcfrank/auto-psych/agent_trees/e6344f63e5fb0046/repo/_runs/chain_0/experiment1/loop/round_2/critique",
+   "block": "exp1",
+   "n_statistics": 8,
+   "n_evaluated": 8,
+   "n_significant": 8,
+   "n_significant_fdr": 8
+  },
+  "standing": {
+   "competitor_confusion_speaker": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20974.72106528282,
+      "behind": 326.7796244621277,
+      "dse": 98.10829637525575
+     },
+     "exp1": {
+      "elpd_cv": -7677.376606702805,
+      "behind": 637.0297367572784,
+      "dse": 131.58915686091058
+     }
+    },
+    "sel_elpd": -7677.376606702805,
+    "sel_diff": 637.0297367572784,
+    "sel_dse": 131.58915686091058,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "isolated_graded_costly_l3": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21067.523241519928,
+      "behind": 419.581800699234,
+      "dse": 100.26954959533897
+     },
+     "exp1": {
+      "elpd_cv": -7366.449519634247,
+      "behind": 326.1026496887207,
+      "dse": 88.68572770703821
+     }
+    },
+    "sel_elpd": -7366.449519634247,
+    "sel_diff": 326.1026496887207,
+    "sel_dse": 88.68572770703821,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "oddity_heuristic_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -22420.95824623108,
+      "behind": 1773.0168054103851,
+      "dse": 255.07692694629498
+     },
+     "exp1": {
+      "elpd_cv": -7895.212638378143,
+      "behind": 854.8657684326172,
+      "dse": 127.76800591547668
+     }
+    },
+    "sel_elpd": -7895.212638378143,
+    "sel_diff": 854.8657684326172,
+    "sel_dse": 127.76800591547668,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "rsa_l2_singleton_feat_color_valence_l0": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20647.941440820694,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -7082.598378658295,
+      "behind": 42.251508712768555,
+      "dse": 37.48450715191034
+     }
+    },
+    "sel_elpd": -7082.598378658295,
+    "sel_diff": 42.251508712768555,
+    "sel_dse": 37.48450715191034,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "rsa_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21218.76720070839,
+      "behind": 570.8257598876953,
+      "dse": 145.62388920569887
+     },
+     "exp1": {
+      "elpd_cv": -8075.131056308746,
+      "behind": 1034.7841863632202,
+      "dse": 144.39182854694218
+     }
+    },
+    "sel_elpd": -8075.131056308746,
+    "sel_diff": 1034.7841863632202,
+    "sel_dse": 144.39182854694218,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "rsa_l1": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21268.463663101196,
+      "behind": 620.5222222805023,
+      "dse": 152.01524835582754
+     },
+     "exp1": {
+      "elpd_cv": -8053.0649263858795,
+      "behind": 1012.7180564403534,
+      "dse": 141.77924274381434
+     }
+    },
+    "sel_elpd": -8053.0649263858795,
+    "sel_diff": 1012.7180564403534,
+    "sel_dse": 141.77924274381434,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "grammatical_exhaustification": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21012.16299176216,
+      "behind": 364.2215509414673,
+      "dse": 77.14698499277993
+     },
+     "exp1": {
+      "elpd_cv": -7185.972606658936,
+      "behind": 145.62573671340942,
+      "dse": 45.65189103470179
+     }
+    },
+    "sel_elpd": -7185.972606658936,
+    "sel_diff": 145.62573671340942,
+    "sel_dse": 45.65189103470179,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "contextual_oddity_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20822.68933415413,
+      "behind": 174.74789333343506,
+      "dse": 61.253443605486815
+     },
+     "exp1": {
+      "elpd_cv": -7703.278153419495,
+      "behind": 662.9312834739685,
+      "dse": 148.47898551952798
+     }
+    },
+    "sel_elpd": -7703.278153419495,
+    "sel_diff": 662.9312834739685,
+    "sel_dse": 148.47898551952798,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "bounded_depth_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20842.956471204758,
+      "behind": 195.01503038406372,
+      "dse": 60.98152573284802
+     },
+     "exp1": {
+      "elpd_cv": -7040.346869945526,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": -7040.346869945526,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "grammatical_exhaustification_distinct": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20877.593101978302,
+      "behind": 229.65166115760803,
+      "dse": 60.90333249335165
+     },
+     "exp1": {
+      "elpd_cv": -7191.523752689362,
+      "behind": 151.17688274383545,
+      "dse": 41.806214111202124
+     }
+    },
+    "sel_elpd": -7191.523752689362,
+    "sel_diff": 151.17688274383545,
+    "sel_dse": 41.806214111202124,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "rsa_l1_singleton_feat_color_valence_l0": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20709.202179670334,
+      "behind": 61.26073884963989,
+      "dse": 23.72403442782099
+     },
+     "exp1": {
+      "elpd_cv": -7045.440375804901,
+      "behind": 5.093505859375,
+      "dse": 17.211027775103318
+     }
+    },
+    "sel_elpd": -7045.440375804901,
+    "sel_diff": 5.093505859375,
+    "sel_dse": 17.211027775103318,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "competitor_confusion_speaker",
+    "hypothesis": "Pragmatic listener reasoning about a competitor-confusion-averse speaker. Speakers in reference games actively avoid referring expressions that are shared with visually similar or confusable distractors in the context. Candidate words are penalized proportionally to their feature overlap with alternative referents that also satisfy the word. Pragmatic listeners invert this confusion-averse speaker, expecting words to target referents whose competitors are visually distinct rather than near-identical clones.",
+    "source": "seed"
+   },
+   {
+    "name": "isolated_graded_costly_l3",
+    "hypothesis": "Pragmatic listener at depth 3 with perceptual isolation, graded semantics, and utterance extension costs. Refines isolated_graded_costly_l2 by increasing the recursion depth from depth 2 to depth 3. Listeners reason at depth 3, inverting a speaker who simulates a depth-2 pragmatic listener. Visual pop-out is determined by an object's perceptual isolation (minimum Hamming distance to any other context object), semantic applicability diminishes with additional competing features (graded truth), and speakers evaluate communicative utility trade-offs with utterance extension costs proportional to the fraction of display objects sharing each feature. On uninformative prior trials, choice follows the perceptual isolation prior. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "oddity_heuristic_listener",
+    "hypothesis": "Perceptual oddity heuristic listener. Listeners interpret referring expressions using a perceptual oddity heuristic rather than recursive Theory of Mind. When hearing a word that applies to multiple referents, listeners select the contextually unique singleton that lacks identical duplicates in the visual display. On uninformative trials without an informative word, listeners spontaneously choose the unique singleton, defaulting to uniform choice when all items are distinct or no oddity contrast exists. A lapse parameter captures random clicking.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_singleton_feat_color_valence_l0",
+    "hypothesis": "RSA pragmatic listener at depth 2 with singleton salience, contextual distinctiveness, visual feature complexity, evaluative valence framing, visual color contrast, and literal L0. Refining rsa_l2_singleton_distinct_feat_color_l0 by incorporating the evaluative valence framing component from polarity_congruence_listener: speakers and listeners reason at depth 2 (inverting a speaker who simulates a depth-1 pragmatic listener) with common knowledge of an object prior combining discrete visual singleton salience (favoring unique objects with no duplicates in the scene), continuous contextual distinctiveness (favoring objects with greater feature contrast relative to the rest of the display), visual feature complexity modulated by evaluative framing valence (favoring feature-rich items under neutral/positive framing but inverting to favor sparse, featureless items when referring to a least favorite object), and visual color contrast (favoring fully colored objects over desaturated grayscale distractors). Crucially, the foundational simulated literal listener L0 operates purely on truth-conditional semantics without perceptual bias, preventing redundant prior compounding across reasoning tiers. On prior trials with no informative word, choices are governed directly by the combined perceptual prior. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "RSA pragmatic listener at depth 2, uniform prior over objects. One more level of recursion than the vanilla model: a speaker S2 chooses words by how well the depth-1 pragmatic listener L1 would recover the object (exp(alpha * log L1)), and the listener L2 inverts S2. Depth-2 reasoning is what the pragmods \"complex\" game needs to single out the object described by the twice-implicated word. One rationality alpha at every level; uniform choice with no informative word; a lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Vanilla RSA pragmatic listener (depth 1), uniform prior over objects. The listener reasons about a speaker who chooses a true word with probability proportional to exp(alpha * log L0(object | word)), where L0 is the literal listener; the listener inverts that speaker with a uniform prior over objects (Frank & Goodman, 2012). With no informative word the choice is uniform. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "grammatical_exhaustification",
+    "hypothesis": "People resolve referring expressions using grammatical exhaustification over unasserted alternative descriptions rather than recursive Theory of Mind. When hearing a word, listeners rule out referents proportionally to the informativeness of any truer or more specific features of that referent that the speaker left unmentioned. On uninformative trials, visual attention defaults to contextually unique singletons.",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "contextual_oddity_listener",
+    "hypothesis": "People interpret referring expressions by integrating communicative informativeness with contextual oddity salience. Before hearing an utterance, visual attention is captured by a solitary odd-one-out that breaks the homogeneous background of duplicate distractors, establishing a default referential prior over objects. Pragmatic listeners invert an informative speaker using this oddity-grounded referent prior, defaulting to uniform expectations when multiple distinct items or no oddities exist.",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "bounded_depth_listener",
+    "hypothesis": "Listeners interpret referring expressions with a strictly bounded reasoning depth, inverting a communicative speaker who reasons about literal semantics rather than engaging in higher-order recursive mental simulation. This bounded depth prevents over-implicature, naturally preserving non-zero probability for multi-feature scalar competitors while strongly favoring minimal referents when words are universally shared. On uninformative displays without an informative word, visual attention defaults to contextually unique singletons.",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "grammatical_exhaustification_distinct",
+    "hypothesis": "Refining grammatical_exhaustification by incorporating continuous contextual distinctiveness into the visual attention prior: listeners interpret referring expressions through grammatical exhaustification over unasserted alternative features, ruling out referents proportionally to the informativeness of any more specific descriptions the speaker omitted, while spontaneous visual attention weights referents by combining discrete singleton salience with continuous feature contrast (contextual distinctiveness) relative to display competitors. This directly improves the representation of displays lacking identical duplicates as well as empty singletons in full-duplicate contexts, addressing the empirical discrepancy where humans allocate substantial prior belief to empty singleton objects among identical full-feature duplicates. Differences from grammatical_exhaustification: recursion depth remains unchanged (depth 0, L_exh); parameter w_distinct is added with prior dist.Normal(0.0, 1.0); no parameters are removed; and the visual prior is extended by adding w_distinct times the total contextual feature contrast (summed Hamming distance across all context objects).",
+    "source": "round 2 candidate 6 refine chosen"
+   },
+   {
+    "name": "rsa_l1_singleton_feat_color_valence_l0",
+    "hypothesis": "RSA pragmatic listener at depth 1 with singleton salience, contextual distinctiveness, visual feature complexity, evaluative valence framing, visual color contrast, and literal L0. Refining rsa_l2_singleton_feat_color_valence_l0 by reducing pragmatic recursion depth from depth 2 to depth 1: listeners interpret referring expressions by inverting an informative speaker who evaluates literal semantics, rather than engaging in higher-order recursive mental simulation. This bounded depth eliminates over-implicature in scalar implicature and prevents multiplicative prior compounding across reasoning tiers, preserving appropriate probability on multi-feature competitors while maintaining common knowledge of visual singleton salience, continuous contextual distinctiveness, valence-modulated feature complexity, and color contrast. Differences from rsa_l2_singleton_feat_color_valence_l0: recursion depth is reduced from depth 2 to depth 1 (listener calls L1 instead of L2), the depth-2 listener memo L2 is removed, and all parameters (alpha, w_singleton, w_distinct, w_features, w_valence, w_color) are preserved without addition or removal.",
+    "source": "round 2 candidate 4 refine incumbent rsa_l2_singleton_feat_color_valence_l0 retry 1 repair 1"
+   }
+  ],
+  "ledger_entries": 19
+ },
+ {
+  "step": 3,
+  "round": 2,
+  "best_model": "bounded_depth_listener",
+  "events": [
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": null,
+    "outcome": "no file",
+    "reason": ""
+   },
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "feature_parsimony_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referring expressions using a feature parsimony heuristic: among candidate referents satisfying a heard word, listeners choose the object possessing the fewest total visual features, assuming speakers provide minimal descriptions for simple targets rather than leaving distinguishing features unmentioned. Speakers communicate by selecting words that guide this parsimony-biased listener to the intended referent. On uninformative displays without an informative word, visual attention defaults to contextually unique singletons."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "structured_lapse_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "People separate communicative inference from response generation: listeners infer communicative intent using an unbiased, uniform target prior, and resolve their response through a salience-guided structured lapse that captures attention toward contextually unique visual singletons. On uninformative displays lacking a communicative word, choices default entirely to visual singleton salience; on informative trials, communicative beliefs are mixed at the decision level with the salience lapse rather than multiplied inside Bayes' rule."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "aspect_qud_listener",
+    "outcome": "rejected",
+    "reason": "fitting failed: aspect_qud_listener: the fit did not finish within 30 minutes",
+    "hypothesis": "In reference games, listeners interpret utterances by reasoning about a speaker who communicates an informative aspect of the target rather than its complete identity. When selecting an aspect to address as the question under discussion, the speaker chooses among the target's true properties with a preference for distinctive features, and selects an utterance to communicate that aspect to a literal listener. On uninformative displays without an informative word, visual attention defaults to contextually unique singletons."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "bounded_depth_unbiased_prior",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Refining bounded_depth_listener by decoupling visual singleton salience from communicative inference: listeners interpret informative referring expressions with bounded reasoning depth under an unbiased, uniform referent prior, confining visual singleton salience strictly to spontaneous visual attention on uninformative displays without an informative word. This prevents spurious singleton bonuses from overriding scalar implicatures on informative trials, eliminating severe over-allocation to multi-feature singleton competitors when words are shared with duplicate minimal targets. Differences from bounded_depth_listener: recursion depth remains unchanged (depth 1, listener calls L1); no parameters are added or removed (retaining alpha and w_singleton); the prior vector parameter is removed from L1 so that the listener chooses referents proportionally to speaker choice probabilities alone; and listener calls L1 without the prior argument, restricting the singleton prior exclusively to prior trials."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "bounded_depth_distinct_listener",
+    "outcome": "rejected",
+    "reason": "not novel: its listener and speaker predictions are within RMSE 0.0013 of rsa_l1_singleton_feat_color_valence_l0's (threshold 0.002) over the novelty pool of 1597 scenes. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Listeners interpret referring expressions with a strictly bounded reasoning depth (depth 1), inverting an informative speaker who evaluates literal semantics, while visual attention weights candidate referents by combining discrete singleton salience with continuous contextual distinctiveness. This refinement of bounded_depth_listener incorporates contextual feature contrast relative to all display competitors, resolving empirical under-allocation to empty singletons in full-duplicate displays and providing graded perceptual salience across distinct objects. Differences from bounded_depth_listener: recursion depth remains depth 1 (listener calls L1); parameter w_distinct is added with prior dist.Normal(0.0, 1.0); no parameters are removed (retaining alpha and w_singleton); and the object prior is extended by adding w_distinct times the total contextual feature contrast (summed Hamming distance across display objects)."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "aspect_qud_listener_2",
+    "outcome": "rejected",
+    "reason": "fitting failed: aspect_qud_listener_2: the fit did not finish within 30 minutes",
+    "hypothesis": "In reference games, listeners interpret utterances by reasoning about a speaker who communicates an informative aspect of the target rather than its complete identity. When selecting an aspect to address as the question under discussion, the speaker chooses among the target's true properties with a preference for distinctive features, and selects an utterance to communicate that aspect to a literal listener. On uninformative displays without an informative word, visual attention defaults to contextually unique singletons.",
+    "repair": true
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "bounded_depth_costly_speaker",
+    "outcome": "rejected",
+    "reason": "fitting failed: bounded_depth_costly_speaker: the fit did not finish within 30 minutes",
+    "hypothesis": "Listeners interpret referring expressions with bounded reasoning depth, inverting an informative speaker who balances literal informativeness against utterance extension costs. Refining bounded_depth_listener by incorporating utterance extension costs (from isolated_graded_costly_l3) into the communicative speaker: speakers penalize words with broad contextual extensions, favoring more specific descriptions when available. This addresses severe empirical over-allocation to multi-feature singleton competitors and under-allocation to minimal targets when words are shared across objects. Differences from bounded_depth_listener: recursion depth remains unchanged (depth 1, listener calls L1); parameter cost_weight is added with prior dist.Normal(0.0, 1.0); no parameters are removed (retaining alpha and w_singleton); and the speaker choice utility subtracts cost_weight times the utterance extension cost (fraction of display objects satisfying each real utterance).",
+    "repair": true
+   }
+  ],
+  "critique": {
+   "status": "critiqued",
+   "incumbent": "bounded_depth_listener",
+   "attempts": 1,
+   "dir": "/scratch/users/mcfrank/auto-psych/agent_trees/e6344f63e5fb0046/repo/_runs/chain_0/experiment1/loop/round_3/critique",
+   "block": "exp1",
+   "n_statistics": 8,
+   "n_evaluated": 8,
+   "n_significant": 8,
+   "n_significant_fdr": 8
+  },
+  "standing": {
+   "competitor_confusion_speaker": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20974.72106528282,
+      "behind": 326.7796244621277,
+      "dse": 98.10829637525575
+     },
+     "exp1": {
+      "elpd_cv": -7677.376606702805,
+      "behind": 117979.59627223015,
+      "dse": 54109.59965411445
+     }
+    },
+    "sel_elpd": -7677.376606702805,
+    "sel_diff": 117979.59627223015,
+    "sel_dse": 54109.59965411445,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "isolated_graded_costly_l3": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21067.523241519928,
+      "behind": 419.581800699234,
+      "dse": 100.26954959533897
+     },
+     "exp1": {
+      "elpd_cv": -7366.449519634247,
+      "behind": 117668.66918516159,
+      "dse": 54036.74916815769
+     }
+    },
+    "sel_elpd": -7366.449519634247,
+    "sel_diff": 117668.66918516159,
+    "sel_dse": 54036.74916815769,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "oddity_heuristic_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -22420.95824623108,
+      "behind": 1773.0168054103851,
+      "dse": 255.07692694629498
+     },
+     "exp1": {
+      "elpd_cv": -7895.212638378143,
+      "behind": 118197.43230390549,
+      "dse": 54059.42052694612
+     }
+    },
+    "sel_elpd": -7895.212638378143,
+    "sel_diff": 118197.43230390549,
+    "sel_dse": 54059.42052694612,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "rsa_l2_singleton_feat_color_valence_l0": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20647.941440820694,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -7082.598378658295,
+      "behind": 117384.81804418564,
+      "dse": 54031.84861308049
+     }
+    },
+    "sel_elpd": -7082.598378658295,
+    "sel_diff": 117384.81804418564,
+    "sel_dse": 54031.84861308049,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "rsa_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21218.76720070839,
+      "behind": 570.8257598876953,
+      "dse": 145.62388920569887
+     },
+     "exp1": {
+      "elpd_cv": -8075.131056308746,
+      "behind": 118377.35072183609,
+      "dse": 54082.989323216956
+     }
+    },
+    "sel_elpd": -8075.131056308746,
+    "sel_diff": 118377.35072183609,
+    "sel_dse": 54082.989323216956,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "rsa_l1": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21268.463663101196,
+      "behind": 620.5222222805023,
+      "dse": 152.01524835582754
+     },
+     "exp1": {
+      "elpd_cv": -8053.0649263858795,
+      "behind": 118355.28459191322,
+      "dse": 54082.76577408237
+     }
+    },
+    "sel_elpd": -8053.0649263858795,
+    "sel_diff": 118355.28459191322,
+    "sel_dse": 54082.76577408237,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "grammatical_exhaustification": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21012.16299176216,
+      "behind": 364.2215509414673,
+      "dse": 77.14698499277993
+     },
+     "exp1": {
+      "elpd_cv": -7185.972606658936,
+      "behind": 117488.19227218628,
+      "dse": 54033.46704985964
+     }
+    },
+    "sel_elpd": -7185.972606658936,
+    "sel_diff": 117488.19227218628,
+    "sel_dse": 54033.46704985964,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "contextual_oddity_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20822.68933415413,
+      "behind": 174.74789333343506,
+      "dse": 61.253443605486815
+     },
+     "exp1": {
+      "elpd_cv": -7703.278153419495,
+      "behind": 118005.49781894684,
+      "dse": 54102.90325366384
+     }
+    },
+    "sel_elpd": -7703.278153419495,
+    "sel_diff": 118005.49781894684,
+    "sel_dse": 54102.90325366384,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "bounded_depth_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20842.956471204758,
+      "behind": 195.01503038406372,
+      "dse": 60.98152573284802
+     },
+     "exp1": {
+      "elpd_cv": -7040.346869945526,
+      "behind": 117342.56653547287,
+      "dse": 54034.750324601744
+     }
+    },
+    "sel_elpd": -7040.346869945526,
+    "sel_diff": 117342.56653547287,
+    "sel_dse": 54034.750324601744,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "grammatical_exhaustification_distinct": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20877.593101978302,
+      "behind": 229.65166115760803,
+      "dse": 60.90333249335165
+     },
+     "exp1": {
+      "elpd_cv": -7191.523752689362,
+      "behind": 117493.7434182167,
+      "dse": 54040.441713389875
+     }
+    },
+    "sel_elpd": -7191.523752689362,
+    "sel_diff": 117493.7434182167,
+    "sel_dse": 54040.441713389875,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "rsa_l1_singleton_feat_color_valence_l0": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20709.202179670334,
+      "behind": 61.26073884963989,
+      "dse": 23.72403442782099
+     },
+     "exp1": {
+      "elpd_cv": -7045.440375804901,
+      "behind": 117347.66004133224,
+      "dse": 54038.0752816198
+     }
+    },
+    "sel_elpd": -7045.440375804901,
+    "sel_diff": 117347.66004133224,
+    "sel_dse": 54038.0752816198,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "feature_parsimony_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21125.904276371002,
+      "behind": 477.9628355503082,
+      "dse": 99.75846609712195
+     },
+     "exp1": {
+      "elpd_cv": 110302.21966552734,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": 110302.21966552734,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": false,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": false
+   },
+   "structured_lapse_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21088.625723600388,
+      "behind": 440.6842827796936,
+      "dse": 96.85392855762822
+     },
+     "exp1": {
+      "elpd_cv": -7089.991609096527,
+      "behind": 117392.21127462387,
+      "dse": 54060.62770714197
+     }
+    },
+    "sel_elpd": -7089.991609096527,
+    "sel_diff": 117392.21127462387,
+    "sel_dse": 54060.62770714197,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "bounded_depth_unbiased_prior": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21051.25178551674,
+      "behind": 403.3103446960449,
+      "dse": 105.91119696116566
+     },
+     "exp1": {
+      "elpd_cv": -7614.534344673157,
+      "behind": 117916.7540102005,
+      "dse": 54103.06186825052
+     }
+    },
+    "sel_elpd": -7614.534344673157,
+    "sel_diff": 117916.7540102005,
+    "sel_dse": 54103.06186825052,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "competitor_confusion_speaker",
+    "hypothesis": "Pragmatic listener reasoning about a competitor-confusion-averse speaker. Speakers in reference games actively avoid referring expressions that are shared with visually similar or confusable distractors in the context. Candidate words are penalized proportionally to their feature overlap with alternative referents that also satisfy the word. Pragmatic listeners invert this confusion-averse speaker, expecting words to target referents whose competitors are visually distinct rather than near-identical clones.",
+    "source": "seed"
+   },
+   {
+    "name": "isolated_graded_costly_l3",
+    "hypothesis": "Pragmatic listener at depth 3 with perceptual isolation, graded semantics, and utterance extension costs. Refines isolated_graded_costly_l2 by increasing the recursion depth from depth 2 to depth 3. Listeners reason at depth 3, inverting a speaker who simulates a depth-2 pragmatic listener. Visual pop-out is determined by an object's perceptual isolation (minimum Hamming distance to any other context object), semantic applicability diminishes with additional competing features (graded truth), and speakers evaluate communicative utility trade-offs with utterance extension costs proportional to the fraction of display objects sharing each feature. On uninformative prior trials, choice follows the perceptual isolation prior. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "oddity_heuristic_listener",
+    "hypothesis": "Perceptual oddity heuristic listener. Listeners interpret referring expressions using a perceptual oddity heuristic rather than recursive Theory of Mind. When hearing a word that applies to multiple referents, listeners select the contextually unique singleton that lacks identical duplicates in the visual display. On uninformative trials without an informative word, listeners spontaneously choose the unique singleton, defaulting to uniform choice when all items are distinct or no oddity contrast exists. A lapse parameter captures random clicking.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_singleton_feat_color_valence_l0",
+    "hypothesis": "RSA pragmatic listener at depth 2 with singleton salience, contextual distinctiveness, visual feature complexity, evaluative valence framing, visual color contrast, and literal L0. Refining rsa_l2_singleton_distinct_feat_color_l0 by incorporating the evaluative valence framing component from polarity_congruence_listener: speakers and listeners reason at depth 2 (inverting a speaker who simulates a depth-1 pragmatic listener) with common knowledge of an object prior combining discrete visual singleton salience (favoring unique objects with no duplicates in the scene), continuous contextual distinctiveness (favoring objects with greater feature contrast relative to the rest of the display), visual feature complexity modulated by evaluative framing valence (favoring feature-rich items under neutral/positive framing but inverting to favor sparse, featureless items when referring to a least favorite object), and visual color contrast (favoring fully colored objects over desaturated grayscale distractors). Crucially, the foundational simulated literal listener L0 operates purely on truth-conditional semantics without perceptual bias, preventing redundant prior compounding across reasoning tiers. On prior trials with no informative word, choices are governed directly by the combined perceptual prior. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "RSA pragmatic listener at depth 2, uniform prior over objects. One more level of recursion than the vanilla model: a speaker S2 chooses words by how well the depth-1 pragmatic listener L1 would recover the object (exp(alpha * log L1)), and the listener L2 inverts S2. Depth-2 reasoning is what the pragmods \"complex\" game needs to single out the object described by the twice-implicated word. One rationality alpha at every level; uniform choice with no informative word; a lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Vanilla RSA pragmatic listener (depth 1), uniform prior over objects. The listener reasons about a speaker who chooses a true word with probability proportional to exp(alpha * log L0(object | word)), where L0 is the literal listener; the listener inverts that speaker with a uniform prior over objects (Frank & Goodman, 2012). With no informative word the choice is uniform. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "grammatical_exhaustification",
+    "hypothesis": "People resolve referring expressions using grammatical exhaustification over unasserted alternative descriptions rather than recursive Theory of Mind. When hearing a word, listeners rule out referents proportionally to the informativeness of any truer or more specific features of that referent that the speaker left unmentioned. On uninformative trials, visual attention defaults to contextually unique singletons.",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "contextual_oddity_listener",
+    "hypothesis": "People interpret referring expressions by integrating communicative informativeness with contextual oddity salience. Before hearing an utterance, visual attention is captured by a solitary odd-one-out that breaks the homogeneous background of duplicate distractors, establishing a default referential prior over objects. Pragmatic listeners invert an informative speaker using this oddity-grounded referent prior, defaulting to uniform expectations when multiple distinct items or no oddities exist.",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "bounded_depth_listener",
+    "hypothesis": "Listeners interpret referring expressions with a strictly bounded reasoning depth, inverting a communicative speaker who reasons about literal semantics rather than engaging in higher-order recursive mental simulation. This bounded depth prevents over-implicature, naturally preserving non-zero probability for multi-feature scalar competitors while strongly favoring minimal referents when words are universally shared. On uninformative displays without an informative word, visual attention defaults to contextually unique singletons.",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "grammatical_exhaustification_distinct",
+    "hypothesis": "Refining grammatical_exhaustification by incorporating continuous contextual distinctiveness into the visual attention prior: listeners interpret referring expressions through grammatical exhaustification over unasserted alternative features, ruling out referents proportionally to the informativeness of any more specific descriptions the speaker omitted, while spontaneous visual attention weights referents by combining discrete singleton salience with continuous feature contrast (contextual distinctiveness) relative to display competitors. This directly improves the representation of displays lacking identical duplicates as well as empty singletons in full-duplicate contexts, addressing the empirical discrepancy where humans allocate substantial prior belief to empty singleton objects among identical full-feature duplicates. Differences from grammatical_exhaustification: recursion depth remains unchanged (depth 0, L_exh); parameter w_distinct is added with prior dist.Normal(0.0, 1.0); no parameters are removed; and the visual prior is extended by adding w_distinct times the total contextual feature contrast (summed Hamming distance across all context objects).",
+    "source": "round 2 candidate 6 refine chosen"
+   },
+   {
+    "name": "rsa_l1_singleton_feat_color_valence_l0",
+    "hypothesis": "RSA pragmatic listener at depth 1 with singleton salience, contextual distinctiveness, visual feature complexity, evaluative valence framing, visual color contrast, and literal L0. Refining rsa_l2_singleton_feat_color_valence_l0 by reducing pragmatic recursion depth from depth 2 to depth 1: listeners interpret referring expressions by inverting an informative speaker who evaluates literal semantics, rather than engaging in higher-order recursive mental simulation. This bounded depth eliminates over-implicature in scalar implicature and prevents multiplicative prior compounding across reasoning tiers, preserving appropriate probability on multi-feature competitors while maintaining common knowledge of visual singleton salience, continuous contextual distinctiveness, valence-modulated feature complexity, and color contrast. Differences from rsa_l2_singleton_feat_color_valence_l0: recursion depth is reduced from depth 2 to depth 1 (listener calls L1 instead of L2), the depth-2 listener memo L2 is removed, and all parameters (alpha, w_singleton, w_distinct, w_features, w_valence, w_color) are preserved without addition or removal.",
+    "source": "round 2 candidate 4 refine incumbent rsa_l2_singleton_feat_color_valence_l0 retry 1 repair 1"
+   },
+   {
+    "name": "feature_parsimony_listener",
+    "hypothesis": "Listeners interpret referring expressions using a feature parsimony heuristic: among candidate referents satisfying a heard word, listeners choose the object possessing the fewest total visual features, assuming speakers provide minimal descriptions for simple targets rather than leaving distinguishing features unmentioned. Speakers communicate by selecting words that guide this parsimony-biased listener to the intended referent. On uninformative displays without an informative word, visual attention defaults to contextually unique singletons.",
+    "source": "round 3 candidate 1 explore"
+   },
+   {
+    "name": "structured_lapse_listener",
+    "hypothesis": "People separate communicative inference from response generation: listeners infer communicative intent using an unbiased, uniform target prior, and resolve their response through a salience-guided structured lapse that captures attention toward contextually unique visual singletons. On uninformative displays lacking a communicative word, choices default entirely to visual singleton salience; on informative trials, communicative beliefs are mixed at the decision level with the salience lapse rather than multiplied inside Bayes' rule.",
+    "source": "round 3 candidate 2 explore"
+   },
+   {
+    "name": "bounded_depth_unbiased_prior",
+    "hypothesis": "Refining bounded_depth_listener by decoupling visual singleton salience from communicative inference: listeners interpret informative referring expressions with bounded reasoning depth under an unbiased, uniform referent prior, confining visual singleton salience strictly to spontaneous visual attention on uninformative displays without an informative word. This prevents spurious singleton bonuses from overriding scalar implicatures on informative trials, eliminating severe over-allocation to multi-feature singleton competitors when words are shared with duplicate minimal targets. Differences from bounded_depth_listener: recursion depth remains unchanged (depth 1, listener calls L1); no parameters are added or removed (retaining alpha and w_singleton); the prior vector parameter is removed from L1 so that the listener chooses referents proportionally to speaker choice probabilities alone; and listener calls L1 without the prior argument, restricting the singleton prior exclusively to prior trials.",
+    "source": "round 3 candidate 4 refine incumbent bounded_depth_listener"
+   }
+  ],
+  "ledger_entries": 27
+ },
+ {
+  "step": 4,
+  "round": 3,
+  "best_model": "bounded_depth_listener",
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "literal_pragmatic_mixture",
+    "outcome": "rejected",
+    "reason": "fitting failed: literal_pragmatic_mixture: the fit did not finish within 30 minutes",
+    "hypothesis": "Listeners vary in their communicative reasoning depth: the population is a mixture of literal listeners who interpret referring expressions according to literal semantic truth, and pragmatic listeners who invert an informative speaker. Communicative speakers choose words by expecting this heterogeneous population of listeners. On uninformative displays without an informative word, visual attention defaults to contextually unique singletons."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "causal_diagnostic_listener",
+    "outcome": "rejected",
+    "reason": "fitting failed: causal_diagnostic_listener: the fit did not finish within 30 minutes",
+    "hypothesis": "Listeners interpret referring expressions through causal diagnostic inference rather than recursive mental simulation, attributing a heard word to the referent that maximizes causal power relative to the counterfactual production baseline across display alternatives. Speakers communicate by selecting words that reliably distinguish the intended target from contextual competitors. On uninformative displays without an informative word, visual attention defaults to contextually unique singletons and feature contrast."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "communicative_regret_speaker",
+    "outcome": "rejected",
+    "reason": "fitting failed: communicative_regret_speaker: the fit did not finish within 30 minutes",
+    "hypothesis": "Speakers choose referring expressions by balancing communicative recovery against the regret of omitting a more informative description available for the target. Listeners invert this regret-averse speaker, attributing underspecified descriptions to minimal referents that lack distinguishing alternatives rather than multi-feature singletons. On displays where a heard word is shared between duplicate minimal targets and multi-feature singletons, this mechanism predicts listeners will strongly favor the minimal targets because the speaker would regret omitting the singletons' distinguishing features, disagreeing sharply with models whose visual singleton biases inflate belief in the complex competitor."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "bounded_depth_feature_parsimony",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referring expressions with strictly bounded reasoning depth (depth 1) by inverting an informative speaker over literal semantics, but penalize candidate referents possessing redundant visual features using a feature parsimony heuristic taken from feature_parsimony_listener. On informative trials, this parsimony penalty prevents visual singleton salience from spuriously overriding communicative informativeness for multi-feature competitors, while on uninformative displays visual attention defaults to contextually unique singletons. Differences from bounded_depth_listener: recursion depth remains depth 1 (listener calls L1); parameter beta is added with prior dist.LogNormal(0.0, 1.0); no parameters are removed (retaining alpha and w_singleton); L1 adds feature_count to its signature and scales referent choice weights by exp(-beta * vec(feature_count, r)); and listener passes beta and ctx.feature_count into L1 on informative trials."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "bounded_depth_parsimony_listener",
+    "outcome": "rejected",
+    "reason": "not novel: its listener and speaker predictions are within RMSE 0.0017 of bounded_depth_listener's (threshold 0.002) over the novelty pool of 1597 scenes. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Refining bounded_depth_listener by incorporating visual feature parsimony into the referent prior: listeners interpret referring expressions with strictly bounded reasoning depth (depth 1), inverting an informative speaker who evaluates literal semantics, while visual attention weights candidate referents by combining discrete singleton salience with a parsimony penalty on total feature count. This directly penalizes multi-feature competitors in scalar implicature displays and favors simpler or empty referents on prior displays, preventing spurious singleton bonuses from overriding communicative informativeness when words match duplicate minimal targets. Differences from bounded_depth_listener: recursion depth remains unchanged (depth 1, listener calls L1); parameter w_features is added with prior dist.Normal(0.0, 1.0); no parameters are removed (retaining alpha and w_singleton); and the referent prior is extended by adding w_features times the object's feature count (ctx.feature_count)."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "rsa_l1_feature_parsimony",
+    "outcome": "rejected",
+    "reason": "fitting failed: rsa_l1_feature_parsimony: the fit did not finish within 30 minutes",
+    "hypothesis": "Listeners interpret referring expressions by combining depth-1 pragmatic communicative inference with a feature parsimony penalty, favoring candidate referents with the fewest total visual features because speakers provide minimal descriptions for simple targets rather than leaving distinguishing features unmentioned. Speakers communicate by selecting expressions that guide this parsimony-biased listener to the target referent, while spontaneous visual attention on uninformative displays without a word follows contextual visual salience.\n\nRefining rsa_l1_singleton_feat_color_valence_l0 by incorporating the feature parsimony mechanism from feature_parsimony_listener: when interpreting a heard word, listeners discount referents proportionally to their total visual feature count, directly counteracting spurious singleton bonuses and resolving the severe empirical over-allocation to multi-feature singleton competitors and under-allocation to minimal duplicate targets in universal scenes. Differences from rsa_l1_singleton_feat_color_valence_l0: recursion depth remains depth 1 (listener calls L1); parameter beta is added with prior dist.LogNormal(0.0, 1.0); no parameters are removed (retaining alpha, w_singleton, w_distinct, w_features, w_valence, and w_color); in L1 the listener choice weight multiplies speaker probability by exp(-beta * vec(feature_count, r)); and listener passes ctx.feature_count into L1."
+   },
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "literal_pragmatic_mixture_2",
+    "outcome": "rejected",
+    "reason": "fitting failed: literal_pragmatic_mixture_2: the fit did not finish within 30 minutes",
+    "hypothesis": "Listeners vary in their communicative reasoning depth: the population is a mixture of literal listeners who interpret referring expressions according to literal semantic truth, and pragmatic listeners who invert an informative speaker. Communicative speakers choose words by expecting this heterogeneous population of listeners. On uninformative displays without an informative word, visual attention defaults to contextually unique singletons.",
+    "repair": true
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "causal_diagnostic_listener_2",
+    "outcome": "rejected",
+    "reason": "fitting failed: causal_diagnostic_listener_2: the fit did not finish within 30 minutes",
+    "hypothesis": "Listeners interpret referring expressions through causal diagnostic inference rather than recursive mental simulation, attributing a heard word to the referent that maximizes causal power relative to the counterfactual production baseline across display alternatives. Speakers communicate by selecting words that reliably distinguish the intended target from contextual competitors. On uninformative displays without an informative word, visual attention defaults to contextually unique singletons and feature contrast.",
+    "repair": true
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "communicative_regret_speaker_2",
+    "outcome": "rejected",
+    "reason": "fitting failed: communicative_regret_speaker_2: the fit did not finish within 30 minutes",
+    "hypothesis": "Speakers choose referring expressions by balancing communicative recovery against the regret of omitting a more informative description available for the target. Listeners invert this regret-averse speaker, attributing underspecified descriptions to minimal referents that lack distinguishing alternatives rather than multi-feature singletons. On displays where a heard word is shared between duplicate minimal targets and multi-feature singletons, this mechanism predicts listeners will strongly favor the minimal targets because the speaker would regret omitting the singletons' distinguishing features, disagreeing sharply with models whose visual singleton biases inflate belief in the complex competitor.",
+    "repair": true
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "bounded_depth_parsimony_listener_2",
+    "outcome": "rejected",
+    "reason": "not novel: its listener and speaker predictions are within RMSE 0.0017 of bounded_depth_listener's (threshold 0.002) over the novelty pool of 1597 scenes. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Refining bounded_depth_listener by incorporating visual feature parsimony into the referent prior: listeners interpret referring expressions with strictly bounded reasoning depth (depth 1), inverting an informative speaker who evaluates literal semantics, while visual attention weights candidate referents by combining discrete singleton salience with a parsimony penalty on total feature count. This directly penalizes multi-feature competitors in scalar implicature displays and favors simpler or empty referents on prior displays, preventing spurious singleton bonuses from overriding communicative informativeness when words match duplicate minimal targets. Differences from bounded_depth_listener: recursion depth remains unchanged (depth 1, listener calls L1); parameter w_features is added with prior dist.Normal(0.0, 1.0); no parameters are removed (retaining alpha and w_singleton); and the referent prior is extended by adding w_features times the object's feature count (ctx.feature_count).",
+    "repair": true
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "rsa_l1_feature_parsimony_2",
+    "outcome": "rejected",
+    "reason": "fitting failed: rsa_l1_feature_parsimony_2: the fit did not finish within 30 minutes",
+    "hypothesis": "Listeners interpret referring expressions by combining depth-1 pragmatic communicative inference with a feature parsimony penalty, favoring candidate referents with the fewest total visual features because speakers provide minimal descriptions for simple targets rather than leaving distinguishing features unmentioned. Speakers communicate by selecting expressions that guide this parsimony-biased listener to the target referent, while spontaneous visual attention on uninformative displays without a word follows contextual visual salience.\n\nRefining rsa_l1_singleton_feat_color_valence_l0 by incorporating the feature parsimony mechanism from feature_parsimony_listener: when interpreting a heard word, listeners discount referents proportionally to their total visual feature count, directly counteracting spurious singleton bonuses and resolving the severe empirical over-allocation to multi-feature singleton competitors and under-allocation to minimal duplicate targets in universal scenes. Differences from rsa_l1_singleton_feat_color_valence_l0: recursion depth remains depth 1 (listener calls L1); parameter beta is added with prior dist.LogNormal(0.0, 1.0); no parameters are removed (retaining alpha, w_singleton, w_distinct, w_features, w_valence, and w_color); in L1 the listener choice weight multiplies speaker probability by exp(-beta * vec(feature_count, r)); and listener passes ctx.feature_count into L1.",
+    "repair": true
+   }
+  ],
+  "critique": {
+   "status": "critiqued",
+   "incumbent": "bounded_depth_listener",
+   "attempts": 1,
+   "dir": "/scratch/users/mcfrank/auto-psych/agent_trees/e6344f63e5fb0046/repo/_runs/chain_0/experiment1/loop/round_4/critique",
+   "block": "exp1",
+   "n_statistics": 8,
+   "n_evaluated": 8,
+   "n_significant": 8,
+   "n_significant_fdr": 8
+  },
+  "standing": {
+   "competitor_confusion_speaker": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20974.72106528282,
+      "behind": 326.7796244621277,
+      "dse": 98.10829637525575
+     },
+     "exp1": {
+      "elpd_cv": -7677.376606702805,
+      "behind": 117979.59627223015,
+      "dse": 54109.59965411445
+     }
+    },
+    "sel_elpd": -7677.376606702805,
+    "sel_diff": 117979.59627223015,
+    "sel_dse": 54109.59965411445,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "isolated_graded_costly_l3": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21067.523241519928,
+      "behind": 419.581800699234,
+      "dse": 100.26954959533897
+     },
+     "exp1": {
+      "elpd_cv": -7366.449519634247,
+      "behind": 117668.66918516159,
+      "dse": 54036.74916815769
+     }
+    },
+    "sel_elpd": -7366.449519634247,
+    "sel_diff": 117668.66918516159,
+    "sel_dse": 54036.74916815769,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "oddity_heuristic_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -22420.95824623108,
+      "behind": 1773.0168054103851,
+      "dse": 255.07692694629498
+     },
+     "exp1": {
+      "elpd_cv": -7895.212638378143,
+      "behind": 118197.43230390549,
+      "dse": 54059.42052694612
+     }
+    },
+    "sel_elpd": -7895.212638378143,
+    "sel_diff": 118197.43230390549,
+    "sel_dse": 54059.42052694612,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "rsa_l2_singleton_feat_color_valence_l0": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20647.941440820694,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -7082.598378658295,
+      "behind": 117384.81804418564,
+      "dse": 54031.84861308049
+     }
+    },
+    "sel_elpd": -7082.598378658295,
+    "sel_diff": 117384.81804418564,
+    "sel_dse": 54031.84861308049,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "rsa_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21218.76720070839,
+      "behind": 570.8257598876953,
+      "dse": 145.62388920569887
+     },
+     "exp1": {
+      "elpd_cv": -8075.131056308746,
+      "behind": 118377.35072183609,
+      "dse": 54082.989323216956
+     }
+    },
+    "sel_elpd": -8075.131056308746,
+    "sel_diff": 118377.35072183609,
+    "sel_dse": 54082.989323216956,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "rsa_l1": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21268.463663101196,
+      "behind": 620.5222222805023,
+      "dse": 152.01524835582754
+     },
+     "exp1": {
+      "elpd_cv": -8053.0649263858795,
+      "behind": 118355.28459191322,
+      "dse": 54082.76577408237
+     }
+    },
+    "sel_elpd": -8053.0649263858795,
+    "sel_diff": 118355.28459191322,
+    "sel_dse": 54082.76577408237,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "grammatical_exhaustification": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21012.16299176216,
+      "behind": 364.2215509414673,
+      "dse": 77.14698499277993
+     },
+     "exp1": {
+      "elpd_cv": -7185.972606658936,
+      "behind": 117488.19227218628,
+      "dse": 54033.46704985964
+     }
+    },
+    "sel_elpd": -7185.972606658936,
+    "sel_diff": 117488.19227218628,
+    "sel_dse": 54033.46704985964,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "contextual_oddity_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20822.68933415413,
+      "behind": 174.74789333343506,
+      "dse": 61.253443605486815
+     },
+     "exp1": {
+      "elpd_cv": -7703.278153419495,
+      "behind": 118005.49781894684,
+      "dse": 54102.90325366384
+     }
+    },
+    "sel_elpd": -7703.278153419495,
+    "sel_diff": 118005.49781894684,
+    "sel_dse": 54102.90325366384,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "bounded_depth_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20842.956471204758,
+      "behind": 195.01503038406372,
+      "dse": 60.98152573284802
+     },
+     "exp1": {
+      "elpd_cv": -7040.346869945526,
+      "behind": 117342.56653547287,
+      "dse": 54034.750324601744
+     }
+    },
+    "sel_elpd": -7040.346869945526,
+    "sel_diff": 117342.56653547287,
+    "sel_dse": 54034.750324601744,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "grammatical_exhaustification_distinct": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20877.593101978302,
+      "behind": 229.65166115760803,
+      "dse": 60.90333249335165
+     },
+     "exp1": {
+      "elpd_cv": -7191.523752689362,
+      "behind": 117493.7434182167,
+      "dse": 54040.441713389875
+     }
+    },
+    "sel_elpd": -7191.523752689362,
+    "sel_diff": 117493.7434182167,
+    "sel_dse": 54040.441713389875,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "rsa_l1_singleton_feat_color_valence_l0": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20709.202179670334,
+      "behind": 61.26073884963989,
+      "dse": 23.72403442782099
+     },
+     "exp1": {
+      "elpd_cv": -7045.440375804901,
+      "behind": 117347.66004133224,
+      "dse": 54038.0752816198
+     }
+    },
+    "sel_elpd": -7045.440375804901,
+    "sel_diff": 117347.66004133224,
+    "sel_dse": 54038.0752816198,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "feature_parsimony_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21125.904276371002,
+      "behind": 477.9628355503082,
+      "dse": 99.75846609712195
+     },
+     "exp1": {
+      "elpd_cv": 110302.21966552734,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": 110302.21966552734,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": false,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": false
+   },
+   "structured_lapse_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21088.625723600388,
+      "behind": 440.6842827796936,
+      "dse": 96.85392855762822
+     },
+     "exp1": {
+      "elpd_cv": -7089.991609096527,
+      "behind": 117392.21127462387,
+      "dse": 54060.62770714197
+     }
+    },
+    "sel_elpd": -7089.991609096527,
+    "sel_diff": 117392.21127462387,
+    "sel_dse": 54060.62770714197,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "bounded_depth_unbiased_prior": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21051.25178551674,
+      "behind": 403.3103446960449,
+      "dse": 105.91119696116566
+     },
+     "exp1": {
+      "elpd_cv": -7614.534344673157,
+      "behind": 117916.7540102005,
+      "dse": 54103.06186825052
+     }
+    },
+    "sel_elpd": -7614.534344673157,
+    "sel_diff": 117916.7540102005,
+    "sel_dse": 54103.06186825052,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "bounded_depth_feature_parsimony": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20822.93708896637,
+      "behind": 174.99564814567566,
+      "dse": 59.33638553034764
+     },
+     "exp1": {
+      "elpd_cv": -7052.667130947113,
+      "behind": 117354.88679647446,
+      "dse": 54034.781682122215
+     }
+    },
+    "sel_elpd": -7052.667130947113,
+    "sel_diff": 117354.88679647446,
+    "sel_dse": 54034.781682122215,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "competitor_confusion_speaker",
+    "hypothesis": "Pragmatic listener reasoning about a competitor-confusion-averse speaker. Speakers in reference games actively avoid referring expressions that are shared with visually similar or confusable distractors in the context. Candidate words are penalized proportionally to their feature overlap with alternative referents that also satisfy the word. Pragmatic listeners invert this confusion-averse speaker, expecting words to target referents whose competitors are visually distinct rather than near-identical clones.",
+    "source": "seed"
+   },
+   {
+    "name": "isolated_graded_costly_l3",
+    "hypothesis": "Pragmatic listener at depth 3 with perceptual isolation, graded semantics, and utterance extension costs. Refines isolated_graded_costly_l2 by increasing the recursion depth from depth 2 to depth 3. Listeners reason at depth 3, inverting a speaker who simulates a depth-2 pragmatic listener. Visual pop-out is determined by an object's perceptual isolation (minimum Hamming distance to any other context object), semantic applicability diminishes with additional competing features (graded truth), and speakers evaluate communicative utility trade-offs with utterance extension costs proportional to the fraction of display objects sharing each feature. On uninformative prior trials, choice follows the perceptual isolation prior. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "oddity_heuristic_listener",
+    "hypothesis": "Perceptual oddity heuristic listener. Listeners interpret referring expressions using a perceptual oddity heuristic rather than recursive Theory of Mind. When hearing a word that applies to multiple referents, listeners select the contextually unique singleton that lacks identical duplicates in the visual display. On uninformative trials without an informative word, listeners spontaneously choose the unique singleton, defaulting to uniform choice when all items are distinct or no oddity contrast exists. A lapse parameter captures random clicking.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2_singleton_feat_color_valence_l0",
+    "hypothesis": "RSA pragmatic listener at depth 2 with singleton salience, contextual distinctiveness, visual feature complexity, evaluative valence framing, visual color contrast, and literal L0. Refining rsa_l2_singleton_distinct_feat_color_l0 by incorporating the evaluative valence framing component from polarity_congruence_listener: speakers and listeners reason at depth 2 (inverting a speaker who simulates a depth-1 pragmatic listener) with common knowledge of an object prior combining discrete visual singleton salience (favoring unique objects with no duplicates in the scene), continuous contextual distinctiveness (favoring objects with greater feature contrast relative to the rest of the display), visual feature complexity modulated by evaluative framing valence (favoring feature-rich items under neutral/positive framing but inverting to favor sparse, featureless items when referring to a least favorite object), and visual color contrast (favoring fully colored objects over desaturated grayscale distractors). Crucially, the foundational simulated literal listener L0 operates purely on truth-conditional semantics without perceptual bias, preventing redundant prior compounding across reasoning tiers. On prior trials with no informative word, choices are governed directly by the combined perceptual prior. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l2",
+    "hypothesis": "RSA pragmatic listener at depth 2, uniform prior over objects. One more level of recursion than the vanilla model: a speaker S2 chooses words by how well the depth-1 pragmatic listener L1 would recover the object (exp(alpha * log L1)), and the listener L2 inverts S2. Depth-2 reasoning is what the pragmods \"complex\" game needs to single out the object described by the twice-implicated word. One rationality alpha at every level; uniform choice with no informative word; a lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "rsa_l1",
+    "hypothesis": "Vanilla RSA pragmatic listener (depth 1), uniform prior over objects. The listener reasons about a speaker who chooses a true word with probability proportional to exp(alpha * log L0(object | word)), where L0 is the literal listener; the listener inverts that speaker with a uniform prior over objects (Frank & Goodman, 2012). With no informative word the choice is uniform. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "grammatical_exhaustification",
+    "hypothesis": "People resolve referring expressions using grammatical exhaustification over unasserted alternative descriptions rather than recursive Theory of Mind. When hearing a word, listeners rule out referents proportionally to the informativeness of any truer or more specific features of that referent that the speaker left unmentioned. On uninformative trials, visual attention defaults to contextually unique singletons.",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "contextual_oddity_listener",
+    "hypothesis": "People interpret referring expressions by integrating communicative informativeness with contextual oddity salience. Before hearing an utterance, visual attention is captured by a solitary odd-one-out that breaks the homogeneous background of duplicate distractors, establishing a default referential prior over objects. Pragmatic listeners invert an informative speaker using this oddity-grounded referent prior, defaulting to uniform expectations when multiple distinct items or no oddities exist.",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "bounded_depth_listener",
+    "hypothesis": "Listeners interpret referring expressions with a strictly bounded reasoning depth, inverting a communicative speaker who reasons about literal semantics rather than engaging in higher-order recursive mental simulation. This bounded depth prevents over-implicature, naturally preserving non-zero probability for multi-feature scalar competitors while strongly favoring minimal referents when words are universally shared. On uninformative displays without an informative word, visual attention defaults to contextually unique singletons.",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "grammatical_exhaustification_distinct",
+    "hypothesis": "Refining grammatical_exhaustification by incorporating continuous contextual distinctiveness into the visual attention prior: listeners interpret referring expressions through grammatical exhaustification over unasserted alternative features, ruling out referents proportionally to the informativeness of any more specific descriptions the speaker omitted, while spontaneous visual attention weights referents by combining discrete singleton salience with continuous feature contrast (contextual distinctiveness) relative to display competitors. This directly improves the representation of displays lacking identical duplicates as well as empty singletons in full-duplicate contexts, addressing the empirical discrepancy where humans allocate substantial prior belief to empty singleton objects among identical full-feature duplicates. Differences from grammatical_exhaustification: recursion depth remains unchanged (depth 0, L_exh); parameter w_distinct is added with prior dist.Normal(0.0, 1.0); no parameters are removed; and the visual prior is extended by adding w_distinct times the total contextual feature contrast (summed Hamming distance across all context objects).",
+    "source": "round 2 candidate 6 refine chosen"
+   },
+   {
+    "name": "rsa_l1_singleton_feat_color_valence_l0",
+    "hypothesis": "RSA pragmatic listener at depth 1 with singleton salience, contextual distinctiveness, visual feature complexity, evaluative valence framing, visual color contrast, and literal L0. Refining rsa_l2_singleton_feat_color_valence_l0 by reducing pragmatic recursion depth from depth 2 to depth 1: listeners interpret referring expressions by inverting an informative speaker who evaluates literal semantics, rather than engaging in higher-order recursive mental simulation. This bounded depth eliminates over-implicature in scalar implicature and prevents multiplicative prior compounding across reasoning tiers, preserving appropriate probability on multi-feature competitors while maintaining common knowledge of visual singleton salience, continuous contextual distinctiveness, valence-modulated feature complexity, and color contrast. Differences from rsa_l2_singleton_feat_color_valence_l0: recursion depth is reduced from depth 2 to depth 1 (listener calls L1 instead of L2), the depth-2 listener memo L2 is removed, and all parameters (alpha, w_singleton, w_distinct, w_features, w_valence, w_color) are preserved without addition or removal.",
+    "source": "round 2 candidate 4 refine incumbent rsa_l2_singleton_feat_color_valence_l0 retry 1 repair 1"
+   },
+   {
+    "name": "feature_parsimony_listener",
+    "hypothesis": "Listeners interpret referring expressions using a feature parsimony heuristic: among candidate referents satisfying a heard word, listeners choose the object possessing the fewest total visual features, assuming speakers provide minimal descriptions for simple targets rather than leaving distinguishing features unmentioned. Speakers communicate by selecting words that guide this parsimony-biased listener to the intended referent. On uninformative displays without an informative word, visual attention defaults to contextually unique singletons.",
+    "source": "round 3 candidate 1 explore"
+   },
+   {
+    "name": "structured_lapse_listener",
+    "hypothesis": "People separate communicative inference from response generation: listeners infer communicative intent using an unbiased, uniform target prior, and resolve their response through a salience-guided structured lapse that captures attention toward contextually unique visual singletons. On uninformative displays lacking a communicative word, choices default entirely to visual singleton salience; on informative trials, communicative beliefs are mixed at the decision level with the salience lapse rather than multiplied inside Bayes' rule.",
+    "source": "round 3 candidate 2 explore"
+   },
+   {
+    "name": "bounded_depth_unbiased_prior",
+    "hypothesis": "Refining bounded_depth_listener by decoupling visual singleton salience from communicative inference: listeners interpret informative referring expressions with bounded reasoning depth under an unbiased, uniform referent prior, confining visual singleton salience strictly to spontaneous visual attention on uninformative displays without an informative word. This prevents spurious singleton bonuses from overriding scalar implicatures on informative trials, eliminating severe over-allocation to multi-feature singleton competitors when words are shared with duplicate minimal targets. Differences from bounded_depth_listener: recursion depth remains unchanged (depth 1, listener calls L1); no parameters are added or removed (retaining alpha and w_singleton); the prior vector parameter is removed from L1 so that the listener chooses referents proportionally to speaker choice probabilities alone; and listener calls L1 without the prior argument, restricting the singleton prior exclusively to prior trials.",
+    "source": "round 3 candidate 4 refine incumbent bounded_depth_listener"
+   },
+   {
+    "name": "bounded_depth_feature_parsimony",
+    "hypothesis": "Listeners interpret referring expressions with strictly bounded reasoning depth (depth 1) by inverting an informative speaker over literal semantics, but penalize candidate referents possessing redundant visual features using a feature parsimony heuristic taken from feature_parsimony_listener. On informative trials, this parsimony penalty prevents visual singleton salience from spuriously overriding communicative informativeness for multi-feature competitors, while on uninformative displays visual attention defaults to contextually unique singletons. Differences from bounded_depth_listener: recursion depth remains depth 1 (listener calls L1); parameter beta is added with prior dist.LogNormal(0.0, 1.0); no parameters are removed (retaining alpha and w_singleton); L1 adds feature_count to its signature and scales referent choice weights by exp(-beta * vec(feature_count, r)); and listener passes beta and ctx.feature_count into L1 on informative trials.",
+    "source": "round 4 candidate 4 refine incumbent bounded_depth_listener"
+   }
+  ],
+  "ledger_entries": 38
+ },
+ {
+  "step": 5,
+  "round": 5,
+  "best_model": "bounded_depth_listener",
+  "events": [
+   {
+    "name": "isolated_graded_costly_l3",
+    "outcome": "pruned",
+    "reason": "ineligible (E: 419.6 \u00b1 100.3)"
+   },
+   {
+    "name": "oddity_heuristic_listener",
+    "outcome": "pruned",
+    "reason": "ineligible (E: 1773.0 \u00b1 255.1)"
+   },
+   {
+    "name": "rsa_l1",
+    "outcome": "pruned",
+    "reason": "ineligible (E: 620.5 \u00b1 152.0)"
+   },
+   {
+    "name": "grammatical_exhaustification",
+    "outcome": "pruned",
+    "reason": "ineligible (E: 364.2 \u00b1 77.1)"
+   },
+   {
+    "name": "feature_parsimony_listener",
+    "outcome": "pruned",
+    "reason": "ineligible (E: 478.0 \u00b1 99.8)"
+   },
+   {
+    "name": "structured_lapse_listener",
+    "outcome": "pruned",
+    "reason": "ineligible (E: 440.7 \u00b1 96.9)"
+   },
+   {
+    "name": "competitor_confusion_speaker",
+    "outcome": "pruned",
+    "reason": "637.0 nats behind bounded_depth_listener"
+   },
+   {
+    "name": "rsa_l2",
+    "outcome": "pruned",
+    "reason": "1034.8 nats behind bounded_depth_listener"
+   },
+   {
+    "name": "contextual_oddity_listener",
+    "outcome": "pruned",
+    "reason": "662.9 nats behind bounded_depth_listener"
+   },
+   {
+    "name": "grammatical_exhaustification_distinct",
+    "outcome": "pruned",
+    "reason": "151.2 nats behind bounded_depth_listener"
+   },
+   {
+    "name": "bounded_depth_unbiased_prior",
+    "outcome": "pruned",
+    "reason": "574.2 nats behind bounded_depth_listener"
+   },
+   {
+    "name": "loop",
+    "outcome": "stopped",
+    "reason": "stopped after round 4 of 5: 2 rounds in a row left the incumbent (bounded_depth_listener) unchanged"
+   }
+  ],
+  "critique": null,
+  "standing": {
+   "rsa_l2_singleton_feat_color_valence_l0": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20647.941440820694,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -7082.598378658295,
+      "behind": 42.251508712768555,
+      "dse": 37.48450715191034
+     }
+    },
+    "sel_elpd": -7082.598378658295,
+    "sel_diff": 42.251508712768555,
+    "sel_dse": 37.48450715191034,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "bounded_depth_listener": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20842.956471204758,
+      "behind": 195.01503038406372,
+      "dse": 60.98152573284802
+     },
+     "exp1": {
+      "elpd_cv": -7040.346869945526,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": -7040.346869945526,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "rsa_l1_singleton_feat_color_valence_l0": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20709.202179670334,
+      "behind": 61.26073884963989,
+      "dse": 23.72403442782099
+     },
+     "exp1": {
+      "elpd_cv": -7045.440375804901,
+      "behind": 5.093505859375,
+      "dse": 17.211027775103318
+     }
+    },
+    "sel_elpd": -7045.440375804901,
+    "sel_diff": 5.093505859375,
+    "sel_dse": 17.211027775103318,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "bounded_depth_feature_parsimony": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20822.93708896637,
+      "behind": 174.99564814567566,
+      "dse": 59.33638553034764
+     },
+     "exp1": {
+      "elpd_cv": -7052.667130947113,
+      "behind": 12.320261001586914,
+      "dse": 9.765085194458706
+     }
+    },
+    "sel_elpd": -7052.667130947113,
+    "sel_diff": 12.320261001586914,
+    "sel_dse": 9.765085194458706,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "rsa_l2_singleton_feat_color_valence_l0",
+    "hypothesis": "RSA pragmatic listener at depth 2 with singleton salience, contextual distinctiveness, visual feature complexity, evaluative valence framing, visual color contrast, and literal L0. Refining rsa_l2_singleton_distinct_feat_color_l0 by incorporating the evaluative valence framing component from polarity_congruence_listener: speakers and listeners reason at depth 2 (inverting a speaker who simulates a depth-1 pragmatic listener) with common knowledge of an object prior combining discrete visual singleton salience (favoring unique objects with no duplicates in the scene), continuous contextual distinctiveness (favoring objects with greater feature contrast relative to the rest of the display), visual feature complexity modulated by evaluative framing valence (favoring feature-rich items under neutral/positive framing but inverting to favor sparse, featureless items when referring to a least favorite object), and visual color contrast (favoring fully colored objects over desaturated grayscale distractors). Crucially, the foundational simulated literal listener L0 operates purely on truth-conditional semantics without perceptual bias, preventing redundant prior compounding across reasoning tiers. On prior trials with no informative word, choices are governed directly by the combined perceptual prior. A lapse parameter mixes in uniform guessing.",
+    "source": "seed"
+   },
+   {
+    "name": "bounded_depth_listener",
+    "hypothesis": "Listeners interpret referring expressions with a strictly bounded reasoning depth, inverting a communicative speaker who reasons about literal semantics rather than engaging in higher-order recursive mental simulation. This bounded depth prevents over-implicature, naturally preserving non-zero probability for multi-feature scalar competitors while strongly favoring minimal referents when words are universally shared. On uninformative displays without an informative word, visual attention defaults to contextually unique singletons.",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "rsa_l1_singleton_feat_color_valence_l0",
+    "hypothesis": "RSA pragmatic listener at depth 1 with singleton salience, contextual distinctiveness, visual feature complexity, evaluative valence framing, visual color contrast, and literal L0. Refining rsa_l2_singleton_feat_color_valence_l0 by reducing pragmatic recursion depth from depth 2 to depth 1: listeners interpret referring expressions by inverting an informative speaker who evaluates literal semantics, rather than engaging in higher-order recursive mental simulation. This bounded depth eliminates over-implicature in scalar implicature and prevents multiplicative prior compounding across reasoning tiers, preserving appropriate probability on multi-feature competitors while maintaining common knowledge of visual singleton salience, continuous contextual distinctiveness, valence-modulated feature complexity, and color contrast. Differences from rsa_l2_singleton_feat_color_valence_l0: recursion depth is reduced from depth 2 to depth 1 (listener calls L1 instead of L2), the depth-2 listener memo L2 is removed, and all parameters (alpha, w_singleton, w_distinct, w_features, w_valence, w_color) are preserved without addition or removal.",
+    "source": "round 2 candidate 4 refine incumbent rsa_l2_singleton_feat_color_valence_l0 retry 1 repair 1"
+   },
+   {
+    "name": "bounded_depth_feature_parsimony",
+    "hypothesis": "Listeners interpret referring expressions with strictly bounded reasoning depth (depth 1) by inverting an informative speaker over literal semantics, but penalize candidate referents possessing redundant visual features using a feature parsimony heuristic taken from feature_parsimony_listener. On informative trials, this parsimony penalty prevents visual singleton salience from spuriously overriding communicative informativeness for multi-feature competitors, while on uninformative displays visual attention defaults to contextually unique singletons. Differences from bounded_depth_listener: recursion depth remains depth 1 (listener calls L1); parameter beta is added with prior dist.LogNormal(0.0, 1.0); no parameters are removed (retaining alpha and w_singleton); L1 adds feature_count to its signature and scales referent choice weights by exp(-beta * vec(feature_count, r)); and listener passes beta and ctx.feature_count into L1 on informative trials.",
+    "source": "round 4 candidate 4 refine incumbent bounded_depth_listener"
+   }
+  ],
+  "ledger_entries": 49
+ }
+]

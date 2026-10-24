@@ -1,0 +1,1 @@
+{"theory_name": "structured_lapse_listener", "blocks": ["E", "exp1"], "param_names": ["alpha", "w_singleton", "gamma", "lapse@E", "kappa@exp1", "lapse@exp1", "temperature@exp1"], "convergence_problems": [], "offsets": {"E": [0, 40176], "exp1": [40176, 41616]}}

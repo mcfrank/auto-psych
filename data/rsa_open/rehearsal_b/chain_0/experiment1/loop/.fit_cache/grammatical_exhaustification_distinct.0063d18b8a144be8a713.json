@@ -1,0 +1,1 @@
+{"theory_name": "grammatical_exhaustification_distinct", "blocks": ["E", "exp1"], "param_names": ["gamma", "w_singleton", "w_distinct", "lapse@E", "kappa@exp1", "lapse@exp1", "temperature@exp1"], "convergence_problems": [], "offsets": {"E": [0, 40545], "exp1": [40545, 41985]}}

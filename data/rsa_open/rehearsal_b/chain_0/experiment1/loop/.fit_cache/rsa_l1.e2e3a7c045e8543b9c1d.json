@@ -1,0 +1,1 @@
+{"theory_name": "rsa_l1", "blocks": ["E", "exp1"], "param_names": ["alpha", "lapse@E", "kappa@exp1", "lapse@exp1", "temperature@exp1"], "convergence_problems": [], "offsets": {"E": [0, 40545], "exp1": [40545, 41985]}}

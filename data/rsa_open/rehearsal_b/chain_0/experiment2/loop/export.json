@@ -1,0 +1,1 @@
+{"best_model": "rsa_l1_singleton_feat_color_valence_l0", "live": ["bounded_depth_feature_parsimony", "bounded_depth_listener", "feature_uncertainty_listener_2", "rsa_l1_singleton_feat_color_valence_l0", "rsa_l2_singleton_feat_color_valence_l0"], "stopped_early": "stopped after round 2 of 5: 2 rounds in a row left the incumbent (rsa_l1_singleton_feat_color_valence_l0) unchanged"}

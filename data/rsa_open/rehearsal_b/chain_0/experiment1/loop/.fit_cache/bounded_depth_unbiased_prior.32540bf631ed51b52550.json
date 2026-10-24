@@ -1,0 +1,1 @@
+{"theory_name": "bounded_depth_unbiased_prior", "blocks": ["E", "exp1"], "param_names": ["alpha", "w_singleton", "lapse@E", "kappa@exp1", "lapse@exp1", "temperature@exp1"], "convergence_problems": [], "offsets": {"E": [0, 40590], "exp1": [40590, 42030]}}

@@ -1,0 +1,1 @@
+{"theory_name": "rsa_l2_singleton_feat_color_valence_l0", "blocks": ["E", "exp1"], "param_names": ["alpha", "w_singleton", "w_distinct", "w_features", "w_valence", "w_color", "lapse@E", "kappa@exp1", "lapse@exp1", "temperature@exp1"], "convergence_problems": [], "offsets": {"E": [0, 40176], "exp1": [40176, 41616]}}

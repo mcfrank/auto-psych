@@ -1,0 +1,23 @@
+{
+ "screened_out": [],
+ "fits": {
+  "rsa_l2_singleton_feat_color_valence_l0": "the previous loop's fit",
+  "bounded_depth_listener": "the previous loop's fit",
+  "rsa_l1_singleton_feat_color_valence_l0": "the previous loop's fit",
+  "bounded_depth_feature_parsimony": "the previous loop's fit",
+  "literal_listener": "a design fit",
+  "rsa_l1": "the previous loop's fit",
+  "rsa_l2": "the previous loop's fit",
+  "rsa_l1_salience": "a design fit",
+  "rsa_l1_shared_prior": "a design fit",
+  "isolated_graded_costly_l3": "the previous loop's fit",
+  "familiar_isolated_graded_costly_l2": "a design fit",
+  "rsa_l2_singleton_distinct_feat_color_l0": "a design fit",
+  "evaluative_prominence_l2": "a design fit",
+  "lexical_preemption_heuristic": "a design fit",
+  "rsa_l2_singleton_feat_color_familiar_l0": "a design fit",
+  "competitor_confusion_speaker": "the previous loop's fit",
+  "softmax_surprisal_isolated_costly_l4": "a design fit",
+  "oddity_heuristic_listener": "the previous loop's fit"
+ }
+}

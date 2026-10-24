@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "name": "graded_belief_allocation",
+  "summary": "Graded 10-point belief allocation across 3-4 objects and 2-3 features on informative and prior trials, testing whether theories fitted to forced choice generalize to full referent probability distributions.",
+  "charter": {
+    "question": "When listeners allocate graded credence (10 points) across candidate referents on informative and uninformative trials, do their full belief distributions follow recursive pragmatic inference with shared perceptual priors, depth-3 graded lexical precision, competitor-confusion avoidance, or a non-Bayesian singleton oddity heuristic?"
+  },
+  "instructions": {
+    "welcome": "Welcome! In this short study, you will play a communication game where a speaker describes one of the objects on the screen.",
+    "task": "On each turn, you and the speaker see the same row of objects. The speaker has one target object in mind and says a single word that names a part on their target object. Your job is to split 10 points across the objects (using whole numbers that add up to 10) to show how likely each object is to be the speaker's target. Give more points to objects you think are more likely, and 0 points to objects that do not have the named part. On some turns, the speaker's word was cut off; on those turns, split your 10 points across the objects based on which object you think the speaker is most likely to talk about.",
+    "comprehension_checks": [
+      {
+        "question": "How many total points must you split across the objects on each turn?",
+        "options": [
+          "10 points in total across the objects",
+          "10 points for every single object",
+          "1 point in total"
+        ],
+        "correct": 0
+      },
+      {
+        "question": "How many points should you give to an object that does not have the part named by the speaker?",
+        "options": [
+          "0 points",
+          "10 points",
+          "5 points"
+        ],
+        "correct": 0
+      },
+      {
+        "question": "What should you do on turns where the speaker's word was cut off?",
+        "options": [
+          "Split 10 points across the objects based on which one you think the speaker is most likely to talk about",
+          "Give 0 points to every object",
+          "Give 100 points to every object"
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "snowmen",
+        "base": "<circle cx=\"50\" cy=\"77\" r=\"18\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"50\" cy=\"52\" r=\"13.5\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"50\" cy=\"31\" r=\"10.5\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"46.5\" cy=\"28.5\" r=\"1.8\" fill=\"#0f172a\"/><circle cx=\"53.5\" cy=\"28.5\" r=\"1.8\" fill=\"#0f172a\"/><polygon points=\"50,30.5 60,32.5 50,34\" fill=\"#f97316\" stroke=\"#c2410c\" stroke-width=\"1\"/><circle cx=\"46\" cy=\"36\" r=\"1.1\" fill=\"#0f172a\"/><circle cx=\"50\" cy=\"37\" r=\"1.1\" fill=\"#0f172a\"/><circle cx=\"54\" cy=\"36\" r=\"1.1\" fill=\"#0f172a\"/><circle cx=\"50\" cy=\"48\" r=\"1.8\" fill=\"#0f172a\"/><circle cx=\"50\" cy=\"54\" r=\"1.8\" fill=\"#0f172a\"/><circle cx=\"50\" cy=\"60\" r=\"1.8\" fill=\"#0f172a\"/>",
+        "features": [
+          {
+            "word": "hat",
+            "svg": "<rect x=\"34\" y=\"18\" width=\"32\" height=\"4.5\" rx=\"2\" fill=\"#1e293b\" stroke=\"#0f172a\" stroke-width=\"1.5\"/><rect x=\"39\" y=\"4\" width=\"22\" height=\"15\" rx=\"2\" fill=\"#1e293b\" stroke=\"#0f172a\" stroke-width=\"1.5\"/><rect x=\"39\" y=\"14\" width=\"22\" height=\"4\" fill=\"#ef4444\"/>",
+            "phrase": null
+          },
+          {
+            "word": "scarf",
+            "svg": "<rect x=\"36\" y=\"38\" width=\"28\" height=\"6.5\" rx=\"3\" fill=\"#dc2626\" stroke=\"#991b1b\" stroke-width=\"1.5\"/><rect x=\"55\" y=\"41\" width=\"8\" height=\"16\" rx=\"2\" fill=\"#dc2626\" stroke=\"#991b1b\" stroke-width=\"1.5\"/><line x1=\"56\" y1=\"57\" x2=\"56\" y2=\"60\" stroke=\"#dc2626\" stroke-width=\"2\"/><line x1=\"59\" y1=\"57\" x2=\"59\" y2=\"60\" stroke=\"#dc2626\" stroke-width=\"2\"/><line x1=\"62\" y1=\"57\" x2=\"62\" y2=\"60\" stroke=\"#dc2626\" stroke-width=\"2\"/>",
+            "phrase": null
+          },
+          {
+            "word": "broom",
+            "svg": "<line x1=\"37\" y1=\"50\" x2=\"17\" y2=\"46\" stroke=\"#78350f\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"15\" y1=\"32\" x2=\"21\" y2=\"90\" stroke=\"#92400e\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><polygon points=\"6,16 24,16 21,33 9,33\" fill=\"#eab308\" stroke=\"#a16207\" stroke-width=\"1.8\"/><line x1=\"11\" y1=\"16\" x2=\"12\" y2=\"33\" stroke=\"#a16207\" stroke-width=\"1.2\"/><line x1=\"15\" y1=\"16\" x2=\"15\" y2=\"33\" stroke=\"#a16207\" stroke-width=\"1.2\"/><line x1=\"19\" y1=\"16\" x2=\"18\" y2=\"33\" stroke=\"#a16207\" stroke-width=\"1.2\"/>",
+            "phrase": null
+          }
+        ]
+      },
+      {
+        "name": "houses",
+        "base": "<rect x=\"24\" y=\"46\" width=\"52\" height=\"42\" fill=\"#fef3c7\" stroke=\"#78350f\" stroke-width=\"2.5\"/><polygon points=\"18,46 50,20 82,46\" fill=\"#b45309\" stroke=\"#78350f\" stroke-width=\"2.5\"/><rect x=\"44\" y=\"64\" width=\"12\" height=\"24\" fill=\"#92400e\" stroke=\"#451a03\" stroke-width=\"2\"/><circle cx=\"53\" cy=\"76\" r=\"1.5\" fill=\"#fbbf24\"/><rect x=\"29\" y=\"53\" width=\"11\" height=\"11\" fill=\"#bae6fd\" stroke=\"#0369a1\" stroke-width=\"1.8\"/><line x1=\"34.5\" y1=\"53\" x2=\"34.5\" y2=\"64\" stroke=\"#0369a1\" stroke-width=\"1.2\"/><line x1=\"29\" y1=\"58.5\" x2=\"40\" y2=\"58.5\" stroke=\"#0369a1\" stroke-width=\"1.2\"/><rect x=\"60\" y=\"53\" width=\"11\" height=\"11\" fill=\"#bae6fd\" stroke=\"#0369a1\" stroke-width=\"1.8\"/><line x1=\"65.5\" y1=\"53\" x2=\"65.5\" y2=\"64\" stroke=\"#0369a1\" stroke-width=\"1.2\"/><line x1=\"60\" y1=\"58.5\" x2=\"71\" y2=\"58.5\" stroke=\"#0369a1\" stroke-width=\"1.2\"/>",
+        "features": [
+          {
+            "word": "chimney",
+            "svg": "<rect x=\"62\" y=\"14\" width=\"13\" height=\"24\" fill=\"#dc2626\" stroke=\"#7f1d1d\" stroke-width=\"2\"/><rect x=\"60\" y=\"11\" width=\"17\" height=\"4\" fill=\"#991b1b\" stroke=\"#7f1d1d\" stroke-width=\"1.5\"/><circle cx=\"69\" cy=\"6.5\" r=\"3.5\" fill=\"#cbd5e1\" stroke=\"#64748b\" stroke-width=\"1.2\"/><circle cx=\"75\" cy=\"4\" r=\"2.5\" fill=\"#cbd5e1\" stroke=\"#64748b\" stroke-width=\"1.2\"/>",
+            "phrase": null
+          },
+          {
+            "word": "flag",
+            "svg": "<line x1=\"10\" y1=\"16\" x2=\"10\" y2=\"88\" stroke=\"#334155\" stroke-width=\"3\" stroke-linecap=\"round\"/><circle cx=\"10\" cy=\"14\" r=\"2.5\" fill=\"#eab308\" stroke=\"#a16207\" stroke-width=\"1\"/><polygon points=\"10,17 28,24 10,31\" fill=\"#2563eb\" stroke=\"#1e3a8a\" stroke-width=\"1.8\"/>",
+            "phrase": null
+          },
+          {
+            "word": "tree",
+            "svg": "<rect x=\"85\" y=\"72\" width=\"6\" height=\"16\" fill=\"#78350f\" stroke=\"#451a03\" stroke-width=\"1.5\"/><polygon points=\"77,74 88,54 99,74\" fill=\"#16a34a\" stroke=\"#14532d\" stroke-width=\"1.8\"/><polygon points=\"79,62 88,44 97,62\" fill=\"#22c55e\" stroke=\"#14532d\" stroke-width=\"1.8\"/>",
+            "phrase": null
+          }
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [
+        3,
+        2
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        4,
+        3
+      ]
+    ],
+    "prior_queries": true,
+    "synonyms": true
+  },
+  "response": {
+    "type": "bet",
+    "link": "allocation",
+    "prompt": "The speaker says: {message}. Split 10 points across the objects to show how likely each one is to be the speaker's target.",
+    "prior_prompt": "The speaker's word was cut off. Split 10 points across the objects to show how likely each one is to be the speaker's target.",
+    "scale_labels": null,
+    "scale_points": null,
+    "total_points": 10
+  },
+  "design": {
+    "n_participants": 120,
+    "trials_per_participant": 15,
+    "distinct_trials": 45,
+    "catch_trials": 2,
+    "minutes": 3.9,
+    "pay_usd": 0.65
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}

@@ -1,0 +1,1 @@
+{"theory_name": "topic_discriminability_listener", "blocks": ["E", "exp1", "exp2"], "param_names": ["alpha", "w_discriminability", "lapse@E", "kappa@exp1", "lapse@exp1", "temperature@exp1", "center@exp2", "spread@exp2", "lapse@exp2", "temperature@exp2"], "convergence_problems": [], "offsets": {"E": [0, 40176], "exp1": [40176, 41616], "exp2": [41616, 44816]}}
