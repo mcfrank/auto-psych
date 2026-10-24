@@ -32,7 +32,12 @@
 # Overrides: CHAINS ("0"), N_EXPERIMENTS (3), MAX_ITERATIONS (5), CANDIDATES (6),
 # PILOT_PARTICIPANTS (12), CV_FOLDS (5), THEORIST_TIMEOUT_SEC (2400), SEED (0), RUN2_ROOT (run 2's
 # sweep root), LITERATURE ("all": E, run 2's all_trials.csv; "pragmods": the committed pragmods
-# trials alone, about 7x fewer, for a dry run that tests the machinery, not the science).
+# trials alone, about 7x fewer, for a dry run that tests the machinery, not the science),
+# REPLAY_FROM (another rehearsal's WORK_ROOT) and REPLAY_EXPERIMENTS ("1"): before the chain, copy
+# those experiments of that rehearsal's chain, everything but their loops, into this run, so the
+# chain skips their design and collection and reruns only their loops on this code (a replay of
+# the same data, PI 2026-10-24). Copy that rehearsal's private/ground_truth into this WORK_ROOT
+# first: the replayed data were simulated from it.
 set -euo pipefail
 export REPO="${REPO:-${SLURM_SUBMIT_DIR:-$HOME/auto-psych}}"
 export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/rsa_open_rehearsal}"
@@ -118,6 +123,25 @@ fi
 if find "$RUN_REPO" -type f -name '*.py' -size "$(stat -c %s "$GT_DIR/ground_truth.py")c" \
      -exec cmp -s "$GT_DIR/ground_truth.py" {} \; -print | grep . >&2; then
   echo "ERROR: the agents' tree holds a copy of the ported ground truth (files above)" >&2; exit 1
+fi
+
+# --- a replay: earlier experiments' designs and data, without their loops -----------------
+if [[ -n "${REPLAY_FROM:-}" ]]; then
+  SRC_TREE_ID="$REPLAY_FROM/cells/$CELL/agent_tree_id"
+  [[ -s "$SRC_TREE_ID" ]] || { echo "ERROR: $SRC_TREE_ID is missing (REPLAY_FROM=$REPLAY_FROM)" >&2; exit 1; }
+  SRC_RUN="$AGENT_TREES_ROOT/$(cat "$SRC_TREE_ID")/repo/_runs/chain_$CHAIN"
+  cmp -s "$REPLAY_FROM/private/ground_truth/ground_truth.json" "$GT_DIR/ground_truth.json" || {
+    echo "ERROR: this WORK_ROOT's ground truth is not REPLAY_FROM's (copy its private/ground_truth first)" >&2; exit 1; }
+  for n in ${REPLAY_EXPERIMENTS:-1}; do
+    [[ -f "$SRC_RUN/experiment$n/data/rows.jsonl" ]] || { echo "ERROR: $SRC_RUN/experiment$n has no data" >&2; exit 1; }
+    if [[ ! -d "$RUN_DIR/experiment$n" ]]; then
+      mkdir -p "$RUN_DIR"
+      rsync -a --exclude '/loop/' --exclude '/loop.abandoned_*/' "$SRC_RUN/experiment$n"/ "$RUN_DIR/experiment$n.tmp"/
+      mv "$RUN_DIR/experiment$n.tmp" "$RUN_DIR/experiment$n"
+      echo "[open rehearsal] replay: experiment $n's design and data from $SRC_RUN"
+    fi
+  done
+  unset REPLAY_FROM SRC_TREE_ID SRC_RUN  # not for the agents' environment
 fi
 
 # --- the chain ----------------------------------------------------------------------

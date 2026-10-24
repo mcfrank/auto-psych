@@ -199,7 +199,7 @@ is refused before your code runs.
 ### Parameters and identification
 
 The fit must pass a convergence gate (at most 0.1% divergent transitions, R-hat ≤ 1.05, bulk
-ESS ≥ 100) within 30 minutes on all the data. Give every parameter a proper, weakly
+ESS ≥ 100) within the loop's admission limit on all the data (your `CONTEXT.md` gives it). Give every parameter a proper, weakly
 informative prior on a sensible scale.
 
 Most theories that fail this gate, or are rejected as too slow, fail for one reason: two
@@ -235,7 +235,7 @@ reparameterise so that one parameter carries the combination the data measure.
    several prior draws, on every scene of every paradigm **and on a broad pool of scenes**
    (2-4 objects × 2-4 features, with prior trials and features that share an extension):
    shapes, finite, non-negative, sums to 1, the sink never said, finite gradients.
-4. The fit to every paradigm at once converges within 30 minutes.
+4. The fit to every paradigm at once converges within the admission limit (`CONTEXT.md`).
 5. **Novelty.** Your posterior-mean listener and speaker predictions on the pool must differ
    from every theory already in the set (RMSE ≥ 0.002).
 
@@ -245,7 +245,7 @@ Run the self-check with the exact command your `CONTEXT.md` gives (the pipeline'
 `uv` is not available to you). It runs gates 1–4 with a short fit and prints what fails. It
 compiles and fits your theory on every paradigm, which takes 3–15 minutes: **give the shell
 tool a timeout of 1200000 milliseconds**. Run it once per change and read its PASS/FAIL line
-and its sampling lines. A projected admission fit over 30 minutes is a FAIL: the loop would
+and its sampling lines. A projected admission fit over the limit is a FAIL: the loop would
 reject the theory as too slow.
 
 Write, edit and check your three files **in your candidate directory**, from the start. The

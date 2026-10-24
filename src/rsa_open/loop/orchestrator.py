@@ -67,6 +67,15 @@ from src.rsa_open.loop.gates import GateConfig, admit, pool_predictions
 SpawnFn = Callable[[Path, str], bool]
 DEFAULT_PRUNE_DSE_MULTIPLIER = 2.0
 MAX_LIVE_MODELS = 8  # the closed campaign's carry-forward cap
+ADMISSION_FACTOR = 2.0
+"""A candidate's admission fit is limited at ``ADMISSION_FACTOR`` times the median full-fit time of
+the theories the loop starts from (its seeds or carried theories, fitted at setup), and never below
+``fit_time_limit_sec`` (PI 2026-10-24). A fixed 30 minutes was the closed campaign's, set for its
+smaller corpora: on all of E, 12 of the 15 bar theories take longer than that themselves (the
+temperature audit: `rsa_l1` 26 min, `rsa_l2` 46, the starting incumbent 83), and run B rejected 43
+of 61 candidates as too slow, refinements of the incumbent above all. The limit is fixed for the
+loop (it does not ratchet up as slow candidates are admitted) and is recorded in history.json, the
+theorists' brief and their self-check command."""
 FOLD_TIME_FACTOR = 3.0
 FOLD_MIN_SEC = 10 * 60
 """A theory in play is never time-limited, but each of its cross-validation folds is: at
@@ -132,6 +141,7 @@ class OpenLoop:
         self.live: Dict[str, Live] = {}
         self.cv: Dict[str, Optional[CorpusCV]] = {}
         self.cv_problems: Dict[str, str] = {}
+        self.admission_limit_sec: Optional[float] = None
         self.history: List[dict] = []
         self.step = 0
 
@@ -179,7 +189,22 @@ class OpenLoop:
             self.live[name] = Live(name, hypothesis, theory, fitted, pool_predictions(theory, fitted, self.pool), "seed")
         if not self.live:
             raise RuntimeError("no seed theory could be fitted; nothing to compare")
+        self._set_admission_limit()
         self._write_manifest()
+
+    def _set_admission_limit(self) -> None:
+        """`ADMISSION_FACTOR` x the median full-fit time of the starting theories (None: unlimited)."""
+        if self.cfg.fit_time_limit_sec is None:
+            return
+        timed = {n: m.fit.timing["warmup_sec"] + m.fit.timing["sampling_sec"] for n, m in self.live.items()
+                 if m.fit.timing}
+        if not timed:
+            raise RuntimeError("no starting theory's fit records its time (fits cached by code before "
+                               "2026-10-23?), so the admission limit cannot be set; start in a fresh work root")
+        self.admission_limit_sec = max(self.cfg.fit_time_limit_sec, ADMISSION_FACTOR * float(np.median(list(timed.values()))))
+        self.gate_cfg = replace(self.gate_cfg, time_limit_sec=self.admission_limit_sec)
+        print(f"[open loop] admission limit {self.admission_limit_sec / 60:.0f} min: {ADMISSION_FACTOR:g} x the median "
+              f"of the starting fits ({', '.join(f'{n} {t / 60:.0f}' for n, t in sorted(timed.items()))} min)", flush=True)
 
     def _fit(self, path: Path, name: str, cfg: GateConfig) -> CorpusFit:
         return loop_fit(path, name, cfg.corpus_path, cfg.settings, cfg.cache_dir, time_limit_sec=cfg.time_limit_sec)
@@ -300,6 +325,7 @@ class OpenLoop:
         s = self.standing()
         best = self.incumbent(s)
         entry = dict(step=self.step, round=round_index, best_model=best, events=events, critique=critique,
+                     admission_limit_sec=self.admission_limit_sec,
                      standing={n: {k: v for k, v in d.items()} for n, d in s.items()},
                      live=[dict(name=m.name, hypothesis=m.hypothesis, source=m.source) for m in self.live.values()],
                      ledger_entries=len(self.ledger.entries()))
@@ -339,7 +365,8 @@ class OpenLoop:
                   for e in sorted(self.ledger.pruned(self.live), key=lambda e: prune_margin(e.detail))
                   if (pruned_dir / f"{e.name}.py").exists()]
         context = briefs.context_md(candidate_dir=cdir, corpus_path=self.check_corpus,
-                                    full_corpus_path=self.agent_corpus, blocks=self.blocks,
+                                    full_corpus_path=self.agent_corpus, admission_limit_sec=self.admission_limit_sec,
+                                    blocks=self.blocks,
                                     data_paths=self.data_paths, paradigm_notes=self.cfg.paradigm_notes,
                                     round_index=round_index, n_rounds=self.cfg.max_iterations,
                                     network=self.cfg.agent_network)

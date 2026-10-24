@@ -172,7 +172,7 @@ def _loop(tmp_path, timing):
     fit = SimpleNamespace(timing=timing, flat=lambda: {"alpha": np.ones(10)}, converged=True)
     loop.live = {"slow": SimpleNamespace(theory=None, fit=fit)}
     loop.models_dir, loop.dir, loop.fold_paths = tmp_path, tmp_path, [tmp_path / "f0", tmp_path / "f1"]
-    loop.cv, loop.cv_problems = {}, {}
+    loop.cv, loop.cv_problems, loop.admission_limit_sec = {}, {}, None
     loop.blocks = [SimpleNamespace(name="E")]
     return loop
 
@@ -224,19 +224,75 @@ def test_the_self_check_fails_a_theory_projected_over_the_admission_limit(monkey
     monkeypatch.setattr(cc, "read_corpus", lambda p: [])
     monkeypatch.setattr(cc, "TheoryModel", lambda *a, **k: None)
     monkeypatch.setattr(cc, "step_seconds", lambda theory, blocks, chains: per_step_ms / 1000)
-    for per_step_ms, ok in ((8.0, True), (200.0, False)):
+    # 15,333 projected steps: 2 min at 8 ms a step, 51 min at 200 ms, judged against the loop's own limit.
+    for per_step_ms, limit_min, ok in ((8.0, 30, True), (200.0, 30, False), (200.0, 90, True)):
         monkeypatch.setattr(cc, "admit", lambda *a, **k: Admission(True, "admitted", fit=fit(per_step_ms)))
-        passed, message = cc.check(tmp_path, tmp_path / "check.json", tmp_path / "corpus.json")
+        passed, message = cc.check(tmp_path, tmp_path / "check.json", tmp_path / "corpus.json", limit_min * 60)
         assert passed is ok, message
         assert "alpha and cost_weight are correlated at +0.92" in message
         assert "Projected admission fit on all the data" in message and "15,333 leapfrog steps" in message
-        assert ("over the loop's 30-minute limit" in message) is (not ok)
+        assert f"The loop's limit is {limit_min} minutes" in message
+        assert (f"over the loop's {limit_min}-minute limit" in message) is (not ok)
 
 
-def test_the_brief_s_self_check_command_names_the_full_corpus():
-    from src.rsa_open.loop.brief import CHECK_COMMAND
+def test_the_brief_states_the_loop_s_admission_limit_and_passes_it_to_the_self_check(tmp_path):
+    from src.rsa_open.loop.brief import context_md
 
-    assert "--full-corpus {full_corpus}" in CHECK_COMMAND
+    def ctx(limit):
+        return context_md(candidate_dir=tmp_path / "c", corpus_path=tmp_path / "check.json",
+                          full_corpus_path=tmp_path / "corpus.json", admission_limit_sec=limit, blocks=[],
+                          data_paths={}, paradigm_notes={}, round_index=0, n_rounds=3)
+
+    text = ctx(90 * 60)
+    assert "must finish within **90 minutes**" in text
+    assert f"--full-corpus {tmp_path / 'corpus.json'} --limit-minutes 90`" in text
+    assert "## The admission limit" not in ctx(None) and "--limit-minutes inf`" in ctx(None)
+
+
+# --------------------------------------------------------------------------- the corpus-relative limit
+
+def _limit_loop(tmp_path, minutes):
+    from src.rsa_open.loop.gates import GateConfig
+
+    loop = _loop(tmp_path, {})
+    loop.live = {f"t{i}": SimpleNamespace(fit=SimpleNamespace(timing=dict(warmup_sec=60.0 * m * 0.6,
+                                                                          sampling_sec=60.0 * m * 0.4) if m else {}))
+                 for i, m in enumerate(minutes)}
+    loop.gate_cfg = GateConfig(tmp_path, tmp_path, FitSettings(), 0.002, loop.cfg.fit_time_limit_sec)
+    return loop
+
+
+def test_the_admission_limit_is_twice_the_median_starting_fit_and_never_below_the_floor(tmp_path):
+    from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC
+    from src.rsa_open.loop.orchestrator import ADMISSION_FACTOR
+
+    loop = _limit_loop(tmp_path, [13, 26, 41, 46, 83, 165])  # chain 0's starting theories on all of E (the audit)
+    loop._set_admission_limit()
+    assert loop.admission_limit_sec == ADMISSION_FACTOR * 43.5 * 60 == loop.gate_cfg.time_limit_sec
+    small = _limit_loop(tmp_path, [1, 2, 3, None])  # fast theories (a fit recorded without its time is skipped)
+    small._set_admission_limit()
+    assert small.admission_limit_sec == FIT_TIME_LIMIT_SEC == small.gate_cfg.time_limit_sec
+
+
+def test_the_admission_limit_refuses_starting_fits_without_their_time(tmp_path):
+    loop = _limit_loop(tmp_path, [None, None])
+    with pytest.raises(RuntimeError, match="fresh work root"):
+        loop._set_admission_limit()
+
+
+def test_an_unlimited_loop_has_no_admission_limit(tmp_path):
+    loop = _limit_loop(tmp_path, [None])
+    loop.cfg.fit_time_limit_sec = None
+    loop._set_admission_limit()
+    assert loop.admission_limit_sec is None
+
+
+def test_a_replay_reruns_only_the_loops_of_an_earlier_rehearsal_s_experiments():
+    text = (ROOT / "scripts/rsa/slurm/open_rehearsal.sbatch").read_text()
+    assert "REPLAY_FROM" in text and "--exclude '/loop/'" in text and "--exclude '/loop.abandoned_*/'" in text
+    assert "this WORK_ROOT's ground truth is not REPLAY_FROM's" in text
+    # The source path names another rehearsal's root (its private/ holds the truth): never the agents'.
+    assert text.index("unset REPLAY_FROM") < text.index("WITHHELD=()")
 
 
 def test_the_prompt_names_the_identification_pairs_and_no_longer_invites_a_sharpness_parameter():

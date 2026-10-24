@@ -1,15 +1,15 @@
 """Self-check for a theorist's theory: the open loop's admission gates with a short fit.
 
     <the harness python> -m src.rsa_open.loop.check_candidate <candidate_dir> --corpus <corpus.json> \
-        --full-corpus <the loop's corpus.json>
+        --full-corpus <the loop's corpus.json> --limit-minutes <the loop's admission limit>
 
 Runs the code gate, the theory checks, the listener and speaker contracts on the corpus and
 the novelty pool, and a short fit to every paradigm at once. It does not run the novelty
 comparison (that needs the loop's set) and reports non-convergence of the short fit as a
 warning, since the loop's fit is longer. Then it says how hard the posterior was to sample
 (`src.rsa_open.sampler`: steps per draw, step size, correlated parameters) and projects the
-loop's admission fit on ``--full-corpus`` from the short fit; a projection over the admission
-limit fails, since the loop would reject the theory as too slow. Exit code 0 when nothing fails.
+loop's admission fit on ``--full-corpus`` from the short fit; a projection over the loop's
+admission limit (``--limit-minutes``, `src.rsa_open.loop.orchestrator.ADMISSION_FACTOR`) fails, since the loop would reject the theory as too slow. Exit code 0 when nothing fails.
 """
 
 from __future__ import annotations
@@ -23,7 +23,6 @@ from typing import Optional, Sequence
 import tyro
 
 from src.rsa.fit import FitSettings
-from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC
 from src.rsa.loop.novelty import plain_pool
 from src.rsa_open.corpus import Block, CorpusFit
 from src.rsa_open.fit import TheoryModel
@@ -41,9 +40,11 @@ class Args:
     corpus: Path
     full_corpus: Path
     """The loop's corpus (all the data), for the projected admission fit time."""
+    limit_minutes: float
+    """The loop's admission limit (its brief gives it; ``inf`` for none)."""
 
 
-def sampling_lines(fit: CorpusFit, theory, full_blocks: Sequence[Block],
+def sampling_lines(fit: CorpusFit, theory, full_blocks: Sequence[Block], limit_sec: float,
                    full_settings: FitSettings = FitSettings(dense_mass=True)) -> tuple[list, Optional[float]]:
     """The sampler report's lines and the projected admission fit (seconds), from the short fit."""
     report = fit.sampler_report()
@@ -54,22 +55,22 @@ def sampling_lines(fit: CorpusFit, theory, full_blocks: Sequence[Block],
     seconds = projected_fit_seconds(fit.timing, CHECK_SETTINGS, full_settings, full_step)
     lines.append(f"- Projected admission fit on all the data: about {seconds / 60:.0f} minutes (about "
                  f"{seconds / full_step:,.0f} leapfrog steps at {full_step * 1000:.0f} ms each; rough, ±40%). "
-                 f"The loop's limit is {FIT_TIME_LIMIT_SEC // 60} minutes.")
+                 f"The loop's limit is {limit_sec / 60:.0f} minutes.")
     return lines, seconds
 
 
-def check(candidate_dir: Path, corpus: Path, full_corpus: Path) -> tuple[bool, str]:
+def check(candidate_dir: Path, corpus: Path, full_corpus: Path, limit_sec: float) -> tuple[bool, str]:
     blocks = read_corpus(corpus)
     with tempfile.TemporaryDirectory() as cache:
         cfg = GateConfig(corpus, Path(cache), CHECK_SETTINGS, novelty_threshold=0.0,
                          time_limit_sec=CHECK_TIME_LIMIT_SEC)
         out = admit(candidate_dir, "candidate", cfg=cfg, blocks=blocks, pool=plain_pool(), admitted_preds={})
     lines, seconds = (sampling_lines(out.fit, TheoryModel(Path(candidate_dir) / "candidate.py", name="candidate"),
-                                     read_corpus(full_corpus)) if out.fit is not None else ([], None))
+                                     read_corpus(full_corpus), limit_sec) if out.fit is not None else ([], None))
     sampling = ("\n\nSampling:\n" + "\n".join(lines)) if lines else ""
-    if seconds is not None and seconds > FIT_TIME_LIMIT_SEC:
+    if seconds is not None and seconds > limit_sec:
         return False, (f"FAIL: the admission fit on all the data would take about {seconds / 60:.0f} minutes, over "
-                       f"the loop's {FIT_TIME_LIMIT_SEC // 60}-minute limit: the loop would reject it as too slow. "
+                       f"the loop's {limit_sec / 60:.0f}-minute limit: the loop would reject it as too slow. "
                        f"Make the posterior easier to sample (below) or the theory cheaper." + sampling)
     if out.admitted:
         return True, ("PASS: the theory meets every gate the self-check runs. The loop also checks novelty "
@@ -82,7 +83,7 @@ def check(candidate_dir: Path, corpus: Path, full_corpus: Path) -> tuple[bool, s
 
 
 def main(args: Args) -> int:
-    ok, message = check(args.candidate_dir, args.corpus, args.full_corpus)
+    ok, message = check(args.candidate_dir, args.corpus, args.full_corpus, args.limit_minutes * 60)
     print(message)
     return 0 if ok else 1
 
