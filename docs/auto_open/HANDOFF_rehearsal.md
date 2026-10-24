@@ -151,29 +151,22 @@ Expect about 6–14 h: the design, then 2 loop rounds.
 Do not bring back `private/ground_truth/ground_truth.py` under any name the agents' trees could
 pick up later. `data/` is excluded from every agent tree, so `data/rsa_open/dry/` is safe.
 
-## Run B: bring back experiment 1's rounds, then stop it (2026-10-23, PI)
+## Run B: let it finish; bring back experiments 1 and 2 now (revised 2026-10-24)
 
-Answers `RUN_B_STATUS.md`. The too-slow candidates and the stalled fold look like a sampling
-problem in the theories themselves: parameters the data cannot separate. Locally, on pragmods:
-- `isolated_graded_costly_l3` needs twice the steps per draw of `rsa_l1_salience`, at the same
-  cost per step: `alpha` and `cost_weight` are 0.92 correlated;
-- adding a listener `beta` to `rsa_l1_salience` reproduces the free-temperature ridge (`alpha`
-  0.21, `beta` 2.86).
+Answers the Sat 09:16 update of `RUN_B_STATUS.md`. The 2026-10-23 request (bring back
+experiment 1, then cancel) never reached Sherlock, and run B is now in experiment 3's design. So:
 
-The driver is changing the self-check, the prompt and the refit rule. Before the restart, the
-diagnosis needs checking on run B's own candidates. The critic is calibrated: against the true
-model only 1 of run A's 8 statistics is significant. Its "8 of 8" reflects real misfit.
-
-1. **Bring back, without stopping the job**, to `data/rsa_open/rehearsal_b1/` on `auto-psych-open`:
-   - `chain_0/experiment1/loop/`, every `round_*/` directory, with each candidate's `candidate.py`,
-     `hypothesis.md`, `model_name.txt`, its `*_retry_*`/`*_repair_*` siblings, and `agent.jsonl`;
-     leave out `scratch/` and `.xdg_data/`;
-   - `chain_0/experiment1/loop/attempted_hypotheses.jsonl`, `history.json`, `models/` (with
-     `pruned/`), and the `.fit_cache/*.json` files only, not the `.nc` files;
-   - `chain_0/experiment1/design/frozen/`, `design_screened_out.json`, `token_usage*.json*`;
-   - the job log.
-2. **Then cancel run B** (49021326_0). Its replacement, run B′ (below), comes after the driver's
-   fixes.
+1. **Leave run B running to its end.** It has a day or so left, and its full three experiments
+   on the old code are the baseline the fixed code is compared against.
+2. **Now, without stopping the job,** copy experiments 1 and 2 to `data/rsa_open/rehearsal_b/`
+   on `auto-psych-open`, so the driver can profile the too-slow candidates before the run ends:
+   - `chain_0/experiment{1,2}/loop/`: every `round_*/` directory, with each candidate's
+     `candidate.py`, `hypothesis.md`, `model_name.txt`, its `*_retry_*`/`*_repair_*` siblings,
+     and `agent.jsonl`; leave out `scratch/` and `.xdg_data/`;
+   - `attempted_hypotheses.jsonl`, `history.json`, `models/` (with `pruned/`) and the
+     `.fit_cache/*.json` sidecars, not the `.nc` files;
+   - `chain_0/experiment{1,2}/design/frozen/`, `design_screened_out.json`, and the job log so far.
+3. **At the end,** bring back everything per §3 into the same directory.
 
 ## Run B′: two experiments on the fixed inference (2026-10-23, PI)
 
@@ -199,14 +192,14 @@ changes to the inference (PLAN.md, Decisions 2026-10-23):
      `history.json` (`cv_problem`). Run B's fifth fold of `feature_parsimony_listener` ran
      5 h 50 min to R-hat 1.55, then started an unlimited refit.
 
-**Same work root.** This keeps run B's ground truth, its experiment-1 design and simulated data,
-and every cached fit. Experiment 1's loop restarts as `loop.abandoned_<i>`, after the bring-back
-above. Fits cached by run B carry no timing, so their folds are limited at 3 × 30 min.
+**Work root: to be settled when cleared.** Run B is finishing in its root, so B′ needs a fresh
+one (with run B's ground truth copied into its `private/`, to skip that fit).
 
 ```bash
-scancel 49021326_0          # if the bring-back above has not already stopped it
 cd ~/auto-psych && git pull
-export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_rehearsal
+export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_rehearsal_bprime
+mkdir -p "$WORK_ROOT/logs" "$WORK_ROOT/private"
+cp -r "$SCRATCH/auto-psych/rsa_open_rehearsal/private/ground_truth" "$WORK_ROOT/private/"
 export RESTAGE_REASON='Run B-prime: sampler diagnostics, identification prompt, near-miss refits, bounded folds; PI 2026-10-23'
 sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%A_%a.out" --time=3-00:00:00 \
   --export=ALL,WORK_ROOT=$WORK_ROOT,N_EXPERIMENTS=2,MAX_ITERATIONS=3,CANDIDATES=6 \
