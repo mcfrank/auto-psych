@@ -87,6 +87,12 @@ with the closed campaign's on paradigms neither campaign saw.
 | Let run B finish | Run B runs to its end (experiment 3) as the old code's baseline; experiments 1 and 2 are brought back now | it was past experiment 2 when the stop would have reached it |
 | Run B′ is a replay of run B's experiment 1 (proposed by the driver, awaiting the PI) | Same frozen design, simulated data and starting theories as run B's experiment 1; only its loop reruns, 3 rounds of 6, on the new code (`REPLAY_FROM` in `open_rehearsal.sbatch`) | a before/after on identical data isolates what the code changed (too-slow rate, admissions, incumbent changes) for a third of a two-experiment B′'s cost; run B already exercised the design, collection and carry-forward machinery three times |
 
+## Decisions (PI, 2026-10-25)
+
+| Decision | Choice | Why |
+|---|---|---|
+| An upgraded closed arm, supplemental | The closed campaign's nine inner loops rerun on its own frozen designs and live data with the open campaign's theorist tooling. Their finals join the bakeoff as a supplemental comparison (`PREREG_DRAFT.md` §5). Run only if the open campaign completes and proceeds to the bakeoff, decided before any bakeoff data | the sampler report and the identification prompt help the open theorists, and the prompt bears on claim 2; open against upgraded closed isolates the designer and the changing paradigms. Making the arm contingent on completion, not on any result, keeps the decision free of the outcomes |
+
 ## 1. Claims
 
 1. **Transfer.** On the blind paradigm, this campaign's final theories predict new people better
@@ -431,9 +437,23 @@ the same rounds and slots, 3 chains × 3 experiments, the same per-experiment bu
 closed-campaign data. What differs: the designer, the page built from its spec, and that the
 paradigm, and with it the link, changes every experiment.
 
+**Asymmetries added since (2026-10-23/24):**
+- **The admission limit is corpus-relative**: 2× the median starting fit, never below 30 min.
+  Argued as parity of constraint, since a fixed 30 min on all of E rejected 77% of run B's
+  candidates where the closed campaign's rejected about a third. The two campaigns' too-slow
+  rates are reported side by side.
+- **Theorist tooling the closed campaign never had:** the sampler report, the identification
+  prompt, near-miss refits and bounded folds. **The upgraded closed arm** (`PREREG_DRAFT.md` §5)
+  removes this confound: the closed campaign's nine loops rerun on its own data with this tooling.
+  It is a supplemental comparison, run only if the open campaign completes and goes to the
+  bakeoff (PI 2026-10-25).
+
 ## 7. The final bakeoff (pre-registered, as `rsa-prereg-final` was)
 
-**Competitors:** the three open finals and the three closed finals (ported, §3), plus the seeds.
+**Competitors:** the three open finals and the three closed finals (ported, §3), plus the seeds;
+supplementally, the three upgraded closed finals (`PREREG_DRAFT.md` §5).
+
+**Draft:** `PREREG_DRAFT.md`.
 
 **Arms:**
 - **F, forced choice:** the closed campaign's paradigm on fresh displays, designed with its own
@@ -467,7 +487,7 @@ The existing protocol covers the rest (PI, 2026-10-20).
 | 3 | Rehearsal on simulated participants with a ground-truth theory across paradigms | Sherlock | **next**: run B (`HANDOFF_rehearsal.md` §3), chain 0, 3 experiments on all of E |
 | 4 | One live paradigm per chain, with PI review | live | |
 | 5 | Campaign: 3 chains × 3 experiments | live | |
-| 6 | Bakeoff: arms F and T, pre-registered | live | |
+| 6 | Bakeoff: arms F and T, pre-registered (`PREREG_DRAFT.md`); first, if the campaign completed, the upgraded closed arm's nine loops (Sherlock, no participants) | live | |
 
 **Gemini 4 smoke test (2026-10-20).** The API key sees `gemini-4-argon`. A designer-style call
 (propose one new paradigm, JSON only) returned valid JSON in 6 s for about 430 tokens. It
