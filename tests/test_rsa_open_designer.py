@@ -70,8 +70,8 @@ def spec_for(minutes=None):
 class FakeDesigner:
     """Each session writes the next spec of ``specs`` and runs the tools on it, as the agent would."""
 
-    def __init__(self, specs, submit=True):
-        self.specs, self.submit, self.prompts, self.sessions = list(specs), submit, [], 0
+    def __init__(self, specs, submit=True, score=True):
+        self.specs, self.submit, self.score, self.prompts, self.sessions = list(specs), submit, score, [], 0
         self.refusals = []
 
     def __call__(self, ws, prompt, timeout_sec, log):
@@ -83,7 +83,8 @@ class FakeDesigner:
         self.sessions += 1
         path = ws.work / f"spec_{self.sessions}.json"
         path.write_text(json.dumps(spec))
-        for command in (Validate, Eig, LinkCheck) + ((Submit,) if self.submit else ()):
+        commands = (Validate,) + ((Eig, LinkCheck) if self.score else ()) + ((Submit,) if self.submit else ())
+        for command in commands:
             try:
                 run(command(workspace=ws.root, spec=path))
             except ToolRefused as err:  # the agent reads the refusal and ends its session
@@ -183,11 +184,12 @@ def test_no_submission_fails_the_cycle_and_the_retry_hears_why_then_the_chain_st
                                                                                    pilot_lists):
     from src.rsa_open.designer import DesignerFailed
 
-    designer = FakeDesigner([spec_for()], submit=False)
+    designer = FakeDesigner([spec_for()], submit=False, score=False)  # nothing for the harness to submit either
     with pytest.raises(DesignerFailed, match="both designer cycles failed") as err:
         run(tmp_path, theories, designer)
     assert designer.sessions == 2  # one session per cycle: each ended without a submission
     assert "previous designer cycle" in designer.prompts[1] and "without a submission" in designer.prompts[1]
+    assert "no spec of its had a full eig meeting the floor" in str(err.value)
     assert "cycle 2" in str(err.value)
     assert (tmp_path / "exp1" / "cycle_1" / "failure.txt").exists()
 
@@ -234,3 +236,29 @@ def test_a_session_cut_off_by_its_time_limit_is_reported_as_such(tmp_path, theor
 
     with pytest.raises(DesignerFailed, match="reached its time limit"):
         run(tmp_path, theories, slow, cycle_seconds=1)
+
+
+def test_a_session_that_ends_without_submitting_is_submitted_for_with_its_best_scored_spec(tmp_path, theories, fast,
+                                                                                          pilot_lists):
+    """Run B's experiment-3 designer had a full eig above the floor and ran out its time unsubmitted."""
+    designer = FakeDesigner([spec_for()], submit=False)  # validates, scores and link-checks, never submits
+    record = run(tmp_path, theories, designer)
+    assert designer.sessions == 1 and record["submitted_by"] == "harness"
+    submitted = json.loads((tmp_path / "exp1" / "cycle_1" / "submissions" / "1.json").read_text())
+    assert submitted["submitted_by"] == "harness" and "ended without a submission" in submitted["why"]
+    assert (tmp_path / "exp1" / "cycle_1" / "checks" / "1" / "eig.json").exists()  # checked like any submission
+
+
+def test_a_designer_s_own_submission_is_recorded_as_its_own(tmp_path, theories, fast, pilot_lists):
+    assert run(tmp_path, theories, FakeDesigner([spec_for()]))["submitted_by"] == "designer"
+
+
+def test_the_brief_and_every_tool_give_the_session_s_deadline(tmp_path, theories, fast, pilot_lists):
+    import re
+
+    designer = FakeDesigner([spec_for()])
+    run(tmp_path, theories, designer)
+    assert re.search(r"this session ends at \*\*\d\d:\d\d", designer.prompts[0])
+    assert "the harness submits your spec with the best full `eig`" in designer.prompts[0]
+    deadline = json.loads((tmp_path / "exp1" / "cycle_1" / "inputs" / "deadline.json").read_text())
+    assert deadline["clock"] in designer.prompts[0]

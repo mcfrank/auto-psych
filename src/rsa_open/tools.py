@@ -35,6 +35,14 @@ Every report is written to ``work/reports/<command>_<sha12>.json``. ``submit`` o
 the harness then re-scores the spec with a seed of its own, reruns the link check, and pilots
 it (`src.rsa_open.designer`); the agent's reports are never trusted as the gate.
 
+**The clock.** Before each session the harness writes ``inputs/deadline.json`` (when the
+session is killed); every command's output ends with the time left (`time_note`), and with an
+urging note in the last ``URGENT_SECONDS``. A session that ends without a submission is
+submitted for by the harness: its best spec with a full ``eig`` report that meets the floor
+(`best_scored_spec`), which then goes through every check a submission does. Run B's
+experiment-3 designer spent 92 of its 120 minutes on its own scripts before its first tool call,
+had a full eig of a spec well above the floor at minute 119, and submitted nothing (2026-10-24).
+
 **The call budget.** Every command is a line in ``work/tool_log.jsonl``, and a command past
 ``MAX_TOOL_CALLS`` is refused (PI 2026-10-21: 40 calls). The log is in the agent's own
 directory; the harness counts it too and the agent's transcript records every command.
@@ -56,6 +64,8 @@ import tyro
 MAX_TOOL_CALLS = 40
 TOOL_LOG = "tool_log.jsonl"
 SUBMISSION = "submission.json"
+DEADLINE = "deadline.json"
+URGENT_SECONDS = 30 * 60
 # Link check: NUTS settings and the replicates of the library's recovery test.
 LINK_CHECK_WARMUP = 500
 LINK_CHECK_SAMPLES = 500
@@ -98,6 +108,10 @@ class Workspace:
         return self.work / SUBMISSION
 
     @property
+    def deadline(self) -> Path:
+        return self.inputs / DEADLINE
+
+    @property
     def timing(self) -> Path:
         return self.inputs / "timing.json"
 
@@ -120,6 +134,50 @@ class Workspace:
         if not self.log.exists():
             return []
         return [json.loads(line) for line in self.log.read_text().splitlines() if line.strip()]
+
+
+def write_deadline(ws: Workspace, deadline: float) -> None:
+    """The session's end (epoch seconds), for `time_note` (the harness writes it; the agent may not)."""
+    ws.deadline.write_text(json.dumps({"deadline": deadline, "clock": time.strftime("%H:%M %Z", time.localtime(deadline))}))
+
+
+def time_note(ws: Workspace, now: Optional[float] = None) -> Optional[str]:
+    """How long the session has left, for every command's output (None without a deadline)."""
+    if not ws.deadline.exists():
+        return None
+    d = json.loads(ws.deadline.read_text())
+    left = d["deadline"] - (time.time() if now is None else now)
+    note = f"time: {max(0, left) / 60:.0f} min left in this session (it ends at {d['clock']})"
+    if left < URGENT_SECONDS:
+        note += (". SUBMIT NOW: run the full eig on the spec you mean to submit, then link-check and submit. "
+                 "If the session ends without a submission, the harness submits your best spec that has a full "
+                 "eig meeting the floor")
+    return note
+
+
+def best_scored_spec(ws: Workspace, exclude=frozenset()) -> Optional[Dict[str, Any]]:
+    """The spec in ``work/`` that a session ending without a submission is submitted with: valid
+    as it stands, with a full ``eig`` report of that exact spec that meets the floor, the highest
+    bits per dollar; None if there is none. ``exclude``: sha256s that already failed."""
+    from src.rsa_open.paradigm import ParadigmInvalid, load_paradigm
+
+    best = None
+    for spec in sorted(ws.work.glob("*.json")):
+        if spec.name in (SUBMISSION,):
+            continue
+        try:
+            p = load_paradigm(spec)
+        except (ParadigmInvalid, ValueError, OSError):
+            continue
+        report = ws.report_path("eig", p.sha256)
+        if p.sha256 in exclude or not report.exists():
+            continue
+        eig = json.loads(report.read_text())
+        if eig.get("paradigm_sha256") != p.sha256 or not eig.get("meets_floor"):
+            continue
+        if best is None or eig["bits_per_dollar"] > best["bits_per_dollar"]:
+            best = {"spec": str(spec.resolve()), "sha256": p.sha256, "bits_per_dollar": eig["bits_per_dollar"]}
+    return best
 
 
 def seed_for(sha: str, purpose: str) -> int:
@@ -372,16 +430,24 @@ def main(argv: Optional[list] = None) -> int:
 
     cmd = tyro.cli(Command, args=argv)
     command = NAMES[type(cmd)]
+    ws = Workspace(Path(cmd.workspace))
     try:
         report = run(cmd)
     except (ParadigmInvalid, ToolRefused, NotImplementedError, ValueError) as err:
         print(f"{command}: {err}")
+        _print_time(ws)
         return 1
     print(f"{command}: {_summary(command, report)} ({report['calls_left']} tool calls left)")
     if command in ("eig", "link-check"):
-        path = Workspace(Path(cmd.workspace)).report_path(report_name(command, report), report["paradigm_sha256"])
-        print(f"report: {path}")
+        print(f"report: {ws.report_path(report_name(command, report), report['paradigm_sha256'])}")
+    _print_time(ws)
     return 0
+
+
+def _print_time(ws: Workspace) -> None:
+    note = time_note(ws) if ws.inputs.is_dir() else None
+    if note:
+        print(note)
 
 
 if __name__ == "__main__":

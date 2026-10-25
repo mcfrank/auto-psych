@@ -386,6 +386,21 @@ def test_the_open_campaign_s_agent_commands_run_in_the_tree(scrubbed_tree, modul
     assert result.returncode == 0, result.stderr
 
 
+def test_every_response_type_s_catch_trials_build_in_the_tree(scrubbed_tree):
+    """Run B's experiment-3 designer could not validate a spec: the catch trials imported
+    src.rsa.experiment, which the tree leaves out (2026-10-24)."""
+    env = dict(os.environ, PATH=f"{scrubbed_tree / '.agent_bin'}:{os.environ['PATH']}")
+    assert not (scrubbed_tree / "src" / "rsa" / "experiment").exists()
+    code = ("import numpy as np; from src.rsa_open.screens import _catch\n"
+            "opts = dict(scale_points=7, total_points=100)\n"
+            "for rt in ('choice', 'rating', 'slider', 'bet', 'production', 'binary_judgment'):\n"
+            "    for k in (0, 1):\n"
+            "        _catch((3, 3), np.random.default_rng(k), rt, k, opts)\n"
+            "print('ok')")
+    result = _run(["uv", "run", "python", "-c", code], cwd=scrubbed_tree, env=env)
+    assert result.returncode == 0 and result.stdout.strip().endswith("ok"), result.stderr
+
+
 @pytest.mark.parametrize("command", [["pip", "install", "numpy"], ["sync"], ["add", "x"], ["run", "--with", "x", "python"],
                                      ["run", "pytest"]])
 def test_the_uv_shim_refuses_everything_but_running_python(scrubbed_tree, command):

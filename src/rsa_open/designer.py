@@ -16,7 +16,12 @@ A submission that fails any step goes back to the agent with the report, in a ne
 same workspace (its notes and drafts are still in ``work/``), up to ``MAX_SUBMISSIONS`` (3) per
 cycle; a spec that already failed is refused unchanged. A cycle also ends when the agent's
 wall-clock budget (``CYCLE_SECONDS``, 2 hours over its sessions) or its tool calls (40) are spent,
-or when a session ends without a new submission.
+or when a session ends without a new submission and without a spec to submit for it: **a session
+that ends without submitting is submitted for by the harness** with its best spec that has a full
+``eig`` meeting the floor (`src.rsa_open.tools.best_scored_spec`; the record says
+``submitted_by: harness``), checked like any submission. Each session's deadline is in its brief
+and in every tool's output (`src.rsa_open.tools.time_note`); run B's experiment-3 designer ran
+out its 120 minutes with such a spec in hand (2026-10-24).
 
 **A failed cycle gets one retry** (PI 2026-10-21), on a fresh workspace with the failure's
 reason in the brief; a second failure raises `DesignerFailed` and the chain stops. There is no
@@ -42,7 +47,7 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 import numpy as np
 
 from src.rsa_open.timing import CLOSED_CAMPAIGN, TimingRecord, digest_md, write_records
-from src.rsa_open.tools import MAX_TOOL_CALLS, Workspace, seed_for
+from src.rsa_open.tools import MAX_TOOL_CALLS, Workspace, best_scored_spec, seed_for, write_deadline
 
 DESIGNER_MODEL = "google/gemini-4-argon"
 CYCLE_SECONDS = 2 * 3600
@@ -151,13 +156,14 @@ probabilistic inference".
 
 def brief(ws: Workspace, *, chain: str, experiment: int, hypotheses: Mapping[str, str],
           history: Sequence[EarlierParadigm], feedback: str = "", submissions_left: int = MAX_SUBMISSIONS,
-          seconds_left: int = CYCLE_SECONDS) -> str:
+          seconds_left: int = CYCLE_SECONDS, deadline: Optional[float] = None) -> str:
     from src.rsa_open.design import FLOOR_SHARE
     from src.rsa_open.paradigm import (BUDGET_USD, MAX_FEATURES, MAX_MINUTES, MAX_OBJECTS, MAX_POOL,
                                        MIN_HOURLY_USD, MIN_PARTICIPANTS)
     from src.rsa_open.pilot import FLOORS, TIME_TOLERANCE
 
     calls_left = MAX_TOOL_CALLS - len(ws.calls())
+    clock = time.strftime("%H:%M %Z", time.localtime(time.time() + seconds_left if deadline is None else deadline))
     theories = "\n".join(f"- **{name}** (`{ws.context / 'theories' / (name + '.py')}`): {text}"
                          for name, text in hypotheses.items())
     if history:
@@ -253,6 +259,12 @@ Their files (read-only) are in `{ws.context / 'theories'}`, their posterior draw
   paradigm gives under the same theories.
 - Every report is saved in `{ws.reports}`. Keep notes in `{ws.work}/notes.md`: a later session of this
   cycle starts with no memory but your files.
+- **The clock:** this session ends at **{clock}** (`date` shows the time now), about {seconds_left // 60} minutes
+  from its start, and every tool's output says how long is left. A full `eig` and a `link-check` take up to
+  35 minutes together, and the harness's checks run after you submit. Use the tools early: explore with
+  `eig --quick` rather than long scripts of your own, and leave yourself time to submit. If the session ends
+  without a submission, the harness submits your spec with the best full `eig` that meets the floor, if there
+  is one, and checks it like any submission.
 
 ## After you submit
 
@@ -338,7 +350,7 @@ def _sha_file(path: Path) -> str:
 
 
 def freeze(result: SubmissionResult, out: Path, *, chain: str, experiment: int,
-           code_commit: Optional[str]) -> Dict[str, Any]:
+           code_commit: Optional[str], submitted_by: str = "designer") -> Dict[str, Any]:
     """Write the paradigm that passed, and its record, to ``out`` (once)."""
     from src.rsa_open.page import render
     from src.rsa_open.screens import design_sha256
@@ -362,6 +374,7 @@ def freeze(result: SubmissionResult, out: Path, *, chain: str, experiment: int,
         "pilot": {k: d["pilot"][k] for k in ("comprehension_final", "catch_pass", "readable", "estimated_minutes",
                                              "participant_model")},
         "review_required": experiment == 1, "frozen_at": time.time(), "code_commit": code_commit,
+        "submitted_by": submitted_by,
     }
     (out / "record.json").write_text(json.dumps(record, indent=2))
     return record
@@ -396,8 +409,11 @@ def run_designer(root: Path, *, chain: str, experiment: int,
             if len(ws.calls()) >= MAX_TOOL_CALLS:
                 reason = "the designer's tool calls for the cycle were spent without a passing submission"
                 break
+            deadline = time.time() + left
+            write_deadline(ws, deadline)
             prompt = brief(ws, chain=chain, experiment=experiment, hypotheses=hypotheses, history=history,
-                           feedback=feedback, submissions_left=MAX_SUBMISSIONS - k, seconds_left=left)
+                           feedback=feedback, submissions_left=MAX_SUBMISSIONS - k, seconds_left=left,
+                           deadline=deadline)
             (ws.root / "logs" / f"brief_{k + 1}.md").write_text(prompt)
             started = time.monotonic()
             ok = spawn(ws, prompt, left, ws.root / "logs" / f"agent_{k + 1}.jsonl")
@@ -411,7 +427,12 @@ def run_designer(root: Path, *, chain: str, experiment: int,
                     reason = "the designer's session failed (the agent exited with an error) without a submission"
                 else:
                     reason = "the designer's session ended without a submission"
-                break
+                best = best_scored_spec(ws, exclude=failed_shas)
+                if best is None:
+                    reason += " (and no spec of its had a full eig meeting the floor)"
+                    break
+                ws.submission.write_text(json.dumps({"spec": best["spec"], "sha256": best["sha256"], "time": time.time(),
+                                                     "submitted_by": "harness", "why": reason}, indent=2))
             submitted = ws.root / "submissions" / f"{k + 1}.json"
             submitted.parent.mkdir(exist_ok=True)
             os.replace(ws.submission, submitted)  # the next session must submit anew
@@ -424,7 +445,8 @@ def run_designer(root: Path, *, chain: str, experiment: int,
                                           pilot_participants=pilot_participants,
                                           participant_factory=participant_factory)
             if result.passed:
-                return freeze(result, root / "frozen", chain=chain, experiment=experiment, code_commit=code_commit)
+                return freeze(result, root / "frozen", chain=chain, experiment=experiment, code_commit=code_commit,
+                              submitted_by=json.loads(submitted.read_text()).get("submitted_by", "designer"))
             failed_shas.add(sha)
             where = f" Its reports (and the pilot's transcripts) are in `{result.dir}`." if result.dir.exists() else ""
             feedback = (f"\n## Your last submission did not pass\n\n{result.feedback()}\n\n"

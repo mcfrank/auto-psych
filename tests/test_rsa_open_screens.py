@@ -208,3 +208,16 @@ def test_a_production_trial_offers_every_word_of_its_scene():
         options = t["widget"]["options"]
         assert sorted(o["utterance"] for o in options) == list(range(len(t["objects"][0])))
         assert [o["label"] for o in options] == [t["words"][o["utterance"]] for o in options]
+
+
+def test_catch_scenes_are_the_closed_campaign_s_drawn_alike():
+    """The open code's copy of `_catch_spec` (the agents' tree leaves src/rsa/experiment out)."""
+    from src.rsa.experiment.design import _catch_spec
+    from src.rsa_open.screens import catch_scene
+
+    for shape in ((2, 2), (3, 2), (3, 4), (4, 3), (6, 4)):
+        for seed in range(3):
+            a, b = np.random.default_rng(seed), np.random.default_rng(seed)
+            spec, target = _catch_spec(shape, a)
+            assert catch_scene(shape, b) == (spec.objects, spec.utterance, target)
+            assert a.integers(10**9) == b.integers(10**9)  # the generator is left in the same state

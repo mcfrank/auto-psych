@@ -82,14 +82,33 @@ def scene_of(trial: Mapping[str, Any]) -> Context:
 
 # --------------------------------------------------------------------------- catch trials
 
+def catch_scene(shape: Tuple[int, int], rng: np.random.Generator) -> Tuple[Tuple[Tuple[int, ...], ...], int, int]:
+    """An unambiguous scene of this shape: (objects, a word true of exactly one object, that object).
+
+    The closed campaign's catch trials (`src.rsa.experiment.design._catch_spec`, drawing the same
+    from ``rng``), here because the agents' tree leaves the closed experiment build out: the
+    designer's ``validate`` crashed on a missing module in run B's experiment 3 (2026-10-24)."""
+    from src.rsa.design_space import games
+
+    n_obj, n_feat = shape
+    candidates = []
+    for synonyms in (False, True):
+        candidates = [(matrix, word) for matrix in games(n_obj, n_feat, synonyms) for word in range(n_feat)
+                      if sum(row[word] for row in matrix) == 1]
+        if candidates:
+            break
+    if not candidates:
+        raise ValueError(f"no {n_obj}x{n_feat} game has a word true of exactly one object")
+    matrix, word = candidates[int(rng.integers(len(candidates)))]
+    objects = tuple(tuple(int(v) for v in row) for row in matrix)
+    return objects, word, next(i for i, row in enumerate(objects) if row[word])
+
+
 def _catch(shape: Tuple[int, int], rng: np.random.Generator, response_type: str, k: int,
            options: Mapping[str, int]) -> Dict[str, Any]:
     """An unambiguous trial and what passing it means, for the ``k``-th catch trial."""
-    from src.rsa.experiment.design import _catch_spec
-
-    spec, target = _catch_spec(shape, rng)
-    word = spec.utterance
-    objects = [list(r) for r in spec.objects]
+    scene, word, target = catch_scene(shape, rng)
+    objects = [list(r) for r in scene]
     trial: Dict[str, Any] = {"objects": objects, "heard": word}
     if response_type == "choice":
         trial["expect"] = {"choice": target}
@@ -103,7 +122,7 @@ def _catch(shape: Tuple[int, int], rng: np.random.Generator, response_type: str,
         top = options["total_points"]
         trial["expect"] = {"object": target, "min_points": top // 2 + 1}
     elif response_type == "production":
-        true_words = [f for f, v in enumerate(spec.objects[target]) if v]
+        true_words = [f for f, v in enumerate(scene[target]) if v]
         trial.update(target=target, expect={"utterance_in": true_words})
     elif response_type == "binary_judgment":
         if k % 2 == 1:  # the word is false of every other object

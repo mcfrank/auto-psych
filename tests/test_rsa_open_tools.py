@@ -212,3 +212,43 @@ def test_a_quick_eig_is_saved_apart_and_does_not_count_for_submit(ws, monkeypatc
     _report(ws, "link-check", sha, converged=True, recovered=True, misses={})
     assert main(["submit", "--workspace", str(ws.root), "--spec", str(spec)]) == 1
     assert "no eig report" in capsys.readouterr().out
+
+
+# --------------------------------------------------------------------------- the clock and the harness's submission
+
+def test_every_command_ends_with_the_time_left_and_urges_at_the_end(ws, capsys):
+    import time
+
+    from src.rsa_open.tools import main, time_note, write_deadline
+
+    assert time_note(ws) is None  # no deadline written: nothing to say
+    write_deadline(ws, time.time() + 90 * 60)
+    spec = write_spec(ws)
+    assert main(["validate", "--workspace", str(ws.root), "--spec", str(spec)]) == 0
+    out = capsys.readouterr().out
+    assert "time: 90 min left in this session" in out and "SUBMIT NOW" not in out
+    write_deadline(ws, time.time() + 10 * 60)
+    bad = ws.work / "bad.json"
+    bad.write_text("{}")
+    assert main(["validate", "--workspace", str(ws.root), "--spec", str(bad)]) == 1
+    out = capsys.readouterr().out  # a refused command says it too
+    assert "time: 10 min left" in out and "SUBMIT NOW" in out and "harness submits your best spec" in out
+
+
+def test_the_best_scored_spec_is_the_highest_bits_per_dollar_with_a_full_eig_meeting_the_floor(ws):
+    from src.rsa_open.paradigm import load_paradigm
+    from src.rsa_open.tools import best_scored_spec
+
+    assert best_scored_spec(ws) is None
+    low, high, below, quick_only, edited = (write_spec(ws, n_participants=k) for k in (121, 122, 123, 124, 125))
+    sha = {p: load_paradigm(p).sha256 for p in (low, high, below, quick_only, edited)}
+    _report(ws, "eig", sha[low], meets_floor=True, bits_per_dollar=0.02)
+    _report(ws, "eig", sha[high], meets_floor=True, bits_per_dollar=0.03)
+    _report(ws, "eig", sha[below], meets_floor=False, bits_per_dollar=0.05)
+    _report(ws, "eig-quick", sha[quick_only], meets_floor=True, bits_per_dollar=0.09)
+    _report(ws, "eig", sha[edited], meets_floor=True, bits_per_dollar=0.08)
+    edited.write_text(edited.read_text().replace('"n_participants": 125', '"n_participants": 126'))  # after its eig
+    (ws.work / "notes.json").write_text("{}")  # not a spec
+    best = best_scored_spec(ws)
+    assert best["sha256"] == sha[high] and best["spec"] == str(high.resolve())
+    assert best_scored_spec(ws, exclude={sha[high]})["sha256"] == sha[low]
