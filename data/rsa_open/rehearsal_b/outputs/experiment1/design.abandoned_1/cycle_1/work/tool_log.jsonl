@@ -1,0 +1,1 @@
+{"command": "validate", "spec": "/scratch/users/mcfrank/auto-psych/agent_trees/e6344f63e5fb0046/repo/_runs/chain_0/experiment1/design/cycle_1/work/cand_bet.json", "sha256": "4805e4c95007e9e7a2fe244d8a23032950de11ec226be3a9d97af2fddcdf37dd", "outcome": "refused: ModuleNotFoundError", "time": 1792687137.4675722}

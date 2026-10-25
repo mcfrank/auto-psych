@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "name": "choice_v3",
+  "summary": "Forced-choice referent selection across 2-6 objects and 2-4 features on informative and prior trials.",
+  "charter": {
+    "question": "When listeners make discrete referent choices across scenes spanning 2-6 objects and 2-4 features on informative and prior trials, do their choices follow depth-1 RSA with a multi-cue structural prior, singleton-only bounded-depth RSA, informative feature parsimony, or depth-2 recursive inference?"
+  },
+  "instructions": {
+    "welcome": "Welcome! In this short study, you will play a communication game where a speaker describes one of the objects on the screen.",
+    "task": "On each turn, you and the speaker see the same row of objects. The speaker has one target object in mind and says a single word that names a part on their target object. Your job is to click the object you think is the speaker's target. An object without the named part cannot be the target. On some turns, the speaker's word was cut off; on those turns, click the object you think the speaker is most likely to talk about.",
+    "comprehension_checks": [
+      {
+        "question": "What is your job on each turn when you hear the speaker's word?",
+        "options": [
+          "Click the object you think is the speaker's target",
+          "Click an object that does not have the named part",
+          "Count how many objects are on the screen"
+        ],
+        "correct": 0
+      },
+      {
+        "question": "Can an object that does NOT have the part named by the speaker be the target?",
+        "options": [
+          "No, the target always has the named part",
+          "Yes, the speaker always names a missing part",
+          "Only when there are five objects"
+        ],
+        "correct": 0
+      },
+      {
+        "question": "What should you do on turns where the speaker's word was cut off?",
+        "options": [
+          "Click the object you think the speaker is most likely to talk about",
+          "Close the page without answering",
+          "Always click the leftmost object"
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "snowmen",
+        "base": "<circle cx=\"50\" cy=\"77\" r=\"18\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"50\" cy=\"52\" r=\"13.5\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"50\" cy=\"31\" r=\"10.5\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"2.5\"/>",
+        "features": [
+          {
+            "word": "hat",
+            "svg": "<rect x=\"39\" y=\"4\" width=\"22\" height=\"15\" fill=\"#1e293b\"/>",
+            "phrase": null
+          },
+          {
+            "word": "scarf",
+            "svg": "<rect x=\"36\" y=\"38\" width=\"28\" height=\"6.5\" fill=\"#dc2626\"/>",
+            "phrase": null
+          },
+          {
+            "word": "broom",
+            "svg": "<line x1=\"15\" y1=\"32\" x2=\"21\" y2=\"90\" stroke=\"#92400e\" stroke-width=\"3.5\"/>",
+            "phrase": null
+          },
+          {
+            "word": "balloon",
+            "svg": "<ellipse cx=\"84\" cy=\"14\" rx=\"10\" ry=\"11.5\" fill=\"#a855f7\"/>",
+            "phrase": null
+          }
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [2, 2],
+      [2, 3],
+      [3, 2],
+      [3, 3],
+      [3, 4],
+      [4, 2],
+      [4, 3],
+      [4, 4],
+      [5, 2],
+      [6, 2]
+    ],
+    "prior_queries": true,
+    "synonyms": true
+  },
+  "response": {
+    "type": "choice",
+    "link": "choice",
+    "prompt": "The speaker says: {message}. Which object is the speaker's target?",
+    "prior_prompt": "The speaker's word was cut off. Which object do you think the speaker is talking about?",
+    "scale_labels": null,
+    "scale_points": null,
+    "total_points": null
+  },
+  "design": {
+    "n_participants": 200,
+    "trials_per_participant": 28,
+    "distinct_trials": 56,
+    "catch_trials": 2,
+    "minutes": 3.0,
+    "pay_usd": 0.5
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}

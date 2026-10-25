@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "name": "explore_slider",
+  "summary": "Exploration spec for 0-100 continuous slider on a probed referent.",
+  "charter": {
+    "question": "When listeners report a 0-100 continuous probability judgment for a highlighted candidate referent across 2-5 objects and 2-4 features, do their judgments follow depth-1 RSA with a multi-cue structural prior, singleton-only bounded-depth RSA, informative feature parsimony, or depth-2 recursive inference?"
+  },
+  "instructions": {
+    "welcome": "Welcome! In this short study, you will play a communication game where a speaker describes one of the objects on the screen.",
+    "task": "On each turn, you and the speaker see the same row of objects, and one object is highlighted with an orange frame. The speaker has one target object in mind and says a single word that names a part on their target object. Your job is to use the slider from 0 (Impossible) to 100 (Certain) to show how likely it is that the highlighted object is the speaker's target. On some turns, the speaker's word was cut off; on those turns, use the slider from 0 to 100 to show how likely it is that the speaker is talking about the highlighted object.",
+    "comprehension_checks": [
+      {
+        "question": "What are you rating with the 0 to 100 slider on each turn?",
+        "options": [
+          "How likely it is that the highlighted object is the speaker's target",
+          "How many parts the objects have",
+          "Which word the speaker should have said"
+        ],
+        "correct": 0
+      },
+      {
+        "question": "What slider value should you give if the highlighted object does NOT have the named part?",
+        "options": [
+          "0 (Impossible)",
+          "100 (Certain)",
+          "50"
+        ],
+        "correct": 0
+      },
+      {
+        "question": "What should you do on turns where the speaker's word was cut off?",
+        "options": [
+          "Use the slider from 0 to 100 to show how likely it is that the speaker is talking about the highlighted object",
+          "Always put the slider at 0",
+          "Skip the turn"
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "snowmen",
+        "base": "<circle cx=\"50\" cy=\"77\" r=\"18\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"50\" cy=\"52\" r=\"13.5\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"50\" cy=\"31\" r=\"10.5\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"2.5\"/>",
+        "features": [
+          {
+            "word": "hat",
+            "svg": "<rect x=\"39\" y=\"4\" width=\"22\" height=\"15\" fill=\"#1e293b\"/>",
+            "phrase": null
+          },
+          {
+            "word": "scarf",
+            "svg": "<rect x=\"36\" y=\"38\" width=\"28\" height=\"6.5\" fill=\"#dc2626\"/>",
+            "phrase": null
+          },
+          {
+            "word": "broom",
+            "svg": "<line x1=\"15\" y1=\"32\" x2=\"21\" y2=\"90\" stroke=\"#92400e\" stroke-width=\"3.5\"/>",
+            "phrase": null
+          },
+          {
+            "word": "balloon",
+            "svg": "<ellipse cx=\"84\" cy=\"14\" rx=\"10\" ry=\"11.5\" fill=\"#a855f7\"/>",
+            "phrase": null
+          }
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [2, 2],
+      [2, 3],
+      [3, 2],
+      [3, 3],
+      [3, 4],
+      [4, 2],
+      [4, 3],
+      [4, 4],
+      [5, 2],
+      [5, 3]
+    ],
+    "prior_queries": true,
+    "synonyms": true
+  },
+  "response": {
+    "type": "slider",
+    "link": "ordered_beta",
+    "prompt": "The speaker says: {message}. How likely is it that the highlighted object is the speaker's target?",
+    "prior_prompt": "The speaker's word was cut off. How likely is it that the speaker is talking about the highlighted object?",
+    "scale_labels": [
+      "Impossible",
+      "Certain"
+    ],
+    "scale_points": 100,
+    "total_points": null
+  },
+  "design": {
+    "n_participants": 200,
+    "trials_per_participant": 20,
+    "distinct_trials": 60,
+    "catch_trials": 2,
+    "minutes": 3.0,
+    "pay_usd": 0.5
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}

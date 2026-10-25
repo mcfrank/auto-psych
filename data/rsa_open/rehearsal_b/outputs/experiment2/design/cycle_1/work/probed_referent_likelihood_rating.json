@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "name": "probed_referent_likelihood_rating",
+  "summary": "7-point Likert likelihood ratings of a single probed candidate referent across 2-5 objects and 2-4 features with informative and prior queries and synonyms, testing whether reference theories generalize from multi-object allocation and forced choice to targeted single-referent evaluation.",
+  "charter": {
+    "question": "When listeners evaluate the likelihood of a single highlighted candidate referent on a 7-point scale across informative and prior trials spanning 2-5 objects and 2-4 features, do their graded judgments follow singleton-only bounded-depth RSA, a shared multi-cue structural prior (feature complexity and Hamming distinctiveness), a feature-parsimony penalty, or depth-2 recursive inference?"
+  },
+  "instructions": {
+    "welcome": "Welcome! In this short study, you will play a communication game where a speaker describes one of the objects on the screen.",
+    "task": "On each turn, you and the speaker see the same row of objects, and one object is highlighted with an orange frame. The speaker has one target object in mind and says a single word that names a part on their target object. Your job is to rate how likely it is that the highlighted object is the speaker's target on a scale from 1 (Definitely not) to 7 (Definitely). If the highlighted object does not have the named part, it cannot be the target (rate it 1). If the highlighted object is the only object that has the named part, it is definitely the target (rate it 7). If more than one object has the named part, use the 1 to 7 scale to show how likely the highlighted object is to be the target. On some turns, the speaker's word was cut off; on those turns, rate how likely it is that the speaker is talking about the highlighted object.",
+    "comprehension_checks": [
+      {
+        "question": "What are you rating on each turn?",
+        "options": [
+          "How likely it is that the highlighted object (in the orange frame) is the speaker's target, from 1 to 7",
+          "How many total parts all the objects have combined",
+          "Which word the speaker should have said instead"
+        ],
+        "correct": 0
+      },
+      {
+        "question": "What rating should you give if the highlighted object is the ONLY object that has the part named by the speaker?",
+        "options": [
+          "7 (Definitely)",
+          "1 (Definitely not)",
+          "2"
+        ],
+        "correct": 0
+      },
+      {
+        "question": "What should you do on turns where the speaker's word was cut off?",
+        "options": [
+          "Rate from 1 to 7 how likely it is that the speaker is talking about the highlighted object",
+          "Always rate every object 1",
+          "Skip the turn without answering"
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "snowmen",
+        "base": "<circle cx=\"50\" cy=\"77\" r=\"18\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"50\" cy=\"52\" r=\"13.5\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"50\" cy=\"31\" r=\"10.5\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"46.5\" cy=\"28.5\" r=\"1.8\" fill=\"#0f172a\"/><circle cx=\"53.5\" cy=\"28.5\" r=\"1.8\" fill=\"#0f172a\"/><polygon points=\"50,30.5 60,32.5 50,34\" fill=\"#f97316\" stroke=\"#c2410c\" stroke-width=\"1\"/><circle cx=\"46\" cy=\"36\" r=\"1.1\" fill=\"#0f172a\"/><circle cx=\"50\" cy=\"37\" r=\"1.1\" fill=\"#0f172a\"/><circle cx=\"54\" cy=\"36\" r=\"1.1\" fill=\"#0f172a\"/><circle cx=\"50\" cy=\"48\" r=\"1.8\" fill=\"#0f172a\"/><circle cx=\"50\" cy=\"54\" r=\"1.8\" fill=\"#0f172a\"/><circle cx=\"50\" cy=\"60\" r=\"1.8\" fill=\"#0f172a\"/>",
+        "features": [
+          {
+            "word": "hat",
+            "svg": "<rect x=\"34\" y=\"18\" width=\"32\" height=\"4.5\" rx=\"2\" fill=\"#1e293b\" stroke=\"#0f172a\" stroke-width=\"1.5\"/><rect x=\"39\" y=\"4\" width=\"22\" height=\"15\" rx=\"2\" fill=\"#1e293b\" stroke=\"#0f172a\" stroke-width=\"1.5\"/><rect x=\"39\" y=\"14\" width=\"22\" height=\"4\" fill=\"#ef4444\"/>",
+            "phrase": null
+          },
+          {
+            "word": "scarf",
+            "svg": "<rect x=\"36\" y=\"38\" width=\"28\" height=\"6.5\" rx=\"3\" fill=\"#dc2626\" stroke=\"#991b1b\" stroke-width=\"1.5\"/><rect x=\"55\" y=\"41\" width=\"8\" height=\"16\" rx=\"2\" fill=\"#dc2626\" stroke=\"#991b1b\" stroke-width=\"1.5\"/><line x1=\"56\" y1=\"57\" x2=\"56\" y2=\"60\" stroke=\"#dc2626\" stroke-width=\"2\"/><line x1=\"59\" y1=\"57\" x2=\"59\" y2=\"60\" stroke=\"#dc2626\" stroke-width=\"2\"/><line x1=\"62\" y1=\"57\" x2=\"62\" y2=\"60\" stroke=\"#dc2626\" stroke-width=\"2\"/>",
+            "phrase": null
+          },
+          {
+            "word": "broom",
+            "svg": "<line x1=\"37\" y1=\"50\" x2=\"17\" y2=\"46\" stroke=\"#78350f\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"15\" y1=\"32\" x2=\"21\" y2=\"90\" stroke=\"#92400e\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><polygon points=\"6,16 24,16 21,33 9,33\" fill=\"#eab308\" stroke=\"#a16207\" stroke-width=\"1.8\"/><line x1=\"11\" y1=\"16\" x2=\"12\" y2=\"33\" stroke=\"#a16207\" stroke-width=\"1.2\"/><line x1=\"15\" y1=\"16\" x2=\"15\" y2=\"33\" stroke=\"#a16207\" stroke-width=\"1.2\"/><line x1=\"19\" y1=\"16\" x2=\"18\" y2=\"33\" stroke=\"#a16207\" stroke-width=\"1.2\"/>",
+            "phrase": null
+          },
+          {
+            "word": "balloon",
+            "svg": "<line x1=\"63.5\" y1=\"50\" x2=\"79\" y2=\"44\" stroke=\"#78350f\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"79\" y1=\"44\" x2=\"84\" y2=\"28\" stroke=\"#334155\" stroke-width=\"1.6\"/><polygon points=\"84,24 81,28.5 87,28.5\" fill=\"#9333ea\" stroke=\"#581c87\" stroke-width=\"1\"/><ellipse cx=\"84\" cy=\"14\" rx=\"10\" ry=\"11.5\" fill=\"#a855f7\" stroke=\"#581c87\" stroke-width=\"2\"/><ellipse cx=\"80.5\" cy=\"10.5\" rx=\"2.5\" ry=\"4\" fill=\"#f3e8ff\"/>",
+            "phrase": null
+          }
+        ]
+      },
+      {
+        "name": "houses",
+        "base": "<rect x=\"24\" y=\"46\" width=\"52\" height=\"42\" fill=\"#fef3c7\" stroke=\"#78350f\" stroke-width=\"2.5\"/><polygon points=\"18,46 50,20 82,46\" fill=\"#b45309\" stroke=\"#78350f\" stroke-width=\"2.5\"/><rect x=\"44\" y=\"64\" width=\"12\" height=\"24\" fill=\"#92400e\" stroke=\"#451a03\" stroke-width=\"2\"/><circle cx=\"53\" cy=\"76\" r=\"1.5\" fill=\"#fbbf24\"/><rect x=\"29\" y=\"53\" width=\"11\" height=\"11\" fill=\"#bae6fd\" stroke=\"#0369a1\" stroke-width=\"1.8\"/><line x1=\"34.5\" y1=\"53\" x2=\"34.5\" y2=\"64\" stroke=\"#0369a1\" stroke-width=\"1.2\"/><line x1=\"29\" y1=\"58.5\" x2=\"40\" y2=\"58.5\" stroke=\"#0369a1\" stroke-width=\"1.2\"/><rect x=\"60\" y=\"53\" width=\"11\" height=\"11\" fill=\"#bae6fd\" stroke=\"#0369a1\" stroke-width=\"1.8\"/><line x1=\"65.5\" y1=\"53\" x2=\"65.5\" y2=\"64\" stroke=\"#0369a1\" stroke-width=\"1.2\"/><line x1=\"60\" y1=\"58.5\" x2=\"71\" y2=\"58.5\" stroke=\"#0369a1\" stroke-width=\"1.2\"/>",
+        "features": [
+          {
+            "word": "chimney",
+            "svg": "<rect x=\"62\" y=\"14\" width=\"13\" height=\"24\" fill=\"#dc2626\" stroke=\"#7f1d1d\" stroke-width=\"2\"/><rect x=\"60\" y=\"11\" width=\"17\" height=\"4\" fill=\"#991b1b\" stroke=\"#7f1d1d\" stroke-width=\"1.5\"/><circle cx=\"69\" cy=\"6.5\" r=\"3.5\" fill=\"#cbd5e1\" stroke=\"#64748b\" stroke-width=\"1.2\"/><circle cx=\"75\" cy=\"4\" r=\"2.5\" fill=\"#cbd5e1\" stroke=\"#64748b\" stroke-width=\"1.2\"/>",
+            "phrase": null
+          },
+          {
+            "word": "flag",
+            "svg": "<line x1=\"9\" y1=\"28\" x2=\"9\" y2=\"88\" stroke=\"#334155\" stroke-width=\"3\" stroke-linecap=\"round\"/><circle cx=\"9\" cy=\"26\" r=\"2.3\" fill=\"#eab308\" stroke=\"#a16207\" stroke-width=\"1\"/><polygon points=\"9,29 23,35 9,41\" fill=\"#2563eb\" stroke=\"#1e3a8a\" stroke-width=\"1.8\"/>",
+            "phrase": null
+          },
+          {
+            "word": "tree",
+            "svg": "<rect x=\"85\" y=\"72\" width=\"6\" height=\"16\" fill=\"#78350f\" stroke=\"#451a03\" stroke-width=\"1.5\"/><polygon points=\"77,74 88,54 99,74\" fill=\"#16a34a\" stroke=\"#14532d\" stroke-width=\"1.8\"/><polygon points=\"79,62 88,44 97,62\" fill=\"#22c55e\" stroke=\"#14532d\" stroke-width=\"1.8\"/>",
+            "phrase": null
+          },
+          {
+            "word": "sun",
+            "svg": "<circle cx=\"34\" cy=\"12\" r=\"6.5\" fill=\"#facc15\" stroke=\"#ca8a04\" stroke-width=\"1.5\"/><line x1=\"34\" y1=\"2\" x2=\"34\" y2=\"4.2\" stroke=\"#eab308\" stroke-width=\"2\" stroke-linecap=\"round\"/><line x1=\"34\" y1=\"19.8\" x2=\"34\" y2=\"22\" stroke=\"#eab308\" stroke-width=\"2\" stroke-linecap=\"round\"/><line x1=\"24\" y1=\"12\" x2=\"26.2\" y2=\"12\" stroke=\"#eab308\" stroke-width=\"2\" stroke-linecap=\"round\"/><line x1=\"41.8\" y1=\"12\" x2=\"44\" y2=\"12\" stroke=\"#eab308\" stroke-width=\"2\" stroke-linecap=\"round\"/><line x1=\"26.9\" y1=\"4.9\" x2=\"28.5\" y2=\"6.5\" stroke=\"#eab308\" stroke-width=\"2\" stroke-linecap=\"round\"/><line x1=\"39.5\" y1=\"17.5\" x2=\"41.1\" y2=\"19.1\" stroke=\"#eab308\" stroke-width=\"2\" stroke-linecap=\"round\"/><line x1=\"41.1\" y1=\"4.9\" x2=\"39.5\" y2=\"6.5\" stroke=\"#eab308\" stroke-width=\"2\" stroke-linecap=\"round\"/><line x1=\"28.5\" y1=\"17.5\" x2=\"26.9\" y2=\"19.1\" stroke=\"#eab308\" stroke-width=\"2\" stroke-linecap=\"round\"/>",
+            "phrase": null
+          }
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [2, 2],
+      [2, 3],
+      [3, 2],
+      [3, 3],
+      [3, 4],
+      [4, 2],
+      [4, 3],
+      [4, 4],
+      [5, 2]
+    ],
+    "prior_queries": true,
+    "synonyms": true
+  },
+  "response": {
+    "type": "rating",
+    "link": "rating",
+    "prompt": "The speaker says: {message}. How likely is it that the highlighted object is the speaker's target?",
+    "prior_prompt": "The speaker's word was cut off. How likely is it that the speaker is talking about the highlighted object?",
+    "scale_labels": [
+      "Definitely not",
+      "Definitely"
+    ],
+    "scale_points": 7,
+    "total_points": null
+  },
+  "design": {
+    "n_participants": 200,
+    "trials_per_participant": 20,
+    "distinct_trials": 50,
+    "catch_trials": 2,
+    "minutes": 3.0,
+    "pay_usd": 0.50
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}

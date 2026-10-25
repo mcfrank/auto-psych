@@ -1,0 +1,385 @@
+{
+  "$defs": {
+    "Charter": {
+      "additionalProperties": false,
+      "properties": {
+        "question": {
+          "title": "Question",
+          "type": "string"
+        }
+      },
+      "required": [
+        "question"
+      ],
+      "title": "Charter",
+      "type": "object"
+    },
+    "ComprehensionCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "question": {
+          "title": "Question",
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Options",
+          "type": "array"
+        },
+        "correct": {
+          "title": "Correct",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "question",
+        "options",
+        "correct"
+      ],
+      "title": "ComprehensionCheck",
+      "type": "object"
+    },
+    "Content": {
+      "additionalProperties": false,
+      "properties": {
+        "deception": {
+          "title": "Deception",
+          "type": "boolean"
+        },
+        "affective_stimuli": {
+          "title": "Affective Stimuli",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "deception",
+        "affective_stimuli"
+      ],
+      "title": "Content",
+      "type": "object"
+    },
+    "Design": {
+      "additionalProperties": false,
+      "properties": {
+        "n_participants": {
+          "title": "N Participants",
+          "type": "integer"
+        },
+        "trials_per_participant": {
+          "title": "Trials Per Participant",
+          "type": "integer"
+        },
+        "distinct_trials": {
+          "title": "Distinct Trials",
+          "type": "integer"
+        },
+        "catch_trials": {
+          "title": "Catch Trials",
+          "type": "integer"
+        },
+        "minutes": {
+          "title": "Minutes",
+          "type": "number"
+        },
+        "pay_usd": {
+          "title": "Pay Usd",
+          "type": "number"
+        }
+      },
+      "required": [
+        "n_participants",
+        "trials_per_participant",
+        "distinct_trials",
+        "catch_trials",
+        "minutes",
+        "pay_usd"
+      ],
+      "title": "Design",
+      "type": "object"
+    },
+    "Domain": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "base": {
+          "title": "Base",
+          "type": "string"
+        },
+        "features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Features",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "base",
+        "features"
+      ],
+      "title": "Domain",
+      "type": "object"
+    },
+    "Feature": {
+      "additionalProperties": false,
+      "properties": {
+        "word": {
+          "title": "Word",
+          "type": "string"
+        },
+        "svg": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Svg"
+        },
+        "phrase": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Phrase"
+        }
+      },
+      "required": [
+        "word"
+      ],
+      "title": "Feature",
+      "type": "object"
+    },
+    "Instructions": {
+      "additionalProperties": false,
+      "properties": {
+        "welcome": {
+          "title": "Welcome",
+          "type": "string"
+        },
+        "task": {
+          "title": "Task",
+          "type": "string"
+        },
+        "comprehension_checks": {
+          "items": {
+            "$ref": "#/$defs/ComprehensionCheck"
+          },
+          "title": "Comprehension Checks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "welcome",
+        "task",
+        "comprehension_checks"
+      ],
+      "title": "Instructions",
+      "type": "object"
+    },
+    "Materials": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "svg",
+            "text"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "domains": {
+          "items": {
+            "$ref": "#/$defs/Domain"
+          },
+          "title": "Domains",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "domains"
+      ],
+      "title": "Materials",
+      "type": "object"
+    },
+    "Response": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "choice",
+            "rating",
+            "slider",
+            "bet",
+            "production",
+            "binary_judgment"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "link": {
+          "title": "Link",
+          "type": "string"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "prior_prompt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prior Prompt"
+        },
+        "scale_labels": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scale Labels"
+        },
+        "scale_points": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scale Points"
+        },
+        "total_points": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total Points"
+        }
+      },
+      "required": [
+        "type",
+        "link",
+        "prompt"
+      ],
+      "title": "Response",
+      "type": "object"
+    },
+    "SceneSpace": {
+      "additionalProperties": false,
+      "properties": {
+        "sizes": {
+          "items": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "title": "Sizes",
+          "type": "array"
+        },
+        "prior_queries": {
+          "title": "Prior Queries",
+          "type": "boolean"
+        },
+        "synonyms": {
+          "title": "Synonyms",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "sizes",
+        "prior_queries",
+        "synonyms"
+      ],
+      "title": "SceneSpace",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "charter": {
+      "$ref": "#/$defs/Charter"
+    },
+    "instructions": {
+      "$ref": "#/$defs/Instructions"
+    },
+    "materials": {
+      "$ref": "#/$defs/Materials"
+    },
+    "scene_space": {
+      "$ref": "#/$defs/SceneSpace"
+    },
+    "response": {
+      "$ref": "#/$defs/Response"
+    },
+    "design": {
+      "$ref": "#/$defs/Design"
+    },
+    "content": {
+      "$ref": "#/$defs/Content"
+    }
+  },
+  "required": [
+    "schema_version",
+    "name",
+    "summary",
+    "charter",
+    "instructions",
+    "materials",
+    "scene_space",
+    "response",
+    "design",
+    "content"
+  ],
+  "title": "Paradigm",
+  "type": "object"
+}

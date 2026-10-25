@@ -1,0 +1,76 @@
+{
+  "theories": {
+    "rsa_l2_singleton_feat_color_valence_l0": {
+      "theory_sha256": "ca7fe0f167a4c85532df55567d0cfe73c5632c5168f191670e9aaeb16cbe8a97",
+      "draws_sha256": "bbd1984f4649aa4463c8d1e0cf051bc3d1e150a8e44b65ad685c9b81f237cee2"
+    },
+    "bounded_depth_listener": {
+      "theory_sha256": "f025f4b1ce18f89e4e9356c1194af78b21a8c99362b526e217fbfddaf69557de",
+      "draws_sha256": "3e592815735c93516a1f2c829056fe36c3d366de5790f69b9924ca1c33dbc847"
+    },
+    "rsa_l1_singleton_feat_color_valence_l0": {
+      "theory_sha256": "5902794e0f39cbacee1de2d84e38d677cc98e44fad631987015922cf28677a1a",
+      "draws_sha256": "8675f13d2f0cf1ddbd70e7a3fabaef50e69741b929e4b6c1bf8e74093a894aa1"
+    },
+    "bounded_depth_feature_parsimony": {
+      "theory_sha256": "2c9164d707eb45bc59fa3009752b3f702793f92254e941a268a03f4e7396d55e",
+      "draws_sha256": "dcd2b92ab3147456c2e866278b27ae97382cf6cf263319481c3f7cf2ed1a8b26"
+    },
+    "literal_listener": {
+      "theory_sha256": "04f06e2d7d62fc77595482ac1d44c25032827e92833dfbdee6e57b1ec5b6883d",
+      "draws_sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    "rsa_l1": {
+      "theory_sha256": "df909a385250d04076442f793337cbd8e58e38e12fa1820f896d9372c78e1067",
+      "draws_sha256": "c6048688a565bbe5eb359bc2a99ad4ec782d8c25950e5355a64488b6e092b91c"
+    },
+    "rsa_l2": {
+      "theory_sha256": "0e08a5dc4b4e15430fc64d8a13a1320abd0310e0ae77a1f1274e0eab27c90756",
+      "draws_sha256": "8befc3ef9603a9b37c86947d13ccbc9e338e49ed979e8f5ab8c36f42f730f19d"
+    },
+    "rsa_l1_salience": {
+      "theory_sha256": "ea5e725d91a41fb2d59f026f5484c8d63b98cbe3230dc3f973932999b8746c19",
+      "draws_sha256": "f93ce8f2e38a7821015bd493b1a9f4c3519744fea28dfd5a35bfa95a7adffe71"
+    },
+    "rsa_l1_shared_prior": {
+      "theory_sha256": "213dc40c5c59cd300e4a17ba59beb6f2416492ca645354cbf5422608501b35d3",
+      "draws_sha256": "c3135f3b213dd6f6709d49d175cf88a47c1b64b101db646ce059a831acc96432"
+    },
+    "isolated_graded_costly_l3": {
+      "theory_sha256": "cac4cbd78af2b03ee3643be8c1974344fe0a98019a63369ea5dcec41892c9880",
+      "draws_sha256": "fd3e3ac53e45ad16884d15c3773463ffdbb58d077f917fca0b3dfeaf48214f26"
+    },
+    "familiar_isolated_graded_costly_l2": {
+      "theory_sha256": "c67cb4407ed7b8968e2942ad09f77e76f7f1a22e12e97a78df255d2606604ef8",
+      "draws_sha256": "60325a51bd5b0ef8d4acf01e980fef36ca5b3c0cd8109786a0a467ca57500183"
+    },
+    "rsa_l2_singleton_distinct_feat_color_l0": {
+      "theory_sha256": "d4315a1b4df789ee4c7a20abc2c19d15e375ccbf9151f36c84904407bc99465b",
+      "draws_sha256": "358cc4971c7bb1e88141f4d283cc232c94fd8289cbedac3547fcdf0df8420694"
+    },
+    "evaluative_prominence_l2": {
+      "theory_sha256": "1fd6c9418daa805c379d28d0e46eb8bdefe30ab1de8d75041b3a52608b0241e9",
+      "draws_sha256": "1dc82ce478e7bec1f4694f584698e769f8b312bcb568879563d50ac558fc4965"
+    },
+    "lexical_preemption_heuristic": {
+      "theory_sha256": "dc53ca3e47d8b63789a027009042ef67e2df3c65cfda9a9dc2f5d32c066b829f",
+      "draws_sha256": "67e900dbb25a4c7b1d1d384647ee7aa1b57c8fa30faf70fe1f039a45ae8ae9a2"
+    },
+    "rsa_l2_singleton_feat_color_familiar_l0": {
+      "theory_sha256": "e633a323717144c7f0282f95629c18ef4cea06f60377b1c92d787c8376ff5960",
+      "draws_sha256": "80d3177ab49abee95b4f1fe6eaed68a77bacd0acab0c25e0a09c71adf0a72d11"
+    },
+    "competitor_confusion_speaker": {
+      "theory_sha256": "ea936aacd3741d0d041f01a7b733a143673c6e9ad6683981d09483e6074f5676",
+      "draws_sha256": "5dec119dda2619d58ef082e49dd2754cfa9c0e65e77c87b82525e802c221a2bd"
+    },
+    "softmax_surprisal_isolated_costly_l4": {
+      "theory_sha256": "c70eac142d9a24aa14d72a548a102a1804d64a14076f1b3a2ec582e0addab1d5",
+      "draws_sha256": "4e26bc47505e34e9d2313b43ca1c5f7a618b33e991990ef8958653315a78db6c"
+    },
+    "oddity_heuristic_listener": {
+      "theory_sha256": "040ad21eaa58e152cabf03836a0970e925dd554d2be3dbeffabe420d6a5f9296",
+      "draws_sha256": "63aef61b51a82d5605a987bca79b1ef36f165bffa7d0b887c277ba34892af412"
+    }
+  }
+}

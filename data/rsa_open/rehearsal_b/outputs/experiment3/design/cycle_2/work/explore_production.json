@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "name": "explore_production",
+  "summary": "Exploration spec for speaker utterance production.",
+  "charter": {
+    "question": "When speakers choose a single-word referring expression for a highlighted target object across scenes with 2-5 objects and 2-4 features, do their utterance choices align with the speaker predictions of depth-1 vs depth-2 RSA?"
+  },
+  "instructions": {
+    "welcome": "Welcome! In this short study, you will play a communication game where you describe one of the objects on the screen to a listener.",
+    "task": "On each turn, you and the listener see the same row of objects, and one target object is highlighted with an orange frame. Your job is to choose one word that names a part on the highlighted target object so the listener can figure out which object is the target.",
+    "comprehension_checks": [
+      {
+        "question": "What is your job on each turn?",
+        "options": [
+          "Choose a word that names a part on the highlighted target object so the listener can identify it",
+          "Choose a word for a part that is missing from the target object",
+          "Click all the objects on the screen"
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "snowmen",
+        "base": "<circle cx=\"50\" cy=\"77\" r=\"18\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"50\" cy=\"52\" r=\"13.5\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"50\" cy=\"31\" r=\"10.5\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"2.5\"/>",
+        "features": [
+          {
+            "word": "hat",
+            "svg": "<rect x=\"39\" y=\"4\" width=\"22\" height=\"15\" fill=\"#1e293b\"/>",
+            "phrase": null
+          },
+          {
+            "word": "scarf",
+            "svg": "<rect x=\"36\" y=\"38\" width=\"28\" height=\"6.5\" fill=\"#dc2626\"/>",
+            "phrase": null
+          },
+          {
+            "word": "broom",
+            "svg": "<line x1=\"15\" y1=\"32\" x2=\"21\" y2=\"90\" stroke=\"#92400e\" stroke-width=\"3.5\"/>",
+            "phrase": null
+          },
+          {
+            "word": "balloon",
+            "svg": "<ellipse cx=\"84\" cy=\"14\" rx=\"10\" ry=\"11.5\" fill=\"#a855f7\"/>",
+            "phrase": null
+          }
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [2, 2],
+      [2, 3],
+      [3, 2],
+      [3, 3],
+      [3, 4],
+      [4, 2],
+      [4, 3],
+      [4, 4]
+    ],
+    "prior_queries": false,
+    "synonyms": true
+  },
+  "response": {
+    "type": "production",
+    "link": "production",
+    "prompt": "You want the listener to pick the highlighted object. Which word do you say?",
+    "prior_prompt": null,
+    "scale_labels": null,
+    "scale_points": null,
+    "total_points": null
+  },
+  "design": {
+    "n_participants": 200,
+    "trials_per_participant": 22,
+    "distinct_trials": 66,
+    "catch_trials": 2,
+    "minutes": 3.0,
+    "pay_usd": 0.5
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}
