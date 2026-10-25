@@ -16,6 +16,84 @@
  },
  "best_promoted": "promoted:rsa_l2_singleton_distinct_feat_color_l0",
  "best_promoted_lpd": -10147.522478552488,
+ "bar_vs_best_promoted": {
+  "boundary_avoidable_ambiguity_listener": {
+   "diff": 197.92418335363618,
+   "se": 35.09328837856588
+  },
+  "feature_surprisal_ensemble_listener": {
+   "diff": 8.096555392405207,
+   "se": 24.065911656958914
+  },
+  "competition_endpoint_binding_lapse_l2": {
+   "diff": 60.76878327643499,
+   "se": 22.887987144962036
+  },
+  "seed:literal_listener": {
+   "diff": -1264.5719264148756,
+   "se": 116.326409341791
+  },
+  "seed:rsa_l1": {
+   "diff": -683.5000248661127,
+   "se": 88.54044602495846
+  },
+  "seed:rsa_l2": {
+   "diff": -677.1797615375526,
+   "se": 88.10560892756216
+  },
+  "seed:rsa_l1_salience": {
+   "diff": -652.1731640914404,
+   "se": 75.52541051565714
+  },
+  "seed:rsa_l1_shared_prior": {
+   "diff": -651.7341909893403,
+   "se": 76.4760140534667
+  },
+  "promoted:isolated_graded_costly_l3": {
+   "diff": -193.21043478360662,
+   "se": 41.01495478032413
+  },
+  "promoted:familiar_isolated_graded_costly_l2": {
+   "diff": -192.09453644738824,
+   "se": 40.956337127449025
+  },
+  "promoted:evaluative_prominence_l2": {
+   "diff": -644.4987764425041,
+   "se": 73.90972853950903
+  },
+  "promoted:lexical_preemption_heuristic": {
+   "diff": -1295.3635949906547,
+   "se": 115.83087309944949
+  },
+  "promoted:rsa_l2_singleton_feat_color_familiar_l0": {
+   "diff": -0.725441603719446,
+   "se": 0.11755860086160302
+  },
+  "promoted:rsa_l2_singleton_feat_color_valence_l0": {
+   "diff": -1.000922919707591,
+   "se": 0.22861782399545538
+  },
+  "promoted:competitor_confusion_speaker": {
+   "diff": -248.07238519890416,
+   "se": 47.24310172193529
+  },
+  "promoted:softmax_surprisal_isolated_costly_l4": {
+   "diff": -89.53602137972484,
+   "se": 27.06633696365256
+  },
+  "promoted:oddity_heuristic_listener": {
+   "diff": -713.9393682644568,
+   "se": 68.49419139737965
+  },
+  "promoted:rsa_l2": {
+   "diff": -677.1797615375526,
+   "se": 88.10560892756216
+  },
+  "promoted:rsa_l1": {
+   "diff": -683.5000248661127,
+   "se": 88.54044602495846
+  }
+ },
  "chains": {
   "c0": {
    "others_at_end": {
