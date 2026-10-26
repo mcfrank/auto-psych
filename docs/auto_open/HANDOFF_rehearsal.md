@@ -13,6 +13,86 @@ experiment. Theories must predict every paradigm with one set of parameters. Two
 
 Start B only after the driver has reviewed A.
 
+## The integrated harness: run C (plumbing) and the live smoke test (2026-10-26, proposed)
+
+> **Hold: proposed to the PI on 2026-10-26; launch only once the PI says go.** The live smoke test
+> (D2) recruits real people and needs its own explicit go-ahead.
+
+Runs B and B′ tested the loop at full size; nothing here repeats that. These runs test only what
+has never run on Sherlock: the fixed arm, a two-measure paradigm, reference keeping (from
+experiment 2), Gemini 4 theorists and critic, the designer's deadline, kill-and-resume, and the
+live path. Every loop is run A's trimmed loop: pragmods only, 1 round of 3 theorists, 3 folds.
+
+**Run C: three cells at once, simulated people, one work root, each on its own node.**
+
+```bash
+cd ~/auto-psych && git pull
+export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_plumbing
+mkdir -p "$WORK_ROOT/logs"
+common=ALL,WORK_ROOT=$WORK_ROOT,LITERATURE=pragmods,MAX_ITERATIONS=1,CANDIDATES=3,CV_FOLDS=3,PILOT_PARTICIPANTS=4
+for cell in "ARM=open,N_EXPERIMENTS=2" "ARM=fixed,N_EXPERIMENTS=2" "ARM=fixed,FIXED_SPEC=pair,N_EXPERIMENTS=1"; do
+  sbatch --chdir="$HOME/auto-psych" --partition=normal --time=1-00:00:00 -o "$WORK_ROOT/logs/%x_%A_%a.out" \
+    --export=$common,$cell scripts/rsa/slurm/open_rehearsal.sbatch
+done
+```
+
+The first job to start stages the code and fits the ground truth on pragmods; the others wait on
+its lock. **Kill and resume once:** when the open cell's log shows its experiment-1 loop has
+started, `scancel` it and submit the same line again. The log should show the loop set aside as
+`loop.abandoned_1` and restarted, with its fits read from the cache. **Then the ground-truth check**
+for each cell, once it is done (`ARM=open`, `ARM=fixed`, `ARM=fixed_pair`; `EXPERIMENT=2` for the
+first two):
+
+```bash
+sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%j.out" \
+  --export=ALL,WORK_ROOT=$WORK_ROOT,ARM=open,EXPERIMENT=2,CV_FOLDS=3 scripts/rsa/slurm/open_oracle.sbatch
+```
+
+**Expect** about half a day to a day of wall clock, and about $30 of agent spend (run A was 4 h 20 min
+and $9 for one open experiment). **What to report:** for each cell and experiment, the frozen design
+(`submitted_by`; for the open cell, whether the designer submitted before its deadline), the pilot,
+the simulated collection, the loop's attempts / admitted / too slow; for experiment 2, that each
+earlier paradigm's best theory was kept (`references` in `history.json`, any "over cap" event); the
+model ID on the token-usage records; the kill and resume; the oracle tables. **Bring back** to
+`data/rsa_open/plumbing/` as §3 says for run B (outputs without fit caches; never E's trials).
+
+**Run D: the live path.** `scripts/rsa/live/open_launch.sh` runs `scripts/rsa/slurm/open_live.sbatch`.
+A smoke test fields run C's frozen experiment-1 designs at a few people each (cells
+`<arm>_chain_0_smoke`, their own Hosting sites), and its data are never modelled.
+
+*D1, no money: a test deploy of each.* The page goes up, a Prolific draft is created, and the job stops
+with a STOP record saying so.
+
+```bash
+cd ~/auto-psych && git pull
+C=$SCRATCH/auto-psych/agent_trees/$(cat $SCRATCH/auto-psych/rsa_open_plumbing/cells/open_chain_0/agent_tree_id)/repo/_runs/chain_0
+F=$SCRATCH/auto-psych/agent_trees/$(cat $SCRATCH/auto-psych/rsa_open_plumbing/cells/fixed_chain_0/agent_tree_id)/repo/_runs/chain_0
+PROLIFIC_MODE=test ARM=open CHAINS=0 PARTICIPANTS=15 SMOKE_FROM=$C/experiment1 LINKS=1 bash scripts/rsa/live/open_launch.sh
+PROLIFIC_MODE=test ARM=fixed CHAINS=0 PARTICIPANTS=15 SMOKE_FROM=$F/experiment1 LINKS=1 bash scripts/rsa/live/open_launch.sh
+```
+
+Open each page from the log (add `?PROLIFIC_PID=test-<you>`; it really submits) and each draft in
+Prolific's dashboard: the study's name, description, pay and minutes are the paradigm's under one
+neutral text, and the blocklist filter lists the earlier RSA studies.
+
+*D2, about $25, with the PI's go-ahead: 15 people each.* **Check Prolific's balance first:** a
+publish the balance cannot cover fails after the draft is recorded (the closed campaign, 10-12), and
+the harness does not check it. The PI first approves the open smoke
+paradigm (`python -m src.rsa_open.review --frozen <smoke run>/experiment1/design/frozen --by <name>`);
+the fixed arm needs no review. Set `confirm_live_recruitment: true` in `scripts/rsa/live/open_live.yaml`
+**on Sherlock only, never committed**, then:
+
+```bash
+CLEAR_STOP=1 PROLIFIC_MODE=live ARM=open CHAINS=0 PARTICIPANTS=15 SMOKE_FROM=$C/experiment1 LINKS=1 bash scripts/rsa/live/open_launch.sh
+CLEAR_STOP=1 PROLIFIC_MODE=live ARM=fixed CHAINS=0 PARTICIPANTS=15 SMOKE_FROM=$F/experiment1 LINKS=1 bash scripts/rsa/live/open_launch.sh
+```
+
+The two studies run one after the other (one study recruits at a time, campaign-wide; the second job
+logs that it is waiting). While one fills: `python -m src.rsa_open.monitor --exp-dir <smoke run>/experiment1`.
+**Report** each study's `data/participants.json` (aggregates: kept, exclusions by reason,
+comprehension, catch, same-answer flags, minutes). **Never bring back** `cells/*/private/` or
+`private/campaign/` (Prolific ids).
+
 ## Restart, 2026-10-22 (answers `DRY_RUN_STATUS.md`)
 
 The stalled fit (`rsa_l1_shared_prior`) was the link's temperature trading off against the

@@ -1,0 +1,27 @@
+# The open campaign's live settings, both arms (docs/auto_open/PLAN.md Phase 3b, item 6; read by
+# src/rsa_open/live.py and scripts/rsa/slurm/open_live.sbatch). Each study's N, pay and minutes
+# are its paradigm's (the fixed arm's: src/rsa_open/fixed_paradigm.json), so they are not here.
+# Live recruitment spends real money: it needs confirm_live_recruitment: true here AND
+# CONFIRM_LIVE_RECRUITMENT=1 at submit, and the launcher asks for a typed "yes".
+
+confirm_live_recruitment: false   # set to true, deliberately, for a live (paid) launch
+firebase_project: auto-psych-2c5da
+code_tag: ""                      # the frozen tag every live chain runs on (set at registration; a live chain refuses without it)
+series_label: ro                  # Hosting sites <firebase_project>-<series_label>-<arm>-c<k> (<= 30 characters)
+max_concurrent_studies: 1         # one study recruits at a time across the campaign (the blocklist applies at publish)
+max_wait_hours: 3                 # then an unfilled study is paused and its partial data modelled (PREREG_DRAFT.md §4a)
+review_first_paradigm: true       # an open chain's experiment 1 is published only after the PI's approval
+
+study:                            # one neutral text for both arms: the listing does not say which arm a study is
+  name: "What do people mean?"
+  description: >-
+    On a few short screens, answer questions about what someone means or would say.
+    About {minutes} minutes, on a desktop computer.
+
+prolific:                         # rendered into the rsa_reference project's prolific_config.yaml
+  completion_code: AUTO_PSYCH_COMPLETE_RSA
+  completion_code_action: AUTOMATICALLY_APPROVE
+  device_compatibility: [desktop]
+  min_approval_rate: 98           # percent
+  exclude_earlier_participants: true
+  exclude_earlier_participants_from: project   # every earlier RSA study, closed and open; subjective randomness allowed (PI 2026-10-26)

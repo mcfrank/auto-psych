@@ -24,8 +24,10 @@ reads it), and a loop's fit cache moves to the new attempt, so no fit is repeate
    but one theory would leave the next design nothing to tell apart (zero bits, no paradigm
    above the floor: the first two-experiment dry run);
 2. **collect**: simulated participants (`GroundTruth`: a theory at fixed parameters, each link at
-   its reference values) answer every list of the frozen paradigm; the live path (Prolific) is
-   Phase 4's and is not here;
+   its reference values) answer every list of the frozen paradigm; or, with ``ChainConfig.live``,
+   real people do (`src.rsa_open.live`: deploy, Prolific, collection, exclusions), and the kept
+   people's rows, a record of the collection (``data/participants.json``, aggregates only) and
+   their completion times (``data/timing.json``) are written as a simulated experiment's are;
 **The fixed arm** (``ChainConfig.arm = "fixed"``, PI 2026-10-26) designs every experiment the same way
 but has no designer: its paradigm is always `src.rsa_open.fixed`'s frozen spec (the closed
 campaign's forced-choice reference game), submitted to the harness's own checks exactly as a
@@ -42,6 +44,7 @@ from __future__ import annotations
 import json
 import math
 import shutil
+import time
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
@@ -88,15 +91,29 @@ class FixedDesignFailed(RuntimeError):
     """The fixed arm's paradigm failed the harness's checks (a broken spec or harness, not a design)."""
 
 
+class OutOfJobTime(RuntimeError):
+    """Too little of the job is left to finish the next stage: the next job of the chain starts it
+    (a design or loop killed part way starts again from scratch, so starting one late wastes it)."""
+
+
+STAGE_MIN_HOURS = {"design": 8.0, "loop": 24.0}
+"""The time a job must have left to start a stage (run B: a designer cycle took up to 2 h and a
+design 6 h at worst; its loops 11-27 h)."""
+
+
 @dataclass
 class ChainConfig:
     chain: str
     seeds_dir: Path
     literature: Block
     out_dir: Path
-    ground_truth: GroundTruth
+    ground_truth: Optional[GroundTruth]
+    """Simulated participants; None with ``live``."""
     arm: str = "open"
     """"open" (an agent designer) or "fixed" (the closed forced-choice paradigm every experiment)."""
+    fixed_spec: Optional[Path] = None
+    """The fixed arm's spec (default `src.rsa_open.fixed.SPEC_PATH`; the two-measure rehearsal runs
+    `PAIR_SPEC_PATH`)."""
     n_experiments: int = 4
     loop: Dict[str, Any] = field(default_factory=dict)
     """OpenLoopConfig overrides (max_iterations, candidate_count, settings, ...)."""
@@ -112,6 +129,13 @@ class ChainConfig:
     other_chains: Sequence[Path] = ()
     """The campaign's other chains' run directories, whose finished experiments' timing every
     design reads too (PLAN.md, "Timing digest")."""
+    live: Optional[Any] = None
+    """`src.rsa_open.live.LiveConfig`: real people instead of ``ground_truth``."""
+    stop_after_collect: bool = False
+    """Stop once experiment 1's data are in (a live smoke test: its data are never modelled)."""
+    deadline: Optional[float] = None
+    """When the job ends (epoch seconds): a stage is started only with ``stage_min_hours`` left."""
+    stage_min_hours: Mapping[str, float] = field(default_factory=lambda: dict(STAGE_MIN_HOURS))
 
 
 def _hypotheses(models_dir: Path) -> Dict[str, str]:
@@ -172,6 +196,10 @@ class Chain:
         loop's ``models/`` and ``data/``)."""
         if cfg.arm not in ARMS:
             raise ValueError(f"arm {cfg.arm!r} is not one of {ARMS}")
+        if cfg.live is not None and cfg.ground_truth is not None:
+            raise ValueError("a chain collects from a ground truth (simulated) or from live people, not both")
+        if cfg.live is not None and cfg.live.participants is not None and not cfg.stop_after_collect:
+            raise ValueError("a smoke test's participant count is for data never modelled: it needs stop_after_collect")
         self.cfg = cfg
         self.designer_spawn = designer_spawn
         self.theorist_spawn = theorist_spawn
@@ -311,6 +339,8 @@ class Chain:
         frozen = self.exp(n) / "design" / "frozen"
         if (frozen / "record.json").exists():
             return frozen
+        if (self.exp(n) / "deployment").exists():
+            raise RuntimeError(f"experiment {n} has a deployment but no frozen design: refusing to design it again")
         if set_aside(self.exp(n) / "design") is not None:
             shutil.rmtree(self.exp(n) / "design")  # run_designer lays its directory out itself
         context = self.design_context(n)
@@ -336,7 +366,7 @@ class Chain:
         ws = prepare_workspace(self.exp(n) / "design" / "fixed", theories=context, history=self.history(n),
                                timing=self.timing(n))
         spec = ws.work / "paradigm.json"
-        shutil.copyfile(SPEC_PATH, spec)
+        shutil.copyfile(self.cfg.fixed_spec or SPEC_PATH, spec)
         submitted = ws.root / "submissions" / "1.json"
         submitted.parent.mkdir(parents=True, exist_ok=True)
         submitted.write_text(json.dumps({"spec": str(spec), "sha256": load_paradigm(spec).sha256,
@@ -360,9 +390,13 @@ class Chain:
             return out
         frozen = self.exp(n) / "design" / "frozen"
         paradigm = load_paradigm(frozen / "paradigm.json")
+        if self.cfg.live is not None:
+            return self.collect_live(n, paradigm)
         lists = json.loads((frozen / "lists.json").read_text())
         link = paradigm_likelihood(paradigm)
         gt = self.cfg.ground_truth
+        if gt is None:
+            raise ValueError("simulated collection needs a ground truth (or a live configuration)")
         theory = TheoryModel(Path(gt.theory_path), name="ground_truth")
         params = {**gt.theory_params, **link.reference_params, **link.named_params(gt.link_params)}
         trials = [t for lst in lists["lists"] for t in lst["trials"]]
@@ -392,6 +426,24 @@ class Chain:
         write_corpus(out, [paradigm_block(f"exp{n}", paradigm, rows)])
         return out
 
+    def collect_live(self, n: int, paradigm) -> Path:
+        from src.rsa_open import live
+        from src.rsa_open.corpus import paradigm_block
+
+        rows, record, seconds = live.collect(exp_dir=self.exp(n), chain=self.cfg.chain, arm=self.cfg.arm, n=n,
+                                             cfg=self.cfg.live)
+        data = self.exp(n) / "data"
+        data.mkdir(parents=True, exist_ok=True)
+        (data / "participants.json").write_text(json.dumps(record, indent=1))
+        with (data / "rows.jsonl").open("w") as f:
+            for r in rows:
+                f.write(json.dumps(r) + "\n")
+        if not (data / "timing.json").exists():
+            self.record_timing(n, seconds)
+        out = data / "block.json"
+        write_corpus(out, [paradigm_block(f"exp{n}", paradigm, rows)])
+        return out
+
     # ---------- 3. the inner loop ----------
     def model_loop(self, n: int) -> dict:
         from src.rsa_open.paradigm import load_paradigm
@@ -412,10 +464,27 @@ class Chain:
         OpenLoop(cfg, self.theorist_spawn(loop_dir)).run()
         return json.loads((loop_dir / "export.json").read_text())
 
+    def _time_for(self, stage: str, n: int) -> None:
+        if self.cfg.deadline is None:
+            return
+        left = (self.cfg.deadline - time.time()) / 3600
+        need = self.cfg.stage_min_hours.get(stage, 0.0)
+        if left < need:
+            raise OutOfJobTime(f"{self.cfg.chain}, experiment {n}: {left:.1f} h of the job left, under the "
+                               f"{need:g} h a {stage} needs; the chain's next job starts it")
+
     def run(self) -> List[dict]:
         exports = []
         for n in range(1, self.cfg.n_experiments + 1):
+            if not (self.exp(n) / "design" / "frozen" / "record.json").exists():
+                self._time_for("design", n)
             self.design(n)
             self.collect(n)
+            if self.cfg.stop_after_collect:
+                print(f"[chain] {self.cfg.chain}: stopped after experiment {n}'s collection (stop_after_collect)",
+                      flush=True)
+                break
+            if not (self.exp(n) / "loop" / "export.json").exists():
+                self._time_for("loop", n)
             exports.append(self.model_loop(n))
         return exports

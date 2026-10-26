@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
+from typing import Any, Mapping
 
 from .firebase import (
     firebase_project_from_rc,
@@ -56,6 +57,7 @@ def run_deployment(
     repo_root: Path,
     run_label: str | None = None,
     publish_another_prolific_study: bool = False,
+    recruitment_overrides: Mapping[str, Any] | None = None,
 ) -> Path:
     if deploy_target == "none":
         raise ValueError(
@@ -120,6 +122,7 @@ def run_deployment(
             manifest=payload_manifest,
             n_participants=n_participants,
             mode=prolific_mode,
+            recruitment_overrides=recruitment_overrides,
         )
         _record_plan(manifest, plan)
 
@@ -157,7 +160,11 @@ def run_deployment(
             # The page is live: create the draft now and record its id at
             # once (collection and the relaunch guard read it from disk).
             plan = create_draft_study(
-                project_id, manifest, n_participants, prolific_mode
+                project_id,
+                manifest,
+                n_participants,
+                prolific_mode,
+                **({"recruitment_overrides": recruitment_overrides} if recruitment_overrides else {}),
             )
             _record_plan(manifest, plan)
             write_client_config(exp_dir, manifest, existing=existing_config)

@@ -150,7 +150,7 @@ def test_the_fixed_arm_s_files_stay_out_of_the_agents_tree():
     exclude = (ROOT / "scripts/rsa/slurm/agent_tree.exclude").read_text().split()
     assert "/src/rsa_open/fixed.py" in exclude and "/src/rsa_open/fixed_paradigm.json" in exclude
     text = (ROOT / "scripts/rsa/slurm/open_rehearsal.sbatch").read_text()
-    assert 'CELL="${ARM}_chain_$CHAIN"' in text and '--arm "$ARM"' in text
+    assert 'CELL="${ARM}${SPEC_LABEL}_chain_$CHAIN"' in text and '--arm "$ARM"' in text
 
 
 @pytest.mark.slow  # the design fits, a real EIG pick and a scripted pilot of the fixed spec
@@ -197,3 +197,17 @@ def test_a_fixed_experiment_is_designed_end_to_end(tmp_path, monkeypatch):
     assert len(lists["lists"]) == 400  # one list per person
     assert all("variants" in t for t in lists["lists"][0]["trials"])
     assert np.isfinite(record["bits_per_dollar"])
+
+
+def test_the_two_measure_rehearsal_variant_is_the_builder_s_valid_and_within_budget():
+    from src.rsa_open.fixed import PAIR_SPEC_PATH, build_pair
+    from src.rsa_open.paradigm import BUDGET_USD, load_paradigm
+
+    assert json.loads(PAIR_SPEC_PATH.read_text()) == build_pair()
+    p = load_paradigm(PAIR_SPEC_PATH)
+    assert p.second_response.type == "rating" and p.cost_usd <= BUDGET_USD
+    assert (p.design.n_participants * p.design.trials_per_participant) % p.design.distinct_trials == 0
+    exclude = (ROOT / "scripts/rsa/slurm/agent_tree.exclude").read_text().split()
+    assert "/src/rsa_open/fixed_pair_paradigm.json" in exclude
+    text = (ROOT / "scripts/rsa/slurm/open_rehearsal.sbatch").read_text()
+    assert 'CELL="${ARM}${SPEC_LABEL}_chain_$CHAIN"' in text and "--fixed-spec" in text

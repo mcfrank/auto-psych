@@ -42,8 +42,11 @@ Everything else is identical by construction:
 each arm starts from the same seeds; chain 4 repeats chain 1's (the closed campaign's chain 0
 seeds), so one pair of chains measures chain-to-chain variance from one start.
 After the feasibility chain, the two arms' chains run concurrently, with recruitment interleaved,
-so time, Prolific's pool and the agents' model versions are shared. Every study excludes
-everyone who took any earlier auto-psych study.
+so time, Prolific's pool and the agents' model versions are shared. One study recruits at a time
+across the campaign, in the order the chains are ready, so Prolific's blocklist (applied when a
+study is published) covers every earlier study. Every study excludes everyone who took part in
+any earlier RSA study (§4b). Each study's listing uses one neutral name and description for both
+arms, with the paradigm's own pay and minutes.
 
 The closed campaign (October 2026) is reported as history and pilot evidence. It is not an arm:
 it ran older code and agents, and its pre-registered data are spent.
@@ -101,6 +104,12 @@ how it is going.
   - those from the closed RSA campaign are excluded (the same task);
   - those from the subjective-randomness studies are **allowed** (a different task), which
     widens the pool.
+- **Exclusions (proposed, 2026-10-26; awaiting the PI):** a participant's data are left out if
+  they missed any catch trial (the closed campaign's rule), failed the comprehension checks on the
+  second reading, had taken part in an earlier study of the campaign (a backstop to the
+  blocklist), or left an incomplete record. Nothing else: no exclusions by time or by answer
+  pattern. People who give the same answer on nearly every trial are monitored and reported, not
+  excluded. The gate's "exclusions ≤ 25%" (§4) counts these exclusions.
 - About 32 experiments × 400 people plus the bakeoff is roughly 14,000 people. Recruitment speed
   is monitored. If a study's fill rate falls below half the first experiment's, its collection
   window is extended; the exclusions are never relaxed mid-campaign.
@@ -137,6 +146,7 @@ how it is going.
 - Each arm's admission outcomes: too slow, not converged, admitted.
 - Claim 3's designer measures, pilot against live.
 - The rehearsals: run B, its replay and the ground-truth check, and the integrated harness's
-  rehearsal.
+  rehearsal (run C, simulated) and live smoke test (run D: about 15 people per arm on a
+  rehearsal's design, never modelled).
 - **Scope:** every paradigm shares one abstract scene (referents, features, a message, its
   alternatives). Generalization is claimed within that space of operationalizations.

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 import urllib.parse
 
 from .manifest import DeploymentManifest, slug
@@ -175,8 +175,21 @@ def external_study_url(base_url: str) -> str:
     )
 
 
-def load_recruitment_config(project_id: str, n_participants: int) -> dict[str, Any]:
+# What a caller may set per study over the project's rendered settings (the open RSA campaign:
+# each experiment's paradigm sets its own pay and length).
+RECRUITMENT_OVERRIDE_KEYS = ("reward", "estimated_completion_time", "name", "description")
+
+
+def load_recruitment_config(
+    project_id: str,
+    n_participants: int,
+    overrides: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     """The project's Prolific settings for a study that recruits ``n_participants``.
+
+    ``overrides`` (only ``RECRUITMENT_OVERRIDE_KEYS``) replace the rendered
+    settings for this one study; an overridden ``reward`` drops any
+    ``reward_per_hour``, which would otherwise take precedence.
 
     ``--n-participants`` is the one participant count: it sets the design's N,
     the collection poll's target and the study's places. The rendered
@@ -206,6 +219,16 @@ def load_recruitment_config(project_id: str, n_participants: int) -> dict[str, A
             "total_available_places from that file (re-render it with "
             "_pilot_config.py --render-only) or pass the number you mean to recruit."
         )
+    if overrides:
+        unknown = sorted(set(overrides) - set(RECRUITMENT_OVERRIDE_KEYS))
+        if unknown:
+            raise ValueError(
+                f"recruitment overrides {unknown} are not among {RECRUITMENT_OVERRIDE_KEYS}"
+            )
+        cfg = dict(cfg)
+        if "reward" in overrides:
+            cfg.pop("reward_per_hour", None)
+        cfg.update(overrides)
     return cfg
 
 
@@ -264,11 +287,12 @@ def build_prolific_plan(
     mode: str,
     test_participant_id: str | None = None,
     excluded_study_ids: Sequence[str] = (),
+    recruitment_overrides: Mapping[str, Any] | None = None,
 ) -> ProlificStudyPlan:
     if not manifest.experiment_url:
         raise ValueError("Prolific study creation requires an experiment_url")
 
-    cfg = load_recruitment_config(project_id, n_participants)
+    cfg = load_recruitment_config(project_id, n_participants, recruitment_overrides)
     completion_code = str(cfg.get("completion_code") or "AUTO_PSYCH_COMPLETE")
     redirect = str(
         cfg.get("prolific_redirect_url") or completion_redirect_url(completion_code)
@@ -349,7 +373,11 @@ def verify_live_eligibility() -> None:
 
 
 def create_draft_study(
-    project_id: str, manifest: DeploymentManifest, n_participants: int, mode: str
+    project_id: str,
+    manifest: DeploymentManifest,
+    n_participants: int,
+    mode: str,
+    recruitment_overrides: Mapping[str, Any] | None = None,
 ) -> ProlificStudyPlan:
     """Create a DRAFT Prolific study. It is never published here — the caller
     publishes only for live mode. Test mode creates the same draft (no test
@@ -363,7 +391,7 @@ def create_draft_study(
     """
     from src.runtime.prolific import create_study
 
-    recruitment = load_recruitment_config(project_id, n_participants)
+    recruitment = load_recruitment_config(project_id, n_participants, recruitment_overrides)
     exclude = excludes_earlier_participants(recruitment)
     scope = earlier_participants_scope(recruitment)
     excluded: list[str] = []
@@ -379,6 +407,7 @@ def create_draft_study(
         n_participants=n_participants,
         mode=mode,
         excluded_study_ids=excluded,
+        recruitment_overrides=recruitment_overrides,
     )
     study_id, err = create_study(plan.payload)
     if err:

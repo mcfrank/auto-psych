@@ -30,7 +30,9 @@
 # environment variables that point outside the tree are withheld from the agents.
 #
 # ARM ("open"; "fixed": the closed forced-choice paradigm every experiment, no designer, cell
-# fixed_chain_<k>; both arms can share a WORK_ROOT and its ground truth).
+# fixed_chain_<k>; both arms can share a WORK_ROOT and its ground truth). FIXED_SPEC=pair (with
+# ARM=fixed): the two-measure rehearsal variant of the fixed paradigm (src/rsa_open/fixed.py
+# build_pair), cell fixed_pair_chain_<k>.
 #
 # Overrides: CHAINS ("0"), N_EXPERIMENTS (4), MAX_ITERATIONS (5), CANDIDATES (6),
 # PILOT_PARTICIPANTS (12), CV_FOLDS (5), THEORIST_TIMEOUT_SEC (2400), SEED (0), RUN2_ROOT (run 2's
@@ -101,7 +103,15 @@ GT_ORIGINAL="$("$VENV_PY" -c 'import json,sys; print(json.load(open(sys.argv[1])
 # --- the cell and its agent tree (as outer_rehearsal.sbatch) ------------------------
 ARM="${ARM:-open}"
 case "$ARM" in open|fixed) ;; *) echo "ERROR: ARM must be open or fixed, not $ARM" >&2; exit 1 ;; esac
-CELL="${ARM}_chain_$CHAIN"
+SPEC_FLAG=()
+SPEC_LABEL=""
+case "${FIXED_SPEC:-}" in
+  "") ;;
+  pair) [[ "$ARM" == fixed ]] || { echo "ERROR: FIXED_SPEC is for ARM=fixed" >&2; exit 1; }
+        SPEC_FLAG=(--fixed-spec "$WORK_ROOT/harness_repo/src/rsa_open/fixed_pair_paradigm.json"); SPEC_LABEL=_pair ;;
+  *) echo "ERROR: FIXED_SPEC must be pair or unset, not $FIXED_SPEC" >&2; exit 1 ;;
+esac
+CELL="${ARM}${SPEC_LABEL}_chain_$CHAIN"
 CELL_DIR="$CELLS_ROOT/$CELL"
 mkdir -p "$CELL_DIR"
 [[ -s "$CELL_DIR/agent_tree_id" ]] || head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$CELL_DIR/agent_tree_id"
@@ -168,6 +178,7 @@ env ${UNSET_ARGS[@]+"${UNSET_ARGS[@]}"} PATH="$RUN_REPO/.agent_bin:$PATH" \
     --agent-root "$RUN_REPO" --literature "$EXISTING" --seeds "$WORK_ROOT/open_seeds" \
     --n-experiments "$N_EXPERIMENTS" --max-iterations "$MAX_ITERATIONS" --candidate-count "$CANDIDATES" \
     --pilot-participants "$PILOT_PARTICIPANTS" --cv-folds "$CV_FOLDS" --theorist-timeout-sec "$THEORIST_TIMEOUT_SEC" --seed "$SEED" \
+    ${SPEC_FLAG[@]+"${SPEC_FLAG[@]}"} \
     --code-commit "$(cat "$WORK_ROOT/code_commit")"
 
 # --- outputs: the run without fit caches; where agents' files name the truth ----------

@@ -544,14 +544,53 @@ The existing protocol covers the rest (PI, 2026-10-20).
      the first measure; timing adds both answers.
    - **The critic** sees the second response as `second_*` columns and simulates both.
    - The designer's brief describes the option; a theory may not use a `q2_` parameter name.
-6. **Live collection for open chains:** deploy the spec's page, Prolific (double gate, blocklist,
-   one study per experiment), collection, participant ids; interleaved publishing across arms;
-   neutral study text; the monitor covering every response type.
-7. **Infrastructure:** chains spread across nodes (`normal` partition, resume across its 48-hour
-   limit), the failure rules (`PREREG_DRAFT.md`), a frozen code tag, and a schedule.
+6. **Live collection for open chains** (built 2026-10-26, `src/rsa_open/live.py`; tests in
+   `tests/test_rsa_open_live.py`, one of them in Chromium against stand-in `/assign` and `/submit`):
+   - The page is the open player with the closed campaign's live hooks (the list from `/assign`, the
+     data to `/submit`, Prolific's completion URL). The deployment injects the IRB consent gate.
+   - The deployment is main's, under the closed campaign's Prolific project (`rsa_reference`), so the
+     project-scoped blocklist excludes everyone from any earlier RSA study, closed or open, and
+     admits the subjective-randomness studies' people. One study per experiment (main's guard).
+   - Each study's N, pay and minutes are its paradigm's (`recruitment_overrides`, a new optional
+     argument of main's deployment), under one neutral name and description for both arms
+     (`scripts/rsa/live/open_live.yaml`), so a listing does not say which arm it is.
+   - **One study recruits at a time across the campaign** (a lock every chain's job shares):
+     Prolific applies the blocklist at publish, so two open studies could share a person. Chains
+     publish in the order they are ready, which interleaves the arms.
+   - Participant ids are the campaign's (`p<k>`, one private map). Someone seen in an earlier study
+     is excluded, on record; raw responses stay private on Sherlock.
+   - **Exclusions:** a missed catch trial (the closed campaign's rule), failed comprehension checks
+     on the second reading, a repeat person, an incomplete record (`PREREG_DRAFT.md` §4b).
+   - **Monitoring:** every 10 minutes while a study fills, and at its end: exclusions by reason,
+     comprehension, catch trials, people giving the same answer on nearly every test trial (a
+     screen position for a choice, the same rating, slider value, allocation, word or yes/no, both
+     parts of a two-measure trial), fast responders, minutes. `python -m src.rsa_open.monitor`
+     prints it for a running study.
+   - **The PI's review** (`python -m src.rsa_open.review`): an open chain's experiment 1 is published
+     only with an approval naming its paradigm's sha256. A test launch (deploy + Prolific draft)
+     needs none: it is how the PI sees the page.
+   - **A smoke test** fields another run's frozen design at a few people and stops; it is never
+     modelled.
+7. **Infrastructure** (built 2026-10-26): `scripts/rsa/live/open_launch.sh` submits a ladder of
+   jobs per chain (`open_live.sbatch`; default 4 × 48 h on `normal`, each after the last). A job
+   never starts a design or loop it cannot finish (8 h and 24 h left, `STAGE_MIN_HOURS`); it hands
+   the chain to the next job, which resumes it. A job that finishes, stops for review, made a test
+   deploy, or failed writes the cell's STOP; the ladder's later jobs then exit, and a person
+   relaunches with `CLEAR_STOP=1` (`PREREG_DRAFT.md` §4a: infrastructure resumes, a failure is
+   looked at first). A live chain runs only on the config's frozen `code_tag`, clean, staged once
+   (`stage_code.sh`; later fixes only as logged re-stages). The model ID is on every token-usage
+   record. **Still open:** the schedule (below, after run C) and the tag itself (at registration).
 8. The pre-registration's remaining pieces: claim 3's metric, chain-level reporting and failure
    rules.
-9. The rehearsal of both arms, simulated, with Gemini 4 and the ground-truth check.
+9. The rehearsal of both arms, simulated, with Gemini 4 and the ground-truth check. **Proposed
+   (2026-10-26):** not a third full-size rehearsal, since runs B and B′ tested the loop at size. Run C
+   (plumbing) runs three cells at once on run A's trimmed loop, each on its own node: an open chain
+   (2 experiments), a fixed chain (2), and the fixed paradigm with a second measure
+   (`fixed_pair_paradigm.json`, 1; a designer picks its own format, so the two-measure path is
+   rehearsed on a harness spec). It includes one kill-and-resume and the ground-truth check.
+   Expect half a day to a day and about $30. Run D tests the live path: a test deploy of each arm
+   (no money), then, with the PI's go-ahead, about 15 real people each (about $25, never
+   modelled). `HANDOFF_rehearsal.md` has the commands.
 
 **Gemini 4 smoke test (2026-10-20).** The API key sees `gemini-4-argon`. A designer-style call
 (propose one new paradigm, JSON only) returned valid JSON in 6 s for about 430 tokens. It
