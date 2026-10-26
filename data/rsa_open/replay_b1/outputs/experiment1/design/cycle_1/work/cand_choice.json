@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "name": "multi_competitor_choice",
+  "summary": "Referent choice across 2-5 objects and 2-4 features with prior queries and synonymy.",
+  "charter": {
+    "question": "How do listeners resolve referring expressions across multi-competitor scenes that pit recursive pragmatic inference against minimum-distance isolation, sum-distance distinctiveness, feature dilution, competitor confusion, and singleton oddity?"
+  },
+  "instructions": {
+    "welcome": "Welcome! In this short study, you will play a communication game where a speaker describes one of the objects on the screen.",
+    "task": "On each turn, you will see a row of objects and a word from the speaker. Click the object you think the speaker is talking about. On some turns, the speaker's word is missing; click the object you think the speaker is most likely to talk about.",
+    "comprehension_checks": [
+      {
+        "question": "What is your goal on each turn?",
+        "options": [
+          "Click the object you think the speaker is talking about",
+          "Click the object with the fewest parts",
+          "Click the leftmost object"
+        ],
+        "correct": 0
+      },
+      {
+        "question": "What should you do when the speaker's word is missing?",
+        "options": [
+          "Click the object you think the speaker is most likely to talk about",
+          "Skip the turn without clicking",
+          "Always click the first object"
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "robots",
+        "base": "<rect x=\"25\" y=\"30\" width=\"50\" height=\"50\" rx=\"8\" fill=\"#90a4ae\" stroke=\"#37474f\" stroke-width=\"3\"/><circle cx=\"40\" cy=\"50\" r=\"5\" fill=\"#ffffff\"/><circle cx=\"60\" cy=\"50\" r=\"5\" fill=\"#ffffff\"/><circle cx=\"40\" cy=\"50\" r=\"2.5\" fill=\"#263238\"/><circle cx=\"60\" cy=\"50\" r=\"2.5\" fill=\"#263238\"/><rect x=\"38\" y=\"65\" width=\"24\" height=\"6\" rx=\"3\" fill=\"#37474f\"/>",
+        "features": [
+          {
+            "word": "hat",
+            "svg": "<polygon points=\"30,30 50,8 70,30\" fill=\"#e53935\" stroke=\"#b71c1c\" stroke-width=\"2\"/>"
+          },
+          {
+            "word": "scarf",
+            "svg": "<rect x=\"22\" y=\"76\" width=\"56\" height=\"10\" rx=\"4\" fill=\"#1e88e5\" stroke=\"#0d47a1\" stroke-width=\"2\"/>"
+          },
+          {
+            "word": "flag",
+            "svg": "<line x1=\"82\" y1=\"20\" x2=\"82\" y2=\"75\" stroke=\"#5d4037\" stroke-width=\"3\"/><polygon points=\"82,20 98,27 82,34\" fill=\"#fdd835\" stroke=\"#f57f17\" stroke-width=\"2\"/>"
+          },
+          {
+            "word": "belt",
+            "svg": "<rect x=\"25\" y=\"58\" width=\"50\" height=\"6\" fill=\"#43a047\" stroke=\"#1b5e20\" stroke-width=\"1.5\"/>"
+          }
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [2, 2], [2, 3], [2, 4],
+      [3, 2], [3, 3], [3, 4],
+      [4, 2], [4, 3], [4, 4],
+      [5, 2], [5, 3]
+    ],
+    "prior_queries": true,
+    "synonyms": true
+  },
+  "response": {
+    "type": "choice",
+    "link": "choice",
+    "prompt": "The speaker says: {message}. Which one are they talking about?",
+    "prior_prompt": "The speaker's word was cut off. Which one are they talking about?"
+  },
+  "design": {
+    "n_participants": 150,
+    "trials_per_participant": 20,
+    "distinct_trials": 50,
+    "catch_trials": 2,
+    "minutes": 2.4,
+    "pay_usd": 0.40
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}

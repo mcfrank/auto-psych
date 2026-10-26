@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "name": "graded_belief_allocation_10pt",
+  "summary": "Graded belief allocation (10-point bet) across 2-5 objects and 2-4 features on informative and prior trials.",
+  "charter": {
+    "question": "When listeners distribute graded credence (10 points) across candidate referents on informative and uninformative trials, do their full belief distributions follow recursive pragmatic inference with shared perceptual priors, depth-3 graded lexical precision, competitor-confusion avoidance, or a singleton oddity heuristic?"
+  },
+  "instructions": {
+    "welcome": "Welcome! In this short study, you will play a communication game where a speaker describes one of the objects on the screen.",
+    "task": "On each turn, you will see a row of objects and a word from the speaker. The speaker's word names a part that their target object has. Split 10 points across the objects to show how likely each object is to be the one the speaker is talking about. Give more points to objects that are more likely, and 0 points to objects that do not have the named part. Your points on each turn must add up to 10. On some turns, the speaker's word is missing; split your 10 points based on which object you think the speaker is most likely to talk about.",
+    "comprehension_checks": [
+      {
+        "question": "How many total points must you split across the objects on each turn?",
+        "options": [
+          "10 points in total across the objects",
+          "10 points for every single object",
+          "100 points in total across the objects"
+        ],
+        "correct": 0
+      },
+      {
+        "question": "How many points should you give to an object that does not have the part named by the speaker?",
+        "options": [
+          "0 points",
+          "10 points",
+          "5 points"
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "robots",
+        "base": "<rect x=\"25\" y=\"30\" width=\"50\" height=\"50\" rx=\"8\" fill=\"#90a4ae\" stroke=\"#37474f\" stroke-width=\"3\"/><circle cx=\"40\" cy=\"50\" r=\"5\" fill=\"#ffffff\"/><circle cx=\"60\" cy=\"50\" r=\"5\" fill=\"#ffffff\"/><circle cx=\"40\" cy=\"50\" r=\"2.5\" fill=\"#263238\"/><circle cx=\"60\" cy=\"50\" r=\"2.5\" fill=\"#263238\"/><rect x=\"38\" y=\"65\" width=\"24\" height=\"6\" rx=\"3\" fill=\"#37474f\"/>",
+        "features": [
+          {
+            "word": "hat",
+            "svg": "<polygon points=\"30,30 50,8 70,30\" fill=\"#e53935\" stroke=\"#b71c1c\" stroke-width=\"2\"/>"
+          },
+          {
+            "word": "scarf",
+            "svg": "<rect x=\"22\" y=\"76\" width=\"56\" height=\"10\" rx=\"4\" fill=\"#1e88e5\" stroke=\"#0d47a1\" stroke-width=\"2\"/>"
+          },
+          {
+            "word": "flag",
+            "svg": "<line x1=\"82\" y1=\"20\" x2=\"82\" y2=\"75\" stroke=\"#5d4037\" stroke-width=\"3\"/><polygon points=\"82,20 98,27 82,34\" fill=\"#fdd835\" stroke=\"#f57f17\" stroke-width=\"2\"/>"
+          },
+          {
+            "word": "belt",
+            "svg": "<rect x=\"25\" y=\"58\" width=\"50\" height=\"6\" fill=\"#43a047\" stroke=\"#1b5e20\" stroke-width=\"1.5\"/>"
+          }
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [2, 2], [2, 3], [2, 4],
+      [3, 2], [3, 3], [3, 4],
+      [4, 2], [4, 3], [4, 4],
+      [5, 2], [5, 3]
+    ],
+    "prior_queries": true,
+    "synonyms": true
+  },
+  "response": {
+    "type": "bet",
+    "link": "allocation",
+    "prompt": "The speaker says: {message}. Split 10 points across the objects to show how likely each one is to be the speaker's target.",
+    "prior_prompt": "The speaker's word was cut off. Split 10 points across the objects to show how likely each one is to be the speaker's target.",
+    "total_points": 10
+  },
+  "design": {
+    "n_participants": 135,
+    "trials_per_participant": 16,
+    "distinct_trials": 45,
+    "catch_trials": 2,
+    "minutes": 4.2,
+    "pay_usd": 0.70
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}

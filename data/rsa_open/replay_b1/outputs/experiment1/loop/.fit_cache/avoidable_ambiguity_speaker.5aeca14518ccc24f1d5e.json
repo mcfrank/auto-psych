@@ -1,0 +1,1 @@
+{"theory_name": "avoidable_ambiguity_speaker", "blocks": ["E", "exp1"], "param_names": ["alpha", "w_singleton", "lapse@E", "kappa@exp1", "lapse@exp1", "temperature@exp1"], "convergence_problems": [], "offsets": {"E": [0, 40590], "exp1": [40590, 42030]}, "timing": {"warmup_sec": 449.031783035025, "warmup_steps": 4590.0, "sampling_sec": 288.8744235248305, "sampling_steps": 3496.0}}

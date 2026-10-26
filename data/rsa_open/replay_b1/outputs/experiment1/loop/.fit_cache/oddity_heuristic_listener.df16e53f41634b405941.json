@@ -1,0 +1,1 @@
+{"theory_name": "oddity_heuristic_listener", "blocks": ["E", "exp1"], "param_names": ["beta", "lapse@E", "kappa@exp1", "lapse@exp1", "temperature@exp1"], "convergence_problems": [], "offsets": {"E": [0, 40176], "exp1": [40176, 41616]}, "timing": {"warmup_sec": 267.2256356156431, "warmup_steps": 4906.0, "sampling_sec": 176.55267623998225, "sampling_steps": 3500.0}}

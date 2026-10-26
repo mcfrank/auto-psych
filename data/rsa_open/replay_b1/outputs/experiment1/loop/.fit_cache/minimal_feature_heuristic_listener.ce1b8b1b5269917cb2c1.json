@@ -1,0 +1,1 @@
+{"theory_name": "minimal_feature_heuristic_listener", "blocks": ["E", "exp1"], "param_names": ["beta", "lapse@E", "kappa@exp1", "lapse@exp1", "temperature@exp1"], "convergence_problems": [], "offsets": {"E": [0, 40545], "exp1": [40545, 41985]}, "timing": {"warmup_sec": 251.8453550101258, "warmup_steps": 4267.0, "sampling_sec": 170.6656137118116, "sampling_steps": 3496.0}}

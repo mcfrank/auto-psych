@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "name": "speaker_word_production",
+  "summary": "Speaker referring expression production across 2-5 objects and 2-4 features with synonymy.",
+  "charter": {
+    "question": "When speakers choose a single word to refer to a highlighted target object in context, do their word choices follow recursive listener simulation, graded lexical precision with extension costs, competitor-confusion avoidance, or singleton heuristics?"
+  },
+  "instructions": {
+    "welcome": "Welcome! In this short study, you will play a communication game where you describe a highlighted object so a listener can pick it out.",
+    "task": "On each turn, you will see a row of objects with one target object highlighted in an orange frame. Choose one word from the buttons below to describe the highlighted target object to a listener who sees the same objects.",
+    "comprehension_checks": [
+      {
+        "question": "Which object are you describing on each turn?",
+        "options": [
+          "The target object highlighted in an orange frame",
+          "The leftmost object",
+          "Every object at once"
+        ],
+        "correct": 0
+      },
+      {
+        "question": "How do you describe the highlighted object?",
+        "options": [
+          "By choosing one of the word buttons that applies to it",
+          "By clicking on all objects",
+          "By typing a full sentence"
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "robots",
+        "base": "<rect x=\"25\" y=\"30\" width=\"50\" height=\"50\" rx=\"8\" fill=\"#90a4ae\" stroke=\"#37474f\" stroke-width=\"3\"/><circle cx=\"40\" cy=\"50\" r=\"5\" fill=\"#ffffff\"/><circle cx=\"60\" cy=\"50\" r=\"5\" fill=\"#ffffff\"/><circle cx=\"40\" cy=\"50\" r=\"2.5\" fill=\"#263238\"/><circle cx=\"60\" cy=\"50\" r=\"2.5\" fill=\"#263238\"/><rect x=\"38\" y=\"65\" width=\"24\" height=\"6\" rx=\"3\" fill=\"#37474f\"/>",
+        "features": [
+          {
+            "word": "hat",
+            "svg": "<polygon points=\"30,30 50,8 70,30\" fill=\"#e53935\" stroke=\"#b71c1c\" stroke-width=\"2\"/>"
+          },
+          {
+            "word": "scarf",
+            "svg": "<rect x=\"22\" y=\"76\" width=\"56\" height=\"10\" rx=\"4\" fill=\"#1e88e5\" stroke=\"#0d47a1\" stroke-width=\"2\"/>"
+          },
+          {
+            "word": "flag",
+            "svg": "<line x1=\"82\" y1=\"20\" x2=\"82\" y2=\"75\" stroke=\"#5d4037\" stroke-width=\"3\"/><polygon points=\"82,20 98,27 82,34\" fill=\"#fdd835\" stroke=\"#f57f17\" stroke-width=\"2\"/>"
+          },
+          {
+            "word": "belt",
+            "svg": "<rect x=\"25\" y=\"58\" width=\"50\" height=\"6\" fill=\"#43a047\" stroke=\"#1b5e20\" stroke-width=\"1.5\"/>"
+          }
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [2, 2], [2, 3], [2, 4],
+      [3, 2], [3, 3], [3, 4],
+      [4, 2], [4, 3], [4, 4]
+    ],
+    "prior_queries": false,
+    "synonyms": true
+  },
+  "response": {
+    "type": "production",
+    "link": "production",
+    "prompt": "You want the listener to pick the highlighted object. Which word do you say?"
+  },
+  "design": {
+    "n_participants": 150,
+    "trials_per_participant": 20,
+    "distinct_trials": 50,
+    "catch_trials": 2,
+    "minutes": 2.4,
+    "pay_usd": 0.40
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}

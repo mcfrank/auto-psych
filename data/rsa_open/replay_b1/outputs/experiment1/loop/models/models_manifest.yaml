@@ -1,0 +1,69 @@
+models:
+- name: contextual_contrast_listener
+  rationale: Speakers choose referring expressions to maximize contextual contrast
+    against visually similar competitors in the immediate display, rather than simulating
+    recursive mental states. Listeners interpret utterances by inverting this contrastive
+    speaker, expecting heard words to discriminate the target from its nearest context
+    competitors. On uninformative displays without a referring expression, visual
+    singleton salience guides referent expectations.
+- name: contextual_contrast_distinct_listener
+  rationale: 'We refine contextual_contrast_listener by incorporating continuous contextual
+    distinctiveness into the visual referent prior alongside discrete singleton salience,
+    as established in rsa_l2_singleton_feat_color_valence_l0. Speakers maximize contextual
+    contrast against visually similar competitors and listeners invert this speaker,
+    but referent expectations now weight both discrete singleton status and continuous
+    total feature distance to all context distractors, explaining why fully isolated
+    singletons like empty objects attract greater belief than singletons sharing features
+    with duplicate competitors and elevating singleton competitor belief when hearing
+    shared features. Differences from contextual_contrast_listener: recursion depth
+    is unchanged (calls L_contrast); parameter w_distinct is added with prior Normal(0.0,
+    1.0); the prior logit adds w_distinct multiplied by the object''s sum of Hamming
+    distances to all other objects; no parameters or likelihood terms are removed.'
+- name: type_contrast_listener
+  rationale: 'Speakers choose referring expressions to maximize contextual contrast
+    against distinct competitor types in the immediate display, weighting each distractor''s
+    contribution inversely by its duplicate multiplicity rather than accumulating
+    contrast independently across identical clones. Listeners interpret utterances
+    by inverting this type-contrastive speaker, expecting heard words to discriminate
+    the target from each competing distractor category without artificially penalizing
+    shared features in displays with background duplicates. On uninformative displays
+    without a referring expression, visual singleton salience guides referent expectations.
+    Refining contextual_contrast_listener with type-weighted contrast directly addresses
+    the discrepancy in multiclone competitor displays (multiclone_competitor_margin_unit20),
+    where summing contrast over duplicate tokens over-inflates the speaker''s contrast
+    utility for private features and wrongly predicts that a singleton competitor
+    will receive fewer points than identical clones. ## Differences from contextual_contrast_listener
+    1. **Recursion depth**: Unchanged (depth 1, listener calls `L_contrast`). 2. **Parameters**:
+    Unchanged (`PARAMS` contains `alpha` and `w_singleton`; no parameters added or
+    removed). 3. **Contrast functional form**: In `listener(params, ctx)`, distractor
+    similarity `sim` is normalized by distractor duplicate multiplicity (`type_sim
+    = sim / duplicate_count[:, None]`), and contextual contrast is evaluated against
+    distractor types (`contrast = real_lex * ((1.0 - real_lex) @ type_sim)`) rather
+    than unnormalized tokens (`contrast = real_lex * ((1.0 - real_lex) @ sim)`). All
+    prior terms, likelihood definitions, and memo structures are unchanged.'
+- name: contextual_contrast_isolated_listener
+  rationale: 'We refine contextual_contrast_listener by incorporating continuous perceptual
+    isolation into the visual referent prior alongside discrete singleton salience,
+    as established in attentional_bottleneck_listener. Speakers choose referring expressions
+    to maximize contextual contrast against visually similar competitors in the immediate
+    display, and listeners invert this contrastive speaker, but referent expectations
+    now weight both discrete singleton status and continuous nearest-neighbor feature
+    distance (perceptual isolation), explaining why completely isolated singletons
+    like empty objects attract greater belief than singletons sharing features with
+    nearby competitors and resolving the discrepancy on empty versus non-empty singletons.
+    Differences from contextual_contrast_listener: recursion depth is unchanged (calls
+    L_contrast); parameter w_isolation is added with prior Normal(0.0, 1.0); the prior
+    logit adds w_isolation multiplied by the object''s minimum Hamming distance to
+    all other context objects; no parameters or likelihood terms are removed.'
+- name: type_contrast_distinct_listener
+  rationale: 'We refine contextual_contrast_distinct_listener by evaluating contextual
+    contrast against distinct distractor types rather than accumulating contrast independently
+    across duplicate distractor clones. Speakers choose referring expressions to maximize
+    contextual contrast against visually similar competitor types, weighting each
+    distractor''s contribution inversely by its duplicate multiplicity, and listeners
+    invert this speaker with referent expectations guided by discrete singleton salience
+    and continuous contextual distinctiveness. Differences from contextual_contrast_distinct_listener:
+    recursion depth is unchanged (calls L_contrast); no parameters are added or removed;
+    distractor similarity in the speaker''s contrast calculation is normalized by
+    distractor duplicate multiplicity; all prior terms and likelihood definitions
+    are unchanged.'

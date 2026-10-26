@@ -1,0 +1,1 @@
+{"theory_name": "type_contrast_listener", "blocks": ["E", "exp1"], "param_names": ["alpha", "w_singleton", "lapse@E", "kappa@exp1", "lapse@exp1", "temperature@exp1"], "convergence_problems": [], "offsets": {"E": [0, 40545], "exp1": [40545, 41985]}, "timing": {"warmup_sec": 439.4927671798505, "warmup_steps": 4719.0, "sampling_sec": 249.2458593370393, "sampling_steps": 3500.0}}
