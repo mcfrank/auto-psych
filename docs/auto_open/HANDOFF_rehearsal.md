@@ -168,6 +168,24 @@ experiment 1, then cancel) never reached Sherlock, and run B is now in experimen
    - `chain_0/experiment{1,2}/design/frozen/`, `design_screened_out.json`, and the job log so far.
 3. **At the end,** bring back everything per §3 into the same directory.
 
+## The ground-truth check on run B′ (2026-10-26, PI)
+
+**What:** score run B′'s hidden ground truth on run B′'s own corpus and folds, beside every theory
+the loop ended with or pruned (`src/rsa_open/oracle.py`). Only the truth is fitted; the others come
+from the replay's fit cache. No agents, no API spend. Expect 1–3 h on the node's 24 cores.
+
+```bash
+cd ~/auto-psych && git pull
+export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_replay_b1
+sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%j.out" \
+  --export=ALL,WORK_ROOT=$WORK_ROOT scripts/rsa/slurm/open_oracle.sbatch
+```
+
+The log should show the first fits as cache hits (no sampling time) and one new fit for
+`ground_truth` and its folds. **Bring back** `$WORK_ROOT/private/oracle/{oracle.json,oracle.md}`
+and the job log to `data/rsa_open/replay_b1/oracle/`. They name the truth only as
+`ground_truth`, and hold aggregates only.
+
 ## Run B′: replay run B's experiment 1 on the fixed code (2026-10-24)
 
 > **Hold: launch once run B has finished** (it needs the node's 24 cores) **and the PI has said go.**
