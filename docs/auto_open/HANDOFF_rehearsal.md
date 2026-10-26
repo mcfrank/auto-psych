@@ -13,10 +13,11 @@ experiment. Theories must predict every paradigm with one set of parameters. Two
 
 Start B only after the driver has reviewed A.
 
-## The integrated harness: run C (plumbing) and the live smoke test (2026-10-26, proposed)
+## The integrated harness: run C (plumbing) and the live smoke test (2026-10-26)
 
-> **Hold: proposed to the PI on 2026-10-26; launch only once the PI says go.** The live smoke test
-> (D2) recruits real people and needs its own explicit go-ahead.
+> **Run C: cleared by the PI (2026-10-26), launch now.** Run D follows once run C has been brought
+> back and reviewed: D1 (no money) then; D2 recruits real people and needs the PI's explicit
+> go-ahead at that point.
 
 Runs B and B′ tested the loop at full size; nothing here repeats that. These runs test only what
 has never run on Sherlock: the fixed arm, a two-measure paradigm, reference keeping (from

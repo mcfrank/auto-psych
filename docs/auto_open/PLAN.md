@@ -106,6 +106,7 @@ with the closed campaign's on paradigms neither campaign saw.
 | Two-measure paradigms, if not too complex | A paradigm may ask a second question about the same screen, each measure with its own link and its own block. The joint outcome space is capped for the EIG | it tests whether one theory explains two responses from the same people |
 | PI review: the first paradigm of each open chain only | As before | |
 | Infrastructure, spread across nodes; failure rules pre-registered; a frozen code tag; the Gemini 4 model ID pinned and recorded; claim 3's metric in the pre-registration; live monitoring of every response type | Gemini spend is not capped (credits) | |
+| The live path's rules; the integrated harness's rehearsal (PI, evening) | Exclusions: a missed catch trial, failed comprehension on the second reading, a repeat person, an incomplete record; nothing else. One study recruits at a time across the campaign. Rehearsal: run C (plumbing, trimmed loops, three cells) now, then run D (live smoke) | the blocklist covers only studies published earlier; runs B and B′ already tested the loop at full size |
 | Subjective randomness: not now | No open branch for subjective randomness until after the RSA feasibility chain | scope |
 
 ## 1. Claims

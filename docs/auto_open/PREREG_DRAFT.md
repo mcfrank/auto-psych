@@ -104,7 +104,7 @@ how it is going.
   - those from the closed RSA campaign are excluded (the same task);
   - those from the subjective-randomness studies are **allowed** (a different task), which
     widens the pool.
-- **Exclusions (proposed, 2026-10-26; awaiting the PI):** a participant's data are left out if
+- **Exclusions (accepted by the PI, 2026-10-26):** a participant's data are left out if
   they missed any catch trial (the closed campaign's rule), failed the comprehension checks on the
   second reading, had taken part in an earlier study of the campaign (a backstop to the
   blocklist), or left an incomplete record. Nothing else: no exclusions by time or by answer
