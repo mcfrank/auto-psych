@@ -43,10 +43,11 @@ from typing import Any, Dict, List, Literal, Optional
 import tyro
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-# The closed campaign's experiment: 200 people x $0.50 for 3 minutes, plus Prolific's fee of a
-# third (PLAN.md, decisions of 2026-10-21: equal dollars per experiment).
+# Twice the closed campaign's experiment (200 people x $0.50 for 3 minutes, plus Prolific's fee of
+# a third), for every experiment of both arms (PLAN.md, decisions of 2026-10-21: equal dollars per
+# experiment; 2026-10-26: twice the closed campaign's).
 PROLIFIC_FEE_MULTIPLIER = 4.0 / 3.0
-BUDGET_USD = 200 * 0.50 * PROLIFIC_FEE_MULTIPLIER
+BUDGET_USD = 2 * 200 * 0.50 * PROLIFIC_FEE_MULTIPLIER
 MIN_HOURLY_USD = 0.50 / 3 * 60
 MIN_PARTICIPANTS = 100
 MAX_MINUTES = 15

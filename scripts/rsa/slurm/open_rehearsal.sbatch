@@ -29,7 +29,7 @@
 # $WORK_ROOT/private (outside it), the tree is checked for its name before any agent starts, and
 # environment variables that point outside the tree are withheld from the agents.
 #
-# Overrides: CHAINS ("0"), N_EXPERIMENTS (3), MAX_ITERATIONS (5), CANDIDATES (6),
+# Overrides: CHAINS ("0"), N_EXPERIMENTS (4), MAX_ITERATIONS (5), CANDIDATES (6),
 # PILOT_PARTICIPANTS (12), CV_FOLDS (5), THEORIST_TIMEOUT_SEC (2400), SEED (0), RUN2_ROOT (run 2's
 # sweep root), LITERATURE ("all": E, run 2's all_trials.csv; "pragmods": the committed pragmods
 # trials alone, about 7x fewer, for a dry run that tests the machinery, not the science),
@@ -55,7 +55,7 @@ command -v flock >/dev/null || { echo "FATAL: no flock" >&2; exit 1; }
 TASK="${SLURM_ARRAY_TASK_ID:?run as an array task}"
 read -r -a CHAIN_LIST <<< "${CHAINS:-0}"
 CHAIN="${CHAIN_LIST[$TASK]:?array task $TASK has no chain in CHAINS=${CHAINS:-0}}"
-N_EXPERIMENTS="${N_EXPERIMENTS:-3}"
+N_EXPERIMENTS="${N_EXPERIMENTS:-4}"
 MAX_ITERATIONS="${MAX_ITERATIONS:-5}"
 CANDIDATES="${CANDIDATES:-6}"
 PILOT_PARTICIPANTS="${PILOT_PARTICIPANTS:-12}"

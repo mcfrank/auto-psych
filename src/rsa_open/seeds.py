@@ -28,6 +28,10 @@ from src.rsa_open.port import port_file
 
 PROMOTED = here() / "data/rsa/live_seeds/models"
 CHAINS = here() / "data/rsa/live_seeds/chains"
+# Chains beyond the closed campaign's three repeat one of its seed sets (PI 2026-10-26: 4 chains
+# per arm; chain 3 repeats chain 0, so one pair of chains measures chain-to-chain variance from one
+# start).
+REPEATS = {"chain_3": "chain_0"}
 OUT = here() / "data/rsa_open/seeds"
 
 
@@ -73,6 +77,10 @@ def build(out: Path = OUT, starting: Path = STARTING_MODELS, promoted: Path = PR
             raise ValueError(f"{chains / name}'s manifest is not chains.json's chain {c['chain']}")
         _write(Path(out) / name, entries)
         record["chains"][name] = [n for n, _, _ in entries]
+    for name, source in REPEATS.items():
+        _write(Path(out) / name, _entries(Path(chains) / source))
+        record["chains"][name] = record["chains"][source]
+    record["repeats"] = dict(REPEATS)
     record["source"] = {"starting": str(Path(starting).relative_to(here())),
                         "promoted": str(Path(promoted).relative_to(here())),
                         "chains": str(Path(chains).relative_to(here()))}

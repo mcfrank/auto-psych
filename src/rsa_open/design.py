@@ -67,11 +67,12 @@ DEFAULT_DRAWS = 64
 DEFAULT_SCENARIOS = 1000
 # Lazy greedy (`src.rsa.design.eig.select`): a full pass every 16 picks, as main's design.
 LAZY_FULL_EVERY = 16
-# The closed campaign's paradigm: forced choice over the 1,597-display plain pool, 200 people
-# answering 13 of 52 designed displays each, at the per-experiment budget.
+# The closed campaign's paradigm at the per-experiment budget: forced choice over the 1,597-display
+# plain pool, 13 of 52 designed displays each, for 400 people (twice the closed campaign's 200 at
+# its $0.50, as the budget is twice its: 2026-10-26).
 REFERENCE = {"sizes": ((2, 2), (2, 3), (2, 4), (3, 2), (3, 3), (3, 4), (4, 2), (4, 3), (4, 4)),
              "prior_queries": True, "synonyms": True, "link": "choice",
-             "n_participants": 200, "trials_per_participant": 13, "distinct_trials": 52}
+             "n_participants": 400, "trials_per_participant": 13, "distinct_trials": 52}
 
 
 class ContextInvalid(ValueError):

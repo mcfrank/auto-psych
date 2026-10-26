@@ -38,7 +38,18 @@
    "rsa_l2_singleton_distinct_feat_color_l0",
    "rsa_l2",
    "rsa_l1"
+  ],
+  "chain_3": [
+   "competitor_confusion_speaker",
+   "isolated_graded_costly_l3",
+   "oddity_heuristic_listener",
+   "rsa_l2_singleton_feat_color_valence_l0",
+   "rsa_l2",
+   "rsa_l1"
   ]
+ },
+ "repeats": {
+  "chain_3": "chain_0"
  },
  "source": {
   "starting": "src/pipelines/outer_loop/projects/rsa_reference/seed_models",

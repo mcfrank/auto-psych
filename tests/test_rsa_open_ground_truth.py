@@ -85,7 +85,9 @@ def test_the_committed_seeds_are_the_closed_campaign_s_ported(tmp_path):
     from src.rsa_open.seeds import OUT, build
 
     record = build(tmp_path)
-    assert len(record["bar"]) == 15 and set(record["chains"]) == {"chain_0", "chain_1", "chain_2"}
+    assert len(record["bar"]) == 15 and set(record["chains"]) == {"chain_0", "chain_1", "chain_2", "chain_3"}
+    assert record["repeats"] == {"chain_3": "chain_0"} and record["chains"]["chain_3"] == record["chains"]["chain_0"]
+    assert (tmp_path / "chain_3" / "rsa_l1.py").read_bytes() == (tmp_path / "chain_0" / "rsa_l1.py").read_bytes()
     assert all({"rsa_l1", "rsa_l2"} <= set(m) and set(m) <= set(record["bar"]) for m in record["chains"].values())
     built = sorted(p.relative_to(tmp_path) for p in tmp_path.rglob("*") if p.is_file())
     committed = sorted(p.relative_to(OUT) for p in OUT.rglob("*") if p.is_file())

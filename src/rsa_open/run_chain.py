@@ -22,7 +22,6 @@ from typing import Optional, Tuple
 import tyro
 
 from src.rsa.fit import FitSettings
-from src.rsa.loop.run import DEFAULT_AGENT_MODEL
 from src.rsa_open.chain import Chain, ChainConfig
 from src.rsa_open.corpus import literature_block
 from src.rsa_open.designer import DESIGNER_MODEL, designer_spawner
@@ -30,7 +29,7 @@ from src.rsa_open.ground_truth import load_ground_truth
 from src.rsa_open.pilot import PILOT_PARTICIPANTS
 from src.rsa_open.seeds import OUT as SEEDS
 
-THEORIST_MODEL = DEFAULT_AGENT_MODEL  # the closed campaign's theorist (PLAN.md, "Theorist")
+THEORIST_MODEL = DESIGNER_MODEL  # Gemini 4 for every agent, theorists and critic too (PI 2026-10-26)
 
 
 
@@ -46,7 +45,7 @@ class Args:
     literature: Path
     """E: every literature trial (promote's all_trials.csv on Sherlock), as the ground truth's fit."""
     seeds: Path = SEEDS
-    n_experiments: int = 3
+    n_experiments: int = 4
     max_iterations: int = 5
     candidate_count: int = 6
     cv_folds: int = 5

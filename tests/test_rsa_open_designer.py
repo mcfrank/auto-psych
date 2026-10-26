@@ -141,7 +141,7 @@ def test_the_brief_states_the_charter_the_theories_the_tools_and_the_bounds(tmp_
     run(tmp_path, theories, designer)
     prompt = designer.prompts[0]
     for text in ("Grice (1975)", "rsa_l1", HYPOTHESES["rsa_l1"], "-m src.rsa_open.tools", "link-check",
-                 "$133.33", "first experiment", "rationale.md", "no internet", "floor", "timing.md",
+                 "$266.67", "first experiment", "rationale.md", "no internet", "floor", "timing.md",
                  "--theory", "do not\nadd your own"):
         assert text in prompt, text
 

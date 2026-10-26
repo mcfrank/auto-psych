@@ -80,7 +80,7 @@ class ChainConfig:
     literature: Block
     out_dir: Path
     ground_truth: GroundTruth
-    n_experiments: int = 3
+    n_experiments: int = 4
     loop: Dict[str, Any] = field(default_factory=dict)
     """OpenLoopConfig overrides (max_iterations, candidate_count, settings, ...)."""
     settings: FitSettings = field(default_factory=lambda: FitSettings(dense_mass=True))

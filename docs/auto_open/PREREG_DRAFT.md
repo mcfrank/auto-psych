@@ -78,6 +78,33 @@ none yet.
 further chains run under this registration. A revision is registered anew, and open chain 1 is
 then reported as a pilot, not counted.
 
+## 4a. Failures (proposed by the driver, awaiting the PI)
+
+The rule is fixed in advance and is the same for every chain, so no chain is rerun because of
+how it is going.
+- **Infrastructure** (a crash, a timeout, a node lost, an API outage): the chain resumes from its
+  last finished stage. Nothing is discarded.
+- **A designer failure before any live data** (both cycles fail in experiment 1): the chain is
+  restarted once, from the same seeds, with a fresh designer. Nothing has been spent or seen, so
+  the restart selects on nothing but the designer's luck. The failure is reported (claim 3).
+- **A designer failure after live data** (experiment n > 1): the chain stops there. Its last
+  finished experiment's incumbent is its final; it is not rerun or replaced, and is reported as
+  a shorter chain. Rerunning it would select chains on how their designs went.
+- **An underfilled study** (Prolific's poll ends short): the partial data are modelled, as now.
+- **The fixed arm** cannot fail at design; its infrastructure failures resume like any other.
+
+## 4b. Participants (proposed by the driver, awaiting the PI)
+
+- **No one takes part twice within this campaign**, in either arm. Taking one referent game
+  changes how a person approaches the next, and the arms must not share people.
+- **People from earlier auto-psych studies:**
+  - those from the closed RSA campaign are excluded (the same task);
+  - those from the subjective-randomness studies are **allowed** (a different task), which
+    widens the pool.
+- About 32 experiments × 400 people plus the bakeoff is roughly 14,000 people. Recruitment speed
+  is monitored. If a study's fill rate falls below half the first experiment's, its collection
+  window is extended; the exclusions are never relaxed mid-campaign.
+
 ## 5. Competitors in the bakeoff
 
 - Each chain's final incumbent: 4 open, 4 fixed.

@@ -120,11 +120,15 @@ def test_unsafe_or_broken_svg_is_refused(tmp_path, svg, problem):
         load_paradigm(write(tmp_path, spec))
 
 
-def test_the_budget_is_the_closed_campaign_s_and_pay_is_at_its_rate(tmp_path):
-    from src.rsa_open.paradigm import ParadigmInvalid, load_paradigm
+def test_the_budget_is_twice_the_closed_campaign_s_and_pay_is_at_its_rate(tmp_path):
+    from src.rsa_open.paradigm import BUDGET_USD, ParadigmInvalid, load_paradigm
 
+    assert BUDGET_USD == pytest.approx(266.67, abs=0.01)  # 2 x (200 people x $0.50 x Prolific's 4/3)
+    at_budget = closed_like_spec()
+    at_budget["design"].update(n_participants=400)  # the closed paradigm at twice its people
+    assert load_paradigm(write(tmp_path, at_budget)).cost_usd == pytest.approx(266.67, abs=0.01)
     over = closed_like_spec()
-    over["design"].update(n_participants=150, minutes=4, pay_usd=0.80)  # $159.60
+    over["design"].update(n_participants=300, minutes=4, pay_usd=0.80)  # $320
     with pytest.raises(ParadigmInvalid, match="budget"):
         load_paradigm(write(tmp_path, over))
     underpaid = closed_like_spec()

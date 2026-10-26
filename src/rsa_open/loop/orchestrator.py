@@ -514,14 +514,30 @@ class OpenLoop:
         self._ledger(name, outcome, detail, m.hypothesis, m.source)
         self._write_manifest()
 
+    def references(self, s: Mapping[str, dict]) -> Dict[str, str]:
+        """Each earlier block's best theory (block -> name): kept as the 4-SE guard's reference.
+        Never pruned, nor retired by the cap, while it is best there (PI 2026-10-26: run B′ pruned
+        E's best theory, about 110 nats ahead on E, on the newest block alone, and the guard then
+        compared only survivors). It may still be ineligible to lead."""
+        out = {}
+        for b in self.blocks[:-1]:
+            best = [n for n, d in s.items() if d["by_block"].get(b.name, {}).get("behind") == 0]
+            if best:
+                out[b.name] = best[0]
+        return out
+
     def end(self, stopped: Optional[str] = None) -> dict:
         from src.models.clustered_se import cluster_dse
 
         s = self.standing()
         events = []
         newest = self.blocks[-1]
+        kept = self.references(s)
+        protected = set(kept.values())
+        for b, n in kept.items():
+            events.append(dict(name=n, outcome="kept", reason=f"the best theory on {b}, the guard's reference there"))
         for n, d in s.items():
-            if d["guard_failures"]:
+            if d["guard_failures"] and n not in protected:
                 why = ", ".join(f"{b}: {d['by_block'][b]['behind']:.1f} ± {d['by_block'][b]['dse']:.1f}"
                                 for b in d["guard_failures"])
                 self._retire(n, "pruned", f"ineligible: more than {self.cfg.guard_k:g} SEs behind the best on {why}")
@@ -529,7 +545,7 @@ class OpenLoop:
         s = {n: d for n, d in s.items() if n in self.live}
         best = self.incumbent(s)
         units = np.unique(np.asarray(newest.units), return_inverse=True)[1]
-        for n in [n for n in s if n != best and s[n]["trusted"]]:
+        for n in [n for n in s if n != best and s[n]["trusted"] and n not in protected]:
             a, b = self.cv[best].pointwise[newest.name], self.cv[n].pointwise[newest.name]
             diff, dse = float(a.sum() - b.sum()), float(cluster_dse(a, b, units))
             if diff > self.cfg.prune_dse_multiplier * dse:
@@ -539,7 +555,13 @@ class OpenLoop:
         while len(self.live) > self.cfg.max_live_models:
             s = self.standing()
             keep = self.incumbent(s)
-            drop = sorted((n for n in s if n != keep), key=lambda n: (s[n]["trusted"], s[n]["sel_elpd"]))[0]
+            droppable = sorted((n for n in s if n != keep and n not in protected),
+                               key=lambda n: (s[n]["trusted"], s[n]["sel_elpd"]))
+            if not droppable:  # the incumbent and the references alone exceed the cap
+                events.append(dict(name="loop", outcome="over cap",
+                                   reason=f"{len(self.live)} live theories: the incumbent and the references"))
+                break
+            drop = droppable[0]
             self._retire(drop, "pruned", f"retired by the cap of {self.cfg.max_live_models} live theories")
             events.append(dict(name=drop, outcome="retired", reason="live-set cap"))
         if stopped:
