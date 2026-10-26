@@ -15,9 +15,10 @@ Start B only after the driver has reviewed A.
 
 ## The integrated harness: run C (plumbing) and the live smoke test (2026-10-26)
 
-> **Run C: cleared by the PI (2026-10-26), launch now.** Run D follows once run C has been brought
-> back and reviewed: D1 (no money) then; D2 recruits real people and needs the PI's explicit
-> go-ahead at that point.
+> **Run C: cleared by the PI (2026-10-26), launch now.** Run D runs beside it: D1 (no money) as soon
+> as run C's open and fixed cells have each frozen their experiment-1 design (a few hours in;
+> `experiment1/design/frozen/record.json` exists); D2 recruits real people and needs the PI's
+> explicit go-ahead. Neither waits for run C's loops.
 
 Runs B and B′ tested the loop at full size; nothing here repeats that. These runs test only what
 has never run on Sherlock: the fixed arm, a two-measure paradigm, reference keeping (from
@@ -61,11 +62,17 @@ model ID on the token-usage records; the kill and resume; the oracle tables. **B
 A smoke test fields run C's frozen experiment-1 designs at a few people each (cells
 `<arm>_chain_0_smoke`, their own Hosting sites), and its data are never modelled.
 
+**Run D has its own work root** (`rsa_open_smoke`), never the campaign's (`rsa_open_live`): a work
+root runs on the code it first staged, and the campaign's must be staged from the frozen tag. Smoke
+participants are still excluded from every later study (Prolific's blocklist covers every earlier
+RSA study).
+
 *D1, no money: a test deploy of each.* The page goes up, a Prolific draft is created, and the job stops
 with a STOP record saying so.
 
 ```bash
 cd ~/auto-psych && git pull
+export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_smoke
 C=$SCRATCH/auto-psych/agent_trees/$(cat $SCRATCH/auto-psych/rsa_open_plumbing/cells/open_chain_0/agent_tree_id)/repo/_runs/chain_0
 F=$SCRATCH/auto-psych/agent_trees/$(cat $SCRATCH/auto-psych/rsa_open_plumbing/cells/fixed_chain_0/agent_tree_id)/repo/_runs/chain_0
 PROLIFIC_MODE=test ARM=open CHAINS=0 PARTICIPANTS=15 SMOKE_FROM=$C/experiment1 LINKS=1 bash scripts/rsa/live/open_launch.sh
@@ -84,6 +91,7 @@ the fixed arm needs no review. Set `confirm_live_recruitment: true` in `scripts/
 **on Sherlock only, never committed**, then:
 
 ```bash
+export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_smoke   # with C and F as in D1
 CLEAR_STOP=1 PROLIFIC_MODE=live ARM=open CHAINS=0 PARTICIPANTS=15 SMOKE_FROM=$C/experiment1 LINKS=1 bash scripts/rsa/live/open_launch.sh
 CLEAR_STOP=1 PROLIFIC_MODE=live ARM=fixed CHAINS=0 PARTICIPANTS=15 SMOKE_FROM=$F/experiment1 LINKS=1 bash scripts/rsa/live/open_launch.sh
 ```
