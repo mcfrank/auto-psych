@@ -31,6 +31,7 @@ content does; it is recorded with every trial collected under the paradigm.
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import json
 import re
@@ -78,6 +79,32 @@ CHARGED = re.compile(
 URL = re.compile(r"https?://|www\.", re.IGNORECASE)
 EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
 WORD = re.compile(r"^[a-z][a-z' -]{0,30}$")
+# Raster images are the harness's own curated stimuli only (the fixed arm's pragmods pictures,
+# PI-approved; `src.rsa_open.fixed`): an SVG <image> must embed one of these files byte for byte. The
+# files are not in the agents' tree, so a designer's spec can never carry one.
+TRUSTED_IMAGES_DIR = Path(__file__).resolve().parents[1] / "pipelines/outer_loop/projects/rsa_reference/experiment/images"
+PNG_DATA = re.compile(r"^data:image/png;base64,([A-Za-z0-9+/=]+)$")
+
+
+@functools.lru_cache(maxsize=1)
+def _trusted_image_shas() -> frozenset:
+    if not TRUSTED_IMAGES_DIR.is_dir():
+        return frozenset()
+    return frozenset(hashlib.sha256(f.read_bytes()).hexdigest() for f in TRUSTED_IMAGES_DIR.glob("*.png"))
+
+
+def _trusted_png(href: str) -> bool:
+    import base64
+    import binascii
+
+    m = PNG_DATA.match(href)
+    if not m:
+        return False
+    try:
+        data = base64.b64decode(m.group(1), validate=True)
+    except (binascii.Error, ValueError):
+        return False
+    return hashlib.sha256(data).hexdigest() in _trusted_image_shas()
 
 
 class ParadigmInvalid(ValueError):
@@ -124,6 +151,10 @@ class Domain(_Strict):
     """The object without features: an SVG fragment drawn in a 100 x 100 box (viewBox
     "0 0 100 100"), or a noun phrase for text."""
     features: List[Feature]
+    variants: Optional[List[str]] = None
+    """Alternative bases (SVG), one drawn per object in place of ``base``, distinct within a trial
+    up to their number (the closed campaign drew each object on one of three base pictures, so
+    objects with the same features are still different individuals)."""
 
 
 class Materials(_Strict):
@@ -197,6 +228,12 @@ class Paradigm(_Strict):
                                ensure_ascii=False)
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
+    @property
+    def harness_materials(self) -> bool:
+        """Whether the pictures are the harness's own curated images (the fixed arm's), which the
+        legibility check, meant for a designer's drawings, does not test."""
+        return self.materials.kind == "svg" and any("<image" in d.base for d in self.materials.domains)
+
     def max_features(self) -> int:
         return max(f for _, f in self.scene_space.sizes)
 
@@ -213,12 +250,16 @@ def _svg_problems(fragment: str, where: str) -> List[str]:
     problems = []
     for el in root.iter():
         tag = el.tag.split("}")[-1]
-        if tag not in SVG_ELEMENTS:
+        trusted_image = tag == "image" and any(a.split("}")[-1] == "href" and _trusted_png(v)
+                                               for a, v in el.attrib.items())
+        if tag not in SVG_ELEMENTS and not trusted_image:
             problems.append(f"{where}: SVG element <{tag}> is not allowed (drawing elements only)")
         for attr, value in el.attrib.items():
             name = attr.split("}")[-1]
             if name.lower().startswith("on"):
                 problems.append(f"{where}: SVG event handler attribute {name} is not allowed")
+            if name == "href" and trusted_image:
+                continue
             if name == "href" and not value.startswith("#"):
                 problems.append(f"{where}: SVG href {value!r} points outside the fragment")
             if "url(" in value.replace(" ", "") and not re.fullmatch(r"\s*url\(#[\w-]+\)\s*", value):
@@ -319,10 +360,17 @@ def _problems(p: Paradigm) -> List[str]:
     kind = p.materials.kind
     if not p.materials.domains:
         problems.append("materials.domains is empty")
+    if sizes_ok and p.materials.domains:
+        # Each scene is drawn in a domain with enough features (`src.rsa_open.screens` rotates among
+        # those), so every size needs one, and every domain must serve the narrowest scenes.
+        widest = max(len(d.features) for d in p.materials.domains)
+        if widest < p.max_features():
+            problems.append(f"no domain names {p.max_features()} features; the widest scenes need them")
+        narrowest = min(f for _, f in p.scene_space.sizes)
     for i, domain in enumerate(p.materials.domains):
         where = f"materials.domains[{i}] ({domain.name})"
-        if sizes_ok and len(domain.features) < p.max_features():
-            problems.append(f"{where} names {len(domain.features)} features; scenes need {p.max_features()} features")
+        if sizes_ok and len(domain.features) < narrowest:
+            problems.append(f"{where} names {len(domain.features)} features; every scene needs at least {narrowest}")
         words = [f.word for f in domain.features]
         if len(set(words)) != len(words):
             problems.append(f"{where}: feature words must differ ({words})")
@@ -339,6 +387,10 @@ def _problems(p: Paradigm) -> List[str]:
                 problems.append(f"{fwhere}: text materials need a phrase per feature")
         if kind == "svg":
             problems += _svg_problems(domain.base, f"{where}.base")
+            for k, variant in enumerate(domain.variants or []):
+                problems += _svg_problems(variant, f"{where}.variants[{k}]")
+        elif domain.variants:
+            problems.append(f"{where}: variants are SVG bases (materials.kind 'svg')")
 
     for where, text in _texts(p) + _svg_texts(p):
         if CHARGED.search(text):

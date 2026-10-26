@@ -29,6 +29,9 @@
 # $WORK_ROOT/private (outside it), the tree is checked for its name before any agent starts, and
 # environment variables that point outside the tree are withheld from the agents.
 #
+# ARM ("open"; "fixed": the closed forced-choice paradigm every experiment, no designer, cell
+# fixed_chain_<k>; both arms can share a WORK_ROOT and its ground truth).
+#
 # Overrides: CHAINS ("0"), N_EXPERIMENTS (4), MAX_ITERATIONS (5), CANDIDATES (6),
 # PILOT_PARTICIPANTS (12), CV_FOLDS (5), THEORIST_TIMEOUT_SEC (2400), SEED (0), RUN2_ROOT (run 2's
 # sweep root), LITERATURE ("all": E, run 2's all_trials.csv; "pragmods": the committed pragmods
@@ -96,7 +99,9 @@ GT_ORIGINAL="$("$VENV_PY" -c 'import json,sys; print(json.load(open(sys.argv[1])
 [[ -f "$GT_ORIGINAL" && -f "$GT_DIR/ground_truth.py" ]] || { echo "ERROR: the ground truth's files are missing" >&2; exit 1; }
 
 # --- the cell and its agent tree (as outer_rehearsal.sbatch) ------------------------
-CELL="open_chain_$CHAIN"
+ARM="${ARM:-open}"
+case "$ARM" in open|fixed) ;; *) echo "ERROR: ARM must be open or fixed, not $ARM" >&2; exit 1 ;; esac
+CELL="${ARM}_chain_$CHAIN"
 CELL_DIR="$CELLS_ROOT/$CELL"
 mkdir -p "$CELL_DIR"
 [[ -s "$CELL_DIR/agent_tree_id" ]] || head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$CELL_DIR/agent_tree_id"
@@ -155,11 +160,11 @@ done
 UNSET_ARGS=()
 for name in ${WITHHELD[@]+"${WITHHELD[@]}"}; do UNSET_ARGS+=(-u "$name"); done
 echo "[open rehearsal] withheld from the agents' environment: ${WITHHELD[*]:-}"
-echo "[open rehearsal] chain $CHAIN, $N_EXPERIMENTS experiments, $MAX_ITERATIONS rounds of $CANDIDATES theorists," \
+echo "[open rehearsal] $ARM arm, chain $CHAIN, $N_EXPERIMENTS experiments, $MAX_ITERATIONS rounds of $CANDIDATES theorists," \
      "$CV_FOLDS folds, literature ${LITERATURE:-all} ($EXISTING) -> $RUN_DIR"
 cd "$HARNESS_REPO"
 env ${UNSET_ARGS[@]+"${UNSET_ARGS[@]}"} PATH="$RUN_REPO/.agent_bin:$PATH" \
-  "$AGENT_PY" -m src.rsa_open.run_chain --chain "$CHAIN" --run-dir "$RUN_DIR" --private-dir "$GT_DIR" \
+  "$AGENT_PY" -m src.rsa_open.run_chain --chain "$CHAIN" --arm "$ARM" --run-dir "$RUN_DIR" --private-dir "$GT_DIR" \
     --agent-root "$RUN_REPO" --literature "$EXISTING" --seeds "$WORK_ROOT/open_seeds" \
     --n-experiments "$N_EXPERIMENTS" --max-iterations "$MAX_ITERATIONS" --candidate-count "$CANDIDATES" \
     --pilot-participants "$PILOT_PARTICIPANTS" --cv-folds "$CV_FOLDS" --theorist-timeout-sec "$THEORIST_TIMEOUT_SEC" --seed "$SEED" \

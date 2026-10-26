@@ -17,7 +17,7 @@ import json
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Literal, Optional, Tuple
 
 import tyro
 
@@ -44,6 +44,8 @@ class Args:
     """The agents' working tree (their cwd)."""
     literature: Path
     """E: every literature trial (promote's all_trials.csv on Sherlock), as the ground truth's fit."""
+    arm: Literal["open", "fixed"] = "open"
+    """"fixed": the closed forced-choice paradigm every experiment, no designer (`src.rsa_open.fixed`)."""
     seeds: Path = SEEDS
     n_experiments: int = 4
     max_iterations: int = 5
@@ -74,15 +76,16 @@ def build(args: Args) -> Chain:
 
     run_dir = Path(args.run_dir)
     gt = load_ground_truth(args.private_dir)
-    cfg = ChainConfig(chain=f"chain_{args.chain}", seeds_dir=Path(args.seeds) / f"chain_{args.chain}",
+    cfg = ChainConfig(chain=f"chain_{args.chain}", arm=args.arm, seeds_dir=Path(args.seeds) / f"chain_{args.chain}",
                       bar_dir=Path(args.seeds) / "bar", literature=literature_block(args.literature), out_dir=run_dir,
                       ground_truth=gt, n_experiments=args.n_experiments, settings=FitSettings(dense_mass=True),
                       pilot_participants=args.pilot_participants, seed=args.seed, other_chains=args.other_chains,
                       code_commit=args.code_commit or _commit(),
                       loop=dict(max_iterations=args.max_iterations, candidate_count=args.candidate_count,
                                 cv_folds=args.cv_folds))
-    designer = designer_spawner(agent_root=args.agent_root, model=args.designer_model, sandbox=not args.no_sandbox,
-                                shell_dir=run_dir / ".agent_shell")
+    designer = None if args.arm == "fixed" else designer_spawner(
+        agent_root=args.agent_root, model=args.designer_model, sandbox=not args.no_sandbox,
+        shell_dir=run_dir / ".agent_shell")
 
     def theorists(loop_dir: Path):
         return coding_agent_spawner(models_dir=loop_dir / "models", responses_path=loop_dir / "data" / "corpus.json",

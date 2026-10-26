@@ -17,7 +17,7 @@
 #
 # Bring back $WORK_ROOT/private/oracle/{oracle.json,oracle.md} and the job log (aggregates only).
 #
-# Overrides: WORK_ROOT (the rehearsal's root), EXPERIMENT (1), CHAIN (0), CV_FOLDS (5).
+# Overrides: WORK_ROOT (the rehearsal's root), ARM (open), EXPERIMENT (1), CHAIN (0), CV_FOLDS (5).
 set -euo pipefail
 export REPO="${REPO:-${SLURM_SUBMIT_DIR:-$HOME/auto-psych}}"
 export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/rsa_open_replay_b1}"
@@ -26,7 +26,7 @@ source "$REPO/scripts/rsa/slurm/_env.sh"
   echo "FATAL: the venv cannot run the open campaign; on a login node: source scripts/rsa/slurm/_env.sh &&" \
        "source scripts/_venv.sh && build_shared_venv" >&2; exit 1; }
 CHAIN="${CHAIN:-0}"
-TREE_ID="$WORK_ROOT/cells/open_chain_$CHAIN/agent_tree_id"
+TREE_ID="$WORK_ROOT/cells/${ARM:-open}_chain_$CHAIN/agent_tree_id"
 [[ -s "$TREE_ID" ]] || { echo "ERROR: $TREE_ID is missing" >&2; exit 1; }
 LOOP_DIR="$AGENT_TREES_ROOT/$(cat "$TREE_ID")/repo/_runs/chain_$CHAIN/experiment${EXPERIMENT:-1}/loop"
 [[ -f "$LOOP_DIR/export.json" && -f "$LOOP_DIR/corpus.json" ]] || { echo "ERROR: $LOOP_DIR is not a finished loop" >&2; exit 1; }

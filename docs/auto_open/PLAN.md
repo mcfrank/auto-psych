@@ -509,9 +509,25 @@ The existing protocol covers the rest (PI, 2026-10-20).
 1. Reference keeping: each earlier paradigm's best theory is never pruned or retired.
 2. Gemini 4 for theorists and critic; the model ID pinned and recorded on every call.
 3. The 2× budget; the fixed paradigm's reference at 400 people; 4 experiments; chain 4's seeds.
-4. **The fixed arm:** the closed paradigm as a faithful spec (the closed live page's materials and
-   instructions), and a chain mode that freezes it with EIG-chosen displays and a pilot, with no
-   designer.
+4. **The fixed arm** (built 2026-10-26):
+   - `src/rsa_open/fixed.py` writes `fixed_paradigm.json`: the closed campaign's six pragmods items
+     (pictures and words), each object drawn on one of an item's three base pictures (the spec's
+     new base `variants`); Bob's wording; the closed scene space; 13 + 2 trials, $0.50 for 3 minutes,
+     for 400 people.
+   - The pictures are embedded PNGs, which the validator accepts only when their bytes are one of the
+     curated pragmods files. Those files are not in the agents' tree, so a designer cannot use them.
+   - It runs on the open page, so it gets the same consent, comprehension checks, practice and
+     catch trials as any open paradigm. Two changes from the closed page: two comprehension
+     checks (the closed page had none), and "Click on the one you think Bob is talking about" in
+     place of naming the item.
+   - The harness's pictures skip the legibility check, which exists for a designer's drawings.
+   - A domain now needs only the features of the scenes it can draw (the page already rotates
+     among eligible domains): pizza, boat and Christmas tree have 3 features, as in the closed
+     campaign.
+   - The chain mode (`arm="fixed"`) sends the spec through the harness's own checks (EIG re-score
+     under the design theories, link check, page, pilot), with seeds salted by chain and experiment.
+     A failure raises `FixedDesignFailed`. `ARM=fixed` in `open_rehearsal.sbatch` runs cell
+     `fixed_chain_<k>` beside the open arm's, sharing the work root and its ground truth.
 5. **Two-measure paradigms** (constrained, above).
 6. **Live collection for open chains:** deploy the spec's page, Prolific (double gate, blocklist,
    one study per experiment), collection, participant ids; interleaved publishing across arms;

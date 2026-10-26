@@ -165,9 +165,10 @@ CATCH_RULES = {
 
 # --------------------------------------------------------------------------- rendering
 
-def _object_html(paradigm, domain, feats: Sequence[int], label: str) -> str:
+def _object_html(paradigm, domain, feats: Sequence[int], label: str, variant: Optional[int] = None) -> str:
     if paradigm.materials.kind == "svg":
-        parts = [domain.base] + [domain.features[f].svg for f in feats]
+        base = domain.base if variant is None else domain.variants[variant]
+        parts = [base] + [domain.features[f].svg for f in feats]
         return (f'<svg class="ro-svg" viewBox="0 0 100 100" role="img" aria-label="{html.escape(label)}" '
                 f'xmlns="http://www.w3.org/2000/svg">{"".join(parts)}</svg>')
     return f'<span class="ro-text">{html.escape(label)}</span>'
@@ -238,13 +239,20 @@ def _concrete(paradigm, trial: Dict[str, Any], rng: np.random.Generator, counts:
     words = [domain.features[f].word for f in feature_map]
     display_order = [int(i) for i in rng.permutation(n_obj)]
     position_of = {obj: p for p, obj in enumerate(display_order)}
+    # Base variants, when the domain has them: distinct across a trial's objects up to their number
+    # (drawn only then, so a paradigm without them gets the same lists as before).
+    variants = None
+    if domain.variants:
+        perm = [int(v) for v in rng.permutation(len(domain.variants))]
+        variants = [perm[p % len(perm)] for p in range(n_obj)]
     items, labels = [], []
-    for obj in display_order:
+    for p, obj in enumerate(display_order):
         feats = [feature_map[j] for j, v in enumerate(trial["objects"][obj]) if v]
         label = _object_label(paradigm, domain, feats)
         labels.append(label)
-        items.append(_object_html(paradigm, domain, feats, label))
-    return {**trial, "domain": d, "domain_name": domain.name, "feature_map": feature_map, "words": words,
+        items.append(_object_html(paradigm, domain, feats, label, None if variants is None else variants[p]))
+    extra = {} if variants is None else {"variants": variants}
+    return {**trial, **extra, "domain": d, "domain_name": domain.name, "feature_map": feature_map, "words": words,
             "display_order": display_order, "items_html": items, "item_labels": labels,
             "prompt_html": _prompt_html(paradigm, trial, words),
             "widget": _widget(paradigm, trial, position_of, words, rng)}

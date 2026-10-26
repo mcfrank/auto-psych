@@ -78,7 +78,7 @@ none yet.
 further chains run under this registration. A revision is registered anew, and open chain 1 is
 then reported as a pilot, not counted.
 
-## 4a. Failures (proposed by the driver, awaiting the PI)
+## 4a. Failures (accepted by the PI, 2026-10-26)
 
 The rule is fixed in advance and is the same for every chain, so no chain is rerun because of
 how it is going.
@@ -93,7 +93,7 @@ how it is going.
 - **An underfilled study** (Prolific's poll ends short): the partial data are modelled, as now.
 - **The fixed arm** cannot fail at design; its infrastructure failures resume like any other.
 
-## 4b. Participants (proposed by the driver, awaiting the PI)
+## 4b. Participants (accepted by the PI, 2026-10-26)
 
 - **No one takes part twice within this campaign**, in either arm. Taking one referent game
   changes how a person approaches the next, and the arms must not share people.

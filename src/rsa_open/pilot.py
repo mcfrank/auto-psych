@@ -327,7 +327,9 @@ def materials_check(paradigm, checkers: Sequence[Participant], out: Optional[Pat
     more than half of them get it right: ``illegible`` for a feature or a trial, and
     ``unrecognised_bases`` (a warning) for a base. A free name that is not the domain's name
     (singular or plural) goes to ``judge`` (a fresh chat); without a judge it is wrong."""
-    items = legibility_items(paradigm, lists)
+    # The harness's own pictures (the fixed arm's, used with people in the closed campaign) are not
+    # tested: the check exists for a designer's drawings.
+    items = [] if paradigm.harness_materials else legibility_items(paradigm, lists)
     if not items:
         return {"items": 0, "legibility": None, "illegible": [], "unrecognised_bases": []}
     given: Dict[str, List[Optional[str]]] = {it.key: [] for it in items}

@@ -303,8 +303,10 @@ class SubmissionResult:
 
 
 def check_submission(ws: Workspace, submitted: Path, out: Path, *, pilot_participants: int,
-                     participant_factory=None) -> SubmissionResult:
-    """The harness's own checks of a submission record (validation, floor, link, pilot)."""
+                     participant_factory=None, salt: str = "") -> SubmissionResult:
+    """The harness's own checks of a submission record (validation, floor, link, pilot). Its seeds
+    come from the spec's sha256 and ``salt`` (the fixed arm's chain and experiment: one spec, a
+    fresh draw each time)."""
     from src.rsa_open.paradigm import ParadigmInvalid, load_paradigm
     from src.rsa_open.pilot import run_pilot
     from src.rsa_open.screens import design_units, trial_lists
@@ -321,20 +323,20 @@ def check_submission(ws: Workspace, submitted: Path, out: Path, *, pilot_partici
         return SubmissionResult(sha, False, [f"the spec is not valid: {err}"], out)
     if paradigm.sha256 != sha:
         return SubmissionResult(sha, False, ["the spec changed after it was submitted (its sha256 differs)"], out)
-    eig = eig_report(ws, spec, seed=seed_for(sha, "harness_eig"))
+    eig = eig_report(ws, spec, seed=seed_for(sha + salt, "harness_eig"))
     (out / "eig.json").write_text(json.dumps(eig, indent=2))
     if not eig["meets_floor"]:
         return SubmissionResult(sha, False, [
             f"below the floor on the harness's re-score: {eig['bits_per_dollar']:.5f} bits/$ against "
             f"{eig['floor_bits_per_dollar']:.5f}"], out, {"eig": eig})
-    link = link_check_report(ws, spec, seed=seed_for(sha, "harness_link_check"))
+    link = link_check_report(ws, spec, seed=seed_for(sha + salt, "harness_link_check"))
     (out / "link_check.json").write_text(json.dumps(link, indent=2))
     if not (link["converged"] and link["recovered"]):
         return SubmissionResult(sha, False, [
             f"the link check failed on the harness's re-run: converged={link['converged']}, "
             f"misses={link['misses']}"], out, {"eig": eig, "link": link})
     units = design_units(eig)
-    lists = trial_lists(paradigm, units, seed=seed_for(sha, "lists"))
+    lists = trial_lists(paradigm, units, seed=seed_for(sha + salt, "lists"))
     (out / "lists.json").write_text(json.dumps(lists))
     pilot = run_pilot(paradigm, lists, out / "pilot", n_participants=pilot_participants,
                       participant_factory=participant_factory, timing=ws.timing_records())

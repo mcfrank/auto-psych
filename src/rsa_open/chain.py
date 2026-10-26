@@ -16,7 +16,7 @@ loop that stopped part way starts again from scratch (as main's model-loop stage
 abandoned attempt is kept beside it as ``design.abandoned_<i>`` / ``loop.abandoned_<i>`` (no agent
 reads it), and a loop's fit cache moves to the new attempt, so no fit is repeated:
 
-1. **design**: the carried theories and **the bar** (the chain's starting theories, `bar_dir`, kept
+1. **design**: (the open arm; the fixed arm's is below) the carried theories and **the bar** (the chain's starting theories, `bar_dir`, kept
    in every design although the loop may prune them, as the closed campaign's design kept its
    seeds) are fitted to the data so far; their posterior draws (theory parameters only) and
    hypotheses, the chain's earlier paradigms with each theory's standing on them, and the timing
@@ -26,6 +26,13 @@ reads it), and a loop's fit cache moves to the new attempt, so no fit is repeate
 2. **collect**: simulated participants (`GroundTruth`: a theory at fixed parameters, each link at
    its reference values) answer every list of the frozen paradigm; the live path (Prolific) is
    Phase 4's and is not here;
+**The fixed arm** (``ChainConfig.arm = "fixed"``, PI 2026-10-26) designs every experiment the same way
+but has no designer: its paradigm is always `src.rsa_open.fixed`'s frozen spec (the closed
+campaign's forced-choice reference game), submitted to the harness's own checks exactly as a
+designer's submission is (re-scored for its displays under the design theories, link check, page,
+pilot), with seeds salted by chain and experiment. A fixed paradigm that fails them raises
+`FixedDesignFailed`: it is not the arm's to retry.
+
 3. **loop**: the inner loop on E plus every block so far, starting from ``models_input`` and
    continuing the previous experiment's ledger; its live set is the next experiment's input.
 """
@@ -73,6 +80,13 @@ class GroundTruth:
     link_params: Mapping[str, Mapping[str, float]] = field(default_factory=dict)
 
 
+ARMS = ("open", "fixed")
+
+
+class FixedDesignFailed(RuntimeError):
+    """The fixed arm's paradigm failed the harness's checks (a broken spec or harness, not a design)."""
+
+
 @dataclass
 class ChainConfig:
     chain: str
@@ -80,6 +94,8 @@ class ChainConfig:
     literature: Block
     out_dir: Path
     ground_truth: GroundTruth
+    arm: str = "open"
+    """"open" (an agent designer) or "fixed" (the closed forced-choice paradigm every experiment)."""
     n_experiments: int = 4
     loop: Dict[str, Any] = field(default_factory=dict)
     """OpenLoopConfig overrides (max_iterations, candidate_count, settings, ...)."""
@@ -149,10 +165,12 @@ def _copy_models(src: Path, dst: Path) -> None:
 
 
 class Chain:
-    def __init__(self, cfg: ChainConfig, *, designer_spawn: DesignerSpawn,
+    def __init__(self, cfg: ChainConfig, *, designer_spawn: Optional[DesignerSpawn],
                  theorist_spawn: Callable[[Path], Callable[[Path, str], bool]], participant_factory=None) -> None:
         """``theorist_spawn(loop_dir)`` is an experiment's theorist spawner (theorists read that
         loop's ``models/`` and ``data/``)."""
+        if cfg.arm not in ARMS:
+            raise ValueError(f"arm {cfg.arm!r} is not one of {ARMS}")
         self.cfg = cfg
         self.designer_spawn = designer_spawn
         self.theorist_spawn = theorist_spawn
@@ -295,6 +313,11 @@ class Chain:
         if set_aside(self.exp(n) / "design") is not None:
             shutil.rmtree(self.exp(n) / "design")  # run_designer lays its directory out itself
         context = self.design_context(n)
+        if self.cfg.arm == "fixed":
+            self.fixed_design(n, context)
+            return frozen
+        if self.designer_spawn is None:
+            raise ValueError("the open arm needs a designer")
         run_designer(self.exp(n) / "design", chain=self.cfg.chain, experiment=n, theories=context,
                      hypotheses={k: h for k, (_, h) in self.design_theories(n).items() if k in context},
                      history=self.history(n),
@@ -302,6 +325,28 @@ class Chain:
                      pilot_participants=self.cfg.pilot_participants, participant_factory=self.participant_factory,
                      code_commit=self.cfg.code_commit, timing=self.timing(n))
         return frozen
+
+    def fixed_design(self, n: int, context: Dict[str, tuple]) -> Dict[str, Any]:
+        """The fixed arm's experiment ``n``: the frozen spec through the harness's checks, frozen."""
+        from src.rsa_open.designer import check_submission, freeze, prepare_workspace
+        from src.rsa_open.fixed import SPEC_PATH
+        from src.rsa_open.paradigm import load_paradigm
+
+        ws = prepare_workspace(self.exp(n) / "design" / "fixed", theories=context, history=self.history(n),
+                               timing=self.timing(n))
+        spec = ws.work / "paradigm.json"
+        shutil.copyfile(SPEC_PATH, spec)
+        submitted = ws.root / "submissions" / "1.json"
+        submitted.parent.mkdir(parents=True, exist_ok=True)
+        submitted.write_text(json.dumps({"spec": str(spec), "sha256": load_paradigm(spec).sha256,
+                                         "submitted_by": "fixed arm"}, indent=2))
+        result = check_submission(ws, submitted, ws.root / "checks" / "1", pilot_participants=self.cfg.pilot_participants,
+                                  participant_factory=self.participant_factory, salt=f"{self.cfg.chain}/experiment{n}")
+        if not result.passed:
+            raise FixedDesignFailed(f"{self.cfg.chain}, experiment {n}: the fixed paradigm failed the harness's "
+                                    f"checks: {'; '.join(result.problems)}")
+        return freeze(result, self.exp(n) / "design" / "frozen", chain=self.cfg.chain, experiment=n,
+                      code_commit=self.cfg.code_commit, submitted_by="fixed arm")
 
     # ---------- 2. collect ----------
     def collect(self, n: int) -> Path:

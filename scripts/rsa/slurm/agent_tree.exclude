@@ -64,6 +64,8 @@ data
 /src/rsa_open/chain.py
 /src/rsa_open/ground_truth.py
 /src/rsa_open/oracle.py
+/src/rsa_open/fixed.py
+/src/rsa_open/fixed_paradigm.json
 /src/rsa_open/run_chain.py
 /src/rsa_open/seeds.py
 # Everything built from the closed campaign's live or pre-registered data (PLAN.md, "Data": the
