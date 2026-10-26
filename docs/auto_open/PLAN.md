@@ -93,6 +93,17 @@ with the closed campaign's on paradigms neither campaign saw.
 |---|---|---|
 | An upgraded closed arm, supplemental | The closed campaign's nine inner loops rerun on its own frozen designs and live data with the open campaign's theorist tooling. Their finals join the bakeoff as a supplemental comparison (`PREREG_DRAFT.md` §5). Run only if the open campaign completes and proceeds to the bakeoff, decided before any bakeoff data | the sampler report and the identification prompt help the open theorists, and the prompt bears on claim 2; open against upgraded closed isolates the designer and the changing paradigms. Making the arm contingent on completion, not on any result, keeps the decision free of the outcomes |
 
+## Decisions (PI, 2026-10-26)
+
+| Decision | Choice | Why |
+|---|---|---|
+| One harness, two arms | The closed campaign's approach becomes the **fixed arm** of this harness: the closed forced-choice paradigm as one frozen spec, its displays chosen by the same EIG tool, no designer. Everything else is shared by construction (`PREREG_DRAFT.md` §2). This supersedes the upgraded closed arm of 2026-10-25 | the open harness had drifted from the closed code (theorist tooling, reference keeping, the admission limit, budget, agents); one harness makes the designer the only difference |
+| 4 chains per arm, behind a feasibility gate | Open chain 1 runs first, live, with pre-registered pass criteria (`PREREG_DRAFT.md` §4). On a pass, open chains 2–4 and fixed chains 1–4 run, concurrently and interleaved. Registration comes before chain 1 | the method claim's unit is the chain; 3 against 3 was thin. The gate spends on 7 more chains only once the open arm is shown to run with real people |
+| A larger per-experiment budget, for every experiment of both arms | Amount to be set before registration | run B's experiments 2 and 3 barely separated the leading theories at N = 200 |
+| Gemini 4 for every agent | Designer, theorists and critic, in both arms | both arms share the harness, so the upgrade is not an asymmetry |
+| Keep each earlier paradigm's best theory | It is never pruned or retired by the cap while it is best there, so the 4-SE guard keeps its reference | run B′ pruned E's best theory (about 110 nats ahead on E) on the newest block alone, after which the guard compared only survivors |
+| Subjective randomness: not now | No open branch for subjective randomness until after the RSA feasibility chain | scope |
+
 ## 1. Claims
 
 1. **Transfer.** On the blind paradigm, this campaign's final theories predict new people better
@@ -485,9 +496,10 @@ The existing protocol covers the rest (PI, 2026-10-20).
 | 2 | Designer tools as an agent CLI; designer brief; the page; simulated pilot | cloud | **built** (§4.1–4.3): the EIG tool; the tools CLI (`validate`, `eig`, `link-check`, `submit`, 40 calls); spec-driven trial lists and one page for all six response types (tested in Chromium); the pilot with Gemini 3.8 Flash participants and its gate (a live 3-participant run passed); the designer cycle (brief, the harness's own re-checks, up to 3 pilots, one retry, freeze); a real Gemini 4 designer cycle froze a paradigm (§4.3); EIG for bets (2026-10-21). Not yet: designer-proposed links |
 | 2b | Fitting across paradigms (shared theory parameters, each paradigm its own link parameters, E included); the open inner loop (theorists; grouped CV within paradigm; the k = 4 SE accountability rule; carry-forward); the chain driver (context → designer → frozen paradigm → simulated collection → inner loop → timing record); rehearsal ground truths; Sherlock jobs | cloud | **done (2026-10-22)**: everything above, and run A, the trimmed dry run with real agents (pragmods only, 1 experiment, 1 round of 3), passed end to end in 4 h 20 min for $9.28 of agent spend (`DRY_RUN_A_REPORT.md`, `data/rsa_open/dry/`). The designer froze a bet paradigm on its first submission (3.63 bits, 0.032 bits/$ against a 0.012 floor; pilot and legibility 100%). The critic's 8 statistics all flagged the incumbent on duplicate and crowded displays, the hidden truth's mechanisms, and the round's new incumbent, `rsa_l2_duplicate_suppression_l0`, was discovered there. No design theory was screened out; no agent file names the truth |
 | 3 | Rehearsal on simulated participants with a ground-truth theory across paradigms | Sherlock | **next**: run B (`HANDOFF_rehearsal.md` §3), chain 0, 3 experiments on all of E |
-| 4 | One live paradigm per chain, with PI review | live | |
-| 5 | Campaign: 3 chains × 3 experiments | live | |
-| 6 | Bakeoff: arms F and T, pre-registered (`PREREG_DRAFT.md`); first, if the campaign completed, the upgraded closed arm's nine loops (Sherlock, no participants) | live | |
+| 3b | The integrated harness: the fixed arm, reference keeping, Gemini 4, the new budget; a simulated rehearsal of both arms; registration (`PREREG_DRAFT.md`) | cloud, Sherlock | **next** (2026-10-26) |
+| 4 | The feasibility chain: open chain 1, live, 3 experiments, PI review of its first paradigm; the gate (`PREREG_DRAFT.md` §4) | live | |
+| 5 | On a pass: open chains 2–4 and fixed chains 1–4, concurrently | live | |
+| 6 | Bakeoff: arms F and T (second registration) | live | |
 
 **Gemini 4 smoke test (2026-10-20).** The API key sees `gemini-4-argon`. A designer-style call
 (propose one new paradigm, JSON only) returned valid JSON in 6 s for about 430 tokens. It
