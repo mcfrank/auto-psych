@@ -38,7 +38,9 @@ Everything else is identical by construction:
 - the per-experiment budget (§3);
 - the page builder and recruitment.
 
-**Four chains per arm**, each of 3 experiments. Chain k of each arm starts from the same seeds.
+**Four chains per arm**, each of 3 experiments (depth under discussion, 2026-10-26). Chain k of
+each arm starts from the same seeds; chain 4 repeats chain 1's (the closed campaign's chain 0
+seeds), so one pair of chains measures chain-to-chain variance from one start.
 After the feasibility chain, the two arms' chains run concurrently, with recruitment interleaved,
 so time, Prolific's pool and the agents' model versions are shared. Every study excludes
 everyone who took any earlier auto-psych study.
@@ -48,7 +50,7 @@ it ran older code and agents, and its pre-registered data are spent.
 
 ## 3. Resources per experiment
 
-**TBD before registration:** one budget for every experiment of both arms, raised from the closed
+**$266.67 per experiment, for every experiment of both arms** (PI 2026-10-26): twice the closed
 campaign's $133.33 (200 people × $0.50 × Prolific's fee). The open designer spends it as it
 chooses, within the bounds; the fixed arm spends it on the closed paradigm's design, with more
 people at the same pay and length.
@@ -60,18 +62,17 @@ one, and its data count as the open arm's chain 1 if the gate passes. The gate i
 the method can run with real people. It looks at no comparison with the fixed arm, since there is
 none yet.
 
-**Pass** requires all of these (thresholds **TBD at registration**, the draft's proposals in
-brackets):
+**Pass** requires all of these (thresholds accepted by the PI, 2026-10-26):
 1. **Design:** each experiment freezes a paradigm that passes the pilot, within the designer's two
    cycles (a harness submission counts).
-2. **Data:** in each experiment, among recruited participants: final comprehension ≥ [0.8], catch
-   trials passed ≥ [0.8], exclusions ≤ [25%], and the data parse and pass the monitor's degeneracy
+2. **Data:** in each experiment, among recruited participants: final comprehension ≥ 0.8, catch
+   trials passed ≥ 0.8, exclusions ≤ 25%, and the data parse and pass the monitor's degeneracy
    checks.
 3. **Information:** each experiment's data separate its design theories: on the new paradigm, the
-   best and worst design theories differ by more than [4] clustered SEs (held-out).
-4. **Loop:** each experiment's loop admits at least [1] new theory, ends with at least [2]
+   best and worst design theories differ by more than 4 clustered SEs (held-out).
+4. **Loop:** each experiment's loop admits at least 1 new theory, ends with at least 2
    trusted theories, and finishes without a harness failure.
-5. **Cost and time:** within [1.5×] the plan's estimate.
+5. **Cost and time:** within 1.5× the plan's estimate.
 
 **If it passes:** open chains 2–4 and fixed chains 1–4 run as registered. **If it fails:** no
 further chains run under this registration. A revision is registered anew, and open chain 1 is
