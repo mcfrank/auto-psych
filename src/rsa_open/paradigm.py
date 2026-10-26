@@ -215,6 +215,11 @@ class Paradigm(_Strict):
     materials: Materials
     scene_space: SceneSpace
     response: Response
+    second_response: Optional[Response] = None
+    """A second question about the same screen (`src.rsa_open.links`, "Two measures"): a choice or
+    a rating of at most 7 points after a listener response, a yes/no judgment after a speaker one.
+    Its prompt is shown once the first answer is given; its probed or judged object and message
+    are design fields of their own."""
     design: Design
     content: Content
 
@@ -272,9 +277,14 @@ def _texts(p: Paradigm) -> List[tuple]:
     out = [("name", p.name), ("summary", p.summary), ("charter.question", p.charter.question),
            ("instructions.welcome", p.instructions.welcome), ("instructions.task", p.instructions.task),
            ("response.prompt", p.response.prompt)]
-    if p.response.prior_prompt:
-        out.append(("response.prior_prompt", p.response.prior_prompt))
-    out += [(f"response.scale_labels[{i}]", x) for i, x in enumerate(p.response.scale_labels or [])]
+    for where, r in (("response", p.response), ("second_response", p.second_response)):
+        if r is None:
+            continue
+        if where != "response":
+            out.append((f"{where}.prompt", r.prompt))
+        if r.prior_prompt:
+            out.append((f"{where}.prior_prompt", r.prior_prompt))
+        out += [(f"{where}.scale_labels[{i}]", x) for i, x in enumerate(r.scale_labels or [])]
     for i, check in enumerate(p.instructions.comprehension_checks):
         out.append((f"instructions.comprehension_checks[{i}].question", check.question))
         out += [(f"instructions.comprehension_checks[{i}].options[{j}]", o) for j, o in enumerate(check.options)]
@@ -405,51 +415,10 @@ def _problems(p: Paradigm) -> List[str]:
     if p.content.affective_stimuli:
         problems.append("content.affective_stimuli: affectively charged stimuli are not allowed (PI 2026-10-20)")
 
-    link = LINKS.get(p.response.link)
-    if link is None:
-        problems.append(f"response.link {p.response.link!r} is not in the link library ({', '.join(sorted(LINKS))})")
-    elif link.response_type != p.response.type:
-        problems.append(f"response.link {link.name!r} scores {link.response_type!r} responses, not {p.response.type!r}")
-    if not p.response.prompt.strip():
-        problems.append("response.prompt is empty")
-    r = p.response
-    listener = r.type in LISTENER_TYPES
-    for field in ("prompt", "prior_prompt"):
-        text = getattr(r, field) or ""
-        other = sorted(set(PLACEHOLDER.findall(text)) - {MESSAGE})
-        if other:
-            problems.append(f"response.{field}: unknown placeholders {other}; the only one is {MESSAGE}")
-    wants_message = listener or r.type == "binary_judgment"
-    if wants_message and r.prompt.count(MESSAGE) != 1:
-        problems.append(f"response.prompt must show the message once, where it says {MESSAGE}")
-    if QUOTED_MESSAGE.search(r.prompt):
-        problems.append(f"response.prompt: no quotation marks around {MESSAGE}: the page shows the word in "
-                        f"quotation marks itself")
-    if not wants_message and MESSAGE in r.prompt:
-        problems.append(f"response.prompt: a {r.type} trial has no message to show ({MESSAGE})")
-    if listener and p.scene_space.prior_queries:
-        if not (r.prior_prompt or "").strip():
-            problems.append("response.prior_prompt is required: scene_space.prior_queries gives trials with "
-                            "no informative message")
-        elif MESSAGE in r.prior_prompt:
-            problems.append(f"response.prior_prompt: those trials have no message to show ({MESSAGE})")
-    elif r.prior_prompt is not None:
-        problems.append("response.prior_prompt applies only to listener responses with scene_space.prior_queries")
-    if r.type in ("rating", "slider"):
-        if r.scale_labels is None or len(r.scale_labels) != 2 or not all(x.strip() for x in r.scale_labels):
-            problems.append(f"response.scale_labels must be [low, high] for a {r.type} response")
-    elif r.scale_labels is not None:
-        problems.append("response.scale_labels applies only to rating and slider responses")
-    if r.type == "rating":
-        if r.scale_points is None or not 2 <= r.scale_points <= MAX_SCALE_POINTS:
-            problems.append(f"response.scale_points must be 2-{MAX_SCALE_POINTS} for a rating response")
-    elif r.scale_points is not None:
-        problems.append("response.scale_points applies only to rating responses")
-    if r.type in ("slider", "bet"):
-        if r.total_points is None or not 2 <= r.total_points <= MAX_TOTAL_POINTS:
-            problems.append(f"response.total_points must be 2-{MAX_TOTAL_POINTS} for a {r.type} response")
-    elif r.total_points is not None:
-        problems.append("response.total_points applies only to slider and bet responses")
+    problems += _response_problems(p.response, p, "response")
+    if p.second_response is not None:
+        problems += _response_problems(p.second_response, p, "second_response")
+        problems += _pair_problems(p)
 
     checks = p.instructions.comprehension_checks
     if not checks:
@@ -464,6 +433,94 @@ def _problems(p: Paradigm) -> List[str]:
             problems.append(f"instructions.{field} is empty")
     if len(p.charter.question.strip()) < 15:
         problems.append("charter.question must state the question about pragmatic reference the paradigm asks")
+    return problems
+
+
+def _response_problems(r: "Response", p: "Paradigm", where: str) -> List[str]:
+    """A response block's problems (the first measure's, or the second's)."""
+    from src.rsa_open.links import LINKS
+
+    problems = []
+    link = LINKS.get(r.link)
+    if link is None:
+        problems.append(f"{where}.link {r.link!r} is not in the link library ({', '.join(sorted(LINKS))})")
+    elif link.response_type != r.type:
+        problems.append(f"{where}.link {link.name!r} scores {link.response_type!r} responses, not {r.type!r}")
+    if not r.prompt.strip():
+        problems.append(f"{where}.prompt is empty")
+    listener = r.type in LISTENER_TYPES
+    for field in ("prompt", "prior_prompt"):
+        text = getattr(r, field) or ""
+        other = sorted(set(PLACEHOLDER.findall(text)) - {MESSAGE})
+        if other:
+            problems.append(f"{where}.{field}: unknown placeholders {other}; the only one is {MESSAGE}")
+    wants_message = listener or r.type == "binary_judgment"
+    if wants_message and r.prompt.count(MESSAGE) != 1:
+        problems.append(f"{where}.prompt must show the message once, where it says {MESSAGE}")
+    if QUOTED_MESSAGE.search(r.prompt):
+        problems.append(f"{where}.prompt: no quotation marks around {MESSAGE}: the page shows the word in "
+                        f"quotation marks itself")
+    if not wants_message and MESSAGE in r.prompt:
+        problems.append(f"{where}.prompt: a {r.type} trial has no message to show ({MESSAGE})")
+    if listener and p.scene_space.prior_queries:
+        if not (r.prior_prompt or "").strip():
+            problems.append(f"{where}.prior_prompt is required: scene_space.prior_queries gives trials with "
+                            "no informative message")
+        elif MESSAGE in r.prior_prompt:
+            problems.append(f"{where}.prior_prompt: those trials have no message to show ({MESSAGE})")
+    elif r.prior_prompt is not None:
+        problems.append(f"{where}.prior_prompt applies only to listener responses with scene_space.prior_queries")
+    if r.type in ("rating", "slider"):
+        if r.scale_labels is None or len(r.scale_labels) != 2 or not all(x.strip() for x in r.scale_labels):
+            problems.append(f"{where}.scale_labels must be [low, high] for a {r.type} response")
+    elif r.scale_labels is not None:
+        problems.append(f"{where}.scale_labels applies only to rating and slider responses")
+    if r.type == "rating":
+        if r.scale_points is None or not 2 <= r.scale_points <= MAX_SCALE_POINTS:
+            problems.append(f"{where}.scale_points must be 2-{MAX_SCALE_POINTS} for a rating response")
+    elif r.scale_points is not None:
+        problems.append(f"{where}.scale_points applies only to rating responses")
+    if r.type in ("slider", "bet"):
+        if r.total_points is None or not 2 <= r.total_points <= MAX_TOTAL_POINTS:
+            problems.append(f"{where}.total_points must be 2-{MAX_TOTAL_POINTS} for a {r.type} response")
+    elif r.total_points is not None:
+        problems.append(f"{where}.total_points applies only to slider and bet responses")
+
+    return problems
+
+
+def _outcome_count(r: "Response", p: "Paradigm") -> int:
+    """The most outcomes one trial of this measure can have (the design tool's slots)."""
+    from src.rsa_open.links import bet_compositions, design_bet_total, slider_bin_edges
+
+    objects = max(n for n, _ in p.scene_space.sizes)
+    return {"choice": objects, "rating": r.scale_points or 0, "binary_judgment": 2,
+            "production": max(f for _, f in p.scene_space.sizes),
+            "slider": len(slider_bin_edges(r.total_points or 2)) + 1,
+            "bet": max((len(bet_compositions(n, design_bet_total(n, r.total_points or 2)))
+                        for n, _ in p.scene_space.sizes), default=0)}[r.type]
+
+
+def _pair_problems(p: "Paradigm") -> List[str]:
+    """A second measure's own rules (`src.rsa_open.links`, "Two measures")."""
+    from src.rsa_open.links import MAX_PAIR_OUTCOMES, MAX_SECOND_POINTS, SECOND_TYPES
+
+    first, second = p.response, p.second_response
+    side = "listener" if first.type in LISTENER_TYPES else "speaker"
+    problems = []
+    if second.type not in SECOND_TYPES[side]:
+        problems.append(f"second_response.type: after a {first.type} response the second is one of "
+                        f"{', '.join(SECOND_TYPES[side])}, not {second.type}")
+        return problems
+    if second.type == "choice" and first.type == "choice":
+        problems.append("second_response: a second choice on the same screen repeats the first")
+    if second.type == "rating" and (second.scale_points or 0) > MAX_SECOND_POINTS:
+        problems.append(f"second_response.scale_points: a second rating has at most {MAX_SECOND_POINTS} points")
+    if not problems:
+        joint = _outcome_count(first, p) * _outcome_count(second, p)
+        if joint > MAX_PAIR_OUTCOMES:
+            problems.append(f"the two measures have up to {joint} joint outcomes per trial, over the "
+                            f"{MAX_PAIR_OUTCOMES} the EIG tool scores: make one of them coarser")
     return problems
 
 
@@ -502,8 +559,13 @@ def paradigm_likelihood(paradigm: Paradigm):
     """The paradigm's link likelihood, with its frozen options (`src.rsa_open.links`)."""
     from src.rsa_open.links import likelihood
 
-    return likelihood(paradigm.response.link, scale_points=paradigm.response.scale_points,
-                      total_points=paradigm.response.total_points)
+    def part(r):
+        return dict(name=r.link, **{k: v for k, v in (("scale_points", r.scale_points),
+                                                      ("total_points", r.total_points)) if v is not None})
+
+    if paradigm.second_response is None:
+        return likelihood(**part(paradigm.response))
+    return likelihood("pair", first=part(paradigm.response), second=part(paradigm.second_response))
 
 
 def main_schema(out: Path) -> dict:

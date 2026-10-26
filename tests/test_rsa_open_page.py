@@ -132,3 +132,36 @@ def test_answering_the_page_gives_the_link_s_data(kind, browser, cdn, tmp_path):
             points[t["display_order"][0]] += p.response.total_points - 1
             points[t["display_order"][-1]] += 1
             assert r["response"]["points"] == points.tolist()
+
+
+def test_a_two_measure_trial_asks_the_second_question_on_the_same_screen(browser, cdn, tmp_path):
+    """The second question comes once the first is answered; the page records both, the second
+    under "second" with its own probed object (src/rsa_open/links.py PairLikelihood)."""
+    from src.rsa_open.fit import OpenData
+    from src.rsa_open.page import render
+    from src.rsa_open.paradigm import paradigm_likelihood
+    from src.rsa_open.screens import page_rows, scenes_and_responses, trial_lists
+    from tests.test_rsa_open_two_measures import pair_paradigm
+
+    p = pair_paradigm("choice", "rating", trials_per_participant=4, catch_trials=1)
+    lists = trial_lists(p, units_of(p), seed=5, n_lists=3)
+    path = tmp_path / "page.html"
+    path.write_text(render(lists, preview=True))
+    context = browser.new_context(viewport={"width": 1100, "height": 900})
+    page = context.new_page()
+    blocked, errors = [], []
+    install_routes(page, cdn, blocked)
+    page.on("pageerror", lambda e: errors.append(str(e)))
+    page.goto(f"file://{path}?list=1")
+    data = answer_everything(page)
+    context.close()
+    assert not blocked and not errors, (blocked, errors)
+    rows = page_rows(data)
+    expected = lists["lists"][1]["trials"]
+    assert len(rows) == len(expected) == 6
+    for row, trial in zip(rows, expected):
+        assert row["response"]["choice"] == trial["display_order"][0]  # the first object on screen
+        assert row["response"]["second"] == {"probe": trial["second_probe"], "rating": 5}  # the top of the scale
+        assert row["second_probe"] == trial["second_probe"]
+    scenes, responses = scenes_and_responses(rows)
+    assert OpenData.build(scenes, responses, paradigm_likelihood(p)).n_trials == 4

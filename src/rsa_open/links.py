@@ -47,6 +47,16 @@ the scene's real messages (never the sink).
   two points on the tempered speaker probability: P(yes) = Φ(logit(q) - ``center``), with a
   random yes/no lapse.
 
+**Two measures** (PI 2026-10-26): a paradigm may ask a second question about the same screen
+(`PairLikelihood`, the ``pair`` link). Both parts read the same side of the theory (its listener,
+or its speaker), their responses are independent given it, so the pair's log-likelihood is the
+sum of the parts' and its outcomes, for the design tool, are their product (at most
+``MAX_PAIR_OUTCOMES``). The second part's parameters carry the prefix ``q2_`` (its own temperature,
+lapse, ...), its trial fields the prefix ``second_`` (``second_probe``, ``second_target``,
+``second_utterance``), and its response sits in the first's as ``"second"``. A second measure is
+small: a choice or a rating of at most ``MAX_SECOND_POINTS`` points after a listener measure, a
+yes/no judgment after a speaker measure (`SECOND_TYPES`).
+
 The choice link also has a **model-file form**: `compose` puts a theory and the link together
 into an ordinary RSA model file (``PARAMS`` and ``choice_probs``), so the closed campaign's
 fitting, cross-validation and loop code runs it unchanged. The link's parameters are appended
@@ -246,6 +256,10 @@ class LinkLikelihood:
         """'speaker' when the link scores the theory's speaker, else 'listener'."""
         return "speaker" if self.name in SPEAKER_LINKS else "listener"
 
+    def named_params(self, by_link: Mapping[str, Mapping[str, float]]) -> Dict[str, float]:
+        """This link's entries of a by-link-name parameter table (a ground truth's)."""
+        return dict(by_link.get(self.name, {}))
+
     # -- responses
     def encode(self, ctx, response: Mapping[str, Any], i: int) -> Dict[str, Any]:
         """Check one trial's response against its scene; its numeric fields."""
@@ -442,6 +456,112 @@ class LinkLikelihood:
         raise KeyError(self.name)
 
 
+SECOND_PREFIX = "q2_"  # the second measure's parameters
+SECOND_ENC = "q2."  # its encoded response fields
+SECOND_FIELDS = {"probe": "second_probe", "target": "second_target", "utterance": "second_utterance"}
+SECOND_TYPES = {"listener": ("choice", "rating"), "speaker": ("binary_judgment",)}
+MAX_SECOND_POINTS = 7
+MAX_PAIR_OUTCOMES = 300
+
+
+@dataclass(frozen=True)
+class PairLikelihood:
+    """Two measures of one screen (see the module's docstring): the parts' likelihoods summed."""
+
+    first: LinkLikelihood
+    second: LinkLikelihood
+    name: str = "pair"
+
+    def __post_init__(self) -> None:
+        if self.first.side != self.second.side:
+            raise ValueError(f"a pair's measures read one side of the theory: {self.first.name} reads its "
+                             f"{self.first.side}, {self.second.name} its {self.second.side}")
+        if self.second.name not in SECOND_TYPES[self.first.side]:
+            raise ValueError(f"after a {self.first.side} measure the second is one of "
+                             f"{SECOND_TYPES[self.first.side]}, not {self.second.name}")
+
+    @property
+    def side(self) -> str:
+        return self.first.side
+
+    @property
+    def response_type(self) -> str:
+        return f"{self.first.response_type}+{self.second.response_type}"
+
+    @property
+    def params(self) -> Dict[str, Any]:
+        return {**self.first.params, **{SECOND_PREFIX + k: v for k, v in self.second.params.items()}}
+
+    @property
+    def reference_params(self) -> Dict[str, float]:
+        return {**self.first.reference_params,
+                **{SECOND_PREFIX + k: v for k, v in self.second.reference_params.items()}}
+
+    @property
+    def options(self) -> Dict[str, Any]:
+        return {"first": {"name": self.first.name, **self.first.options},
+                "second": {"name": self.second.name, **self.second.options}}
+
+    def named_params(self, by_link: Mapping[str, Mapping[str, float]]) -> Dict[str, float]:
+        return {**self.first.named_params(by_link),
+                **{SECOND_PREFIX + k: v for k, v in self.second.named_params(by_link).items()}}
+
+    def _p(self, p: Mapping[str, Any]):
+        return ({k: p[k] for k in self.first.params},
+                {k: p[SECOND_PREFIX + k] for k in self.second.params})
+
+    @staticmethod
+    def _enc(enc: Mapping[str, Any]):
+        return ({k: v for k, v in enc.items() if not k.startswith(SECOND_ENC)},
+                {k[len(SECOND_ENC):]: v for k, v in enc.items() if k.startswith(SECOND_ENC)})
+
+    @staticmethod
+    def _unit(unit: Mapping[str, Any]):
+        second = {v: k for k, v in SECOND_FIELDS.items()}
+        return ({k: v for k, v in unit.items() if k not in second},
+                {second[k]: v for k, v in unit.items() if k in second})
+
+    def encode(self, ctx, response: Mapping[str, Any], i: int) -> Dict[str, Any]:
+        r2 = response.get("second")
+        if not isinstance(r2, Mapping):
+            raise ValueError(f"trial {i}: a two-measure response needs 'second', the second measure's "
+                             f"response; got {dict(response)}")
+        e1 = self.first.encode(ctx, {k: v for k, v in response.items() if k != "second"}, i)
+        e2 = self.second.encode(ctx, r2, i)
+        return {**e1, **{SECOND_ENC + k: v for k, v in e2.items()}}
+
+    def stack(self, encoded: List[Dict[str, Any]]) -> Dict[str, jnp.ndarray]:
+        keys = encoded[0].keys()
+        return {k: jnp.asarray(np.asarray([e[k] for e in encoded])) for k in keys}
+
+    def log_lik(self, latent, p, enc, arrays, classes) -> jnp.ndarray:
+        (p1, p2), (e1, e2) = self._p(p), self._enc(enc)
+        return (self.first.log_lik(latent, p1, e1, arrays, classes)
+                + self.second.log_lik(latent, p2, e2, arrays, classes))
+
+    def outcome_probs(self, latent, p, unit, arrays, classes) -> jnp.ndarray:
+        (p1, p2), (u1, u2) = self._p(p), self._unit(unit)
+        a = self.first.outcome_probs(latent, p1, u1, arrays, classes)
+        b = self.second.outcome_probs(latent, p2, u2, arrays, classes)
+        return (a[:, :, None] * b[:, None, :]).reshape(a.shape[0], -1)
+
+    def outcome_valid(self, arrays, classes, unit) -> jnp.ndarray:
+        u1, u2 = self._unit(unit)
+        a = self.first.outcome_valid(arrays, classes, u1)
+        b = self.second.outcome_valid(arrays, classes, u2)
+        return (a[:, :, None] & b[:, None, :]).reshape(a.shape[0], -1)
+
+    def sample(self, key, latent, p, probes, arrays=None, utterances=None, second_probes=None,
+               second_utterances=None) -> List[dict]:
+        """One response per trial, the second measure's under ``"second"``: its probed or target
+        objects ``second_probes`` and judged messages ``second_utterances`` (default: the first's)."""
+        (p1, p2), (k1, k2) = self._p(p), jax.random.split(key)
+        first = self.first.sample(k1, latent, p1, probes, arrays, utterances)
+        second = self.second.sample(k2, latent, p2, probes if second_probes is None else second_probes, arrays,
+                                    utterances if second_utterances is None else second_utterances)
+        return [{**a, "second": b} for a, b in zip(first, second)]
+
+
 def _tempered_speaker(speaker, targets, is_sink, p) -> jnp.ndarray:
     """(trials, N_UTT): the tempered speaker distribution over messages for each trial's target."""
     column = jnp.take_along_axis(speaker, targets[:, None, None], axis=2)[:, :, 0]
@@ -464,8 +584,15 @@ def _shared_params() -> Dict[str, Any]:
 
 
 def likelihood(name: str, *, scale_points: Optional[int] = None,
-               total_points: Optional[int] = None) -> LinkLikelihood:
-    """The named link's likelihood, with the options its paradigm fixes."""
+               total_points: Optional[int] = None, first: Optional[Mapping[str, Any]] = None,
+               second: Optional[Mapping[str, Any]] = None):
+    """The named link's likelihood, with the options its paradigm fixes; ``pair`` takes its parts
+    (``first``, ``second``: each a link name and its options)."""
+    if name == "pair":
+        if first is None or second is None:
+            raise ValueError("the pair link needs first and second")
+        parts = [likelihood(**dict(part)) for part in (first, second)]
+        return PairLikelihood(*parts)
     if name not in LINKS:
         raise KeyError(f"no link {name!r}; the library has {sorted(LINKS)}")
     link = LINKS[name]

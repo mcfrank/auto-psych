@@ -80,6 +80,10 @@ class Scripted:
         if self.mumble > 0:
             self.mumble -= 1
             return "Hmm, hard to say."
+        if "A second question about the same picture." in text:  # a two-measure trial's second question
+            from src.rsa_open.pilot import _step
+
+            return reply_for(_step(self.trials[self.trial_i - 1], True), self.good)
         trial = self.trials[self.trial_i]
         self.trial_i += 1
         return reply_for(trial, self.good)

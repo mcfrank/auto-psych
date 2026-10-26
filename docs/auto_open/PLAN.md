@@ -528,7 +528,22 @@ The existing protocol covers the rest (PI, 2026-10-20).
      under the design theories, link check, page, pilot), with seeds salted by chain and experiment.
      A failure raises `FixedDesignFailed`. `ARM=fixed` in `open_rehearsal.sbatch` runs cell
      `fixed_chain_<k>` beside the open arm's, sharing the work root and its ground truth.
-5. **Two-measure paradigms** (constrained, above).
+5. **Two-measure paradigms** (built 2026-10-26):
+   - A spec may add `second_response`, a second question about the same screen, asked once the
+     first is answered. After a listener response it is a choice or a rating of at most 7 points;
+     after a speaker response, a yes/no judgment.
+   - The **pair link** (`links.PairLikelihood`) reads one side of the theory. The two responses
+     are independent given it, so its log-likelihood is the sum of the parts'. The second part's
+     parameters are prefixed `q2_` (its own temperature and lapse), its design fields `second_*`,
+     and its response sits in the first's as `"second"`. One block per experiment, as before, so
+     standing, the guard and pruning are unchanged.
+   - **The design tool** scores every pairing of the two measures' units per scene, with the
+     product of their outcomes, capped at 300 joint outcomes.
+   - **The page** draws the second question as a second step of the same trial (tested in
+     Chromium). The pilot asks it as a second question about the same picture; catch trials judge
+     the first measure; timing adds both answers.
+   - **The critic** sees the second response as `second_*` columns and simulates both.
+   - The designer's brief describes the option; a theory may not use a `q2_` parameter name.
 6. **Live collection for open chains:** deploy the spec's page, Prolific (double gate, blocklist,
    one study per experiment), collection, participant ids; interleaved publishing across arms;
    neutral study text; the monitor covering every response type.

@@ -76,8 +76,9 @@ def model_seconds(response_type: str, materials: str, trials: int, objects_per_t
                   words_per_trial: float, instruction_words: float) -> float:
     """The uncalibrated estimate of one person's time."""
     per_trial = (60.0 * words_per_trial / READING_WPM + SECONDS_PER_OBJECT * objects_per_trial
-                 + SECONDS_TO_ANSWER[response_type]
-                 + (SECONDS_PER_BET_OBJECT * objects_per_trial if response_type == "bet" else 0.0))
+                 # a two-measure trial ("choice+rating") answers both
+                 + sum(SECONDS_TO_ANSWER[t] for t in response_type.split("+"))
+                 + (SECONDS_PER_BET_OBJECT * objects_per_trial if response_type.split("+")[0] == "bet" else 0.0))
     return SECONDS_OVERHEAD + 60.0 * instruction_words / READING_WPM + trials * per_trial
 
 
@@ -92,7 +93,7 @@ def features(lists: Mapping[str, Any]) -> Dict[str, Any]:
         _words(c["question"]) + sum(_words(o) for o in c["options"]) for c in intro["checks"])
     trials = [t for lst in lists["lists"] for t in lst["trials"]]
     text = lists["materials_kind"] == "text"
-    words = [_words(t["prompt_html"]) + (sum(len(x.split()) for x in t["item_labels"]) if text else 0)
+    words = [_words(t["prompt_html"]) + _words(t.get("prompt2_html", "")) + (sum(len(x.split()) for x in t["item_labels"]) if text else 0)
              for t in trials]
     return {"response_type": lists["response_type"], "materials": lists["materials_kind"],
             "trials": len(lists["lists"][0]["trials"]),

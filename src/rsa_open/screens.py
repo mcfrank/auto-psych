@@ -60,7 +60,7 @@ def design_units(report: Mapping[str, Any]) -> List[Dict[str, Any]]:
     units = []
     for i, u in enumerate(report["design"]):
         unit = {"objects": [list(map(int, row)) for row in u["objects"]], "heard": u["heard"],
-                **{k: int(u[k]) for k in UNIT_FIELDS if k in u}}
+                **{k: int(u[k]) for k in UNIT_FIELDS + SECOND_DESIGN if k in u}}
         scene_of(unit)  # a unit that is not a valid scene fails here
         units.append(unit)
     if not units:
@@ -187,12 +187,13 @@ def _word_html(word: str) -> str:
     return f'<span class="ro-word">“{html.escape(word)}”</span>'
 
 
-def _prompt_html(paradigm, trial: Mapping[str, Any], words: Sequence[str]) -> str:
-    r = paradigm.response
+def _prompt_html(paradigm, trial: Mapping[str, Any], words: Sequence[str], second: bool = False) -> str:
+    r = paradigm.second_response if second else paradigm.response
+    utterance = trial.get("second_utterance" if second else "utterance")
     if r.type == "production":
         text = html.escape(r.prompt)
     elif r.type == "binary_judgment":
-        text = html.escape(r.prompt).replace(html.escape("{message}"), _word_html(words[trial["utterance"]]))
+        text = html.escape(r.prompt).replace(html.escape("{message}"), _word_html(words[utterance]))
     elif trial["heard"] is None:
         text = html.escape(r.prior_prompt)
     else:
@@ -201,8 +202,10 @@ def _prompt_html(paradigm, trial: Mapping[str, Any], words: Sequence[str]) -> st
 
 
 def _widget(paradigm, trial: Mapping[str, Any], position_of: Mapping[int, int], words: Sequence[str],
-            rng: np.random.Generator) -> Dict[str, Any]:
-    r = paradigm.response
+            rng: np.random.Generator, second: bool = False) -> Dict[str, Any]:
+    r = paradigm.second_response if second else paradigm.response
+    if second:  # the second measure's design fields, under the first's names
+        trial = {k[len("second_"):]: trial[k] for k in SECOND_DESIGN if k in trial}
     kind = r.type
     w: Dict[str, Any] = {"type": kind}
     if kind in ("rating", "slider"):
@@ -255,7 +258,10 @@ def _concrete(paradigm, trial: Dict[str, Any], rng: np.random.Generator, counts:
     return {**trial, **extra, "domain": d, "domain_name": domain.name, "feature_map": feature_map, "words": words,
             "display_order": display_order, "items_html": items, "item_labels": labels,
             "prompt_html": _prompt_html(paradigm, trial, words),
-            "widget": _widget(paradigm, trial, position_of, words, rng)}
+            "widget": _widget(paradigm, trial, position_of, words, rng),
+            **({} if paradigm.second_response is None else {
+                "prompt2_html": _prompt_html(paradigm, trial, words, second=True),
+                "widget2": _widget(paradigm, trial, position_of, words, rng, second=True)})}
 
 
 # --------------------------------------------------------------------------- lists
@@ -266,11 +272,31 @@ def _options(paradigm) -> Dict[str, int]:
 
 
 def _abstract_test_trial(paradigm, unit: Mapping[str, Any], rng: np.random.Generator) -> Dict[str, Any]:
-    trial = {"objects": unit["objects"], "heard": unit["heard"], **{k: unit[k] for k in UNIT_FIELDS if k in unit}}
-    missing = [k for k in _needed_fields(paradigm.response.type) if k not in trial]
+    trial = {"objects": unit["objects"], "heard": unit["heard"],
+             **{k: unit[k] for k in UNIT_FIELDS + SECOND_DESIGN if k in unit}}
+    needed = list(_needed_fields(paradigm.response.type))
+    if paradigm.second_response is not None:
+        needed += ["second_" + k for k in _needed_fields(paradigm.second_response.type)]
+    missing = [k for k in needed if k not in trial]
     if missing:
         raise ValueError(f"a {paradigm.response.type} design unit needs {missing}: {dict(unit)}")
     return trial
+
+
+SECOND_DESIGN = ("second_probe", "second_target", "second_utterance")
+
+
+def _catch_second(paradigm, trial: Mapping[str, Any]) -> Dict[str, Any]:
+    """A catch or practice trial's second-measure fields: its one true object and word. Only the
+    first measure is judged (`catch_passed`)."""
+    objects, heard = trial["objects"], trial["heard"]
+    target = next(i for i, row in enumerate(objects) if row[heard] and sum(r[heard] for r in objects) == 1)
+    kind = paradigm.second_response.type
+    if kind == "rating":
+        return {"second_probe": target}
+    if kind == "binary_judgment":
+        return {"second_target": trial.get("target", target), "second_utterance": trial.get("utterance", heard)}
+    return {}
 
 
 def _needed_fields(response_type: str) -> Tuple[str, ...]:
@@ -293,10 +319,15 @@ def trial_list(paradigm, units: Sequence[Mapping[str, Any]], seed: int, index: i
     catches = [{"phase": "catch", "unit": None,
                 **_catch(shapes[int(rng.integers(len(shapes)))], rng, kind, k, options)}
                for k in range(d.catch_trials)]
+    if paradigm.second_response is not None:  # a catch trial's second question: about its own target and word
+        for c in catches:
+            c.update(_catch_second(paradigm, c))
     sequence = list(tests)
     for c in catches:
         sequence.insert(int(rng.integers(len(sequence) + 1)), c)
     practice = {"phase": "practice", "unit": None, **_catch(PRACTICE_SHAPE, rng, kind, 0, options)}
+    if paradigm.second_response is not None:
+        practice.update(_catch_second(paradigm, practice))
     counts = [0] * len(paradigm.materials.domains)
     out, previous = [], None
     for i, trial in enumerate([practice] + sequence):
@@ -317,7 +348,8 @@ def trial_lists(paradigm, units: Sequence[Mapping[str, Any]], seed: int,
     ins = paradigm.instructions
     return {
         "schema": SCHEMA, "paradigm_sha256": paradigm.sha256, "paradigm_name": paradigm.name,
-        "design_sha256": design_sha256(units), "seed": seed, "response_type": paradigm.response.type,
+        "design_sha256": design_sha256(units), "seed": seed, "response_type": paradigm.response.type + (
+            "" if paradigm.second_response is None else "+" + paradigm.second_response.type),
         "minutes": paradigm.design.minutes, "materials_kind": paradigm.materials.kind,
         "intro": {"welcome": ins.welcome, "task": ins.task,
                   "checks": [c.model_dump() for c in ins.comprehension_checks]},

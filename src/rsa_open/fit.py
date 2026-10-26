@@ -234,10 +234,12 @@ def fit(theory: RSAModel, link: LinkLikelihood, data: OpenData,
 
 def simulate(theory: RSAModel, link: LinkLikelihood, contexts: Sequence[Context],
              params: Mapping[str, Any], key, probes: Optional[Sequence[int]] = None,
-             utterances: Optional[Sequence[int]] = None) -> List[dict]:
+             utterances: Optional[Sequence[int]] = None, second_probes: Optional[Sequence[int]] = None,
+             second_utterances: Optional[Sequence[int]] = None) -> List[dict]:
     """One simulated response per scene, in input order. ``probes`` (the probed object of a
     rating, the target of a speaker link) default to a random object per trial; a judgment's
-    message (``utterances``) to a random real message of the scene."""
+    message (``utterances``) to a random real message of the scene. A two-measure link's second
+    measure takes ``second_probes`` and ``second_utterances`` (default: random, like the first's)."""
     tp, lp = _split(theory, link, {k: jnp.asarray(np.asarray(v).reshape(())) for k, v in params.items()})
     rng = np.random.default_rng(np.asarray(jax.random.randint(key, (), 0, 2**31 - 1)).item())
     if probes is None:
@@ -245,11 +247,20 @@ def simulate(theory: RSAModel, link: LinkLikelihood, contexts: Sequence[Context]
     if utterances is None:
         utterances = [int(rng.integers(ctx.shape[1] - (1 if ctx.needs_sink else 0))) for ctx in contexts]
     utterances = np.asarray(utterances)
+    pair = link.name == "pair"
+    if pair:
+        if second_probes is None:
+            second_probes = [int(rng.integers(ctx.shape[0])) for ctx in contexts]
+        if second_utterances is None:
+            second_utterances = [int(rng.integers(ctx.shape[1] - (1 if ctx.needs_sink else 0))) for ctx in contexts]
+        second_probes, second_utterances = np.asarray(second_probes), np.asarray(second_utterances)
     out: List[Optional[dict]] = [None] * len(contexts)
     for k, group in zip(jax.random.split(key, len(contexts) or 1), group_by_shape(contexts).values()):
         latent = _latent(theory, link, tp, group)
+        extra = ({"second_probes": second_probes[group.indices], "second_utterances": second_utterances[group.indices]}
+                 if pair else {})
         responses = link.sample(k, latent, lp, np.asarray(probes)[group.indices], group.arrays,
-                                utterances[group.indices])
+                                utterances[group.indices], **extra)
         for i, response in zip(group.indices, responses):
             out[i] = response
     return out  # type: ignore[return-value]

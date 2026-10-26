@@ -154,10 +154,26 @@ def row_png(items_html: Sequence[str], marked: Optional[int] = None) -> bytes:
     return bytes(resvg_py.svg_to_bytes(svg_string=svg, zoom=2))
 
 
-def trial_screen(trial: Mapping[str, Any], kind: str) -> Tuple[str, List[bytes]]:
-    """A trial as the participant reads it: text, and its image for SVG materials."""
+def _step(trial: Mapping[str, Any], second: bool) -> Mapping[str, Any]:
+    """The trial as one question sees it: a two-measure trial's second question (``widget2``) with
+    its own probed or judged object and message under the first's names."""
+    if not second:
+        return trial
+    return {**trial, "widget": trial["widget2"], "prompt_html": trial["prompt2_html"],
+            **{k: trial["second_" + k] for k in ("probe", "target", "utterance") if "second_" + k in trial}}
+
+
+DESIGN_FIELDS = ("probe", "target", "utterance", "second_probe", "second_target", "second_utterance")
+
+
+def trial_screen(trial: Mapping[str, Any], kind: str, second: bool = False) -> Tuple[str, List[bytes]]:
+    """A trial as the participant reads it: text, and its image for SVG materials (the second
+    question of a two-measure trial with ``second``)."""
+    trial = _step(trial, second)
     w, n = trial["widget"], len(trial["items_html"])
-    lines = ["(Practice question.)"] if trial["phase"] == "practice" else []
+    lines = ["(Practice question.)"] if trial["phase"] == "practice" and not second else []
+    if second:
+        lines.append("A second question about the same picture.")
     lines.append(_plain(trial["prompt_html"]))
     images: List[bytes] = []
     if kind == "svg":
@@ -188,8 +204,9 @@ def trial_screen(trial: Mapping[str, Any], kind: str) -> Tuple[str, List[bytes]]
     return "\n".join(lines), images
 
 
-def parse_answer(trial: Mapping[str, Any], reply: str) -> Tuple[Optional[dict], str]:
+def parse_answer(trial: Mapping[str, Any], reply: str, second: bool = False) -> Tuple[Optional[dict], str]:
     """The response the page would record for this reply, or (None, why not)."""
+    trial = _step(trial, second)
     found = ANSWER.findall(reply)
     if not found:
         return None, "no line starting with ANSWER:"
@@ -420,15 +437,23 @@ def run_participant(lists: Mapping[str, Any], index: int, participant: Participa
         if all(answers):
             break
         lead = f"Not quite: please read the instructions again.\n\nInstructions:\n{intro['task']}\n\n"
-    for trial in lst["trials"]:
-        text, images = trial_screen(trial, kind)
-        response, why = parse_answer(trial, _ask(participant, session, text, images))
+    def answer(trial, second):
+        text, images = trial_screen(trial, kind, second)
+        response, why = parse_answer(trial, _ask(participant, session, text, images), second)
         if response is None:
             response, why = parse_answer(trial, _ask(
-                participant, session, f"Your answer could not be read: {why}. Please answer again.\n\n{text}", images))
+                participant, session, f"Your answer could not be read: {why}. Please answer again.\n\n{text}", images),
+                second)
+        return response, why
+
+    for trial in lst["trials"]:
+        response, why = answer(trial, False)
+        if response is not None and "widget2" in trial:  # the page asks the second once the first is answered
+            second, why = answer(trial, True)
+            response = None if second is None else {**response, "second": second}
         session.rows.append({"phase": trial["phase"], "unit": trial["unit"], "trial_number": trial["trial_number"],
                              "objects": trial["objects"], "heard": trial["heard"], "expect": trial.get("expect"),
-                             **{k: trial[k] for k in ("probe", "target", "utterance") if k in trial},
+                             **{k: trial[k] for k in DESIGN_FIELDS if k in trial},
                              "response": response, "unreadable": why if response is None else None})
     return session
 

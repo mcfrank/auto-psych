@@ -81,6 +81,7 @@ class GroundTruth:
 
 
 ARMS = ("open", "fixed")
+TRIAL_DESIGN_FIELDS = ("probe", "target", "utterance", "second_probe", "second_target", "second_utterance")
 
 
 class FixedDesignFailed(RuntimeError):
@@ -363,20 +364,25 @@ class Chain:
         link = paradigm_likelihood(paradigm)
         gt = self.cfg.ground_truth
         theory = TheoryModel(Path(gt.theory_path), name="ground_truth")
-        params = {**gt.theory_params, **link.reference_params, **gt.link_params.get(link.name, {})}
+        params = {**gt.theory_params, **link.reference_params, **link.named_params(gt.link_params)}
         trials = [t for lst in lists["lists"] for t in lst["trials"]]
         probe_key = "probe" if link.side == "listener" else "target"
         rng = np.random.default_rng([self.cfg.seed, n])
         probes = [t.get(probe_key, int(rng.integers(len(t["objects"])))) for t in trials]
         utterances = [t.get("utterance", 0) for t in trials] if link.name == "binary_judgment" else None
+        second = {}
+        if link.name == "pair":  # the second measure's design, as shown (a choice has none)
+            second = {"second_probes": [t.get("second_probe", t.get("second_target", 0)) for t in trials],
+                      "second_utterances": [t.get("second_utterance", 0) for t in trials]}
         responses = simulate(theory, link, [scene_of(t) for t in trials], params,
-                             jax.random.PRNGKey(self.cfg.seed * 1000 + n), probes=probes, utterances=utterances)
+                             jax.random.PRNGKey(self.cfg.seed * 1000 + n), probes=probes, utterances=utterances,
+                             **second)
         rows = []
         for lst in lists["lists"]:
             for t in lst["trials"]:
                 rows.append({"list_index": lst["list_index"], "phase": t["phase"], "unit": t["unit"],
                              "objects": t["objects"], "heard": t["heard"],
-                             **{k: t[k] for k in ("probe", "target", "utterance") if k in t},
+                             **{k: t[k] for k in TRIAL_DESIGN_FIELDS if k in t},
                              "response": responses[len(rows)]})
         data = out.parent
         data.mkdir(parents=True, exist_ok=True)

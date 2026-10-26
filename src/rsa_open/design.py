@@ -159,7 +159,40 @@ class Unit:
         return dict(self.fields)
 
 
+def _scene_fields(ctx: Context, link: LinkLikelihood) -> List[Tuple[Tuple[str, int], ...]]:
+    """The design fields of one scene's units under a single link."""
+    reps = sorted(set(ctx.choice_classes()))
+    n_real = ctx.shape[1] - (1 if ctx.needs_sink else 0)
+    if link.name in ("choice", "allocation"):  # a bet's whole split is the response: one unit per scene
+        return [()]
+    if link.name in ("rating", "ordered_beta"):
+        return [(("probe", r),) for r in reps]
+    if link.name == "production":
+        return [(("target", r),) for r in reps]
+    return [(("target", r), ("utterance", u)) for r in reps for u in range(n_real)]
+
+
 def trial_units(scenes: Sequence[Context], link: LinkLikelihood) -> List[Unit]:
+    if link.name == "pair":  # every pairing of the two measures' units of a scene
+        from src.rsa_open.links import SECOND_FIELDS
+
+        for part in (link.first, link.second):
+            if part.name not in LinkLikelihood.CATEGORICAL:
+                raise NotImplementedError(f"the design tool cannot score {part.name!r} measures yet")
+        units: List[Unit] = []
+        games = set()
+        for i, ctx in enumerate(scenes):
+            if link.side == "speaker":
+                if ctx.objects in games:
+                    continue
+                games.add(ctx.objects)
+            for f1 in _scene_fields(ctx, link.first):
+                for f2 in _scene_fields(ctx, link.second):
+                    units.append(Unit(i, f1 + tuple((SECOND_FIELDS[k], v) for k, v in f2)))
+        if len(units) > MAX_UNITS:
+            raise ValueError(f"{len(units)} trial units, over the {MAX_UNITS} the EIG tool scores; narrow the "
+                             f"scene_space (fewer or smaller sizes)")
+        return units
     if link.name not in LinkLikelihood.CATEGORICAL:
         raise NotImplementedError(
             f"the design tool cannot score {link.name!r} ({link.response_type}) paradigms yet: its "
@@ -171,18 +204,7 @@ def trial_units(scenes: Sequence[Context], link: LinkLikelihood) -> List[Unit]:
             if ctx.objects in games:
                 continue
             games.add(ctx.objects)
-        reps = sorted(set(ctx.choice_classes()))
-        n_real = ctx.shape[1] - (1 if ctx.needs_sink else 0)
-        if link.name == "choice":
-            units.append(Unit(i, ()))
-        elif link.name in ("rating", "ordered_beta"):
-            units += [Unit(i, (("probe", r),)) for r in reps]
-        elif link.name == "production":
-            units += [Unit(i, (("target", r),)) for r in reps]
-        elif link.name == "allocation":  # the whole split is the response: one unit per scene
-            units.append(Unit(i, ()))
-        else:
-            units += [Unit(i, (("target", r), ("utterance", u))) for r in reps for u in range(n_real)]
+        units += [Unit(i, f) for f in _scene_fields(ctx, link)]
     if len(units) > MAX_UNITS:
         raise ValueError(f"{len(units)} trial units, over the {MAX_UNITS} the EIG tool scores; narrow the "
                          f"scene_space (fewer or smaller sizes)")
@@ -223,6 +245,15 @@ def outcome_prob_draws(theory: TheoryModel, link: LinkLikelihood, theory_draws: 
 
         width = max(len(bet_compositions(n, design_bet_total(n, link.options["total_points"])))
                     for n in {s[0] for s in by_group})
+    if link.name == "pair":  # the product of the parts' slots, per scene shape
+        width = 0
+        for shape, unit_ids in by_group.items():
+            group = groups[shape]
+            pos = np.asarray([position[units[u].scene][1] for u in unit_ids])
+            arrays = jax.tree_util.tree_map(lambda a: a[pos], group.arrays)
+            keys = [k for k, _ in units[unit_ids[0]].fields]
+            enc = {k: jnp.asarray([units[u].as_dict()[k] for u in unit_ids]) for k in keys}
+            width = max(width, int(link.outcome_valid(arrays, jnp.asarray(group.classes[pos]), enc).shape[1]))
     width = max(width, 2)
     probs = np.zeros((n_draws, len(units), width), dtype=np.float64)
     valid = np.zeros((len(units), width), dtype=bool)

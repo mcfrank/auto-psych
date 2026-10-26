@@ -73,7 +73,10 @@ def _refuse(reason: str, **kw) -> Admission:
 def link_parameter_names() -> set:
     from src.rsa_open.links import LINKS, likelihood
 
-    return {k for name in LINKS for k in likelihood(name, scale_points=5, total_points=100).params}
+    from src.rsa_open.links import SECOND_PREFIX
+
+    names = {k for name in LINKS for k in likelihood(name, scale_points=5, total_points=100).params}
+    return names | {SECOND_PREFIX + k for k in names}  # a two-measure paradigm's second link
 
 
 def theory_shape_problems(source: str) -> list:

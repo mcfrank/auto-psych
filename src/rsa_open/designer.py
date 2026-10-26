@@ -235,6 +235,14 @@ Their files (read-only) are in `{ws.context / 'theories'}`, their posterior draw
 - Scenes: 2-{MAX_OBJECTS} objects, 2-{MAX_FEATURES} features, at most {MAX_POOL} scenes in the space.
 - Content (IRB): no deception, no affectively charged stimuli or language, SVG or text materials
   only, no links or requests for personal information.
+- **A second question (optional):** `second_response` asks a second question about the same screen once
+  the first is answered, with its own link and parameters, e.g. a choice and then a 1-5 rating of a
+  marked object. After a listener response it is a choice or a rating of at most 7 points; after a
+  speaker response (production, judgment) it is a yes/no judgment. A rating's probed object and a
+  judgment's target and message are design fields of their own (`second_probe`, `second_target`,
+  `second_utterance`), chosen by the EIG tool. Both questions together have at most 300 joint outcomes
+  per screen. It costs time per trial, which `validate` estimates; use it when one question cannot
+  tell your theories apart and two can.
 
 ## Your tools ({calls_left} calls left; each command is one call)
 

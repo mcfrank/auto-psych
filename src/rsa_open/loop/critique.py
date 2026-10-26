@@ -24,7 +24,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Mapping, Optional
 
 import jax
 import numpy as np
@@ -62,6 +62,35 @@ def _cell(v: Any) -> Any:
     return json.dumps(v) if isinstance(v, (list, tuple)) else v
 
 
+def outcome_columns(link) -> List[str]:
+    """The response columns of a block's link: one, or a two-measure link's two (the second's
+    prefixed ``second_``)."""
+    if link.name == "pair":
+        return [OUTCOME[link.first.name], "second_" + OUTCOME[link.second.name]]
+    return [OUTCOME[link.name]]
+
+
+SECOND_OUTCOME_WORDS = {
+    "choice": "`second_choice`: the index of the object picked in answer to the second question",
+    "rating": "`second_rating`: the second question's rating of the probed object `second_probe` (1 = lowest)",
+    "binary_judgment": ("`second_answer`: the second question's yes/no on the message `second_utterance` for the "
+                        "target `second_target`"),
+}
+
+
+def outcome_words(link) -> str:
+    if link.name == "pair":
+        return f"{OUTCOME_WORDS[link.first.name]}; then {SECOND_OUTCOME_WORDS[link.second.name]}"
+    return OUTCOME_WORDS[link.name]
+
+
+def _flat(response: Mapping[str, Any]) -> Dict[str, Any]:
+    """A response as columns: a two-measure response's second part as ``second_<key>``."""
+    out = {k: v for k, v in response.items() if k != "second"}
+    out.update({"second_" + k: v for k, v in dict(response.get("second", {})).items()})
+    return out
+
+
 def critique_frame(block: Block) -> pd.DataFrame:
     """One row per trial: ``trial``, ``unit``, ``source``, ``objects`` (JSON), ``heard`` (NaN when
     no word was heard), the response's design keys and its outcome column."""
@@ -70,7 +99,7 @@ def critique_frame(block: Block) -> pd.DataFrame:
         rows.append({"trial": i, "unit": unit, "source": block.sources[i] if block.sources else block.name,
                      "objects": json.dumps([list(r) for r in ctx.objects]),
                      "heard": np.nan if ctx.utterance is None else ctx.utterance,
-                     **{k: _cell(v) for k, v in dict(response).items()}})
+                     **{k: _cell(v) for k, v in _flat(response).items()}})
     return pd.DataFrame(rows)
 
 
@@ -92,6 +121,11 @@ def simulate_outcomes(theory: TheoryModel, fitted: CorpusFit, block: Block, n_re
     responses = [dict(r) for r in block.responses]
     probes = np.asarray([r.get("probe", r.get("target", 0)) for r in responses])
     utterances = np.asarray([r.get("utterance", 0) for r in responses])
+    pair = link.name == "pair"
+    if pair:  # the second measure's design, as observed
+        seconds = [dict(r["second"]) for r in responses]
+        second_probes = np.asarray([r.get("probe", r.get("target", 0)) for r in seconds])
+        second_utterances = np.asarray([r.get("utterance", 0) for r in seconds])
     groups = list(group_by_shape(block.contexts).values())
     theory_flat = {k: flat[k] for k in theory.params}
     latents = []
@@ -102,24 +136,28 @@ def simulate_outcomes(theory: TheoryModel, fitted: CorpusFit, block: Block, n_re
         parts = [np.asarray(theory.latent_draws(params, g, link.side == "speaker", n))[:n]
                  for n, params in draw_batches(theory_flat, take)]
         latents.append(np.concatenate(parts))
-    key = OUTCOME[link.name]
+    columns = outcome_columns(link)
     out = []
     for r, d in enumerate(take):
         lp = {k: jnp.asarray(flat[k][d]) for k in link.params}
         row: List[Any] = [None] * block.n
         for k, (g, lat) in zip(jax.random.split(jax.random.PRNGKey(seed * 100_003 + r), len(groups)),
                                zip(groups, latents)):
-            sampled = link.sample(k, lat[r], lp, probes[g.indices], g.arrays, utterances[g.indices])
+            extra = ({"second_probes": second_probes[g.indices], "second_utterances": second_utterances[g.indices]}
+                     if pair else {})
+            sampled = link.sample(k, lat[r], lp, probes[g.indices], g.arrays, utterances[g.indices], **extra)
             for i, s in zip(g.indices, sampled):
-                row[i] = _cell(s[key])
+                cells = _flat(s)
+                row[i] = _cell(cells[columns[0]]) if len(columns) == 1 else tuple(_cell(cells[c]) for c in columns)
         out.append(row)
     return out
 
 
 class ReplicateFrames:
-    """The replicate frames, built one at a time when iterated (only the outcome column differs)."""
+    """The replicate frames, built one at a time when iterated (only the outcome column differs;
+    with several ``column``s, each outcome is a tuple of their values)."""
 
-    def __init__(self, observed: pd.DataFrame, column: str, outcomes: List[List[Any]]) -> None:
+    def __init__(self, observed: pd.DataFrame, column, outcomes: List[List[Any]]) -> None:
         if outcomes and len(outcomes[0]) != len(observed):
             raise ValueError(f"{len(outcomes[0])} simulated responses per replicate for {len(observed)} trials")
         self.observed, self.column, self.outcomes = observed, column, outcomes
@@ -130,7 +168,11 @@ class ReplicateFrames:
     def __iter__(self):
         for row in self.outcomes:
             df = self.observed.copy()
-            df[self.column] = row
+            if isinstance(self.column, str):
+                df[self.column] = row
+            else:
+                for j, c in enumerate(self.column):
+                    df[c] = [v[j] for v in row]
             yield df
 
 
@@ -139,9 +181,11 @@ def context_md(*, critique_dir: Path, incumbent: str, incumbent_file: Path, hypo
                n_replicates: int) -> str:
     from src.critique.ppc import _TEST_STAT_BUDGET_SEC, _TEST_STAT_CALL_TIMEOUT_SEC
 
-    design = [c for c in ("probe", "target") if c in observed.columns]
+    design = [c for c in ("probe", "target", "second_probe", "second_target") if c in observed.columns]
     if block.link.name == "binary_judgment":
         design.append("utterance")
+    if "second_utterance" in observed.columns:
+        design.append("second_utterance")
     n_scenes = observed[["objects", "heard"]].astype(str).drop_duplicates().shape[0]
     return f"""# Critique context
 
@@ -158,7 +202,7 @@ Its link (response process): `{block.link.name}`.
 - `objects`: a JSON list of 0/1 feature lists, one per object.
 - `heard`: the index of the feature whose word was heard (NaN when no word was heard).
 - `unit`: the designed trial the row belongs to.{"" if not design else chr(10) + "- " + ", ".join(f"`{c}`" for c in design) + ": the trial's design (as presented, the same in every simulated dataset)."}
-- **The response:** {OUTCOME_WORDS[block.link.name]}.
+- **The response:** {outcome_words(block.link)}.
 
 **Your job:** propose **{n_proposals}** test statistics. Write each to
 `{critique_dir / "test_stats"}/<name>.py` as `test_statistic(df)` returning one
@@ -166,7 +210,7 @@ float, with `# name:` and `# description:` header comments.
 
 You do not need to run anything: the pipeline computes each statistic on the
 observed data and on {n_replicates} datasets simulated from the incumbent's
-posterior through this experiment's link (only `{OUTCOME[block.link.name]}` differs between them),
+posterior through this experiment's link (only {", ".join(f"`{c}`" for c in outcome_columns(block.link))} differ{"s" if len(outcome_columns(block.link)) == 1 else ""} between them),
 and flags a statistic as a **significant discrepancy** when its two-sided p ≤ {alpha}
 (with a Benjamini–Hochberg q beside it).
 
@@ -222,7 +266,8 @@ def run_critique(round_dir: Path, *, spawn: SpawnFn, incumbent: str, theory: The
         print(f"  [critique] NO CRITIQUE this round: {reason}", flush=True)
         return CritiqueOutcome(None, dict(status=CRITIQUE_STATUS_NONE, incumbent=incumbent, attempts=attempts,
                                           reason=reason, broken=broken))
-    reps = ReplicateFrames(observed, OUTCOME[block.link.name],
+    columns = outcome_columns(block.link)
+    reps = ReplicateFrames(observed, columns[0] if len(columns) == 1 else columns,
                            simulate_outcomes(theory, fitted, block, n_replicates, seed))
     result = score_statistics(incumbent, observed, reps, usable, significance_alpha=alpha)
     result["n_replicates"] = len(reps)

@@ -95,8 +95,11 @@ def context_md(*, candidate_dir: Path, corpus_path: Path, full_corpus_path: Path
              "heard, `null` on a prior trial; `response` in its paradigm's form). You may analyse them from "
              "the shell; your theory file may not read them.", ""]
     for b in blocks:
-        resp = RESPONSE_WORDS.get(b.link.response_type, b.link.response_type)
-        opts = ", ".join(f"{k} {v}" for k, v in b.link.options.items())
+        resp = ", then ".join(RESPONSE_WORDS.get(t, t) for t in b.link.response_type.split("+"))
+        opts = ", ".join(f"{k} {v}" for k, v in b.link.options.items() if not isinstance(v, dict))
+        if b.link.name == "pair":
+            opts = (f"two questions per screen: {b.link.first.name} then {b.link.second.name}, each with its own "
+                    f"link parameters (the second's prefixed q2_)")
         lines += [f"### {b.name}: {b.n} trials, people {resp}",
                   f"- link `{b.link.name}`{f' ({opts})' if opts else ''}; data `{data_paths[b.name]}`"]
         if b.fixed:

@@ -135,12 +135,28 @@
     class OpenTrialPlugin {
       constructor(jsPsych) { this.jsPsych = jsPsych; }
       trial(el, par) {
-        const t = par.trial, w = t.widget, start = performance.now(), self = this;
+        const t = par.trial, start = performance.now(), self = this;
         const n = t.items_html.length;
+        function finish(response) {
+          self.jsPsych.finishTrial({ response: response, rt: Math.round(performance.now() - start) });
+        }
+        // A two-measure trial (t.widget2): the second question on the same screen once the first is
+        // answered, its response recorded under "second" (src/rsa_open/links.py PairLikelihood).
+        const first = { probe: t.probe, target: t.target, utterance: t.utterance };
+        if (t.widget2) {
+          step(t.widget, t.prompt_html, first, function (r1) {
+            step(t.widget2, t.prompt2_html, { probe: t.second_probe, target: t.second_target, utterance: t.second_utterance },
+                 function (r2) { r1.second = r2; finish(r1); });
+          });
+        } else {
+          step(t.widget, t.prompt_html, first, finish);
+        }
+
+        function step(w, promptHtml, fields, done) {
         const clickable = w.type === 'choice';
         let h = '<div class="ro-trial">';
         if (t.phase === 'practice') h += '<span class="ro-tag">Practice</span>';
-        h += t.prompt_html + '<div class="ro-items">';
+        h += promptHtml + '<div class="ro-items">';
         t.items_html.forEach(function (item, p) {
           const marked = w.marked === p;
           const cls = 'ro-item' + (marked ? ' ro-marked' : '') + (LISTS_KIND === 'text' ? ' ro-text-item' : '');
@@ -176,17 +192,14 @@
         h += '</div></div>';
         el.innerHTML = h;
 
-        function finish(response) {
-          self.jsPsych.finishTrial({ response: response, rt: Math.round(performance.now() - start) });
-        }
         const at = function (sel) { return Array.from(el.querySelectorAll(sel)); };
         if (w.type === 'choice') {
           at('button.ro-item').forEach(function (b) {
-            b.addEventListener('click', function () { finish({ choice: t.display_order[Number(b.dataset.position)] }); });
+            b.addEventListener('click', function () { done({ choice: t.display_order[Number(b.dataset.position)] }); });
           });
         } else if (w.type === 'rating') {
           at('.ro-rate').forEach(function (b) {
-            b.addEventListener('click', function () { finish({ probe: t.probe, rating: Number(b.dataset.value) }); });
+            b.addEventListener('click', function () { done({ probe: fields.probe, rating: Number(b.dataset.value) }); });
           });
         } else if (w.type === 'slider') {
           const s = el.querySelector('.ro-slider'), go = el.querySelector('.ro-continue');
@@ -194,7 +207,7 @@
           ['input', 'change', 'pointerdown', 'keydown'].forEach(function (ev) {
             s.addEventListener(ev, function () { s.classList.remove('ro-unset'); go.disabled = false; });
           });
-          go.addEventListener('click', function () { finish({ probe: t.probe, value: Number(s.value) }); });
+          go.addEventListener('click', function () { done({ probe: fields.probe, value: Number(s.value) }); });
         } else if (w.type === 'bet') {
           const inputs = at('.ro-bet'), total = el.querySelector('.ro-total'), go = el.querySelector('.ro-continue');
           const points = function () {
@@ -211,20 +224,21 @@
           go.addEventListener('click', function () {
             const p = points(), byObject = new Array(n).fill(0);
             p.forEach(function (v, pos) { byObject[t.display_order[pos]] = v; });
-            finish({ points: byObject });
+            done({ points: byObject });
           });
         } else if (w.type === 'production') {
           at('.ro-word-btn').forEach(function (b) {
             b.addEventListener('click', function () {
-              finish({ target: t.target, utterance: w.options[Number(b.dataset.i)].utterance });
+              done({ target: fields.target, utterance: w.options[Number(b.dataset.i)].utterance });
             });
           });
         } else if (w.type === 'binary_judgment') {
           at('.ro-answer').forEach(function (b) {
             b.addEventListener('click', function () {
-              finish({ target: t.target, utterance: t.utterance, answer: b.dataset.answer === '1' });
+              done({ target: fields.target, utterance: fields.utterance, answer: b.dataset.answer === '1' });
             });
           });
+        }
         }
       }
     }
@@ -296,6 +310,7 @@
         return { type: OpenTrialPlugin, trial: t, post_trial_gap: 300,
                  data: { task: 'rsa_open_trial', phase: t.phase, unit: t.unit, trial_number: t.trial_number,
                          objects: t.objects, heard: t.heard, probe: t.probe, target: t.target, utterance: t.utterance,
+                         second_probe: t.second_probe, second_target: t.second_target, second_utterance: t.second_utterance,
                          expect: t.expect, domain: t.domain, words: t.words, display_order: t.display_order } };
       };
       const practice = LIST.trials.filter(function (t) { return t.phase === 'practice'; });
