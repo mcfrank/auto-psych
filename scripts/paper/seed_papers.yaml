@@ -1,0 +1,28 @@
+# The paper each starting model implements, per domain, for Figure 2's
+# labels; null for a starting model no paper proposed (reference games' seeds
+# promoted from the earlier agent sweep, data/rsa/live_seeds/promotion.json).
+# Every starting model must be listed: scripts/paper/figures.py raises on one
+# that is not. Drafted from each model's docstring (2026-10-21).
+subjective_randomness:
+  falk_konold_dp: Falk & Konold, 1997
+  finite_experience_occurrence: Hahn & Warren, 2009
+  local_representativeness: Kahneman & Tversky, 1972
+  motif_stack: Griffiths et al., 2018
+rsa:
+  rsa_l1: Frank & Goodman, 2012
+  # One more level of the same recursion (the pragmods "complex" game).
+  rsa_l2: Frank & Goodman, 2012
+  rsa_l2_singleton_distinct_feat_color_l0: null
+  rsa_l2_singleton_feat_color_familiar_l0: null
+  rsa_l2_singleton_feat_color_valence_l0: null
+  competitor_confusion_speaker: null
+  isolated_graded_costly_l3: null
+  softmax_surprisal_isolated_costly_l4: null
+  familiar_isolated_graded_costly_l2: null
+  evaluative_prominence_l2: null
+  oddity_heuristic_listener: null
+  lexical_preemption_heuristic: null
+number_game:
+  bigelow_piantadosi_independent: Bigelow & Piantadosi, 2016
+  bigelow_piantadosi_interval: Bigelow & Piantadosi, 2016
+  tenenbaum_rules_similarity: Tenenbaum, 2000

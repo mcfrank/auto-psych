@@ -645,7 +645,8 @@ def pooled_fit_settings(args: Args, fit_kwargs: Dict[str, Any]) -> Dict[str, Any
 def pooled_extras(args: Args, fit_kwargs: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
     """Every run's other models live at the end and its removed models, for
     Figure 2's pooled view: ``<run>__<name>`` -> ``file``, ``run``, ``name``,
-    ``role`` (``live`` / ``removed``) and a removed model's ``outcome``."""
+    ``role`` (``live`` / ``removed``), its run's admission ``order`` and a
+    removed model's ``outcome``."""
     from scripts.paper import removed_models as rm
 
     extras: Dict[str, Dict[str, Any]] = {}
@@ -657,7 +658,8 @@ def pooled_extras(args: Args, fit_kwargs: Dict[str, Any]) -> Dict[str, Dict[str,
         for name in posterior["elpd_loo"]:
             if name != posterior["best_model"]:
                 extras[f"{run}{POOLED_LABEL_SEP}{name}"] = {
-                    "file": loop / "models" / f"{name}.py", "run": run, "name": name, "role": "live"}
+                    "file": loop / "models" / f"{name}.py", "run": run, "name": name, "role": "live",
+                    "order": order[name]}
         for name, entry in info["removed"].items():
             extras[f"{run}{POOLED_LABEL_SEP}{name}"] = {
                 "file": entry["file"], "run": run, "name": name, "role": "removed",
@@ -679,9 +681,11 @@ def pooled_extras_fields(extras: Dict[str, Dict[str, Any]], scored: Dict[str, An
         "pruned_during_run": diffs("removed"),
         "extras_unscored": scored["unscored"],
         "pruned_outcome": {label: x["outcome"] for label, x in extras.items() if x["role"] == "removed"},
-        # Each removed model's place in the order its own run admitted models.
+        # Each model's place in the order its own run admitted models.
         "pruned_order": {label: extras[label]["order"] for label in scored["elpd"]
                          if extras[label]["role"] == "removed"},
+        "others_order": {label: extras[label]["order"] for label in scored["elpd"]
+                         if extras[label]["role"] == "live"},
     }
 
 

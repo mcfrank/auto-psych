@@ -2100,6 +2100,28 @@
       "run3__tally_gist_typicality": 60,
       "run3__tally_reverting_chance_coin": 38,
       "run3__worst_stretch_regularity_evidence": 57
+    },
+    "others_order": {
+      "run1__capacity_blur_pattern_gain": 85,
+      "run1__capacity_blur_personal_antisymmetry": 80,
+      "run1__longest_repeated_chunk_aversion": 77,
+      "run1__personal_first_read_anchoring": 76,
+      "run1__returns_to_balance_expectation": 82,
+      "run1__sensitivity_linked_consistency": 87,
+      "run1__side_lean_complement_symmetry": 81,
+      "run2__local_alternation_switch_ideal_rule": 82,
+      "run2__person_decisiveness_rule_built_tally": 67,
+      "run2__person_pattern_sensitivity_rule_built": 69,
+      "run2__streak_excess_pattern_rule_built": 74,
+      "run2__terminal_run_pattern_rule_built": 78,
+      "run2__terminal_streak_recency_pattern_rule": 77,
+      "run3__accelerating_streak_weary_chance": 83,
+      "run3__gamblers_run_signed_sensitivity_motif": 77,
+      "run3__heavy_tailed_signed_sensitivity_motif": 69,
+      "run3__lopsided_trick_coin_probit": 81,
+      "run3__short_sequence_pseudoflip_dilution": 72,
+      "run3__streak_weary_chance_pseudoflip": 79,
+      "run3__thurstonian_probit_decision": 76
     }
   },
   "conditions": [

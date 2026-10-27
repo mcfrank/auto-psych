@@ -24,11 +24,20 @@ it to four decimals).
 
 What each figure shows:
 
-- **Figure 2** (`fig2_elpd`): per domain, a forest plot in ELPD difference
-  from the best starting model, the runs collapsed: the best discovered
-  models and the starting models as named points with ±2 SE of the paired
-  difference (names: `model_names.yaml`), the other models live at the end
-  and the models pruned during the runs as strips. A point whose paired SE
+- **Figure 2**, in two layouts of the same comparison: `fig2_elpd` (models
+  across, ELPD up) and `fig2_elpd_horizontal` (a forest plot: one row per
+  model, ELPD across). Per domain, each model's ELPD (a dashed line marks
+  the best starting model's), the runs collapsed: the best discovered
+  models and the starting models as points with ±2 SE of the paired
+  difference (names: `model_names.yaml`; the paper each starting model
+  implements, or null: `seed_papers.yaml`), and the non-winning models
+  (the other models live at the end and those pruned during the runs) as
+  one strip, each run's in the order it admitted them (`pruned_order`,
+  `others_order`); every model the loop wrote is coloured by its run
+  (`RUN_COLORS`). The vertical layout
+  names the best discovered models at the top and, at the bottom, the
+  starting models a paper proposed (by the paper) and the best starting
+  model; the horizontal one names every row. A point whose paired SE
   is not computed yet is drawn hollow, a strip not scored yet "pending".
   Subjective randomness is drawn from all runs pooled (each run is scored on
   its own data); reference games from every chain on the pre-registered
