@@ -1,0 +1,19 @@
+{
+ "model": "r2_minus_idealP_fin",
+ "fold": 1,
+ "converged": true,
+ "has_lpd": true,
+ "attempts": [
+  {
+   "seed": 20261018,
+   "problems": [],
+   "problems_all": [
+    "max R-hat 1.529 > 1.05",
+    "min bulk ESS 7 < 100"
+   ],
+   "seconds": 2315
+  }
+ ],
+ "elpd": -2186.3293744561197,
+ "seed": 20261018
+}

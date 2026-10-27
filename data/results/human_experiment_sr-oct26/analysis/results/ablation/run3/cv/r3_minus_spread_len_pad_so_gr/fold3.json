@@ -1,0 +1,16 @@
+{
+ "model": "r3_minus_spread_len_pad_so_gr",
+ "fold": 3,
+ "converged": true,
+ "has_lpd": true,
+ "attempts": [
+  {
+   "seed": 20261018,
+   "problems": [],
+   "problems_all": [],
+   "seconds": 2306
+  }
+ ],
+ "elpd": -2222.347251476019,
+ "seed": 20261018
+}

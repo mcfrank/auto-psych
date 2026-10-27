@@ -1,0 +1,34 @@
+{
+ "model": "r3_minus_gr",
+ "fold": 1,
+ "converged": false,
+ "has_lpd": true,
+ "attempts": [
+  {
+   "seed": 20261018,
+   "problems": [
+    "max R-hat 1.050 > 1.05",
+    "min bulk ESS 88 < 100"
+   ],
+   "problems_all": [
+    "max R-hat 1.050 > 1.05",
+    "min bulk ESS 88 < 100"
+   ],
+   "seconds": 4812
+  },
+  {
+   "seed": 6,
+   "problems": [
+    "max R-hat 1.081 > 1.05",
+    "min bulk ESS 33 < 100"
+   ],
+   "problems_all": [
+    "max R-hat 1.081 > 1.05",
+    "min bulk ESS 33 < 100"
+   ],
+   "seconds": 3236
+  }
+ ],
+ "elpd": -2277.0434652577637,
+ "seed": 6
+}

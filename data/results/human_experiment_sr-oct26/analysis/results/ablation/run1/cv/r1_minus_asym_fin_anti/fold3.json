@@ -1,0 +1,16 @@
+{
+ "model": "r1_minus_asym_fin_anti",
+ "fold": 3,
+ "converged": true,
+ "has_lpd": true,
+ "attempts": [
+  {
+   "seed": 20261018,
+   "problems": [],
+   "problems_all": [],
+   "seconds": 4250
+  }
+ ],
+ "elpd": -2072.423293548235,
+ "seed": 20261018
+}

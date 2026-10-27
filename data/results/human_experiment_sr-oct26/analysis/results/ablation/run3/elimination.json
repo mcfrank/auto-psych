@@ -1,0 +1,601 @@
+{
+ "final": "run3",
+ "rule": {
+  "threshold_dse": 2.0,
+  "start": [
+   "markov",
+   "trick_coin",
+   "motif",
+   "trick_coin_spread",
+   "motif_weight",
+   "motif_weight_personal",
+   "beta_personal",
+   "switch_belief",
+   "switch_belief_personal",
+   "length_scaling",
+   "length_padding",
+   "second_order",
+   "gamblers_run",
+   "side_bias",
+   "side_personal"
+  ]
+ },
+ "rounds": [
+  {
+   "model": "r3_full",
+   "mechanisms": [
+    "markov",
+    "trick_coin",
+    "motif",
+    "trick_coin_spread",
+    "motif_weight",
+    "motif_weight_personal",
+    "beta_personal",
+    "switch_belief",
+    "switch_belief_personal",
+    "length_scaling",
+    "length_padding",
+    "second_order",
+    "gamblers_run",
+    "side_bias",
+    "side_personal"
+   ],
+   "elpd_cv": -10908.279642977304,
+   "converged": true,
+   "size": {
+    "population": 14,
+    "person_vectors": 4
+   },
+   "candidates": [
+    {
+     "mechanism": "trick_coin_spread",
+     "model": "r3_minus_spread",
+     "elpd_cv": -10910.610622972361,
+     "cost": 2.330979995056623,
+     "se": 11.576818957672087,
+     "cost_in_se": 0.20134892007720798,
+     "converged": true
+    },
+    {
+     "mechanism": "length_padding",
+     "model": "r3_minus_pad",
+     "elpd_cv": -10910.976472375862,
+     "cost": 2.6968293985573837,
+     "se": 1.6749269105791447,
+     "cost_in_se": 1.6101176603729488,
+     "converged": true
+    },
+    {
+     "mechanism": "second_order",
+     "model": "r3_minus_so",
+     "elpd_cv": -10916.317396824037,
+     "cost": 8.037753846732812,
+     "se": 9.61218012984934,
+     "cost_in_se": 0.8362050791966166,
+     "converged": true
+    },
+    {
+     "mechanism": "gamblers_run",
+     "model": "r3_minus_gr",
+     "elpd_cv": -10919.273144595973,
+     "cost": 10.993501618668233,
+     "se": 7.29389654791309,
+     "cost_in_se": 1.5072192958116006,
+     "converged": false
+    },
+    {
+     "mechanism": "side_personal",
+     "model": "r3_minus_sideP",
+     "elpd_cv": -10920.565846577336,
+     "cost": 12.286203600031513,
+     "se": 4.513067318181288,
+     "cost_in_se": 2.722362139499994,
+     "converged": true
+    },
+    {
+     "mechanism": "markov",
+     "model": "r3_minus_markov",
+     "elpd_cv": -11067.07440522582,
+     "cost": 158.79476224851533,
+     "se": 45.21379925141296,
+     "cost_in_se": 3.5120862408737503,
+     "converged": true
+    },
+    {
+     "mechanism": "motif_weight_personal",
+     "model": "r3_minus_mwP",
+     "elpd_cv": -11078.850896205027,
+     "cost": 170.571253227723,
+     "se": 33.96089490236582,
+     "cost_in_se": 5.022578283584643,
+     "converged": true
+    },
+    {
+     "mechanism": "beta_personal",
+     "model": "r3_minus_betaP",
+     "elpd_cv": -11499.679182282436,
+     "cost": 591.3995393051318,
+     "se": 56.15464863633784,
+     "cost_in_se": 10.531622112624802,
+     "converged": true
+    },
+    {
+     "mechanism": "switch_belief_personal",
+     "model": "r3_minus_sbP",
+     "elpd_cv": -11666.785511028933,
+     "cost": 758.5058680516286,
+     "se": 80.15537188051772,
+     "cost_in_se": 9.462944906328708,
+     "converged": false
+    }
+   ],
+   "decision": "drop trick_coin_spread"
+  },
+  {
+   "model": "r3_minus_spread",
+   "mechanisms": [
+    "markov",
+    "trick_coin",
+    "motif",
+    "motif_weight",
+    "motif_weight_personal",
+    "beta_personal",
+    "switch_belief",
+    "switch_belief_personal",
+    "length_scaling",
+    "length_padding",
+    "second_order",
+    "gamblers_run",
+    "side_bias",
+    "side_personal"
+   ],
+   "elpd_cv": -10910.610622972361,
+   "converged": true,
+   "size": {
+    "population": 13,
+    "person_vectors": 4
+   },
+   "candidates": [
+    {
+     "mechanism": "length_padding",
+     "model": "r3_minus_spread_pad",
+     "elpd_cv": -10912.924887895102,
+     "cost": 2.314264922741131,
+     "se": 1.52815264825461,
+     "cost_in_se": 1.514419992913918,
+     "converged": true
+    },
+    {
+     "mechanism": "gamblers_run",
+     "model": "r3_minus_spread_gr",
+     "elpd_cv": -10914.275295372618,
+     "cost": 3.664672400256677,
+     "se": 5.32079699365861,
+     "cost_in_se": 0.6887450140691851,
+     "converged": true
+    },
+    {
+     "mechanism": "second_order",
+     "model": "r3_minus_spread_so",
+     "elpd_cv": -10919.41335790111,
+     "cost": 8.802734928749487,
+     "se": 9.024056498270134,
+     "cost_in_se": 0.975474270405657,
+     "converged": true
+    },
+    {
+     "mechanism": "side_personal",
+     "model": "r3_minus_spread_sideP",
+     "elpd_cv": -10923.293030107397,
+     "cost": 12.682407135036556,
+     "se": 4.404153208834533,
+     "cost_in_se": 2.8796471270790986,
+     "converged": true
+    },
+    {
+     "mechanism": "trick_coin",
+     "model": "r3_minus_trick_spread",
+     "elpd_cv": -11028.517377661163,
+     "cost": 117.90675468880181,
+     "se": 36.04198892365051,
+     "cost_in_se": 3.271372036059647,
+     "converged": true
+    },
+    {
+     "mechanism": "motif_weight_personal",
+     "model": "r3_minus_spread_mwP",
+     "elpd_cv": -11106.688864282969,
+     "cost": 196.07824131060806,
+     "se": 37.16384540677093,
+     "cost_in_se": 5.276048244320926,
+     "converged": true
+    },
+    {
+     "mechanism": "markov",
+     "model": "r3_minus_markov_spread",
+     "elpd_cv": -11151.186581919303,
+     "cost": 240.57595894694168,
+     "se": 51.55163681022508,
+     "cost_in_se": 4.666698747753909,
+     "converged": true
+    },
+    {
+     "mechanism": "beta_personal",
+     "model": "r3_minus_spread_betaP",
+     "elpd_cv": -11545.658967067324,
+     "cost": 635.0483440949629,
+     "se": 59.797873353104634,
+     "cost_in_se": 10.619915199074416,
+     "converged": true
+    },
+    {
+     "mechanism": "switch_belief_personal",
+     "model": "r3_minus_spread_sbP",
+     "elpd_cv": -11868.717106874163,
+     "cost": 958.1064839018018,
+     "se": 93.02551930191076,
+     "cost_in_se": 10.299394091983554,
+     "converged": false
+    }
+   ],
+   "decision": "drop length_padding"
+  },
+  {
+   "model": "r3_minus_spread_pad",
+   "mechanisms": [
+    "markov",
+    "trick_coin",
+    "motif",
+    "motif_weight",
+    "motif_weight_personal",
+    "beta_personal",
+    "switch_belief",
+    "switch_belief_personal",
+    "length_scaling",
+    "second_order",
+    "gamblers_run",
+    "side_bias",
+    "side_personal"
+   ],
+   "elpd_cv": -10912.924887895102,
+   "converged": true,
+   "size": {
+    "population": 12,
+    "person_vectors": 4
+   },
+   "candidates": [
+    {
+     "mechanism": "gamblers_run",
+     "model": "r3_minus_spread_pad_gr",
+     "elpd_cv": -10915.507531590942,
+     "cost": 2.582643695839579,
+     "se": 5.408908161740841,
+     "cost_in_se": 0.47747967216517917,
+     "converged": true
+    },
+    {
+     "mechanism": "second_order",
+     "model": "r3_minus_spread_pad_so",
+     "elpd_cv": -10922.562252294712,
+     "cost": 9.637364399610306,
+     "se": 9.021620784550361,
+     "cost_in_se": 1.0682519948205331,
+     "converged": true
+    },
+    {
+     "mechanism": "side_personal",
+     "model": "r3_minus_spread_pad_sideP",
+     "elpd_cv": -10926.933191166403,
+     "cost": 14.008303271300974,
+     "se": 4.367686618756177,
+     "cost_in_se": 3.20725924134416,
+     "converged": true
+    },
+    {
+     "mechanism": "length_scaling",
+     "model": "r3_minus_spread_len_pad",
+     "elpd_cv": -10987.895330882615,
+     "cost": 74.9704429875128,
+     "se": 27.50490176076593,
+     "cost_in_se": 2.7257120799629098,
+     "converged": true
+    },
+    {
+     "mechanism": "trick_coin",
+     "model": "r3_minus_trick_spread_pad",
+     "elpd_cv": -11032.896722737354,
+     "cost": 119.97183484225206,
+     "se": 36.259197389907904,
+     "cost_in_se": 3.308728363514303,
+     "converged": true
+    },
+    {
+     "mechanism": "motif_weight_personal",
+     "model": "r3_minus_spread_mwP_pad",
+     "elpd_cv": -11110.557204118573,
+     "cost": 197.6323162234712,
+     "se": 37.375817456470386,
+     "cost_in_se": 5.287705518511882,
+     "converged": true
+    },
+    {
+     "mechanism": "markov",
+     "model": "r3_minus_markov_spread_pad",
+     "elpd_cv": -11152.75254694988,
+     "cost": 239.82765905477754,
+     "se": 51.451502848771334,
+     "cost_in_se": 4.661237199614757,
+     "converged": true
+    },
+    {
+     "mechanism": "beta_personal",
+     "model": "r3_minus_spread_betaP_pad",
+     "elpd_cv": -11548.325090711147,
+     "cost": 635.4002028160448,
+     "se": 59.601876213900944,
+     "cost_in_se": 10.660741627255192,
+     "converged": true
+    },
+    {
+     "mechanism": "switch_belief_personal",
+     "model": "r3_minus_spread_sbP_pad",
+     "elpd_cv": -11950.791612381132,
+     "cost": 1037.8667244860299,
+     "se": 100.68777315758534,
+     "cost_in_se": 10.307773148003541,
+     "converged": true
+    }
+   ],
+   "decision": "drop gamblers_run"
+  },
+  {
+   "model": "r3_minus_spread_pad_gr",
+   "mechanisms": [
+    "markov",
+    "trick_coin",
+    "motif",
+    "motif_weight",
+    "motif_weight_personal",
+    "beta_personal",
+    "switch_belief",
+    "switch_belief_personal",
+    "length_scaling",
+    "second_order",
+    "side_bias",
+    "side_personal"
+   ],
+   "elpd_cv": -10915.507531590942,
+   "converged": true,
+   "size": {
+    "population": 11,
+    "person_vectors": 4
+   },
+   "candidates": [
+    {
+     "mechanism": "second_order",
+     "model": "r3_minus_spread_pad_so_gr",
+     "elpd_cv": -10924.144554791696,
+     "cost": 8.637023200753902,
+     "se": 8.628498372631306,
+     "cost_in_se": 1.0009879851341963,
+     "converged": true
+    },
+    {
+     "mechanism": "side_personal",
+     "model": "r3_minus_spread_pad_gr_sideP",
+     "elpd_cv": -10928.28123794846,
+     "cost": 12.773706357518677,
+     "se": 4.384094130952495,
+     "cost_in_se": 2.9136478314491483,
+     "converged": true
+    },
+    {
+     "mechanism": "length_scaling",
+     "model": "r3_minus_spread_len_pad_gr",
+     "elpd_cv": -10986.431671777977,
+     "cost": 70.92414018703494,
+     "se": 26.708646701710773,
+     "cost_in_se": 2.655474872206536,
+     "converged": true
+    },
+    {
+     "mechanism": "trick_coin",
+     "model": "r3_minus_trick_spread_pad_gr",
+     "elpd_cv": -11014.353577325857,
+     "cost": 98.8460457349156,
+     "se": 37.77565159399623,
+     "cost_in_se": 2.6166602444688323,
+     "converged": false
+    },
+    {
+     "mechanism": "motif_weight_personal",
+     "model": "r3_minus_spread_mwP_pad_gr",
+     "elpd_cv": -11114.47330950488,
+     "cost": 198.96577791393793,
+     "se": 37.647142652489165,
+     "cost_in_se": 5.285016707656634,
+     "converged": true
+    },
+    {
+     "mechanism": "markov",
+     "model": "r3_minus_markov_spread_pad_gr",
+     "elpd_cv": -11193.56262849459,
+     "cost": 278.0550969036485,
+     "se": 54.79797703636005,
+     "cost_in_se": 5.074185434238765,
+     "converged": true
+    },
+    {
+     "mechanism": "beta_personal",
+     "model": "r3_minus_spread_betaP_pad_gr",
+     "elpd_cv": -11546.466675301755,
+     "cost": 630.9591437108138,
+     "se": 58.96733714194779,
+     "cost_in_se": 10.700146458910831,
+     "converged": true
+    },
+    {
+     "mechanism": "switch_belief_personal",
+     "model": "r3_minus_spread_sbP_pad_gr",
+     "elpd_cv": -11884.14604820522,
+     "cost": 968.6385166142791,
+     "se": 91.30461434175541,
+     "cost_in_se": 10.60886707202597,
+     "converged": true
+    }
+   ],
+   "decision": "drop second_order"
+  },
+  {
+   "model": "r3_minus_spread_pad_so_gr",
+   "mechanisms": [
+    "markov",
+    "trick_coin",
+    "motif",
+    "motif_weight",
+    "motif_weight_personal",
+    "beta_personal",
+    "switch_belief",
+    "switch_belief_personal",
+    "length_scaling",
+    "side_bias",
+    "side_personal"
+   ],
+   "elpd_cv": -10924.144554791696,
+   "converged": true,
+   "size": {
+    "population": 10,
+    "person_vectors": 4
+   },
+   "candidates": [
+    {
+     "mechanism": "side_personal",
+     "model": "r3_minus_spread_pad_so_gr_sideP",
+     "elpd_cv": -10937.347570279304,
+     "cost": 13.203015487608354,
+     "se": 4.43568804340935,
+     "cost_in_se": 2.9765428403437224,
+     "converged": true
+    },
+    {
+     "mechanism": "trick_coin",
+     "model": "r3_minus_trick_spread_pad_so_gr",
+     "elpd_cv": -10982.820787357092,
+     "cost": 58.676232565396276,
+     "se": 36.49525498087453,
+     "cost_in_se": 1.607777027346316,
+     "converged": true
+    },
+    {
+     "mechanism": "length_scaling",
+     "model": "r3_minus_spread_len_pad_so_gr",
+     "elpd_cv": -11014.041575751924,
+     "cost": 89.89702096022847,
+     "se": 29.00201905517024,
+     "cost_in_se": 3.0996814666323163,
+     "converged": true
+    },
+    {
+     "mechanism": "motif_weight_personal",
+     "model": "r3_minus_spread_mwP_pad_so_gr",
+     "elpd_cv": -11110.863479522945,
+     "cost": 186.718924731249,
+     "se": 36.353736032001954,
+     "cost_in_se": 5.136168798906433,
+     "converged": true
+    },
+    {
+     "mechanism": "markov",
+     "model": "r3_minus_markov_spread_pad_so_gr",
+     "elpd_cv": -11413.043909585926,
+     "cost": 488.89935479423,
+     "se": 75.87566289048351,
+     "cost_in_se": 6.443427789222634,
+     "converged": true
+    },
+    {
+     "mechanism": "beta_personal",
+     "model": "r3_minus_spread_betaP_pad_so_gr",
+     "elpd_cv": -11516.659461549913,
+     "cost": 592.514906758217,
+     "se": 57.66611733537333,
+     "cost_in_se": 10.274922851356228,
+     "converged": false
+    },
+    {
+     "mechanism": "switch_belief_personal",
+     "model": "r3_minus_spread_sbP_pad_so_gr",
+     "elpd_cv": -11866.918685935078,
+     "cost": 942.774131143382,
+     "se": 90.34439871841913,
+     "cost_in_se": 10.435335721053088,
+     "converged": true
+    }
+   ],
+   "decision": "stop: the cheapest removal (side_personal) costs 13.2 nats, 2.98 SE >= 2.0"
+  }
+ ],
+ "lean": {
+  "model": "r3_minus_spread_pad_so_gr",
+  "mechanisms": [
+   "markov",
+   "trick_coin",
+   "motif",
+   "motif_weight",
+   "motif_weight_personal",
+   "beta_personal",
+   "switch_belief",
+   "switch_belief_personal",
+   "length_scaling",
+   "side_bias",
+   "side_personal"
+  ],
+  "removed": [
+   "trick_coin_spread",
+   "length_padding",
+   "second_order",
+   "gamblers_run"
+  ],
+  "size": {
+   "population": 10,
+   "person_vectors": 4
+  },
+  "elpd_cv": -10924.144554791696,
+  "cost_vs_start": 15.864911814391235,
+  "se_vs_start": 14.45020113726445
+ },
+ "config": {
+  "final": "run3",
+  "data_sha256": "b25187190507721b4b0801f54710eeb8e1636acd1bd8c95e45326aada9da0922",
+  "folds": 5,
+  "fold_seed": 0,
+  "threshold_dse": 2.0,
+  "start": [
+   "markov",
+   "trick_coin",
+   "motif",
+   "trick_coin_spread",
+   "motif_weight",
+   "motif_weight_personal",
+   "beta_personal",
+   "switch_belief",
+   "switch_belief_personal",
+   "length_scaling",
+   "length_padding",
+   "second_order",
+   "gamblers_run",
+   "side_bias",
+   "side_personal"
+  ],
+  "sampler": {
+   "draws": 1000,
+   "tune": 4000,
+   "chains": 4,
+   "target_accept": 0.95,
+   "method": "nuts_no_jitter"
+  },
+  "gate": "population"
+ },
+ "n_trials": 23104,
+ "lean_file_sha256": "7cc33cf2984915ba6e0eff4ce3b5d3fd8c6dfe6e0135e984e97738b0573fc7c7"
+}

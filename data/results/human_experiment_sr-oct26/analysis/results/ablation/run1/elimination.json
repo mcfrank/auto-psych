@@ -1,0 +1,469 @@
+{
+ "final": "run1",
+ "rule": {
+  "threshold_dse": 2.0,
+  "start": [
+   "ideal_personal",
+   "beta_personal",
+   "asymmetry",
+   "imbalance",
+   "imbalance_personal",
+   "longest_run",
+   "longest_run_personal",
+   "final_run",
+   "palindrome",
+   "variety",
+   "lopsided",
+   "antisymmetry",
+   "gain_personal",
+   "lapse",
+   "lapse_personal"
+  ]
+ },
+ "rounds": [
+  {
+   "model": "r1_full",
+   "mechanisms": [
+    "ideal_personal",
+    "beta_personal",
+    "asymmetry",
+    "imbalance",
+    "imbalance_personal",
+    "longest_run",
+    "longest_run_personal",
+    "final_run",
+    "palindrome",
+    "variety",
+    "lopsided",
+    "antisymmetry",
+    "gain_personal",
+    "lapse",
+    "lapse_personal"
+   ],
+   "elpd_cv": -10362.23806755778,
+   "converged": true,
+   "size": {
+    "population": 17,
+    "person_vectors": 6
+   },
+   "candidates": [
+    {
+     "mechanism": "final_run",
+     "model": "r1_minus_fin",
+     "elpd_cv": -10360.84189163506,
+     "cost": -1.3961759227204311,
+     "se": 2.653169531821382,
+     "cost_in_se": -0.5262294421728739,
+     "converged": true
+    },
+    {
+     "mechanism": "asymmetry",
+     "model": "r1_minus_asym",
+     "elpd_cv": -10373.991086242146,
+     "cost": 11.753018684365088,
+     "se": 12.465498591269727,
+     "cost_in_se": 0.9428438500323102,
+     "converged": true
+    },
+    {
+     "mechanism": "antisymmetry",
+     "model": "r1_minus_anti",
+     "elpd_cv": -10379.820183857837,
+     "cost": 17.58211630005644,
+     "se": 11.433334188168937,
+     "cost_in_se": 1.5377943136001555,
+     "converged": true
+    },
+    {
+     "mechanism": "ideal_personal",
+     "model": "r1_minus_idealP",
+     "elpd_cv": -10418.709740661187,
+     "cost": 56.47167310340592,
+     "se": 15.129878631392303,
+     "cost_in_se": 3.732460416849306,
+     "converged": true
+    },
+    {
+     "mechanism": "palindrome",
+     "model": "r1_minus_pal",
+     "elpd_cv": -10420.179611595322,
+     "cost": 57.94154403754146,
+     "se": 17.45015654712744,
+     "cost_in_se": 3.32040253513253,
+     "converged": true
+    },
+    {
+     "mechanism": "beta_personal",
+     "model": "r1_minus_betaP",
+     "elpd_cv": -10426.580592892984,
+     "cost": 64.34252533520339,
+     "se": 13.463858278817744,
+     "cost_in_se": 4.778906907868409,
+     "converged": true
+    },
+    {
+     "mechanism": "lopsided",
+     "model": "r1_minus_lop",
+     "elpd_cv": -10432.291620473923,
+     "cost": 70.05355291614251,
+     "se": 23.308015998651133,
+     "cost_in_se": 3.005556239544224,
+     "converged": true
+    },
+    {
+     "mechanism": "imbalance_personal",
+     "model": "r1_minus_imbP",
+     "elpd_cv": -10434.664387851984,
+     "cost": 72.42632029420383,
+     "se": 18.068675292118005,
+     "cost_in_se": 4.0083912696022574,
+     "converged": true
+    },
+    {
+     "mechanism": "lapse_personal",
+     "model": "r1_minus_lapseP",
+     "elpd_cv": -10454.451593231908,
+     "cost": 92.2135256741276,
+     "se": 18.833421157292737,
+     "cost_in_se": 4.896270566243902,
+     "converged": true
+    },
+    {
+     "mechanism": "gain_personal",
+     "model": "r1_minus_gainP",
+     "elpd_cv": -10466.832040028381,
+     "cost": 104.59397247060042,
+     "se": 15.023485547873612,
+     "cost_in_se": 6.962031023846154,
+     "converged": true
+    },
+    {
+     "mechanism": "variety",
+     "model": "r1_minus_var",
+     "elpd_cv": -10470.659208720917,
+     "cost": 108.42114116313678,
+     "se": 30.592474615141565,
+     "cost_in_se": 3.5440461266076975,
+     "converged": true
+    },
+    {
+     "mechanism": "longest_run_personal",
+     "model": "r1_minus_lrunP",
+     "elpd_cv": -10798.317095310798,
+     "cost": 436.0790277530177,
+     "se": 43.696383550188784,
+     "cost_in_se": 9.979751007360738,
+     "converged": false
+    }
+   ],
+   "decision": "drop final_run"
+  },
+  {
+   "model": "r1_minus_fin",
+   "mechanisms": [
+    "ideal_personal",
+    "beta_personal",
+    "asymmetry",
+    "imbalance",
+    "imbalance_personal",
+    "longest_run",
+    "longest_run_personal",
+    "palindrome",
+    "variety",
+    "lopsided",
+    "antisymmetry",
+    "gain_personal",
+    "lapse",
+    "lapse_personal"
+   ],
+   "elpd_cv": -10360.84189163506,
+   "converged": true,
+   "size": {
+    "population": 16,
+    "person_vectors": 6
+   },
+   "candidates": [
+    {
+     "mechanism": "asymmetry",
+     "model": "r1_minus_asym_fin",
+     "elpd_cv": -10375.9326540798,
+     "cost": 15.090762444739084,
+     "se": 13.169125461943965,
+     "cost_in_se": 1.1459198629664704,
+     "converged": true
+    },
+    {
+     "mechanism": "antisymmetry",
+     "model": "r1_minus_fin_anti",
+     "elpd_cv": -10376.780611711993,
+     "cost": 15.93872007693244,
+     "se": 11.30032886064443,
+     "cost_in_se": 1.4104651531374544,
+     "converged": true
+    },
+    {
+     "mechanism": "palindrome",
+     "model": "r1_minus_fin_pal",
+     "elpd_cv": -10417.705576753138,
+     "cost": 56.86368511807814,
+     "se": 18.202035533090065,
+     "cost_in_se": 3.1240289040587697,
+     "converged": true
+    },
+    {
+     "mechanism": "ideal_personal",
+     "model": "r1_minus_idealP_fin",
+     "elpd_cv": -10418.266856289385,
+     "cost": 57.42496465432487,
+     "se": 15.002976993273798,
+     "cost_in_se": 3.8275713333473673,
+     "converged": true
+    },
+    {
+     "mechanism": "beta_personal",
+     "model": "r1_minus_betaP_fin",
+     "elpd_cv": -10425.116786950386,
+     "cost": 64.27489531532592,
+     "se": 13.382237156846228,
+     "cost_in_se": 4.803000766014932,
+     "converged": true
+    },
+    {
+     "mechanism": "lopsided",
+     "model": "r1_minus_fin_lop",
+     "elpd_cv": -10431.475723574242,
+     "cost": 70.63383193918162,
+     "se": 23.10406344715048,
+     "cost_in_se": 3.0572038594316266,
+     "converged": true
+    },
+    {
+     "mechanism": "imbalance_personal",
+     "model": "r1_minus_imbP_fin",
+     "elpd_cv": -10433.942669876637,
+     "cost": 73.10077824157634,
+     "se": 18.211942892162764,
+     "cost_in_se": 4.013892349345888,
+     "converged": true
+    },
+    {
+     "mechanism": "lapse_personal",
+     "model": "r1_minus_fin_lapseP",
+     "elpd_cv": -10452.492015443006,
+     "cost": 91.65012380794542,
+     "se": 18.592462504615398,
+     "cost_in_se": 4.9294236191249095,
+     "converged": true
+    },
+    {
+     "mechanism": "gain_personal",
+     "model": "r1_minus_fin_gainP",
+     "elpd_cv": -10463.790609339601,
+     "cost": 102.9487177045412,
+     "se": 14.80987125893908,
+     "cost_in_se": 6.951358043872424,
+     "converged": true
+    },
+    {
+     "mechanism": "variety",
+     "model": "r1_minus_fin_var",
+     "elpd_cv": -10471.597041082892,
+     "cost": 110.75514944783208,
+     "se": 30.334806046771323,
+     "cost_in_se": 3.651091399004355,
+     "converged": true
+    },
+    {
+     "mechanism": "longest_run_personal",
+     "model": "r1_minus_lrunP_fin",
+     "elpd_cv": -10813.011506181267,
+     "cost": 452.1696145462065,
+     "se": 44.27341435246239,
+     "cost_in_se": 10.213118214612193,
+     "converged": true
+    }
+   ],
+   "decision": "drop asymmetry"
+  },
+  {
+   "model": "r1_minus_asym_fin",
+   "mechanisms": [
+    "ideal_personal",
+    "beta_personal",
+    "imbalance",
+    "imbalance_personal",
+    "longest_run",
+    "longest_run_personal",
+    "palindrome",
+    "variety",
+    "lopsided",
+    "antisymmetry",
+    "gain_personal",
+    "lapse",
+    "lapse_personal"
+   ],
+   "elpd_cv": -10375.9326540798,
+   "converged": true,
+   "size": {
+    "population": 15,
+    "person_vectors": 6
+   },
+   "candidates": [
+    {
+     "mechanism": "antisymmetry",
+     "model": "r1_minus_asym_fin_anti",
+     "elpd_cv": -10413.223534631883,
+     "cost": 37.29088055208376,
+     "se": 15.906131173542446,
+     "cost_in_se": 2.3444343659199642,
+     "converged": true
+    },
+    {
+     "mechanism": "ideal_personal",
+     "model": "r1_minus_idealP_asym_fin",
+     "elpd_cv": -10428.269308503175,
+     "cost": 52.336654423375876,
+     "se": 15.014005593981999,
+     "cost_in_se": 3.4858555297430924,
+     "converged": true
+    },
+    {
+     "mechanism": "palindrome",
+     "model": "r1_minus_asym_fin_pal",
+     "elpd_cv": -10432.894322397515,
+     "cost": 56.96166831771552,
+     "se": 18.959156629966767,
+     "cost_in_se": 3.0044410428933395,
+     "converged": true
+    },
+    {
+     "mechanism": "imbalance_personal",
+     "model": "r1_minus_asym_imbP_fin",
+     "elpd_cv": -10447.282731396783,
+     "cost": 71.35007731698352,
+     "se": 18.90301400728485,
+     "cost_in_se": 3.7745344361214883,
+     "converged": true
+    },
+    {
+     "mechanism": "beta_personal",
+     "model": "r1_minus_betaP_asym_fin",
+     "elpd_cv": -10449.543291871,
+     "cost": 73.61063779120013,
+     "se": 15.646415709420163,
+     "cost_in_se": 4.70463262374409,
+     "converged": true
+    },
+    {
+     "mechanism": "lapse_personal",
+     "model": "r1_minus_asym_fin_lapseP",
+     "elpd_cv": -10465.496296383415,
+     "cost": 89.56364230361578,
+     "se": 19.146868459566797,
+     "cost_in_se": 4.677717533431165,
+     "converged": true
+    },
+    {
+     "mechanism": "variety",
+     "model": "r1_minus_asym_fin_var",
+     "elpd_cv": -10470.532940096786,
+     "cost": 94.6002860169865,
+     "se": 28.4407710538787,
+     "cost_in_se": 3.326220862218329,
+     "converged": true
+    },
+    {
+     "mechanism": "lopsided",
+     "model": "r1_minus_asym_fin_lop",
+     "elpd_cv": -10471.344810880411,
+     "cost": 95.41215680061214,
+     "se": 24.10440318655629,
+     "cost_in_se": 3.958287457364894,
+     "converged": true
+    },
+    {
+     "mechanism": "gain_personal",
+     "model": "r1_minus_asym_fin_gainP",
+     "elpd_cv": -10482.338236938915,
+     "cost": 106.40558285911538,
+     "se": 15.196622633069776,
+     "cost_in_se": 7.001923087012989,
+     "converged": true
+    },
+    {
+     "mechanism": "longest_run_personal",
+     "model": "r1_minus_asym_lrunP_fin",
+     "elpd_cv": -10804.660959286659,
+     "cost": 428.72830520685966,
+     "se": 40.90025864804824,
+     "cost_in_se": 10.48228836145315,
+     "converged": true
+    }
+   ],
+   "decision": "stop: the cheapest removal (antisymmetry) costs 37.3 nats, 2.34 SE >= 2.0"
+  }
+ ],
+ "lean": {
+  "model": "r1_minus_asym_fin",
+  "mechanisms": [
+   "ideal_personal",
+   "beta_personal",
+   "imbalance",
+   "imbalance_personal",
+   "longest_run",
+   "longest_run_personal",
+   "palindrome",
+   "variety",
+   "lopsided",
+   "antisymmetry",
+   "gain_personal",
+   "lapse",
+   "lapse_personal"
+  ],
+  "removed": [
+   "asymmetry",
+   "final_run"
+  ],
+  "size": {
+   "population": 15,
+   "person_vectors": 6
+  },
+  "elpd_cv": -10375.9326540798,
+  "cost_vs_start": 13.694586522018653,
+  "se_vs_start": 13.574460573975525
+ },
+ "config": {
+  "final": "run1",
+  "data_sha256": "b25187190507721b4b0801f54710eeb8e1636acd1bd8c95e45326aada9da0922",
+  "folds": 5,
+  "fold_seed": 0,
+  "threshold_dse": 2.0,
+  "start": [
+   "ideal_personal",
+   "beta_personal",
+   "asymmetry",
+   "imbalance",
+   "imbalance_personal",
+   "longest_run",
+   "longest_run_personal",
+   "final_run",
+   "palindrome",
+   "variety",
+   "lopsided",
+   "antisymmetry",
+   "gain_personal",
+   "lapse",
+   "lapse_personal"
+  ],
+  "sampler": {
+   "draws": 1000,
+   "tune": 4000,
+   "chains": 4,
+   "target_accept": 0.95,
+   "method": "nuts_no_jitter"
+  },
+  "gate": "population"
+ },
+ "n_trials": 23104,
+ "lean_file_sha256": "0b2f6be12d0d38926519c451aa0480344f66a0e065b7b95ec1cb5297ecb0f600"
+}

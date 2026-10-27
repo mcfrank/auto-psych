@@ -1,0 +1,16 @@
+{
+ "model": "r3_minus_spread_mwP",
+ "fold": 0,
+ "converged": true,
+ "has_lpd": true,
+ "attempts": [
+  {
+   "seed": 20261018,
+   "problems": [],
+   "problems_all": [],
+   "seconds": 5359
+  }
+ ],
+ "elpd": -2272.8600688543697,
+ "seed": 20261018
+}

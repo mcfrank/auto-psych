@@ -1,0 +1,424 @@
+{
+ "final": "run2",
+ "rule": {
+  "threshold_dse": 2.0,
+  "start": [
+   "span_ideal_personal",
+   "span_beta_personal",
+   "length_scaling",
+   "switch",
+   "switch_ideal_personal",
+   "switch_weight_personal",
+   "variety",
+   "rule_built",
+   "pattern_gain_personal",
+   "final_run",
+   "opening_run",
+   "side_personal"
+  ]
+ },
+ "rounds": [
+  {
+   "model": "r2_full",
+   "mechanisms": [
+    "span_ideal_personal",
+    "span_beta_personal",
+    "length_scaling",
+    "switch",
+    "switch_ideal_personal",
+    "switch_weight_personal",
+    "variety",
+    "rule_built",
+    "pattern_gain_personal",
+    "final_run",
+    "opening_run",
+    "side_personal"
+   ],
+   "elpd_cv": -10572.666880231685,
+   "converged": true,
+   "size": {
+    "population": 15,
+    "person_vectors": 6
+   },
+   "candidates": [
+    {
+     "mechanism": "final_run",
+     "model": "r2_minus_fin",
+     "elpd_cv": -10571.255033134226,
+     "cost": -1.411847097459031,
+     "se": 3.626660133300759,
+     "cost_in_se": -0.38929677597720086,
+     "converged": true
+    },
+    {
+     "mechanism": "opening_run",
+     "model": "r2_minus_open",
+     "elpd_cv": -10573.368459632471,
+     "cost": 0.7015794007857039,
+     "se": 1.8726608110455052,
+     "cost_in_se": 0.3746430729193359,
+     "converged": true
+    },
+    {
+     "mechanism": "length_scaling",
+     "model": "r2_minus_len",
+     "elpd_cv": -10581.79079629739,
+     "cost": 9.12391606570418,
+     "se": 8.438431598814509,
+     "cost_in_se": 1.0812336343386337,
+     "converged": true
+    },
+    {
+     "mechanism": "side_personal",
+     "model": "r2_minus_sideP",
+     "elpd_cv": -10586.757904883714,
+     "cost": 14.091024652028864,
+     "se": 4.5888373161565,
+     "cost_in_se": 3.0707178488147338,
+     "converged": true
+    },
+    {
+     "mechanism": "variety",
+     "model": "r2_minus_var",
+     "elpd_cv": -10617.347479283626,
+     "cost": 44.68059905194059,
+     "se": 17.8047081253351,
+     "cost_in_se": 2.5094822525263756,
+     "converged": true
+    },
+    {
+     "mechanism": "span_beta_personal",
+     "model": "r2_minus_betaP",
+     "elpd_cv": -10659.190432679814,
+     "cost": 86.52355244812861,
+     "se": 16.5252050012125,
+     "cost_in_se": 5.235853500260974,
+     "converged": true
+    },
+    {
+     "mechanism": "span_ideal_personal",
+     "model": "r2_minus_idealP",
+     "elpd_cv": -10659.962033534153,
+     "cost": 87.29515330246795,
+     "se": 20.700575273817297,
+     "cost_in_se": 4.21703996858877,
+     "converged": true
+    },
+    {
+     "mechanism": "switch_ideal_personal",
+     "model": "r2_minus_swidealP",
+     "elpd_cv": -10665.246446377158,
+     "cost": 92.5795661454722,
+     "se": 17.847173943977143,
+     "cost_in_se": 5.187351590570163,
+     "converged": true
+    },
+    {
+     "mechanism": "rule_built",
+     "model": "r2_minus_rule",
+     "elpd_cv": -10799.670650741511,
+     "cost": 227.0037705098257,
+     "se": 44.03247568833177,
+     "cost_in_se": 5.155371506171745,
+     "converged": false
+    },
+    {
+     "mechanism": "pattern_gain_personal",
+     "model": "r2_minus_patP",
+     "elpd_cv": -10865.458881254104,
+     "cost": 292.79200102241884,
+     "se": 34.531205929484315,
+     "cost_in_se": 8.479055194896038,
+     "converged": true
+    },
+    {
+     "mechanism": "switch_weight_personal",
+     "model": "r2_minus_swweightP",
+     "elpd_cv": -10934.249667886674,
+     "cost": 361.58278765498835,
+     "se": 39.12812523812813,
+     "cost_in_se": 9.240994436979733,
+     "converged": true
+    }
+   ],
+   "decision": "drop final_run"
+  },
+  {
+   "model": "r2_minus_fin",
+   "mechanisms": [
+    "span_ideal_personal",
+    "span_beta_personal",
+    "length_scaling",
+    "switch",
+    "switch_ideal_personal",
+    "switch_weight_personal",
+    "variety",
+    "rule_built",
+    "pattern_gain_personal",
+    "opening_run",
+    "side_personal"
+   ],
+   "elpd_cv": -10571.255033134226,
+   "converged": true,
+   "size": {
+    "population": 14,
+    "person_vectors": 6
+   },
+   "candidates": [
+    {
+     "mechanism": "opening_run",
+     "model": "r2_minus_fin_open",
+     "elpd_cv": -10572.090110010333,
+     "cost": 0.835076876106541,
+     "se": 1.0508609465172671,
+     "cost_in_se": 0.7946597300757332,
+     "converged": true
+    },
+    {
+     "mechanism": "length_scaling",
+     "model": "r2_minus_len_fin",
+     "elpd_cv": -10586.287614305198,
+     "cost": 15.032581170971753,
+     "se": 9.23177747129991,
+     "cost_in_se": 1.6283517684114024,
+     "converged": true
+    },
+    {
+     "mechanism": "side_personal",
+     "model": "r2_minus_fin_sideP",
+     "elpd_cv": -10587.193703520701,
+     "cost": 15.938670386474769,
+     "se": 4.610343236202097,
+     "cost_in_se": 3.457154829887396,
+     "converged": true
+    },
+    {
+     "mechanism": "variety",
+     "model": "r2_minus_var_fin",
+     "elpd_cv": -10615.337081860793,
+     "cost": 44.08204872656643,
+     "se": 17.603379080419515,
+     "cost_in_se": 2.504181073712121,
+     "converged": true
+    },
+    {
+     "mechanism": "span_beta_personal",
+     "model": "r2_minus_betaP_fin",
+     "elpd_cv": -10655.759198036016,
+     "cost": 84.50416490178941,
+     "se": 16.66700231977299,
+     "cost_in_se": 5.070147785456142,
+     "converged": true
+    },
+    {
+     "mechanism": "span_ideal_personal",
+     "model": "r2_minus_idealP_fin",
+     "elpd_cv": -10659.622578360368,
+     "cost": 88.36754522614137,
+     "se": 20.537233546969745,
+     "cost_in_se": 4.3027969187787685,
+     "converged": true
+    },
+    {
+     "mechanism": "switch_ideal_personal",
+     "model": "r2_minus_swidealP_fin",
+     "elpd_cv": -10665.474058727606,
+     "cost": 94.21902559338014,
+     "se": 18.019802510713493,
+     "cost_in_se": 5.228638079544055,
+     "converged": true
+    },
+    {
+     "mechanism": "rule_built",
+     "model": "r2_minus_rule_fin",
+     "elpd_cv": -10795.800316918325,
+     "cost": 224.5452837840985,
+     "se": 42.88417330983755,
+     "cost_in_se": 5.236087499268366,
+     "converged": false
+    },
+    {
+     "mechanism": "pattern_gain_personal",
+     "model": "r2_minus_patP_fin",
+     "elpd_cv": -10869.18071457964,
+     "cost": 297.9256814454129,
+     "se": 34.96525505274458,
+     "cost_in_se": 8.520620856218446,
+     "converged": true
+    },
+    {
+     "mechanism": "switch_weight_personal",
+     "model": "r2_minus_swweightP_fin",
+     "elpd_cv": -10932.603917930173,
+     "cost": 361.348884795947,
+     "se": 39.19177430827,
+     "cost_in_se": 9.220018515969498,
+     "converged": true
+    }
+   ],
+   "decision": "drop opening_run"
+  },
+  {
+   "model": "r2_minus_fin_open",
+   "mechanisms": [
+    "span_ideal_personal",
+    "span_beta_personal",
+    "length_scaling",
+    "switch",
+    "switch_ideal_personal",
+    "switch_weight_personal",
+    "variety",
+    "rule_built",
+    "pattern_gain_personal",
+    "side_personal"
+   ],
+   "elpd_cv": -10572.090110010333,
+   "converged": true,
+   "size": {
+    "population": 13,
+    "person_vectors": 6
+   },
+   "candidates": [
+    {
+     "mechanism": "side_personal",
+     "model": "r2_minus_fin_open_sideP",
+     "elpd_cv": -10585.0922508589,
+     "cost": 13.002140848566341,
+     "se": 4.584377123188099,
+     "cost_in_se": 2.8361848292978795,
+     "converged": true
+    },
+    {
+     "mechanism": "length_scaling",
+     "model": "r2_minus_len_fin_open",
+     "elpd_cv": -10585.167325049395,
+     "cost": 13.07721503906214,
+     "se": 9.244409352492404,
+     "cost_in_se": 1.4146079582181597,
+     "converged": true
+    },
+    {
+     "mechanism": "variety",
+     "model": "r2_minus_var_fin_open",
+     "elpd_cv": -10616.268350716153,
+     "cost": 44.17824070581992,
+     "se": 17.509294726925,
+     "cost_in_se": 2.523130793948235,
+     "converged": true
+    },
+    {
+     "mechanism": "span_beta_personal",
+     "model": "r2_minus_betaP_fin_open",
+     "elpd_cv": -10656.21241608731,
+     "cost": 84.12230607697711,
+     "se": 16.541724482380218,
+     "cost_in_se": 5.085461686088523,
+     "converged": true
+    },
+    {
+     "mechanism": "span_ideal_personal",
+     "model": "r2_minus_idealP_fin_open",
+     "elpd_cv": -10656.553473584103,
+     "cost": 84.46336357377004,
+     "se": 20.24442818186484,
+     "cost_in_se": 4.172178281105176,
+     "converged": false
+    },
+    {
+     "mechanism": "switch_ideal_personal",
+     "model": "r2_minus_swidealP_fin_open",
+     "elpd_cv": -10667.315608182615,
+     "cost": 95.22549817228173,
+     "se": 18.29103145757402,
+     "cost_in_se": 5.206130577882221,
+     "converged": true
+    },
+    {
+     "mechanism": "rule_built",
+     "model": "r2_minus_rule_fin_open",
+     "elpd_cv": -10795.616014675903,
+     "cost": 223.52590466557012,
+     "se": 42.621001878334525,
+     "cost_in_se": 5.244501415139064,
+     "converged": false
+    },
+    {
+     "mechanism": "pattern_gain_personal",
+     "model": "r2_minus_patP_fin_open",
+     "elpd_cv": -10867.73020090312,
+     "cost": 295.64009089278625,
+     "se": 34.97304716838919,
+     "cost_in_se": 8.453369518227284,
+     "converged": true
+    },
+    {
+     "mechanism": "switch_weight_personal",
+     "model": "r2_minus_swweightP_fin_open",
+     "elpd_cv": -10933.327617734778,
+     "cost": 361.2375077244451,
+     "se": 39.11541084179504,
+     "cost_in_se": 9.235170996554144,
+     "converged": true
+    }
+   ],
+   "decision": "stop: the cheapest removal (side_personal) costs 13.0 nats, 2.84 SE >= 2.0"
+  }
+ ],
+ "lean": {
+  "model": "r2_minus_fin_open",
+  "mechanisms": [
+   "span_ideal_personal",
+   "span_beta_personal",
+   "length_scaling",
+   "switch",
+   "switch_ideal_personal",
+   "switch_weight_personal",
+   "variety",
+   "rule_built",
+   "pattern_gain_personal",
+   "side_personal"
+  ],
+  "removed": [
+   "final_run",
+   "opening_run"
+  ],
+  "size": {
+   "population": 13,
+   "person_vectors": 6
+  },
+  "elpd_cv": -10572.090110010333,
+  "cost_vs_start": -0.5767702213524899,
+  "se_vs_start": 3.6070694342805485
+ },
+ "config": {
+  "final": "run2",
+  "data_sha256": "b25187190507721b4b0801f54710eeb8e1636acd1bd8c95e45326aada9da0922",
+  "folds": 5,
+  "fold_seed": 0,
+  "threshold_dse": 2.0,
+  "start": [
+   "span_ideal_personal",
+   "span_beta_personal",
+   "length_scaling",
+   "switch",
+   "switch_ideal_personal",
+   "switch_weight_personal",
+   "variety",
+   "rule_built",
+   "pattern_gain_personal",
+   "final_run",
+   "opening_run",
+   "side_personal"
+  ],
+  "sampler": {
+   "draws": 1000,
+   "tune": 4000,
+   "chains": 4,
+   "target_accept": 0.95,
+   "method": "nuts_no_jitter"
+  },
+  "gate": "population"
+ },
+ "n_trials": 23104,
+ "lean_file_sha256": "f9ad66dc338272ea3496f35e1803a544f68d1df42213ffbe3319222325473f40"
+}

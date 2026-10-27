@@ -1,0 +1,16 @@
+{
+ "model": "r2_minus_var_fin",
+ "fold": 0,
+ "converged": true,
+ "has_lpd": true,
+ "attempts": [
+  {
+   "seed": 20261018,
+   "problems": [],
+   "problems_all": [],
+   "seconds": 3151
+  }
+ ],
+ "elpd": -2202.5858844232584,
+ "seed": 20261018
+}

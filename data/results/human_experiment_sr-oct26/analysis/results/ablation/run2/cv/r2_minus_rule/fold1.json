@@ -1,0 +1,18 @@
+{
+ "model": "r2_minus_rule",
+ "fold": 1,
+ "converged": true,
+ "has_lpd": true,
+ "attempts": [
+  {
+   "seed": 20261018,
+   "problems": [],
+   "problems_all": [
+    "min bulk ESS 99 < 100"
+   ],
+   "seconds": 4300
+  }
+ ],
+ "elpd": -2203.0664650055373,
+ "seed": 20261018
+}

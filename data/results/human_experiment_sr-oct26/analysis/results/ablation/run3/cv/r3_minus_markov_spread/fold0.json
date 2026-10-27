@@ -1,0 +1,16 @@
+{
+ "model": "r3_minus_markov_spread",
+ "fold": 0,
+ "converged": true,
+ "has_lpd": true,
+ "attempts": [
+  {
+   "seed": 20261018,
+   "problems": [],
+   "problems_all": [],
+   "seconds": 4676
+  }
+ ],
+ "elpd": -2292.0320923857744,
+ "seed": 20261018
+}
