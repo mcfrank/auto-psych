@@ -117,6 +117,16 @@ def test_elimination_never_drops_into_an_unconverged_model():
     assert rec["lean"]["mechanisms"] == ["dup", "aspect"]
 
 
+def test_elimination_and_scoring_pass_the_chain_start_to_the_fit(tmp_path):
+    from src.rsa.consolidate import score
+
+    paths = dict(data=tmp_path / "d.csv", out=tmp_path / "e", cache=tmp_path / "c")
+    assert elim._settings(elim.Args(**paths)).init == "uniform"  # the recorded 2026-10-17 run
+    assert elim._settings(elim.Args(**paths, init="map")).init == "map"
+    assert score.Args(train=paths["data"], test=paths["data"], cache=paths["cache"], models=[], reference="x",
+                      out=paths["out"], init="map").init == "map"
+
+
 @pytest.mark.slow  # runs NUTS
 def test_elimination_and_scoring_run_end_to_end_on_a_small_dataset(tmp_path):
     from src.rsa.consolidate import score

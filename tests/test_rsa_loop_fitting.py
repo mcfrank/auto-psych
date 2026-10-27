@@ -90,12 +90,12 @@ def test_a_dense_mass_fit_is_its_own_cache_entry_and_old_keys_stand(tmp_path, re
 
     from src.rsa.loop.fitting import FIT_FORMAT
 
-    # The key a fit had before dense_mass existed (run 2's caches, promote's).
+    # The key a fit had before dense_mass and init existed (run 2's caches, promote's).
     h = hashlib.sha256()
     h.update(f"format{FIT_FORMAT}".encode())
     for p in (SEEDS / "rsa_l1.py", responses):
         h.update(hashlib.sha256(p.read_bytes()).hexdigest().encode())
-    old = {k: v for k, v in asdict(QUICK).items() if k != "dense_mass"}
+    old = {k: v for k, v in asdict(QUICK).items() if k not in ("dense_mass", "init")}
     h.update(json.dumps(old, sort_keys=True).encode())
     assert fingerprint(SEEDS / "rsa_l1.py", responses, QUICK) == h.hexdigest()[:20]
     dense = FitSettings(num_warmup=100, num_samples=100, num_chains=2, dense_mass=True)
@@ -119,3 +119,13 @@ def test_a_fit_without_a_time_limit_runs_in_a_child_and_is_never_killed(tmp_path
     fitted = fit_cached(SEEDS / "rsa_l1.py", "rsa_l1", responses, QUICK, tmp_path / "c",
                         time_limit_sec=fitting.NO_TIME_LIMIT)
     assert joined == [fitting.NO_TIME_LIMIT] and fitted.param_names == ["alpha", "lapse"]
+
+
+def test_a_map_init_fit_is_its_own_cache_entry_and_old_keys_stand(responses):
+    from dataclasses import replace
+
+    from src.rsa.loop.fitting import fingerprint as fp
+
+    old = fp(SEEDS / "rsa_l1.py", responses, QUICK)
+    assert fp(SEEDS / "rsa_l1.py", responses, replace(QUICK, init="uniform")) == old  # the default
+    assert fp(SEEDS / "rsa_l1.py", responses, replace(QUICK, init="map")) != old

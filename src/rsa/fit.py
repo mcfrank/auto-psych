@@ -33,7 +33,7 @@ import jax.numpy as jnp
 import numpy as np
 import numpyro
 import numpyro.distributions as dist
-from numpyro.infer import MCMC, NUTS
+from numpyro.infer import MCMC, NUTS, init_to_median, init_to_value
 
 from src.models.loo_reliability import LooDiagnostics
 from src.models.pymc_inference import convergence_problems
@@ -56,6 +56,22 @@ class FitSettings:
     # default so every earlier fit's cache key stands; the live loop turns it on
     # (src.rsa.outer.run.OuterConfig.dense_mass, 2026-10-09).
     dense_mass: bool = False
+    # Where the chains start. "uniform" (numpyro's default): each chain at its own point drawn
+    # uniformly in (-2, 2) on the unconstrained scale. "map": every chain at the highest-density
+    # point found by optimisation (`map_start`). The full consolidation superset has a minor mode
+    # (~1e-5 of the posterior mass, ~500 nats of barrier away) that caught a third of uniform
+    # starts, so its chains never mixed (R-hat 1.74; 2026-10-27, docs/auto_rsa/CONSOLIDATION.md).
+    # The prior median is no fix: with interior off it lies in a mode 19.6 nats below the best.
+    # Uniform by default so every earlier fit's cache key stands.
+    init: str = "uniform"
+
+    def __post_init__(self):
+        if self.init not in INIT_STRATEGIES:
+            raise ValueError(f"init {self.init!r} is not one of {INIT_STRATEGIES}")
+
+
+INIT_STRATEGIES = ("uniform", "map")
+MAP_STARTS = 20  # the uniform starts `map_start` optimises from, besides the prior median
 
 
 class ZeroProbabilityChoice(ValueError):
@@ -224,6 +240,35 @@ def pattern_log_lik(model: RSAModel, prep: Prepared, flat: Mapping[str, np.ndarr
     return out
 
 
+def map_start(model: RSAModel, prep: Prepared, seed: int, n_uniform: int = MAP_STARTS) -> Dict[str, float]:
+    """The highest-density point found by L-BFGS from the prior median and ``n_uniform``
+    uniform starts in (-2, 2) on the unconstrained scale (as numpyro's init_to_uniform), as
+    constrained parameter values. Density is NUTS's: on the unconstrained scale."""
+    from jax.flatten_util import ravel_pytree
+    from numpyro.infer.util import initialize_model
+    from scipy.optimize import minimize
+
+    (median, _, _), potential_fn, postprocess, _ = initialize_model(
+        jax.random.PRNGKey(seed), _numpyro_model, model_args=(model, prep), init_strategy=init_to_median)
+    flat_median, unravel = ravel_pytree(median)
+    value_and_grad = jax.jit(jax.value_and_grad(lambda x: potential_fn(unravel(x))))
+
+    def energy_and_grad(x):
+        energy, grad = value_and_grad(jnp.asarray(x, dtype=flat_median.dtype))
+        return float(energy), np.asarray(grad, dtype=np.float64)
+
+    uniform = jax.random.uniform(jax.random.PRNGKey(seed), (n_uniform, flat_median.size), minval=-2.0, maxval=2.0)
+    best = None
+    for x0 in [flat_median, *uniform]:
+        result = minimize(energy_and_grad, np.asarray(x0, dtype=np.float64), jac=True, method="L-BFGS-B")
+        if np.isfinite(result.fun) and (best is None or result.fun < best.fun):
+            best = result
+    if best is None:
+        raise ValueError(f"{model.name}: no optimisation from {n_uniform + 1} starts reached a finite density")
+    point = postprocess(unravel(jnp.asarray(best.x, dtype=flat_median.dtype)))
+    return {name: float(point[name]) for name in model.params}
+
+
 def fit(
     model: RSAModel,
     contexts: Sequence[Context],
@@ -234,6 +279,10 @@ def fit(
     check_contract(model, {g.shape: g for g in prep.groups})
     _check_possible(model, prep)
     kernel = NUTS(_numpyro_model, target_accept_prob=settings.target_accept, dense_mass=settings.dense_mass)
+    if settings.init == "map":
+        start = init_to_value(values=map_start(model, prep, settings.seed))
+        kernel = NUTS(_numpyro_model, target_accept_prob=settings.target_accept, dense_mass=settings.dense_mass,
+                      init_strategy=start)
     mcmc = MCMC(
         kernel,
         num_warmup=settings.num_warmup,

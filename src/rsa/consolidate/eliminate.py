@@ -124,13 +124,16 @@ class Args:
     num_samples: int = 1000
     num_chains: int = 4
     seed: int = 0
+    init: Literal["uniform", "map"] = "uniform"
+    """Where each chain starts (`src.rsa.fit.FitSettings.init`). The recorded 2026-10-17 run used
+    "uniform"; "map" starts every chain in the full superset's main mode, not its minor one."""
 
 
 def _settings(args: Args):
     from src.rsa.fit import FitSettings
 
     return FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains,
-                       seed=args.seed, dense_mass=True)
+                       seed=args.seed, dense_mass=True, init=args.init)
 
 
 def read_folds(data: Path, fold_dir: Path, k: int, seed: int):

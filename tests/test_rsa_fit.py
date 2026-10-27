@@ -137,3 +137,34 @@ def test_pattern_loo_equals_trial_level_loo():
     np.testing.assert_allclose(got.loo["loo_i"].values, want.loo["loo_i"].values, rtol=1e-4, atol=1e-5)
     assert (got.n_points, got.n_bad_k, got.n_exact) == (want.n_points, want.n_bad_k, want.n_exact)
     assert len(fitted.idata.constant_data["pattern_count"]) < len(choices) / 5
+
+
+
+def test_an_unknown_init_strategy_raises():
+    with pytest.raises(ValueError, match="init"):
+        FitSettings(init="median")
+
+
+@pytest.mark.slow
+def test_the_map_start_is_the_best_optimum_found_and_a_map_fit_starts_there():
+    # init="map" starts every chain at the best of L-BFGS optimisations from the prior median
+    # and uniform starts. On the full consolidation superset a third of uniform starts fell into
+    # a minor mode ~500 nats of barrier away (R-hat 1.74); with interior off, the median start
+    # itself lands in a mode 19.6 nats below the best one.
+    from src.rsa.fit import _numpyro_model, map_start
+
+    model = RSAModel(SEEDS / "rsa_l1.py")
+    contexts, choices = simulate(model, {"alpha": 3.0, "lapse": 0.05}, design(), 100)
+    prep = prepare(contexts, choices)
+    start = map_start(model, prep, seed=0)
+    assert set(start) == {"alpha", "lapse"}
+    assert 1.5 < start["alpha"] < 6.0
+
+    from numpyro.infer.util import log_density
+
+    def density(params):
+        return float(log_density(_numpyro_model, (model, prep), {}, params)[0])
+
+    assert density(start) >= density({"alpha": 3.0, "lapse": 0.05})
+    fitted = fit(model, contexts, choices, FitSettings(num_warmup=0, num_samples=1, num_chains=2, init="map"))
+    assert fitted.idata.posterior["alpha"].shape == (2, 1)
