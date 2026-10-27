@@ -108,7 +108,9 @@ total cost against the full final, with its SE: drops that each fall below 2 SE 
 - **Measured cost allows the sr-oct26 settings as they are.** One fold fit of the full final
   (6,048 training responses) took 345 s on 4 cores, compilation included (2026-10-27,
   Sherlock, seed 20261018). It converged cleanly: 0 divergences, R-hat 1.00, bulk ESS ≥
-  1,500 on every parameter. Nothing argues for cheaper settings.
+  1,500 on every parameter, with a peak memory of ~2.7 GB (1.6 GB in the parent, 0.27 GB per
+  chain). A repeat with the compile cache warm took 289 s. Nothing argues for cheaper
+  settings.
 - **A shorter time limit per attempt** (1 h, not 22 h): 10× the measured fit.
 - **Several fits per array task.** One fit is shorter than the 10 minutes Sherlock asks a job
   to last, so each worker array task fits `TASKS_PER_JOB` (5) of the round's (model, fold)
