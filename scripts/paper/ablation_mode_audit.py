@@ -68,9 +68,11 @@ def audit_one(out_dir: Path, folds_dir: Path, name: str, fold: int, n_uniform: i
     model = load_pymc_model(name, out_dir / "models")
     with model:
         pm.set_data(extract_observed(folds_dir / f"train_fold{fold}.csv", model))
-    value_vars = model.value_vars
+    value_vars = model.continuous_value_vars  # compile_dlogp's default, in its order
+    if len(value_vars) != len(model.value_vars):
+        raise ValueError(f"{name} has discrete parameters; the audit optimises continuous ones only")
     logp = model.compile_logp(jacobian=True)
-    dlogp = model.compile_dlogp(vars=value_vars, jacobian=True)
+    dlogp = model.compile_dlogp(jacobian=True)
     initial = model.initial_point()
     start = DictToArrayBijection.map({v.name: initial[v.name] for v in value_vars})
 
