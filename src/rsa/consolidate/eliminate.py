@@ -16,6 +16,10 @@ The rule (docs/auto_rsa/CONSOLIDATION.md, fixed before any fit):
 4. Stop when every removal costs at least ``threshold_dse`` SEs (or none
    converges): the current model is the lean model.
 
+The starting model must converge on every fold, or the elimination stops with an error
+(`StartingModelUnconverged`; added 2026-10-27, as the sr-oct26 ablation's rule: the first
+run costed its first drop against an unconverged full superset).
+
 Every model's CV is saved (``cv/<name>.npz``) and reused, so a killed run
 resumes. Writes ``elimination.json`` (every round: each candidate's ELPD-CV,
 cost, SE and convergence; the decision) and the lean model file under
@@ -41,6 +45,10 @@ from src.rsa.consolidate.variants import canonical, variant_name, write_variant
 THRESHOLD_DSE = 2.0
 
 
+class StartingModelUnconverged(RuntimeError):
+    """The elimination's starting model did not converge on some fold."""
+
+
 @dataclass
 class Scored:
     pointwise: np.ndarray
@@ -62,6 +70,10 @@ def eliminate(start: Tuple[str, ...], score: Callable[[List[Tuple[str, ...]]], D
         drops = [canonical(set(current) - {m}) for m in current]
         scored = score([current] + drops)
         cur = scored[current]
+        if not rounds and not cur.converged:
+            raise StartingModelUnconverged(
+                f"the starting model {variant_name(current)} did not converge on every fold; no removal "
+                f"can be costed against it (see its fits' convergence problems in the fit cache)")
         rows = []
         for m, d in zip(current, drops):
             s = scored[d]

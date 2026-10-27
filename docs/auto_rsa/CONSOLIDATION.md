@@ -185,3 +185,41 @@ data, scored on the pre-registered experiment's 14,404 trials, against chain 0's
 - **The pre-registered data are now spent for this exercise.** Any revision of the superset or the
   rule is chosen after seeing them, so it must be judged on the pooled CV or on new data, never on
   these 14,404 trials again.
+
+## 6. Rerun with chains started in the main mode (2026-10-27)
+
+**Why §5's run is rerun.** Its starting model, the full superset, did not converge (R-hat 1.74),
+and the cause is not slow mixing. The superset's posterior has two modes:
+- **the main one:** alpha ≈ 1.7, carried by the `interior` penalty;
+- **a minor one:** alpha ≈ 7.2, carried by `avoidable` (c_avoid ≈ 3.4) and `competition`
+  (≈ 1.3). It is 13.3 nats lower at its peak and holds ~2e-5 of the mass (Laplace).
+
+About 500 nats of low density separate them, so no chain crosses. numpyro's default start (a
+uniform point in (-2, 2) on the unconstrained scale) put about a third of chains in the minor
+mode, which matches §5's R-hat 1.74 and bulk ESS 6. A multi-start optimisation found more than one
+optimum in 12 of round 1's 14 models, so §5's convergence verdicts, and with them which drops the
+rule could choose, depended on where chains happened to start. The prior median is no fix: with
+`interior` off it lies in a mode 19.6 nats below the best.
+
+**What changes (fixed before any rerun fit):**
+- **Chain start** (`src.rsa.fit.FitSettings.init = "map"`): every chain starts at the best of
+  L-BFGS optimisations from the prior median and 20 uniform starts (`map_start`).
+- **Mode guard:** optima joined by a straight path rising ≤ 0.5 nats are one mode. If a mode the
+  chains did not reach (outside the draws' 99.9% Mahalanobis region) holds more than 1% of the
+  Laplace mass, the fit fails the convergence gate, so the rule cannot choose that model. Each
+  fit's mode table is in its posterior attrs (`map_modes`).
+- **The rule gains one check** (as the sr-oct26 ablation's): the starting model must converge on
+  every fold, or the elimination stops with an error (`StartingModelUnconverged`).
+- Everything else is §2's: data, folds, fit settings, threshold.
+
+**Checks before launch:** with `init="map"` the full superset converges on the pooled data (seeds
+0 and 1) and on all 5 CV folds (R-hat ≤ 1.01, bulk ESS ≥ 1,800, no divergences); on the pooled
+data the guard passes it (the minor mode's share is 2e-5). The guard flags round 2's model without `redundancy` (a second mode 1.7 nats lower
+holding ~17%).
+
+**Running it:** `INIT=map WORK_ROOT=$SCRATCH/auto-psych/rsa_consolidate_map sbatch
+scripts/rsa/slurm/consolidate_array.sbatch`, into a fresh work root: saved CVs are named by model,
+not by fit settings, so §5's must not be reused.
+
+**Judging it:** the pre-registered data are spent (§5), so the rerun's lean model is judged on
+the pooled CV only. `score.json` is not redone as a test.

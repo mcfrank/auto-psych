@@ -676,6 +676,14 @@ def test_the_consolidation_job_reads_the_preregistered_data_only_when_scoring():
     assert "--cpus-per-task=24" in text  # the mcfrank node's cores
 
 
+def test_the_consolidation_jobs_require_the_chain_start():
+    # 2026-10-27: uniform starts left the full superset unconverged; a rerun must state its start.
+    for name in ("consolidate.sbatch", "consolidate_array.sbatch"):
+        text = (SLURM / name).read_text()
+        assert 'INIT="${INIT:?' in text, name
+        assert text.count('--init "$INIT"') == (2 if name == "consolidate.sbatch" else 1), name
+
+
 def test_the_consolidation_array_chains_rounds_and_stops_on_a_stuck_round():
     text = (SLURM / "consolidate_array.sbatch").read_text()
     assert "--mode plan" in text and "--mode worker --task" in text

@@ -117,6 +117,17 @@ def test_elimination_never_drops_into_an_unconverged_model():
     assert rec["lean"]["mechanisms"] == ["dup", "aspect"]
 
 
+def test_elimination_stops_with_an_error_when_its_starting_model_did_not_converge():
+    # The 2026-10-17 run costed its first drop against an unconverged full superset (R-hat 1.74);
+    # the sr-oct26 ablation's rule refuses that, and so does this one since 2026-10-27.
+    def score(sets):
+        out = scored({s: -100.0 for s in sets})
+        return {k: elim.Scored(v.pointwise, converged=k != canonical(("dup", "aspect"))) for k, v in out.items()}
+
+    with pytest.raises(elim.StartingModelUnconverged, match="cons_dup_asp"):
+        elim.eliminate(("dup", "aspect"), score, np.arange(40))
+
+
 def test_elimination_and_scoring_pass_the_chain_start_to_the_fit(tmp_path):
     from src.rsa.consolidate import score
 

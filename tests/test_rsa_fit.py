@@ -145,20 +145,76 @@ def test_an_unknown_init_strategy_raises():
         FitSettings(init="median")
 
 
+
+def _double_well(depth_b, width_b):
+    """A 1-d energy with wells at x = -2 (depth 0, unit curvature) and x = +2 (depth ``depth_b``,
+    curvature 1 / width_b**2), joined by a high barrier at 0."""
+    import jax
+    import jax.numpy as jnp
+
+    def energy(x):
+        a = 0.5 * (x[0] + 2.0) ** 2
+        b = depth_b + 0.5 * ((x[0] - 2.0) / width_b) ** 2
+        return -jnp.logaddexp(-a, -b) + 50.0 * jnp.exp(-4.0 * x[0] ** 2)
+
+    value_and_grad = jax.jit(jax.value_and_grad(energy))
+    return (lambda x: tuple(np.asarray(v, dtype=np.float64) for v in value_and_grad(jnp.asarray(x)))), \
+        (lambda x: np.asarray(jax.hessian(energy)(jnp.asarray(x)), dtype=np.float64))
+
+
+def test_find_modes_merges_starts_in_one_well_and_weighs_each_mode_by_laplace_mass():
+    from src.rsa.fit import find_modes
+
+    energy_and_grad, hessian = _double_well(depth_b=1.0, width_b=2.0)
+    starts = [np.array([v]) for v in (-3.0, -1.0, -2.5, 1.0, 3.5)]
+    modes, failed = find_modes(energy_and_grad, hessian, starts)
+    assert failed == 0
+    assert [m.starts for m in modes] == [3, 2]
+    assert np.allclose([m.x[0] for m in modes], [-2.0, 2.0], atol=0.1)  # each pulled slightly by the other well
+    # Laplace log mass: -energy - 0.5 log det(H); well b is wider (x2) and 1 nat higher.
+    assert np.isclose(modes[1].log_mass - modes[0].log_mass, -1.0 + np.log(2.0), atol=0.15)
+
+
+def test_a_minor_mode_holding_real_mass_is_a_convergence_problem():
+    from src.rsa.fit import find_modes, minor_mode_problem
+
+    starts = [np.array([-3.0]), np.array([3.0])]
+    heavy, _ = find_modes(*_double_well(depth_b=1.0, width_b=1.0), starts)  # b holds e^-1 / (1 + e^-1) = 27%
+    problem = minor_mode_problem(heavy)
+    assert problem is not None and "27" in problem
+    light, _ = find_modes(*_double_well(depth_b=8.0, width_b=1.0), starts)  # b holds ~0.03%
+    assert minor_mode_problem(light) is None
+    assert minor_mode_problem(find_modes(*_double_well(1.0, 1.0), [np.array([-3.0])])[0]) is None  # one mode
+    # The straight-line test can split one curved ridge in two; a mode the chains reached is no problem.
+    assert minor_mode_problem(heavy, visited=[True, True]) is None
+    assert minor_mode_problem(heavy, visited=[True, False]) is not None
+
+
+def test_a_mode_inside_the_posterior_draws_is_visited():
+    from src.rsa.fit import visited_by_draws
+
+    rng = np.random.default_rng(0)
+    draws = rng.normal([1.0, 5.0], [0.1, 2.0], size=(4000, 2))
+    assert visited_by_draws(draws, [np.array([1.1, 8.0]), np.array([2.0, 5.0])]) == [True, False]
+
+
 @pytest.mark.slow
-def test_the_map_start_is_the_best_optimum_found_and_a_map_fit_starts_there():
+def test_the_map_start_is_the_best_optimum_found_and_a_map_fit_records_its_modes():
     # init="map" starts every chain at the best of L-BFGS optimisations from the prior median
     # and uniform starts. On the full consolidation superset a third of uniform starts fell into
     # a minor mode ~500 nats of barrier away (R-hat 1.74); with interior off, the median start
     # itself lands in a mode 19.6 nats below the best one.
+    import json
+
     from src.rsa.fit import _numpyro_model, map_start
 
     model = RSAModel(SEEDS / "rsa_l1.py")
     contexts, choices = simulate(model, {"alpha": 3.0, "lapse": 0.05}, design(), 100)
     prep = prepare(contexts, choices)
-    start = map_start(model, prep, seed=0)
+    start, modes, failed = map_start(model, prep, seed=0)
     assert set(start) == {"alpha", "lapse"}
     assert 1.5 < start["alpha"] < 6.0
+    assert sum(m.starts for m in modes) + failed == 21  # one start steps to alpha ~ 44, where rsa_l1 is NaN
 
     from numpyro.infer.util import log_density
 
@@ -168,3 +224,6 @@ def test_the_map_start_is_the_best_optimum_found_and_a_map_fit_starts_there():
     assert density(start) >= density({"alpha": 3.0, "lapse": 0.05})
     fitted = fit(model, contexts, choices, FitSettings(num_warmup=0, num_samples=1, num_chains=2, init="map"))
     assert fitted.idata.posterior["alpha"].shape == (2, 1)
+    recorded = json.loads(fitted.idata.posterior.attrs["map_modes"])
+    assert recorded[0]["starts"] == modes[0].starts and "share" in recorded[0]
+    assert fitted.idata.posterior.attrs["map_failed_starts"] == failed
