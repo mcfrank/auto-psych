@@ -1,0 +1,96 @@
+{
+ "loop_dir": "/scratch/users/mcfrank/auto-psych/agent_trees/f30695355035b5ad/repo/_runs/chain_0/experiment2/loop",
+ "blocks": [
+  "E",
+  "exp1",
+  "exp2"
+ ],
+ "dropped": [],
+ "theories": {
+  "competitor_confusion_shared_prior": {
+   "trusted": true,
+   "by_block": {
+    "E": {
+     "elpd_cv": -4941.228624582291,
+     "minus_truth": -17.84488272666931,
+     "dse": 11.481940150433344
+    },
+    "exp1": {
+     "elpd_cv": -3616.2800781726837,
+     "minus_truth": -27.090203285217285,
+     "dse": 10.531728488678247
+    },
+    "exp2": {
+     "elpd_cv": -4225.733087778091,
+     "minus_truth": -4.331938028335571,
+     "dse": 4.354364667444818
+    }
+   }
+  },
+  "rsa_l2_singleton_feat_color_valence_l0": {
+   "trusted": true,
+   "by_block": {
+    "E": {
+     "elpd_cv": -4830.502284526825,
+     "minus_truth": 92.88145732879639,
+     "dse": 55.73686777877422
+    },
+    "exp1": {
+     "elpd_cv": -3663.814426422119,
+     "minus_truth": -74.62455153465271,
+     "dse": 20.41697433302248
+    },
+    "exp2": {
+     "elpd_cv": -4276.996814966202,
+     "minus_truth": -55.59566521644592,
+     "dse": 16.487658688425437
+    }
+   }
+  },
+  "similarity_crowded_pragmatics": {
+   "trusted": true,
+   "by_block": {
+    "E": {
+     "elpd_cv": -4927.912411212921,
+     "minus_truth": -4.528669357299805,
+     "dse": 19.77517591857202
+    },
+    "exp1": {
+     "elpd_cv": -3601.6883187294006,
+     "minus_truth": -12.498443841934204,
+     "dse": 7.490438919264215
+    },
+    "exp2": {
+     "elpd_cv": -4238.925145864487,
+     "minus_truth": -17.523996114730835,
+     "dse": 7.584996279968595
+    }
+   }
+  },
+  "ground_truth": {
+   "trusted": true,
+   "by_block": {
+    "E": {
+     "elpd_cv": -4923.383741855621,
+     "minus_truth": 0.0,
+     "dse": 0.0
+    },
+    "exp1": {
+     "elpd_cv": -3589.1898748874664,
+     "minus_truth": 0.0,
+     "dse": 0.0
+    },
+    "exp2": {
+     "elpd_cv": -4221.401149749756,
+     "minus_truth": 0.0,
+     "dse": 0.0
+    }
+   }
+  }
+ },
+ "ended_live": [
+  "competitor_confusion_shared_prior",
+  "rsa_l2_singleton_feat_color_valence_l0",
+  "similarity_crowded_pragmatics"
+ ]
+}
