@@ -28,6 +28,13 @@ gives:
 
 You do not need to open any file to get it.
 
+**Your context is limited, and a critic that fills it writes nothing** (run C′: both first
+attempts ran out of context reading design files whole). Open only the incumbent's `.py` file and
+the data file the context names, and the data file only a few lines at a time (`head -n 20`).
+Do not open other files of the run: designs, other theories, fits. Explore with short scripts
+that print a few summary lines, never whole tables. Write your first statistic file early, then
+add to it.
+
 ## Step 1: understand the incumbent and the data
 
 Read the incumbent's `.py` file and its hypothesis, and look at a sample of the

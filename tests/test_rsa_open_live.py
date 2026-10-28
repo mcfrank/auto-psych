@@ -534,6 +534,7 @@ def test_a_live_launch_needs_the_frozen_tag_and_a_typed_yes(tmp_path):
     assert out.returncode == 0, out.stderr
     (call,) = calls
     assert "CONFIRM=1" in call and "PARTICIPANTS=15" in call and "rsa_open_open_c0_smoke" in call
+    assert "--cpus-per-task=4 --mem=16G" in call  # a smoke test fits nothing
 
 
 def test_the_live_job_is_double_gated_stops_on_record_and_resumes_after_a_time_limit():

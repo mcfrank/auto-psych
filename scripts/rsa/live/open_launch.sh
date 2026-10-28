@@ -33,7 +33,11 @@ N_EXPERIMENTS="${N_EXPERIMENTS:-4}"
 source "$REPO/scripts/rsa/slurm/_env.sh"
 cd "$REPO"
 SMOKE=""
-[[ -n "${PARTICIPANTS:-}" ]] && SMOKE=_smoke
+SIZE=()
+if [[ -n "${PARTICIPANTS:-}" ]]; then
+  SMOKE=_smoke
+  SIZE=(--cpus-per-task=4 --mem=16G)  # a smoke test deploys and collects: no fits (run C′'s report)
+fi
 "$VENV_PY" -m src.rsa_open.live --config "$CONFIG" --check --arm "$ARM" --chains "${CHAIN_LIST[@]}" \
   --n-experiments "$([[ -n "$SMOKE" ]] && echo 1 || echo "$N_EXPERIMENTS")" ${PARTICIPANTS:+--participants "$PARTICIPANTS"}
 echo "mode: $PROLIFIC_MODE${SMOKE:+ (smoke test: $PARTICIPANTS people, never modelled)}; $LINKS job(s) of $TIME on $PARTITION per chain" >&2
@@ -72,7 +76,7 @@ for chain in "${CHAIN_LIST[@]}"; do
     id="$(env ${EXTRA_ENV[@]+"${EXTRA_ENV[@]}"} PROLIFIC_MODE="$PROLIFIC_MODE" CONFIG="$CONFIG" WORK_ROOT="$WORK_ROOT" \
           ARM="$ARM" CHAIN="$chain" N_EXPERIMENTS="$N_EXPERIMENTS" \
           ${PARTICIPANTS:+PARTICIPANTS="$PARTICIPANTS"} ${SMOKE_FROM:+SMOKE_FROM="$SMOKE_FROM"} \
-          sbatch --parsable --chdir="$REPO" --partition="$PARTITION" --time="$TIME" \
+          sbatch --parsable --chdir="$REPO" --partition="$PARTITION" --time="$TIME" ${SIZE[@]+"${SIZE[@]}"} \
             --job-name="rsa_open_${ARM}_c$chain$SMOKE" ${dep[@]+"${dep[@]}"} \
             -o "$WORK_ROOT/logs/%x_%j.out" scripts/rsa/slurm/open_live.sbatch)"
     echo "[launch] ${ARM}_chain_$chain$SMOKE: job $link of $LINKS: $id" >&2

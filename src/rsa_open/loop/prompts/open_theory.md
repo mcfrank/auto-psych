@@ -250,7 +250,12 @@ reject the theory as too slow.
 
 Add `--quick` to the same command for the quick fit (seconds, no sampling): the best-fitting
 values, how sharply the data pin each parameter down, which parameters trade off, and whether
-different starts disagree. Use it to explore instead of writing fitting scripts of your own.
+different starts disagree. **Do not fit theories with code of your own** (an optimiser, a sampler,
+inline or in a file): the quick fit and the self-check are the loop's own fits, and fits of your
+own have cost earlier theorists their whole session.
+
+**When the self-check passes and you have no substantive change left to make, stop**: end the
+session. A finished candidate does not get better by running out the clock.
 
 **Your session has a time limit (`CONTEXT.md`, "Your time").** Write a complete first version
 of your three files early, check it, then improve the files in place: whatever is in your

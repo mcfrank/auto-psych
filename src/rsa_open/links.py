@@ -73,6 +73,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import numpyro.distributions as dist
+from jax.scipy.special import gammaln
 
 from src.rsa_open.link_kit import temper, with_uniform
 from src.rsa_open.port import LISTENER
@@ -194,11 +195,35 @@ def design_bet_total(n_objects: int, total: int) -> int:
     return t
 
 
+STIRLING_FROM = 10.0
+
+
+def log_rising(c, x) -> jnp.ndarray:
+    """log Γ(c + x) - log Γ(c), stable in float32 for every c > 0.
+
+    The direct difference cancels two numbers near c log c: at a concentration of 1e8 float32 gave
+    +224 for a Dirichlet-multinomial log probability whose true value is -4.3, and run C′'s bet
+    paradigm scored an unconverged fold at +121,409 nats (a pmf's log is never positive). From
+    ``STIRLING_FROM`` on, the difference is taken inside Stirling's series, where nothing larger
+    than x log(c + x) is formed (truncation error below 1e-8)."""
+    small = gammaln(c + x) - gammaln(c)
+    cs = jnp.maximum(c, STIRLING_FROM)
+    big = ((cs - 0.5) * jnp.log1p(x / cs) + x * jnp.log(cs + x) - x
+           + (1.0 / (12.0 * (cs + x)) - 1.0 / (12.0 * cs))
+           - (1.0 / (360.0 * (cs + x) ** 3) - 1.0 / (360.0 * cs ** 3)))
+    return jnp.where(c < STIRLING_FROM, small, big)
+
+
 def allocation_log_prob(latent, points, total: int, kappa, lapse, temperature=1.0) -> jnp.ndarray:
-    """log P(points | latent): Dirichlet-multinomial around the tempered, lapse-mixed posterior."""
+    """log P(points | latent): Dirichlet-multinomial around the tempered, lapse-mixed posterior,
+    computed with `log_rising` (numpyro's `DirichletMultinomial.log_prob` is the same distribution,
+    unstable at large concentrations in float32)."""
     conc = jnp.maximum(kappa * with_uniform(temper(jnp.asarray(latent), temperature), lapse),
                        CONCENTRATION_FLOOR)
-    return dist.DirichletMultinomial(conc, total_count=total).log_prob(points)
+    conc, pts = jnp.broadcast_arrays(conc, jnp.asarray(points, dtype=conc.dtype))
+    coef = gammaln(jnp.asarray(total, conc.dtype) + 1.0) - jnp.sum(gammaln(pts + 1.0), axis=-1)
+    return (coef + jnp.sum(log_rising(conc, pts), axis=-1)
+            - log_rising(jnp.sum(conc, axis=-1), jnp.asarray(total, conc.dtype)))
 
 
 def _ordered_beta_parts(q, p):

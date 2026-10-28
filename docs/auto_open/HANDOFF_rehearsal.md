@@ -13,6 +13,29 @@ experiment. Theories must predict every paradigm with one set of parameters. Two
 
 Start B only after the driver has reviewed A.
 
+## After run C′ (2026-10-28): what changed, and run D
+
+Run C′ is done (`RUN_C_PRIME_REPORT.md`). The fixes since then, on `auto-psych-open`:
+- **The bet link's likelihood is computed stably.** Run C′'s +121,409 nats was float32 losing
+  precision at a huge concentration, not the betting data: a Dirichlet-multinomial is a probability
+  mass function, and its log is never above 0.
+- **A theory with an impossible held-out score is untrusted, and only converged cross-validation
+  is compared.**
+- **A repair that leaves `candidate.py` unchanged is refused** without a refit.
+- **Prompts:** the critic keeps its context small. The theorists don't fit with code of their own,
+  and stop when the self-check passes and nothing is left to change.
+- **Job sizes:** the ground-truth check asks for 8 CPUs and 32 GB, a smoke test for 4 CPUs and 16 GB.
+
+**Run D1 is unaffected.** It deploys run C′'s designs on the code it staged in `rsa_open_smoke`,
+and the page code has not changed. Report D1 as planned.
+
+**Before D2:**
+1. Pull, and re-stage `rsa_open_smoke` with `RESTAGE_REASON='Run C′ fixes (bet likelihood, scoring), PI 2026-10-28'`.
+   A smoke test never fits anything, but its jobs should run the current code.
+2. Check Prolific's balance.
+3. The PI reviews the open smoke paradigm (the bet design).
+4. The PI's explicit go-ahead.
+
 ## Run C′: run C's fixes, checked (2026-10-28, cleared by the PI)
 
 **First, cancel run C's open cell** (49903873): its remaining hours are the fits now capped, and

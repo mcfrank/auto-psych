@@ -82,6 +82,8 @@ admitted theory) whose fit does not finish within it is dropped on record, as a 
 fit is; no candidate's admission limit and no fold's limit exceeds it. Run C's starting fits took
 8-10 h on single blocks and cost a 24-h job; the slowest healthy fit seen is 2.7 h, on all of E
 (run B′)."""
+IMPOSSIBLE_LPD = 1e-3
+"""A held-out log probability above this (float32 rounding aside) is impossible for any link."""
 FOLD_TIME_FACTOR = 3.0
 FOLD_MIN_SEC = 10 * 60
 """Each of a theory's cross-validation folds is time-limited: at
@@ -307,6 +309,11 @@ class OpenLoop:
                 rows = np.where(self.folds[b.name] == f)[0]
                 if len(rows):
                     out[b.name][rows] = heldout_lpd(theory, fitted, b.subset(rows))
+        impossible = [b for b, v in out.items() if np.nanmax(v) > IMPOSSIBLE_LPD]
+        if impossible:  # every link is a probability mass function: a held-out log probability is <= 0
+            self.cv_problems[name] = ("an impossible held-out score (a log probability above 0 on "
+                                      f"{', '.join(impossible)}: a numerical failure), so it is untrusted")
+            return CorpusCV(out, False)
         return CorpusCV(out, all(fit.converged for fit in fits))
 
     def standing(self) -> Dict[str, dict]:
@@ -317,10 +324,12 @@ class OpenLoop:
         with ThreadPoolExecutor(max_workers=workers) as pool:
             for name, result in zip(todo, pool.map(self._cv_one, todo)):
                 self.cv[name] = result
-        scored = {n: self.cv[n] for n in self.live if self.cv.get(n) is not None}
+        # Only converged cross-validation is compared (PI 2026-10-28): run C′'s one unconverged fold
+        # scored +121,409 nats, and every other theory was then 138,000 nats "behind" it on that block.
+        scored = {n: self.cv[n] for n in self.live if self.cv.get(n) is not None and self.cv[n].converged}
         out = standing(scored, self.blocks, guard_k=self.cfg.guard_k) if scored else {}
         for n in self.live:
-            if n not in out:  # a fold fit failed: no CV, never selected
+            if n not in out:  # a fold failed, or did not converge: unscored, never selected
                 out[n] = dict(sel_elpd=-math.inf, sel_diff=math.inf, sel_dse=0.0, eligible=False, guard_failures=[],
                               by_block={}, cv_converged=False)
             out[n]["trusted"] = bool(self.live[n].fit.converged and out[n]["cv_converged"])
@@ -516,7 +525,20 @@ class OpenLoop:
             jobs.append((rd, self._docs_for(rd, sl["role"], sl["lens"], round_index, s, incumbent,
                                             briefs.repair_note(reason), critiques)))
         self._spawn_all(jobs)
-        for sl, ok, reason in self._admit_all([sl for sl, _ in repairs], "repair", round_index, " repair 1"):
+        changed = []
+        for sl, reason in repairs:
+            before, after = sl["dir"] / "candidate.py", sl["repair"] / "candidate.py"
+            if after.exists() and before.exists() and after.read_bytes() == before.read_bytes():
+                # Run C′: a repair session spent its hour on fits of its own and left the file as it was;
+                # refitting the same file can only fail the same way.
+                why = "the repair left candidate.py unchanged, so the rejection stands: " + reason
+                self._ledger(sl["dir_name"] + "_repair", "rejected", why, _read(sl["repair"] / "hypothesis.md"),
+                             sl["context"] + " repair 1")
+                events.append(dict(slot=sl["i"] + 1, role=sl["role"], name=None, outcome="rejected", reason=why,
+                                   repair=True))
+            else:
+                changed.append(sl)
+        for sl, ok, reason in self._admit_all(changed, "repair", round_index, " repair 1"):
             events.append(dict(slot=sl["i"] + 1, role=sl["role"], name=sl["repair_name"],
                                outcome="admitted" if ok else "rejected", reason=reason,
                                hypothesis=_read(sl["repair"] / "hypothesis.md"), repair=True))
