@@ -8,7 +8,7 @@ run), then the assembly.
 | step | on Sherlock | writes | cost |
 |---|---|---|---|
 | SR data | `bash scripts/paper/submit_figure_data.sh sr` | `data/paper/figure_data/subjective_randomness.json` | 176 removed models on each run's data and 254 other models on all runs pooled (86 shards), then 15 MCMC fits at ~7,700 trials and 7 on all runs pooled (~23,000) |
-| number-game data | `bash scripts/paper/submit_figure_data.sh number_game` | `data/paper/figure_data/number_game.json` | 52 removed models × 5 fits (8 shards), then 7 models × 5 |
+| number-game data | `bash scripts/paper/submit_figure_data.sh number_game` | `data/paper/figure_data/number_game.json` | 170 removed models on each run's data and 250 other models on all runs pooled, × 5 fits (84 shards), then 7-10 models × 5 per run and 6 × 5 pooled |
 | RSA chain models | `bash scripts/paper/submit_rsa_chain_models.sh` | `data/rsa/prereg/chain_models_lpd.json` (sums only) | 224 numpyro fits on the pooled data (28 shards of 8) |
 | RSA data | `uv run python -m scripts.paper.rsa_figure_data` (anywhere) | `data/paper/figure_data/rsa.json` | seconds: reads aggregates, the chain models' sums included (`--chain-models None` leaves them out) |
 | figures | `uv run python -m scripts.paper.figures` (anywhere) | `data/paper/figures/fig{2,3,4}_*.{pdf,png}` | seconds |
@@ -39,10 +39,9 @@ What each figure shows:
   starting models a paper proposed (by the paper) and the best starting
   model; the horizontal one names every row. A point whose paired SE
   is not computed yet is drawn hollow, a strip not scored yet "pending".
-  Subjective randomness is drawn from all runs pooled (each run is scored on
-  its own data); reference games from every chain on the pre-registered
-  test; the number game from its one run. The per-run records below are
-  still written.
+  Subjective randomness and the number game are drawn from all runs pooled
+  (each run is scored on its own data); reference games from every chain on
+  the pre-registered test. The per-run records below are still written.
   - Subjective randomness: PSIS-LOO on each run's final pooled data; the
     starting models are the run's seeds, refitted there by
     `sr_figure_data.py` (they were pruned in experiment 1) with the live
@@ -63,12 +62,14 @@ What each figure shows:
     and SE are the pre-registered test's. The textbook RSA models are not
     drawn. The campaign's "chains" are its runs.
   - Number game: ELPD from grouped cross-validation (4 folds of whole
-    example sets, the run's own criterion and settings, from its
-    `holdout.json`) on the one dataset run's final data, 7,560 responses
-    (`data/results/number_game_dataset-oct26/`). The starting models are the
-    three literature seeds (pruned in experiment 1), the other models live at
-    the end the run's three other carried models; `number_game_figure_data.py`
-    refits all seven. The SE is stimulus-clustered ((set, target) cells).
+    example sets, the runs' own criterion and settings, from their
+    `holdout.json`, which must agree) on each of the three dataset runs'
+    final data, 7,560 responses each, and on all three pooled, 22,680
+    (`data/results/number_game_dataset-oct26/`; each run drew its own items).
+    The starting models are the three literature seeds (pruned in experiment
+    1), the other models live at the end each run's other carried models;
+    `number_game_figure_data.py` refits them all, per run and pooled. The SE
+    is stimulus-clustered ((set, target) cells).
   - Every domain also draws the models pruned during the run (grey dots):
     every model the run admitted and later pruned, retired or dropped,
     scored on the same data as the rest of its column (`pruned_during_run`;
@@ -95,10 +96,12 @@ What each figure shows:
     model is the chain final with the highest held-out density, the best
     starting model the best promoted seed (panels.json
     records no pooled ELPD). Conditions are (display, object class) cells.
-  - Number game: one run, so its final data; the best model is the run's
-    winner and the best starting model the seed with the highest ELPD-CV,
-    both fitted on all 7,560 responses. Conditions are (example set, target)
-    cells: 840, 9 responses each (no cell was drawn twice).
+  - Number game: the three runs' final data pooled (22,680 responses; the
+    runs hide participant ids, so nothing is renumbered); the best model is
+    the winner and the best starting model the seed with the highest ELPD-CV
+    there. Conditions are (example set, target) cells, 9 responses per run
+    that drew the cell: 2,147 cells, 1,845 drawn by one run, 231 by two and
+    71 by all three.
 - **Figure 4** (`fig4_pseudocode`): hand-written annotated pseudocode of each
   domain's Figure 3 model, `pseudocode/<domain>.yaml`. Each spec records its
   model file's SHA-256, and the figure script refuses a spec whose model
@@ -121,9 +124,10 @@ DATA)", for drafting the figures' look from invented figure data.
 The number game is drawn as "results pending" until its figure data exist
 (`--pending-domains` controls this; any other missing domain raises).
 
-Run the number-game data step on Sherlock too:
-`sbatch scripts/paper/number_game_figure_data.sbatch` (fits on `$SCRATCH`;
-a rerun reuses them and its `scored.json`).
+Run the number-game data step on Sherlock too (both steps:
+`bash scripts/paper/submit_figure_data.sh number_game`; fits on `$SCRATCH`,
+per run in `<run>/` and pooled in `pooled/`; a rerun reuses them and each
+`scored.json`).
 
 Run the SR data step on Sherlock: `sbatch scripts/paper/sr_figure_data.sbatch`
 from the checkout. Its fits take about 16 GB (kept on `$SCRATCH`). Each run's

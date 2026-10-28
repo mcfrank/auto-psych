@@ -144,12 +144,12 @@ def test_runs_on_one_test_collapse_into_one_forest():
 
 
 def test_the_non_winning_models_of_every_run_share_one_strip_in_admission_order():
-    data = _domain_data("number_game")
+    data = _domain_data("rsa")
     for k, run in enumerate(data["runs"]):
         run["pruned_during_run"] = {f"late_{k}": 4.0 - k, f"early_{k}": -k}
         run["pruned_order"] = {f"late_{k}": 9, f"early_{k}": 2}
         run["others_order"] = {"rival": 5}  # admitted between them, still live
-    rows = figures.forest_rows("number_game", data, NAMES, PAPERS)
+    rows = figures.forest_rows("rsa", data, NAMES, PAPERS)
     (strip,) = [r for r in rows if "values" in r]
     assert strip["kind"] == "nonwinning"
     # Run by run, in admission order: early, rival (live), late.
@@ -179,6 +179,14 @@ def test_subjective_randomness_is_drawn_from_all_runs_pooled():
     assert strip["values"] == [15.0, -3.0]
     # The pooled labels name each model's run.
     assert strip["runs"] == [0, 1]
+
+
+def test_the_number_game_is_drawn_from_all_runs_pooled():
+    # Each run drew its own items, so its runs are not on one test.
+    data = _domain_data("number_game")
+    rows = figures.forest_rows("number_game", data, NAMES, PAPERS)
+    assert _labelled(rows)[0] == ("winner", "Winner one", 20.0, None)
+    assert figures.best_seed_elpd("number_game", data) == -100.0
 
 
 def test_a_labelled_model_without_a_name_raises():

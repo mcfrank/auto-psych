@@ -203,11 +203,11 @@ def _save(fig, out_dir: Path, name: str) -> None:
 
 
 # Figure 2 collapses each domain's runs into one comparison. Subjective
-# randomness scores each run on its own data, so it is drawn from all runs
-# pooled (the figure data's ``pooled``); the other domains score every run on
-# one test (reference games: the pre-registered experiment; the number game
-# has one run), so their runs are drawn together.
-POOLED_VIEW = {"subjective_randomness"}
+# randomness and the number game score each run on its own data, so they are
+# drawn from all runs pooled (the figure data's ``pooled``); reference games
+# score every chain on one test (the pre-registered experiment), so its runs
+# are drawn together.
+POOLED_VIEW = {"subjective_randomness", "number_game"}
 # The pooled view's labels of the runs' models, "<run>__<name>"
 # (sr_figure_data.POOLED_LABEL_SEP).
 POOLED_LABEL_SEP = "__"

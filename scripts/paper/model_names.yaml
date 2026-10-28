@@ -37,5 +37,7 @@ number_game:
   bigelow_piantadosi_independent: Learned rule prior
   bigelow_piantadosi_interval: Learned rule and interval prior
   tenenbaum_rules_similarity: Rules and similarity
-  # best discovered model
+  # best discovered models (each run's winner)
   even_rule_digit_size_principle_counting: Digit similarity + even rule
+  relational_analogy_transfer: Similarity + relational analogy
+  outlier_tolerant_rule_concepts: Rules and intervals + stray examples

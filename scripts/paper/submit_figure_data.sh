@@ -34,12 +34,13 @@ case "$DOMAIN" in
     export FIT_WORK_DIR="${FIT_WORK_DIR:-$WORK_ROOT/sr_figure_data}"
     N_SHARDS="${N_SHARDS:-86}" SHARD_CPUS="${SHARD_CPUS:-16}"
     SHARD_MEM="${SHARD_MEM:-64G}" SHARD_TIME="${SHARD_TIME:-24:00:00}" ;;
-  number_game)  # 52 removed models to fit, 5 fits each (all data + 4 CV folds)
+  number_game)  # 170 removed models on each run's data (7,560 responses) and 250 other
+                # models on all runs pooled (22,680), 5 fits each (all data + 4 CV folds)
     MODULE=scripts.paper.number_game_figure_data
     ASSEMBLY=scripts/paper/number_game_figure_data.sbatch
     export FIT_WORK_DIR="${FIT_WORK_DIR:-$WORK_ROOT/number_game_figure_data}"
-    N_SHARDS="${N_SHARDS:-8}" SHARD_CPUS="${SHARD_CPUS:-16}"
-    SHARD_MEM="${SHARD_MEM:-16G}" SHARD_TIME="${SHARD_TIME:-04:00:00}" ;;
+    N_SHARDS="${N_SHARDS:-84}" SHARD_CPUS="${SHARD_CPUS:-16}"
+    SHARD_MEM="${SHARD_MEM:-32G}" SHARD_TIME="${SHARD_TIME:-08:00:00}" ;;
   *) echo "FATAL: domain must be sr or number_game, not $DOMAIN" >&2; exit 1 ;;
 esac
 MAX_PARALLEL="${MAX_PARALLEL:-$N_SHARDS}"

@@ -3,15 +3,17 @@
 #SBATCH --partition=normal
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=32G
-#SBATCH --time=04:00:00
+#SBATCH --time=08:00:00
 #SBATCH --output=%x-%j.out
 # ============================================================================
 #  The number-game data behind the paper's Figures 2 and 3
-#  (scripts/paper/number_game_figure_data.py): the dataset run's four live
-#  models and three seeds on its final data (7,560 responses), each fitted on
-#  all of them and on each of the 4 grouped-CV folds (35 fits; 9 minutes on a
-#  15-core laptop), at the run's sampler settings, plus the records of its 84
-#  removed models, which the shards of submit_figure_data.sh score first:
+#  (scripts/paper/number_game_figure_data.py): each of the three dataset
+#  runs' live models and the three seeds on its final data (7,560 responses;
+#  35-50 fits a run, about 9 minutes each on a 15-core laptop), and the three
+#  winners and the seeds on all runs pooled (22,680; 30 fits), each fitted on
+#  all the data and on each of the 4 grouped-CV folds at the runs' sampler
+#  settings, plus the records of the runs' 235 removed models and 15 other
+#  live models, which the shards of submit_figure_data.sh score first:
 #
 #    cd $HOME/auto-psych && bash scripts/paper/submit_figure_data.sh number_game
 #
