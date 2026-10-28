@@ -690,3 +690,12 @@ def test_the_consolidation_array_chains_rounds_and_stops_on_a_stuck_round():
     assert '--partition="$WORKER_PARTITION" --requeue' in text and 'WORKER_PARTITION="${WORKER_PARTITION:-mcfrank,owners}"' in text
     assert '--dependency="afterany:$ARRAY"' in text and "MAX_ATTEMPTS" in text
     assert "modelled.csv" not in text  # the pre-registered data are read only when scoring
+
+
+def test_the_c0_ablation_array_runs_its_own_module_on_a_fresh_work_root():
+    text = (SLURM / "ablation_c0_array.sbatch").read_text()
+    assert "-m src.rsa.ablation.eliminate" in text and "consolidate.eliminate" not in text
+    assert 'WORK_ROOT="${WORK_ROOT:?' in text  # never the consolidation's work root by default
+    assert "--mode plan" in text and "--mode worker --task" in text
+    assert '--partition="$WORKER_PARTITION" --requeue' in text and '--dependency="afterany:$ARRAY"' in text
+    assert "modelled.csv" not in text  # the pre-registered data are never read

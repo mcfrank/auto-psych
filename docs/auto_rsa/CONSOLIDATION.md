@@ -223,3 +223,11 @@ not by fit settings, so §5's must not be reused.
 
 **Judging it:** the pre-registered data are spent (§5), so the rerun's lean model is judged on
 the pooled CV only. `score.json` is not redone as a test.
+
+**How the rerun ended (2026-10-28).** Round 1's fits ran, and the elimination stopped at its
+starting-model check: on 2 of the 5 folds the full superset's second mode is not negligible. It is
+3.2 nats lower and holds ~21% of the mass on one fold, and 1.9 nats lower with ~51–57% on the
+other (the fit and its refit agree). The superset has two accounts of the data that nearly tie on
+some folds, and no chain start can sample that. The consolidation is not continued: the ablation
+starts from chain 0's final instead (`ABLATION_C0.md`, user decision), as the sr-oct26 ablation
+did with each run's final.
