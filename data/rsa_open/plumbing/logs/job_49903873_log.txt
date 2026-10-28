@@ -1,0 +1,32 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) devel   2) math
+[_env] REPO=/home/users/mcfrank/auto-psych
+[_env] WORK_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_plumbing
+[_env] UV_PROJECT_ENVIRONMENT=/home/groups/mcfrank/venvs/auto-psych
+[rsa_env] WORK_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_plumbing DATA_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_plumbing/data AGENT_TREES_ROOT=/scratch/users/mcfrank/auto-psych/agent_trees
+[rsa_env] opencode 1.18.35 at /home/groups/mcfrank/software/npm-global/bin/opencode
+[rsa_env] GOOGLE_API_KEY is set
+[env_check] OK: 13 packages and 11 harness modules import; resvg renders
+[stage] code already staged for this sweep (303b9ace5d84548868524a6da59c00ccb8e05c1f); not re-staging
+[scrub] agent tools: /scratch/users/mcfrank/auto-psych/agent_trees/f99f6875513adde3/repo/.agent_bin/{uv,python,python3} -> /scratch/users/mcfrank/auto-psych/agent_trees/f99f6875513adde3/venv/bin/python
+[check] withheld seed crowd_discrim_confusion_chromatic_l2: no file, no manifest entry, no copy
+[check] agent tree OK: /scratch/users/mcfrank/auto-psych/agent_trees/f99f6875513adde3/repo
+[open rehearsal] withheld from the agents' environment: AGENT_SRC CELLS_ROOT DATA_ROOT HARNESS_REPO HF_HOME OLDPWD PIP_CACHE_DIR PWD REPO SLURM_EXPORT_ENV SLURM_SUBMIT_DIR UV_CACHE_DIR WORK_ROOT
+[open rehearsal] open arm, chain 0, 2 experiments, 1 rounds of 3 theorists, 3 folds, literature pragmods (/home/users/mcfrank/auto-psych/src/pipelines/outer_loop/projects/rsa_reference/data/pragmods_trials.csv) -> /scratch/users/mcfrank/auto-psych/agent_trees/f99f6875513adde3/repo/_runs/chain_0
+/scratch/users/mcfrank/auto-psych/agent_trees/f99f6875513adde3/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/f99f6875513adde3/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/f99f6875513adde3/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(

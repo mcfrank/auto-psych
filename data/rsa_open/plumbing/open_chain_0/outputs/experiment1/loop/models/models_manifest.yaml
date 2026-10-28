@@ -1,0 +1,38 @@
+models:
+- name: competitor_confusion_speaker
+  rationale: Pragmatic listener reasoning about a competitor-confusion-averse speaker.
+    Speakers in reference games actively avoid referring expressions that are shared
+    with visually similar or confusable distractors in the context. Candidate words
+    are penalized proportionally to their feature overlap with alternative referents
+    that also satisfy the word. Pragmatic listeners invert this confusion-averse speaker,
+    expecting words to target referents whose competitors are visually distinct rather
+    than near-identical clones.
+- name: isolated_graded_costly_l3
+  rationale: Pragmatic listener at depth 3 with perceptual isolation, graded semantics,
+    and utterance extension costs. Refines isolated_graded_costly_l2 by increasing
+    the recursion depth from depth 2 to depth 3. Listeners reason at depth 3, inverting
+    a speaker who simulates a depth-2 pragmatic listener. Visual pop-out is determined
+    by an object's perceptual isolation (minimum Hamming distance to any other context
+    object), semantic applicability diminishes with additional competing features
+    (graded truth), and speakers evaluate communicative utility trade-offs with utterance
+    extension costs proportional to the fraction of display objects sharing each feature.
+    On uninformative prior trials, choice follows the perceptual isolation prior.
+    A lapse parameter mixes in uniform guessing.
+- name: rsa_l2_singleton_feat_color_valence_l0
+  rationale: 'RSA pragmatic listener at depth 2 with singleton salience, contextual
+    distinctiveness, visual feature complexity, evaluative valence framing, visual
+    color contrast, and literal L0. Refining rsa_l2_singleton_distinct_feat_color_l0
+    by incorporating the evaluative valence framing component from polarity_congruence_listener:
+    speakers and listeners reason at depth 2 (inverting a speaker who simulates a
+    depth-1 pragmatic listener) with common knowledge of an object prior combining
+    discrete visual singleton salience (favoring unique objects with no duplicates
+    in the scene), continuous contextual distinctiveness (favoring objects with greater
+    feature contrast relative to the rest of the display), visual feature complexity
+    modulated by evaluative framing valence (favoring feature-rich items under neutral/positive
+    framing but inverting to favor sparse, featureless items when referring to a least
+    favorite object), and visual color contrast (favoring fully colored objects over
+    desaturated grayscale distractors). Crucially, the foundational simulated literal
+    listener L0 operates purely on truth-conditional semantics without perceptual
+    bias, preventing redundant prior compounding across reasoning tiers. On prior
+    trials with no informative word, choices are governed directly by the combined
+    perceptual prior. A lapse parameter mixes in uniform guessing.'

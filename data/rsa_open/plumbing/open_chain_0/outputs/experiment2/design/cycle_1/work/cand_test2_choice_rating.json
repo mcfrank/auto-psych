@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "name": "cand_test2_choice_rating",
+  "summary": "Two-stage listener paradigm: referent choice followed by a 7-point likelihood rating of a probed object.",
+  "charter": {
+    "question": "How do people both select a primary referent and evaluate the graded plausibility of specific competing referents across small and large visual contexts?"
+  },
+  "instructions": {
+    "welcome": "Welcome to our study on how people understand descriptions of objects.",
+    "task": "In each round, you will see a row of objects that differ in their parts. A speaker sees the same objects and wants to point out one of them. On most rounds, the speaker says a single word that is true of the object they mean. On some rounds, you have not heard the speaker's word yet. First, click the object you think the speaker means. Second, rate from 1 to 7 how likely a highlighted object is to be the one the speaker meant.",
+    "comprehension_checks": [
+      {
+        "question": "What two answers do you give on each round?",
+        "options": [
+          "First click the object you think the speaker meant, then rate from 1 to 7 how likely a highlighted object is.",
+          "Click every object that has the named part, then type a word.",
+          "Only rate one object without clicking any object first."
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "robots",
+        "base": "<g><rect x=\"30\" y=\"52\" width=\"12\" height=\"18\" rx=\"4\" fill=\"#64748b\"/><rect x=\"58\" y=\"52\" width=\"12\" height=\"18\" rx=\"4\" fill=\"#64748b\"/><rect x=\"24\" y=\"24\" width=\"52\" height=\"36\" rx=\"10\" fill=\"#94a3b8\" stroke=\"#334155\" stroke-width=\"2.5\"/><rect x=\"30\" y=\"30\" width=\"40\" height=\"22\" rx=\"6\" fill=\"#e2e8f0\"/><circle cx=\"41\" cy=\"39\" r=\"4\" fill=\"#1e293b\"/><circle cx=\"59\" cy=\"39\" r=\"4\" fill=\"#1e293b\"/><circle cx=\"40\" cy=\"38\" r=\"1.3\" fill=\"#ffffff\"/><circle cx=\"58\" cy=\"38\" r=\"1.3\" fill=\"#ffffff\"/><path d=\"M 42 47 Q 50 51 58 47\" fill=\"none\" stroke=\"#334155\" stroke-width=\"2.2\" stroke-linecap=\"round\"/></g>",
+        "features": [
+          {
+            "word": "antenna",
+            "svg": "<g><line x1=\"50\" y1=\"24\" x2=\"50\" y2=\"10\" stroke=\"#334155\" stroke-width=\"3\" stroke-linecap=\"round\"/><circle cx=\"50\" cy=\"7\" r=\"5.5\" fill=\"#ef4444\" stroke=\"#991b1b\" stroke-width=\"1.8\"/></g>",
+            "phrase": null
+          },
+          {
+            "word": "bowtie",
+            "svg": "<g><polygon points=\"36,54 50,60 36,66\" fill=\"#e11d48\" stroke=\"#881337\" stroke-width=\"1.5\"/><polygon points=\"64,54 50,60 64,66\" fill=\"#e11d48\" stroke=\"#881337\" stroke-width=\"1.5\"/><circle cx=\"50\" cy=\"60\" r=\"3.2\" fill=\"#fb7185\" stroke=\"#881337\" stroke-width=\"1.5\"/></g>",
+            "phrase": null
+          },
+          {
+            "word": "earmuffs",
+            "svg": "<g><rect x=\"13\" y=\"31\" width=\"10\" height=\"18\" rx=\"5\" fill=\"#10b981\" stroke=\"#065f46\" stroke-width=\"2\"/><rect x=\"77\" y=\"31\" width=\"10\" height=\"18\" rx=\"5\" fill=\"#10b981\" stroke=\"#065f46\" stroke-width=\"2\"/></g>",
+            "phrase": null
+          },
+          {
+            "word": "wheels",
+            "svg": "<g><circle cx=\"36\" cy=\"77\" r=\"8\" fill=\"#1e293b\" stroke=\"#0f172a\" stroke-width=\"2\"/><circle cx=\"36\" cy=\"77\" r=\"3.5\" fill=\"#fbbf24\"/><circle cx=\"64\" cy=\"77\" r=\"8\" fill=\"#1e293b\" stroke=\"#0f172a\" stroke-width=\"2\"/><circle cx=\"64\" cy=\"77\" r=\"3.5\" fill=\"#fbbf24\"/></g>",
+            "phrase": null
+          }
+        ],
+        "variants": null
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [2, 2],
+      [3, 2],
+      [3, 3],
+      [4, 3],
+      [4, 4],
+      [5, 3],
+      [6, 3]
+    ],
+    "prior_queries": true,
+    "synonyms": true
+  },
+  "response": {
+    "type": "choice",
+    "link": "choice",
+    "prompt": "The speaker said {message}. Click the object you think the speaker meant.",
+    "prior_prompt": "You have not heard the speaker's word yet. Click the object you think the speaker will refer to.",
+    "scale_labels": null,
+    "scale_points": null,
+    "total_points": null
+  },
+  "second_response": {
+    "type": "rating",
+    "link": "rating",
+    "prompt": "Now look at the highlighted object. Given that the speaker said {message}, how likely is it that the speaker meant this highlighted object?",
+    "prior_prompt": "Now look at the highlighted object. Before hearing any word, how likely is it that the speaker will refer to this highlighted object?",
+    "scale_labels": ["1 (not at all likely)", "7 (extremely likely)"],
+    "scale_points": 7,
+    "total_points": null
+  },
+  "design": {
+    "n_participants": 333,
+    "trials_per_participant": 16,
+    "distinct_trials": 48,
+    "catch_trials": 2,
+    "minutes": 3.6,
+    "pay_usd": 0.6
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}

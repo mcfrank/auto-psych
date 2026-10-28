@@ -1,0 +1,1697 @@
+{
+  "paradigm_sha256": "24c339dcbd15f37d22444fc4be8d112e8e213439b2a827a9192cfb2862b544f3",
+  "context_sha256": "e0de4bf906111f4df0d0364740d4c16af1b49f337dcece745f0d9d8c3d4e74ca",
+  "theories": [
+    "competitor_confusion_speaker",
+    "isolated_graded_costly_l3",
+    "oddity_heuristic_listener",
+    "rsa_l2_singleton_feat_color_valence_l0",
+    "rsa_l2",
+    "rsa_l1",
+    "literal_listener",
+    "rsa_l1_salience",
+    "rsa_l1_shared_prior",
+    "familiar_isolated_graded_costly_l2",
+    "rsa_l2_singleton_distinct_feat_color_l0",
+    "evaluative_prominence_l2",
+    "lexical_preemption_heuristic",
+    "rsa_l2_singleton_feat_color_familiar_l0",
+    "softmax_surprisal_isolated_costly_l4"
+  ],
+  "link": "choice",
+  "n_units": 1597,
+  "design_size": 52,
+  "responses_per_unit": 100,
+  "design": [
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": 2,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": 2,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          0
+        ]
+      ],
+      "heard": 1,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": 3,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": 3,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": 3,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          0
+        ]
+      ],
+      "heard": 2,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": 3,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": null,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": 2,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": 2,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "source": "eig_single_response_fill"
+    }
+  ],
+  "joint_eig_bits": 3.569128851867467,
+  "max_bits": 3.906890595608518,
+  "p_correct": 0.729,
+  "by_theory": {
+    "competitor_confusion_speaker": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 1.0,
+      "n_scenarios": 75
+    },
+    "isolated_graded_costly_l3": {
+      "p_correct": 0.6911764705882353,
+      "mean_posterior_on_truth": 0.6827713648057996,
+      "n_scenarios": 68
+    },
+    "oddity_heuristic_listener": {
+      "p_correct": 0.9154929577464789,
+      "mean_posterior_on_truth": 0.9125332173071006,
+      "n_scenarios": 71
+    },
+    "rsa_l2_singleton_feat_color_valence_l0": {
+      "p_correct": 0.35185185185185186,
+      "mean_posterior_on_truth": 0.38894706702477505,
+      "n_scenarios": 54
+    },
+    "rsa_l2": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 0.9999120459616743,
+      "n_scenarios": 66
+    },
+    "rsa_l1": {
+      "p_correct": 0.8840579710144928,
+      "mean_posterior_on_truth": 0.5622377929293088,
+      "n_scenarios": 69
+    },
+    "literal_listener": {
+      "p_correct": 0.9538461538461539,
+      "mean_posterior_on_truth": 0.88170287739515,
+      "n_scenarios": 65
+    },
+    "rsa_l1_salience": {
+      "p_correct": 0.5166666666666667,
+      "mean_posterior_on_truth": 0.5147819808857707,
+      "n_scenarios": 60
+    },
+    "rsa_l1_shared_prior": {
+      "p_correct": 0.38095238095238093,
+      "mean_posterior_on_truth": 0.3810733441616527,
+      "n_scenarios": 63
+    },
+    "familiar_isolated_graded_costly_l2": {
+      "p_correct": 0.5625,
+      "mean_posterior_on_truth": 0.5686847649586795,
+      "n_scenarios": 80
+    },
+    "rsa_l2_singleton_distinct_feat_color_l0": {
+      "p_correct": 0.1232876712328767,
+      "mean_posterior_on_truth": 0.13775270353575533,
+      "n_scenarios": 73
+    },
+    "evaluative_prominence_l2": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 0.9938654810645262,
+      "n_scenarios": 63
+    },
+    "lexical_preemption_heuristic": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 1.0,
+      "n_scenarios": 75
+    },
+    "rsa_l2_singleton_feat_color_familiar_l0": {
+      "p_correct": 0.5,
+      "mean_posterior_on_truth": 0.47943497886165,
+      "n_scenarios": 62
+    },
+    "softmax_surprisal_isolated_costly_l4": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 1.0,
+      "n_scenarios": 56
+    }
+  },
+  "cost_usd": 266.66666666666663,
+  "bits_per_dollar": 0.013384233194503003,
+  "settings": {
+    "n_draws": 64,
+    "n_scenarios": 1000,
+    "seed": 2918320750
+  },
+  "reference": {
+    "link": "choice",
+    "n_units": 1597,
+    "design_size": 52,
+    "responses_per_unit": 100,
+    "joint_eig_bits": 3.4010326613541877,
+    "max_bits": 3.906890595608518,
+    "p_correct": 0.718,
+    "by_theory": {
+      "competitor_confusion_speaker": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 0.9999999995246838,
+        "n_scenarios": 62
+      },
+      "isolated_graded_costly_l3": {
+        "p_correct": 0.71875,
+        "mean_posterior_on_truth": 0.6848074923531099,
+        "n_scenarios": 64
+      },
+      "oddity_heuristic_listener": {
+        "p_correct": 0.8225806451612904,
+        "mean_posterior_on_truth": 0.8041064446900135,
+        "n_scenarios": 62
+      },
+      "rsa_l2_singleton_feat_color_valence_l0": {
+        "p_correct": 0.3783783783783784,
+        "mean_posterior_on_truth": 0.3689151086877626,
+        "n_scenarios": 74
+      },
+      "rsa_l2": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 0.9730313726515893,
+        "n_scenarios": 77
+      },
+      "rsa_l1": {
+        "p_correct": 0.868421052631579,
+        "mean_posterior_on_truth": 0.49527345254493693,
+        "n_scenarios": 76
+      },
+      "literal_listener": {
+        "p_correct": 0.8688524590163934,
+        "mean_posterior_on_truth": 0.7786275043915729,
+        "n_scenarios": 61
+      },
+      "rsa_l1_salience": {
+        "p_correct": 0.4307692307692308,
+        "mean_posterior_on_truth": 0.4174495751204814,
+        "n_scenarios": 65
+      },
+      "rsa_l1_shared_prior": {
+        "p_correct": 0.18181818181818182,
+        "mean_posterior_on_truth": 0.30694427141405284,
+        "n_scenarios": 55
+      },
+      "familiar_isolated_graded_costly_l2": {
+        "p_correct": 0.59375,
+        "mean_posterior_on_truth": 0.6168904694829441,
+        "n_scenarios": 64
+      },
+      "rsa_l2_singleton_distinct_feat_color_l0": {
+        "p_correct": 0.11864406779661017,
+        "mean_posterior_on_truth": 0.17720867698494538,
+        "n_scenarios": 59
+      },
+      "evaluative_prominence_l2": {
+        "p_correct": 0.9538461538461539,
+        "mean_posterior_on_truth": 0.9221602147828283,
+        "n_scenarios": 65
+      },
+      "lexical_preemption_heuristic": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 0.9999996896386926,
+        "n_scenarios": 81
+      },
+      "rsa_l2_singleton_feat_color_familiar_l0": {
+        "p_correct": 0.5666666666666667,
+        "mean_posterior_on_truth": 0.5084729468249722,
+        "n_scenarios": 60
+      },
+      "softmax_surprisal_isolated_costly_l4": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 0.9999999438230858,
+        "n_scenarios": 75
+      }
+    },
+    "cost_usd": 266.66666666666663,
+    "bits_per_dollar": 0.012753872480078206
+  },
+  "floor_bits_per_dollar": 0.006376936240039103,
+  "meets_floor": true,
+  "time": {
+    "estimated_minutes": 2.3156847133757967,
+    "declared_minutes": 3.0,
+    "within_tolerance": true,
+    "calibration_basis": "9 choice experiment(s)"
+  }
+}

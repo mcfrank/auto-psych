@@ -1,0 +1,1 @@
+{"theory_name": "similarity_crowded_pragmatics", "blocks": ["E", "exp1"], "param_names": ["alpha", "beta", "gamma", "lapse@E", "lapse@exp1", "temperature@exp1"], "convergence_problems": [], "offsets": {"E": [0, 4468], "exp1": [4468, 7968]}, "timing": {"warmup_sec": 260.62183700315654, "warmup_steps": 5614.0, "sampling_sec": 139.03880371991545, "sampling_steps": 3572.0}}

@@ -1,0 +1,1813 @@
+{
+  "paradigm_sha256": "c67f3a8edf2399ff464d03c529837cd4a9f232329b1fc023544a0496b18aed01",
+  "context_sha256": "401d44d898b1b1c41059cfa02e149196149eb7868a488d6a7c817a222940ab92",
+  "theories": [
+    "competitor_confusion_speaker",
+    "isolated_graded_costly_l3",
+    "rsa_l2_singleton_feat_color_valence_l0",
+    "literal_listener",
+    "rsa_l1",
+    "rsa_l2",
+    "rsa_l1_salience",
+    "rsa_l1_shared_prior",
+    "familiar_isolated_graded_costly_l2",
+    "rsa_l2_singleton_distinct_feat_color_l0",
+    "evaluative_prominence_l2",
+    "lexical_preemption_heuristic",
+    "rsa_l2_singleton_feat_color_familiar_l0",
+    "softmax_surprisal_isolated_costly_l4",
+    "oddity_heuristic_listener"
+  ],
+  "link": "pair",
+  "n_units": 11293,
+  "design_size": 48,
+  "responses_per_unit": 111,
+  "design": [
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 0,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 1,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "second_probe": 5,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "second_probe": 5,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 1,
+      "second_probe": 3,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 1,
+      "second_probe": 4,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 0,
+      "source": "eig"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "second_probe": 2,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "second_probe": 0,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 1,
+      "second_probe": 2,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 5,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": null,
+      "second_probe": 5,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 1,
+      "second_probe": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 1,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 1,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "second_probe": 0,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 4,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 1,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "second_probe": 0,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          0
+        ]
+      ],
+      "heard": 1,
+      "second_probe": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 1,
+      "second_probe": 1,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "second_probe": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 1,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "second_probe": 2,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "second_probe": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "second_probe": 0,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "second_probe": 0,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "second_probe": 0,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "second_probe": 0,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": null,
+      "second_probe": 4,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 1,
+      "second_probe": 4,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "second_probe": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 0,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": null,
+      "second_probe": 5,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "second_probe": 0,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 1,
+      "second_probe": 5,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 1,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          0
+        ]
+      ],
+      "heard": null,
+      "second_probe": 1,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "second_probe": 0,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          1
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3,
+      "second_probe": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": 2,
+      "second_probe": 4,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": null,
+      "second_probe": 3,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": null,
+      "second_probe": 1,
+      "source": "eig_single_response_fill"
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null,
+      "second_probe": 0,
+      "source": "eig_single_response_fill"
+    }
+  ],
+  "joint_eig_bits": 3.4470734826517546,
+  "max_bits": 3.906890595608518,
+  "p_correct": 0.6,
+  "by_theory": {
+    "competitor_confusion_speaker": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 1.0,
+      "n_scenarios": 9
+    },
+    "isolated_graded_costly_l3": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 0.9981752867920628,
+      "n_scenarios": 7
+    },
+    "rsa_l2_singleton_feat_color_valence_l0": {
+      "p_correct": 0.0,
+      "mean_posterior_on_truth": 1.4504794066131632e-09,
+      "n_scenarios": 11
+    },
+    "literal_listener": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 0.9999999999999984,
+      "n_scenarios": 18
+    },
+    "rsa_l1": {
+      "p_correct": 0.6428571428571429,
+      "mean_posterior_on_truth": 0.5153438500130963,
+      "n_scenarios": 14
+    },
+    "rsa_l2": {
+      "p_correct": 0.7142857142857143,
+      "mean_posterior_on_truth": 0.5106774937768281,
+      "n_scenarios": 21
+    },
+    "rsa_l1_salience": {
+      "p_correct": 0.25,
+      "mean_posterior_on_truth": 0.3231210006846046,
+      "n_scenarios": 16
+    },
+    "rsa_l1_shared_prior": {
+      "p_correct": 0.5714285714285714,
+      "mean_posterior_on_truth": 0.4059961146507605,
+      "n_scenarios": 7
+    },
+    "familiar_isolated_graded_costly_l2": {
+      "p_correct": 0.5625,
+      "mean_posterior_on_truth": 0.558914054679376,
+      "n_scenarios": 16
+    },
+    "rsa_l2_singleton_distinct_feat_color_l0": {
+      "p_correct": 0.0,
+      "mean_posterior_on_truth": 0.0030564564996565908,
+      "n_scenarios": 13
+    },
+    "evaluative_prominence_l2": {
+      "p_correct": 0.0,
+      "mean_posterior_on_truth": 0.008238031684425162,
+      "n_scenarios": 13
+    },
+    "lexical_preemption_heuristic": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 1.0,
+      "n_scenarios": 18
+    },
+    "rsa_l2_singleton_feat_color_familiar_l0": {
+      "p_correct": 0.4,
+      "mean_posterior_on_truth": 0.3604171958034471,
+      "n_scenarios": 10
+    },
+    "softmax_surprisal_isolated_costly_l4": {
+      "p_correct": 0.7647058823529411,
+      "mean_posterior_on_truth": 0.7707962712028417,
+      "n_scenarios": 17
+    },
+    "oddity_heuristic_listener": {
+      "p_correct": 1.0,
+      "mean_posterior_on_truth": 0.9999999999999986,
+      "n_scenarios": 10
+    }
+  },
+  "cost_usd": 266.4,
+  "bits_per_dollar": 0.01293946502496905,
+  "settings": {
+    "n_draws": 16,
+    "n_scenarios": 200,
+    "seed": 2242485072
+  },
+  "reference": {
+    "link": "choice",
+    "n_units": 1597,
+    "design_size": 52,
+    "responses_per_unit": 100,
+    "joint_eig_bits": 2.9698415004888092,
+    "max_bits": 3.906890595608518,
+    "p_correct": 0.535,
+    "by_theory": {
+      "competitor_confusion_speaker": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 0.9999999804858664,
+        "n_scenarios": 10
+      },
+      "isolated_graded_costly_l3": {
+        "p_correct": 0.5,
+        "mean_posterior_on_truth": 0.5133440708086477,
+        "n_scenarios": 10
+      },
+      "rsa_l2_singleton_feat_color_valence_l0": {
+        "p_correct": 0.0,
+        "mean_posterior_on_truth": 0.0694142639659296,
+        "n_scenarios": 12
+      },
+      "literal_listener": {
+        "p_correct": 0.9411764705882353,
+        "mean_posterior_on_truth": 0.9644703707406841,
+        "n_scenarios": 17
+      },
+      "rsa_l1": {
+        "p_correct": 0.3125,
+        "mean_posterior_on_truth": 0.36025218741971415,
+        "n_scenarios": 16
+      },
+      "rsa_l2": {
+        "p_correct": 0.7333333333333333,
+        "mean_posterior_on_truth": 0.4680988484659491,
+        "n_scenarios": 15
+      },
+      "rsa_l1_salience": {
+        "p_correct": 0.42857142857142855,
+        "mean_posterior_on_truth": 0.32258449992831884,
+        "n_scenarios": 14
+      },
+      "rsa_l1_shared_prior": {
+        "p_correct": 0.5625,
+        "mean_posterior_on_truth": 0.32057994975846416,
+        "n_scenarios": 16
+      },
+      "familiar_isolated_graded_costly_l2": {
+        "p_correct": 0.0,
+        "mean_posterior_on_truth": 4.20337381703762e-10,
+        "n_scenarios": 9
+      },
+      "rsa_l2_singleton_distinct_feat_color_l0": {
+        "p_correct": 0.07142857142857142,
+        "mean_posterior_on_truth": 0.14999759589674969,
+        "n_scenarios": 14
+      },
+      "evaluative_prominence_l2": {
+        "p_correct": 0.0,
+        "mean_posterior_on_truth": 0.12231722243601284,
+        "n_scenarios": 10
+      },
+      "lexical_preemption_heuristic": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 1.0,
+        "n_scenarios": 17
+      },
+      "rsa_l2_singleton_feat_color_familiar_l0": {
+        "p_correct": 0.5,
+        "mean_posterior_on_truth": 0.3966499874185001,
+        "n_scenarios": 18
+      },
+      "softmax_surprisal_isolated_costly_l4": {
+        "p_correct": 0.5,
+        "mean_posterior_on_truth": 0.5470681012721881,
+        "n_scenarios": 8
+      },
+      "oddity_heuristic_listener": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 0.9991948359527626,
+        "n_scenarios": 14
+      }
+    },
+    "cost_usd": 266.66666666666663,
+    "bits_per_dollar": 0.011136905626833036
+  },
+  "floor_bits_per_dollar": 0.005568452813416518,
+  "meets_floor": true,
+  "time": {
+    "estimated_minutes": 3.738606179699147,
+    "declared_minutes": 3.6,
+    "within_tolerance": true,
+    "calibration_basis": "9 experiment(s) of other response types (none of choice+rating yet)"
+  },
+  "quick": true
+}

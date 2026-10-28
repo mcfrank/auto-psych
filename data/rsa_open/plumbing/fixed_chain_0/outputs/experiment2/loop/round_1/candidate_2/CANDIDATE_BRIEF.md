@@ -1,0 +1,9 @@
+# This slot: refine the incumbent
+
+Improve the current best model, **competitor_confusion_shared_prior** (best on exp2 (held out, grouped CV); 110.7 ± 53.0 behind on E, 14.6 ± 11.2 behind on exp1), with ONE stated change to its mechanism (a different functional form, prior, depth, or one component taken from another model). Your hypothesis must say what you changed and why it should fit better, and list EVERY difference between your candidate.py and its source: recursion depth (which L<k> listener calls), each parameter added or removed, and every other term. A hypothesis that misdescribes its code misleads every later round.
+
+Its hypothesis: Pragmatic listener at depth 1 reasoning about a competitor-confusion-averse speaker under a shared visual confusability object prior. Refining competitor_confusion_speaker with one change: rather than applying the baseline visual confusability prior only on uninformative prior trials while assuming a uniform object prior when interpreting heard words, the depth-1 listener and simulated speaker share the baseline visual confusability prior over objects when interpreting heard words as well. Recursion depth remains at depth 1 (where the listener L1 inverts a speaker reasoning about a literal listener L0), the parameter set is unchanged with no parameters added or removed (keeping only speaker rationality alpha and confusion aversion w_confusion), and all other terms (exponential feature-distance similarity, utterance-specific competitor confusion penalty, and prior-trial choice probabilities) remain identical.
+
+Its source: `/scratch/users/mcfrank/auto-psych/agent_trees/f30695355035b5ad/repo/_runs/chain_0/experiment2/loop/models/competitor_confusion_shared_prior.py`
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.

@@ -1,0 +1,1 @@
+{"theory_name": "competitor_confusion_shared_prior", "blocks": ["E", "exp1"], "param_names": ["alpha", "w_confusion", "lapse@E", "lapse@exp1", "temperature@exp1"], "convergence_problems": [], "offsets": {"E": [0, 6703], "exp1": [6703, 11903]}, "timing": {"warmup_sec": 269.0604468230158, "warmup_steps": 10296.0, "sampling_sec": 161.50269419467077, "sampling_steps": 7000.0}}

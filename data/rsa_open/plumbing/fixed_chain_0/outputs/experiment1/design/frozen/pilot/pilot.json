@@ -1,0 +1,28 @@
+{
+  "paradigm_sha256": "24c339dcbd15f37d22444fc4be8d112e8e213439b2a827a9192cfb2862b544f3",
+  "design_sha256": "2dfdcd753384b4a8295bfff84461cf32096123da98af3b4335909d8d4670cdc3",
+  "n_participants": 4,
+  "comprehension_first": 1.0,
+  "comprehension_final": 1.0,
+  "catch_pass": 1.0,
+  "practice_pass": 1.0,
+  "readable": 1.0,
+  "unreadable_examples": [],
+  "declared_minutes": 3.0,
+  "estimated_minutes": 2.314510773817591,
+  "time_model_minutes": 5.421833333333335,
+  "time_calibration": 0.42688711207480695,
+  "time_calibration_basis": "9 choice experiment(s)",
+  "legibility": {
+    "items": 0,
+    "legibility": null,
+    "illegible": [],
+    "unrecognised_bases": []
+  },
+  "data_parse": "ok",
+  "time_ratio": 0.7715035912725304,
+  "problems": [],
+  "warnings": [],
+  "passed": true,
+  "participant_model": "gemini-3.8-flash"
+}

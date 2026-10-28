@@ -1,0 +1,22 @@
+{
+  "chain": "chain_0",
+  "experiment": 2,
+  "paradigm_sha256": "24c339dcbd15f37d22444fc4be8d112e8e213439b2a827a9192cfb2862b544f3",
+  "design_sha256": "2a815b64f406754a8b97d5458dd7db3e654c19fb4f83dbd716a198ce20c42f7e",
+  "lists_sha256": "649db1a1a105fc536f0f39a6ff6f1bbac32942a0572f2e4ade39dea074fa43cb",
+  "context_sha256": "596849d658735f65f47105f2baca1c77d6abf24d4284f66fc2660204a9f423e5",
+  "joint_eig_bits": 3.4758496348769103,
+  "bits_per_dollar": 0.013034436130788416,
+  "floor_bits_per_dollar": 0.006349431494827966,
+  "pilot": {
+    "comprehension_final": 1.0,
+    "catch_pass": 1.0,
+    "readable": 1.0,
+    "estimated_minutes": 2.3106154289199083,
+    "participant_model": "gemini-3.8-flash"
+  },
+  "review_required": false,
+  "frozen_at": 1793081424.7062101,
+  "code_commit": "303b9ace5d84548868524a6da59c00ccb8e05c1f",
+  "submitted_by": "fixed arm"
+}

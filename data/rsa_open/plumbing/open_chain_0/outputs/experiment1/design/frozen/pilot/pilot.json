@@ -1,0 +1,118 @@
+{
+  "paradigm_sha256": "e3b1f9fcf770dba7c83f2c98628033b8caf4dd395463729d0c63355f38bcd2da",
+  "design_sha256": "171aa226e4d6f02fd2500d34595489ba4b29613cf9a2af07f0dee3e09b7450ee",
+  "n_participants": 4,
+  "comprehension_first": 1.0,
+  "comprehension_final": 1.0,
+  "catch_pass": 1.0,
+  "practice_pass": 1.0,
+  "readable": 1.0,
+  "unreadable_examples": [],
+  "declared_minutes": 4.4,
+  "estimated_minutes": 4.4137992952974665,
+  "time_model_minutes": 10.3395,
+  "time_calibration": 0.42688711207480695,
+  "time_calibration_basis": "9 experiment(s) of other response types (none of bet yet)",
+  "legibility": {
+    "items": 11,
+    "legibility": 1.0,
+    "illegible": [],
+    "unrecognised_bases": [],
+    "by_item": [
+      {
+        "item": "robots: the base",
+        "kind": "name",
+        "right": 3,
+        "of": 3,
+        "answer": "robots",
+        "wrong_answers": []
+      },
+      {
+        "item": "robots: antenna",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "antenna",
+        "wrong_answers": []
+      },
+      {
+        "item": "robots: bowtie",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "bowtie",
+        "wrong_answers": []
+      },
+      {
+        "item": "robots: earmuffs",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "earmuffs",
+        "wrong_answers": []
+      },
+      {
+        "item": "robots: wheels",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "wheels",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 1 (robots): earmuffs",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "3",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 2 (robots): earmuffs",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "1, 2, 4",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 3 (robots): antenna",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "2, 3, 4",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 4 (robots): earmuffs",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "1, 3, 4",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 5 (robots): antenna",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "1, 2, 3",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 6 (robots): earmuffs",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "1, 3",
+        "wrong_answers": []
+      }
+    ]
+  },
+  "data_parse": "ok",
+  "time_ratio": 1.0031362034766969,
+  "problems": [],
+  "warnings": [],
+  "passed": true,
+  "participant_model": "gemini-3.8-flash"
+}

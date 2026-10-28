@@ -1,0 +1,64 @@
+{
+  "theories": {
+    "competitor_confusion_speaker": {
+      "theory_sha256": "ea936aacd3741d0d041f01a7b733a143673c6e9ad6683981d09483e6074f5676",
+      "draws_sha256": "f54edfb58df9766e46ef51c9d25c1a36df36f8c9eaa1407bdcd3558ef3508c70"
+    },
+    "isolated_graded_costly_l3": {
+      "theory_sha256": "cac4cbd78af2b03ee3643be8c1974344fe0a98019a63369ea5dcec41892c9880",
+      "draws_sha256": "dae263cda3535690eab7f9007cb404ea354c35488641aeffc336a4f55d2cd53e"
+    },
+    "oddity_heuristic_listener": {
+      "theory_sha256": "040ad21eaa58e152cabf03836a0970e925dd554d2be3dbeffabe420d6a5f9296",
+      "draws_sha256": "70c432d859ba8aa4a79f9478d9d7be5281490503817ae574400692c9423b51d3"
+    },
+    "rsa_l2_singleton_feat_color_valence_l0": {
+      "theory_sha256": "ca7fe0f167a4c85532df55567d0cfe73c5632c5168f191670e9aaeb16cbe8a97",
+      "draws_sha256": "476398e58b9793f3917db764408efa488822d6de6bab39172ee863b3ad20cde8"
+    },
+    "rsa_l2": {
+      "theory_sha256": "0e08a5dc4b4e15430fc64d8a13a1320abd0310e0ae77a1f1274e0eab27c90756",
+      "draws_sha256": "edabb0aeb80bf682c2e8ddd70e3c5bb146d8694ab3a98a1b587d9a23c8ebaa3a"
+    },
+    "rsa_l1": {
+      "theory_sha256": "df909a385250d04076442f793337cbd8e58e38e12fa1820f896d9372c78e1067",
+      "draws_sha256": "50d45f62e9980ffca7218d7c6290601105b64d5e15b5a0ec5fd71feb841df18e"
+    },
+    "literal_listener": {
+      "theory_sha256": "04f06e2d7d62fc77595482ac1d44c25032827e92833dfbdee6e57b1ec5b6883d",
+      "draws_sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    "rsa_l1_salience": {
+      "theory_sha256": "ea5e725d91a41fb2d59f026f5484c8d63b98cbe3230dc3f973932999b8746c19",
+      "draws_sha256": "d7f482dcb52032c52ebe4e7f5b54a497d6b04943f54ec90c21f4190419c1acfb"
+    },
+    "rsa_l1_shared_prior": {
+      "theory_sha256": "213dc40c5c59cd300e4a17ba59beb6f2416492ca645354cbf5422608501b35d3",
+      "draws_sha256": "6f7727d5a257ffe8dc228ee4e2e93bac6666f5997bcf69cc1fabd25e87eecd58"
+    },
+    "familiar_isolated_graded_costly_l2": {
+      "theory_sha256": "c67cb4407ed7b8968e2942ad09f77e76f7f1a22e12e97a78df255d2606604ef8",
+      "draws_sha256": "13ea16c3719eb7adef6af08d9295c55684fda1cd80b15672a1cc24a692735bc1"
+    },
+    "rsa_l2_singleton_distinct_feat_color_l0": {
+      "theory_sha256": "d4315a1b4df789ee4c7a20abc2c19d15e375ccbf9151f36c84904407bc99465b",
+      "draws_sha256": "78d7e33b4a5bbc457aaa0f3034c51855c5109db48ae31523467453ce44e1fa3d"
+    },
+    "evaluative_prominence_l2": {
+      "theory_sha256": "1fd6c9418daa805c379d28d0e46eb8bdefe30ab1de8d75041b3a52608b0241e9",
+      "draws_sha256": "1ad7fc661ab43415677555fead5cee8b26e32ee1c72bd9f1cf10c7ddc28b5710"
+    },
+    "lexical_preemption_heuristic": {
+      "theory_sha256": "dc53ca3e47d8b63789a027009042ef67e2df3c65cfda9a9dc2f5d32c066b829f",
+      "draws_sha256": "e5ff8fb0dd0e16a7861a048871aeeb6ca9f377688735ae91ce91daaf4a23ecf8"
+    },
+    "rsa_l2_singleton_feat_color_familiar_l0": {
+      "theory_sha256": "e633a323717144c7f0282f95629c18ef4cea06f60377b1c92d787c8376ff5960",
+      "draws_sha256": "5cccd3915210c35580db31bf7b2604d9c49e9248a55b4ae0474d07eecdc65f37"
+    },
+    "softmax_surprisal_isolated_costly_l4": {
+      "theory_sha256": "c70eac142d9a24aa14d72a548a102a1804d64a14076f1b3a2ec582e0addab1d5",
+      "draws_sha256": "e7dcbc2e2870ac3da7313a2edecd958ab814084020bc8cd1b3ba28842095f46e"
+    }
+  }
+}

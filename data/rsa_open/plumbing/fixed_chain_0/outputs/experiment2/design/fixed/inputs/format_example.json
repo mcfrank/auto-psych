@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "name": "FORMAT EXAMPLE ONLY",
+  "summary": "Placeholder text showing the format.",
+  "charter": {
+    "question": "Placeholder: the question about pragmatic reference this paradigm asks."
+  },
+  "instructions": {
+    "welcome": "Placeholder welcome.",
+    "task": "Placeholder task description.",
+    "comprehension_checks": [
+      {
+        "question": "Placeholder question?",
+        "options": [
+          "right option",
+          "wrong option"
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "things",
+        "base": "<circle cx=\"50\" cy=\"50\" r=\"40\" fill=\"#dddddd\"/>",
+        "features": [
+          {
+            "word": "alpha",
+            "svg": "<rect x=\"35\" y=\"35\" width=\"30\" height=\"30\" fill=\"#777777\"/>"
+          },
+          {
+            "word": "beta",
+            "svg": "<rect x=\"35\" y=\"35\" width=\"30\" height=\"30\" fill=\"#777777\"/>"
+          }
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [
+        2,
+        2
+      ],
+      [
+        3,
+        2
+      ]
+    ],
+    "prior_queries": false,
+    "synonyms": false
+  },
+  "response": {
+    "type": "choice",
+    "link": "choice",
+    "prompt": "Placeholder prompt with the word {message}."
+  },
+  "design": {
+    "n_participants": 100,
+    "trials_per_participant": 10,
+    "distinct_trials": 20,
+    "catch_trials": 2,
+    "minutes": 3,
+    "pay_usd": 0.5
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}

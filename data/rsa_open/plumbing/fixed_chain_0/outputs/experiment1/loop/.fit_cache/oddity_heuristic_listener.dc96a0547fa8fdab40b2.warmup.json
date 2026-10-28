@@ -1,0 +1,1 @@
+{"report": {"steps_per_draw": 15.518, "step_size": 0.3220555782318115, "correlated": [["beta", "temperature@exp1", -0.9866776022897126]], "phase": "warmup"}, "timing": {"warmup_sec": 432.77100683702156, "warmup_steps": 25015.0}}

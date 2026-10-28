@@ -1,0 +1,44 @@
+models:
+- name: isolated_graded_costly_l3
+  rationale: Pragmatic listener at depth 3 with perceptual isolation, graded semantics,
+    and utterance extension costs. Refines isolated_graded_costly_l2 by increasing
+    the recursion depth from depth 2 to depth 3. Listeners reason at depth 3, inverting
+    a speaker who simulates a depth-2 pragmatic listener. Visual pop-out is determined
+    by an object's perceptual isolation (minimum Hamming distance to any other context
+    object), semantic applicability diminishes with additional competing features
+    (graded truth), and speakers evaluate communicative utility trade-offs with utterance
+    extension costs proportional to the fraction of display objects sharing each feature.
+    On uninformative prior trials, choice follows the perceptual isolation prior.
+    A lapse parameter mixes in uniform guessing.
+- name: rsa_l1
+  rationale: Vanilla RSA pragmatic listener (depth 1), uniform prior over objects.
+    The listener reasons about a speaker who chooses a true word with probability
+    proportional to exp(alpha * log L0(object | word)), where L0 is the literal listener;
+    the listener inverts that speaker with a uniform prior over objects (Frank & Goodman,
+    2012). With no informative word the choice is uniform. A lapse parameter mixes
+    in uniform guessing.
+- name: rsa_l2_ext_distinct_salience_l0
+  rationale: Refining rsa_l2_singleton_feat_color_valence_l0 by replacing scene-wide
+    contextual distinctiveness on utterance trials with utterance-extension distinctiveness,
+    so listeners and simulated depth-1 listeners evaluate how visually distinct a
+    referent is only relative to the candidate objects that actually satisfy the word
+    rather than against false distractors already ruled out by literal semantics.
+    This prevents false featureless distractors from artificially inflating the salience
+    of feature-rich competitors when a word applies to a subset of objects, while
+    preserving the strong distinctiveness advantage of a feature-rich singleton when
+    a word applies to every object in the display. Compared to rsa_l2_singleton_feat_color_valence_l0,
+    recursion depth remains at depth two with listener calling L2 (which calls L1,
+    which calls literal L0), no parameters are added or removed (retaining alpha,
+    w_singleton, w_distinct, w_features, w_valence, and w_color), unused vec and with_lapse
+    imports are removed, L1 and L2 add listener knows u and weight referent choice
+    by the utterance-indexed prior at(prior, u, r) rather than vec(prior, r), and
+    utterance trials compute distinctiveness across the extension of each real utterance
+    while prior trials continue to use scene-wide distinctiveness.
+- name: competitor_confusion_prior_l2
+  rationale: Refining competitor_confusion_speaker by extending recursive pragmatic
+    inference from depth 1 with a uniform referent prior to depth 2 with common knowledge
+    of the confusion-averse object prior at both pragmatic listener levels while keeping
+    the literal listener unbiased and adding or removing no parameters. Speakers choose
+    words that maximize informativeness while penalizing expressions shared with visually
+    similar competitors, and listeners invert this confusion-averse speaker at depth
+    2 weighted by each object's baseline visual distinctiveness from all display alternatives.
