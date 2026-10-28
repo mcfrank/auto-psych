@@ -32,7 +32,7 @@ from src.pipelines.inner_loop import model_zoo
 from src.pipelines.inner_loop.model_zoo import (
     DEFAULT_NOVELTY_RMSE_THRESHOLD,
     NOVELTY_POOL_FILENAME,
-    _admit_candidate,
+    _admit_candidate_with_reason,
     _min_prediction_rmse,
 )
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
@@ -281,9 +281,9 @@ def test_candidate_that_needs_response_row_columns_is_rejected_not_crashed(
             "needs_trial": _FakeFitted(lambda row: 0.5, needs=("trial_index",)),
         },
     )
-    assert not _admit_candidate(
+    assert not _admit_candidate_with_reason(
         _candidate(tmp_path), models_dir, "needs_trial", responses
-    )
+    ).admitted
     out = capsys.readouterr().out
     assert "[reject] needs_trial" in out
     assert "trial_index" in out
@@ -345,9 +345,9 @@ def test_hook_reading_participant_id_is_rejected_not_crashed(
         ),
     )
 
-    admitted = _admit_candidate(
+    admitted = _admit_candidate_with_reason(
         _candidate(tmp_path), models_dir, "reads_participant", responses
-    )
+    ).admitted
 
     assert not admitted
     out = capsys.readouterr().out
@@ -391,7 +391,7 @@ def test_candidate_predicting_identically_to_an_existing_model_is_rejected(
         },
     )
 
-    assert not _admit_candidate(_candidate(tmp_path), models_dir, "re_skin", responses)
+    assert not _admit_candidate_with_reason(_candidate(tmp_path), models_dir, "re_skin", responses).admitted
 
     out = capsys.readouterr().out
     assert "predicts like existing model 'seed_a'" in out
@@ -416,7 +416,7 @@ def test_model_differing_only_off_the_training_stimuli_is_admitted(
         },
     )
 
-    assert _admit_candidate(_candidate(tmp_path), models_dir, "off_training", responses)
+    assert _admit_candidate_with_reason(_candidate(tmp_path), models_dir, "off_training", responses).admitted
     assert (models_dir / "off_training.py").exists()
 
 
@@ -441,7 +441,7 @@ def test_gate_threshold_separates_the_re_skin_cluster(
         },
     )
     assert (
-        _admit_candidate(_candidate(tmp_path), models_dir, "shifted", responses)
+        _admit_candidate_with_reason(_candidate(tmp_path), models_dir, "shifted", responses).admitted
         is admitted
     )
 

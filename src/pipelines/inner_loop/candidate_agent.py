@@ -158,9 +158,7 @@ def _pruned_source(models_dir: Path, entry: LedgerEntry) -> Optional[Path]:
     pruned list is in an earlier experiment's zoo. The prune's ledger context
     starts with that experiment's directory name (``experiment2 end of
     experiment``), a sibling of the current experiment's directory
-    (``models_dir`` is ``<run>/<experiment>/model_loop/models``). The menu
-    used to look only in the current zoo, and so never showed a pruned
-    model's source although the brief promised it.
+    (``models_dir`` is ``<run>/<experiment>/model_loop/models``).
     """
     in_this_zoo = models_dir / "pruned" / f"{entry.name}.py"
     if in_this_zoo.exists():

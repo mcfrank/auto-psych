@@ -4,7 +4,7 @@ The inner loop improves a cognitive model by repeatedly asking a coding agent
 to write a new candidate **PyMC model** (`candidate.py` with a module-level
 `with pm.Model() as model:` block), fitting every surviving model to the
 observed responses via MCMC, and scoring them by ELPD-LOO. The Bayesian
-posterior over models (softmax of ELPD-LOO, optionally with a complexity prior)
+posterior over models (softmax of ELPD-LOO)
 selects the incumbent; the best model is exported for the outer loop.
 
 This replaces the earlier maximum-likelihood + BIC tournament: models are now
@@ -80,6 +80,7 @@ from src.pipelines.inner_loop.model_zoo import (
     slot_roles,
 )
 from src.model_comparison.cv import LOO, Selection
+from src.runtime.pytensor_threads import make_change_flags_thread_local
 from src.tasks import task_of_file
 
 from src.pipelines.inner_loop.critique_round import (
@@ -90,7 +91,6 @@ from src.pipelines.inner_loop.critique_round import (
     critique_disabled_status,
 )
 from src.pipelines.inner_loop.scoring import (
-    DEFAULT_COMPLEXITY_PRIOR_CONST,
     _compare,
     _export,
     _record_end_of_experiment_retirements,
@@ -118,8 +118,7 @@ class _Slot:
     ``candidate_<i>_repair_1/``, with the rejection reason in its prompt and
     the rejected files copied in. A repair that writes nothing, or is rejected
     again, is final — so every slot ends admitted or with a recorded reason the
-    agent had a chance to act on. In the 2026-09 sweep 29% of slots ended as
-    "no candidate.py written" and no rejected candidate ever saw its reason.
+    agent had a chance to act on.
 
     A slot has a ``role`` (``model_zoo.slot_roles``), fixed across its
     attempts: an exploratory slot works the lens ``lens``; a refinement slot
@@ -172,7 +171,6 @@ def run_pymc_inner_loop(
     seed_models_dir: Path,
     max_iterations: int = 3,
     candidate_count: int = 3,
-    complexity_prior_const: float = DEFAULT_COMPLEXITY_PRIOR_CONST,
     cache_dir: Optional[Path] = None,
     agent_timeout_sec: int = 900,
     backend: Optional[str] = None,
@@ -181,7 +179,6 @@ def run_pymc_inner_loop(
     enable_critique: bool = True,
     n_critique_proposals: int = CRITIQUE_N_PROPOSALS,
     critique_significance_alpha: float = CRITIQUE_SIGNIFICANCE_ALPHA,
-    n_critique_replicates: int = CRITIQUE_PPC_REPLICATES,
     candidate_hints: Optional[List[str]] = None,
     selection: Selection = LOO,
     novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD,
@@ -228,8 +225,6 @@ def run_pymc_inner_loop(
         refines a non-incumbent model of the agent's choosing from a menu of
         the live and pruned models; at three, one of each; at two, one
         exploratory and one incumbent slot; at one, exploratory only.
-    complexity_prior_const
-        Passed through to ``model_posterior`` (negative penalises complex models).
     fit_kwargs
         Extra kwargs for MCMC (e.g. ``{"draws": 500, "tune": 500, "chains": 2}``).
     enable_critique
@@ -239,10 +234,11 @@ def run_pymc_inner_loop(
         A critique agent that writes no usable statistic is retried once; a
         round can end with no critique, and every round's ``history.json``
         entry records its critique status either way.
-    n_critique_proposals, critique_significance_alpha, n_critique_replicates
-        Test statistics the critique agent proposes per round, the raw p-value
-        threshold for a significant discrepancy, and the posterior-predictive replicates
-        forming each statistic's null distribution.
+    n_critique_proposals, critique_significance_alpha
+        Test statistics the critique agent proposes per round, and the raw
+        p-value threshold for a significant discrepancy (each statistic's null
+        distribution has ``CRITIQUE_PPC_REPLICATES`` posterior-predictive
+        replicates).
     selection
         How models are compared at every scoring step, in pruning and in the
         export (``src.model_comparison.cv.Selection``): trial-level PSIS-LOO
@@ -281,6 +277,7 @@ def run_pymc_inner_loop(
     Returns a dict with ``best_model``, ``posteriors``, ``elpd_loo``,
     ``live_models`` (the surviving zoo, in manifest order) and paths.
     """
+    make_change_flags_thread_local()  # this loop builds model graphs in several threads
     responses_path = Path(responses_path)
     results_dir = Path(results_dir)
     results_dir.mkdir(parents=True, exist_ok=True)
@@ -356,7 +353,7 @@ def run_pymc_inner_loop(
         )
 
     posterior = _score(
-        responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs, selection
+        responses_path, models_dir, cache_dir, fit_kwargs, selection
     )
     # The comparison table (ELPD rank + PSIS-LOO reliability) is what selects
     # the best model at every step; it reuses the fits _score just made.
@@ -380,7 +377,7 @@ def run_pymc_inner_loop(
                 fit_kwargs=fit_kwargs,
                 n_proposals=n_critique_proposals,
                 significance_alpha=critique_significance_alpha,
-                n_replicates=n_critique_replicates,
+                n_replicates=CRITIQUE_PPC_REPLICATES,
                 agent_timeout_sec=agent_timeout_sec,
                 backend=backend,
                 agent_model=agent_model,
@@ -708,7 +705,7 @@ def run_pymc_inner_loop(
             ledger_context=round_context,
         )
         posterior = _score(
-            responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs, selection
+            responses_path, models_dir, cache_dir, fit_kwargs, selection
         )
         comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs, selection)
         _record_history_step(
@@ -717,7 +714,6 @@ def run_pymc_inner_loop(
             posterior,
             comparison,
             iteration=iteration,
-            pruned=[],
             critique=critique_status,
         )
 
@@ -741,13 +737,10 @@ def run_pymc_inner_loop(
         cache_dir=cache_dir,
         fit_kwargs=fit_kwargs,
         prune_dse_multiplier=prune_dse_multiplier,
-        complexity_prior_const=complexity_prior_const,
         selection=selection,
     )
     result["history"] = history
     result["history_path"] = str(results_dir / "history.json")
-    result["live_models"] = _manifest_names(models_dir)
-    result["ledger_path"] = str(ledger.path)
     return result
 
 
@@ -764,7 +757,6 @@ def end_experiment(
     cache_dir: Optional[Path],
     fit_kwargs: Optional[Dict[str, Any]],
     prune_dse_multiplier: float,
-    complexity_prior_const: float,
     selection: Selection,
 ) -> Dict[str, Any]:
     """The end of an experiment's loop: prune, cap the live set, export.
@@ -773,8 +765,7 @@ def end_experiment(
     grouped CV); pruning, the cap and the rescoring all use it.
 
     Pruning happens once, at the end of the experiment (user decision
-    2026-09-26): it used to run after every round against the max of a
-    growing zoo. Then the live set is capped. Both apply to every model,
+    2026-09-26). Then the live set is capped. Both apply to every model,
     starting models included (user decision 2026-09-28). Neither can change
     the best trusted model or empty the set: pruning measures every margin
     against the best trusted model, and the cap retires untrusted fits first,
@@ -805,7 +796,7 @@ def end_experiment(
     )
     if retired:
         posterior = _score(
-            responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs, selection
+            responses_path, models_dir, cache_dir, fit_kwargs, selection
         )
         comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs, selection)
         _record_end_of_experiment_retirements(history, results_dir, retired)

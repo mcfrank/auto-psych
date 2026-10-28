@@ -225,10 +225,8 @@ def _export_inner_loop_models(
     zoo order. A carried model the loop pruned, retired or dropped — a
     starting model included — is removed, file and entry: the carried set is
     the loop's uncertainty set (every model still within the pruning margin
-    of the best), not an ever-growing archive. Before this change only the
-    single best model was exported, so a rival statistically tied with it was
-    left behind and re-proposed from scratch by the next experiment's agents.
-    The ledger of attempted hypotheses (``attempted_hypotheses.jsonl``) is
+    of the best), not an ever-growing archive, so a rival statistically tied
+    with the best is carried rather than re-proposed from scratch. The ledger of attempted hypotheses (``attempted_hypotheses.jsonl``) is
     copied beside the manifest so the next experiment's loop continues it.
 
     Each exported model keeps its own descriptive name and its hypothesis as
@@ -375,7 +373,6 @@ def run_inner_model_loop_programmatic(
     cache_dir: Optional[Path] = None,
     project_id: Optional[str] = None,
     agent_timeout_sec: int = 900,
-    complexity_prior_const: Optional[float] = None,
     enable_critique: bool = True,
     n_critique_proposals: Optional[int] = None,
     critique_alpha: Optional[float] = None,
@@ -400,8 +397,6 @@ def run_inner_model_loop_programmatic(
     (the standard `data/outer_loop/<project>/experimentN` layout) and must be
     passed explicitly when experiments live elsewhere. `cache_dir` shares the
     MCMC fit cache so later analyses can re-load the loop's fits for free.
-    `complexity_prior_const` overrides the inner loop's default Occam line-count
-    prior (leave None to use it; pass 0.0 to disable the penalty).
     `enable_critique` runs a CriticAL posterior-predictive critique of the
     incumbent before each candidate round (the critique feeds the candidate
     agents); `n_critique_proposals` (None ⇒ inner-loop default) sets how many test
@@ -426,12 +421,7 @@ def run_inner_model_loop_programmatic(
     seed_models_dir = exp_dir / "cognitive_models"
     # Names no candidate may take: the run's starting models, carried or not.
     starting_models = run_starting_models(exp_dir, project_id or exp_dir.parent.name)
-    # None ⇒ inherit run_pymc_inner_loop's default Occam line-count prior.
-    extra = (
-        {}
-        if complexity_prior_const is None
-        else {"complexity_prior_const": complexity_prior_const}
-    )
+    extra = {}
     # None ⇒ inherit run_pymc_inner_loop's default proposal count / critique alpha.
     if n_critique_proposals is not None:
         extra["n_critique_proposals"] = n_critique_proposals
@@ -563,11 +553,8 @@ def finish_model_loop_stage(exp_dir: Path) -> None:
     Writes the next design's registry, then the completion record
     ``model_loop/export_complete.json`` (the exported models and the ledger's
     hash), last, and validates the stage (``_validate_model_loop`` checks the
-    set, the registry and the ledger against the record). The export and the
-    registry update used to be two unvalidated writes after the loop: a crash
-    between them left a stage that a resume skipped (its validator asked only
-    whether the best model was in the set) with the placeholder registry
-    steering the next design.
+    set, the registry and the ledger against the record), so a crash between
+    the export and the registry update leaves a stage a resume redoes.
     """
     exp_dir = Path(exp_dir)
     update_registry_from_interpretation(exp_dir)
@@ -605,19 +592,13 @@ def update_registry_from_interpretation(exp_dir: Path) -> None:
     The registry is the model prior for the next experiment's EIG design, so it
     must (a) cover exactly the models that design will score — the
     ``cognitive_models/`` set the inner loop just exported — and (b) leave EIG
-    something to discriminate. Neither held for the stacking weights recorded
-    before: ``az.compare``'s weights are ensemble coefficients, not
-    plausibility (a model 1.6 nats behind the best read 0.000 because its
-    predictions were redundant with the best's; one 95 nats behind read 0.33
-    because they differed), they were written over the whole zoo including
-    models never carried, and in 15 of 40 next-experiment designs of the
-    iteration-2 recovery sweep every model actually present had weight ~0 or a
-    single model had weight 1.0 — a degenerate prior under which all 32
-    EIG-selected stimuli had zero EIG (filler pairs). The carried set is, by
-    construction, every model still within the pruning margin of the best
-    (starting models included, and only while they are), so a uniform prior over it asks the design to separate
-    exactly the hypotheses the data have not yet resolved. The stacking weights
-    stay in ``model_posterior.json``'s ``comparison`` block as a report field.
+    something to discriminate. ``az.compare``'s stacking weights do neither:
+    they are ensemble coefficients, not plausibility, and can put ~0 on every
+    carried model. The carried set is, by construction, every model still
+    within the pruning margin of the best, so a uniform prior over it asks the
+    design to separate exactly the hypotheses the data have not yet resolved.
+    The stacking weights stay in ``model_posterior.json``'s ``comparison``
+    block as a report field.
 
     This runs only after a model loop completed and exported, so a missing
     posterior export or an absent/empty carried set means the pipeline is

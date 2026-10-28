@@ -35,7 +35,6 @@ from tests.paths import REPO_ROOT
 
 SLURM_DIR = REPO_ROOT / "scripts" / "subjective_randomness" / "slurm"
 REGISTRY_DIR = REPO_ROOT / "src" / "subjective_randomness" / "pymc_model_families"
-FAMILY_DIR = REPO_ROOT / "src" / "subjective_randomness" / "model_families"
 POOL_REL = "src/pipelines/outer_loop/projects/subjective_randomness/seed_models"
 VITERBI = (REGISTRY_DIR / "motif_stack.py").read_bytes()
 # Code of the motif-stack model that no other seed has: the automaton's
@@ -83,7 +82,6 @@ def staged_sweep(tmp_path_factory):
         check=True,
     )
     shutil.copytree(REGISTRY_DIR, work / "gt_models_src")
-    shutil.copytree(FAMILY_DIR, work / "gt_family_src")
     return work
 
 
@@ -103,7 +101,6 @@ def _agent_tree(tmp_path: Path, staged: Path, gt: str) -> Path:
         "HARNESS_REPO": str(staged / "harness_repo"),
         "AGENT_SRC": str(staged / "agent_src"),
         "GT_MODELS_SRC": str(staged / "gt_models_src"),
-        "GT_FAMILY_SRC": str(staged / "gt_family_src"),
         "GT_MODELS": gt,
         "SLURM_ARRAY_TASK_ID": "1",
         "SLURM_JOB_ID": "77",

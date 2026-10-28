@@ -219,10 +219,8 @@ def _build_critique_prompt(
     """The critique agent's full prompt: the critique brief + the inlined context.
 
     The context is a delimited section of the prompt, exactly as the candidate
-    agent's documents are (``_build_candidate_prompt``). It used to be a file
-    the agent had to read first; when that read was denied the agent wrote no
-    statistics and exited, and nobody noticed because a fallback battery
-    filled in. ``attempt`` > 0 marks a retry after an attempt that wrote no
+    agent's documents are (``_build_candidate_prompt``), so the agent never
+    depends on a file read it may be denied. ``attempt`` > 0 marks a retry after an attempt that wrote no
     usable statistic, and says so, with each set-aside statistic's error
     (``broken``: file stem -> error) so the agent can fix it.
     """
@@ -307,8 +305,7 @@ def _spawn_critique_agent(
     "n_significant_fdr"}`` or ``{"status": "no_critique", "incumbent",
     "attempts", "reason"}``. A round in which the check ran but no statistic
     produced a p-value (each one errored or ran out of time on some replicate)
-    is ``no_critique``, its reason listing each statistic's error: it used to
-    count as critiqued, which kept the verifier's "no critique" warning quiet.
+    is ``no_critique``, its reason listing each statistic's error.
     """
     from src.runtime.coding_agent import run_coding_agent
 
@@ -430,8 +427,8 @@ def _n_evaluated(result: Dict[str, Any]) -> int:
 def _format_critiques_md(result: Dict[str, Any]) -> str:
     """Render a human/agent-readable critique summary from a PPC result dict.
 
-    Counts only the statistics that could be evaluated: a critique where every
-    statistic errored used to read "the incumbent fits these checks".
+    Counts only the statistics that could be evaluated, so a critique where
+    every statistic errored does not read as "the incumbent fits these checks".
     """
     results = result.get("results", [])
     sig = [r for r in results if r.get("significant")]
@@ -552,11 +549,10 @@ def _persist_critique_results(
     reused from ``fit_cache_dir`` (no resampling).
 
     Requires at least one usable statistic and raises otherwise: there is no
-    pipeline-written fallback battery. (There used to be one; under the
-    raw-only schema it reduced to the marginal choice rate, which any fitted
-    Bernoulli likelihood matches by construction, so a critique agent that had
-    written nothing looked like one that had found nothing — through a whole
-    sweep.) The caller retries the agent and then records "no critique".
+    pipeline-written fallback battery: under the raw-only schema it would
+    reduce to the marginal choice rate, which any fitted Bernoulli likelihood
+    matches by construction, so a critique agent that wrote nothing would look
+    like one that found nothing. The caller retries the agent and then records "no critique".
     """
     from src.critique.ppc import run_ppc_for_model
 

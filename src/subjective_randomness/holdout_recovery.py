@@ -8,12 +8,16 @@ tries to recover the held-out process. After every inner-loop scoring step we
 ask: how well does the then-best model predict the ground truth's ``p_left``
 on a large held-out stimulus set (Pearson r and RMSE)?
 
-Layout under ``results_root`` (one run per held-out model)::
+Layout under ``results_root`` (one cell per held-out model, named
+``cell_<i>`` so no path an agent sees names the model)::
 
-    <gt_model>/
+    cell_<i>/
         experiment1..N/        # full agentic pipeline output trees
         eval_stimuli.json      # held-out stimulus set (post-run exclusion)
-        trajectory.json        # per-step correlation trajectory + leakage audit
+
+and ``<summary_root>/<gt_model>/trajectory.json`` (per-step correlation
+trajectory + leakage audit), outside the agents' tree when a summary root is
+given.
 
 The expensive seams (`run_design_programmatic`, `generate_responses`,
 `fit_model`, ...) are imported at module level so tests can monkeypatch them
@@ -34,7 +38,7 @@ import hashlib
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
 
 from src.models.model_manifest import read_manifest_names
 from src.pipelines.outer_loop.columns import write_responses_csv
@@ -100,10 +104,9 @@ def forget_command_line() -> None:
 
     Candidate models and critique statistics are agent-written code that runs
     in the harness process, and the harness's arguments name the held-out
-    ground truth (``--gt-model``, and the ``run<r>/<gt>/`` output paths).
-    ``typing.sys.argv`` used to pass the code gate; the gate now blocks that
-    route, and this empties what any other in-process route would find. The
-    lists are cleared in place, so every reference to ``sys.argv`` sees it,
+    ground truth (``--gt-model``, and the ``run<r>/<gt>/`` output paths). The
+    code gate blocks the routes to ``sys.argv`` it knows of; this empties what
+    any other in-process route would find. The lists are cleared in place, so every reference to ``sys.argv`` sees it,
     and fit workers spawned later inherit the cleared list. The script path
     stays (``argv[0]``).
     """
@@ -357,9 +360,8 @@ def derive_seed(*parts: Any) -> int:
     """A seed for one purpose in one cell, from everything that identifies it.
 
     Distinct (cell seed, ground truth, experiment, purpose) tuples get
-    unrelated seeds. The response seed used to be ``cell seed + experiment``,
-    so repeat r's experiment 2 reused repeat r+1's experiment 1 seed, and every
-    design used seed 42.
+    unrelated seeds (a sum such as ``cell seed + experiment`` would let repeat
+    r's experiment 2 reuse repeat r+1's experiment 1 seed).
     """
     digest = hashlib.sha256("|".join(str(part) for part in parts).encode()).digest()
     return int.from_bytes(digest[:4], "big") % 2**31
@@ -407,9 +409,7 @@ def run_holdout_recovery_from_config(
     agent_timeout_override: Optional[int] = None,
     resume: bool = False,
     gt_models_dir: Optional[Path] = None,
-    gt_family_dir: Optional[Path] = None,
     summary_root: Optional[Path] = None,
-    gt_params_by_model_override: Optional[Mapping[str, Mapping[str, float]]] = None,
     agent_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Run holdout recovery for every configured ground-truth model.
@@ -421,13 +421,20 @@ def run_holdout_recovery_from_config(
 
     Config keys:
         project_id        project whose pipeline assets drive the agents
-        seed_models_dir   the GT/baseline registry: models with pure-Python
-                          family twins used to generate ground-truth data and
-                          fixed-param baselines. Experiment 1's agent seed pool
+        seed_models_dir   the GT/baseline registry: the models that generate
+                          ground-truth data and the fixed-param baselines.
+                          Experiment 1's agent seed pool
                           always comes from ``project_seed_models_dir(project_id)``,
                           which mirrors the registry manifest.
+        seed_params       {name: params}: the seed models' generating
+                          parameters (null gt_models params come from here;
+                          the no-learning baseline scores every seed at its own)
         gt_models         null | [names] | {name: params|null}; null params ->
-                          the family's DEFAULT_PARAMS
+                          that model's seed_params
+        gt_models_dir     where the ground-truth models live (default:
+                          seed_models_dir); the impossible-model sweep points
+                          it at src/subjective_randomness/impossible_models,
+                          outside the seed pool, and gives explicit params
         n_experiments, n_participants, seed
         hide_participant_id
                           true -> the responses agents and models see carry
@@ -450,22 +457,20 @@ def run_holdout_recovery_from_config(
         fit               MCMC kwargs (draws/tune/chains/...; method: nuts (default)
                           or warm_start_nuts, NUTS started from the posterior mode)
 
-    ``gt_models_dir`` (default: ``seed_models_dir``) is where the ground-truth
-    models live; the impossible-theory variant points it at a separate directory
-    so the agent seed pool stays the normal seed models. When
-    ``gt_params_by_model_override`` is given, the per-model fixed params are
-    taken from it verbatim instead of resolving the config's ``gt_models`` spec
-    (impossible models have no ``model_families`` defaults to fall back on).
+    The ``gt_models_dir`` argument (the array passes a pristine snapshot)
+    overrides the config's.
     """
     project_id = config.get("project_id", PROJECT_ID)
     # seed_models_dir is the GT/baseline registry and is allowed to differ from
-    # the live project seed pool (see docstring). Its adequacy is validated
-    # eagerly just below: resolving the configured gt_models imports each GT's
-    # pure-Python family twin and raises loudly if one is missing.
+    # the live project seed pool (see docstring). Resolving the configured
+    # gt_models just below raises for a model with no parameters anywhere.
     seed_models_dir = resolve_path(config["seed_models_dir"], config_path)
-    gt_models_dir = (
-        Path(gt_models_dir) if gt_models_dir is not None else seed_models_dir
-    )
+    if gt_models_dir is not None:
+        gt_models_dir = Path(gt_models_dir)
+    elif "gt_models_dir" in config:
+        gt_models_dir = resolve_path(config["gt_models_dir"], config_path)
+    else:
+        gt_models_dir = seed_models_dir
 
     # data_source: dataset (number game) collects every experiment from the
     # dataset in place of a ground truth: one cell per run, named "dataset",
@@ -477,17 +482,16 @@ def run_holdout_recovery_from_config(
         if config.get("gt_models"):
             raise ValueError("A dataset run has no ground truth: drop gt_models from the config.")
         gt_params_by_model = {DATASET: {}}
-    elif gt_params_by_model_override is not None:
-        gt_params_by_model = {
-            name: dict(params) for name, params in gt_params_by_model_override.items()
-        }
     else:
         gt_params_by_model = resolve_generating_params(
-            config.get("gt_models"), seed_models_dir, gt_family_dir
+            config.get("gt_models"), config.get("seed_params", {})
         )
-    # Every configured model's parameters, before --gt-model narrows the
-    # cells: the no-learning baseline scores the other seeds at theirs.
-    seed_params = dict(gt_params_by_model)
+    # Every seed's and configured model's parameters, before --gt-model narrows
+    # the cells: the no-learning baseline scores the other seeds at theirs.
+    seed_params = {**config.get("seed_params", {}), **gt_params_by_model}
+    # The leakage audit looks for a ground truth's seed_params (the subjective-
+    # randomness seeds'); other ground truths have none to look for.
+    leakage_params = dict(config.get("seed_params", {}))
     if gt_model_override is not None:
         if gt_model_override not in gt_params_by_model:
             raise ValueError(
@@ -593,9 +597,9 @@ def run_holdout_recovery_from_config(
             gt_params_by_model,
             results_root,
             seed_params=seed_params,
+            leakage_params=leakage_params,
             seed_models_dir=seed_models_dir,
             gt_models_dir=gt_models_dir,
-            gt_family_dir=gt_family_dir,
             summary_root=summary_root,
             project_id=project_id,
             n_experiments=n_experiments,
@@ -691,9 +695,9 @@ def _run_holdout_recovery_resolved(
     results_root: Path,
     *,
     seed_params: Mapping[str, Mapping[str, Any]],
+    leakage_params: Mapping[str, Mapping[str, float]],
     seed_models_dir: Path,
     gt_models_dir: Path,
-    gt_family_dir: Optional[Path] = None,
     summary_root: Optional[Path] = None,
     project_id: str,
     n_experiments: int,
@@ -721,8 +725,7 @@ def _run_holdout_recovery_resolved(
     """The recovery loop proper, after all config resolution and validation."""
     # Every project seed model — the fitted-seed baseline for each ground truth
     # fits the *other* seed models (all of these except that GT).
-    # Names only — the fitted-seed baseline fits these by MCMC, so no
-    # pure-Python family twin (and no default params) is required here.
+    # Names only — the fitted-seed baseline fits these by MCMC.
     all_seed_models = set(seed_model_names(seed_models_dir))
     task = task_for_project(project_id)
     gt_runs: List[Dict[str, Any]] = []
@@ -842,7 +845,7 @@ def _run_holdout_recovery_resolved(
             seed_models_dir=seed_models_dir,
             n_experiments=n_experiments,
             gt_models_dir=gt_models_dir,
-            gt_family_dir=gt_family_dir,
+            gt_params=leakage_params.get(gt_model, {}),
             # The agents' checkout is the scrubbed agent tree (when agent_root
             # is set), or the tree this process runs from (when harness and
             # agents share a copy). This is where the scrubbed manifests live.
@@ -857,7 +860,6 @@ def _run_holdout_recovery_resolved(
             seed_models_dir=seed_models_dir,
             seeded_models_dir=seeded_models_dir(run_root),
             gt_models_dir=gt_models_dir,
-            gt_family_dir=gt_family_dir,
         )
         # At the end of every experiment, on that experiment's cumulative data
         # (the loop's own seed fits, cache hits, while the seed is in the set;
@@ -889,8 +891,8 @@ def _run_holdout_recovery_resolved(
             "n_eval_dropped": eval_info["n_dropped"],
             "trajectory": trajectory,
             "incumbent": summarise_incumbents(trajectory, starting_models),
-            # False for a run that protected its starting models from pruning
-            # (the code before 2026-09-28): the two conditions must not be pooled.
+            # False for a run that protected its starting models from pruning:
+            # the two conditions must not be pooled.
             "starting_models_prunable": starting_models_prunable(run_root),
             "baseline": baseline,
             "fitted_baseline": fitted_baseline,
@@ -930,64 +932,6 @@ def _run_holdout_recovery_resolved(
         "metrics_version": 2,
         "gt_runs": gt_runs,
     }
-
-
-def run_impossible_holdout_recovery_from_config(
-    config: Mapping[str, Any],
-    config_path: Path,
-    results_root: Path,
-    **overrides: Any,
-) -> Dict[str, Any]:
-    """Run holdout recovery with impossible-theory ground-truth generators.
-
-    Identical to ``run_holdout_recovery_from_config`` except the ground truth is
-    a deliberately weird model (e.g. "more heads => more random") that lives in a
-    separate ``gt_models_dir`` outside the project seed pool. The agentic loop is
-    still seeded with the normal seed models, so it is *expected* to fail to
-    recover the ground truth (the held-out correlation should stay low). The
-    config must provide:
-
-      * ``gt_models_dir`` — directory of impossible PyMC models (it has no
-        ``models_manifest.yaml``, so it never enters the agent seed pool).
-      * ``gt_models`` — a ``{name: {beta, side_bias}}`` mapping; explicit params
-        are required because impossible models have no ``model_families``
-        defaults to fall back on.
-
-    All keyword overrides are forwarded to ``run_holdout_recovery_from_config``.
-    """
-    if "gt_models_dir" not in config:
-        raise KeyError(
-            "Impossible-theory holdout config must set 'gt_models_dir' (the "
-            "directory of impossible ground-truth models, separate from the "
-            "project seed pool)."
-        )
-    gt_models_dir = resolve_path(config["gt_models_dir"], config_path)
-
-    spec = config.get("gt_models")
-    if not isinstance(spec, Mapping) or not spec:
-        raise ValueError(
-            "Impossible-theory holdout config must give 'gt_models' as a "
-            "non-empty mapping of {name: {beta, side_bias}}; got "
-            f"{type(spec).__name__}."
-        )
-    gt_params_by_model: Dict[str, Dict[str, float]] = {}
-    for name, params in spec.items():
-        if not params:
-            raise ValueError(
-                f"Impossible ground-truth model {name!r} needs explicit params "
-                f"{{beta, side_bias}}: there is no model_families default to "
-                f"fall back on for an impossible model."
-            )
-        gt_params_by_model[name] = dict(params)
-
-    return run_holdout_recovery_from_config(
-        config,
-        config_path,
-        results_root,
-        gt_models_dir=gt_models_dir,
-        gt_params_by_model_override=gt_params_by_model,
-        **overrides,
-    )
 
 
 def trajectory_tidy_rows(result: Mapping[str, Any]) -> List[Dict[str, Any]]:

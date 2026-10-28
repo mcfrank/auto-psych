@@ -79,7 +79,6 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
-from src.registry.io import validate_theory_weights
 
 # Numeric floor for probabilities entering logs. The PyMC models already clip
 # p_left to [1e-6, 1 - 1e-6]; this only guards hand-built arrays at 0 or 1.
@@ -113,10 +112,6 @@ def _validated_p(
                 f"Model {name!r} has {arr.shape[1]} stimuli but another model "
                 f"has {n_stim}; all models must score the same stimulus pool."
             )
-        if not np.isfinite(arr).all() or arr.min() < 0.0 or arr.max() > 1.0:
-            raise ValueError(
-                f"Model {name!r}: p_left values must be finite and in [0, 1]."
-            )
         out[name] = np.clip(arr, _P_CLIP, 1.0 - _P_CLIP)
     assert n_stim is not None
     return out, n_stim
@@ -131,8 +126,7 @@ def _model_prior(
     is zero falls back to uniform rather than failing.
     """
     if model_weights:
-        validated = validate_theory_weights(model_weights)
-        w = np.array([validated.get(n, 0.0) for n in names], dtype=float)
+        w = np.array([model_weights.get(n, 0.0) for n in names], dtype=float)
         if w.sum() <= 0:
             w = np.ones(len(names))
     else:
@@ -296,11 +290,6 @@ class _ScenarioState:
             if rows.size:
                 q[rows] = self.p[n][np.ix_(self.d_idx[rows], cols)]
         return q
-
-    def marginal_gains(self, cols: np.ndarray, h_current: np.ndarray) -> np.ndarray:
-        """Expected posterior-entropy reduction from adding each candidate
-        (float64 scoring; see ``next_entropy``)."""
-        return h_current.mean() - self.next_entropy(cols).mean(axis=0)
 
     def next_entropy(
         self, cols: np.ndarray, dtype: np.dtype = np.dtype(np.float64)
@@ -523,8 +512,7 @@ def select_n_joint_eig(
         are not part of the returned ``indices``.
     leave_one_out: average a scenario's own model's likelihood over every
         draw but the one that generated the scenario (the module docstring
-        says why). ``False`` includes the generating draw, as the estimator
-        did before 2026-09-27.
+        says why). ``False`` includes the generating draw.
     """
     _validate_n_responses(n_responses)
     p, n_stim = _validated_p(p_left_draws)

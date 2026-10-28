@@ -53,56 +53,20 @@ def seed_model_names(seed_models_dir: Path) -> List[str]:
     return read_manifest_names(seed_models_dir)
 
 
-def _default_params_from_file(path: Path) -> Dict[str, float]:
-    """Parse a family's ``DEFAULT_PARAMS`` from source WITHOUT importing it."""
-    import ast as _ast
-
-    tree = _ast.parse(Path(path).read_text(encoding="utf-8"))
-    for node in _ast.walk(tree):
-        target = None
-        if isinstance(node, _ast.AnnAssign):
-            target = getattr(node.target, "id", None)
-        elif isinstance(node, _ast.Assign):
-            target = next(
-                (t.id for t in node.targets if isinstance(t, _ast.Name)), None
-            )
-        if target == "DEFAULT_PARAMS":
-            return dict(_ast.literal_eval(node.value))
-    raise ValueError(f"No DEFAULT_PARAMS literal found in {path}")
-
-
-def _family_default_params(
-    name: str, gt_family_dir: Optional[Path] = None
-) -> Dict[str, float]:
-    """``DEFAULT_PARAMS`` of the pure-Python model family named ``name``."""
-    import importlib
-
-    if gt_family_dir is not None:
-        pristine = Path(gt_family_dir) / f"{name}.py"
-        if pristine.exists():
-            return _default_params_from_file(pristine)
-    module = importlib.import_module(f"src.subjective_randomness.model_families.{name}")
-    return dict(module.DEFAULT_PARAMS)
-
-
 def resolve_generating_params(
-    spec: Any,
-    seed_models_dir: Path,
-    gt_family_dir: Optional[Path] = None,
+    spec: Any, seed_params: Mapping[str, Mapping[str, float]]
 ) -> Dict[str, Dict[str, float]]:
-    """Turn a config's ``generating_models`` spec into per-model fixed params."""
+    """Turn a config's ``gt_models`` spec into per-model fixed params: null ->
+    every model of ``seed_params`` (the config's); a list of names, or a
+    name -> params mapping whose null params, -> those models' ``seed_params``.
+    A model with no parameters anywhere raises (KeyError)."""
     if spec is None:
-        return {
-            name: _family_default_params(name, gt_family_dir)
-            for name in seed_model_names(seed_models_dir)
-        }
+        return {name: dict(params) for name, params in seed_params.items()}
     if isinstance(spec, (list, tuple)):
-        return {name: _family_default_params(name, gt_family_dir) for name in spec}
+        return {name: dict(seed_params[name]) for name in spec}
     if isinstance(spec, Mapping):
         return {
-            name: (
-                dict(params) if params else _family_default_params(name, gt_family_dir)
-            )
+            name: dict(params) if params else dict(seed_params[name])
             for name, params in spec.items()
         }
     raise TypeError(
@@ -215,54 +179,6 @@ def strip_generating_model(
         {key: value for key, value in row.items() if key != GENERATING_MODEL_COLUMN}
         for row in rows
     ]
-
-
-def strip_to_raw_columns(
-    rows: Sequence[Mapping[str, Any]], task: TaskSpec
-) -> List[Dict[str, Any]]:
-    """Copy ``rows`` keeping only the task's raw columns.
-
-    Fails loudly if a row lacks one of them: a raw CSV missing a sequence
-    column would leave every model unable to compute anything, and the useful
-    place to find that out is here.
-    """
-    rows = list(rows)
-    if rows:
-        missing = [c for c in task.raw_columns if c not in rows[0]]
-        if missing:
-            raise ValueError(
-                f"generated rows lack raw columns {missing}; got {sorted(rows[0])}"
-            )
-    return [{c: row[c] for c in task.raw_columns} for row in rows]
-
-
-def validate_raw_pool_models(pool_dir: Path, task: TaskSpec) -> None:
-    """Raise if any model in ``pool_dir`` cannot bind a raw stimulus row.
-
-    Every model must compute its own features via ``compute_features`` or
-    ``prepare_observed``. A model that expects columns the raw CSV does not
-    carry would fail at fit time deep inside a sweep; catching it here fails
-    at config resolution with the model's name and the missing columns.
-    """
-    from src.models.data_binding import MissingStimulusColumns, make_stim_data
-    from src.models.model_loading import load_pymc_model
-
-    raw_row = dict(task.probe_row)
-    for name in read_manifest_names(pool_dir):
-        try:
-            model = load_pymc_model(name, pool_dir)
-        except Exception as exc:
-            raise ValueError(
-                f"raw pool model {name!r} in {pool_dir} failed to load: {exc}"
-            ) from exc
-        try:
-            make_stim_data(model, [raw_row])
-        except MissingStimulusColumns as exc:
-            raise ValueError(
-                f"raw pool model {name!r} cannot bind a raw row — missing "
-                f"columns: {list(exc.missing)}. Every model must compute its "
-                f"own features via compute_features or prepare_observed."
-            ) from exc
 
 
 def _require_no_generating_model_column(responses_path: Path) -> None:

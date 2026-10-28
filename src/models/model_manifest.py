@@ -70,12 +70,9 @@ def read_manifest_entries(
     entries: List[Dict[str, str]] = []
     seen_names: set[str] = set()
     for entry in raw_entries:
-        if not isinstance(entry, (dict, str)):
-            raise ValueError(
-                f"{path} has a model entry that is neither a mapping nor a string: "
-                f"{entry!r}"
-            )
-        normalised = dict(entry) if isinstance(entry, dict) else {"name": entry}
+        if not isinstance(entry, dict):
+            raise ValueError(f"{path} has a model entry that is not a mapping: {entry!r}")
+        normalised = dict(entry)
         name = normalised.get("name")
         if not name:
             raise ValueError(f"{path} has a model entry with no name: {entry!r}")

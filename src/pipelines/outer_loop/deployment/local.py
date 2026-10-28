@@ -3,11 +3,9 @@
 Order for a Firebase deploy: the results token and (live mode) Prolific's
 eligibility IDs are checked; the page and functions are staged, deployed
 and verified live (``verify_functions_live``); only then is the Prolific draft created, its
-id recorded at once, and, in live mode only, the study published. The draft
-used to be created before the Firebase deploy, so a failed deploy left a
-recorded live study that ``refuse_second_live_study`` then treated as
-published, blocking a plain relaunch. Now a failed deploy records no study,
-and a recorded study id always belongs to a page that was live.
+id recorded at once, and, in live mode only, the study published. So a failed
+deploy records no study (``refuse_second_live_study`` would block a relaunch
+past one), and a recorded study id always belongs to a page that was live.
 """
 
 from __future__ import annotations

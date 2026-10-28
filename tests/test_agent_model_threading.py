@@ -3,8 +3,8 @@
 The holdout config's ``agent.model`` key was previously read by nothing: every
 opencode agent silently ran the backend's default (Gemini). Running recovery
 with a different hosted model (e.g. DeepSeek via Fireworks) requires the
-chosen id to reach all three spawn sites — the outer implement agent and
-the inner loop's candidate and critique agents.
+chosen id to reach the inner loop's candidate and critique agents (the outer
+implement agent reads it from ``CODING_AGENT_MODEL``, like every agent).
 """
 
 from __future__ import annotations
@@ -15,7 +15,6 @@ import yaml
 from src.pipelines.inner_loop import critique_round
 from src.pipelines.inner_loop import pymc_orchestrator
 from src.pipelines.outer_loop import model_loop_runner as mlr
-from src.pipelines.outer_loop import orchestrator as orch
 
 AGENT_MODEL = "fireworks-ai/accounts/fireworks/models/deepseek-v4-flash-0731"
 
@@ -29,15 +28,6 @@ def _capture_run_coding_agent(monkeypatch, target_module):
 
     monkeypatch.setattr(target_module, "run_coding_agent", fake_run_coding_agent)
     return captured
-
-
-def test_spawn_cc_agent_threads_model(tmp_path, monkeypatch):
-    captured = _capture_run_coding_agent(monkeypatch, orch)
-    ok, _ = orch.spawn_cc_agent(
-        agent_key="3_implement", exp_dir=tmp_path, model=AGENT_MODEL
-    )
-    assert ok
-    assert captured["model"] == AGENT_MODEL
 
 
 def test_candidate_agent_threads_model(tmp_path, monkeypatch):

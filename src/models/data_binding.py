@@ -321,6 +321,25 @@ def _bookkeeping_column_missing_from(
 # ---------------------------------------------------------------------------
 
 
+def _columns_as_arrays(
+    model: Any, inputs: Sequence[str], rows: Sequence[Mapping[str, Any]]
+) -> Dict[str, np.ndarray]:
+    """One array per pm.Data input, cast to the dtype of its placeholder."""
+    out: Dict[str, np.ndarray] = {}
+    for col in inputs:
+        placeholder = model.named_vars[col].get_value()
+        dtype = placeholder.dtype
+        values = [r[col] for r in rows]
+        if np.issubdtype(dtype, np.integer):
+            arr = np.array([int(float(v)) for v in values], dtype=dtype)
+        elif np.issubdtype(dtype, np.floating):
+            arr = np.array([float(v) for v in values], dtype=dtype)
+        else:
+            arr = np.array(values, dtype=dtype)
+        out[col] = arr
+    return out
+
+
 def make_stim_data(model: Any, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
     """Build a `pm.set_data` dict from a list of row dicts for a given model.
 
@@ -340,19 +359,7 @@ def make_stim_data(model: Any, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarr
     missing = [c for c in inputs if rows and c not in rows[0]]
     if missing:
         raise MissingStimulusColumns(missing, list(rows[0].keys()) if rows else [])
-    out: Dict[str, np.ndarray] = {}
-    for col in inputs:
-        placeholder = model.named_vars[col].get_value()
-        dtype = placeholder.dtype
-        values = [r[col] for r in rows]
-        if np.issubdtype(dtype, np.integer):
-            arr = np.array([int(float(v)) for v in values], dtype=dtype)
-        elif np.issubdtype(dtype, np.floating):
-            arr = np.array([float(v) for v in values], dtype=dtype)
-        else:
-            arr = np.array(values, dtype=dtype)
-        out[col] = arr
-    return out
+    return _columns_as_arrays(model, inputs, rows)
 
 
 def extract_observed(csv_path: Path, model: Any) -> Dict[str, np.ndarray]:
@@ -379,16 +386,4 @@ def extract_observed(csv_path: Path, model: Any) -> Dict[str, np.ndarray]:
             f"Available columns: {list(rows[0].keys())}"
         )
 
-    out: Dict[str, np.ndarray] = {}
-    for col in inputs:
-        placeholder = model.named_vars[col].get_value()
-        dtype = placeholder.dtype
-        values = [r[col] for r in rows]
-        if np.issubdtype(dtype, np.integer):
-            arr = np.array([int(float(v)) for v in values], dtype=dtype)
-        elif np.issubdtype(dtype, np.floating):
-            arr = np.array([float(v) for v in values], dtype=dtype)
-        else:
-            arr = np.array(values, dtype=dtype)
-        out[col] = arr
-    return out
+    return _columns_as_arrays(model, inputs, rows)

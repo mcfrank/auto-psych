@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.registry.io import DEFAULT_RESERVED_FOR_NEW, load_registry, normalize_theories
+from src.registry.io import DEFAULT_RESERVED_FOR_NEW, load_registry
 
 
 def _write(tmp_path, text: str):
@@ -63,8 +63,3 @@ def test_out_of_range_reserved_mass_raises(tmp_path, reserved):
     path = _write(tmp_path, f"theories:\n  a: 0.5\nreserved_for_new: {reserved}\n")
     with pytest.raises(ValueError, match="reserved_for_new"):
         load_registry(path)
-
-
-def test_normalize_rejects_negative_weight():
-    with pytest.raises(ValueError, match="a"):
-        normalize_theories({"a": -1.0, "b": 2.0})

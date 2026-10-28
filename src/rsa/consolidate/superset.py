@@ -67,8 +67,8 @@ OFF = {
 }
 NO_WORD = -1e30  # a speaker's log weight for a word false of the object
 # The listener normalises in log space. As joint / (sum + 1e-10), a word true only of improbable
-# objects (a joint of ~1e-9 under a peaked prior) left its row summing to 0.9; found 2026-10-16 by
-# the memo twin, which normalises exactly. Floored as max(sum, 1e-30), the gradient was NaN on a
+# objects (a joint of ~1e-9 under a peaked prior) leaves its row summing to 0.9 (the memo twin,
+# which normalises exactly, shows it). Floored as max(sum, 1e-30), the gradient is NaN on a
 # row the speaker never uses (1e-30 squared is 0 in float32).
 BIND_FLOOR = 1e-15  # below this prior mass on its targets, binding is off (a safe division)
 

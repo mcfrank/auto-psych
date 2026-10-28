@@ -44,7 +44,7 @@ from pyprojroot import here
 
 sys.path.insert(0, str(here()))
 
-from src.subjective_randomness.config import resolve_path  # noqa: E402
+from src.subjective_randomness.config import load_config, resolve_path  # noqa: E402
 from src.subjective_randomness.holdout_eval import (  # noqa: E402
     TRAJECTORY_COLUMNS,
     reevaluate_trajectories,
@@ -90,6 +90,9 @@ class Args:
     gt_models_dir: Optional[Path] = None
     """Directory holding the ground-truth generator. Default: auto — the seed
     dir for a normal GT, the impossible-models dir for an impossible GT."""
+    config: Path = Path("scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml")
+    """Config whose ``seed_params`` give the seeds' generating parameters for the
+    no-learning baseline (the result's own recorded ones take precedence)."""
 
 
 def _resolve_gt_models_dir(
@@ -145,6 +148,7 @@ def main(args: Args) -> None:
     enriched = reevaluate_trajectories(
         result,
         seed_models_dir=seed_models_dir,
+        seed_params=load_config(resolve_path(args.config))["seed_params"],
         cache_dir=cache_dir,
         gt_models_dir=gt_models_dir,
         eval_pool_override=eval_pool_override,

@@ -18,16 +18,7 @@ from typing import Any, Dict, Iterable, List, Optional
 
 from src.model_comparison.cv import LOO, Selection
 from src.model_comparison.posterior import compare_table, model_posterior
-from src.pipelines.inner_loop.model_zoo import _manifest_entries
-
-# Complexity prior of the softmax model posterior (a report field and the
-# model-average weights; selection, pruning and carry-forward use ELPD-LOO
-# alone): each model's log-prior is this constant times its non-comment line
-# count (``model_complexity``). 0.0: no prior (user decision 2026-09-29; it was
-# -0.05). On 14 finished recovery cells a line-count penalty left held-out
-# accuracy unchanged within noise, and among near-tied models the one with
-# shorter code was closer to the hidden model only half the time.
-DEFAULT_COMPLEXITY_PRIOR_CONST = 0.0
+from src.pipelines.inner_loop.model_zoo import _manifest_entries, _untrusted
 
 
 def _best_model(posterior: Dict[str, Any]) -> str:
@@ -35,18 +26,12 @@ def _best_model(posterior: Dict[str, Any]) -> str:
     return max(posterior["posteriors"], key=lambda m: posterior["posteriors"][m])
 
 
-def _excluded(row: Dict[str, Any]) -> bool:
-    """A model whose ELPD cannot be trusted: unreliable PSIS-LOO or a fit that
-    failed the convergence gate. Such a model is never exported or pruned."""
-    return bool(row.get("loo_unreliable") or row.get("not_converged"))
-
-
 def _unreliable_names(comparison: Dict[str, Dict[str, Any]]) -> List[str]:
     """Models excluded from export — unreliable PSIS-LOO or not converged — sorted."""
     return sorted(
         name
         for name, row in comparison.items()
-        if isinstance(row, dict) and _excluded(row)
+        if isinstance(row, dict) and _untrusted(row)
     )
 
 
@@ -61,9 +46,8 @@ def _best_exportable_model(
     restricted to reliable rows. It deliberately does NOT use the softmax
     ``posteriors``: those are rounded to six decimals, so every model more
     than ~14 nats behind the argmax reads 0.0 and ties, and a ``max`` over
-    them picks whichever comes first in the manifest (62 of 230 baseline
-    experiments exported a far-behind seed that way). The posterior (which
-    also carries the line-count complexity prior) stays a report field.
+    them picks whichever comes first in the manifest. The posterior stays a
+    report field.
 
     With no comparison table (no reliability or rank information available)
     we fall back to the plain posterior argmax. Every model in the posterior
@@ -79,7 +63,7 @@ def _best_exportable_model(
             f"Model(s) {missing} are in the posterior but have no comparison row; "
             "the posterior and the az.compare table must cover the same model set."
         )
-    reliable = [name for name in posteriors if not _excluded(comparison[name])]
+    reliable = [name for name in posteriors if not _untrusted(comparison[name])]
     if not reliable:
         raise RuntimeError(
             "Cannot export a model: no model has both a reliable PSIS-LOO estimate "
@@ -123,7 +107,6 @@ def _record_history_step(
     posterior: Dict[str, Any],
     comparison: Dict[str, Dict[str, Any]],
     iteration: Optional[int],
-    pruned: Optional[List[str]] = None,
     critique: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Append one scoring step to the history and persist it immediately.
@@ -134,8 +117,6 @@ def _record_history_step(
     reliable models), so the trajectory a recovery harness scores from this
     file is the model the loop would carry forward. The raw posterior argmax
     and the models excluded as unreliable are recorded beside it for audit.
-    ``pruned`` records any models dropped by the pruning pass this step (the
-    posterior and comparison in the entry are over the surviving set).
     ``critique`` is the status of the critique the round ran with (see
     ``critique_round.CRITIQUE_STATUS_*``): required for a round's step, so an
     absent critique is visible in the run record, and absent for the seed
@@ -155,8 +136,6 @@ def _record_history_step(
         "posteriors": dict(posterior["posteriors"]),
         "elpd_loo": dict(posterior["elpd_loo"]),
     }
-    if pruned:
-        entry["pruned"] = list(pruned)
     if critique is not None:
         entry["critique"] = dict(critique)
     history.append(entry)
@@ -168,7 +147,6 @@ def _record_history_step(
 def _score(
     responses_path: Path,
     models_dir: Path,
-    complexity_prior_const: float,
     cache_dir: Optional[Path],
     fit_kwargs: Dict[str, Any],
     selection: Selection = LOO,
@@ -178,7 +156,6 @@ def _score(
     return model_posterior(
         responses_path,
         models_dir,
-        complexity_prior_const=complexity_prior_const,
         cache_dir=cache_dir,
         selection=selection,
         **fit_kwargs,
@@ -352,9 +329,5 @@ def _export(
         "best_model": best_model,
         "posteriors": posterior["posteriors"],
         "elpd_loo": posterior["elpd_loo"],
-        "comparison": comparison,
         "excluded_unreliable": excluded_unreliable,
-        "model_posterior_path": str(results_dir / "model_posterior.json"),
-        "best_model_path": str(results_dir / "best_model.py"),
-        "report_path": str(results_dir / "report.md"),
     }

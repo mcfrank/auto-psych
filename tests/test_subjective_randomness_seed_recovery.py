@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-
-import numpy as np
 import yaml
 
 from src.models.model_loading import load_pymc_model, observed_response_data
@@ -11,17 +9,9 @@ from src.pipelines.outer_loop.orchestrator import (
     get_ground_truth_models,
     seed_experiment_models_from_project,
 )
-from tests.paths import REPO_ROOT, load_script_module
+from tests.paths import REPO_ROOT
 
-EVAL = (
-    REPO_ROOT
-    / "src/pipelines/outer_loop/projects/subjective_randomness/evaluate_recovery.py"
-)
 REGISTRY_DIR = REPO_ROOT / "src/subjective_randomness/pymc_model_families"
-
-
-def _load_eval():
-    return load_script_module(EVAL, "_sr_eval")
 
 
 def test_seed_experiment_models_from_project_copies_active_seed_set(tmp_path):
@@ -57,24 +47,3 @@ def test_hidden_ground_truth_models_return_valid_probabilities():
         assert set(probs) == {"left", "right"}
         assert 0.0 <= probs["left"] <= 1.0
         assert abs((probs["left"] + probs["right"]) - 1.0) < 1e-12
-
-
-def test_recovery_eval_helpers_are_deterministic_and_metric_sensitive():
-    ev = _load_eval()
-
-    assert ev.parse_experiments("1-3") == [1, 2, 3]
-    assert ev.parse_experiments("1,3") == [1, 3]
-
-    stimuli_a = ev.make_heldout_stimuli(n_pairs=5, min_length=4, max_length=5, seed=10)
-    stimuli_b = ev.make_heldout_stimuli(n_pairs=5, min_length=4, max_length=5, seed=10)
-    assert stimuli_a == stimuli_b
-    assert len(stimuli_a) == 5
-
-    rows = ev.feature_rows(stimuli_a)
-    assert {"sequence_a", "sequence_b", "chose_left", "imbalance_a"} <= set(rows[0])
-
-    true = np.array([0.2, 0.8])
-    good = ev.metrics(true, np.array([0.25, 0.75]))
-    bad = ev.metrics(true, np.array([0.8, 0.2]))
-    assert good["rmse"] < bad["rmse"]
-    assert good["cross_entropy"] < bad["cross_entropy"]

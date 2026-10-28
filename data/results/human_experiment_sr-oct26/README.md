@@ -2,7 +2,7 @@
 
 Three independent runs (run1–run3) of the whole pipeline, three experiments
 each, 40 Prolific participants per experiment, Claude Opus 5.5 agents
-(`full_run_sr-oct26.yaml` at the repository root; runbook:
+(`full_run_sr-oct26.yaml` in this directory, moved from the repository root; runbook:
 `docs/onboarding/full_run_checklist.md`). **Status (2026-10-07): all three
 runs are complete and in `collected/`.**
 

@@ -126,6 +126,7 @@ def _run_agent(
     prune_dse_multiplier: Optional[float] = None,
     candidate_parallelism: Optional[int] = None,
     agent_timeout_sec: int = 900,
+    implement_agent_timeout_sec: int = 900,
 ) -> None:
     """Run one agent. Raises SystemExit if --validate and output stays invalid.
 
@@ -162,11 +163,9 @@ def _run_agent(
             candidate_count=inner_loop_candidates,
             fit_kwargs=fit_kwargs,
             # The admission gates reuse a fit only through this cache: without
-            # it every novelty check re-sampled every admitted model, and no
-            # wave was prefitted (full live run 1, 2026-09-29: one model
-            # sampled 14 times in round 0). Inside model_loop/, so every
-            # (re)start of the stage empties it; results collection leaves
-            # .fit_cache out.
+            # it every novelty check re-samples every admitted model, and no
+            # wave is prefitted. Inside model_loop/, so every (re)start of the
+            # stage empties it; results collection leaves .fit_cache out.
             cache_dir=_loop_fit_cache_dir(exp_dir),
             enable_critique=enable_critique,
             n_critique_proposals=n_critique_proposals,
@@ -196,6 +195,7 @@ def _run_agent(
                 agent_key=agent_key,
                 exp_dir=exp_dir,
                 allowed_dirs=allowed_dirs,
+                timeout_secs=implement_agent_timeout_sec,
                 backend=backend,
                 repair_feedback=repair_feedback,
             )
@@ -304,6 +304,7 @@ def _run_experiment(
     prune_dse_multiplier: Optional[float] = None,
     candidate_parallelism: Optional[int] = None,
     agent_timeout_sec: int = 900,
+    implement_agent_timeout_sec: int = 900,
     publish_another_prolific_study: bool = False,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
@@ -367,6 +368,7 @@ def _run_experiment(
             prune_dse_multiplier=prune_dse_multiplier,
             candidate_parallelism=candidate_parallelism,
             agent_timeout_sec=agent_timeout_sec,
+            implement_agent_timeout_sec=implement_agent_timeout_sec,
             publish_another_prolific_study=publish_another_prolific_study,
         )
     finally:
@@ -406,6 +408,7 @@ def _run_experiment_stages(
     prune_dse_multiplier: Optional[float],
     candidate_parallelism: Optional[int],
     agent_timeout_sec: int,
+    implement_agent_timeout_sec: int,
     publish_another_prolific_study: bool,
 ) -> None:
     """The body of one experiment, from smoke prep through the agent stages."""
@@ -558,6 +561,7 @@ def _run_experiment_stages(
             prune_dse_multiplier=prune_dse_multiplier,
             candidate_parallelism=candidate_parallelism,
             agent_timeout_sec=agent_timeout_sec,
+            implement_agent_timeout_sec=implement_agent_timeout_sec,
         )
         if agent_key == "3_implement" and deploy_target != "none":
             print(f"\n{'=' * 60}", flush=True)
@@ -720,6 +724,8 @@ class Args:
     agent_timeout_sec: int = 900
     """Seconds each inner-loop agent (critique and candidates) may run. The
     recovery sweep gives them 1800 (holdout_recovery_faithful.yaml)."""
+    implement_agent_timeout_sec: int = 900
+    """Seconds the 3_implement agent (it builds the jsPsych experiment) may run."""
     confirm_live_recruitment: bool = False
     """Required alongside --prolific-mode live: going live recruits and PAYS
     real participants, so it must be a second, explicit act (mirrors
@@ -824,7 +830,7 @@ def main(args: Args) -> None:
     print(
         f"Inner-loop MCMC: draws={args.draws} tune={args.tune} chains={args.chains} "
         f"target_accept={args.target_accept if args.target_accept is not None else 'model/default'}; "
-        f"agent timeout {args.agent_timeout_sec} s",
+        f"agent timeout {args.agent_timeout_sec} s (implement agent {args.implement_agent_timeout_sec} s)",
         flush=True,
     )
     print(f"Outputs: {outer_data_dir() / project_id}", flush=True)
@@ -891,6 +897,7 @@ def main(args: Args) -> None:
             prune_dse_multiplier=args.prune_dse_multiplier,
             candidate_parallelism=args.candidate_parallelism,
             agent_timeout_sec=args.agent_timeout_sec,
+            implement_agent_timeout_sec=args.implement_agent_timeout_sec,
             publish_another_prolific_study=args.publish_another_prolific_study,
         )
 

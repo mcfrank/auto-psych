@@ -129,7 +129,6 @@ def test_the_compile_dir_flag_keeps_the_other_flags():
     "script",
     [
         SLURM / "holdout_recovery_array.sbatch",
-        SLURM / "impossible_holdout_recovery_array.sbatch",
         LIVE / "run_live.sbatch",
     ],
 )

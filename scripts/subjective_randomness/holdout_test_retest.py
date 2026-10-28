@@ -563,14 +563,11 @@ def main(args: Args) -> None:
         print(f"Wrote per-run CSV to {csv_path}")
 
     if args.figure is not None:
-        try:
-            import matplotlib
+        import matplotlib
 
-            matplotlib.use("Agg")
-            import matplotlib.pyplot as plt
-        except ImportError:
-            print("matplotlib not available; skipping figure.", file=sys.stderr)
-            return
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
         figure_path = resolve_path(args.figure)
         figure_path.parent.mkdir(parents=True, exist_ok=True)
         fig, ax = plt.subplots(figsize=(max(5, 1.4 * len(gt_models)), 5))

@@ -206,7 +206,6 @@ def _drive_experiment_with_llm(
     project_id: str,
     run_id: int,
     logs_dir: Path,
-    state: dict | None = None,
 ) -> tuple[bool, bool]:
     """Steer one participant through the experiment with the LLM.
 
@@ -220,9 +219,7 @@ def _drive_experiment_with_llm(
     """
     llm = get_llm()
 
-    steering_prompt = load_prompt_for_run(
-        project_id, run_id, "4_collect_steering", state
-    )
+    steering_prompt = load_prompt_for_run(project_id, run_id, "4_collect_steering")
     if not steering_prompt.strip():
         print(
             f"  [steering] no 4_collect_steering prompt for project {project_id!r} "

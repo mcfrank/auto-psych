@@ -28,7 +28,6 @@ from src.models.model_loading import (
 )
 from src.pipelines.inner_loop import candidate_agent, critique_round
 from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
-from src.subjective_randomness.features import featurize_stimulus
 from tests.inner_loop_fixtures import write_task_description_beside
 from tests.paths import REPO_ROOT
 
@@ -43,7 +42,62 @@ TASK_DESCRIPTION = (
     / "task_description.md"
 )
 # Every column the retired featurizer used to add to responses.csv.
-FEATURE_COLUMNS = sorted(featurize_stimulus("HHTH", "THTT"))
+FEATURE_COLUMNS = [
+    'alt_motifs_a',
+    'alt_motifs_b',
+    'alts_a',
+    'alts_b',
+    'complement_symmetry_a',
+    'complement_symmetry_b',
+    'duplication_a',
+    'duplication_b',
+    'h_a',
+    'h_b',
+    'imbalance_a',
+    'imbalance_b',
+    'local_imbalance_a',
+    'local_imbalance_b',
+    'max_run_a',
+    'max_run_b',
+    'max_run_norm_a',
+    'max_run_norm_b',
+    'mirror_symmetry_a',
+    'mirror_symmetry_b',
+    'multiscale_imbalance_a',
+    'multiscale_imbalance_b',
+    'n_a',
+    'n_b',
+    'occ_n10_a',
+    'occ_n10_b',
+    'occ_n20_a',
+    'occ_n20_b',
+    'occ_n50_a',
+    'occ_n50_b',
+    'p_a',
+    'p_alts_a',
+    'p_alts_b',
+    'p_b',
+    'periodicity_a',
+    'periodicity_b',
+    'rep_motifs_a',
+    'rep_motifs_b',
+    'sym1_a',
+    'sym1_b',
+    'sym2_a',
+    'sym2_b',
+    'sym3_a',
+    'sym3_b',
+    'sym4_a',
+    'sym4_b',
+    'sym5_a',
+    'sym5_b',
+    'sym6_a',
+    'sym6_b',
+    'sym7_a',
+    'sym7_b',
+    'sym8_a',
+    'sym8_b',
+]
 # Phrases that present feature columns as part of the data.
 FEATURE_CLAIMS = re.compile(
     r"precomputed feature|all feature columns|feature columns? (?:in|of) the"

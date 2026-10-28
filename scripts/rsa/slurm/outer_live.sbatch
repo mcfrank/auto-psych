@@ -107,7 +107,7 @@ bash "$SLURM_DIR/check_agent_tree.sh" "$RUN_REPO"
 
 # --- deploying from Sherlock (as scripts/outer_loop_live/_env.sh) --------------------
 # firebase-tools' functions deploy runs a child node that needs the gcc module's
-# libstdc++: a node wrapper carries LD_LIBRARY_PATH to it (2026-09-29). Kept
+# libstdc++: a node wrapper carries LD_LIBRARY_PATH to it. Kept
 # outside WORK_ROOT so the harness keeps it (paths under WORK_ROOT are withheld).
 LIVE_BIN="$(dirname "$WORK_ROOT")/rsa_live_bin"
 mkdir -p "$LIVE_BIN"

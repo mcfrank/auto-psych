@@ -12,7 +12,7 @@ from __future__ import annotations
 import yaml
 
 import src.pipelines.inner_loop.model_zoo as model_zoo
-from src.pipelines.inner_loop.model_zoo import _admit_candidate
+from src.pipelines.inner_loop.model_zoo import _admit_candidate_with_reason
 
 
 def _models_dir_with_seed(tmp_path):
@@ -78,12 +78,12 @@ def test_admit_rejects_candidate_without_hypothesis(tmp_path, monkeypatch):
     models_dir = _models_dir_with_seed(tmp_path)
     cand_dir = _candidate_dir(tmp_path, hypothesis=None)
 
-    ok = _admit_candidate(
+    ok = _admit_candidate_with_reason(
         cand_dir / "candidate.py",
         models_dir,
         model_name="iter0_candidate0",
         responses_path=tmp_path / "responses.csv",
-    )
+    ).admitted
 
     assert ok is False
     assert "iter0_candidate0" not in _manifest(models_dir)
@@ -96,12 +96,12 @@ def test_admit_rejects_candidate_with_empty_hypothesis(tmp_path, monkeypatch):
     models_dir = _models_dir_with_seed(tmp_path)
     cand_dir = _candidate_dir(tmp_path, hypothesis="   \n")
 
-    ok = _admit_candidate(
+    ok = _admit_candidate_with_reason(
         cand_dir / "candidate.py",
         models_dir,
         model_name="iter0_candidate0",
         responses_path=tmp_path / "responses.csv",
-    )
+    ).admitted
 
     assert ok is False
     assert "iter0_candidate0" not in _manifest(models_dir)
@@ -114,12 +114,12 @@ def test_admit_rejects_unfittable_candidate(tmp_path, monkeypatch):
     models_dir = _models_dir_with_seed(tmp_path)
     cand_dir = _candidate_dir(tmp_path, hypothesis="People use heuristic H.\n")
 
-    ok = _admit_candidate(
+    ok = _admit_candidate_with_reason(
         cand_dir / "candidate.py",
         models_dir,
         model_name="iter0_candidate0",
         responses_path=tmp_path / "responses.csv",
-    )
+    ).admitted
 
     assert ok is False
     assert "iter0_candidate0" not in _manifest(models_dir)
@@ -138,12 +138,12 @@ def test_admit_rejects_candidate_with_nonfinite_elpd(tmp_path, monkeypatch):
     models_dir = _models_dir_with_seed(tmp_path)
     cand_dir = _candidate_dir(tmp_path, hypothesis="People use heuristic H.\n")
 
-    ok = _admit_candidate(
+    ok = _admit_candidate_with_reason(
         cand_dir / "candidate.py",
         models_dir,
         model_name="iter0_candidate0",
         responses_path=tmp_path / "responses.csv",
-    )
+    ).admitted
 
     assert ok is False
     assert "iter0_candidate0" not in _manifest(models_dir)
@@ -159,12 +159,12 @@ def test_admit_uses_hypothesis_as_rationale_and_copies_it(tmp_path, monkeypatch)
     # A coin-flip response file: the novelty gate gates on its task's pool.
     (tmp_path / "responses.csv").write_text("sequence_a,sequence_b,participant_id,trial_index,chose_left\n")
 
-    ok = _admit_candidate(
+    ok = _admit_candidate_with_reason(
         cand_dir / "candidate.py",
         models_dir,
         model_name="iter0_candidate0",
         responses_path=tmp_path / "responses.csv",
-    )
+    ).admitted
 
     assert ok is True
     manifest = _manifest(models_dir)
@@ -186,12 +186,12 @@ def test_admit_rejects_candidate_whose_fit_raises(tmp_path, monkeypatch):
     models_dir = _models_dir_with_seed(tmp_path)
     cand_dir = _candidate_dir(tmp_path, hypothesis="People use heuristic H.\n")
 
-    ok = _admit_candidate(
+    ok = _admit_candidate_with_reason(
         cand_dir / "candidate.py",
         models_dir,
         model_name="iter0_candidate0",
         responses_path=tmp_path / "responses.csv",
-    )
+    ).admitted
 
     assert ok is False
     assert "iter0_candidate0" not in _manifest(models_dir)

@@ -218,19 +218,6 @@ def _get_all_pages(url: str) -> Tuple[Optional[list], Optional[str]]:
         return (None, str(e))
 
 
-def list_submissions(
-    study_id: str,
-) -> Tuple[Optional[list], Optional[str]]:
-    """GET /studies/{id}/submissions/ , following pagination (``_get_all_pages``).
-
-    Returns (submissions_list, error_message). Each submission dict carries
-    'status' (e.g. 'APPROVED', 'AWAITING REVIEW', 'RETURNED', 'TIMED-OUT') and,
-    once the participant has finished, 'time_taken' (seconds between starting
-    and submitting).
-    """
-    return _get_all_pages(f"{_BASE}/studies/{study_id}/submissions/")
-
-
 def list_studies() -> Tuple[Optional[list], Optional[str]]:
     """GET /studies/ , every study of the account, following pagination.
 

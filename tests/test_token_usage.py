@@ -509,7 +509,7 @@ def test_spawn_cc_agent_labels_usage_by_stage(tmp_path, monkeypatch):
     from src.pipelines.outer_loop import orchestrator as orch
 
     captured = _capture_run_coding_agent(monkeypatch, orch)
-    ok, _ = orch.spawn_cc_agent(agent_key="3_implement", exp_dir=tmp_path)
+    ok, _ = orch.spawn_cc_agent(agent_key="3_implement", exp_dir=tmp_path, timeout_secs=900)
     assert ok
     assert captured["usage_label"] == "outer:3_implement"
 

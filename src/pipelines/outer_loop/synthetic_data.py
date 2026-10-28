@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any, Callable
 
 from src.models.probability import validate_probability_distribution
-from src.models.theorist.predictions import get_model_predictions
 
 RESPONSE_OPTIONS = ["left", "right"]
 
@@ -297,17 +296,15 @@ def _generate_from_models(
     stimuli: list[dict[str, Any]],
     model_names: list[str],
     n_participants: int,
-    cognitive_models_dir: Path | None = None,
-    model_registry: dict[str, Any] | None = None,
+    *,
+    model_registry: dict[str, Any],
     seed: int = 0,
 ) -> list[dict[str, Any]]:
     """Generate synthetic responses from ground-truth models (non-PyMC path).
 
     Each participant draws a random model; each trial draws a binary choice
-    from that model's predicted left-probability. If ``model_registry``
-    maps ``model_name`` to a callable, that callable is used directly;
-    otherwise ``get_model_predictions`` loads the model from
-    ``cognitive_models_dir``. Uses a seeded RNG for reproducibility.
+    from that model's predicted left-probability, from its callable in
+    ``model_registry``. Uses a seeded RNG for reproducibility.
     """
     rng = random.Random(seed)
     rows: list[dict[str, Any]] = []
@@ -321,25 +318,7 @@ def _generate_from_models(
                 stimulus["sequence_a"], stimulus["sequence_b"], swap
             )
             stimulus_tuple = (seq_a, seq_b)
-            if model_registry is not None and model_name in model_registry:
-                fn = model_registry[model_name]
-                preds = {model_name: fn(stimulus_tuple, RESPONSE_OPTIONS)}
-            else:
-                preds = get_model_predictions(
-                    stimulus_tuple, RESPONSE_OPTIONS, [model_name], cognitive_models_dir
-                )
-            if not preds:
-                # Backstop. get_model_predictions now raises rather than dropping
-                # a model, so this fires only if a registry callable returns
-                # nothing. Substituting a coin flip would emit pure noise labeled
-                # as this model's ground-truth data and feed it straight into model
-                # comparison. Fail loudly instead of fabricating data.
-                raise RuntimeError(
-                    f"ground-truth model {model_name!r} produced no prediction for "
-                    f"stimulus {stimulus_tuple}; refusing to substitute random "
-                    "responses. Check the model loads and returns a left/right "
-                    "distribution."
-                )
+            preds = {model_name: model_registry[model_name](stimulus_tuple, RESPONSE_OPTIONS)}
             distribution = validate_probability_distribution(
                 preds[model_name],
                 RESPONSE_OPTIONS,

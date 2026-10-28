@@ -61,11 +61,9 @@ if [[ "${AGENT_BACKEND:-}" == "codex" ]]; then
   # Codex" (HTTP 400). 0.155.1 in the $GROUP_HOME npm prefix accepts it.
   CODEX_BIN_DIR="${CODEX_BIN_DIR:-/home/groups/ngoodman/benpry/software/npm-global/bin}"
   if [[ -x "$CODEX_BIN_DIR/codex" ]]; then
-    # The npm-installed CLI is a node script (`#!/usr/bin/env node`) and brings
-    # no interpreter with it — unlike the codex module, which pulls its nodejs
-    # dependency in automatically. Without this the agents run but every call
-    # dies with "/usr/bin/env: node: No such file or directory", which surfaces
-    # as every candidate slot writing no file.
+    # The npm-installed CLI is a node script and brings no interpreter with it
+    # (the codex module pulls nodejs in itself); without node every call dies
+    # and every candidate slot writes no file.
     ml load "${NODEJS_MODULE:-nodejs/25.3.0}"
     export PATH="$CODEX_BIN_DIR:$PATH"
   else
@@ -73,9 +71,8 @@ if [[ "${AGENT_BACKEND:-}" == "codex" ]]; then
   fi
   command -v codex >/dev/null || { echo "FATAL: AGENT_BACKEND=codex but no codex on PATH (looked in $CODEX_BIN_DIR, then module ${CODEX_MODULE:-codex/0.151.0})" >&2; exit 1; }
   [[ -f "${CODEX_HOME:-$HOME/.codex}/auth.json" ]] || { echo "FATAL: AGENT_BACKEND=codex but codex is not logged in (codex login --device-auth)" >&2; exit 1; }
-  # Assert the CLI actually RUNS. `command -v` only proves the file exists; a
-  # missing interpreter still resolves. An empty version string is the exact
-  # symptom that preceded a whole task of empty candidate slots.
+  # Assert the CLI actually RUNS: `command -v` only proves the file exists, and
+  # a missing interpreter still resolves.
   CODEX_VERSION="$(codex --version 2>&1 || true)"
   [[ -n "${CODEX_VERSION// }" ]] || { echo "FATAL: '$(command -v codex) --version' produced no output — the CLI cannot execute (missing node?)" >&2; exit 1; }
   echo "[env] codex backend: $CODEX_VERSION at $(command -v codex), node $(node --version 2>/dev/null || echo MISSING)"
@@ -108,9 +105,9 @@ if [[ -z "${UV_PROJECT_ENVIRONMENT:-}" && -n "${GROUP_HOME:-}" ]]; then
   export UV_PROJECT_ENVIRONMENT="$GROUP_HOME/venvs/auto-psych_$(basename "$WORK_ROOT")"
 fi
 export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-$WORK_ROOT/venv}"
-# uv's standalone Python looks for /etc/ssl/cert.pem, which el7 lacks: every
-# HTTPS fetch failed with CERTIFICATE_VERIFY_FAILED (RSA Sherlock run 1).
-# Verification stays on; only the bundle's path is given.
+# uv's standalone Python looks for /etc/ssl/cert.pem, which el7 lacks (every
+# HTTPS fetch fails CERTIFICATE_VERIFY_FAILED). Verification stays on; only the
+# bundle's path is given.
 if [[ -z "${SSL_CERT_FILE:-}" && -f /etc/pki/tls/certs/ca-bundle.crt ]]; then
   export SSL_CERT_FILE=/etc/pki/tls/certs/ca-bundle.crt
 fi

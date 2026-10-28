@@ -101,15 +101,6 @@ def task_for_project(project_id: str) -> TaskSpec:
     return tasks[project_id]
 
 
-def task_for_columns(columns: Sequence[str]) -> TaskSpec:
-    """The task whose raw columns are exactly ``columns`` (in any order),
-    optional ones included or not."""
-    matches = [t for t in _tasks().values() if set(t.columns_of(set(columns))) == set(columns)]
-    if len(matches) != 1:
-        raise ValueError(f"no task has exactly the columns {sorted(columns)}")
-    return matches[0]
-
-
 def task_of_file(path) -> TaskSpec:
     """The task of a response file: the one whose response column its header
     carries (``chose_left``, ``rating``; a featurised file has more columns)."""

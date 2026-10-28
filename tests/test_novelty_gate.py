@@ -19,7 +19,7 @@ import yaml
 from src.pipelines.inner_loop import model_zoo
 from src.pipelines.inner_loop.model_zoo import (
     DEFAULT_NOVELTY_RMSE_THRESHOLD,
-    _admit_candidate,
+    _admit_candidate_with_reason,
     _min_prediction_rmse,
 )
 
@@ -137,7 +137,7 @@ def test_admission_rejects_near_duplicate(tmp_path, monkeypatch, capsys):
         "_min_prediction_rmse",
         lambda *a, **k: ("seed_a", DEFAULT_NOVELTY_RMSE_THRESHOLD / 2),
     )
-    admitted = _admit_candidate(_candidate(tmp_path), models_dir, "near_dup", responses)
+    admitted = _admit_candidate_with_reason(_candidate(tmp_path), models_dir, "near_dup", responses).admitted
     assert not admitted
     out = capsys.readouterr().out
     assert "seed_a" in out and "near_dup" in out
@@ -157,7 +157,7 @@ def test_admission_accepts_genuinely_novel_candidate(tmp_path, monkeypatch):
         "_min_prediction_rmse",
         lambda *a, **k: ("seed_a", 5 * DEFAULT_NOVELTY_RMSE_THRESHOLD),
     )
-    assert _admit_candidate(_candidate(tmp_path), models_dir, "novel_model", responses)
+    assert _admit_candidate_with_reason(_candidate(tmp_path), models_dir, "novel_model", responses).admitted
     assert (models_dir / "novel_model.py").exists()
 
 
@@ -170,10 +170,10 @@ def test_threshold_zero_disables_the_gate(tmp_path, monkeypatch):
         raise AssertionError("gate must not run when the threshold is 0")
 
     monkeypatch.setattr(model_zoo, "_min_prediction_rmse", tripwire)
-    assert _admit_candidate(
+    assert _admit_candidate_with_reason(
         _candidate(tmp_path),
         models_dir,
         "any_model",
         responses,
         novelty_rmse_threshold=0.0,
-    )
+    ).admitted

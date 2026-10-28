@@ -7,9 +7,9 @@ in the fit, so it is close to in-sample fit with a complexity penalty. Grouped
 CV holds out whole units: the training trials are split into ``cv_folds``
 folds of whole units, each model is fitted on the other folds, and each
 held-out trial is scored by its log posterior predictive density. The sum over
-trials is the model's ELPD-CV. (auto-rsa found the trial-level LOO winner
-59-74 nats worse on held-out conditions than the models that generalised best,
-and switched; PI decision 2026-10-08 there.)
+trials is the model's ELPD-CV. (In the RSA domain the trial-level LOO winner
+was 59-74 nats worse on held-out conditions than the models that generalised
+best; PI decision 2026-10-08.)
 
 ``cv_group`` names the unit: ``"stimulus"`` (the task's stimulus identity,
 ``TaskSpec.stimulus_key``: the unordered pair for the coin-flip task, so both

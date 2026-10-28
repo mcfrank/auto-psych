@@ -8,9 +8,9 @@ posterior-predictive check:
 1. ``build_critique_frames`` builds the observed ("human") dataframe and
    ``n_replicates`` model dataframes. Each model dataframe is the observed
    dataframe with its response column overwritten by one posterior-predictive
-   draw of the response (``FittedModel.sample_synthetic_responses``). Feature
-   columns are identical across all frames, so a statistic that conditions on
-   stimulus features sees the same design under the model and the data.
+   draw of the response (``FittedModel.sample_synthetic_responses``). The
+   stimulus columns are identical across all frames, so a statistic that
+   conditions on the stimuli sees the same design under the model and the data.
 2. ``evaluate_test_statistic`` computes the statistic on the observed frame and
    on every replicate, then forms the two-sided empirical p-value
 
@@ -76,16 +76,14 @@ from src.models.mcmc_defaults import (  # noqa: E402  (needs sys.path above)
 # Time limits for agent-authored test statistics, which run in the harness
 # process (outside the critique agent's own subprocess timeout). A statistic is
 # called once on the observed data and once per posterior-predictive replicate
-# (1000 in the loop), so a limit on the whole batch — 30 s for 1001 calls, as it
-# used to be — is ~30 ms per call, which an ordinary pandas statistic misses on
-# experiment 3's 7,680 rows (a groupby/map took ~32 ms per call, a row-wise
-# apply ~127 ms), and the critique silently lost its statistics exactly when
-# the data were richest. Now:
+# (1000 in the loop); a single limit on the whole batch would time out
+# ordinary pandas statistics on large data (a row-wise apply takes ~0.1 s per
+# call at 7,680 rows). So:
 # - each call has its own wall-clock limit (a hung statistic stops there;
 #   ``_time_limit``), and
 # - all of one statistic's calls share a budget, so the check of a slow but
 #   finite statistic cannot take hours. The budget allows ~0.3 s per call over
-#   1001 calls, more than twice the row-wise apply above. The pre-check
+#   1001 calls. The pre-check
 #   (``check_test_statistic``) projects one call's time over every call and
 #   sets aside a statistic that would exceed it, with that reason, before the
 #   check runs.
@@ -496,8 +494,8 @@ def evaluate_test_stat_dir(
 
     Builds the observed + replicate frames once, runs every statistic, and
     returns a JSON-serialisable dict with one entry per statistic (sorted
-    most-discrepant first) plus a significance count (raw two-sided p ≤ alpha;
-    no multiple-comparisons correction). Fails loudly if the directory holds no
+    most-discrepant first) plus significance counts (raw two-sided p ≤ alpha,
+    and BH-FDR q ≤ alpha). Fails loudly if the directory holds no
     test-statistic files.
     """
     test_stats_dir = Path(test_stats_dir)
@@ -533,7 +531,7 @@ def score_statistics(
     rows = [_result_to_dict(r, significance_alpha) for r in results]
     # Multiple statistics are screened per round, so also report a Benjamini-
     # Hochberg FDR-adjusted q-value and flag alongside the raw p. ``significant``
-    # stays the raw screen (kept for back-compat / the most-discrepant sort);
+    # is the raw screen (it drives the most-discrepant sort);
     # ``significant_fdr`` is the multiplicity-aware view.
     qvals = _benjamini_hochberg([d["p_value"] for d in rows])
     for d, q in zip(rows, qvals):
@@ -623,8 +621,8 @@ class Args:
     n_replicates: int = 200
     """Posterior-predictive replicates forming each statistic's null distribution."""
     significance_alpha: float = 0.05
-    """Raw two-sided p-value threshold for flagging a statistic as a significant
-    discrepancy (no multiple-comparisons correction)."""
+    """Threshold for flagging a statistic as a significant discrepancy, on the
+    raw two-sided p-value and on the BH-FDR q-value."""
     seed: int = 42
     """Seed for posterior-predictive sampling."""
     draws: int = PRODUCTION_DRAWS

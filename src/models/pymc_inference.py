@@ -5,9 +5,9 @@ Each model is a ``<name>.py`` file with a module-level
 to observed data via MCMC, and exposes posterior-mean predictions, ELPD-LOO
 for Bayesian model comparison, and posterior-predictive samples for PPC.
 
-Convention: every ``pm.Data`` container in the model must have a name matching
-a column in the preprocessed responses CSV. The bridge auto-pulls
-``df[name].values`` for each container. The observed-response container is
+Convention: the responses CSV carries only the raw columns; every other
+``pm.Data`` container is filled by the model's own ``compute_features`` or
+``prepare_observed`` hook (``data_binding``). The observed-response container is
 identified by tracing ``model.observed_RVs[0]`` back through the pytensor graph
 to its ``TensorSharedVariable`` ancestor.
 
@@ -62,8 +62,7 @@ from src.models.loo_reliability import (
     describe_unreliable,
     loo_diagnostics,
 )
-from src.models.probability import validate_probability, validate_probability_array
-from src.registry.io import validate_theory_weights
+from src.models.probability import validate_probability_array
 
 from src.models.model_loading import (
     _exec_model_module,
@@ -133,24 +132,17 @@ def model_logp_is_finite(
     probability at the initial point. Returns ``(True, "")`` when that logp is
     finite, else ``(False, reason)``.
 
-    A model whose graph evaluates to NaN or ``-inf`` — e.g. the numerically
-    unsafe ``pt.sqrt(x**2)``, which NaNs in PyTensor for some inputs — passes
-    graph-loading but crashes ``pm.sample`` at its start-value check, aborting
-    the whole run. This catches such a model cheaply, before any sampling.
-
-    NUTS also needs a finite *gradient* of the logp, and it evaluates the logp
-    at jittered initial points. We therefore check both the logp and its gradient
-    at the initial point. This is still not a full guarantee (a logp that only
-    NaNs once NUTS jitters off the initial point can slip through), but it catches
-    the common non-finite-gradient failure that a logp-only check misses.
+    A model whose logp or its gradient is NaN or ``-inf`` at the initial point
+    (e.g. ``pt.sqrt(x**2)``) would crash ``pm.sample`` at its start-value check;
+    this catches it cheaply. A logp that only fails at NUTS's jittered start
+    points can still slip through.
 
     ``(False, reason)`` states one thing only: *this model cannot be fit to this
     data*. A broken harness is not that, and propagates — otherwise a missing
     dependency would silently condemn every candidate the inner loop
     generated. A code error (``BROKEN_MODEL_CODE_ERRORS``) raised in the
     model's own file — a typo in its ``compute_features`` — is the model's,
-    and a ``(False, reason)`` like any other (``is_model_failure``); it used
-    to propagate and end the cell.
+    and a ``(False, reason)`` like any other (``is_model_failure``).
     """
     pm = _import_pymc()
     model_file = Path(models_dir) / f"{name}.py"
@@ -282,32 +274,6 @@ def prior_predict_p_left_draws(
     return out
 
 
-def prior_predict_p_left_batch(
-    model_names: List[str],
-    models_dir: Path,
-    feature_rows: List[Dict[str, Any]],
-    *,
-    var_name: str = "p_left",
-    n_samples: int = 200,
-    seed: int = 42,
-) -> Dict[str, np.ndarray]:
-    """Prior-predictive mean of `p_left` for each model over a *batch* of stimuli.
-
-    Mean over the draws of :func:`prior_predict_p_left_draws`; returns
-    ``{model_name: array of shape (n_rows,)}``. With the same ``seed`` the
-    means match :func:`prior_predict_p_left` row for row.
-    """
-    draws = prior_predict_p_left_draws(
-        model_names,
-        models_dir,
-        feature_rows,
-        var_name=var_name,
-        n_samples=n_samples,
-        seed=seed,
-    )
-    return {name: arr.mean(axis=0) for name, arr in draws.items()}
-
-
 def eig_from_prior_means(
     preds: Dict[str, float],
     model_weights: Optional[Dict[str, float]] = None,
@@ -321,12 +287,7 @@ def eig_from_prior_means(
 
     if not preds:
         return 0.0
-    preds = {
-        name: validate_probability(value, context=f"prediction for model {name!r}")
-        for name, value in preds.items()
-    }
     if model_weights:
-        model_weights = validate_theory_weights(model_weights)
         total_w = math.fsum(model_weights.get(m, 0.0) for m in preds)
         if total_w <= 0:
             p_model = {m: 1.0 / len(preds) for m in preds}
@@ -351,31 +312,6 @@ def eig_from_prior_means(
     h_m = -sum(p * math.log2(p) for p in p_model.values() if p > 0)
     h_m_given_r = p_left * h_given_r(True) + p_right * h_given_r(False)
     return max(0.0, h_m - h_m_given_r)
-
-
-def expected_information_gain_prior_pymc(
-    feature_row: Dict[str, Any],
-    model_names: List[str],
-    models_dir: Path,
-    *,
-    model_weights: Optional[Dict[str, float]] = None,
-    n_samples: int = 200,
-    seed: int = 42,
-) -> float:
-    """EIG of a candidate stimulus computed from prior-predictive p_left per model.
-
-    Standard formula: EIG = H(M) - E_R[H(M|R)] in bits.
-    `feature_row` must include every pm.Data input of the models (including a
-    dummy observed-response value, which is ignored for p_left).
-    """
-    preds = prior_predict_p_left(
-        model_names,
-        models_dir,
-        feature_row,
-        n_samples=n_samples,
-        seed=seed,
-    )
-    return eig_from_prior_means(preds, model_weights)
 
 
 # ---------------------------------------------------------------------------
@@ -514,10 +450,9 @@ def resolve_fit_settings(
         )
     declared = model_sampler_settings(name, models_dir)
     settings = {**_FIT_DEFAULTS, **declared, **given, "method": method}
-    # A model's declared target_accept is a floor: the loop passes one
-    # explicitly, which used to override a model that needs smaller steps
-    # (a model declaring 0.9 ran at the sweep's 0.8), and declaring a higher value
-    # is how a candidate rejected for divergences fixes itself.
+    # A model's declared target_accept is a floor over the loop's explicit
+    # one: declaring a higher value is how a candidate rejected for
+    # divergences fixes itself.
     if "target_accept" in declared:
         settings["target_accept"] = max(
             settings["target_accept"], declared["target_accept"]
@@ -934,11 +869,9 @@ def refit_settings(settings: Dict[str, Any], first_fingerprint: str) -> Dict[str
     """The settings of a near miss's refit: ``ESCALATED_TARGET_ACCEPT`` and a
     random seed of its own.
 
-    The refit used to reuse the first fit's ``random_seed`` (42, for every fit
-    in every cell), so it started its chains from the same draws. Its seed is
-    now derived from the first fit's seed and fingerprint (model source, data
-    and settings; ``refit_random_seed``): different from the first fit's,
-    different for every model and data set, and the same on every resume.
+    The seed is derived from the first fit's seed and fingerprint (model
+    source, data and settings; ``refit_random_seed``): different from the first
+    fit's, different for every model and data set, and the same on every resume.
     ``random_seed`` is a sampler setting, so it is part of the refit's cache
     fingerprint.
     """
@@ -1309,9 +1242,8 @@ def _warn_sampling_diagnostics(name: str, idata: Any, model: Any) -> None:
     log. Diagnostics are rerun on cache hits so loading a suspect stored fit
     cannot make its warning disappear from a later run.
 
-    A diagnostic that could not be computed is itself warned about: previously a
-    missing ``diverging`` stat read as 0 divergences and an unavailable R-hat as
-    NaN, i.e. the two values that mean "this fit is healthy".
+    A diagnostic that could not be computed is itself warned about, rather than
+    read as healthy.
     """
     n_div = _divergence_count(idata)
     if n_div is None:
@@ -1379,10 +1311,8 @@ def default_fit_workers(cpus: int, per_fit_cpus: Sequence[int]) -> int:
 
     The widest fit sets the budget, so a batch that mixes 2- and 4-chain fits
     is sized for the 4-chain ones. Never below 1: a single fit that on its own
-    exceeds the allocation still runs, as it always has.
+    exceeds the allocation still runs.
     """
-    if not per_fit_cpus:
-        raise ValueError("default_fit_workers: no fits to size the pool for.")
     return max(1, int(cpus) // max(int(c) for c in per_fit_cpus))
 
 
@@ -1392,9 +1322,8 @@ class FitInfrastructureFailure(RuntimeError):
     A pool worker that died (one out-of-memory kill breaks the whole pool, so
     every pending fit fails with it), a fit file that cannot be read or
     written, the machine out of memory. Always raised, never reported as the
-    model's failure: the start-of-experiment screen used to turn each one into
-    a dropped model — starting models included — and a ledger line "MCMC fit
-    failed", which later agents then read as a property of the model.
+    model's failure (a dropped model and a ledger line that later agents would
+    read as a property of the model).
     """
 
 
@@ -1468,8 +1397,7 @@ def _fit_process_caches() -> Iterator[str]:
     On import, arviz 0.23 writes a once-a-day marker, ``<XDG cache>/arviz/
     daily_warning``, through a fixed-name ``daily_warning.tmp`` whenever the
     stored date is not today. Fit processes that import it together after
-    midnight collide on that file (one finds it already moved and raises
-    ``FileNotFoundError``), which ended 11 of 24 cells of a sweep.
+    midnight would collide on that file (``FileNotFoundError``).
     """
     with tempfile.TemporaryDirectory(prefix="fit-process-caches-") as root:
         yield root
@@ -1490,11 +1418,8 @@ def _use_own_cache_dir(cache_root: str) -> None:
 
 # PyTensor compiles a model's C code in its compile directory under one file
 # lock (``<compiledir>/.lock``), and a process gives up after waiting
-# ``compile__timeout`` (120 s) for it. Every process of a node used to share one
-# directory (``$L_SCRATCH`` is per user and node, not per job), so the
-# concurrent fit processes of a cell, and those of the other cells on the node,
-# queued on one lock, and a cell died on ``Timeout: The file lock
-# '.../compiledir_.../.lock' could not be acquired`` (2026-09-28). Each fit
+# ``compile__timeout`` (120 s) for it, so processes sharing one directory
+# queue on one lock and can time out. Each fit
 # process therefore compiles in a directory no other running process uses: a
 # numbered *slot* under this process's own root, held while the fit process
 # runs and handed to the next one after it, so compiled code is reused within
@@ -1738,10 +1663,6 @@ def sample_fits_time_limited(
     oversubscribed machine would stop fits that would finish on their own
     cores. ``_target`` replaces the child's entry point (tests only).
     """
-    if time_limit_sec <= 0:
-        raise ValueError(f"time_limit_sec must be > 0, got {time_limit_sec}.")
-    if workers < 1:
-        raise ValueError(f"workers must be >= 1, got {workers}.")
     outcomes: List[Optional[BaseException]] = [None] * len(requests)
     queue: List[int] = []
     for i, request in enumerate(requests):
@@ -1954,10 +1875,6 @@ def _fit_executor(
     fit needs the usual ``if __name__ == "__main__":`` guard (all of the
     repo's do; an ad-hoc script without one re-runs itself in each worker).
     """
-    if len(compile_dirs) < workers:
-        raise ValueError(
-            f"{workers} fit-pool workers need as many compile directories."
-        )
     context = multiprocessing.get_context("spawn")
     handed_out = context.SimpleQueue()
     for compile_dir in compile_dirs:
@@ -2093,8 +2010,6 @@ def _fit_outcomes(
     model's (``INFRASTRUCTURE_ERRORS``: a broken pool, an unreadable cache
     file, out of memory) raises instead, whatever the caller.
     """
-    if fit_workers is not None and fit_workers < 1:
-        raise ValueError(f"fit_workers must be >= 1, got {fit_workers}.")
     models_dir = Path(models_dir)
     responses_path = Path(responses_path)
     outcomes: Dict[str, Union[FittedModel, BaseException]] = {}

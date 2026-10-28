@@ -19,15 +19,12 @@ set -euo pipefail
 # Absolute dir of this script — passed to every job so they can find _env.sh.
 HOLDOUT_SLURM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export HOLDOUT_SLURM_DIR
-# The retry job resubmits failed tasks through the staged copy of this script.
-export RETRY_SUBMIT_SCRIPT="submit_holdout_test_retest.sh"
 
 # --- knobs (exported so --export=ALL carries them into every job) ----------
 export N_REPEATS="${N_REPEATS:-5}"
 # Must match the config's gt_models keys (the setup job validates this).
-# Default: the literature-faithful registry models — the active seed set since
-# the 2026-08 consolidation. Override GT_MODELS + CONFIG together to run
-# another set.
+# Default: the literature-faithful registry models (the active seed set).
+# Override GT_MODELS + CONFIG together to run another set.
 export GT_MODELS="${GT_MODELS:-falk_konold_dp motif_stack finite_experience_occurrence local_representativeness}"
 export CONFIG="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml}"
 # The GT/baseline registry (config seed_models_dir; the setup job validates the

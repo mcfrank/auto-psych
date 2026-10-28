@@ -25,7 +25,7 @@ from src.number_game import data as ng_data
 from src.number_game.metrics import binned_mean_r2
 from src.runtime.config import REPO_ROOT
 
-DATA_CSV = REPO_ROOT / "data" / "number-game" / "human experiment" / "numbergame_data.csv"
+DATA_CSV = ng_data.DATA_CSV
 SEEDS_DIR = REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects" / "number_game" / "seed_models"
 
 needs_data = pytest.mark.skipif(not DATA_CSV.exists(), reason="number-game dataset not present")

@@ -10,8 +10,7 @@ The ledger is the loop's memory: one JSON line per event, appended the moment
 it happens so a crashed run still leaves the record, started from the ledger
 the previous experiment carried in ``cognitive_models/``, and rendered into
 every candidate brief as the "tried before" section
-(``render_markdown``). Before it, in the weakest recovery cell 11 of 13
-re-proposals had already been pruned there. Events:
+(``render_markdown``). Events:
 
 - ``admitted`` — the candidate entered the zoo (its later fate, if any, is a
   later line under the same name);
@@ -45,9 +44,8 @@ def collapse_whitespace(text: str) -> str:
     """Collapse runs of whitespace (including newlines) in ``text`` to single spaces.
 
     This is the only normalisation the ledger applies to an agent's hypothesis:
-    the full text is stored, however long. The ledger used to cut hypotheses to
-    240 characters here, which destroyed the text before it reached the file —
-    not merely hid it — and the brief could not show a multi-sentence hypothesis.
+    the full text is stored, however long, so the brief can show a
+    multi-sentence hypothesis.
     """
     return " ".join(text.split())
 

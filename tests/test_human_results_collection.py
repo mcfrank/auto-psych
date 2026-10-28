@@ -266,6 +266,16 @@ def test_summarize_model_posterior_picks_winner_and_runner_up():
     assert s["runner_up_dse"] == pytest.approx(4.011, abs=1e-3)
 
 
+def test_the_summarys_best_model_is_the_one_the_loop_exported():
+    """The best reliable model by ELPD-LOO rank (scoring's rule), not the
+    posterior argmax: an untrusted fit is never the exported model."""
+    posterior = _posterior_fixture()
+    posterior["comparison"]["iter1_candidate0"]["loo_unreliable"] = True
+    s = summarize_model_posterior(posterior)
+    assert s["best_model"] == "iter0_candidate0"
+    assert s["best_posterior"] == pytest.approx(0.000795)
+
+
 def test_render_summary_tabulates_runs_and_winners():
     records = [
         {

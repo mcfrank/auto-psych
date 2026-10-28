@@ -8,9 +8,8 @@
 # thousands of small files, the biggest inode consumer per task. Its _runs go
 # to <run_dir>/agent_runs.tar.gz and the tree is deleted. The archive is
 # written under a temporary name, listed back with `tar tzf`, and only then
-# moved into place; the tree is removed only after that. A failed tar
-# (quota, inodes) used to be followed by the `rm -rf` all the same, deleting
-# the only copy of the agents' work. Now the tree stays, and this says so.
+# moved into place; the tree is removed only after that, so a failed tar
+# (quota, inodes) keeps the tree, and this says so.
 # An existing archive is never overwritten (it may be the only record of an
 # earlier run), and the tree is then kept too. Exits 0 either way: the cell's
 # results are already written, and a kept tree only costs inodes.

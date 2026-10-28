@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 from typing import Any
 
 from src.runtime.config import PROMPTS_DIR, project_prompts_dir, prompts_used_dir
@@ -49,14 +48,9 @@ def load_prompt_for_run(
     project_id: str,
     run_id: int,
     agent_key: str,
-    state: dict | None = None,
 ) -> str:
     """Load the prompt archived for a run, falling back to project/canonical prompts."""
-    if state and state.get("batch_dir"):
-        prompts_dir = Path(state["batch_dir"]) / "prompts_used"
-    else:
-        prompts_dir = prompts_used_dir(project_id, run_id)
-    path = prompts_dir / f"{agent_key}.md"
+    path = prompts_used_dir(project_id, run_id) / f"{agent_key}.md"
     if path.exists():
         return path.read_text(encoding="utf-8")
 

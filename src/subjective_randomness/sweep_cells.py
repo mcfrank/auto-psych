@@ -1,10 +1,9 @@
 """Which cells of a holdout sweep a summary covers, and which it does not.
 
-Every sweep summary used to read whatever ``run<r>/<gt>/`` cells happened to
-have a result: a cell that died on a time limit or ran out of memory simply
-vanished from the report (first audit C6), and the incumbent report read the
-kept run records of cells that never finished as if they were whole. Failures
-plausibly correlate with ground-truth difficulty, so both bias the means.
+A summary that read only the cells with a result would let a cell that died
+on a time limit or ran out of memory vanish from the report, and one that read
+unfinished cells' run records would count them as whole. Failures plausibly
+correlate with ground-truth difficulty, so both bias the means.
 
 ``survey_sweep`` sorts the sweep's expected cells into
 

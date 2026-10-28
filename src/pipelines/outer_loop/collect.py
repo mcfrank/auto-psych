@@ -43,7 +43,7 @@ MAX_PARALLEL_PARTICIPANTS = 3
 _PROLIFIC_POLL_INTERVAL_SEC = 30
 # Stop waiting on a Prolific study after this long so a stalled/under-recruited
 # study (participants return or time out and the target is never met) can't hang
-# the pipeline forever (user decision 2026-09-28: 3 hours, was 2). On timeout
+# the pipeline forever (user decision 2026-09-28: 3 hours). On timeout
 # the study is paused and we fetch whatever results exist.
 _PROLIFIC_MAX_WAIT_SEC = 3 * 60 * 60  # 3 hours
 # Prolific study statuses in which nobody new is being recruited.
@@ -209,10 +209,8 @@ def _run_one_participant_firebase(args: tuple) -> tuple[int, bool, str | None]:
         logs_dir_path,
     ) = args
     logs_dir = Path(logs_dir_path) if logs_dir_path else None
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        return (participant_index, False, "playwright not installed")
+    from playwright.sync_api import sync_playwright  # the parent checked it imports
+
     try:
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch(headless=True)
@@ -412,7 +410,6 @@ def _collect_from_firebase(
                                 project_id,
                                 run_id,
                                 logs_dir,
-                                state,
                             )
                             log_status(
                                 "Steering: LLM (Gemini)"
@@ -485,8 +482,8 @@ def _this_runs_rows(
     ``/results`` answers per session (or project and run), which earlier
     collections of the same run share. Raises when no row belongs to this
     collection's participants, or when the rows carry no
-    ``participant_id_str`` to tell: every row used to be kept then, mixing
-    other collections' data into this experiment.
+    ``participant_id_str`` to tell, rather than mix other collections' data
+    into this experiment.
     """
     if not rows:
         return rows

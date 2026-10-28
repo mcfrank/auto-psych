@@ -20,7 +20,6 @@ from src.models.data_binding import make_stim_data
 from src.models.model_loading import model_source_file, pm_data_inputs
 from src.models.pymc_inference import InvalidPredictions, fit_model, is_model_failure
 from src.subjective_randomness.holdout_data import (
-    _family_default_params,
     _raw_eval_rows,
     p_left_fixed_params,
     seed_model_names,
@@ -101,7 +100,6 @@ def build_eval_stimuli(
     seed: int,
     min_remaining: int = 1,
     exhaustive: bool = False,
-    extra_excluded_pairs: Optional[Set[Any]] = None,
 ) -> Dict[str, Any]:
     """Generate the held-out eval pool, excluding every stimulus used in training.
 
@@ -117,17 +115,11 @@ def build_eval_stimuli(
     pair at the given ``lengths`` rather than an ``n_pairs`` sample, so the correlation is
     measured over the whole stimulus space at those lengths (``n_pairs``/``seed``
     are then unused).
-
-    ``extra_excluded_pairs``, when given, is an additional set of unordered
-    pairs to drop (e.g. the training pairs of a second cell in a matched-cell
-    comparison).
     """
     pool = task.eval_pool(
         {"exhaustive": exhaustive, "lengths": lengths, "n_pairs": n_pairs, "seed": seed}
     )
     trained = collect_trained_pairs(run_root, n_experiments, task)
-    if extra_excluded_pairs:
-        trained = trained | extra_excluded_pairs
     kept = [stim for stim in pool if task.stimulus_key(stim) not in trained]
     if len(kept) < min_remaining:
         raise ValueError(
@@ -406,7 +398,7 @@ def _fitted_seed_baseline(
 
     A held-out pair where a seed's ``p_left`` is undefined (NaN or outside
     [0, 1]) is left out of that seed's metrics, as the trajectory leaves it out
-    of a step's (user decision 2026-09-27, audit B6): ``per_model[name]
+    of a step's (user decision 2026-09-27): ``per_model[name]
     ["n_eval_excluded"]`` counts them, a warning is printed, and
     ``exclusions_log`` gets one line per such seed with the pairs.
     """
@@ -700,7 +692,6 @@ def seed_baseline_correlation(
     seed_models_dir: Path,
     seeded_models_dir: Path,
     gt_models_dir: Optional[Path] = None,
-    gt_family_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """No-learning baseline: how well the *other* seed models predict the GT.
 
@@ -715,9 +706,7 @@ def seed_baseline_correlation(
     ``gt_models_dir`` is where the ground-truth model lives (default:
     ``seed_models_dir``). The *other* seed models are the registry's names
     (``seed_models_dir``) with their parameters in ``params_by_model`` (the
-    config's ``gt_models``), or for a coin-flip seed absent from it its
-    family's default parameters, but their
-    code is the files the cell was seeded with (``seeded_models_dir``, see
+    config's ``seed_params`` and ``gt_models``), but their code is the files the cell was seeded with (``seeded_models_dir``, see
     ``seeded_models_dir()``), so a run is scored with the seeds it ran with.
     For an impossible ground truth, which is not among the project seeds,
     nothing is excluded — every seed model is scored against it.
@@ -728,11 +717,7 @@ def seed_baseline_correlation(
     )
     gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params, task=task)
     others = {
-        name: (
-            params_by_model[name]
-            if name in params_by_model
-            else _family_default_params(name, gt_family_dir)
-        )
+        name: params_by_model[name]
         for name in seed_model_names(seed_models_dir)
         if name != gt_model
     }
@@ -758,7 +743,7 @@ def _all_responses_so_far(run_root: Path, n_experiments: int) -> Path:
     """The final experiment's cumulative inner-loop responses: every experiment once.
 
     Each experiment's ``model_loop/responses.csv`` already holds experiments
-    1..k, so the last one is the full training set (concatenating them used to
+    1..k, so the last one is the full training set (concatenating them would
     count experiment 1 once per experiment). Checked against the experiments'
     own ``data/responses.csv`` row counts; a mismatch raises.
     """
@@ -877,11 +862,8 @@ def fitted_seed_baseline_by_experiment(
     experiment ``k`` was fit on) — ``fitted_seed_baseline_correlation`` with
     ``n_experiments=k``. The seed fits are the loop's own, so with the run's
     ``cache_dir`` they are cache hits. The last entry is the ``fitted_baseline``
-    the harness records (the final data).
-
-    The baseline used to be scored only on the final data and drawn flat
-    across every step, so only the final experiment's steps were compared with
-    it on the same data (second audit W1).
+    the harness records (the final data). Each experiment's steps are thus
+    compared with a baseline fit on the same data.
     """
     return [
         {
@@ -912,10 +894,10 @@ def reevaluate_trajectories(
     result: Mapping[str, Any],
     *,
     seed_models_dir: Path,
+    seed_params: Mapping[str, Mapping[str, Any]],
     cache_dir: Optional[Path],
     gt_models_dir: Optional[Path] = None,
     eval_pool_override: Optional[Mapping[str, Any]] = None,
-    extra_excluded_pairs: Optional[Set[Any]] = None,
 ) -> Dict[str, Any]:
     """Recompute every ground truth's trajectory from its finished run tree.
 
@@ -926,6 +908,10 @@ def reevaluate_trajectories(
     loop already finished can be re-analyzed (e.g. to add a baseline or
     regenerate the figure) without re-running any agents. Returns a new result;
     the input is not mutated.
+
+    ``seed_params`` are the seeds' generating parameters for the no-learning
+    baseline (a config's ``seed_params``); the result's own recorded
+    ``seed_params`` override them.
 
     ``gt_models_dir`` (default: ``seed_models_dir``) is where each ground-truth
     generator lives. Pass the impossible-models directory to re-score a run
@@ -957,12 +943,11 @@ def reevaluate_trajectories(
     from src.tasks import task_for_project
 
     task = task_for_project(result["project_id"])
-    # The seeds' parameters for the no-learning baseline (recorded since the
-    # number game, whose seeds have no family defaults).
-    params_by_model = dict(result.get("seed_params", {}))
+    # The seeds' parameters for the no-learning baseline: what the run recorded,
+    # over the given ones (an impossible run recorded only its ground truths').
+    params_by_model = {**seed_params, **result.get("seed_params", {})}
 
-    # Names only — the fitted-seed baseline fits these by MCMC, so no
-    # pure-Python family twin (and no default params) is required here.
+    # Names only — the fitted-seed baseline fits these by MCMC.
     all_seed_models = set(seed_model_names(seed_models_dir))
     new_runs: List[Dict[str, Any]] = []
     for gt_run in result["gt_runs"]:
@@ -978,7 +963,6 @@ def reevaluate_trajectories(
                 seed=int(eval_pool.get("seed", 0)),
                 min_remaining=int(eval_pool.get("min_remaining", 1)),
                 exhaustive=bool(eval_pool.get("exhaustive", False)),
-                extra_excluded_pairs=extra_excluded_pairs,
             )
             eval_stimuli = rebuilt["stimuli"]
         else:

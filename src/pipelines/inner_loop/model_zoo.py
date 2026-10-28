@@ -111,11 +111,9 @@ def _is_all_no_file_round(round_results: list[dict]) -> bool:
 # model already proposed — depth: two refine the incumbent (the best model of
 # the latest scoring step, named in the brief) and one refines a
 # non-incumbent model of the agent's choosing, live or pruned, from a menu.
-# Before this the loop had three breadth mechanisms (the novelty gate, the
-# ledger's "do not re-propose", pruning) and no depth mechanism: in the
-# September 2026 sweep the exported best model never changed from its
-# starting seed (0 of 27 scoring steps), and a partially correct mechanism,
-# once pruned, could not be revived by design. A role is the slot's
+# Without refinement slots the loop had only breadth mechanisms (the novelty
+# gate, the ledger's "do not re-propose", pruning), and a partially correct
+# mechanism, once pruned, could never be revived. A role is the slot's
 # *assignment*: it shapes the prompt and the ledger context. Which model the
 # agent actually refined is stated in its hypothesis, in prose; nothing in
 # the pipeline parses it or branches on it.
@@ -370,8 +368,8 @@ def _drop_unfittable_models(
     numerically unsafe construct that NaNs in PyTensor) would otherwise crash
     ``pm.sample`` at its start-value check and abort the whole run. We drop such
     models from the manifest with a loud warning rather than let one bad model
-    kill a long agentic run — a run's starting model too (they are not
-    protected; user decision 2026-09-28). Fails loudly only if **no** model
+    kill a long agentic run — a run's starting model too (user decision
+    2026-09-28). Fails loudly only if **no** model
     survives. Each drop is recorded in the ledger so a carried model that
     vanishes here is still accounted for.
 
@@ -453,7 +451,7 @@ def _drop_nonfinite_elpd_models(
     (a broken fit pool, an unreadable cache file, out of memory:
     ``INFRASTRUCTURE_ERRORS``) raises out of here instead of being recorded as
     "MCMC fit failed". A run's starting model is dropped like any other
-    (user decision 2026-09-28; it used to raise).
+    (user decision 2026-09-28).
     """
     fit_kwargs = fit_kwargs or {}
     entries = _manifest_entries(models_dir)
@@ -542,8 +540,7 @@ class NoveltyPoolUndefined(ValueError):
     The admission gate turns it into a recorded rejection naming those
     stimuli: such a model would also break the next experiment's design and
     the held-out evaluation, both of which predict on pairs unlike the
-    training stimuli. It used to propagate out of the inner loop and end the
-    cell.
+    training stimuli.
     """
 
     def __init__(
@@ -565,8 +562,7 @@ class NoveltyPoolFailed(ValueError):
     ``p_left`` without one value per stimulus, a ``compute_features`` that
     breaks on some pool pair.
 
-    The admission gate turns it into a recorded rejection with the error. It
-    used to propagate out of the inner loop and end the cell.
+    The admission gate turns it into a recorded rejection with the error.
     """
 
     def __init__(self, model_name: str, error: BaseException):
@@ -781,17 +777,16 @@ def _min_prediction_rmse(
     stimuli and ``NoveltyPoolFailed`` when its own code fails on the pool.
     An admitted model whose ``p_left`` is undefined on some stimuli
     is compared on the rest (said out loud), and skipped when it is undefined
-    on all of them; before, it crashed every later candidate's admission.
+    on all of them.
 
     ``predictions`` (one dict for a whole model loop, made by
     ``run_pymc_inner_loop``) keeps each model's prediction for the loop's later
     admissions. Within a loop the data, the pool and every admitted fit are
     fixed and the prediction is deterministic (``predict_p_left`` samples with
-    a fixed seed), so recomputing it at every admission, as the gate did until
-    2026-09-30, only repeated work that grows with the set: each prediction
-    runs every posterior draw over the pool, a model with a participant effect
-    once per participant (in the October 2026 live run, most of the set, and
-    rounds grew from 1.5 to 2.9 hours). The key is the fit's in-process key
+    a fixed seed), so recomputing it at every admission only repeats work
+    that grows with the set: each prediction runs every posterior draw over
+    the pool, a model with a participant effect once per participant. The key
+    is the fit's in-process key
     (``_cache_key``: name, model source, responses file, sampler settings),
     the pool and the participants, so new data or a changed model file is
     predicted afresh. Without the dict every call recomputes.
@@ -908,12 +903,9 @@ DEFAULT_PRUNE_DSE_MULTIPLIER = 2.0
 # Novelty gate: a candidate whose posterior-mean p_left is within this RMSE of
 # an admitted model's — measured on the loop's novelty pool below, not on the
 # training stimuli — is a re-skinned duplicate, not a new hypothesis; reject
-# it at admission. Calibration (the September 2026 sweep, measured on the 64
-# training stimuli at the old 0.02): the 23 archived rejection margins were
-# bimodal — about five re-skins at ~0 (0.0000 x2, 0.0001, 0.0002, 0.0004; two
-# predicted identically) and about eighteen spread evenly from 0.006 to 0.019,
-# distinct mechanisms that happened to agree on the training points. 0.002
-# sits in the gap. Set to 0 to disable.
+# it at admission. Calibration: observed rejection margins were bimodal —
+# re-skins at ~0 and distinct mechanisms from about 0.006 up — and 0.002 sits
+# in the gap. Set to 0 to disable.
 DEFAULT_NOVELTY_RMSE_THRESHOLD = 0.002
 
 # The novelty pool: the stimuli on which a candidate's predictions are compared
@@ -951,7 +943,8 @@ def _clustered_dse(comparison: Dict[str, Dict[str, Any]], name: str) -> float:
 
 
 def _untrusted(row: Dict[str, Any]) -> bool:
-    """An unreliable PSIS-LOO or a fit that failed the convergence gate."""
+    """A model whose ELPD cannot be trusted: unreliable PSIS-LOO or a fit that
+    failed the convergence gate. Such a model is never exported or pruned."""
     return bool(row.get("loo_unreliable") or row.get("not_converged"))
 
 
@@ -976,7 +969,7 @@ def _prune_losers(
     survivors are therefore the uncertainty set — every trusted model still
     within the margin of the best — which is what the outer loop carries into
     the next experiment. The run's starting models are pruned by the same rule
-    (user decision 2026-09-28; they used to be protected). The best trusted
+    (user decision 2026-09-28). The best trusted
     model is never pruned (its margin is zero), so pruning never empties the
     set; untrusted models are never pruned either. Pruned files move to
     ``models/pruned/`` (an audit trail, not a deletion), the ledger records
@@ -999,9 +992,7 @@ def _prune_losers(
         return []
     # Reliability gates are deliberately narrow. Every elpd_diff is measured
     # against the best *trusted* model: an untrusted baseline would poison
-    # every comparison. It used to switch pruning off for the whole
-    # experiment instead, and the live-set cap then retired that model
-    # without pruning being rerun. Beyond that, a model is only shielded by
+    # every comparison. Beyond that, a model is only shielded by
     # its OWN untrusted row — agent-written candidates trip Pareto-k warnings
     # routinely, and one flaky bystander must not switch pruning off wholesale
     # (the active set would then only ever grow).
@@ -1092,7 +1083,7 @@ def _cap_live_set(
     Models that cannot be trusted (an unreliable PSIS-LOO or a non-converged
     fit; they can never be exported) retire first, then the lowest by ELPD-LOO.
     The run's starting models are retired by the same ordering (user decision
-    2026-09-28; they used to be exempt). The best trusted model is retired
+    2026-09-28). The best trusted model is retired
     last of all, so with ``cap >= 1`` it always stays. Retired models go where
     pruned ones do: ``models/pruned/``, and the ledger as ``pruned`` with the
     reason.
@@ -1187,36 +1178,6 @@ class Admission:
             raise ValueError("a rejected candidate needs a rejection reason")
 
 
-def _admit_candidate(
-    candidate_file: Path,
-    models_dir: Path,
-    model_name: str,
-    responses_path: Path,
-    *,
-    cache_dir: Optional[Path] = None,
-    fit_kwargs: Optional[Dict[str, Any]] = None,
-    novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD,
-    novelty_pool: Optional[Sequence[Mapping[str, str]]] = None,
-    ledger: Optional[HypothesisLedger] = None,
-    ledger_context: str = "",
-    fit_time_limit_sec: Optional[float] = CANDIDATE_FIT_TIME_LIMIT_SEC,
-) -> bool:
-    """``_admit_candidate_with_reason`` for callers that only need the verdict."""
-    return _admit_candidate_with_reason(
-        candidate_file,
-        models_dir,
-        model_name,
-        responses_path,
-        cache_dir=cache_dir,
-        fit_kwargs=fit_kwargs,
-        novelty_rmse_threshold=novelty_rmse_threshold,
-        novelty_pool=novelty_pool,
-        ledger=ledger,
-        ledger_context=ledger_context,
-        fit_time_limit_sec=fit_time_limit_sec,
-    ).admitted
-
-
 def _smaller_steps_already_tried(
     model_name: str, models_dir: Path, fit_kwargs: Optional[Dict[str, Any]], fitted: Any
 ) -> str:
@@ -1227,8 +1188,8 @@ def _smaller_steps_already_tried(
     floor on it), and returns a fit far from converging as it is. A rejected
     fit that is a near miss was therefore already sampled at that step size or
     smaller; one far from converging is a geometry problem smaller steps do
-    not fix. Either way, advising agents to declare a higher target_accept (as
-    the rejection used to) only re-samples the same failing fit.
+    not fix. Either way, advising agents to declare a higher target_accept
+    only re-samples the same failing fit.
     """
     settings = resolve_fit_settings(model_name, models_dir, fit_kwargs or {})
     if settings["chains"] < 2:
@@ -1380,7 +1341,6 @@ def _admit_candidate_with_reason(
     novelty_pool: Optional[Sequence[Mapping[str, str]]] = None,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
-    fit_time_limit_sec: Optional[float] = CANDIDATE_FIT_TIME_LIMIT_SEC,
     name_note: str = "",
     novelty_predictions: Optional[Dict[tuple, np.ndarray]] = None,
 ) -> Admission:
@@ -1415,7 +1375,7 @@ def _admit_candidate_with_reason(
     candidate.
 
     Each sampling run of the admission fit is stopped at
-    ``fit_time_limit_sec`` (``CANDIDATE_FIT_TIME_LIMIT_SEC``); a candidate
+    ``CANDIDATE_FIT_TIME_LIMIT_SEC``; a candidate
     still sampling then is rejected as too slow to fit, with the limit in the
     reason. In the loop these fits are usually in the cache already: the
     orchestrator fits a wave's candidates concurrently first
@@ -1468,7 +1428,7 @@ def _admit_candidate_with_reason(
             models_dir,
             responses_path,
             cache_dir=cache_dir,
-            time_limit_sec=fit_time_limit_sec,
+            time_limit_sec=CANDIDATE_FIT_TIME_LIMIT_SEC,
             **(fit_kwargs or {}),
         )
     except INFRASTRUCTURE_ERRORS:

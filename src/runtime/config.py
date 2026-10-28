@@ -2,7 +2,6 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
 
 from pyprojroot import here
 
@@ -13,9 +12,6 @@ from pyprojroot import here
 # pyprojroot's here() directly — the same resolution as this one.
 REPO_ROOT = here()
 
-# Top-level defaults retained for shared support modules.
-DEFAULT_SIMULATED_N_PARTICIPANTS = 5
-DEFAULT_MAX_VALIDATION_RETRIES = 3
 # An agent call that ends on its account's usage or rate limit
 # (src/runtime/usage_limits.py) waits for the limit to lift and runs again,
 # for at most AGENT_USAGE_LIMIT_MAX_WAIT_SEC in all; then the run raises
@@ -35,8 +31,6 @@ PROJECTS_DIR = Path(os.environ.get("PIPELINE_PROJECTS_DIR", REPO_ROOT / "project
 # root copies silently went stale while the pipeline ran the ones under src/.
 PROJECT_ASSETS_DIR = REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects"
 PROMPTS_DIR = REPO_ROOT / "src" / "pipelines" / "outer_loop" / "prompts"
-SECRETS_PATH = REPO_ROOT / ".secrets"
-
 
 def project_dir(project_id: str) -> Path:
     """Return path to project run-output directory."""
@@ -61,20 +55,6 @@ def references_dir(project_id: str) -> Path:
 def run_dir(project_id: str, run_id: int) -> Path:
     """Return path to run directory (e.g. projects/subjective_randomness/run1)."""
     return project_dir(project_id) / f"run{run_id}"
-
-
-def run_dir_for_state(
-    project_id: str, run_id: int, state: Optional[Dict[str, Any]] = None
-) -> Path:
-    """Return run directory; when state has 'batch_dir', runs live under that batch."""
-    if state and state.get("batch_dir"):
-        return Path(state["batch_dir"]) / f"run{run_id}"
-    return run_dir(project_id, run_id)
-
-
-def agent_dir(project_id: str, run_id: int, agent_key: str) -> Path:
-    """Return path to agent output directory (e.g. run1/1_theory)."""
-    return run_dir(project_id, run_id) / agent_key
 
 
 def prompts_used_dir(project_id: str, run_id: int) -> Path:

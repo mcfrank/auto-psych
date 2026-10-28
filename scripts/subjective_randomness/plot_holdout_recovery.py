@@ -29,7 +29,7 @@ from pyprojroot import here
 
 sys.path.insert(0, str(here()))
 
-from src.subjective_randomness.config import resolve_path  # noqa: E402
+from src.subjective_randomness.config import load_config, resolve_path  # noqa: E402
 from src.subjective_randomness.holdout_eval import (  # noqa: E402
     TRAJECTORY_COLUMNS,
     reevaluate_trajectories,
@@ -58,6 +58,9 @@ class Args:
     is what makes the per-step refits free."""
     seed_models_dir: Optional[Path] = None
     """Seed-model directory (default: the result's recorded seed_models_dir)."""
+    config: Path = Path("scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml")
+    """Config whose ``seed_params`` give the seeds' generating parameters for the
+    no-learning baseline (the result's own recorded ones take precedence)."""
 
 
 def main(args: Args) -> None:
@@ -76,7 +79,10 @@ def main(args: Args) -> None:
     )
 
     enriched = reevaluate_trajectories(
-        result, seed_models_dir=seed_models_dir, cache_dir=cache_dir
+        result,
+        seed_models_dir=seed_models_dir,
+        seed_params=load_config(resolve_path(args.config))["seed_params"],
+        cache_dir=cache_dir,
     )
 
     out_path = resolve_path(args.out) if args.out is not None else result_path

@@ -3,10 +3,8 @@
 from pathlib import Path
 
 import pytest
-import yaml
 
-from src.subjective_randomness.features import featurize_stimulus
-from src.models.theorist.loader import get_model_names_from_manifest
+from src.models.model_manifest import read_loadable_model_names
 from src.models.data_binding import make_stim_data
 from src.models.model_loading import (
     load_pymc_model,
@@ -71,8 +69,7 @@ def test_subjective_randomness_manifest_lists_loadable_pymc_models():
     # would shrink the model set without a trace. *Which* models these are is
     # pinned once, in test_literature_faithful_pymc.py; here the manifest is
     # the reference.
-    manifest = yaml.safe_load((MODEL_DIR / "models_manifest.yaml").read_text())
-    assert get_model_names_from_manifest(manifest, MODEL_DIR) == faithful_model_names()
+    assert read_loadable_model_names(MODEL_DIR) == faithful_model_names()
 
 
 @pytest.mark.parametrize("model_name,expected_inputs", EXPECTED_INPUTS.items())
@@ -82,57 +79,15 @@ def test_subjective_randomness_pymc_models_load(model_name, expected_inputs):
     assert set(pm_data_inputs(model)) == expected_inputs
 
 
-def test_featurize_stimulus_adds_pymc_adapter_features():
-    features = featurize_stimulus("HTHT", "HHHT")
-    assert features["n_a"] == 4
-    assert features["h_a"] == 2
-    assert features["alts_a"] == 3
-    assert features["max_run_a"] == 1
-    assert features["p_alts_a"] == 1.0
-    assert features["imbalance_a"] == 0.0
-    assert features["max_run_norm_a"] == 0.0
-    assert features["periodicity_a"] == 1.0
-
-    assert features["imbalance_b"] == 0.5
-    assert features["max_run_norm_b"] == pytest.approx(2.0 / 3.0)
-    assert features["periodicity_b"] == 0.5
-
-
-def test_featurize_stimulus_marks_stack_automaton_patterns():
-    mirror = featurize_stimulus("HHHTTHHH", "HHTTHHTT")
-    complement = featurize_stimulus("TTTTHHHH", "HHTHTTHT")
-
-    assert mirror["mirror_symmetry_a"] == 1
-    assert mirror["duplication_a"] == 0
-    assert mirror["duplication_b"] == 1
-    assert complement["complement_symmetry_a"] == 1
-    assert complement["mirror_symmetry_b"] == 0
-
-
-def test_featurizer_exposes_multiscale_local_balance():
-    features = featurize_stimulus("HHHHTTTT", "HHTTHHTT")
-
-    assert features["multiscale_imbalance_a"] > features["multiscale_imbalance_b"]
-
-
 def _stimulus_row(sequence_a: str, sequence_b: str) -> dict:
-    """A feature row as every production caller builds it.
-
-    The raw H/T sequences travel alongside the numeric features because models
-    may declare a `compute_features` featurizer or a `prepare_observed` hook,
-    both of which derive their inputs from the sequences rather than from the
-    fixed feature columns.
-    """
-    return {
-        "sequence_a": sequence_a,
-        "sequence_b": sequence_b,
-        **featurize_stimulus(sequence_a, sequence_b),
-        "chose_left": 0,
-    }
+    """A raw stimulus row, as every production caller builds it: the models
+    compute their features from the sequences (``compute_features`` or
+    ``prepare_observed``)."""
+    return {"sequence_a": sequence_a, "sequence_b": sequence_b, "chose_left": 0}
 
 
 @pytest.mark.parametrize("model_name", EXPECTED_INPUTS)
-def test_featurized_stimuli_fill_pymc_data_containers(model_name):
+def test_raw_stimuli_fill_pymc_data_containers(model_name):
     model = load_pymc_model(model_name, MODEL_DIR)
     stim_data = make_stim_data(model, [_stimulus_row("HHTHTTHT", "HTHTHTHT")])
     assert set(stim_data) == set(pm_data_inputs(model))

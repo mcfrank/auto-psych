@@ -109,7 +109,7 @@ Keys (read by `_pilot_config.py`):
 | `prolific.completion_code_action` | `AUTOMATICALLY_APPROVE` (default) or `MANUALLY_REVIEW` |
 | `prolific.exclude_earlier_participants` | `true` (default): a live study excludes everyone who took part in an earlier published study of the pipeline in the Prolific account (every study it named `auto-psych …`, read from the account just before the study is created; Prolific applies the list when the study is published, so people still taking a parallel run's study at that moment are not excluded). `false` only to recruit the same people on purpose |
 | `modeling.inner_loop_iterations`, `inner_loop_candidates`, `draws`, `tune`, `chains` | rounds, proposals per round, MCMC (the job has 16 CPUs and 128 GB: four 4-chain fits at once; 64 GB ran out in experiment 3's model loop, where the loop holds about 1.5 GB per model) |
-| `modeling.target_accept`, `agent_timeout_sec` | NUTS target acceptance (unset: the model's own, else 0.99) and seconds per critique/proposal agent (unset: 900); `full_run.yaml` sets 0.8 and 1800, as the simulations |
+| `modeling.target_accept`, `agent_timeout_sec` | NUTS target acceptance (unset: the model's own, else 0.99) and seconds per critique/proposal agent (unset: 900); `full_run.yaml` sets 0.8 and 1800, as the simulations. The implement agent has its own `--implement-agent-timeout-sec` (900) |
 | `modeling.novelty_rmse_threshold`, `prune_dse_multiplier`, `candidate_parallelism`, `hints_file` | optional; defaults 0.002, 2.0, all at once, the built-in eleven angles |
 
 **Cost** (printed by the launcher): pay per person = cents/hour × minutes / 60,

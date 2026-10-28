@@ -13,22 +13,20 @@ four models that implement their source theories exactly as published —
     representativeness — multiscale balance plus explicit irregularity cues.
 
 Each PyMC adapter must load from the registry manifest, expose the standard
-``p_left`` / ``chose_left`` contract, and agree with its pure-Python twin.
+``p_left`` / ``chose_left`` contract.
 """
 
 from pathlib import Path
 
 import numpy as np
 import pytest
-import yaml
 
-from src.models.theorist.loader import get_model_names_from_manifest
+from src.models.model_manifest import read_loadable_model_names
 from src.models.model_loading import load_pymc_model, observed_response_data
 from src.models.pymc_inference import prior_predict_p_left
-from src.subjective_randomness.features import featurize_stimulus
 from src.subjective_randomness.holdout_data import p_left_fixed_params
 from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
-from tests.recovery_fixtures import p_left_model_family
+from tests.test_ground_truth_params_in_config import SEED_PARAMS
 
 MODEL_DIR = (
     Path(__file__).resolve().parent.parent
@@ -57,8 +55,7 @@ def test_registry_manifest_is_exactly_the_literature_faithful_set():
     # counterpart (falk_konold_dp <- encoding_compressibility, motif_stack <-
     # bayesian_diagnosticity, finite_experience_occurrence <-
     # window_typicality, local_representativeness <- prototype_similarity).
-    manifest = yaml.safe_load((MODEL_DIR / "models_manifest.yaml").read_text())
-    assert get_model_names_from_manifest(manifest, MODEL_DIR) == NEW_MODELS
+    assert read_loadable_model_names(MODEL_DIR) == NEW_MODELS
 
 
 @pytest.mark.parametrize("model_name", NEW_MODELS)
@@ -66,29 +63,16 @@ def test_new_models_load_and_prior_predict(model_name):
     model = load_pymc_model(model_name, MODEL_DIR)
     assert observed_response_data(model) == "chose_left"
 
-    # The raw sequences travel with the numeric features: motif_stack derives
-    # its pm.Data containers from the sequences via a `prepare_observed` hook.
-    row = {
-        "sequence_a": "HHTHTTHT",
-        "sequence_b": "HTHTHTHT",
-        **featurize_stimulus("HHTHTTHT", "HTHTHTHT"),
-        "chose_left": 0,
-    }
+    # A raw row: every model computes its features from the sequences.
+    row = {"sequence_a": "HHTHTTHT", "sequence_b": "HTHTHTHT", "chose_left": 0}
     preds = prior_predict_p_left([model_name], MODEL_DIR, row, n_samples=10)
     assert 0.0 <= preds[model_name] <= 1.0
 
 
 @pytest.mark.parametrize("model_name", NEW_MODELS)
-def test_new_models_match_their_pure_python_twin(model_name):
-    import importlib
-
-    family = importlib.import_module(
-        f"src.subjective_randomness.model_families.{model_name}"
-    )
-    params = dict(family.DEFAULT_PARAMS)
-    from_family = p_left_model_family(model_name, TEST_STIMULI, params)
-    from_pymc = p_left_fixed_params(model_name, MODEL_DIR, TEST_STIMULI, params, task=SUBJECTIVE_RANDOMNESS)
-    np.testing.assert_allclose(from_pymc, from_family, atol=1e-7)
-    # The defaults must not sit in a degenerate corner: agreement between
-    # constant-0/1 outputs would be vacuous.
-    assert np.all(from_family > 1e-4) and np.all(from_family < 1.0 - 1e-4)
+def test_the_generating_parameters_are_not_degenerate(model_name):
+    # Ground-truth data come from these models at the config's seed_params;
+    # p_left stuck at 0 or 1 would make recovery vacuous.
+    params = SEED_PARAMS[model_name]
+    p = p_left_fixed_params(model_name, MODEL_DIR, TEST_STIMULI, params, task=SUBJECTIVE_RANDOMNESS)
+    assert np.all(p > 1e-4) and np.all(p < 1.0 - 1e-4)

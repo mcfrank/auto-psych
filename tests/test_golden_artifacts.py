@@ -134,6 +134,7 @@ def test_eval_pool():
 
 def test_leakage_check():
     from src.subjective_randomness.leakage_audit import leakage_check
+    from tests.test_ground_truth_params_in_config import SEED_PARAMS
 
     fixture = _load("leakage_check.json")
 
@@ -144,7 +145,6 @@ def test_leakage_check():
         seed_dir = Path(
             "src/pipelines/outer_loop/projects/subjective_randomness/seed_models"
         )
-        family_dir = Path("src/subjective_randomness/model_families")
 
         cm = run_root / "experiment1" / "cognitive_models"
         cm.mkdir(parents=True)
@@ -201,7 +201,7 @@ def test_leakage_check():
             fixture["gt_model"],
             seed_models_dir=seed_dir,
             n_experiments=fixture["n_experiments"],
-            gt_family_dir=family_dir,
+            gt_params=SEED_PARAMS[fixture["gt_model"]],
         )
 
     expected = fixture["expected"]

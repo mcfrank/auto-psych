@@ -61,9 +61,7 @@ class Args:
 
 
 def main(args: Args) -> None:
-    prompt = load_prompt_for_run(
-        "subjective_randomness", 1, "4_collect_participant", None
-    )
+    prompt = load_prompt_for_run("subjective_randomness", 1, "4_collect_participant")
     if not prompt.strip():
         print("FAIL: could not load the 4_collect_participant prompt", file=sys.stderr)
         sys.exit(1)

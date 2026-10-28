@@ -88,8 +88,8 @@ rsa_condition_data_dir() {
   echo "$data_root/$condition"
 }
 
-# Does this checkout's loop CLI take --seed? (src/rsa/loop/run.py did not before
-# 2026-10-07; without it the replicates differ only by the agents' sampling.)
+# Does this checkout's loop CLI take --seed? (Without it the replicates differ
+# only by the agents' sampling.)
 # Run from a repo root (the harness copy). The help is captured first: piped
 # into grep -q, the CLI could die of SIGPIPE and pipefail would read a "no".
 rsa_loop_cli_has_seed() {
@@ -98,8 +98,7 @@ rsa_loop_cli_has_seed() {
   grep -qE -- '(^|[[:space:]])--seed[[:space:]]' <<< "$help"
 }
 
-# The sweep root every script defaults to. One place: after run 1, three
-# scripts still defaulted to rsa_run1 and run 2's first submit went there.
+# The sweep root every script defaults to, in one place.
 RSA_SWEEP_NAME="rsa_run2"
 rsa_default_work_root() {
   local base="${SCRATCH:-${GROUP_SCRATCH:-}}"
@@ -110,8 +109,7 @@ rsa_default_work_root() {
 # The venv: the shared one (scripts/_venv.sh), else $WORK_ROOT/venv.
 source "$(dirname "${BASH_SOURCE[0]}")/../../_venv.sh"
 rsa_default_venv() {
-  # One venv for every RSA job. A venv named after each WORK_ROOT (rehearsals,
-  # live) was never built (live stage 1, 2026-10-10).
+  # One venv for every RSA job.
   local venv
   venv="$(shared_venv_path)"
   echo "${venv:-$1/venv}"

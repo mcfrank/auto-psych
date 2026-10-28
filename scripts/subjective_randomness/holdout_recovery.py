@@ -41,6 +41,7 @@ from src.subjective_randomness.holdout_recovery import (  # noqa: E402
 )
 from src.subjective_randomness.reporting import plot_holdout_trajectories  # noqa: E402
 from src.subjective_randomness.tidy import write_tidy_csv  # noqa: E402
+from src.runtime.diagnostics import install_run_diagnostics  # noqa: E402
 
 
 @dataclass
@@ -75,12 +76,6 @@ class Args:
     deleting the held-out model from the agent's working checkout. The GT is
     still excluded from the agent's seed set (exclusion keys off the seed
     manifest, not this path)."""
-    gt_family_dir: Optional[Path] = None
-    """Read the held-out GT's pure-Python model_family (DEFAULT_PARAMS) from this
-    pristine directory instead of importing it from the working checkout. Point
-    at a copy of src/subjective_randomness/model_families containing the held-out
-    <gt>.py, so the generative source + true params can be scrubbed from the
-    agent's cwd (they are read by parsing, never imported)."""
     n_experiments: Optional[int] = None
     """Override the config's number of outer-loop experiments per run."""
     n_participants: Optional[int] = None
@@ -160,9 +155,6 @@ def main(args: Args) -> None:
     gt_models_dir = (
         resolve_path(args.gt_models_dir) if args.gt_models_dir is not None else None
     )
-    gt_family_dir = (
-        resolve_path(args.gt_family_dir) if args.gt_family_dir is not None else None
-    )
     summary_root = (
         resolve_path(args.summary_root) if args.summary_root is not None else None
     )
@@ -203,7 +195,6 @@ def main(args: Args) -> None:
         results_root,
         gt_model_override=args.gt_model,
         gt_models_dir=gt_models_dir,
-        gt_family_dir=gt_family_dir,
         summary_root=summary_root,
         n_experiments_override=args.n_experiments,
         n_participants_override=args.n_participants,
@@ -269,4 +260,5 @@ if __name__ == "__main__":
     # The arguments name the held-out ground truth; agent-written code runs in
     # this process (see forget_command_line).
     forget_command_line()
+    install_run_diagnostics()
     main(parsed)

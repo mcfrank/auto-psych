@@ -131,8 +131,8 @@ def run_unique_participant_ids(
     """``rows`` with a ``participant_id`` unique across the run's experiments.
 
     Collection numbers participants from 0 in every experiment, and the loop
-    pools every experiment's responses, so two different people used to share
-    an id (and a participant random effect). A participant is identified by
+    pools every experiment's responses, so without renumbering two different
+    people would share an id (and a participant random effect). A participant is identified by
     ``participant_id_str`` (the Prolific ID, on live and Firebase rows) when
     the rows carry it, else by the collection's own ``participant_id``. One
     seen in an earlier experiment of the run (its raw collected file) keeps
@@ -309,10 +309,8 @@ def carry_forward_cognitive_models(prev_exp_dir: Path, exp_dir: Path) -> bool:
             shutil.copyfile(prev_ledger, staging / LEDGER_FILENAME)
 
     # The files, manifest and ledger are built beside the destination and
-    # renamed into place together. They used to be copied in place, the
-    # manifest before the ledger, so a crash in between left a valid-looking
-    # set whose manifest made the copy count as done: the ledger was lost for
-    # good (second audit B14).
+    # renamed into place together, so a crash never leaves a valid-looking set
+    # (a manifest that makes the copy count as done) without its ledger.
     replace_directory(dest_dir, build)
     return True
 
@@ -328,7 +326,6 @@ def write_context(
     project_id: str,
     exp_num: int,
     prev_exp_dir: Optional[Path] = None,
-    extra: Optional[Dict[str, Any]] = None,
 ) -> Path:
     """Write CONTEXT.md into exp_dir for the given agent. Return path."""
     prob_path = outer_project_dir(project_id) / "problem_definition.md"
@@ -362,11 +359,6 @@ def write_context(
             f"- Previous model posterior: `{prev_exp_dir / 'model_loop' / 'model_posterior.json'}`",
         ]
 
-    if extra:
-        lines += ["", "## Additional context", ""]
-        for k, v in extra.items():
-            lines.append(f"- **{k}**: {v}")
-
     context_path = exp_dir / "CONTEXT.md"
     context_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return context_path
@@ -381,27 +373,23 @@ def spawn_cc_agent(
     agent_key: str,
     exp_dir: Path,
     allowed_dirs: Optional[List[Path]] = None,
-    timeout_secs: int = 900,
+    *,
+    timeout_secs: int,
     backend: Optional[str] = None,
-    prompt_key: Optional[str] = None,
     repair_feedback: Optional[str] = None,
-    model: Optional[str] = None,
 ) -> tuple[bool, str]:
     """
     Spawn a coding agent (Claude Code or opencode) for the given agent_key.
-    Reads prompt from src/pipelines/outer_loop/prompts/<agent_key>.md, or
-    <prompt_key>.md when prompt_key is given (lets a caller swap the prompt
-    while keeping the stage identity — logs/validation still use agent_key).
+    Reads prompt from src/pipelines/outer_loop/prompts/<agent_key>.md.
     Tells the agent to read CONTEXT.md and complete the task.
     File tool access is restricted to allowed_dirs (defaults to exp_dir only).
     Bash still runs from REPO_ROOT so python3 -m src.* imports work.
     Streams output to exp_dir/logs/<agent_key>.jsonl and prints live summaries.
-    `backend` selects the agent CLI; None resolves via CODING_AGENT/default.
-    `model` overrides the backend's default agent model (verbatim, per-backend
-    format — e.g. opencode wants `provider/model`).
+    `backend` selects the agent CLI; None resolves via CODING_AGENT/default,
+    and the model via CODING_AGENT_MODEL/the backend's default.
     Returns (success, final_result_text).
     """
-    prompt_path = PROMPTS_DIR / f"{prompt_key or agent_key}.md"
+    prompt_path = PROMPTS_DIR / f"{agent_key}.md"
     if not prompt_path.exists():
         return False, f"Prompt not found: {prompt_path}"
 
@@ -436,7 +424,6 @@ def spawn_cc_agent(
         writable_dirs=dirs,  # the experiment it builds; the rest is read-only
         timeout_secs=timeout_secs,
         backend=backend,
-        model=model,
         usage_label=f"outer:{agent_key}",
         stock=True,  # a loop agent: none of the user's Claude setup
         memory_dir=agent_notes_dir(exp_dir),  # notes shared within this run only
@@ -475,30 +462,13 @@ def _collect_llm_participant_programmatic(
     from src.pipelines.outer_loop.participants import get_participant_model
 
     if not stimuli:
-        print(
-            "  [collect] no stimuli (design/stimuli.json missing or empty); nothing to collect",
-            flush=True,
-        )
-        return []
-
-    prompt_text = load_prompt_for_run(
-        project_id or "", 1, "4_collect_participant", None
-    )
+        raise ValueError("no stimuli to collect (design/stimuli.json is empty)")
+    prompt_text = load_prompt_for_run(project_id or "", 1, "4_collect_participant")
     if not prompt_text.strip():
-        print(
-            "  [collect] no 4_collect_participant.md prompt found; cannot run no-browser mode",
-            flush=True,
+        raise FileNotFoundError(
+            "no 4_collect_participant.md prompt: the no-browser mode cannot run"
         )
-        return []
-
-    try:
-        model = get_participant_model(participant_backend, participant_model)
-    except Exception as exc:
-        print(
-            f"  [collect] failed to init participant model ({participant_backend}, {participant_model}): {exc}",
-            flush=True,
-        )
-        return []
+    model = get_participant_model(participant_backend, participant_model)
 
     print(
         f"  [collect] LLM participants via {model.name}: {n_participants} participant(s) x {len(stimuli)} stimuli",
@@ -598,7 +568,6 @@ def run_design_programmatic(
             n_select=k,
             n_random=n_random,
             seed=seed,
-            random_seed=seed,
             n_responses=n_responses,
         )
         basis = "prior predictive + uniform model weights"
@@ -619,7 +588,6 @@ def run_design_programmatic(
             n_select=k,
             n_random=n_random,
             seed=seed,
-            random_seed=seed,
             responses_csv=prev_exp_dir / "model_loop" / "responses.csv",
             fit_cache_dir=loop_fit_cache_dir,
             fit_kwargs=fit_kwargs,
@@ -677,7 +645,7 @@ def run_collect_programmatic(
     cognitive_models_manifest = manifest_path(cognitive_models_dir)
 
     stimuli: List[Dict[str, Any]] = []
-    if stimuli_path.exists():
+    if stimuli_path.exists():  # live collection reads its stimuli from the page
         stimuli = json.loads(stimuli_path.read_text(encoding="utf-8"))
 
     data_dir = exp_dir / "data"
@@ -777,22 +745,15 @@ def run_collect_programmatic(
     elif rows is None:
         # PyMC cognitive models: sample synthetic responses from their
         # prior-predictive p_left.
-        model_names: List[str] = []
-        if cognitive_models_manifest.exists():
-            model_names = read_loadable_model_names(cognitive_models_dir)
+        model_names = read_loadable_model_names(cognitive_models_dir)
         if not model_names:
-            print(
-                f"  [collect] Warning: no loadable models in {cognitive_models_dir} — cannot generate data",
-                flush=True,
-            )
-            rows = []
-        else:
-            rows = _generate_from_pymc_models(
-                stimuli,
-                model_names,
-                n_participants,
-                models_dir=cognitive_models_dir,
-            )
+            raise ValueError(f"no models in {cognitive_models_dir} to generate data from")
+        rows = _generate_from_pymc_models(
+            stimuli,
+            model_names,
+            n_participants,
+            models_dir=cognitive_models_dir,
+        )
 
     # Fail loudly on degenerate collected data: if real participants produced no
     # response variation (every trial chose the same side), the data carries no

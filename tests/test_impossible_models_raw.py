@@ -6,13 +6,11 @@ models still declared the old featurizer's columns (``h_a``/``h_b``,
 ``max_run_norm_a/b``, ``imbalance_a/b``) with no ``compute_features`` hook, so
 every cell of the 2026-09-28 impossible sweep stopped at data generation with
 ``MissingStimulusColumns: Rows missing columns ['h_a', 'h_b']``. Each now has
-the hook, computing exactly what the old featurizer
-(``src/subjective_randomness/features.py``) computed.
+the hook, computing what the old featurizer computed.
 """
 
 from __future__ import annotations
 
-import ast
 from itertools import product
 
 import numpy as np
@@ -20,7 +18,6 @@ import pytest
 
 from src.models.data_binding import make_stim_data
 from src.models.model_loading import load_pymc_model, model_source_file, pm_data_inputs
-from src.subjective_randomness import features
 from src.subjective_randomness.holdout_data import (
     generate_responses,
     p_left_fixed_params,
@@ -45,41 +42,6 @@ STIMULI = [
     {"sequence_a": a, "sequence_b": b}
     for a, b in product(["HHTT", "HTHT", "HHHH"], ["THTT", "TTTT", "HTTH"])
 ]
-
-
-def _function_source(path, name):
-    source = path.read_text(encoding="utf-8")
-    for node in ast.parse(source).body:
-        if isinstance(node, ast.FunctionDef) and node.name == name:
-            return ast.get_source_segment(source, node)
-    raise AssertionError(f"{path} defines no {name}")
-
-
-@pytest.mark.parametrize("name", MODELS)
-def test_compute_features_matches_the_old_featurizer(name):
-    model = load_pymc_model(name, IMPOSSIBLE_DIR)
-    columns = sorted(set(pm_data_inputs(model)) - {"chose_left"})
-    hook = getattr(model, "_auto_psych_compute_features")
-    for a, b in PAIRS:
-        computed = hook(a, b)
-        old = features.featurize_stimulus(a, b)
-        assert sorted(computed) == columns
-        for column in columns:
-            assert computed[column] == pytest.approx(old[column], abs=0, rel=1e-12), (
-                a,
-                b,
-                column,
-            )
-            assert type(computed[column]) is type(old[column]), (a, b, column)
-
-
-@pytest.mark.parametrize("name", MODELS)
-def test_the_vendored_clean_sequence_is_the_featurizers(name):
-    assert _function_source(
-        IMPOSSIBLE_DIR / f"{name}.py", "clean_sequence"
-    ) == _function_source(
-        REPO_ROOT / "src" / "subjective_randomness" / "features.py", "clean_sequence"
-    )
 
 
 @pytest.mark.parametrize("name", MODELS)

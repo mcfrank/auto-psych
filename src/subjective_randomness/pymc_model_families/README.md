@@ -1,15 +1,16 @@
 # Subjective Randomness PyMC Model Families
 
-These modules are PyMC adapters for the pure-Python model families in
-`../model_families/`. Each computes its own features from raw H/T sequences via
+These modules are the subjective-randomness literature models in PyMC. Each computes its own features from raw H/T sequences via
 a `compute_features` hook, exposes a deterministic `p_left`, and defines the
 Bernoulli response likelihood expected by `src.models.pymc_inference`.
 
 This directory is the **recovery registry**, and its `models_manifest.yaml` is
 the single source of truth for which models are active. The recovery harnesses
 (`holdout_recovery.py` and the impossible variant) point their
-`seed_models_dir` here, because ground-truth generation and
-fixed-parameter baselines need the pure-Python family twins. The outer loop's
+`seed_models_dir` here; ground-truth generation and the fixed-parameter
+baselines run these models at the recovery configs' `seed_params` (until
+2026-10-18 the `DEFAULT_PARAMS` of pure-Python twins in `../model_families/`,
+since removed; same values). The outer loop's
 live seed pool
 (`src/pipelines/outer_loop/projects/subjective_randomness/seed_models/`) is a
 **mirror** of this manifest, not an independent set: to change the seed set,
@@ -18,15 +19,14 @@ edit the manifest here and run
 across (the pool manifest keeps its own header but must list the same models).
 `tests/test_model_manifest.py` and
 `tests/test_subjective_randomness_seed_recovery.py` fail if the two diverge, or
-if a manifest name has no pure-Python twin. (They diverged once, between the
+if a manifest name has no `seed_params`. (They diverged once, between the
 hero-run promotion of 2026-07 and the reconciliation of 2026-08, which left
 the recovery harness's twin lookup raising `ModuleNotFoundError` for every
-pool model; the retired winners are archived under the seed pool's
-`archive_hero_run_2026_07/`.)
+pool model; the retired winners are in git history.)
 
 The 2026-08 seed-model fidelity review **replaced** the original four models
-with closer paper-anchored versions (each with a pure-Python twin and
-paper-derived test vectors in `tests/test_literature_model_families.py`):
+with closer paper-anchored versions (with paper-derived test vectors in
+`tests/test_literature_model_families.py`):
 
 | Active model | Replaces | Faithful to |
 | --- | --- | --- |
@@ -39,14 +39,5 @@ Only manifest-listed models are active — for recovery, the fitted and
 no-learning baselines, and the outer loop's seed pool.
 The superseded originals were removed in September 2026 (git history keeps
 them). A newly discovered model earns its place here only through the
-standard recovery/holdout comparison — and needs a pure-Python twin in
-`../model_families/` before it can be added.
-
-Run model comparison (responses.csv carries only raw columns; each model
-computes its own features via its `compute_features` hook):
-
-```bash
-uv run python -m src.model_comparison.posterior \
-  --responses path/to/responses.csv \
-  --models-dir src/subjective_randomness/pymc_model_families
-```
+standard recovery/holdout comparison — and needs generating parameters in
+the recovery configs' `seed_params` before it can be added.

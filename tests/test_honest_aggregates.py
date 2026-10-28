@@ -23,8 +23,6 @@ import pytest
 
 from src.subjective_randomness.reporting import (
     aggregate_holdout_trajectories,
-    holdout_combined_frames,
-    holdout_trajectories_ggplot,
 )
 from src.subjective_randomness.sweep_cells import accounting_lines, survey_sweep
 from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
@@ -234,20 +232,6 @@ def test_a_result_scored_before_per_experiment_baselines_joins_only_at_the_end()
         e["reason"] for e in agg["gt_models"][0]["excluded"] if e["cell"] == "run2/gt_a"
     }
     assert any("re-score" in reason for reason in reasons)
-
-
-def test_the_combined_figure_draws_positions_and_per_experiment_baselines():
-    agg = aggregate_holdout_trajectories(
-        [CELL_A, CELL_B], metric="rmse", labels=["run1/gt_a", "run2/gt_a"]
-    )
-    frames = holdout_combined_frames(agg)
-    assert set(frames["trajectory"]["position"]) == {
-        p["x"] for p in agg["gt_models"][0]["best"]
-    }
-    assert "global_step" not in frames["trajectory"].columns
-    fitted = frames["baselines"][frames["baselines"]["series"] != "best model"]
-    assert len(fitted) == len(agg["gt_models"][0]["best"])
-    holdout_trajectories_ggplot(agg)  # builds
 
 
 # ── the per-experiment fitted-seed baseline ──────────────────────────────

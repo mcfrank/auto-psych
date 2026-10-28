@@ -29,7 +29,7 @@ does not reach the agents.
 
 ```
 submit_holdout_test_retest.sh   (submits setup → array → retry → analysis)
-holdout_setup.sbatch            (once per sweep: stage harness_repo, agent_src, gt_models_src, gt_family_src; record code_commit)
+holdout_setup.sbatch            (once per sweep: stage harness_repo, agent_src, gt_models_src; record code_commit)
 holdout_recovery_array.sbatch   (one task = one (repeat, ground truth) cell)
  └─ scripts/subjective_randomness/holdout_recovery.py : main
      └─ src/subjective_randomness/holdout_recovery.py : run_holdout_recovery_from_config
@@ -62,7 +62,7 @@ loop's critique agent and candidate agents.
 | Setting | Value | Where it is set |
 | --- | --- | --- |
 | Ground truths (one per array task) | `falk_konold_dp`, `motif_stack`, `finite_experience_occurrence`, `local_representativeness` | config `gt_models`; sbatch `GTS` (sbatch:66) |
-| GT parameters | family `DEFAULT_PARAMS` (config values are `null`) | `holdout_data.resolve_generating_params` |
+| GT parameters | config `seed_params` (`gt_models` values are `null`) | `holdout_data.resolve_generating_params` |
 | Experiments per cell | 3 | config `n_experiments` |
 | Synthetic participants per experiment | 40 | config `n_participants` |
 | Stimuli per experiment | 64, all chosen by EIG (40-response EIG until its noise floor, then single-response EIG fill); 0 random; lazy batched greedy search in float32 | config `design: {n_eig: 64, n_random: 0}`; `DESIGN_*` in eig.py |
@@ -158,31 +158,27 @@ In order (sbatch:134-318):
    `.secrets.example`, and the whole of `/docs/`, `/tests/`, `/scripts/`,
    `/analysis/`, `/diagrams/`, `/README.md`, `/SUMMARY.md`,
    `/HERO_RUN_DESIDERATA.md` and `/src/subjective_randomness/` (which contains
-   `model_families/`, `pymc_model_families/`, `features.py`,
-   `stimulus_design.py`, …). From each project directory it also drops
+   `pymc_model_families/`, `stimulus_design.py`, …). From each project directory it also drops
    `references/`, `instruction_literature.md`, `problem_definition.md` and
    `seed_models/archive_*/`.
 2. Delete `<gt>.py` from the registry path and from the live seed pool
    `src/pipelines/outer_loop/projects/subjective_randomness/seed_models/`
    (sbatch:157-160). The registry path is already absent.
-3. Replace `model_families/<gt>.py` with a stub, but only if the file exists
-   (sbatch:163-189). It never does, because step 1 excluded
-   `src/subjective_randomness/`, so this step has no effect.
-4. Write `opencode.json` read/glob/grep deny rules (seed_models, both family
+3. Write `opencode.json` read/glob/grep deny rules (seed_models, both family
    dirs, holdout configs, `ground_truth_models.py`, `evaluate_recovery.py`,
    `gt.txt`) (sbatch:204-227). Only opencode reads this file.
-5. Remove the GT's entry from both manifests (`remove_manifest_entry.py`); a
+4. Remove the GT's entry from both manifests (`remove_manifest_entry.py`); a
    manifest directory absent from the tree (the registry) is skipped. Then
    remove it from every other `models_manifest.yaml` outside `_runs/` that
    mentions it (sbatch:239-270).
-6. Delete every file whose name contains the GT's name, outside `_runs/`
+5. Delete every file whose name contains the GT's name, outside `_runs/`
    (sbatch:289-292).
-7. Verify: both family directories are absent, and no `*<gt>*.py` remains.
+6. Verify: both family directories are absent, and no `*<gt>*.py` remains.
    Otherwise exit 1 (sbatch:299-312).
-8. **GT-name scan** (`scan_gt_name.sh --before-agents`, sbatch:317): `grep -rIl`
+7. **GT-name scan** (`scan_gt_name.sh --before-agents`, sbatch:317): `grep -rIl`
    for the GT name over every text file in the tree except `_runs/`. Any hit
    stops the cell (exit 1) before an agent runs.
-9. Remove from the agents' environment every variable whose value contains the
+8. Remove from the agents' environment every variable whose value contains the
    GT name, `$WORK_ROOT` or `$REPO`, plus `GT_MODELS` and `CONFIG`
    (sbatch:350-364). That is the harness's environment; each sandboxed agent
    then gets only an allowlist of it (`agent_sandbox.agent_environment`), so
@@ -191,8 +187,8 @@ In order (sbatch:134-318):
 
 The harness then runs from `harness_repo` with `--agent-root $RUN_REPO`,
 `--results-root $RUN_REPO/_runs`, `--summary-root $WORK_ROOT/run<r>`,
-`--cache-dir $AGENT_DIR/mcmc_cache`, `--gt-models-dir $WORK_ROOT/gt_models_src`,
-`--gt-family-dir $WORK_ROOT/gt_family_src`, and `--resume` (sbatch:366-384).
+`--cache-dir $AGENT_DIR/mcmc_cache`, `--gt-models-dir $WORK_ROOT/gt_models_src`
+and `--resume` (sbatch:366-384).
 
 After a successful run: `scan_gt_name.sh --after-run` over `_runs/` writes
 `gt_name_mentions.txt` if an agent wrote the GT name (warn-only, sbatch:391),
@@ -212,21 +208,17 @@ manifest; top-level files and directories the list does not name (e.g.
 - **Generator:** the GT's PyMC model file from the pristine snapshot
   `gt_models_src/<gt>.py`, a copy of `src/subjective_randomness/pymc_model_families/<gt>.py`
   (`run_holdout_experiments` uses `gt_models_dir`, holdout_recovery.py:172).
-- **Parameters:** config `gt_models: {name: null}` means the pure-Python
-  family's `DEFAULT_PARAMS`. `resolve_generating_params`
-  (holdout_data.py:86) calls `_family_default_params` (holdout_data.py:72),
-  which reads `gt_family_src/<gt>.py` by **parsing** the `DEFAULT_PARAMS`
-  literal with `ast` (`_default_params_from_file`, holdout_data.py:54), without
-  importing it. If no pristine directory is given, it imports
-  `src.subjective_randomness.model_families.<gt>`.
-- **Where the values live** (cited by line, not copied here):
-
-  | GT | `DEFAULT_PARAMS` | Free parameters in the PyMC model |
-  | --- | --- | --- |
-  | `falk_konold_dp` | `model_families/falk_konold_dp.py:38` | `beta`, `side_bias` |
-  | `finite_experience_occurrence` | `model_families/finite_experience_occurrence.py:43` | `beta`, `side_bias` |
-  | `local_representativeness` | `model_families/local_representativeness.py:40` | `theta_alt`, `alt_weight`, `periodic_share`, `beta`, `side_bias` |
-  | `motif_stack` | `model_families/motif_stack.py:43` | `delta`, `alpha`, `repetition_weight`, `mirror_share`, `complement_share`, `beta`, `side_bias` |
+- **Parameters:** config `gt_models: {name: null}` means that model's entry
+  in the config's `seed_params` (`resolve_generating_params`, holdout_data.py).
+  Until 2026-10-18 they were the `DEFAULT_PARAMS` of pure-Python twins in
+  `src/subjective_randomness/model_families/`, read from a pristine snapshot
+  (`gt_family_src`); the values are unchanged
+  (`tests/test_ground_truth_params_in_config.py`).
+- **Free parameters in the PyMC models:** `falk_konold_dp` and
+  `finite_experience_occurrence`: `beta`, `side_bias`;
+  `local_representativeness`: `theta_alt`, `alt_weight`, `periodic_share`,
+  `beta`, `side_bias`; `motif_stack`: `delta`, `alpha`, `repetition_weight`,
+  `mirror_share`, `complement_share`, `beta`, `side_bias`.
 
   `side_bias` is 0 in all four. `_require_exact_params` (holdout_data.py:132)
   fails unless the parameter names match the PyMC model's free RVs exactly.
@@ -707,7 +699,7 @@ order (then any random picks in pool order). This order becomes
 `seed = derive_seed(cell seed, GT, exp_num, "responses")` and
 `participant_id_offset = (exp_num − 1) · 40`:
 
-1. `p = p_left_fixed_params(gt, gt_models_src, stimuli, DEFAULT_PARAMS, seed)`
+1. `p = p_left_fixed_params(gt, gt_models_src, stimuli, seed_params[gt], seed)`
    gives one deterministic `p_left` per stimulus in its designed orientation,
    and `p_swapped` the same for every pair with `sequence_a`/`sequence_b`
    swapped (holdout_data.py:200-206).
@@ -921,13 +913,11 @@ experiment means every carried model is refit on it.
 - **ELPD-LOO:** `FittedModel.loo_diagnostics` → `loo_diagnostics`
   (loo_reliability.py:91) → `az.loo(idata, pointwise=True)` on the per-trial
   Bernoulli log-likelihood. It is computed once per fit.
-- **Softmax "posterior"** (`model_posterior`, posterior.py:231):
-  `score_m = elpd_m + c · lines_m`, with `c = DEFAULT_COMPLEXITY_PRIOR_CONST`
-  (scoring.py) and `lines_m` the number of non-blank, non-comment lines in
-  the model file. By default `c = 0`, so there is **no complexity prior** and
-  the posterior is a softmax of ELPD-LOO alone (user decision 2026-09-29; it
-  was −0.05: on 14 finished recovery cells the penalty left held-out accuracy
-  unchanged within noise). Then `posterior_m = softmax(score)`, rounded to 6 decimals.
+- **Softmax "posterior"** (`model_posterior`, posterior.py): a softmax of
+  ELPD-LOO, with no complexity prior (a line-count prior was removed: since
+  the user's decision of 2026-09-29 its constant was 0; at −0.05, on 14
+  finished recovery cells, it left held-out accuracy unchanged within noise),
+  rounded to 6 decimals.
   It raises on a non-finite ELPD. It is used only as a report field and as the
   BMA weights in evaluation (§7). It does **not** select the best model.
 - **Comparison table** (`compare_table`, posterior.py:120): `az.compare` on the
@@ -1281,7 +1271,7 @@ non-abandoned round, so up to 6 per experiment and 18 per cell:
 | `step` | 0.. within the experiment |
 | `iteration` | `null` for the seed step, else the round index |
 | `best_model` | `_best_exportable_model` (§5.5) |
-| `argmax_model` | softmax-posterior argmax (with complexity prior), for audit |
+| `argmax_model` | softmax-posterior argmax, for audit |
 | `excluded_unreliable` | names that are `loo_unreliable` **or** `not_converged` |
 | `posteriors` | softmax posterior (6 dp) |
 | `elpd_loo` | ELPD-LOO (4 dp) |
@@ -1376,7 +1366,7 @@ This runs in the harness after the three experiments
 
 ### 7.2 Per-step trajectory (`evaluate_trajectory`, holdout_eval.py:320)
 
-- GT: `q = p_left_fixed_params(gt, gt_models_src, eval, DEFAULT_PARAMS)`.
+- GT: `q = p_left_fixed_params(gt, gt_models_src, eval, seed_params[gt])`.
 - For every `history.json` entry of every experiment (global_step 0..17):
   - `best_model` and every model with `posteriors > 0`: refit with the loop's
     `fit_kwargs` on that experiment's `model_loop/responses.csv`. This is a
@@ -1428,7 +1418,7 @@ This runs in the harness after the three experiments
 
 - **`baseline` (fixed-parameter seeds, no learning):**
   `seed_baseline_correlation` (holdout_eval.py). Each registry model other
-  than the GT, at its family's `DEFAULT_PARAMS`, gives a fixed `p_left` on the
+  than the GT, at its config `seed_params`, gives a fixed `p_left` on the
   eval pool and a Pearson r with q. The model code is the file the cell was
   seeded with, in experiment 1's zoo (`seeded_models_dir(run_root)` =
   `experiment1/model_loop/models/`, or its `pruned/` for a seed experiment 1
@@ -1583,7 +1573,7 @@ Discrepancies, where the code wins:
 
 1. **README.md:14** says the seed pool is "the best models discovered by three
    earlier human replicate runs". The live pool is the four literature-faithful
-   models. The hero-run pool is archived in `seed_models/archive_hero_run_2026_07/`.
+   models. The hero-run pool is in git history.
 2. **CLAUDE.md, Ledger bullet** says the ledger is rendered as "already tried —
    do not re-propose". The heading is now "Tried before", and pruned mechanisms
    may return with a substantive change (as CLAUDE.md's own Pruning bullet
@@ -1617,9 +1607,9 @@ Discrepancies, where the code wins:
     shows the run tree as `<gt_model>/…/trajectory.json`. The run directory is
     `cell_<i>/`, and `trajectory.json` is written to the summary root, outside
     the agent tree.
-12. **holdout_recovery_array.sbatch:163-189** stubs `model_families/<gt>.py`,
-    but `agent_tree.exclude` already removes `src/subjective_randomness/`, so
-    the stub is never written. This is harmless.
+12. *(Fixed 2026-10-18: the stub step and `model_families/` are gone.)*
+    holdout_recovery_array.sbatch stubbed `model_families/<gt>.py`, but
+    `agent_tree.exclude` already removed `src/subjective_randomness/`.
 13. *(Fixed 2026-09-29.)* The lens comment in candidate_agent.py claimed
     twelve lenses walk "four rounds without repeating". The battery is now
     eleven lenses (the refinement lens left it: refinement slots have their

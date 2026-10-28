@@ -54,6 +54,7 @@ from src.subjective_randomness.leakage_audit import leakage_check
 from src.subjective_randomness.recover import pearson_r
 from src.subjective_randomness.stimulus_design import generate_candidate_pool
 from tests.model_registry import FAITHFUL_MODEL_NAMES
+from tests.test_ground_truth_params_in_config import SEED_PARAMS
 from tests.recovery_fixtures import CannedPredictionFit
 from tests.paths import REPO_ROOT
 
@@ -297,6 +298,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(
     config = {
         "project_id": "subjective_randomness",
         "seed_models_dir": str(SEED_MODELS_DIR),
+        "seed_params": SEED_PARAMS,
         "gt_models": ["local_representativeness"],
         "n_experiments": 2,
         "n_participants": 3,
@@ -519,6 +521,7 @@ def test_holdout_recovery_records_whether_the_incumbent_ever_changes(
     config = {
         "project_id": "subjective_randomness",
         "seed_models_dir": str(SEED_MODELS_DIR),
+        "seed_params": SEED_PARAMS,
         "gt_models": ["local_representativeness"],
         "n_experiments": 2,
         "n_participants": 3,
@@ -988,6 +991,7 @@ def test_from_config_resume_skips_completed_gt_runs(tmp_path, monkeypatch):
 
     config = {
         "seed_models_dir": str(SEED_MODELS_DIR),
+        "seed_params": SEED_PARAMS,
         "gt_models": ["local_representativeness"],
         "n_experiments": 1,
     }
@@ -1018,6 +1022,7 @@ def test_from_config_resume_rejects_stale_trajectory_experiment_count(
 
     config = {
         "seed_models_dir": str(SEED_MODELS_DIR),
+        "seed_params": SEED_PARAMS,
         "gt_models": ["local_representativeness"],
         "n_experiments": 2,  # config asks for more experiments than recorded
     }
@@ -1627,7 +1632,7 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(
     }
 
     enriched = reevaluate_trajectories(
-        result, seed_models_dir=SEED_MODELS_DIR, cache_dir=None
+        result, seed_models_dir=SEED_MODELS_DIR, seed_params=SEED_PARAMS, cache_dir=None
     )
 
     traj = enriched["gt_runs"][0]["trajectory"]
@@ -1713,7 +1718,7 @@ def test_reevaluate_trajectories_records_the_incumbent_trajectory(
     }
 
     enriched = reevaluate_trajectories(
-        result, seed_models_dir=SEED_MODELS_DIR, cache_dir=None
+        result, seed_models_dir=SEED_MODELS_DIR, seed_params=SEED_PARAMS, cache_dir=None
     )
 
     gt_run = enriched["gt_runs"][0]
@@ -1823,6 +1828,7 @@ def test_reevaluate_trajectories_rebuilds_exhaustive_eval_pool(tmp_path, monkeyp
     enriched = reevaluate_trajectories(
         result,
         seed_models_dir=SEED_MODELS_DIR,
+        seed_params=SEED_PARAMS,
         cache_dir=None,
         gt_models_dir=gt_models_dir,
         eval_pool_override={
@@ -1895,6 +1901,7 @@ def test_leakage_check_flags_identical_file(tmp_path):
         "local_representativeness",
         seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
+        gt_params=SEED_PARAMS["local_representativeness"],
     )
     assert result["any_identical"] is True
     flagged = [f for f in result["files"] if f["identical"]]
@@ -1910,6 +1917,7 @@ def test_leakage_check_flags_distinctive_param_mentions(tmp_path):
         "local_representativeness",
         seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
+        gt_params=SEED_PARAMS["local_representativeness"],
     )
     assert result["any_mention"] is True
     assert result["any_identical"] is False
@@ -1924,6 +1932,7 @@ def test_leakage_check_flags_gt_named_file(tmp_path):
         "local_representativeness",
         seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
+        gt_params=SEED_PARAMS["local_representativeness"],
     )
     assert result["any_gt_named"] is True
     assert result["any_identical"] is False
@@ -1939,6 +1948,7 @@ def test_leakage_check_clean_run_unflagged(tmp_path):
         "local_representativeness",
         seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
+        gt_params=SEED_PARAMS["local_representativeness"],
     )
     assert result["any_identical"] is False
     assert result["any_mention"] is False
@@ -1947,17 +1957,10 @@ def test_leakage_check_clean_run_unflagged(tmp_path):
 
 def test_leakage_check_flags_hardcoded_gt_param_value(tmp_path):
     """A candidate that pastes a distinctive generating VALUE (not just a name)
-    is flagged — the exact vector that leaked run1's delta/alpha. Also exercises
-    gt_family_dir: the GT params come from a pristine file by parsing (the name
-    isn't an importable module)."""
+    is flagged — the exact vector that leaked run1's delta/alpha."""
     gt_dir = tmp_path / "gt_models"
     gt_dir.mkdir()
     (gt_dir / "secret_gt.py").write_text("# pymc adapter\n", encoding="utf-8")
-    fam_dir = tmp_path / "gt_family"
-    fam_dir.mkdir()
-    (fam_dir / "secret_gt.py").write_text(
-        "DEFAULT_PARAMS = {'delta': 0.5493, 'beta': 1.0}\n", encoding="utf-8"
-    )
     run_root = tmp_path / "run"
     _make_model_dirs(run_root, 1, {"candidate.py": "p = _viterbi(seq, 0.5493)\n"})
 
@@ -1967,7 +1970,7 @@ def test_leakage_check_flags_hardcoded_gt_param_value(tmp_path):
         seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
         gt_models_dir=gt_dir,
-        gt_family_dir=fam_dir,
+        gt_params={"delta": 0.5493, "beta": 1.0},
     )
     assert result["any_value_mention"] is True
     assert result["any_identical"] is False
@@ -1983,6 +1986,7 @@ def test_from_config_rejects_registry_dir_without_manifest(tmp_path):
     (tmp_path / "other_seeds").mkdir()
     config = {
         "seed_models_dir": str(tmp_path / "other_seeds"),
+        "seed_params": SEED_PARAMS,
         "gt_models": ["local_representativeness"],
     }
     with pytest.raises(FileNotFoundError, match="models_manifest"):
@@ -1994,6 +1998,7 @@ def test_from_config_rejects_registry_dir_without_manifest(tmp_path):
 def test_from_config_rejects_unknown_gt_model_override(tmp_path):
     config = {
         "seed_models_dir": str(SEED_MODELS_DIR),
+        "seed_params": SEED_PARAMS,
         "gt_models": ["local_representativeness"],
     }
     with pytest.raises(ValueError, match="not among the configured"):
@@ -2019,6 +2024,7 @@ def test_from_config_rejects_zero_overrides(tmp_path, monkeypatch):
 
     config = {
         "seed_models_dir": str(SEED_MODELS_DIR),
+        "seed_params": SEED_PARAMS,
         "gt_models": ["local_representativeness"],
     }
     with pytest.raises(ValueError, match="n_experiments"):
@@ -2245,6 +2251,7 @@ def _knob_config(inner_loop):
     return {
         "project_id": "subjective_randomness",
         "seed_models_dir": str(SEED_MODELS_DIR),
+        "seed_params": SEED_PARAMS,
         "gt_models": ["local_representativeness"],
         "n_experiments": 1,
         "n_participants": 3,
@@ -2538,6 +2545,7 @@ def test_holdout_single_experiment_real_mcmc_with_stub_agents(tmp_path, monkeypa
     config = {
         "project_id": "subjective_randomness",
         "seed_models_dir": str(SEED_MODELS_DIR),
+        "seed_params": SEED_PARAMS,
         "gt_models": ["motif_stack"],
         "n_experiments": 1,
         "n_participants": 8,
@@ -2645,6 +2653,7 @@ def test_leakage_check_flags_a_generating_model_column_in_any_agent_facing_csv(
         "local_representativeness",
         seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
+        gt_params=SEED_PARAMS["local_representativeness"],
     )
     assert result["any_csv_generating_model"] is True
     flagged = result["csv_generating_model_files"]
@@ -2661,6 +2670,7 @@ def test_leakage_check_leaves_a_stripped_csv_unflagged(tmp_path):
         "local_representativeness",
         seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
+        gt_params=SEED_PARAMS["local_representativeness"],
     )
     assert result["any_csv_generating_model"] is False
     assert result["csv_generating_model_files"] == []
@@ -2692,6 +2702,7 @@ def test_leakage_check_flags_the_held_out_name_in_a_checkout_manifest(tmp_path):
         "local_representativeness",
         seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
+        gt_params=SEED_PARAMS["local_representativeness"],
         checkout_root=checkout,
     )
     assert result["any_manifest_gt_named"] is True
@@ -2709,6 +2720,7 @@ def test_leakage_check_without_a_checkout_root_reports_the_manifest_channel_unch
         "local_representativeness",
         seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
+        gt_params=SEED_PARAMS["local_representativeness"],
     )
     assert result["any_manifest_gt_named"] is None
     assert result["manifest_gt_named_files"] == []
@@ -2735,6 +2747,7 @@ def test_leakage_check_records_the_featurizer_columns_each_model_reads(tmp_path)
         "local_representativeness",
         seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
+        gt_params=SEED_PARAMS["local_representativeness"],
     )
     by_name = {Path(f["path"]).name: f for f in result["files"]}
     assert by_name["regressor.py"]["data_columns"] == ["occ_n20_a", "p_alts_a"]
@@ -2767,6 +2780,7 @@ def test_leakage_check_manifest_scan_ignores_the_loops_own_output_manifests(tmp_
         "local_representativeness",
         seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
+        gt_params=SEED_PARAMS["local_representativeness"],
         checkout_root=checkout,
     )
     assert result["any_manifest_gt_named"] is False
@@ -2803,6 +2817,7 @@ def test_leakage_check_flags_gt_in_opposite_feature_regime_manifest(tmp_path):
         "local_representativeness",
         seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
+        gt_params=SEED_PARAMS["local_representativeness"],
         checkout_root=checkout,
     )
     assert result["any_manifest_gt_named"] is True
@@ -2848,28 +2863,6 @@ def test_agent_csv_has_only_raw_columns(tmp_path, monkeypatch):
         rows = list(reader)
     assert set(reader.fieldnames) == set(SUBJECTIVE_RANDOMNESS.raw_columns)
     assert len(rows) == 2 * len(DESIGN_STIMULI)
-
-
-def test_strip_to_raw_columns_keeps_only_the_raw_five():
-    rows = [
-        {
-            "sequence_a": "HTHT",
-            "sequence_b": "HHTT",
-            "participant_id": 0,
-            "trial_index": 3,
-            "chose_left": 1,
-            "p_alts_a": 1.0,
-            "occ_n20_b": 0.5,
-        }
-    ]
-    (stripped,) = holdout_data.strip_to_raw_columns(rows, SUBJECTIVE_RANDOMNESS)
-    assert tuple(stripped) == SUBJECTIVE_RANDOMNESS.raw_columns
-    assert rows[0]["p_alts_a"] == 1.0  # input untouched
-
-
-def test_strip_to_raw_columns_fails_loudly_without_the_sequences():
-    with pytest.raises(ValueError, match="sequence_a"):
-        holdout_data.strip_to_raw_columns([{"participant_id": 0, "chose_left": 1}], SUBJECTIVE_RANDOMNESS)
 
 
 # ── Regression: existing metric values must not change ──────────────

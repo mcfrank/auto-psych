@@ -21,9 +21,9 @@ started from the old export: move it aside if it ran nothing), when the stage
 did not finish, and when any fit the comparison needs is not in the cache
 (``fit_kwargs`` must be the loop's own sampler settings; nothing is sampled).
 
-Written for the October 2026 live run (user decision 2026-09-30): pruning at
-2·dse_clustered left experiment 1 a single model, which gives the next
-design nothing to discriminate; the series moved to 4.
+Used when a multiplier proves too strict, e.g. one that leaves an experiment
+a single model and the next design nothing to discriminate (user decision
+2026-09-30).
 
     python -m src.pipelines.outer_loop.reprune --experiment-dir <run>/<project>/experiment1 \\
         --dse-multiplier 4 --draws 3000 --tune 2000 --chains 4 --target-accept 0.8
@@ -51,7 +51,6 @@ from src.pipelines.inner_loop.hypothesis_ledger import (
 from src.pipelines.inner_loop.model_zoo import _write_manifest
 from src.pipelines.inner_loop.pymc_orchestrator import end_experiment
 from src.pipelines.inner_loop.scoring import (
-    DEFAULT_COMPLEXITY_PRIOR_CONST,
     _compare,
     _score,
 )
@@ -184,9 +183,7 @@ def reprune_experiment(
     write_text_atomically(history_path, json.dumps(history, indent=2))
 
     # The loop's own end-of-experiment step, then the stage's export.
-    posterior = _score(
-        responses, models_dir, DEFAULT_COMPLEXITY_PRIOR_CONST, cache_dir, fit_kwargs
-    )
+    posterior = _score(responses, models_dir, cache_dir, fit_kwargs)
     comparison = _compare(responses, models_dir, cache_dir, fit_kwargs)
     result = end_experiment(
         loop_dir,
@@ -200,7 +197,6 @@ def reprune_experiment(
         cache_dir=cache_dir,
         fit_kwargs=fit_kwargs,
         prune_dse_multiplier=dse_multiplier,
-        complexity_prior_const=DEFAULT_COMPLEXITY_PRIOR_CONST,
         # The re-prune scores by PSIS-LOO (_score and _compare above take no
         # selection), so the end-of-experiment step must too.
         selection=LOO,

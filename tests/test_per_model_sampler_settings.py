@@ -23,7 +23,6 @@ import pytest
 
 from src.models import mcmc_defaults as md
 from src.models import pymc_inference as pi
-from src.subjective_randomness.features import featurize_responses_csv
 
 SEED_MODELS_DIR = (
     Path(__file__).resolve().parent.parent
@@ -38,8 +37,9 @@ class _StopSampling(Exception):
 
 
 def _write_same_length_responses(tmp_path: Path) -> Path:
-    """A tiny featurized responses CSV of same-length H/T pairs."""
-    raw = tmp_path / "raw.csv"
+    """A tiny raw responses CSV of same-length H/T pairs (the models compute
+    their own features)."""
+    raw = tmp_path / "responses.csv"
     with raw.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(
             f,
@@ -68,9 +68,7 @@ def _write_same_length_responses(tmp_path: Path) -> Path:
                     "chose_left": y,
                 }
             )
-    featurized = tmp_path / "responses.csv"
-    featurize_responses_csv(raw, featurized)
-    return featurized
+    return raw
 
 
 def _capture_sample_kwargs(monkeypatch) -> dict:

@@ -7,7 +7,6 @@ agent did, including validation feedback on retries.
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional
 
 AGENT_LOG_FILENAME = "observability.log"
 
@@ -27,18 +26,3 @@ def agent_log(out_dir: Path, *lines: str) -> None:
             f.write(f"[{_ts()}] {line}\n")
         f.flush()
 
-
-def append_validation_failure(
-    run_dir: Path,
-    agent_key: str,
-    attempt: int,
-    message: str,
-    details: Optional[Dict[str, Any]] = None,
-) -> None:
-    """Append a validation failure line to the agent's observability.log (called by validator)."""
-    agent_dir = Path(run_dir) / agent_key
-    agent_dir.mkdir(parents=True, exist_ok=True)
-    line = f"Validation failed (attempt {attempt}): {message}"
-    if details:
-        line += f" | details={details}"
-    agent_log(agent_dir, line)

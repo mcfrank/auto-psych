@@ -245,38 +245,6 @@ def test_an_exhausted_api_credit_balance_raises_without_waiting(
     assert not (agent["dir"] / "candidate.py").exists()
 
 
-def test_tools_that_requeue_on_limits_still_get_the_result_back(
-    tmp_path, monkeypatch, agent
-):
-    def fake_sandbox_command(cmd, *, agent_dir, env, **kwargs):
-        return [
-            sys.executable,
-            str(agent["stub"]),
-            str(agent["calls"]),
-            str(agent_dir),
-            "forever",
-            "claude",
-            "You've hit your session limit · resets 3pm",
-        ], dict(env)
-
-    monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
-    (agent["dir"] / "scratch").mkdir()
-    success, result = coding_agent.run_coding_agent(
-        "p",
-        cwd=tmp_path,
-        log_path=agent["dir"] / "agent.jsonl",
-        backend="claude",
-        allowed_dirs=[agent["dir"]],
-        writable_dirs=[agent["dir"]],
-        sandbox=True,
-        on_summary=None,
-        timeout_secs=60,
-        wait_out_usage_limits=False,
-    )
-    assert result.startswith("You've hit your session limit")
-    assert agent["waits"] == []
-
-
 def test_a_candidate_slot_spends_no_retry_on_a_usage_limit(
     tmp_path, monkeypatch, agent
 ):

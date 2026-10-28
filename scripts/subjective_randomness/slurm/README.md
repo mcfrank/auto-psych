@@ -150,36 +150,25 @@ recover them; 5 repeats per ground truth measure how *stably* it fails.
 
 - `run_impossible_test_retest.sh` — pinned wrapper (5 repeats, `BASE_SEED=100`,
   the impossible config, a dedicated `..._full` work root). Start here.
-- `submit_impossible_holdout_test_retest.sh` — submits the chain: setup,
-  array, the shared retry job (`holdout_retry.sbatch`, resubmitting through
-  this script: `RETRY_SUBMIT_SCRIPT`) and the analysis with
-  `MISSING_CELLS.txt`, exactly as the literature submitter does (see Resume).
-  The array's memory for one submission is `ARRAY_MEM` (the old `MEM` knob
-  now stops the submission with a message). Before 2026-09-28 it had no
-  retries: a failed impossible cell needed a manual resubmission.
-- `impossible_holdout_setup.sbatch` — stage 1: build the venv, stage the
-  sweep's code once (`stage_sweep_code.sh`, as the faithful setup does) **and**
-  stage pristine, off-the-agent snapshots of the impossible recipe (the models
-  dir and the config) on scratch.
-- `impossible_holdout_recovery_array.sbatch` — stage 2: `R × G` array running
-  `impossible_holdout_recovery.py`.
-- stage 3 reuses `holdout_analysis.sbatch` / `holdout_test_retest.py` (both are
-  ground-truth-agnostic).
+- `submit_impossible_holdout_test_retest.sh` — sets the impossible config,
+  ground truths and `GT_MODELS_REL=src/subjective_randomness/impossible_models`
+  and runs `submit_holdout_test_retest.sh`: the same setup, array, retry and
+  analysis jobs as the literature sweep, so every isolation guard applies to
+  both. (Until 2026-10-18 it had its own setup and array scripts and its own
+  CLI, `impossible_holdout_recovery.py`.)
 
 **Key difference from the standard holdout — leak prevention.** The impossible
-ground truth is *not* a seed model, so nothing is held out of the seed set.
-Instead, what must stay off the agent's disk is the impossible **recipe**: both
-the model files (`impossible_models/*.py`) and their answer-bearing **names** in
-the config (`more_heads_more_random`, …). Each array task builds its agent tree
-exactly as the faithful array does: from the staged `agent_src`
-(`agent_tree.exclude`, which drops `src/subjective_randomness/` with the
-impossible models and `scripts/` with the configs), under an opaque random id
-in `$AGENT_TREES_ROOT` (never under the GT-named cell directory), with the
-GT-name scan before the agents (fatal) and after (warn-only), the environment
-withholding, and the harness running from the staged `harness_repo` with
-`--agent-root`. The parent loads the ground truth from the pristine scratch
-snapshot via a per-task config whose `gt_models_dir` is rewritten to that
-absolute path. Until September 2026 this array kept the tree at
+ground truth is *not* a seed model, so nothing is held out of the seed set (the
+array's held-out-model scrubs find nothing to remove). What must stay off the
+agent's disk is the impossible **recipe**: both the model files
+(`impossible_models/*.py`) and their answer-bearing **names** in the config
+(`more_heads_more_random`, …). `agent_tree.exclude` drops
+`src/subjective_randomness/` (with the impossible models) and `scripts/` (with
+the configs), the array refuses a tree that still has either, and the GT-name
+scan runs before the agents (fatal) and after (warn-only). The setup job stages
+the pristine GT snapshot from `GT_MODELS_REL` (checked against the config's
+`gt_models_dir`), and the harness reads the ground truth from it
+(`--gt-models-dir`). Until September 2026 the impossible array kept the tree at
 `run<r>/<gt>/repo` with an old inline exclude list, so its results are not
 comparable with (and may have leaked more than) the faithful sweep's.
 

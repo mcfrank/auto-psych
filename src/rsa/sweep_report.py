@@ -113,7 +113,7 @@ def cell_bundle(cell_dir: Path, notes: Dict[str, Any]) -> dict:
                                     status=next((m["status"] for m in models if m["name"] == best_name), "pruned"),
                                     seed=best_name in seeds))
     counts = {k: sum(1 for e in ledger if e["outcome"] == k) for k in ("admitted", "rejected", "pruned")}
-    # From the log: the summary file of a cell resumed before 2026-10-08 covers its last process only.
+    # From the log: an older cell's summary file can cover only its last process.
     log = cell_dir / "token_usage.jsonl"
     usage = summarize_usage(read_usage_log(log)) if log.exists() else json.loads(
         (cell_dir / "token_usage_summary.json").read_text())

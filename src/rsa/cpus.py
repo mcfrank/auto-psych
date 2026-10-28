@@ -1,9 +1,8 @@
 """One core per process: thread counts within a Slurm allocation.
 
-Research Computing flagged job 47042590 (promote, 20 CPUs, 2026-10-08): every
-fit process held 140-160 threads. JAX, numpyro and OpenBLAS size their thread
-pools by the cores a process can see (about 7 per core), and every process saw
-all 20; the single-thread ``XLA_FLAGS`` stop XLA *using* the threads, not
+JAX, numpyro and OpenBLAS size their thread pools by the cores a process can
+see (about 7 per core), so a fit process on a 20-CPU job held 140-160
+threads; the single-thread ``XLA_FLAGS`` stop XLA *using* the threads, not
 creating them (`docs/auto_rsa/HANDOFF_threads.md`). The checker counts threads,
 idle ones too.
 

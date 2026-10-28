@@ -7,15 +7,11 @@
 #SBATCH --output=%x_%A_%a.out
 #SBATCH --error=%x_%A_%a.out
 #
-# CPUs and memory: the inner loop fits models concurrently (fit_models_cached
-# sizes its process pool so workers x cores-per-fit fills the CPUs Slurm
-# allocates), so 16 cores run four 4-chain fits at once where 8 ran one with
-# half the allocation idle. Memory scales with the concurrent fits: the
-# September 2026 sweep peaked at 13.8-18.7 GB per task (sacct MaxRSS) fitting
-# one model at a time under --mem=32GB, so 64GB leaves the same margin for
-# four. `normal` allows at most 8 GB/core (sh_part), i.e. 128 GB at 16 cores.
-# If a future sweep needs more, `-p hns` (the lab-owned partition) allows up to
-# 256 cores per node, 26 GB/core and 7 days.
+# CPUs and memory: the inner loop fits models concurrently (workers x
+# cores-per-fit fill the allocated CPUs), so 16 cores run four 4-chain fits at
+# once; one fit peaks at ~14-19 GB, so 64GB covers four. `normal` allows at
+# most 8 GB/core (128 GB at 16 cores); `-p hns` allows up to 256 cores per
+# node, 26 GB/core and 7 days.
 #
 # Stage 2/3: one array task per (repeat, ground-truth model). With R repeats and
 # G ground truths the submit script sizes the array to R*G; task T maps to
@@ -29,22 +25,20 @@
 # this script guarantees that nothing in what they can read hands them the
 # ground truth:
 #   * each task's agents work in their OWN scrubbed copy of the repo, built with
-#     agent_tree.exclude: no feature code, no model-family implementations
-#     (model_families/ and pymc_model_families/), no GT-recipe or evaluation
-#     code, no holdout configs, no CLAUDE.md/AGENTS.md (agent CLIs load those
-#     into every session);
+#     agent_tree.exclude: no model-family implementations, no GT-recipe or
+#     evaluation code, no holdout configs, no CLAUDE.md/AGENTS.md (agent CLIs
+#     load those into every session);
 #   * the held-out model's registry file, pool file and manifest entries are
 #     removed, and so is every file named after it (its tests and analysis
 #     scripts);
 #   * no path an agent is shown names the held-out model. The copy lives under
 #     an opaque id in $AGENT_TREES_ROOT, not in the GT-named cell directory
 #     (run<r>/<gt>/repo is a symlink to it for the harness-side tools), and the
-#     harness names its run directory cell_<i>. Until September 2026 every
-#     agent prompt carried "run1/motif_stack/.../_runs/motif_stack/";
+#     harness names its run directory cell_<i>;
 #   * the agents' environment carries no variable naming the model or leading
 #     to the full source (GT_MODELS, CONFIG, WORK_ROOT, REPO, ...);
 #   * the parent reads the GT generator from pristine snapshots the setup job
-#     staged outside every agent tree ($WORK_ROOT/gt_models_src, gt_family_src).
+#     staged outside every agent tree ($WORK_ROOT/gt_models_src).
 # A pre-flight check enforces the file and path guarantees before any agent
 # starts. holdout.{json,csv,png} and the MCMC cache live at $WORK_ROOT/run<r>/<gt>/.
 
@@ -62,14 +56,10 @@ STAGED_CODE=$(cat "$CODE_COMMIT_FILE")
 SLURM_DIR="$HARNESS_REPO/scripts/subjective_randomness/slurm"
 source "$SLURM_DIR/_env.sh"
 
-# The coding agents inherit this shell's environment. _env.sh exports
-# UV_PROJECT_ENVIRONMENT pointing at the SHARED per-run venv; agents invoke
-# `uv run python ...` to test their work, and each such call re-syncs that venv
-# against the full project lock — wiping our installed packages mid-run and
-# breaking every task. The pipeline uses $VENV_PY (an explicit interpreter path,
-# already resolved by _env.sh), so drop the UV_* vars here: a stray agent
-# `uv run` then targets a throwaway .venv in its own repo copy, never the
-# shared environment.
+# The coding agents inherit this shell's environment. An agent's `uv run`
+# would re-sync the SHARED venv that _env.sh's UV_PROJECT_ENVIRONMENT points at
+# against the full project lock, mid-run. The pipeline uses $VENV_PY, so drop
+# the UV_* vars: a stray `uv run` then targets a throwaway .venv in its copy.
 unset UV_PROJECT_ENVIRONMENT UV_CACHE_DIR UV_PYTHON
 
 # --- task -> (repeat, ground-truth model) ----------------------------------
@@ -79,15 +69,11 @@ N_GTS="${N_GTS:-${#GTS[@]}}"
 # The GT/baseline registry (config seed_models_dir) — where the GT's PyMC file
 # is deleted from the copy and where the pristine snapshot was staged from.
 SEED_MODELS_REL="${SEED_MODELS_REL:-src/subjective_randomness/pymc_model_families}"
-# The live project seed pool experiment 1 is seeded from. Since the 2026-08
-# consolidation it mirrors the registry, so an active-seed GT also has a copy
-# here that must go.
+# The live project seed pool experiment 1 is seeded from. It mirrors the
+# registry, so an active-seed GT also has a copy here that must go.
 POOL_MODELS_REL="${POOL_MODELS_REL:-src/pipelines/outer_loop/projects/subjective_randomness/seed_models}"
 CONFIG="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml}"
 GT_MODELS_SRC="${GT_MODELS_SRC:-$WORK_ROOT/gt_models_src}"  # pristine GT snapshot
-# Empty: the project's ground truths have no pure-Python twins (number game).
-GT_FAMILY_REL="${GT_FAMILY_REL-src/subjective_randomness/model_families}"
-GT_FAMILY_SRC="${GT_FAMILY_SRC:-$WORK_ROOT/gt_family_src}"  # pristine family snapshot
 
 TASK="${SLURM_ARRAY_TASK_ID:-1}"
 REPEAT=$(( (TASK - 1) / N_GTS + 1 ))
@@ -104,10 +90,8 @@ if ! bash "$SLURM_DIR/cell_lock.sh" "$RUN_DIR/.cell_lock" "${SLURM_JOB_ID:-local
   exit 0
 fi
 trap 'rm -f "$RUN_DIR/.cell_lock"' EXIT
-# A finished cell is left alone. Slurm can mark a task that finished as
-# OUT_OF_MEMORY or TIMEOUT (in its final clean-up), and a resubmission that ran
-# on would rebuild an empty _runs/, overwrite the real agent_runs.tar.gz with
-# it, and blank the cell's leak record (gt_name_mentions.txt, agent_activity.md).
+# A finished cell is left alone: Slurm can mark a finished task OUT_OF_MEMORY
+# or TIMEOUT, and running on would overwrite its archive and leak record.
 if [[ -f "$RUN_DIR/holdout.json" ]]; then
   echo "[task $TASK] $RUN_DIR is already complete (holdout.json); nothing to do."
   exit 0
@@ -132,9 +116,8 @@ echo "[task $TASK] code: $STAGED_CODE"
 # The agents' tree must not live under the GT-named RUN_DIR: every path in it
 # reaches an agent's prompt. It lives under an opaque, random id, recorded in
 # RUN_DIR/agent_tree_id so a resubmitted task finds its tree again, and
-# RUN_DIR/repo links to it. (The id used to be a hash of RUN_DIR: an agent
-# that found $WORK_ROOT, e.g. in the venv's bin/activate, could hash the four
-# candidate paths and confirm the ground truth.)
+# RUN_DIR/repo links to it. (Random, not a hash of RUN_DIR: an agent could hash
+# the candidate paths and confirm the ground truth.)
 AGENT_TREES_ROOT="${AGENT_TREES_ROOT:-${SCRATCH:-$GROUP_SCRATCH}/auto-psych/agent_trees}"
 if [[ ! -s "$RUN_DIR/agent_tree_id" ]]; then
   head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$RUN_DIR/agent_tree_id"
@@ -149,28 +132,19 @@ if [[ -e "$RUN_DIR/repo" && ! -L "$RUN_DIR/repo" ]]; then
 fi
 ln -sfn "$RUN_REPO" "$RUN_DIR/repo"
 
-# Per-task opencode state: opencode keeps its session SQLite DB under
-# XDG_DATA_HOME (default ~/.local/share/opencode). Concurrent array tasks
-# sharing one DB corrupt it ("SQLITE_CORRUPT: database disk image is
-# malformed"). Isolate every task's XDG dirs (also keeps them off $HOME).
-# Within a task, the launcher gives each spawned agent its own XDG_DATA_HOME
-# under the agent's directory (concurrent candidate agents hit "database is
-# locked" on one shared store); this one serves the harness process itself.
-# These are exported, so every agent inherits them: they live under the
-# opaque AGENT_DIR, not the GT-named RUN_DIR.
+# Per-task opencode state: concurrent tasks sharing opencode's session SQLite
+# DB (under XDG_DATA_HOME) corrupt it. Each spawned agent gets its own
+# XDG_DATA_HOME from the launcher; these serve the harness process, under the
+# opaque AGENT_DIR (agents inherit them), not the GT-named RUN_DIR.
 export XDG_DATA_HOME="$AGENT_DIR/.xdg/data"
 export XDG_STATE_HOME="$AGENT_DIR/.xdg/state"
 export XDG_CACHE_HOME="$AGENT_DIR/.xdg/cache"
 mkdir -p "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME"
 
-# Per-task PyTensor compile dir. pytensor defaults to ~/.pytensor (NFS $HOME),
-# shared across concurrent tasks, so its C-compile filelock contends and goes
-# stale ("OSError: [Errno 116] Stale file handle"). Give each task a private
-# compiledir on node-local SSD (reliable flock, fast, and off $HOME).
-# $L_SCRATCH is per user and node, not per job: without the job id every cell
-# on a node compiled under one lock, and one died waiting for it (2026-09-28).
-# The cell's fit processes each compile in a slot of their own below this
-# (_compile_dirs in src/models/pymc_inference.py).
+# Per-job PyTensor compile dir on node-local disk: the default ~/.pytensor on
+# NFS is shared across tasks and its compile lock goes stale. $L_SCRATCH is per
+# user and node, hence the job id. The cell's fit processes each compile in a
+# slot of their own below this (_compile_dirs in src/models/pymc_inference.py).
 PYTENSOR_BASE="${L_SCRATCH:-$AGENT_DIR/.cache}/pytensor/job_${SLURM_JOB_ID}"
 # With persistent compile slots (coco), the harness process compiles in a
 # kept directory of its own too, claimed for the job's lifetime by a lock this
@@ -201,18 +175,15 @@ HELD_OUT="$GT"
 [[ -z "$HELD_OUT" || -f "$GT_MODELS_SRC/${GT}.py" ]] || { echo "ERROR: GT snapshot missing $GT_MODELS_SRC/${GT}.py (setup job didn't run?)" >&2; exit 1; }
 
 # --- isolated, sanitized agent tree on scratch --------------------------------
-# The agent tree is the scrubbed repo copy the coding agents run from. It is
-# built with the shared exclude file (agent_tree.exclude) which removes feature
-# code, research library modules, GT-recipe files, holdout configs, and build
-# artefacts. The HARNESS runs from a full copy (harness_repo, staged by the
-# setup job) so it can import everything it needs; the agents see only the
-# scrubbed tree. node_modules exclusion alone saves ~5.5k inodes per copy.
+# The agent tree is the scrubbed repo copy the coding agents run from, built
+# with agent_tree.exclude (no research library, GT-recipe files, holdout
+# configs or build artefacts). The HARNESS runs from the full staged copy
+# (harness_repo).
 AGENT_EXCLUDE="$SLURM_DIR/agent_tree.exclude"
 [[ -f "$AGENT_EXCLUDE" ]] || { echo "ERROR: $AGENT_EXCLUDE not found" >&2; exit 1; }
-# --delete-excluded also cleans a tree a resumed task built before an exclusion
-# was added (resumed cells kept docs/, tests/ and .secrets otherwise); the
-# protect filter keeps the agents' results root, whose data/ and *.nc match
-# exclude patterns.
+# --delete-excluded also cleans a resumed task's tree of anything now
+# excluded; the protect filter keeps the agents' results root, whose data/ and
+# *.nc match exclude patterns.
 rsync -a --delete --delete-excluded --filter='P /_runs/***' \
   --exclude-from="$AGENT_EXCLUDE" "$AGENT_SRC"/ "$RUN_REPO"/
 
@@ -220,9 +191,8 @@ rsync -a --delete --delete-excluded --filter='P /_runs/***' \
 touch "$RUN_REPO/.here"
 
 # Physically remove THIS task's held-out GT PyMC file from the copy — from the
-# registry AND from the live seed pool (which mirrors the registry since the
-# 2026-08 consolidation; under a superseded-GT config the pool copy simply
-# doesn't exist).
+# registry AND from the live seed pool, which mirrors it (a GT outside the pool
+# simply has no copy there).
 if [[ -n "$HELD_OUT" ]]; then
 for gt_copy in "$RUN_REPO/$SEED_MODELS_REL/${GT}.py" "$RUN_REPO/$POOL_MODELS_REL/${GT}.py"; do
   rm -f "$gt_copy"
@@ -231,47 +201,13 @@ done
 echo "[task $TASK] removed held-out GT from copy: $SEED_MODELS_REL/${GT}.py + $POOL_MODELS_REL/${GT}.py"
 fi
 
-# Scrub the pure-Python family twin too (the real GT-recipe leak — an agent
-# running its own Python could read its DEFAULT_PARAMS + generative form, which
-# is how a prior run pasted the GT's delta/alpha into a candidate). Replace it
-# with an importable stub carrying no params or code: the package __init__
-# imports every twin, so the file must stay importable, but the parent reads the
-# real DEFAULT_PARAMS from the pristine $GT_FAMILY_SRC via --gt-family-dir (by
-# parsing, not importing). Opencode denies below remain as defence in depth.
-[[ -z "$GT_FAMILY_REL" || -f "$GT_FAMILY_SRC/${GT}.py" ]] || { echo "ERROR: pristine family snapshot missing $GT_FAMILY_SRC/${GT}.py (setup job didn't stage it?)" >&2; exit 1; }
-GT_FAMILY_COPY="$RUN_REPO/$GT_FAMILY_REL/${GT}.py"
-if [[ -n "$GT_FAMILY_REL" && -f "$GT_FAMILY_COPY" ]]; then
-  cat > "$GT_FAMILY_COPY" <<'STUB'
-"""Held-out ground truth. Its real DEFAULT_PARAMS and generative form live in
-the pristine gt_family snapshot, off every agent's disk. This importable stub
-exists only so ``model_families/__init__`` (which imports every twin) still
-loads; the held-out family is never fit or called by the pipeline."""
-
-DEFAULT_PARAMS: dict = {}
-
-
-def _held_out(*_args, **_kwargs):
-    raise RuntimeError("held-out ground-truth family is unavailable to the agent")
-
-
-score_sequence = predict_left = predict = _held_out
-STUB
-  echo "[task $TASK] scrubbed held-out GT family twin -> stub: $GT_FAMILY_REL/${GT}.py"
-fi
-
 # Harden opencode permissions: deny reads of the off-limits paths, and grant
 # external access to the repo copy. Every agent runs with cwd = the repo copy
-# and the launcher (src/runtime/coding_agent.py) pins PWD to that cwd, so
-# opencode roots its session there, loads THIS opencode.json, and treats the
-# whole tree (including _runs/, the results root) as internal — the grant is
-# belt-and-braces. (Before P34 the harness's `cd "$HARNESS_REPO"` below leaked
-# into the agents' PWD, opencode rooted every session at harness_repo instead,
-# and the agents' own candidate dirs were "external" and auto-rejected.) The GT
-# PyMC files are deleted; the denies additionally cover both model-family dirs
-# (the pure-Python twin of the GT must stay importable for the parent), the
-# seed pool, and the holdout configs (their gt_models keys name the held-out
-# model). external_directory grants the *location*; the read deny still blocks
-# the *operation*, so the grant exposes nothing sensitive.
+# (the launcher pins PWD to it), so opencode roots its session there and loads
+# THIS opencode.json; the grant is belt-and-braces. The denies cover the
+# model-family and impossible-model dirs, the seed pool and the holdout configs
+# (their gt_models keys name the held-out model). external_directory grants the
+# *location*; the read deny still blocks the *operation*.
 "$VENV_PY" - "$RUN_REPO/opencode.json" "$RUN_REPO" <<'PY'
 import json, sys, pathlib
 p = pathlib.Path(sys.argv[1])
@@ -282,7 +218,8 @@ deny_globs = [
     "**/seed_models/**",
     "**/model_families/**",
     "**/pymc_model_families/**",
-    "**/configs/holdout_recovery*.yaml",
+    "**/impossible_models/**",
+    "**/configs/*holdout_recovery*.yaml",
     "**/ground_truth_models.py",
     "**/evaluate_recovery.py",
     "**/gt.txt",
@@ -299,20 +236,16 @@ PY
 
 cd "$RUN_REPO"
 
-# Remove the held-out model's ENTRY from both manifests the agents can open.
-# Deleting the .py above leaves its manifest line behind, and that line is the
-# model's name plus a one-sentence rationale stating its mechanism — i.e. the
-# answer. Rewriting the manifest also drops the header comment that lists every
-# active model. Seeding keys off the pool manifest by name, so a name that is
-# simply absent is seeded around exactly like a superseded GT (--missing-ok
-# covers that case: a superseded GT was never listed). Run from $RUN_REPO so
-# pyprojroot resolves the copy; the --models-dir paths are absolute regardless.
+# Remove the held-out model's ENTRY from both manifests the agents can open:
+# its line is the model's name plus a rationale stating its mechanism, i.e. the
+# answer (rewriting also drops the header comment listing every active model).
+# Seeding keys off the pool manifest by name, so an absent name is seeded
+# around; --missing-ok covers a GT that was never listed. Run from $RUN_REPO so
+# pyprojroot resolves the copy.
 if [[ -n "$HELD_OUT" ]]; then
 for models_rel in "$SEED_MODELS_REL" "$POOL_MODELS_REL"; do
-  # A directory the agent tree excludes outright (agent_tree.exclude now drops
-  # the whole PyMC registry, whose files describe the ground truths) has nothing
-  # left to scrub. An absent directory is fine; a present one without a manifest
-  # is still an error.
+  # A directory the agent tree excludes outright (the PyMC registry) has
+  # nothing to scrub; a present one without a manifest is an error.
   if [[ ! -d "$RUN_REPO/$models_rel" ]]; then
     echo "[task $TASK] $models_rel is not in the agent tree (excluded) — nothing to scrub"
     continue
@@ -327,8 +260,7 @@ done
 echo "[task $TASK] scrubbed held-out GT entry from both manifests"
 
 # Catch-all: scrub the GT name from ANY remaining models_manifest.yaml in the
-# checkout. The loop above handles the active feature regime's pair, but the
-# other regime's manifests also exist and the leakage audit scans all of them.
+# checkout (the leakage audit scans all of them).
 while IFS= read -r -d '' mf; do
   if grep -q "$GT" "$mf"; then
     "$VENV_PY" "$HARNESS_REPO/scripts/subjective_randomness/remove_manifest_entry.py" \
@@ -343,22 +275,13 @@ done < <(find "$RUN_REPO" -name "models_manifest.yaml" -not -path "*/_runs/*" -p
 fi
 
 # --- GT-leak verifier: backend-agnostic, runs for EVERY backend --------------
-# Everything above this point that protects the ground truth is either physical
-# (rsync excludes, rm of <gt>.py, manifest scrubs) or a permission rule in
-# opencode.json. Only opencode reads that file: the claude backend runs with
-# --dangerously-skip-permissions, and codex's sandbox is pinned by enterprise
-# policy to a profile with filesystem read access. So for those backends the
-# deny-list is inert and the physical scrub is the ONLY protection. Assert it
-# actually worked, before a single agent starts, rather than discovering after
-# the fact that a cell "recovered" the ground truth by reading it.
-# Remove every file in the agent tree NAMED after the held-out model. Beyond
-# the registry entry the step above deletes, the checkout carries unit tests and
-# analysis scripts for the ground truths (test_motif_stack_seed_holdout.py,
-# ...). A test for a mechanism encodes that
-# mechanism, and opencode's deny-list covers neither tests/ nor scripts/ — so
-# these have been readable in every run to date, under every backend. Keyed on
-# $GT so it generalises to any held-out model; nothing the pipeline runs lives
-# under these names (the harness runs from its own full checkout).
+# Only opencode reads opencode.json (claude runs with
+# --dangerously-skip-permissions, codex's sandbox can read the filesystem), so
+# for the other backends the physical scrub is the ONLY protection: assert it
+# worked before a single agent starts.
+# Remove every file in the agent tree NAMED after the held-out model (a test or
+# script for a mechanism encodes it); nothing the pipeline runs lives under
+# these names (the harness runs from its own full checkout).
 if [[ -n "$HELD_OUT" ]]; then
 while IFS= read -r -d '' named; do
   rm -f "$named"
@@ -366,15 +289,14 @@ while IFS= read -r -d '' named; do
 done < <(find "$RUN_REPO" -name "*${GT}*" -type f -not -path "*/_runs/*" -print0)
 fi
 
-# Assert the physical protections actually landed: the two model-family
-# directories must be absent from the tree entirely, and no implementation file
-# for the held-out model may remain anywhere. (The name scan below then checks
-# that no file mentions it at all; docs/, tests/ and scripts/, which did, are
-# no longer copied.)
-for forbidden_dir in src/subjective_randomness/pymc_model_families \
-                     src/subjective_randomness/model_families; do
+# Assert the physical protections actually landed: the research library (the
+# model families and the impossible models) and scripts/ (the configs naming
+# the ground truths) must be absent from the tree entirely, and no
+# implementation file for the held-out model may remain anywhere. (The name
+# scan below then checks that no file mentions it at all.)
+for forbidden_dir in src/subjective_randomness scripts; do
   if [[ -d "$RUN_REPO/$forbidden_dir" ]]; then
-    echo "ERROR: $forbidden_dir is present in the agent tree; it holds implementations of the ground truths." >&2
+    echo "ERROR: $forbidden_dir is present in the agent tree; it holds the ground truths' implementations or configs naming them." >&2
     echo "Add it to agent_tree.exclude. (Only opencode honours the read deny-list; claude and codex ignore it.)" >&2
     exit 1
   fi
@@ -387,9 +309,8 @@ if [[ -n "$leak_files" ]]; then
   exit 1
 fi
 echo "[task $TASK] GT-leak verifier: no ${GT} implementation and no model-family dir in the agent tree"
-# And no file in the tree names the held-out model at all (a loader comment
-# naming motif_stack reached three agents). A hit is our leak, so the cell stops
-# here, before any agent has run.
+# And no file in the tree names the held-out model at all: a hit is our leak,
+# so the cell stops here, before any agent has run.
 bash "$SLURM_DIR/scan_gt_name.sh" --before-agents "$GT" "$RUN_REPO" /dev/null
 echo "[task $TASK] GT-name scan: '$GT' appears nowhere in the agent tree"
 fi
@@ -407,10 +328,8 @@ EXTRA_FLAGS=""
 [[ -n "${TUNE:-}"                 ]] && EXTRA_FLAGS+=" --tune $TUNE"
 [[ -n "${AGENT_TIMEOUT_SEC:-}"    ]] && EXTRA_FLAGS+=" --agent-timeout-sec $AGENT_TIMEOUT_SEC"
 
-# The harness runs from the FULL repo copy (harness_repo, staged once by the
-# setup job), not from the scrubbed agent tree. It can therefore import
-# stimulus_design, model_families, etc. that the agents must not see.
-# --agent-root points agent subprocesses at the scrubbed $RUN_REPO.
+# The harness runs from the FULL staged copy (harness_repo), so it can import
+# what the agents must not see; --agent-root points the agents at $RUN_REPO.
 cd "$HARNESS_REPO"
 
 # Two more paths reach agents' briefs: the critique brief prints the MCMC cache
@@ -442,7 +361,6 @@ env "${UNSET_ARGS[@]}" "$AGENT_DIR/venv/bin/python" scripts/subjective_randomnes
   --config "$CONFIG" \
   --gt-model "$GT" \
   --gt-models-dir "$GT_MODELS_SRC" \
-  ${GT_FAMILY_REL:+--gt-family-dir "$GT_FAMILY_SRC"} \
   --seed "$SEED" \
   --backend "${AGENT_BACKEND:-opencode}" \
   ${CLAUDE_AUTH:+--claude-auth "$CLAUDE_AUTH"} \
@@ -473,17 +391,11 @@ echo "[task $TASK] done -> $RUN_DIR/holdout.json"
   || echo "[task $TASK] WARNING: the agent activity report failed (warn-only; the cell is unaffected)"
 
 # --- reclaim inodes: archive + remove this task's repo copy on success -------
-# Reached only when the run above exits 0 (set -e), i.e. this GT is complete:
-# holdout.{json,csv,png} are in $RUN_DIR and trajectory.json in the summary root,
-# both OUTSIDE the copy. The repo copy (sanitized source + the agent's _runs
-# tree) is thousands of small files and the biggest inode consumer per task; it
-# is not read by the analysis job (it globs run<r>/<gt>/holdout.csv under
-# $RUN_DIR, never the copy) nor by --resume (which skips finished GTs via
-# trajectory.json). Collapse the agent artifacts to one tarball for later
-# inspection, then delete the tree so a long sweep can't fill the inode quota
-# (only once the archive is verified: a failed tar keeps the tree).
-# A FAILED task exits before here (set -e), leaving its copy intact for
-# debugging and resume. Set KEEP_REPO_COPY=1 to opt out.
+# Reached only when the run above exits 0 (set -e): the results live outside
+# the copy, which is the biggest inode consumer per task and is read by neither
+# the analysis job nor --resume. Collapse it to one tarball, then delete it.
+# A FAILED task exits before here, leaving its copy for debugging and resume.
+# Set KEEP_REPO_COPY=1 to opt out.
 if [[ -z "${KEEP_REPO_COPY:-}" ]]; then
   # Removes the tree only once the archive reads back; never overwrites an
   # existing archive (archive_agent_tree.sh).

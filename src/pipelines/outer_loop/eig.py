@@ -8,35 +8,14 @@ batched per-draw pass per PyMC model (module-level `model: pm.Model`), and
 greedily select the set with maximal *joint* EIG about model identity
 (src.models.eig_selection). Each model computes its own features from raw
 stimulus rows via its ``compute_features`` or ``prepare_observed`` hook.
-
-Usage (CLI):
-    python3 -m src.pipelines.outer_loop.eig \\
-        --select 32 --project subjective_randomness \\
-        --models-dir PATH/cognitive_models \\
-        --registry   PATH/model_registry.yaml \\
-        --out        PATH/design/stimuli.json
-
-    # --out defaults to stdout if omitted
-    # --registry is optional (uniform prior over models if omitted)
-    # --responses PREV/model_loop/responses.csv (all data so far) scores from
-    # the posterior predictive; --n-responses is the participants per experiment
 """
 
 from __future__ import annotations
 
 import json
-import sys
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
-import tyro
-from pyprojroot import here
-
-# Ensure repo root on path so "import src..." works when run as a module/script.
-# Must precede the (function-level) src imports below, hence here() rather than
-# the canonical src.runtime.config.REPO_ROOT (same resolution).
-sys.path.insert(0, str(here()))
 
 
 def _load_model_names(models_dir: Path) -> List[str]:
@@ -194,9 +173,8 @@ def _screen_usable_models(
     unbindable column is ``participant_id`` is kept: it is bound as a new
     participant here (and dropped, on record, if its hook renumbers
     participants), and ``_posterior_p_left_draws`` predicts it as new
-    participants (``_new_participant_draws``). Until 2026-09-30 it was
-    dropped, and in the October 2026 live run, where every leading model had a
-    participant effect, that left the experiment-2 design with no model at all.
+    participants (``_new_participant_draws``): dropping person-level models
+    can leave a design with no model at all.
 
     A failure is the model's when its own code raised it, or when it is not a
     code error at all (``is_model_failure``). A code error raised by the
@@ -346,11 +324,10 @@ def _screen_invalid_predictions(
     probability on every pair, and a ``screened_out.json`` record for each
     model whose prediction is not.
 
-    A carried model can break on pairs unlike any it was trained on (the
-    recovery evaluation met one, commit 4de536c), and one such model used to
-    crash the design — identically on every retry, since a resume reuses the
-    same models and fits. It is left out of this design, loudly and on
-    record, like a model that cannot bind a stimulus row.
+    A carried model can break on pairs unlike any it was trained on, and would
+    crash the design identically on every retry (a resume reuses the same
+    models and fits). It is left out of this design, loudly and on record,
+    like a model that cannot bind a stimulus row.
     """
     from src.models.pymc_inference import InvalidPredictions  # type: ignore
 
@@ -440,30 +417,20 @@ def _posterior_p_left_draws(
 # lazy batched greedy — a full pass over the pool every DESIGN_REFRESH_EVERY
 # picks, and in between only the best-ranked candidates re-scored in batches of
 # DESIGN_LAZY_BATCH_SIZE — in float32. Exact greedy (a full pass per pick, in
-# float64) took 11-13 h per later-experiment design; this takes ~3 min on 16
-# CPUs. Validated on two experiment-2 designs of the September 2026 sweep
-# (scripts/subjective_randomness/validate_lazy_eig.py, 2026-09-27): exact
-# greedy in float32 picked sets with the same joint EIG as in float64 (59-64 of
-# 64 pairs shared, the rest near-ties), and lazy greedy's out-of-sample joint EIG
-# was within Monte Carlo noise of exact greedy's (design 1, over three
-# scenario seeds each: 2.078 vs 2.080 bits; design 2: 0.0006 bits lower, of
-# 2.69), while exact greedy itself moved by up to 0.008 bits between scenario
-# seeds. It is an approximation all the same (joint EIG is not submodular);
-# exact greedy stays available (lazy=False, scoring_dtype "float64", or the
-# eig CLI's --no-lazy --scoring-dtype float64).
+# float64) takes 11-13 h per later-experiment design; this takes ~3 min on 16
+# CPUs, and its joint EIG is within exact greedy's own scenario-to-scenario
+# spread (scripts/subjective_randomness/validate_lazy_eig.py). It is an
+# approximation all the same (joint EIG is not submodular); exact greedy stays
+# available (lazy=False, scoring_dtype "float64").
 DESIGN_LAZY_SEARCH = True
 DESIGN_LAZY_BATCH_SIZE = 512
 DESIGN_REFRESH_EVERY = 16
 DESIGN_SCORING_DTYPE = "float32"
 # Each Monte Carlo scenario's likelihood average leaves out the draw that
 # generated the scenario (src/models/eig_selection.py; first audit, C5): an
-# average that includes it rewards the true model for memorising its own draw.
-# Measured on the two experiment-2 designs of the validation above (lazy
-# float32, seeds 42 and 43, 2026-09-27): the same run time (167 s vs 167 s;
-# 205 s vs 196-203 s), recorded joint_eig_bits lower by 0.06-0.10 and
-# 0.02-0.03 bits (the inflation removed), and sets whose joint EIG on 50,000
-# fresh scenarios, scored without the generating draw, is within the
-# selection's own seed-to-seed spread (0.000 to -0.005 bits of 2.0 and 2.7).
+# average that includes it rewards the true model for memorising its own draw
+# and inflates joint_eig_bits (by 0.02-0.1 bits on the validation designs), at
+# no extra cost.
 DESIGN_LEAVE_ONE_OUT = True
 
 
@@ -567,7 +534,6 @@ def design_exhaustive(
     n_samples: int = 200,
     n_scenarios: int = 1000,
     seed: int = 42,
-    random_seed: Optional[int] = None,
     screened_out_path: Optional[Path] = None,
     responses_csv: Optional[Path] = None,
     fit_cache_dir: Optional[Path] = None,
@@ -743,7 +709,7 @@ def design_exhaustive(
                 f"n_random={n_random} exceeds the {len(remaining)} stimuli left after "
                 f"EIG selection."
             )
-        rng = _random.Random(random_seed if random_seed is not None else seed)
+        rng = _random.Random(seed)
         for offset, idx in enumerate(sorted(rng.sample(remaining, n_random)), start=1):
             results.append(
                 {
@@ -756,109 +722,3 @@ def design_exhaustive(
             )
 
     return results
-
-
-@dataclass
-class Args:
-    """Score the task's whole design pool and select the max-joint-EIG set."""
-
-    models_dir: Path
-    """Path to the cognitive_models/ directory."""
-    n_responses: int
-    """Responses each selected stimulus receives (participants per experiment)."""
-    registry: Optional[Path] = None
-    """Path to model_registry.yaml (optional; uniform prior if omitted)."""
-    out: Optional[Path] = None
-    """Output JSON file path (default: stdout)."""
-    project: str = "subjective_randomness"
-    """The project whose task's design pool is scored."""
-    pool: Optional[Path] = None
-    """A JSON list of stimuli to score instead of the task's whole design pool."""
-    n_samples: int = 200
-    """Per-draw prediction samples per model (prior- or posterior-predictive)."""
-    select: int = 32
-    """Stimulus-set size for the joint-EIG selection."""
-    n_scenarios: int = 1000
-    """Monte Carlo scenarios for joint-EIG gain estimation."""
-    seed: int = 42
-    """Seed for predictive draws and selection scenarios."""
-    responses: Optional[Path] = None
-    """Responses so far (the previous experiment's model_loop/responses.csv):
-    fit each model on them and design from the POSTERIOR predictive instead of
-    the prior."""
-    fit_cache: Optional[Path] = None
-    """With --responses: the previous model loop's fit cache
-    (``model_loop/.fit_cache``, or the recovery harness's shared cache). The
-    design loads the loop's fits from it and samples nothing."""
-    fit_draws: Optional[int] = None
-    """With --responses: the model loop's draws (unset: the production default)."""
-    fit_tune: Optional[int] = None
-    """With --responses: the model loop's tune steps."""
-    fit_chains: Optional[int] = None
-    """With --responses: the model loop's chains."""
-    fit_target_accept: Optional[float] = None
-    """With --responses: the model loop's target_accept."""
-    fit_method: Optional[str] = None
-    """With --responses: the model loop's fit method (``fit.method``; unset: nuts)."""
-    lazy: bool = DESIGN_LAZY_SEARCH
-    """Lazy batched greedy search instead of exact greedy (an approximation;
-    see src/models/eig_selection.py)."""
-    scoring_dtype: Literal["float32", "float64"] = DESIGN_SCORING_DTYPE
-    """Precision of candidate scoring."""
-    leave_one_out: bool = DESIGN_LEAVE_ONE_OUT
-    """Leave each scenario's generating draw out of its likelihood average
-    (--no-leave-one-out: the estimator used before 2026-09-27, which
-    includes it)."""
-
-
-def _write_output(stimuli: List[Dict[str, Any]], out: Optional[Path]) -> None:
-    """Write the selected stimuli to ``out`` (or stdout if ``None``)."""
-    output = json.dumps(stimuli, indent=2)
-    if out:
-        out.write_text(output, encoding="utf-8")
-        eig_vals = [s["eig"] for s in stimuli]
-        print(
-            f"Wrote {len(stimuli)} stimuli to {out} "
-            f"(EIG range: {min(eig_vals):.4f} – {max(eig_vals):.4f})",
-            flush=True,
-        )
-    else:
-        print(output)
-
-
-def main(args: Args) -> None:
-    """CLI entry point: run exhaustive EIG design and write selected stimuli."""
-    from src.tasks import task_for_project  # type: ignore
-
-    selected = design_exhaustive(
-        models_dir=args.models_dir,
-        registry_path=args.registry,
-        task=task_for_project(args.project),
-        pool=json.loads(args.pool.read_text(encoding="utf-8")) if args.pool else None,
-        n_select=args.select,
-        n_samples=args.n_samples,
-        n_scenarios=args.n_scenarios,
-        seed=args.seed,
-        responses_csv=args.responses,
-        fit_cache_dir=args.fit_cache,
-        fit_kwargs=(
-            {
-                "draws": args.fit_draws,
-                "tune": args.fit_tune,
-                "chains": args.fit_chains,
-                "target_accept": args.fit_target_accept,
-                "method": args.fit_method,
-            }
-            if args.responses is not None
-            else None
-        ),
-        n_responses=args.n_responses,
-        lazy=args.lazy,
-        scoring_dtype=args.scoring_dtype,
-        leave_one_out=args.leave_one_out,
-    )
-    _write_output(selected, args.out)
-
-
-if __name__ == "__main__":
-    main(tyro.cli(Args))

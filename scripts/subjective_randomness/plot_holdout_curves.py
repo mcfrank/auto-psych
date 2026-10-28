@@ -7,10 +7,6 @@ inner-loop scoring step — one panel per held-out ground-truth model, the mean
 across repeats with a ``±`` spread error bar, the Bayesian-model-average curve
 dashed, and the two flat seed-model baselines.
 
-This is the matplotlib twin of ``scripts/analysis/plot_holdout_combined.py``
-(which renders the same aggregate via plotnine); it exists so the figures can be
-produced in an environment without plotnine/statsmodels.
-
 Usage (Sherlock dev node, NOT login):
     eltest_venv3/bin/python \\
         scripts/subjective_randomness/plot_holdout_curves.py

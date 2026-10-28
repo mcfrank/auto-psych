@@ -6,11 +6,23 @@
 # the question is whether it discovers a model that approximates the held-out
 # faithful theory.
 project_id: subjective_randomness
-# The GT/baseline registry: the four literature-faithful models, all with
-# pure-Python family twins for data generation.
+# The GT/baseline registry: the four literature-faithful models.
 seed_models_dir: src/subjective_randomness/pymc_model_families
 
-# null params -> the family's DEFAULT_PARAMS.
+# The seed models' generating parameters: the faithful sweep's ground truths
+# generate data at them, and the no-learning baseline scores every seed at its
+# own. (Until 2026-10-18 they were the DEFAULT_PARAMS of pure-Python twins in
+# src/subjective_randomness/model_families; same values.)
+seed_params:
+  falk_konold_dp: { beta: 1.0, side_bias: 0.0 }
+  motif_stack:
+    { delta: 0.5493, alpha: 0.2073, repetition_weight: 0.6839, mirror_share: 0.4989,
+      complement_share: 0.3984, beta: 1.0, side_bias: 0.0 }
+  finite_experience_occurrence: { beta: 4.0, side_bias: 0.0 }
+  local_representativeness:
+    { theta_alt: 0.65, alt_weight: 0.75, periodic_share: 0.45, beta: 4.0, side_bias: 0.0 }
+
+# null params -> the model's seed_params.
 gt_models:
   falk_konold_dp:
   motif_stack:

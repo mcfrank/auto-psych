@@ -133,11 +133,6 @@ def test_a_fit_already_on_disk_is_not_sampled(tmp_path):
     assert outcome is None
 
 
-def test_the_limit_must_be_positive(tmp_path):
-    with pytest.raises(ValueError):
-        pi.sample_fits_time_limited([_request(tmp_path)], time_limit_sec=0)
-
-
 # ---------------------------------------------------------------------------
 # fit_model(time_limit_sec=...)
 # ---------------------------------------------------------------------------

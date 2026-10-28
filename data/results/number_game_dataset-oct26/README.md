@@ -110,8 +110,8 @@ cocoflops2 left no result and is not included.
 
 ## What happened in run 1, in order
 
-The run recorded commits under their pre-merge hashes (`docs/merge_plan.md`
-§ 0 maps them; the branch was later replayed onto `main`'s scrubbed history).
+The run recorded commits under their pre-merge hashes (the branch was later
+replayed onto `main`'s scrubbed history); each is given with its hash on `main`.
 
 1. Experiments 1 and 2 ran on `573e2c9a` (now `e86a7f02`), 2026-10-15 to 16.
    The Claude subscription hit its session limit in experiment 1's first round,

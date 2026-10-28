@@ -108,31 +108,6 @@ def test_build_command_rejects_unknown_backend():
         build_command("gemini", prompt="p", allowed_dirs=[], model=None)
 
 
-def test_build_command_claude_extra_args_precede_the_prompt():
-    cmd = build_command(
-        "claude",
-        prompt="p",
-        allowed_dirs=[],
-        model=None,
-        extra_args=["--max-turns", "50", "--disallowedTools", "Bash(scancel:*)"],
-    )
-    assert cmd[-1] == "p" and cmd[-2] == "-p"
-    idx = cmd.index("--max-turns")
-    assert cmd[idx + 1] == "50" and idx < cmd.index("-p")
-    assert "Bash(scancel:*)" in cmd
-
-
-def test_build_command_opencode_extra_args_precede_the_prompt():
-    cmd = build_command(
-        "opencode",
-        prompt="p",
-        allowed_dirs=[],
-        model=None,
-        extra_args=["--dir", "/x"],
-    )
-    assert cmd[-1] == "p" and "--dir" in cmd and cmd.index("--dir") < len(cmd) - 1
-
-
 def test_build_command_codex_exec_json_reads_the_prompt_from_stdin():
     from src.runtime.coding_agent import prompt_via_stdin
 

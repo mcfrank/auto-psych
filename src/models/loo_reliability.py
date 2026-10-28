@@ -152,10 +152,6 @@ def loo_diagnostics(
     """
     import arviz as az
 
-    if not (0.0 <= bad_k_tolerance <= 1.0):
-        raise ValueError(
-            f"bad_k_tolerance must be a proportion in [0, 1], got {bad_k_tolerance!r}."
-        )
 
     # Validate the log-likelihood group first so an ambiguous fit fails with
     # our message rather than arviz's.

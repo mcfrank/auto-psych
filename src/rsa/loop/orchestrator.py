@@ -139,9 +139,9 @@ class LoopConfig:
     only while its ELPD-CV on the *other* trials is within this many clustered
     SEs of the best there; one further behind is pruned at the end. The live
     loop's guarded rule (PI 2026-10-10): rank on the new experiment, but stay
-    answerable to the literature. 0: no guard. Without it the 2026-10-09
-    rehearsal's live-only selection collapsed onto one family of near-copies
-    that predicted the next experiment worse than plain RSA."""
+    answerable to the literature. 0: no guard. Without it, live-only selection
+    can collapse onto one family of near-copies that predict the next
+    experiment worse than plain RSA."""
     novelty_pool: str = "full"
     """The displays the novelty gate compares predictions on: "full" (with
     valence, familiarization and greyscale displays) or "plain" (the live

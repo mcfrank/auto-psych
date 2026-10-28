@@ -12,33 +12,11 @@ import csv
 import hashlib
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Set
+from typing import Any, Dict, List, Mapping, Optional
 
 import yaml
 
-from src.subjective_randomness.holdout_data import (
-    GENERATING_MODEL_COLUMN,
-    _family_default_params,
-)
-
-
-def _distinctive_param_names(
-    gt_model: str, gt_family_dir: Optional[Path] = None
-) -> Set[str]:
-    """The GT family's parameter names that other families do not share.
-
-    An impossible ground truth has no pure-Python ``model_families`` counterpart;
-    in that case there are no distinctive family params to leak, so the set is
-    empty. (``beta``/``side_bias`` are shared by every family, so they are never
-    distinctive anyway.) Only a *missing* family is tolerated — any other import
-    error in an existing family still propagates loudly. ``gt_family_dir``
-    reroutes the held-out GT to a pristine off-cwd source.
-    """
-    try:
-        params = _family_default_params(gt_model, gt_family_dir)
-    except ModuleNotFoundError:
-        return set()
-    return set(params) - {"beta", "side_bias"}
+from src.subjective_randomness.holdout_data import GENERATING_MODEL_COLUMN
 
 
 # Column names a candidate binds with ``pm.Data("<name>", ...)``: harness-
@@ -111,15 +89,14 @@ def leakage_check(
     seed_models_dir: Path,
     n_experiments: int,
     gt_models_dir: Optional[Path] = None,
-    gt_family_dir: Optional[Path] = None,
+    gt_params: Mapping[str, float],
     checkout_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Audit a run for ground-truth leakage into agent-written models.
 
-    Agents can read the project assets dir, which contains the held-out seed
-    model's source. This flags (without enforcing) byte-identical copies,
-    mentions of the GT family's distinctive parameter names, and files named
-    after the GT model, across every experiment's ``cognitive_models/`` and
+    This flags (without enforcing) byte-identical copies of the ground truth's
+    source, mentions of its distinctive parameter names and values
+    (``gt_params`` minus ``beta``/``side_bias``), and files named after it, across every experiment's ``cognitive_models/`` and
     ``model_loop/models/``. Heuristic: a paraphrased reimplementation can evade
     it, so flags are an audit trail, not proof of a clean run.
 
@@ -129,9 +106,9 @@ def leakage_check(
     in the project assets the agents can read, so identical-copy leakage is
     effectively impossible.
 
-    It also audits the two channels that carried the held-out model's *name*
-    (the 2026-09 review panel's finding, closed at the source by
-    ``strip_generating_model`` and the array's manifest scrub):
+    It also audits the two channels that could carry the held-out model's
+    *name* (closed at the source by ``strip_generating_model`` and the array's
+    manifest scrub):
 
     * ``any_csv_generating_model`` — a CSV under the run tree whose header still
       carries ``generating_model``, whose value is the held-out model on every
@@ -142,8 +119,8 @@ def leakage_check(
       ``None`` rather than ``False``, so an unchecked channel is never read as
       a clean one.
 
-    Per admitted model it records ``data_columns``: the featurizer columns the
-    model binds with ``pm.Data(...)``. A model assembled entirely out of
+    Per admitted model it records ``data_columns``: the columns the model binds
+    with ``pm.Data(...)``. A model assembled entirely out of
     provided columns is a regression on the harness's features rather than a
     mechanism, so a report can say per ground truth how much of recovery is
     which.
@@ -155,11 +132,6 @@ def leakage_check(
     gt_hash = hashlib.sha256(
         (gt_models_dir / f"{gt_model}.py").read_bytes()
     ).hexdigest()
-    gt_params: Dict[str, float] = {}
-    try:
-        gt_params = _family_default_params(gt_model, gt_family_dir)
-    except ModuleNotFoundError:
-        pass
     distinctive = set(gt_params) - {"beta", "side_bias"}
     # Distinctive param VALUES an agent could paste from the leaked source. Drop
     # trivially common values (0/0.5/1) that would false-positive everywhere; a
