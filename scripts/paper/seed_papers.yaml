@@ -24,5 +24,7 @@ rsa:
   lexical_preemption_heuristic: null
 number_game:
   bigelow_piantadosi_independent: Bigelow & Piantadosi, 2016
-  bigelow_piantadosi_interval: Bigelow & Piantadosi, 2016
+  bigelow_piantadosi_mixture: Bigelow & Piantadosi, 2016
+  # The October 2026 runs' third seed, which no paper proposed.
+  bigelow_piantadosi_interval: null
   tenenbaum_rules_similarity: Tenenbaum, 2000

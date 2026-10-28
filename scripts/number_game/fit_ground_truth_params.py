@@ -30,7 +30,7 @@ SEEDS_DIR = REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects" / "numbe
 @dataclass
 class Args:
     seeds: List[str] = field(
-        default_factory=lambda: ["tenenbaum_rules_similarity", "bigelow_piantadosi_independent", "bigelow_piantadosi_interval"]
+        default_factory=lambda: ["tenenbaum_rules_similarity", "bigelow_piantadosi_mixture", "bigelow_piantadosi_independent"]
     )
     tune: int = 200
     draws: int = 500

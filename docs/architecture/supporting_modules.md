@@ -68,7 +68,9 @@ Moved verbatim from `CLAUDE.md` (2026-10-28); `CLAUDE.md` keeps the rules that s
 ## The number game
 
 `projects/number_game/`, `src/tasks/number_game.py`; three seeds (Tenenbaum
-2000 and two ports of Bigelow's numpyro models); the dataset
+2000, and the Mixture and Independent models of Bigelow & Piantadosi's 2016
+CogSci paper, built from the paper and its LOTlib grammars and checked
+against its Figure 3 in `tests/test_number_game_replication.py`); the dataset
 (`data/number-game/`, gitignored) is read by `src/number_game/`. Recovery:
 `scripts/number_game/slurm/submit_recovery.sh`; `data_source: dataset` runs
 draw responses from the dataset instead (`submit_dataset_run.sh`). These runs

@@ -10,7 +10,7 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export CLUSTER="${CLUSTER:-coco}"
 export CONFIG="${CONFIG:-scripts/number_game/configs/holdout_recovery.yaml}"
-export GT_MODELS="${GT_MODELS:-tenenbaum_rules_similarity bigelow_piantadosi_independent bigelow_piantadosi_interval}"
+export GT_MODELS="${GT_MODELS:-tenenbaum_rules_similarity bigelow_piantadosi_mixture bigelow_piantadosi_independent}"
 export SEED_MODELS_REL=src/pipelines/outer_loop/projects/number_game/seed_models
 export POOL_MODELS_REL="$SEED_MODELS_REL"
 export AGENT_BACKEND="${AGENT_BACKEND:-claude}" CLAUDE_AUTH="${CLAUDE_AUTH:-subscription}"

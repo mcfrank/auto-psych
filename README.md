@@ -59,8 +59,11 @@ these example numbers, is 32 in the concept too?", yes/no), with Bigelow &
 Piantadosi's (2016) 272,700 responses as its data bank. The pipeline is
 generic over projects through a task spec (`src/tasks/`: the design pool, the
 stimulus rows and the predicted variable, here `p_yes`); the seeds are
-Tenenbaum (2000) and two PyMC ports of Bigelow's numpyro models, checked
-against them (`tests/test_number_game_seed_port.py`).
+Tenenbaum (2000) and Bigelow & Piantadosi's (2016) Mixture and Independent
+models, built from the paper and its LOTlib grammars and checked against its
+Figure 3 (`tests/test_number_game_replication.py`). The paper's third,
+Compositional model is left out: its hypothesis space is a Monte Carlo sample
+of a recursive grammar that cannot be reproduced.
 
 - **Data:** `data/number-game/` (gitignored, never in agent trees), read by
   `src/number_game/`.
