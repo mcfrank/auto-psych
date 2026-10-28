@@ -1,0 +1,12 @@
+{
+  "models": [
+    "outlier_tolerant_rule_concepts",
+    "parity_banded_range_concepts",
+    "late_session_acquiescence_concepts",
+    "parity_banded_session_acquiescence",
+    "single_exception_rule_concepts",
+    "width_preferring_range_concepts",
+    "rule_favoring_width_range_concepts"
+  ],
+  "ledger_sha256": "3b838be3ad5529b2ffa26097cb6285ea59ea37ec1fb3eebcce19aaf3e6d22a4c"
+}

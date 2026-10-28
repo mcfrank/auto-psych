@@ -1,0 +1,203 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "outlier_tolerant_rule_concepts",
+    "argmax_model": "outlier_tolerant_rule_concepts",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "outlier_tolerant_rule_concepts": 1.0
+    },
+    "elpd_loo": {
+      "outlier_tolerant_rule_concepts": -3867.6341
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "outlier_tolerant_rule_concepts",
+    "argmax_model": "outlier_tolerant_rule_concepts",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "outlier_tolerant_rule_concepts": 0.840503,
+      "parity_banded_range_concepts": 0.00017,
+      "exemplar_averaged_concept_similarity": 0.0,
+      "any_of_sampled_concepts_decision": 0.0,
+      "late_session_acquiescence_concepts": 0.159327
+    },
+    "elpd_loo": {
+      "outlier_tolerant_rule_concepts": -3867.6341,
+      "parity_banded_range_concepts": -3876.1389,
+      "exemplar_averaged_concept_similarity": -4049.2144,
+      "any_of_sampled_concepts_decision": -4082.3513,
+      "late_session_acquiescence_concepts": -3869.2971
+    },
+    "critique": {
+      "status": "critiqued",
+      "incumbent": "outlier_tolerant_rule_concepts",
+      "attempts": 1,
+      "n_statistics": 8,
+      "n_evaluated": 8,
+      "n_significant": 1,
+      "n_significant_fdr": 0
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "outlier_tolerant_rule_concepts",
+    "argmax_model": "outlier_tolerant_rule_concepts",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "outlier_tolerant_rule_concepts": 0.840503,
+      "parity_banded_range_concepts": 0.00017,
+      "exemplar_averaged_concept_similarity": 0.0,
+      "any_of_sampled_concepts_decision": 0.0,
+      "late_session_acquiescence_concepts": 0.159327
+    },
+    "elpd_loo": {
+      "outlier_tolerant_rule_concepts": -3867.6341,
+      "parity_banded_range_concepts": -3876.1389,
+      "exemplar_averaged_concept_similarity": -4049.2144,
+      "any_of_sampled_concepts_decision": -4082.3513,
+      "late_session_acquiescence_concepts": -3869.2971
+    },
+    "critique": {
+      "status": "critiqued",
+      "incumbent": "outlier_tolerant_rule_concepts",
+      "attempts": 1,
+      "n_statistics": 8,
+      "n_evaluated": 8,
+      "n_significant": 4,
+      "n_significant_fdr": 3
+    }
+  },
+  {
+    "step": 3,
+    "iteration": 2,
+    "best_model": "outlier_tolerant_rule_concepts",
+    "argmax_model": "outlier_tolerant_rule_concepts",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "outlier_tolerant_rule_concepts": 0.840432,
+      "parity_banded_range_concepts": 0.00017,
+      "exemplar_averaged_concept_similarity": 0.0,
+      "any_of_sampled_concepts_decision": 0.0,
+      "late_session_acquiescence_concepts": 0.159313,
+      "parity_banded_session_acquiescence": 8.5e-05
+    },
+    "elpd_loo": {
+      "outlier_tolerant_rule_concepts": -3867.6341,
+      "parity_banded_range_concepts": -3876.1389,
+      "exemplar_averaged_concept_similarity": -4049.2144,
+      "any_of_sampled_concepts_decision": -4082.3513,
+      "late_session_acquiescence_concepts": -3869.2971,
+      "parity_banded_session_acquiescence": -3876.8362
+    },
+    "critique": {
+      "status": "critiqued",
+      "incumbent": "outlier_tolerant_rule_concepts",
+      "attempts": 1,
+      "n_statistics": 8,
+      "n_evaluated": 8,
+      "n_significant": 2,
+      "n_significant_fdr": 0
+    }
+  },
+  {
+    "step": 4,
+    "iteration": 3,
+    "best_model": "outlier_tolerant_rule_concepts",
+    "argmax_model": "outlier_tolerant_rule_concepts",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "outlier_tolerant_rule_concepts": 0.821445,
+      "parity_banded_range_concepts": 0.000166,
+      "exemplar_averaged_concept_similarity": 0.0,
+      "any_of_sampled_concepts_decision": 0.0,
+      "late_session_acquiescence_concepts": 0.155714,
+      "parity_banded_session_acquiescence": 8.3e-05,
+      "weber_compressed_nearest_similarity": 0.0,
+      "uncertainty_gated_guessing_simple": 0.0,
+      "serial_position_exception_tolerance": 0.0,
+      "single_exception_rule_concepts": 0.0,
+      "width_preferring_range_concepts": 0.022591
+    },
+    "elpd_loo": {
+      "outlier_tolerant_rule_concepts": -3867.6341,
+      "parity_banded_range_concepts": -3876.1389,
+      "exemplar_averaged_concept_similarity": -4049.2144,
+      "any_of_sampled_concepts_decision": -4082.3513,
+      "late_session_acquiescence_concepts": -3869.2971,
+      "parity_banded_session_acquiescence": -3876.8362,
+      "weber_compressed_nearest_similarity": -4637.1852,
+      "uncertainty_gated_guessing_simple": -4091.1371,
+      "serial_position_exception_tolerance": -4054.1364,
+      "single_exception_rule_concepts": -3905.7849,
+      "width_preferring_range_concepts": -3871.2276
+    },
+    "critique": {
+      "status": "critiqued",
+      "incumbent": "outlier_tolerant_rule_concepts",
+      "attempts": 1,
+      "n_statistics": 8,
+      "n_evaluated": 8,
+      "n_significant": 1,
+      "n_significant_fdr": 0
+    }
+  },
+  {
+    "step": 5,
+    "iteration": 4,
+    "best_model": "outlier_tolerant_rule_concepts",
+    "argmax_model": "outlier_tolerant_rule_concepts",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "outlier_tolerant_rule_concepts": 0.817598,
+      "parity_banded_range_concepts": 0.000166,
+      "exemplar_averaged_concept_similarity": 0.0,
+      "any_of_sampled_concepts_decision": 0.0,
+      "late_session_acquiescence_concepts": 0.154985,
+      "parity_banded_session_acquiescence": 8.2e-05,
+      "weber_compressed_nearest_similarity": 0.0,
+      "uncertainty_gated_guessing_simple": 0.0,
+      "serial_position_exception_tolerance": 0.0,
+      "single_exception_rule_concepts": 0.0,
+      "width_preferring_range_concepts": 0.022486,
+      "weakest_link_exemplar_similarity": 0.0,
+      "rule_favoring_width_range_concepts": 0.004684
+    },
+    "elpd_loo": {
+      "outlier_tolerant_rule_concepts": -3867.6341,
+      "parity_banded_range_concepts": -3876.1389,
+      "exemplar_averaged_concept_similarity": -4049.2144,
+      "any_of_sampled_concepts_decision": -4082.3513,
+      "late_session_acquiescence_concepts": -3869.2971,
+      "parity_banded_session_acquiescence": -3876.8362,
+      "weber_compressed_nearest_similarity": -4637.1852,
+      "uncertainty_gated_guessing_simple": -4091.1371,
+      "serial_position_exception_tolerance": -4054.1364,
+      "single_exception_rule_concepts": -3905.7849,
+      "width_preferring_range_concepts": -3871.2276,
+      "weakest_link_exemplar_similarity": -4117.1636,
+      "rule_favoring_width_range_concepts": -3872.7964
+    },
+    "critique": {
+      "status": "critiqued",
+      "incumbent": "outlier_tolerant_rule_concepts",
+      "attempts": 1,
+      "n_statistics": 8,
+      "n_evaluated": 8,
+      "n_significant": 2,
+      "n_significant_fdr": 1
+    },
+    "retired_at_experiment_end": [
+      "exemplar_averaged_concept_similarity",
+      "any_of_sampled_concepts_decision",
+      "weber_compressed_nearest_similarity",
+      "uncertainty_gated_guessing_simple",
+      "serial_position_exception_tolerance",
+      "weakest_link_exemplar_similarity"
+    ]
+  }
+]

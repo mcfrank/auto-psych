@@ -1,0 +1,8 @@
+Sequential sampling (1 chains in 1 job)
+NUTS: [p_mix, rule_weights, midpoint_shape, evidence_strength, size_growth, decade_bonus, rule_stray, range_stray, guess_single, guess_decline, guess_yes]
+Sampling 1 chain for 100 tune and 100 draw iterations (100 + 100 draws total) took 537 seconds.
+Only one chain was sampled, this makes it impossible to run some convergence checks
+arviz - WARNING - Shape validation failed: input_shape: (1, 100), minimum_shape: (chains=2, draws=4)
+  [warn] candidate: R-hat is unavailable (got nan); convergence was NOT verified -- a single-chain fit cannot report one.
+Sequential sampling (1 chains in 1 job)
+NUTS: [p_mix, rule_weights, midpoint_shape, evidence_strength, size_growth, decade_bonus, rule_stray, range_stray, guess_single, guess_decline, guess_yes]

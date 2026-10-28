@@ -1,0 +1,13 @@
+{
+  "models": [
+    "span_filling_size_exemplar",
+    "sequence_momentum_span_exemplar",
+    "recency_anchored_span_exemplar",
+    "recency_anchored_span_exemplar_2",
+    "spread_calibrated_size_gradient",
+    "spread_scaled_recency_span_exemplar",
+    "zigzag_breadth_sequence_exemplar",
+    "set_homogeneity_criterion_momentum"
+  ],
+  "ledger_sha256": "1ebfc113c5256cda7b1e9fca0e355867a3a54526bc816c9c53cb8d7b9ad5ff76"
+}

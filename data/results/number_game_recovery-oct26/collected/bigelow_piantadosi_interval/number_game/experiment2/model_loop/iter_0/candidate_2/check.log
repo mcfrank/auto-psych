@@ -1,0 +1,12 @@
+Sequential sampling (1 chains in 1 job)
+NUTS: [p_mix, rule_weights, rule_evidence_weight, range_evidence_weight, log_gain, bias, anchor_boost]
+Sampling 1 chain for 100 tune and 100 draw iterations (100 + 100 draws total) took 546 seconds.
+Only one chain was sampled, this makes it impossible to run some convergence checks
+arviz - WARNING - Shape validation failed: input_shape: (1, 100), minimum_shape: (chains=2, draws=4)
+  [warn] candidate: R-hat is unavailable (got nan); convergence was NOT verified -- a single-chain fit cannot report one.
+Sequential sampling (1 chains in 1 job)
+NUTS: [p_mix, rule_weights, rule_evidence_weight, range_evidence_weight, log_gain, bias, anchor_boost]
+Sampling 1 chain for 100 tune and 100 draw iterations (100 + 100 draws total) took 750 seconds.
+Only one chain was sampled, this makes it impossible to run some convergence checks
+  [warn] candidate: R-hat is unavailable (got nan); convergence was NOT verified -- a single-chain fit cannot report one.
+OK: /scr/wurgaft/auto-psych/agent_trees/5af1c6040af4ffd9/repo/_runs/cell_1/experiment2/model_loop/iter_0/candidate_2/candidate.py loads as a module-level pm.Model, has a finite log-probability on /scr/wurgaft/auto-psych/agent_trees/5af1c6040af4ffd9/repo/_runs/cell_1/experiment2/model_loop/iter_0/candidate_2/../../responses.csv, honours the data contract (observed = chose_left, p_left = the likelihood's probability), completed a 100-draw / 100-tune smoke fit (1 chain) and has a finite log-likelihood (-1879.0 on this smoke fit). Not checked here: novelty against the other models.

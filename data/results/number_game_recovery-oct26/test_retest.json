@@ -1,0 +1,274 @@
+{
+  "runs_root": "/scr/wurgaft/auto-psych/number_game_recovery",
+  "metric": "pearson_r",
+  "n_runs_found": 1,
+  "runs_found": [
+    "run1"
+  ],
+  "runs_missing_tidy": [
+    "run1/bigelow_piantadosi_independent"
+  ],
+  "gt_models": [
+    "bigelow_piantadosi_interval",
+    "tenenbaum_rules_similarity"
+  ],
+  "runs_in_complete_matrix": [
+    "run1"
+  ],
+  "icc_2_1": null,
+  "mean_pairwise_corr": null,
+  "per_gt_model": {
+    "bigelow_piantadosi_interval": {
+      "n_runs": 1,
+      "mean": 0.9954687299077934,
+      "sd": 0.0,
+      "cv": 0.0,
+      "min": 0.9954687299077934,
+      "max": 0.9954687299077934,
+      "values": [
+        0.995469
+      ],
+      "modal_best_model": "uneven_familiarity_conservative_updating",
+      "best_model_agreement": 1.0
+    },
+    "tenenbaum_rules_similarity": {
+      "n_runs": 1,
+      "mean": 0.9976462189316885,
+      "sd": 0.0,
+      "cv": 0.0,
+      "min": 0.9976462189316885,
+      "max": 0.9976462189316885,
+      "values": [
+        0.997646
+      ],
+      "modal_best_model": "parity_representative_sequence_edges",
+      "best_model_agreement": 1.0
+    }
+  },
+  "per_metric": {
+    "rmse": {
+      "per_gt_model": {
+        "bigelow_piantadosi_interval": {
+          "n_runs": 1,
+          "mean": 0.027623131602203116,
+          "sd": 0.0,
+          "min": 0.027623131602203116,
+          "max": 0.027623131602203116,
+          "values": [
+            0.027623
+          ]
+        },
+        "tenenbaum_rules_similarity": {
+          "n_runs": 1,
+          "mean": 0.023204940580615955,
+          "sd": 0.0,
+          "min": 0.023204940580615955,
+          "max": 0.023204940580615955,
+          "values": [
+            0.023205
+          ]
+        }
+      }
+    },
+    "kl_regret": {
+      "per_gt_model": {
+        "bigelow_piantadosi_interval": {
+          "n_runs": 1,
+          "mean": 0.0020251938899143833,
+          "sd": 0.0,
+          "min": 0.0020251938899143833,
+          "max": 0.0020251938899143833,
+          "values": [
+            0.002025
+          ]
+        },
+        "tenenbaum_rules_similarity": {
+          "n_runs": 1,
+          "mean": 0.0015703864850624772,
+          "sd": 0.0,
+          "min": 0.0015703864850624772,
+          "max": 0.0015703864850624772,
+          "values": [
+            0.00157
+          ]
+        }
+      }
+    }
+  },
+  "eval_exclusions": {
+    "steps": [],
+    "fitted_seed_baseline": [],
+    "cells_without_record": []
+  },
+  "cells": {
+    "root": "/scr/wurgaft/auto-psych/number_game_recovery",
+    "expected_from": "stated: 1 repeats; ground truths tenenbaum_rules_similarity, bigelow_piantadosi_independent, bigelow_piantadosi_interval",
+    "n_expected": 3,
+    "complete": [
+      "run1/bigelow_piantadosi_interval",
+      "run1/tenenbaum_rules_similarity"
+    ],
+    "partial": {
+      "run1/bigelow_piantadosi_independent": "started but has no holdout.json: the cell did not finish (still running, or failed and not resumed)"
+    },
+    "missing": {}
+  },
+  "loop_vs_fitted_baseline": [
+    {
+      "gt_model": "bigelow_piantadosi_interval",
+      "experiment": 1,
+      "metric": "pearson_r",
+      "n_cells": 1,
+      "loop_mean": 0.9370527549906986,
+      "fitted_baseline_mean": 0.9472027274038264,
+      "mean_difference": -0.010149972413127761,
+      "cells": [
+        "run1/bigelow_piantadosi_interval"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_interval",
+      "experiment": 1,
+      "metric": "rmse",
+      "n_cells": 1,
+      "loop_mean": 0.10052521886134672,
+      "fitted_baseline_mean": 0.10120224189127584,
+      "mean_difference": -0.0006770230299291274,
+      "cells": [
+        "run1/bigelow_piantadosi_interval"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_interval",
+      "experiment": 2,
+      "metric": "pearson_r",
+      "n_cells": 1,
+      "loop_mean": 0.9796592109069107,
+      "fitted_baseline_mean": 0.9893355447462961,
+      "mean_difference": -0.009676333839385487,
+      "cells": [
+        "run1/bigelow_piantadosi_interval"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_interval",
+      "experiment": 2,
+      "metric": "rmse",
+      "n_cells": 1,
+      "loop_mean": 0.05908742422175454,
+      "fitted_baseline_mean": 0.04219695795027335,
+      "mean_difference": 0.016890466271481185,
+      "cells": [
+        "run1/bigelow_piantadosi_interval"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_interval",
+      "experiment": 3,
+      "metric": "pearson_r",
+      "n_cells": 1,
+      "loop_mean": 0.9954687299077934,
+      "fitted_baseline_mean": 0.995261568566249,
+      "mean_difference": 0.00020716134154441512,
+      "cells": [
+        "run1/bigelow_piantadosi_interval"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_interval",
+      "experiment": 3,
+      "metric": "rmse",
+      "n_cells": 1,
+      "loop_mean": 0.027623131602203116,
+      "fitted_baseline_mean": 0.027818814602559944,
+      "mean_difference": -0.00019568300035682773,
+      "cells": [
+        "run1/bigelow_piantadosi_interval"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "tenenbaum_rules_similarity",
+      "experiment": 1,
+      "metric": "pearson_r",
+      "n_cells": 1,
+      "loop_mean": 0.99732606905928,
+      "fitted_baseline_mean": 0.9871705645683905,
+      "mean_difference": 0.010155504490889533,
+      "cells": [
+        "run1/tenenbaum_rules_similarity"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "tenenbaum_rules_similarity",
+      "experiment": 1,
+      "metric": "rmse",
+      "n_cells": 1,
+      "loop_mean": 0.02493644584925437,
+      "fitted_baseline_mean": 0.05137643365035581,
+      "mean_difference": -0.02643998780110144,
+      "cells": [
+        "run1/tenenbaum_rules_similarity"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "tenenbaum_rules_similarity",
+      "experiment": 2,
+      "metric": "pearson_r",
+      "n_cells": 1,
+      "loop_mean": 0.9981735320029999,
+      "fitted_baseline_mean": 0.9833517206095926,
+      "mean_difference": 0.014821811393407214,
+      "cells": [
+        "run1/tenenbaum_rules_similarity"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "tenenbaum_rules_similarity",
+      "experiment": 2,
+      "metric": "rmse",
+      "n_cells": 1,
+      "loop_mean": 0.02382760093036674,
+      "fitted_baseline_mean": 0.06584635608893669,
+      "mean_difference": -0.04201875515856995,
+      "cells": [
+        "run1/tenenbaum_rules_similarity"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "tenenbaum_rules_similarity",
+      "experiment": 3,
+      "metric": "pearson_r",
+      "n_cells": 1,
+      "loop_mean": 0.9976462189316885,
+      "fitted_baseline_mean": 0.9891441276221383,
+      "mean_difference": 0.008502091309550153,
+      "cells": [
+        "run1/tenenbaum_rules_similarity"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "tenenbaum_rules_similarity",
+      "experiment": 3,
+      "metric": "rmse",
+      "n_cells": 1,
+      "loop_mean": 0.023204940580615955,
+      "fitted_baseline_mean": 0.04944815000431782,
+      "mean_difference": -0.026243209423701865,
+      "cells": [
+        "run1/tenenbaum_rules_similarity"
+      ],
+      "excluded": {}
+    }
+  ]
+}

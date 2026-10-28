@@ -1,0 +1,101 @@
+models:
+- name: compressed_rule_extension
+  rationale: People think of an arithmetic property such as "even numbers" or "multiples
+    of 5" by its description rather than by listing its members, so they underestimate
+    how many numbers it contains. When they weigh how well a concept explains the
+    examples (the size principle), they treat a rule as smaller than it really is
+    by an inferred degree, but they judge a numeric range at its true size, because
+    its extent is visible on the number line. Otherwise they reason as in Bayesian
+    concept learning over rules, ranges and range-restricted rules, with the last-shown
+    largest example marking a range's top. So broad properties like parity keep more
+    support against tight ranges, and people generalize by the shared property beyond
+    the examples' span (yes to same-parity numbers far away, no to opposite-parity
+    neighbours just outside) more than an ideal learner would.
+- name: parity_representativeness_bias
+  rationale: 'People do the same Bayesian concept learning as the best model (arithmetic
+    rules, ranges of 1-100 and range-restricted rules, with the size principle and
+    the last-shown largest example marking a range''s top), but they judge how likely
+    the examples are under a concept partly by how representative they look: a concept
+    that contains both odd and even numbers (a range, multiples of 3, squares) is
+    expected to produce a parity-mixed sample, so a set whose examples all share a
+    parity seems less likely under it than chance implies, with each further same-parity
+    example costing an inferred extra penalty. Parity-pure concepts (even numbers,
+    odd numbers, multiples of 4) pay nothing, so after examples like 22,46,68 people
+    say "yes" to even numbers outside the examples'' span (e.g. 8 or 90) more, and
+    to odd numbers inside it less, than the ideal learner does.'
+- name: sequence_opens_bottom_ends_top
+  rationale: 'Refinement of `last_example_marks_range_edge`: people do the same Bayesian
+    concept learning over arithmetic rules (primes excluding 1), every range of 1-100
+    and range-restricted rules, and believe the program may deliberately end its demonstration
+    on its range''s top number, so a last-shown largest example blocks generalization
+    above it. The one change is where the bottom edge is read from. It comes from
+    the opening of the sequence, not its end: when several examples are shown and
+    the smallest comes first, people believe (with separately inferred odds) that
+    the program deliberately started at its range''s bottom, and ranges whose bottom
+    is that example get generative credit (larger for wider ranges). So after 20,35,60
+    people say "yes" less to 15 than after 35,20,60, which addresses the critique
+    that a first-shown minimum restricts downward generalization.'
+- name: stray_closing_example
+  rationale: 'People read the examples in order and suspect that the program''s closing
+    example may be a stray: with an inferred probability, they believe the last number
+    shown (in a set of two or more) was a random number tacked onto the demonstration
+    rather than a member of the program''s concept. Otherwise they reason as in the
+    best model (Bayesian concept learning over arithmetic rules, ranges and range-restricted
+    rules, a last-shown largest example marking a range''s top, a first-shown smallest
+    marking its bottom), and under the stray reading they learn from the earlier examples
+    alone. So the last-shown example is itself rejected more often than earlier ones
+    (e.g. "no" to 100 after 31,19,49,100), and a closing example that breaks the earlier
+    examples'' pattern loosens generalization less than an ideal learner predicts.'
+- name: position_graded_stray_example
+  rationale: 'Refinement of `sequence_opens_bottom_ends_top` by way of `stray_closing_example`:
+    people do the same Bayesian concept learning over arithmetic rules (primes excluding
+    1), every range of 1-100 and range-restricted rules, with a last-shown largest
+    example marking a range''s top and a first-shown smallest marking its bottom,
+    and they suspect that, with an inferred probability, one example in a set of several
+    is a random number mixed into the demonstration rather than a member of the program''s
+    concept, and learn from the others alone. The one change from `stray_closing_example`:
+    any example, not only the last, may be the stray, and how suspect each position
+    is follows an inferred recency gradient (later examples more suspect when it is
+    positive, all positions alike at zero). So an example that breaks the others''
+    pattern is often rejected wherever it was shown (e.g. "no" to 72 after 18,8,72,98
+    or to 27 after 92,82,27,42), not only when it closes the sequence.'
+- name: parity_representative_sequence_edges
+  rationale: 'Refinement of `sequence_opens_bottom_ends_top`: people do the same Bayesian
+    concept learning over arithmetic rules (primes excluding 1), every range of 1-100
+    and range-restricted rules, with a last-shown largest example marking a range''s
+    top and a first-shown smallest example (in sets of several) marking its bottom.
+    The one change, taken from `parity_representativeness_bias`: people judge how
+    likely the examples are under a concept partly by how representative they look
+    of it, so a concept holding both odd and even numbers (a range, multiples of 3,
+    squares) is expected to produce a parity-mixed sample, and each further example
+    that repeats a parity shared by the whole set costs it an inferred extra penalty,
+    while parity-pure concepts (even numbers, odd numbers, multiples of 4) pay nothing.
+    So after 22,46,68 people say "yes" to even numbers outside the span (8 or 90)
+    more, and to odd numbers inside it less, than the incumbent, while the order-read
+    edges still stop generalization above a last-shown maximum and below a first-shown
+    minimum.'
+- name: sequence_only_edge_marking
+  rationale: 'Refinement of `sequence_opens_bottom_ends_top`: people do the same Bayesian
+    concept learning over arithmetic rules (primes excluding 1), every range of 1-100
+    and range-restricted rules, and read the range''s edges from the order of the
+    demonstration: a sequence of several examples ending on its largest marks the
+    range''s top, and one opening on its smallest marks its bottom (with separately
+    inferred odds). The one change, taken from `multi_example_sequence_top_marking`:
+    a lone example is not a sequence and marks no edge, so it is treated as an ordinary
+    random draw rather than as the range''s top. So after a single example (e.g. 60)
+    people say "yes" to 62 about as readily as to 58, while after 20,35,60 generalization
+    still stops at 60 and drops below 20.'
+- name: parity_representative_stray_example
+  rationale: 'Refinement of `position_graded_stray_example`: people do Bayesian concept
+    learning over arithmetic rules (primes excluding 1), every range of 1-100 and
+    range-restricted rules, with a last-shown largest example marking a range''s top
+    and a first-shown smallest marking its bottom, and they suspect (with an inferred
+    probability and recency gradient) that one example in a set of several is a random
+    stray, learning from the others alone. The one change, grafted from `parity_representativeness_bias`:
+    people judge how likely the examples they keep are under a concept by how representative
+    they look, so a concept holding both odd and even numbers is expected to produce
+    a parity-mixed sample and each further kept example repeating a parity shared
+    by all of them costs it an inferred penalty, while parity-pure concepts pay nothing.
+    So an example of the odd-one-out parity (27 in 92,82,27,42) is read as the stray
+    more readily, and people then say "yes" to even numbers outside the span and "no"
+    to that stray example more than either parent model predicts.'

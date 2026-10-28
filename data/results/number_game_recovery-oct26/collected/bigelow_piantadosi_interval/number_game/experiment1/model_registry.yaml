@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  criterion_shifted_redundant_examples: 0.125
+  criterion_shifted_tempered_decision: 0.125
+  range_bounded_rule_concepts: 0.125
+  redundant_examples_decision_gain: 0.125
+  round_landmark_interval_prior: 0.125
+  split_rule_range_tempering: 0.125
+  stochastic_example_forgetting: 0.125
+  win_stay_lose_shift_criterion_shift: 0.125

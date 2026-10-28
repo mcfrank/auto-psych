@@ -1,0 +1,1 @@
+range_scaled_magnitude_gradient

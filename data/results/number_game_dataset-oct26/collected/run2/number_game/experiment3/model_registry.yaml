@@ -1,0 +1,9 @@
+reserved_for_new: 0.0
+theories:
+  even_number_rule_abstraction: 0.14285714285714285
+  leading_digit_even_rule_similarity: 0.14285714285714285
+  leading_digit_string_similarity: 0.14285714285714285
+  range_inference_leading_digit: 0.14285714285714285
+  relational_analogy_transfer: 0.14285714285714285
+  round_base_multiples_prior: 0.14285714285714285
+  trivial_small_number_avoidance: 0.14285714285714285

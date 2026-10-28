@@ -1,0 +1,8 @@
+reserved_for_new: 0.0
+theories:
+  family_pooled_rule_prior: 0.16666666666666666
+  parity_kind_rule_prior: 0.16666666666666666
+  random_example_forgetting: 0.16666666666666666
+  range_restricted_rule_concepts: 0.16666666666666666
+  scale_end_avoiding_ranges: 0.16666666666666666
+  weber_blurred_ranges_kind_pooled_rules: 0.16666666666666666

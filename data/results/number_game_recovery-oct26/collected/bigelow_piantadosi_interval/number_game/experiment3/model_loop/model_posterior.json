@@ -1,0 +1,27 @@
+{
+  "posteriors": {
+    "uneven_familiarity_conservative_updating": 1.0
+  },
+  "elpd_loo": {
+    "uneven_familiarity_conservative_updating": -3367.5133
+  },
+  "n_trials": 6750,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "uneven_familiarity_conservative_updating": {
+      "rank": 0,
+      "elpd_loo": -3367.513333370498,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 1.0,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 6750,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "uneven_familiarity_conservative_updating"
+}

@@ -1,0 +1,12 @@
+# Critique of `graded_factor_coherence_tuned_exemplar`
+
+5 of 8 evaluated test statistics show a significant discrepancy (p ≤ 0.05), over 1000 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **shared_final_digit_rule_gap** — Among multi-example sets whose examples all end in the same digit, yes rate for targets with that final digit minus yes rate for other targets; observed > model means people apply an "ends in d" rule more sharply than coherence-stretched digit attention predicts (observed < model means the model over-weights digit coherence). (observed 0.654 vs null mean 0.425, z=2.98, p=0.004, q=0.032) [survives FDR]
+- **common_factor_rule_gap** — Among multi-example sets whose examples all share a greatest common divisor g>=3, yes rate for targets divisible by g minus yes rate for targets not divisible by g; observed > model means people generalize the shared "multiples of g" rule more sharply than graded-factor coherence-tuned similarity predicts (tracks whether the iter-3 refinement closed this gap). (observed 0.197 vs null mean 0.0733, z=2.90, p=0.014, q=0.0373) [survives FDR]
+- **between_set_yes_rate_sd** — Standard deviation across number sets of each set's mean yes rate; observed > model means people treat some sets as far more (or less) generous than the model, i.e. the model under-produces set-level extremity (near-all-yes / near-all-no sets). (observed 0.229 vs null mean 0.195, z=2.54, p=0.012, q=0.0373) [survives FDR]
+- **far_target_size_principle** — Yes rate for targets more than 30 away from every example in 3-4-example sets minus the same far-target yes rate in 1-example sets; observed < model means people tighten generalization with more examples (size principle) more than the averaged exemplar similarity predicts, observed > model means they broaden it more. (observed -0.0829 vs null mean -0.197, z=2.19, p=0.024, q=0.048) [survives FDR]
+- **trial_index_drift** — Pearson correlation between trial_index and the yes response; observed > model (model ~0, being stationary) means yes responses become more frequent later in the session. (observed 0.0417 vs null mean 0.00192, z=2.15, p=0.036, q=0.0575)

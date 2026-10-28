@@ -1,0 +1,1 @@
+parity_restricted_rules

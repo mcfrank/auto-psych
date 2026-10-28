@@ -1,6 +1,6 @@
-# Number-game dataset run, October 2026
+# Number-game dataset runs, October 2026
 
-One run of the full pipeline on Tenenbaum's number game ("given these example
+Three runs (seeds 1–3) of the full pipeline on Tenenbaum's number game ("given these example
 numbers, is *t* in the concept too?", yes/no), three experiments, with
 Claude Opus 5.5 agents. There were no live participants: each experiment's
 design picked 280 (example set, target) items by EIG, and collection drew 9
@@ -10,9 +10,10 @@ never reusing a response (`data_source: dataset`,
 `scripts/number_game/slurm/submit_dataset_run.sh` on the SC cluster). The loop
 started from the three literature seeds (Tenenbaum 2000 and two ports of
 Bigelow's numpyro models) and selected models by grouped cross-validation over
-example sets (4 folds; no PSIS-LOO), with `hide_participant_id`.
+example sets (4 folds; no PSIS-LOO), with `hide_participant_id`. The runs
+differ only in their seed, so each drew its own items and responses.
 
-- `collected/run1/number_game/experiment<N>/`: as in the live series
+- `collected/run<R>/number_game/experiment<N>/`: as in the live series
   (`../human_experiment_sr-oct26/README.md`): the drawn responses
   (`data/responses.csv`), the design (`design/stimuli.json`), the carried
   models with the ledger of every hypothesis tried (`cognitive_models/`), and
@@ -20,13 +21,16 @@ example sets (4 folds; no PSIS-LOO), with `hide_participant_id`.
   traces are not included. `collected/SUMMARY.md` is the collector's generic
   table (written for live studies: there are no participants or Prolific IDs
   here); in it "P(best)" is the softmax over grouped-CV ELPD.
-- `harness/run1/`: the run's own records (`holdout.json`, `trajectory.json`:
-  the best model at every scoring step) and the code it ran on.
-- `score_unseen_items.py`: how table B below was computed.
+- `harness/run<R>/`: each run's own records (`holdout.json`, `trajectory.json`:
+  the best model at every scoring step), the code it ran on (`code_commit`,
+  and `code_history.txt` where that changed mid-run) and, for runs 2–3,
+  `agent_activity.md` (what the agents fetched or touched outside their
+  directories: no web calls).
+- `score_unseen_items.py`: how run 1's table B below was computed.
 
 Browse it: `python -m src.viewer.server` (see `src/viewer/`).
 
-## Results
+## Run 1 (seed 1)
 
 The best model changed 14 times in 18 scoring steps, and from the first round
 on it was always one the agents wrote.
@@ -69,7 +73,42 @@ their example sets are not. On the run's own items (chosen by the design to be
 where the models disagree), held out by example set, the seeds scored below a
 constant base rate.
 
-## What happened, in order
+## Runs 2 and 3 (seeds 2 and 3)
+
+Not yet scored on the unseen items (table B was run 1 only).
+
+**Run 2.** The best model changed 15 times in 18 scoring steps; from the first
+round on it was always one the agents wrote.
+
+| experiment | responses pooled | best at start | best at end | grouped-CV ELPD (per response) | carried |
+|---|---|---|---|---|---|
+| 1 | 2,520 | `bigelow_piantadosi_independent` | `coherence_sharpened_decision_exemplar` | −1541.9 (−0.612) | 8 |
+| 2 | 5,040 | `dual_route_shared_factor_rule_exemplar` | `zigzag_breadth_sequence_exemplar` | −3100.8 (−0.615) | 8 |
+| 3 | 7,560 | `zigzag_breadth_sequence_exemplar` | `relational_analogy_transfer` | −4665.1 (−0.617) | 7 |
+
+**Run 3.** The best model changed 7 times in 18 scoring steps; from the first
+round on it was always one the agents wrote. Experiment 2 ended with one model
+carried: everything else was pruned behind `outlier_tolerant_rule_concepts`.
+
+| experiment | responses pooled | best at start | best at end | grouped-CV ELPD (per response) | carried |
+|---|---|---|---|---|---|
+| 1 | 2,520 | `bigelow_piantadosi_interval` | `session_growing_acquiescence_concepts` | −1587.6 (−0.630) | 7 |
+| 2 | 5,040 | `session_growing_acquiescence_concepts` | `outlier_tolerant_rule_concepts` | −2796.5 (−0.555) | 1 |
+| 3 | 7,560 | `outlier_tolerant_rule_concepts` | `outlier_tolerant_rule_concepts` | −3867.6 (−0.512) | 7 |
+
+ELPDs are on each run's own drawn items, so they compare models within a run,
+not runs with each other. The three runs ended on three different models
+(`collected/SUMMARY.md`, "Winning-model agreement").
+
+Code: run 2 ran throughout on `54c48cc7`. Run 3's experiment 1 ran on
+`01ded870`; experiment 2's first attempt (`e471a07a`, log-only diagnostics)
+stalled in a PyTensor thread race and was discarded, and experiments 2–3 ran
+on `25dacd67` (per-thread `change_flags`; results unchanged), per
+`harness/run3/code_history.txt`. Those two commits are on the `cleanup` and
+`run3-diagnostics` branches, not on `main`. An earlier seed-3 start on
+cocoflops2 left no result and is not included.
+
+## What happened in run 1, in order
 
 The run recorded commits under their pre-merge hashes (`docs/merge_plan.md`
 § 0 maps them; the branch was later replayed onto `main`'s scrubbed history).

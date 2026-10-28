@@ -1,0 +1,1 @@
+memoryless_win_stay_lose_shift_rules

@@ -1,0 +1,132 @@
+{
+  "posteriors": {
+    "inflated_concept_size_principle": 0.000481,
+    "rule_size_prior_anchored_evidence": 0.001164,
+    "log_compressed_range_sampling": 0.000423,
+    "inflated_size_familiar_rule_prior": 0.02177,
+    "volatile_concept_changepoint": 0.090202,
+    "conservative_partial_belief_updating": 0.000581,
+    "volatile_changepoint_inflated_size": 0.87236,
+    "volatile_log_compressed_ranges": 0.013019
+  },
+  "elpd_loo": {
+    "inflated_concept_size_principle": -1946.2756,
+    "rule_size_prior_anchored_evidence": -1945.3915,
+    "log_compressed_range_sampling": -1946.4049,
+    "inflated_size_familiar_rule_prior": -1942.4629,
+    "volatile_concept_changepoint": -1941.0414,
+    "conservative_partial_belief_updating": -1946.0864,
+    "volatile_changepoint_inflated_size": -1938.7723,
+    "volatile_log_compressed_ranges": -1942.9771
+  },
+  "n_trials": 4500,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "volatile_changepoint_inflated_size": {
+      "rank": 0,
+      "elpd_loo": -1938.7722532392804,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.8723597671702522,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "volatile_concept_changepoint": {
+      "rank": 1,
+      "elpd_loo": -1941.0413999199866,
+      "elpd_diff": 2.2691466807061715,
+      "dse": 2.51547905523251,
+      "dse_clustered": 2.9188905807509014,
+      "weight": 0.09020232791866016,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "inflated_size_familiar_rule_prior": {
+      "rank": 2,
+      "elpd_loo": -1942.4628998803723,
+      "elpd_diff": 3.6906466410919165,
+      "dse": 3.574375338913675,
+      "dse_clustered": 3.6638698372694196,
+      "weight": 0.021770487642885864,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "volatile_log_compressed_ranges": {
+      "rank": 3,
+      "elpd_loo": -1942.9770592022023,
+      "elpd_diff": 4.20480596292191,
+      "dse": 3.1077481394811155,
+      "dse_clustered": 3.4695079891232528,
+      "weight": 0.013018819349810041,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "rule_size_prior_anchored_evidence": {
+      "rank": 4,
+      "elpd_loo": -1945.3914755780086,
+      "elpd_diff": 6.61922233872815,
+      "dse": 4.145623239022106,
+      "dse_clustered": 4.459616962776054,
+      "weight": 0.001164136461175246,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "conservative_partial_belief_updating": {
+      "rank": 5,
+      "elpd_loo": -1946.0864211715607,
+      "elpd_diff": 7.31416793228027,
+      "dse": 3.8258042666042256,
+      "dse_clustered": 4.205729215579464,
+      "weight": 0.0005810223722439027,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "inflated_concept_size_principle": {
+      "rank": 6,
+      "elpd_loo": -1946.275594959467,
+      "elpd_diff": 7.503341720186654,
+      "dse": 4.097901001274664,
+      "dse_clustered": 4.285710815455553,
+      "weight": 0.00048087890163149886,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "log_compressed_range_sampling": {
+      "rank": 7,
+      "elpd_loo": -1946.4048785516848,
+      "elpd_diff": 7.632625312404343,
+      "dse": 4.657247074563408,
+      "dse_clustered": 4.9392495595889905,
+      "weight": 0.0004225601833410303,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "volatile_changepoint_inflated_size"
+}

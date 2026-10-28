@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  coherence_sharpened_decision_exemplar: 0.125
+  coherence_sharpened_set_factor_exemplar: 0.125
+  coherence_tuned_attention_exemplar: 0.125
+  dimension_specific_coherence_exemplar: 0.125
+  dual_route_shared_factor_rule_exemplar: 0.125
+  graded_factor_coherence_tuned_exemplar: 0.125
+  independent_retrieval_exemplar_search: 0.125
+  shared_factor_rule_sharpened_exemplar: 0.125

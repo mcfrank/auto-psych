@@ -1,0 +1,146 @@
+"""Parity-restricted rule concepts.
+
+People do the same Bayesian concept learning as split_rule_range_tempering (42
+weighted rules and all 5,050 intervals of 1..100, size principle with evidence
+tempered separately for rules and ranges, 10% noisy examples, a decision gain
+and shifted criterion turning belief into a yes/no answer), but their space of
+mathematical concepts also contains each rule restricted to one parity -- "odd
+multiples of 3", "even squares", "odd numbers containing a 7", "even primes" --
+which take an inferred share of their parent rule's prior belief (split
+equally among a rule's parity variants). Because a parity-restricted rule is
+half as large, the size principle favours it whenever all examples share a
+parity, so e.g. after 63, 27, 99, 33 people endorse other odd multiples of 3
+but reject even ones like 18 or 24. A zero share recovers the base model.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+EPSILON = 0.1
+NUMBERS = np.arange(1, 101)
+
+
+def concept_sets():
+    """42 rules, then 5,050 intervals."""
+    rules = [
+        [2, 4, 8, 16, 32, 64], [3, 9, 27, 81], [4, 16, 64], [5, 25], [6, 36],
+        [7, 49], [8, 64], [9, 81], [10, 100],
+    ]
+    rules += [[i for i in NUMBERS if i % n == 0] for n in range(3, 13)]
+    rules += [[i for i in NUMBERS if i % 10 == d] for d in range(1, 10)]
+    rules += [[i for i in NUMBERS if str(d) in str(i)] for d in range(1, 10)]
+    rules.append([1, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97])
+    rules.append([i for i in NUMBERS if i % 2 == 0])
+    rules.append([i for i in NUMBERS if i % 2 == 1])
+    rules.append([1, 4, 9, 16, 25, 36, 49, 64, 81, 100])
+    rules.append([1, 8, 27, 64])
+    intervals = [list(range(m, n + 1)) for m in range(1, 101) for n in range(m, 101)]
+    return rules, intervals
+
+
+BASE_RULES, INTERVALS = concept_sets()
+N_BASE = len(BASE_RULES)
+
+
+def parity_variants():
+    """Each rule intersected with odd and with even numbers, if non-empty and a proper subset."""
+    variants, parents = [], []
+    for r, rule in enumerate(BASE_RULES):
+        for parity in (1, 0):
+            sub = [i for i in rule if i % 2 == parity]
+            if sub and len(sub) < len(rule):
+                variants.append(sub)
+                parents.append(r)
+    return variants, np.array(parents, dtype="int64")
+
+
+VARIANTS, VARIANT_PARENT = parity_variants()
+N_VARIANTS = len(VARIANTS)
+RULES = BASE_RULES + VARIANTS
+N_RULES = len(RULES)
+HAS_VARIANT = np.isin(np.arange(N_BASE), VARIANT_PARENT).astype("float64")
+LOG_N_SIBLINGS = np.log(np.bincount(VARIANT_PARENT, minlength=N_BASE)[VARIANT_PARENT].astype("float64"))
+MEMBERSHIP = np.array([np.isin(NUMBERS, c) for c in RULES + INTERVALS], dtype="float64")
+EXAMPLE_LOG_LIK = np.log(MEMBERSHIP * (1 - EPSILON) / MEMBERSHIP.sum(axis=1, keepdims=True) + EPSILON / 100)
+RULE_MEMBERSHIP = MEMBERSHIP[:N_RULES]
+INTERVAL_MEMBERSHIP = MEMBERSHIP[N_RULES:]
+INTERVAL_WIDTH = INTERVAL_MEMBERSHIP.sum(axis=1).astype("int64")
+LOG_N_INTERVALS = np.log(len(INTERVALS))
+MAX_SET = 4
+N_GROUPS = 100 * (MAX_SET + 1)
+
+# Intervals of the same width containing the same number of examples share a
+# prior and a likelihood, so prepare_observed collapses each set's intervals
+# into <= 500 groups (width x examples inside); the posterior is exact.
+
+with pm.Model() as model:
+    rule_log_lik = pm.Data("rule_log_lik", np.zeros((1, N_RULES)))  # (sets, rules)
+    group_log_count = pm.Data("group_log_count", np.zeros((1, N_GROUPS)))  # (sets, groups)
+    group_log_lik = pm.Data("group_log_lik", np.zeros((1, N_GROUPS)))  # (sets, groups)
+    group_in_concept = pm.Data("group_in_concept", np.zeros((1, N_GROUPS)))  # (trials, groups)
+    row_set = pm.Data("row_set", np.zeros(1, dtype="int64"))
+    row_cell = pm.Data("row_cell", np.zeros(1, dtype="int64"))  # set index * 100 + target - 1
+    rating = pm.Data("rating", np.zeros(1, dtype="int64"))
+
+    p_mix = pm.Beta("p_mix", 4, 4)
+    rule_weights = pm.Dirichlet("rule_weights", a=np.full(N_BASE, 2.0))
+    # The single change: parity-restricted rules take this share of their parent's prior.
+    parity_share = pm.Beta("parity_share", 1.5, 3.0)
+    rule_evidence_weight = pm.LogNormal("rule_evidence_weight", mu=0.0, sigma=0.5)
+    range_evidence_weight = pm.LogNormal("range_evidence_weight", mu=0.0, sigma=0.5)
+    log_gain = pm.Normal("log_gain", mu=0.0, sigma=0.5)
+    # Response bias shifting the criterion on the log-odds (as in the incumbent).
+    bias = pm.Normal("bias", mu=0.0, sigma=1.0)
+
+    log_w = pt.log(rule_weights)
+    log_rule_prior = pt.concatenate([
+        log_w + pt.log1p(-parity_share * HAS_VARIANT),
+        log_w[VARIANT_PARENT] + pt.log(parity_share) - LOG_N_SIBLINGS,
+    ])
+    log_rules = pt.log(p_mix) + log_rule_prior[None, :] + rule_evidence_weight * rule_log_lik
+    log_groups = pt.log1p(-p_mix) - LOG_N_INTERVALS + group_log_count + range_evidence_weight * group_log_lik
+    log_joint = pt.concatenate([log_rules, log_groups], axis=1)
+    posterior = pt.exp(log_joint - pt.logsumexp(log_joint, axis=1, keepdims=True))
+    rule_part = (posterior[:, :N_RULES] @ pt.as_tensor(RULE_MEMBERSHIP)).reshape((-1,))[row_cell]
+    interval_part = (posterior[:, N_RULES:][row_set] * group_in_concept).sum(axis=1)
+    concept_p = pt.clip(rule_part + interval_part, 1e-6, 1 - 1e-6)
+
+    # Decision gain on the log-odds of the belief, plus a criterion shift (bias).
+    belief_logit = pt.log(concept_p) - pt.log1p(-concept_p)
+    p_yes = pm.Deterministic(
+        "p_yes", pt.clip(pm.math.sigmoid(pt.exp(log_gain) * belief_logit + bias), 1e-6, 1 - 1e-6)
+    )
+    pm.Bernoulli("response", p=p_yes, observed=rating)
+
+
+def prepare_observed(rows):
+    """Rows carry `number_set` ("16,8", in presented order), `target` and `rating`."""
+    sets = [tuple(int(x) for x in str(r["number_set"]).split(",")) for r in rows]
+    unique = list(dict.fromkeys(sets))
+    index = {s: i for i, s in enumerate(unique)}
+    n_sets = len(unique)
+    log_count = np.full((n_sets, N_GROUPS), -700.0)  # empty groups get no mass
+    log_lik = np.zeros((n_sets, N_GROUPS))
+    share = np.zeros((n_sets, N_GROUPS, 100))  # (sets, groups, targets)
+    for i, s in enumerate(unique):
+        ex = np.array(s) - 1
+        inside = INTERVAL_MEMBERSHIP[:, ex].sum(axis=1).astype("int64")
+        ll = EXAMPLE_LOG_LIK[N_RULES:, ex].sum(axis=1)
+        group = (INTERVAL_WIDTH - 1) * (MAX_SET + 1) + inside
+        for g in np.unique(group):
+            members = group == g
+            log_count[i, g] = np.log(members.sum())
+            log_lik[i, g] = ll[members][0]
+            share[i, g] = INTERVAL_MEMBERSHIP[members].mean(axis=0)
+    set_idx = np.array([index[s] for s in sets], dtype="int64")
+    tgt = np.array([int(r["target"]) - 1 for r in rows], dtype="int64")
+    return {
+        "rule_log_lik": np.stack([EXAMPLE_LOG_LIK[:N_RULES, np.array(s) - 1].sum(axis=1) for s in unique]),
+        "group_log_count": log_count,
+        "group_log_lik": log_lik,
+        "group_in_concept": share[set_idx, :, tgt],
+        "row_set": set_idx,
+        "row_cell": set_idx * 100 + tgt,
+        "rating": np.array([int(r["rating"]) for r in rows], dtype="int64"),
+    }

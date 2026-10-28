@@ -1,0 +1,132 @@
+{
+  "posteriors": {
+    "coherence_tuned_attention_exemplar": 2e-05,
+    "graded_factor_coherence_tuned_exemplar": 2.4e-05,
+    "dimension_specific_coherence_exemplar": 0.000393,
+    "coherence_sharpened_decision_exemplar": 0.461427,
+    "independent_retrieval_exemplar_search": 0.023599,
+    "coherence_sharpened_set_factor_exemplar": 0.049029,
+    "shared_factor_rule_sharpened_exemplar": 0.461237,
+    "dual_route_shared_factor_rule_exemplar": 0.004271
+  },
+  "elpd_loo": {
+    "coherence_tuned_attention_exemplar": -1551.9417,
+    "graded_factor_coherence_tuned_exemplar": -1551.7484,
+    "dimension_specific_coherence_exemplar": -1548.9586,
+    "coherence_sharpened_decision_exemplar": -1541.8913,
+    "independent_retrieval_exemplar_search": -1544.8644,
+    "coherence_sharpened_set_factor_exemplar": -1544.1332,
+    "shared_factor_rule_sharpened_exemplar": -1541.8917,
+    "dual_route_shared_factor_rule_exemplar": -1546.5738
+  },
+  "n_trials": 2520,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "coherence_sharpened_decision_exemplar": {
+      "rank": 0,
+      "elpd_loo": -1541.8913274757433,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.46142678791389474,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "shared_factor_rule_sharpened_exemplar": {
+      "rank": 1,
+      "elpd_loo": -1541.8917393204965,
+      "elpd_diff": 0.0004118447532164282,
+      "dse": 4.032221699351104,
+      "dse_clustered": 4.475808981430015,
+      "weight": 0.46123679083963354,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "coherence_sharpened_set_factor_exemplar": {
+      "rank": 2,
+      "elpd_loo": -1544.1332426303159,
+      "elpd_diff": 2.2419151545725526,
+      "dse": 1.7699953774903174,
+      "dse_clustered": 1.4057937858821608,
+      "weight": 0.04902881798509052,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "independent_retrieval_exemplar_search": {
+      "rank": 3,
+      "elpd_loo": -1544.8644452742153,
+      "elpd_diff": 2.9731177984720034,
+      "dse": 5.340705157152826,
+      "dse_clustered": 5.729670007260875,
+      "weight": 0.023599029858119767,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "dual_route_shared_factor_rule_exemplar": {
+      "rank": 4,
+      "elpd_loo": -1546.5737812853724,
+      "elpd_diff": 4.6824538096291235,
+      "dse": 6.353762425490286,
+      "dse_clustered": 7.331549012351275,
+      "weight": 0.004271092256575486,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "dimension_specific_coherence_exemplar": {
+      "rank": 5,
+      "elpd_loo": -1548.9585920647853,
+      "elpd_diff": 7.067264589041997,
+      "dse": 4.751925957952945,
+      "dse_clustered": 5.639215040351725,
+      "weight": 0.00039339495897991954,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "graded_factor_coherence_tuned_exemplar": {
+      "rank": 6,
+      "elpd_loo": -1551.748395684034,
+      "elpd_diff": 9.857068208290684,
+      "dse": 5.194647549114535,
+      "dse_clustered": 6.398963171190887,
+      "weight": 2.4167541502561057e-05,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "coherence_tuned_attention_exemplar": {
+      "rank": 7,
+      "elpd_loo": -1551.9417498685073,
+      "elpd_diff": 10.050422392763949,
+      "dse": 5.439866113507501,
+      "dse_clustered": 6.666871793955486,
+      "weight": 1.9918646203395533e-05,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "coherence_sharpened_decision_exemplar"
+}

@@ -1,0 +1,13 @@
+{
+  "models": [
+    "prime_concept_excludes_one",
+    "upper_edge_marking_ranges",
+    "upper_edge_discounted_range_size",
+    "uncertain_sampling_assumption",
+    "top_marking_range_sampling",
+    "last_example_marks_range_top",
+    "top_marking_uncertain_sampling",
+    "uncertain_sampling_top_marking"
+  ],
+  "ledger_sha256": "7006f764f37a56e60a2652615439a7f5ca23a1344832f7ecfdd97b93cc6ddebb"
+}

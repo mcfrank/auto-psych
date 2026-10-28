@@ -1,0 +1,1 @@
+upper_edge_discounted_range_size

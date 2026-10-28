@@ -1,0 +1,13 @@
+{
+  "models": [
+    "compressed_rule_extension",
+    "parity_representativeness_bias",
+    "sequence_opens_bottom_ends_top",
+    "stray_closing_example",
+    "position_graded_stray_example",
+    "parity_representative_sequence_edges",
+    "sequence_only_edge_marking",
+    "parity_representative_stray_example"
+  ],
+  "ledger_sha256": "89913b87658514f1a9f2546de31ec539376ac5c89ac20c3eeac3f97fd189b08d"
+}

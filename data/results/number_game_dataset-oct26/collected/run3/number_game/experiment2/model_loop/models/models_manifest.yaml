@@ -1,0 +1,13 @@
+models:
+- name: outlier_tolerant_rule_concepts
+  rationale: 'Refinement of `evidence_scarce_guessing_concepts`: people do the same
+    conservative Bayesian concept learning over the 42 arithmetic rules and midpoint-weighted,
+    decade-favoured intervals of 1-100 (evidence weight growing with set size, guessing
+    that becomes rarer as more examples are shown), but how readily they accept that
+    an example could be a stray number the program produced outside its rule is their
+    own inferred belief, rather than a fixed one-in-ten chance. The one change is
+    this inferred tolerance for exceptions, which matters most for sets where all
+    examples but one share a rule (e.g. 92, 82, 27, 42 or 71, 61, 26, 81): a tolerant
+    learner keeps the near-fitting rule and says "yes" to far targets that fit it
+    (52, 62; 11, 41), while an intolerant learner abandons the rule for a range spanning
+    every example and rejects them.'
