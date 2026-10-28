@@ -64,7 +64,6 @@ if [[ -n "${PARTICIPANTS:-}" ]]; then
 fi
 CELL="${ARM}_chain_$CHAIN$SMOKE"
 CELL_DIR="$CELLS_ROOT/$CELL"
-mkdir -p "$CELL_DIR/private"
 if [[ -f "$CELL_DIR/STOP" ]]; then
   echo "[open live] $CELL is stopped; not resuming: $(cat "$CELL_DIR/STOP")"
   exit 0
@@ -103,6 +102,8 @@ mkdir -p "$CAMPAIGN_DIR"
   [[ -d "$WORK_ROOT/open_seeds" ]] || { cp -r "$SEEDS_SRC" "$WORK_ROOT/open_seeds.tmp" && mv "$WORK_ROOT/open_seeds.tmp" "$WORK_ROOT/open_seeds"; }
   (cd "$WORK_ROOT/harness_repo" && "$VENV_PY" -m src.rsa_open.live --config "$CONFIG" --render)
 ) 9>"$WORK_ROOT/.setup.lock"
+# the cell directory only after staging: stage_code.sh refuses a work root with cells but no code_commit
+mkdir -p "$CELL_DIR/private"
 CODE_TAG="${CODE_TAG:-$(cfg code_tag)}"
 if [[ -n "$CODE_TAG" ]]; then
   tag_commit="$(cd "$REPO" && git rev-parse "$CODE_TAG^{commit}")"
