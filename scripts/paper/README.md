@@ -104,6 +104,17 @@ What each figure shows:
   model file's SHA-256, and the figure script refuses a spec whose model
   changed or that is not Figure 3's best model.
 
+- **Ablation figure** (`fig_ablation`, `uv run python -m scripts.paper.ablation_figure`,
+  seconds): the backward elimination of each domain's overall winner, one
+  panel each: the subjective-randomness final best on all runs pooled
+  (Figure 3's, `pooled.best_model`; its elimination in `docs/sr_ablation.md`)
+  and the reference-game consolidation (`data/rsa/consolidate/eliminate/`).
+  The number game was not ablated. Each panel is the path of the model kept
+  after each round: its grouped-CV ELPD against the full model's, by its
+  number of mechanisms, each step named by the mechanism it dropped; the
+  path's last step is the removal that stopped the elimination, below the dashed
+  grey line 2 clustered SEs (of that comparison) under the final model.
+
 `figures.py --mock-domains <domain> ...` marks those domains' titles "(MOCK
 DATA)", for drafting the figures' look from invented figure data.
 
