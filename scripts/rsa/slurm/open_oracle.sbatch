@@ -5,6 +5,7 @@
 #SBATCH --mem=96GB
 #SBATCH --time=12:00:00
 #SBATCH --output=%x_%j.out
+#SBATCH --no-requeue
 #
 # How close a rehearsal's loop came to its hidden ground truth (PI 2026-10-26;
 # src/rsa_open/oracle.py): the truth's theory fitted and cross-validated on the loop's own corpus and
@@ -15,7 +16,9 @@
 #   sbatch --chdir="$HOME/auto-psych" -o "$SCRATCH/auto-psych/rsa_open_replay_b1/logs/%x_%j.out" \
 #     scripts/rsa/slurm/open_oracle.sbatch
 #
-# Bring back $WORK_ROOT/private/oracle/{oracle.json,oracle.md} and the job log (aggregates only).
+# Bring back $WORK_ROOT/private/oracle_<arm>_chain_<k>_exp<n>/{oracle.json,oracle.md} and the job log
+# (aggregates only). Each cell and experiment has its own folder, so checks run side by side (run C: two
+# cells' checks shared one and collided); not requeued, since a preempted check restarts from scratch.
 #
 # Overrides: WORK_ROOT (the rehearsal's root), ARM (open), EXPERIMENT (1), CHAIN (0), CV_FOLDS (5).
 set -euo pipefail
@@ -31,7 +34,7 @@ TREE_ID="$WORK_ROOT/cells/${ARM:-open}_chain_$CHAIN/agent_tree_id"
 LOOP_DIR="$AGENT_TREES_ROOT/$(cat "$TREE_ID")/repo/_runs/chain_$CHAIN/experiment${EXPERIMENT:-1}/loop"
 [[ -f "$LOOP_DIR/export.json" && -f "$LOOP_DIR/corpus.json" ]] || { echo "ERROR: $LOOP_DIR is not a finished loop" >&2; exit 1; }
 GT_DIR="$WORK_ROOT/private/ground_truth"
-OUT="$WORK_ROOT/private/oracle"
+OUT="$WORK_ROOT/private/oracle_${ARM:-open}_chain_${CHAIN}_exp${EXPERIMENT:-1}"
 PYTENSOR_BASE="${L_SCRATCH:-$WORK_ROOT/.cache}/pytensor/job_${SLURM_JOB_ID:-local}"
 mkdir -p "$PYTENSOR_BASE"
 export PYTENSOR_FLAGS="base_compiledir=$PYTENSOR_BASE"

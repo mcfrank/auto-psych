@@ -248,6 +248,15 @@ tool a timeout of 1200000 milliseconds**. Run it once per change and read its PA
 and its sampling lines. A projected admission fit over the limit is a FAIL: the loop would
 reject the theory as too slow.
 
+Add `--quick` to the same command for the quick fit (seconds, no sampling): the best-fitting
+values, how sharply the data pin each parameter down, which parameters trade off, and whether
+different starts disagree. Use it to explore instead of writing fitting scripts of your own.
+
+**Your session has a time limit (`CONTEXT.md`, "Your time").** Write a complete first version
+of your three files early, check it, then improve the files in place: whatever is in your
+directory when the session ends is what the loop judges, and a session that ends without
+`candidate.py` has wasted its slot.
+
 Write, edit and check your three files **in your candidate directory**, from the start. The
 loop reads only that directory. A candidate that fails a gate is sent back once for repair
 with the reason; a second failure is final.

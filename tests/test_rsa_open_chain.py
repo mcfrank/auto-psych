@@ -152,7 +152,7 @@ def test_the_chain_command_starts_from_its_chain_s_seeds_and_designs_against_the
     c = run_chain.build(args)
     assert c.cfg.seeds_dir == OUT / "chain_1" and c.cfg.bar_dir == OUT / "bar"
     assert c.cfg.literature == ("E from", tmp_path / "all_trials.csv") and c.cfg.chain == "chain_1"
-    assert c.cfg.loop == {"max_iterations": 5, "candidate_count": 6, "cv_folds": 5}
+    assert c.cfg.loop == {"max_iterations": 5, "candidate_count": 6, "cv_folds": 5, "theorist_timeout_sec": 3600}
     assert callable(c.theorist_spawn(tmp_path / "run" / "experiment1" / "loop"))
 
 
@@ -193,9 +193,9 @@ def test_a_design_leaves_out_a_theory_whose_fit_fails_or_runs_out_of_time_on_rec
     cfg = ChainConfig(chain="c", seeds_dir=tmp_path, literature=None, out_dir=tmp_path / "chain",
                       ground_truth=GroundTruth(tmp_path / "gt.py", {}))
     c = Chain(cfg, designer_spawn=None, theorist_spawn=None)
-    names = ["literal_listener", "rsa_l1", "slow", "broken"]
+    names = ["literal_listener", "rsa_l1", "slow", "broken", "wild", "near"]
     for name in names:
-        (tmp_path / f"{name}.py").write_text(ported("rsa_l1" if name in ("slow", "broken") else name))
+        (tmp_path / f"{name}.py").write_text(ported(name if name in ("literal_listener", "rsa_l1") else "rsa_l1"))
     monkeypatch.setattr(Chain, "blocks_before", lambda self, n: [])
     monkeypatch.setattr("src.rsa_open.chain.write_corpus", lambda path, blocks: path)
     monkeypatch.setattr(Chain, "design_theories", lambda self, n: {k: (tmp_path / f"{k}.py", "h") for k in names})
@@ -205,14 +205,18 @@ def test_a_design_leaves_out_a_theory_whose_fit_fails_or_runs_out_of_time_on_rec
             raise FitTimeLimitExceeded("slow: the fit did not finish within 120 minutes")
         if name == "broken":
             raise ModelFailure("ValueError: nan")
-        return FakeFit({"alpha": np.ones(50)}), "a design fit"
+        f = FakeFit({"alpha": np.ones(50)})
+        f.converged, f.near_miss = name not in ("wild", "near"), name == "near"
+        f.convergence_problems = [] if f.converged else ["max R-hat 2.24", "min bulk ESS 3"]
+        return f, "a design fit"
 
     monkeypatch.setattr(Chain, "design_fit", fit)
     context = c.design_context(1)
-    assert set(context) == {"literal_listener", "rsa_l1"}
+    assert set(context) == {"literal_listener", "rsa_l1", "near"}  # a near miss is used, as before
     record = json.loads((c.exp(1) / "design_screened_out.json").read_text())
-    assert [s["theory"] for s in record["screened_out"]] == ["slow", "broken"]
+    assert [s["theory"] for s in record["screened_out"]] == ["slow", "broken", "wild"]
     assert "120 minutes" in record["screened_out"][0]["reason"]
+    assert "too far from converging" in record["screened_out"][2]["reason"] and "R-hat 2.24" in record["screened_out"][2]["reason"]
     names[:] = ["rsa_l1", "slow"]
     with pytest.raises(RuntimeError, match="needs two"):
         c.design_context(1)

@@ -68,7 +68,9 @@ class Args:
     pilot_participants: int = PILOT_PARTICIPANTS
     designer_model: str = DESIGNER_MODEL
     theorist_model: str = THEORIST_MODEL
-    theorist_timeout_sec: int = 2400
+    theorist_timeout_sec: int = 3600
+    """A theorist's (and the critic's) session: 60 min for Gemini 4 (PI 2026-10-28; 40 was set for Gemini 3.8
+    Flash, and run C's Gemini 4 theorists ran out of it in 19 of 23 sessions)."""
     seed: int = 0
     other_chains: Tuple[Path, ...] = ()
     """The campaign's other chains' run directories: their finished live experiments' timing goes
@@ -130,7 +132,7 @@ def build(args: Args) -> Chain:
                       pilot_participants=args.pilot_participants, seed=args.seed, other_chains=args.other_chains,
                       code_commit=args.code_commit or _commit(),
                       loop=dict(max_iterations=args.max_iterations, candidate_count=args.candidate_count,
-                                cv_folds=args.cv_folds))
+                                cv_folds=args.cv_folds, theorist_timeout_sec=args.theorist_timeout_sec))
     designer = None if args.arm == "fixed" else designer_spawner(
         agent_root=args.agent_root, model=args.designer_model, sandbox=not args.no_sandbox,
         shell_dir=run_dir / ".agent_shell")
@@ -167,8 +169,11 @@ def main(args: Args) -> list:
         print(f"[chain] PAUSED: {stop}", flush=True)
         raise SystemExit(EXIT_OUT_OF_JOB_TIME)
     finally:
-        write_usage_report(Path(args.run_dir), marker, heading="RSA open chain",
-                           records=read_usage_log(usage_log) if usage_log.exists() else [])
+        records = read_usage_log(usage_log) if usage_log.exists() else []
+        write_usage_report(Path(args.run_dir), marker, heading="RSA open chain", records=records)
+        from src.rsa_open.spend import write_estimates
+
+        write_estimates(Path(args.run_dir), records)
     print(json.dumps([{k: e.get(k) for k in ("best_model", "live")} for e in exports], indent=1))
     return exports
 

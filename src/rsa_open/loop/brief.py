@@ -29,6 +29,39 @@ CHECK_COMMAND = (sys.executable + " -m src.rsa_open.loop.check_candidate {candid
                  " --full-corpus {full_corpus} --limit-minutes {limit_minutes}")
 CHECK_SHELL_TIMEOUT_MS = 1_200_000
 NO_NETWORK_NOTE = closed.NO_NETWORK_NOTE
+DEADLINE_FILE = "deadline.json"
+DRAFT_MINUTES = 15
+URGENT_SECONDS = 10 * 60
+"""A theorist's session has a clock (PI 2026-10-28): run C's Gemini 4 theorists were cut off with no
+candidate.py in 19 of 23 sessions, all still exploring. The brief asks for a complete first version
+within ``DRAFT_MINUTES`` and states when the session ends; every self-check prints the time left."""
+
+
+def write_deadline(candidate_dir: Path, timeout_sec: float, now: Optional[float] = None) -> float:
+    """The session's end (epoch seconds) in ``candidate_dir/deadline.json``, for `time_note`."""
+    import time
+
+    end = (time.time() if now is None else now) + timeout_sec
+    Path(candidate_dir).mkdir(parents=True, exist_ok=True)
+    (Path(candidate_dir) / DEADLINE_FILE).write_text(json.dumps({"deadline": end, "clock": time.strftime(
+        "%H:%M %Z", time.localtime(end))}))
+    return end
+
+
+def time_note(candidate_dir: Path, now: Optional[float] = None) -> Optional[str]:
+    """How long the theorist's session has left (None without a deadline)."""
+    import time
+
+    path = Path(candidate_dir) / DEADLINE_FILE
+    if not path.exists():
+        return None
+    d = json.loads(path.read_text())
+    left = d["deadline"] - (time.time() if now is None else now)
+    note = f"Time: {max(0, left) / 60:.0f} min left in this session (it ends at {d['clock']})."
+    if left < URGENT_SECONDS:
+        note += (" Finish now: make sure candidate.py, hypothesis.md and model_name.txt in your directory are the "
+                 "version you want judged. Whatever is there when the session ends is what the loop admits.")
+    return note
 
 RESPONSE_WORDS = {
     "choice": "click the object the speaker means (the listener)",
@@ -87,9 +120,19 @@ def write_block_data(directory: Path, blocks: Sequence[Block]) -> Dict[str, Path
 
 def context_md(*, candidate_dir: Path, corpus_path: Path, full_corpus_path: Path,
                admission_limit_sec: Optional[float], blocks: Sequence[Block], data_paths: Mapping[str, Path],
-               paradigm_notes: Mapping[str, str], round_index: int, n_rounds: int, network: bool = False) -> str:
+               paradigm_notes: Mapping[str, str], round_index: int, n_rounds: int, network: bool = False,
+               session_minutes: Optional[float] = None) -> str:
     lines = ["# Context", "", f"- Candidate directory (write your three files here): `{candidate_dir}`",
-             f"- Inner-loop round {round_index + 1} of {n_rounds}.", "", "## The paradigms of this chain", "",
+             f"- Inner-loop round {round_index + 1} of {n_rounds}.", ""]
+    if session_minutes is not None:
+        lines += ["## Your time", "",
+                  f"This session ends after **{session_minutes:.0f} minutes**; every self-check prints the time "
+                  f"left. **Write a complete first version of your three files within {DRAFT_MINUTES} minutes**, "
+                  "run the self-check on it, then improve the files in place. Whatever is in your directory when the "
+                  "session ends is what the loop judges; a session that ends with no candidate.py has wasted its "
+                  "slot. Do not spend the session on fitting scripts of your own: the quick fit below answers what "
+                  "they would, in seconds.", ""]
+    lines += ["## The paradigms of this chain", "",
              "Your theory is fitted to all of them at once; the newest is last. The data files are one JSON "
              "object per line (`objects`: one row of 0/1 features per object; `heard`: the index of the word "
              "heard, `null` on a prior trial; `response` in its paradigm's form). You may analyse them from "
@@ -122,7 +165,11 @@ def context_md(*, candidate_dir: Path, corpus_path: Path, full_corpus_path: Path
               f"data. It reports how hard the posterior was to sample (steps per draw, step size, and any pair "
               f"of parameters correlated above {CORRELATION_FLAG}) and projects the admission fit's time from "
               f"the short fit. Give the shell tool a timeout of {CHECK_SHELL_TIMEOUT_MS} milliseconds for it. Run it once "
-              f"per change.", ""]
+              f"per change.", "",
+              "Add `--quick` to the same command for the quick fit instead (seconds, no sampling): the best-fitting "
+              "values from several random starts, how sharply the data pin each parameter down (a Laplace "
+              "approximation), which parameters trade off, and whether the starts disagree (more than one optimum). "
+              "It is for exploring; the loop scores theories with full sampling, never with it.", ""]
     if not network:
         lines.append(NO_NETWORK_NOTE.rstrip())
     lines.append("- Write and test your files **in your candidate directory only**.")
@@ -153,5 +200,30 @@ def build_prompt(candidate_dir: Path, docs: Mapping[str, Optional[str]]) -> str:
     return THEORY_PROMPT.read_text(encoding="utf-8") + prompt[len(old):]
 
 
-repair_note = closed.repair_note
+SAMPLING_REJECTIONS = ("did not converge", "did not finish within")
+REPARAMETERISE = """
+
+## Making the posterior easier to sample
+
+The rejection is about inference, not about the hypothesis. Before you change the mechanism:
+1. Run the self-check with `--quick` (seconds): it shows the best values, which parameters trade off, which
+   the data cannot pin down, and whether different starts end at different optima.
+2. A pair that trades off: the data pin down a combination of them. Keep one and fix the other, or sample
+   the combination (a sum and a difference, a product and a ratio) instead of the two.
+3. A parameter the data cannot pin down (a wide Laplace interval, or a singular curvature): fix it, drop it,
+   or give it a tighter prior, and say so in hypothesis.md.
+4. Sample positive scales on the log scale and weights on the logit scale, not with hard bounds the
+   sampler runs into.
+5. Several optima: the theory has two near-equivalent explanations of the same data. Break the symmetry
+   (order the parameters, fix a sign) or drop one of them.
+Smaller steps do not help: the loop refits only near misses."""
+
+
+def repair_note(reason: str) -> str:
+    """The closed loop's repair note; after a rejection for sampling, a reparameterisation checklist
+    (PI 2026-10-28: the cheap version of an inference debugger)."""
+    note = closed.repair_note(reason)
+    return note + REPARAMETERISE if any(k in reason for k in SAMPLING_REJECTIONS) else note
+
+
 retry_note = closed.retry_note

@@ -32,6 +32,9 @@ Everything else is identical by construction:
 - the theory format and the links;
 - fitting, cross-validation, selection, the 4-SE guard and pruning, with each earlier paradigm's
   best theory kept as its reference;
+- the inference limits: every fit is limited to 4 hours, and a theory whose fit or cross-validation
+  does not converge (or runs out of time) is not carried into the next experiment (the
+  incumbent stays if no theory converges);
 - the theorist and critic (Gemini 4 for every agent), the sandbox, rounds and slots, and theorist
   tooling (the sampler report, the identification prompt, the corpus-relative admission limit);
 - the seeds and the chain split, and the literature data E;

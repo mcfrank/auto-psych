@@ -39,10 +39,14 @@ deployed live only once the PI has approved it (`src.rsa_open.review`).
 
 from __future__ import annotations
 
+import base64
 import fcntl
+import hashlib
 import json
 import math
 import os
+import re
+import shutil
 import statistics
 import time
 from collections import Counter
@@ -133,21 +137,53 @@ def recruitment_overrides(paradigm, cfg: LiveConfig) -> Dict[str, Any]:
 
 # --------------------------------------------------------------------------- the page
 
+DATA_URI = re.compile(r"data:image/(png|jpeg|gif|svg\+xml);base64,([A-Za-z0-9+/=]+)")
+LIST_URL = "lists/{k}.json"
+
+
+def _assets_out(text: str, assets: Path) -> str:
+    """Every embedded base64 image in ``text`` as a file under ``assets`` (named by its content),
+    referenced relative to the page."""
+    def one(m: "re.Match") -> str:
+        ext = {"png": "png", "jpeg": "jpg", "gif": "gif", "svg+xml": "svg"}[m.group(1)]
+        data = base64.b64decode(m.group(2))
+        name = f"{hashlib.sha256(data).hexdigest()[:16]}.{ext}"
+        path = assets / name
+        if not path.exists():
+            path.write_bytes(data)
+        return f"assets/{name}"
+
+    return DATA_URI.sub(one, text)
+
+
 def build_site(lists: Mapping[str, Any], exp_dir: Path) -> Path:
-    """``<exp_dir>/experiment/index.html``: the open page with the closed live hooks, no consent
-    screen of its own (the deployment injects the IRB gate)."""
+    """``<exp_dir>/experiment/``: the open page with the closed live hooks and no lists of its own,
+    one file per participant's list (``lists/<k>.json``, fetched after assignment), and every embedded
+    picture as a file once (``assets/``). The page has no consent screen of its own (the deployment
+    injects the IRB gate). Run C: a page carrying every list was 360 MB for the fixed arm, whose
+    pictures were inlined in every trial of every list."""
     from src.rsa.live.site import LIVE_JS, LIVE_MARKER
     from src.rsa_open.page import CONSENT_PLACEHOLDER_MARKER, render
 
-    html = render(lists, preview=False, consent_html=None)
+    site = Path(exp_dir) / "experiment"
+    if site.exists():
+        shutil.rmtree(site)
+    (site / "lists").mkdir(parents=True)
+    (site / "assets").mkdir()
+    for lst in lists["lists"]:
+        text = _assets_out(json.dumps(lst, ensure_ascii=False), site / "assets")
+        (site / LIST_URL.format(k=lst["list_index"])).write_text(text, encoding="utf-8")
+    ks = sorted(lst["list_index"] for lst in lists["lists"])
+    if ks != list(range(len(ks))):
+        raise ValueError("the lists are not numbered 0..n-1")
+    meta = {**lists, "lists": [], "n_lists": len(ks), "list_url": LIST_URL}
+    html = _assets_out(render(meta, preview=False, consent_html=None), site / "assets")
     if html.count(_INSERT_BEFORE) != 1:
         raise ValueError("the open page has no single injection point for the live hooks")
     i = html.index(_INSERT_BEFORE)
     html = html[:i] + f'  <script id="{LIVE_MARKER}">\n{LIVE_JS}\n  </script>\n' + html[i:]
     if f'class="{CONSENT_PLACEHOLDER_MARKER}"' in html or "[CONSENT PLACEHOLDER]" in html:
         raise ValueError("a live page must not carry the consent placeholder")
-    site = Path(exp_dir) / "experiment"
-    site.mkdir(parents=True, exist_ok=True)
     index = site / "index.html"
     index.write_text(html, encoding="utf-8")
     return index

@@ -50,6 +50,7 @@ from src.rsa_open.timing import CLOSED_CAMPAIGN, TimingRecord, digest_md, write_
 from src.rsa_open.tools import MAX_TOOL_CALLS, Workspace, best_scored_spec, seed_for, write_deadline
 
 DESIGNER_MODEL = "google/gemini-4-argon"
+PREVIEW_LISTS = 3
 CYCLE_SECONDS = 2 * 3600
 MAX_SUBMISSIONS = 3
 MAX_CYCLES = 2
@@ -373,7 +374,9 @@ def freeze(result: SubmissionResult, out: Path, *, chain: str, experiment: int,
     (out / "paradigm.json").write_text(json.dumps(paradigm.model_dump(mode="json"), indent=2, ensure_ascii=False))
     (out / "design.json").write_text(json.dumps({"units": d["units"], "eig": d["eig"]}, indent=2))
     (out / "lists.json").write_text(json.dumps(d["lists"]))
-    (out / "page_preview.html").write_text(render(d["lists"], preview=True))
+    # The first lists only (?list=0..2): every list made the fixed arm's preview 360 MB (run C).
+    (out / "page_preview.html").write_text(render({**d["lists"], "lists": d["lists"]["lists"][:PREVIEW_LISTS]},
+                                                  preview=True))
     (out / "link_check.json").write_text(json.dumps(d["link"], indent=2))
     shutil.copytree(result.dir / "pilot", out / "pilot")
     record = {

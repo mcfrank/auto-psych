@@ -144,6 +144,30 @@ def test_the_live_page_has_the_hooks_and_no_consent_screen_of_its_own(tmp_path):
     assert "const CONSENT_HTML = null" in html and "[CONSENT PLACEHOLDER]" not in html
     assert html.index(LIVE_MARKER) < html.index("const LISTS")  # the hooks exist before the page asks for them
     assert CONSENT_GATE_MARKER in ensure_consent_gate(html, "<p>consent</p>")
+    site = root / "experiment1" / "experiment"
+    assert sorted(int(f.stem) for f in (site / "lists").glob("*.json")) == list(range(len(lists["lists"])))
+    assert json.loads((site / "lists" / "3.json").read_text())["trials"] == lists["lists"][3]["trials"]
+
+
+def test_the_fixed_arm_s_live_page_is_small_and_its_pictures_are_files(tmp_path):
+    """Run C: the fixed arm's page carried every list with its PNGs inlined in every trial (360 MB)."""
+    from src.rsa_open.fixed import SPEC_PATH
+    from src.rsa_open.live import build_site
+    from src.rsa_open.paradigm import load_paradigm
+    from src.rsa_open.screens import trial_lists
+    from tests.test_rsa_open_screens import units_of
+
+    p = load_paradigm(SPEC_PATH)
+    lists = trial_lists(p, units_of(p), seed=0, n_lists=20)
+    whole = len(json.dumps(lists))
+    index = build_site(lists, tmp_path)
+    site = index.parent
+    one = (site / "lists" / "0.json").read_text()
+    assert "data:image" not in one and "data:image" not in index.read_text()
+    assert index.stat().st_size < 200_000 and len(one) < whole / 100  # one list, pictures by reference
+    assets = sorted((site / "assets").glob("*.png"))
+    assert 0 < len(assets) <= 6 * 3 + sum(len(d.features) for d in p.materials.domains)
+    assert all(f"assets/{a.name}" in "".join(f.read_text() for f in (site / "lists").glob("*.json")) for a in assets)
 
 
 def test_the_live_page_takes_its_list_from_assign_and_posts_what_collection_reads(tmp_path):
@@ -165,7 +189,7 @@ def test_the_live_page_takes_its_list_from_assign_and_posts_what_collection_read
     p, lists, root = frozen_experiment(tmp_path, "rating", trials_per_participant=4, catch_trials=1)
     index = build_site(lists, root / "experiment1")
     site = "https://site.test/e1-open-c0/"
-    posts, assigns, blocked = [], [], []
+    posts, assigns, blocked, fetched = [], [], [], []
 
     def handle(route):
         url, req = route.request.url, route.request
@@ -174,6 +198,11 @@ def test_the_live_page_takes_its_list_from_assign_and_posts_what_collection_read
             return route.fulfill(status=200, body=body, headers={"Content-Type": ct})
         if url.startswith(site) and url.split("?")[0] == site:
             return route.fulfill(status=200, body=index.read_text(), headers={"Content-Type": "text/html"})
+        served = index.parent / url[len(site):].split("?")[0] if url.startswith(site) else None
+        if served is not None and served.is_file():
+            fetched.append(url[len(site):])
+            return route.fulfill(status=200, body=served.read_bytes(), headers={
+                "Content-Type": "application/json" if served.suffix == ".json" else "image/png"})
         if url == site + "auto_psych_config.json":
             return route.fulfill(status=200, body=json.dumps({"collection_session_id": "sess", "prolific_study_id": "S1"}),
                                  headers={"Content-Type": "application/json"})
@@ -197,6 +226,7 @@ def test_the_live_page_takes_its_list_from_assign_and_posts_what_collection_read
         b.close()
     assert not blocked and not errors, (blocked, errors)
     assert assigns == [{"collection_session_id": "sess", "n_lists": len(lists["lists"]), "participant_key": "abc123"}]
+    assert fetched == ["lists/7.json"]  # its own list only
     (post,) = posts
     assert post["list_index"] == 7 and post["prolific_pid"] == "abc123" and post["prolific_study_id"] == "S1"
     who = person("p0", post, lists)

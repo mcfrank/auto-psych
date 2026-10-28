@@ -76,9 +76,15 @@ temperature audit: `rsa_l1` 26 min, `rsa_l2` 46, the starting incumbent 83), and
 of 61 candidates as too slow, refinements of the incumbent above all. The limit is fixed for the
 loop (it does not ratchet up as slow candidates are admitted) and is recorded in history.json, the
 theorists' brief and their self-check command."""
+IN_PLAY_FIT_LIMIT_SEC = 4 * 3600
+"""The ceiling on every fit the loop runs (PI 2026-10-28): a theory in play (a seed, a carried or an
+admitted theory) whose fit does not finish within it is dropped on record, as a seed that fails to
+fit is; no candidate's admission limit and no fold's limit exceeds it. Run C's starting fits took
+8-10 h on single blocks and cost a 24-h job; the slowest healthy fit seen is 2.7 h, on all of E
+(run B′)."""
 FOLD_TIME_FACTOR = 3.0
 FOLD_MIN_SEC = 10 * 60
-"""A theory in play is never time-limited, but each of its cross-validation folds is: at
+"""Each of a theory's cross-validation folds is time-limited: at
 ``FOLD_TIME_FACTOR`` times its own full fit's time (at least ``FOLD_MIN_SEC``; the admission limit
 stands in for a full fit recorded without its time). A warm-started fold runs 800 iterations to
 the full fit's 2,000, so a fold past the bound is stuck, not slow: run B's fifth fold of one
@@ -100,6 +106,10 @@ class OpenLoopConfig:
     prune_dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER
     max_live_models: int = MAX_LIVE_MODELS
     fit_time_limit_sec: Optional[float] = FIT_TIME_LIMIT_SEC
+    in_play_fit_limit_sec: float = IN_PLAY_FIT_LIMIT_SEC
+    """`IN_PLAY_FIT_LIMIT_SEC` (with ``fit_time_limit_sec`` None nothing is limited)."""
+    theorist_timeout_sec: Optional[float] = None
+    """The theorists' session limit, stated in their brief and their self-check (None: not stated)."""
     lenses: List[str] = field(default_factory=lambda: list(briefs.LENSES))
     paradigm_notes: Dict[str, str] = field(default_factory=dict)
     """Per block, a line on what people did (an experiment's paradigm, in its own words)."""
@@ -163,8 +173,9 @@ class OpenLoop:
             for f in range(self.cfg.cv_folds)]
         self.gate_cfg = GateConfig(self.corpus, self.dir / ".fit_cache", self.cfg.settings, self.cfg.novelty_threshold,
                                    self.cfg.fit_time_limit_sec)
-        # Theories in play (seeds, carried, admitted) are never time-limited: only a candidate's admission fit is.
-        self.live_cfg = replace(self.gate_cfg, time_limit_sec=None if self.cfg.fit_time_limit_sec is None else math.inf)
+        # Theories in play (seeds, carried, admitted) are limited by the loop's ceiling only.
+        self.live_cfg = replace(self.gate_cfg, time_limit_sec=None if self.cfg.fit_time_limit_sec is None
+                                else self.cfg.in_play_fit_limit_sec)
 
     def setup(self) -> None:
         self._prepare()
@@ -184,6 +195,7 @@ class OpenLoop:
                 fitted = self._fit(path, name, self.live_cfg)
             except ModelFailure as exc:
                 path.unlink()
+                print(f"[open loop] dropped {name}: its fit failed: {exc}", flush=True)
                 self._ledger(name, "dropped", f"seed failed to fit: {exc}", hypothesis, "seed")
                 continue
             self.live[name] = Live(name, hypothesis, theory, fitted, pool_predictions(theory, fitted, self.pool), "seed")
@@ -201,7 +213,8 @@ class OpenLoop:
         if not timed:
             raise RuntimeError("no starting theory's fit records its time (fits cached by code before "
                                "2026-10-23?), so the admission limit cannot be set; start in a fresh work root")
-        self.admission_limit_sec = max(self.cfg.fit_time_limit_sec, ADMISSION_FACTOR * float(np.median(list(timed.values()))))
+        self.admission_limit_sec = min(self.cfg.in_play_fit_limit_sec, max(
+            self.cfg.fit_time_limit_sec, ADMISSION_FACTOR * float(np.median(list(timed.values())))))
         self.gate_cfg = replace(self.gate_cfg, time_limit_sec=self.admission_limit_sec)
         print(f"[open loop] admission limit {self.admission_limit_sec / 60:.0f} min: {ADMISSION_FACTOR:g} x the median "
               f"of the starting fits ({', '.join(f'{n} {t / 60:.0f}' for n, t in sorted(timed.items()))} min)", flush=True)
@@ -263,7 +276,7 @@ class OpenLoop:
             return None
         t = self.live[name].fit.timing
         full = t["warmup_sec"] + t["sampling_sec"] if t else self.cfg.fit_time_limit_sec
-        return max(FOLD_MIN_SEC, FOLD_TIME_FACTOR * full)
+        return min(self.cfg.in_play_fit_limit_sec, max(FOLD_MIN_SEC, FOLD_TIME_FACTOR * full))
 
     def _cv_one(self, name: str) -> Optional[CorpusCV]:
         path = self.models_dir / f"{name}.py"
@@ -369,7 +382,11 @@ class OpenLoop:
                                     blocks=self.blocks,
                                     data_paths=self.data_paths, paradigm_notes=self.cfg.paradigm_notes,
                                     round_index=round_index, n_rounds=self.cfg.max_iterations,
-                                    network=self.cfg.agent_network)
+                                    network=self.cfg.agent_network,
+                                    session_minutes=(None if self.cfg.theorist_timeout_sec is None
+                                                     else self.cfg.theorist_timeout_sec / 60))
+        if self.cfg.theorist_timeout_sec is not None:
+            briefs.write_deadline(cdir, self.cfg.theorist_timeout_sec)
         docs = briefs.write_docs(cdir, role=role, lens=lens, context=context, live=live, pruned=pruned,
                                  incumbent=incumbent, ledger=self.ledger, attempt_note=note, critiques=critiques)
         return briefs.build_prompt(cdir, docs)
@@ -532,6 +549,16 @@ class OpenLoop:
         s = self.standing()
         events = []
         newest = self.blocks[-1]
+        # An untrusted theory (its fit or its folds did not converge, or ran out of time) is not carried:
+        # it cannot be judged, and its refit on more data only gets slower (PI 2026-10-28; run C carried
+        # three and refitted them for 8 h and more). The incumbent stays even so, when no theory is trusted.
+        lead = self.incumbent(s)
+        for n in [n for n in s if not s[n]["trusted"] and n != lead]:
+            why = s[n].get("cv_problem") or ("its fit did not converge: "
+                                             + "; ".join(self.live[n].fit.convergence_problems or ["untrusted"]))
+            self._retire(n, "pruned", f"untrusted, not carried: {why}")
+            events.append(dict(name=n, outcome="pruned", reason="untrusted, not carried"))
+        s = self.standing()  # re-ranked among the rest: a dropped theory is no block's reference
         kept = self.references(s)
         protected = set(kept.values())
         for b, n in kept.items():

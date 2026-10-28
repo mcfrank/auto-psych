@@ -35,7 +35,7 @@
 # build_pair), cell fixed_pair_chain_<k>.
 #
 # Overrides: CHAINS ("0"), N_EXPERIMENTS (4), MAX_ITERATIONS (5), CANDIDATES (6),
-# PILOT_PARTICIPANTS (12), CV_FOLDS (5), THEORIST_TIMEOUT_SEC (2400), SEED (0), RUN2_ROOT (run 2's
+# PILOT_PARTICIPANTS (12), CV_FOLDS (5), THEORIST_TIMEOUT_SEC (3600), SEED (0), RUN2_ROOT (run 2's
 # sweep root), LITERATURE ("all": E, run 2's all_trials.csv; "pragmods": the committed pragmods
 # trials alone, about 7x fewer, for a dry run that tests the machinery, not the science),
 # REPLAY_FROM (another rehearsal's WORK_ROOT) and REPLAY_EXPERIMENTS ("1"): before the chain, copy
@@ -64,7 +64,7 @@ N_EXPERIMENTS="${N_EXPERIMENTS:-4}"
 MAX_ITERATIONS="${MAX_ITERATIONS:-5}"
 CANDIDATES="${CANDIDATES:-6}"
 PILOT_PARTICIPANTS="${PILOT_PARTICIPANTS:-12}"
-THEORIST_TIMEOUT_SEC="${THEORIST_TIMEOUT_SEC:-2400}"
+THEORIST_TIMEOUT_SEC="${THEORIST_TIMEOUT_SEC:-3600}"
 SEED="${SEED:-0}"
 RUN2_ROOT="${RUN2_ROOT:-$(rsa_default_work_root)}"  # the run-2 sweep (_cells.sh)
 CV_FOLDS="${CV_FOLDS:-5}"

@@ -13,12 +13,74 @@ experiment. Theories must predict every paradigm with one set of parameters. Two
 
 Start B only after the driver has reviewed A.
 
-## The integrated harness: run C (plumbing) and the live smoke test (2026-10-26)
+## Run C′: run C's fixes, checked (2026-10-28, cleared by the PI)
 
-> **Run C: cleared by the PI (2026-10-26), launch now.** Run D runs beside it: D1 (no money) as soon
-> as run C's open and fixed cells have each frozen their experiment-1 design (a few hours in;
-> `experiment1/design/frozen/record.json` exists); D2 recruits real people and needs the PI's
-> explicit go-ahead. Neither waits for run C's loops.
+**First, cancel run C's open cell** (49903873): its remaining hours are the fits now capped, and
+`RUN_C_REPORT.md` is its record.
+
+The code since run C (Decisions 2026-10-28 in `PLAN.md`):
+- **Theorists:**
+  - 60 minutes, not 40;
+  - the brief asks for a complete first version within 15 minutes;
+  - every self-check prints the time left;
+  - `check_candidate --quick` is a quick fit in seconds, for exploring.
+  
+  The critic gets 60 minutes too.
+- **Fits:** every fit the loop runs is limited to 4 h, starting and carried theories too. A theory
+  over the limit is dropped on record.
+- **Untrusted theories are not carried:** dropped at the end of the loop, on record (the incumbent
+  stays if none is trusted).
+- **Design fits** beyond main's near-miss bounds are screened out of the design.
+- **The live page fetches its own list,** with pictures as files: the fixed arm drops from 360 MB to
+  about 250 kB a participant.
+- **The ground-truth check** writes `private/oracle_<arm>_chain_<k>_exp<n>/`, and is not requeued.
+- **Unpriced agent records** get an estimate in `token_usage_estimates.json`.
+
+**Two cells, 1 experiment each, on run C's trimmed loop, in a fresh work root.** Any partition
+that has room:
+
+```bash
+cd ~/auto-psych && git pull
+export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_plumbing2
+mkdir -p "$WORK_ROOT/logs"
+common=ALL,WORK_ROOT=$WORK_ROOT,LITERATURE=pragmods,MAX_ITERATIONS=1,CANDIDATES=3,CV_FOLDS=3,PILOT_PARTICIPANTS=4,N_EXPERIMENTS=1
+for arm in open fixed; do
+  sbatch --chdir="$HOME/auto-psych" --partition=mcfrank,owners,normal --time=1-00:00:00 \
+    -o "$WORK_ROOT/logs/%x_%A_%a.out" --export=$common,ARM=$arm scripts/rsa/slurm/open_rehearsal.sbatch
+done
+```
+
+Then each cell's ground-truth check:
+
+```bash
+sbatch --chdir="$HOME/auto-psych" --partition=normal -o "$WORK_ROOT/logs/%x_%j.out" \
+  --export=ALL,WORK_ROOT=$WORK_ROOT,ARM=open,EXPERIMENT=1,CV_FOLDS=3 scripts/rsa/slurm/open_oracle.sbatch
+```
+
+That command is for the open cell; for the fixed cell, change `ARM=open` to `ARM=fixed`.
+
+**Expect** 6–10 h and about $15. The designer takes up to 2 h; no fit takes more than 4 h; the
+theorists take up to 60 min, plus a retry or a repair.
+
+**What to report:**
+- **Each theorist session:** candidate or not; for a candidate, the minute of its first
+  `candidate.py` (the file's first write in the transcript); how many `--quick` and full
+  self-checks it ran; and whether a fit script of its own still appears.
+- **The loop's outcomes:** admitted, rejected, why. Any `dropped ... its fit failed` line (the
+  4-h limit) and any `untrusted, not carried` event in `history.json`.
+- **The critic:** statistics and attempts.
+- **The ground-truth checks.**
+- **`token_usage_estimates.json`.**
+
+**Bring back** to `data/rsa_open/plumbing2/`, as for run C.
+
+Run D (below) then fields **run C′'s** experiment-1 designs. D1 can start as soon as both are frozen.
+
+## The integrated harness: run C (plumbing) and the live smoke test (2026-10-26) — done, `RUN_C_REPORT.md`
+
+> **Run C is done** (`RUN_C_REPORT.md`). Run D now fields **run C′'s** designs (above): D1 (no money)
+> as soon as run C′'s open and fixed cells have each frozen their experiment-1 design; D2 recruits
+> real people and needs the PI's explicit go-ahead. Neither waits for run C′'s loops.
 
 Runs B and B′ tested the loop at full size; nothing here repeats that. These runs test only what
 has never run on Sherlock: the fixed arm, a two-measure paradigm, reference keeping (from
@@ -73,8 +135,8 @@ with a STOP record saying so.
 ```bash
 cd ~/auto-psych && git pull
 export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_smoke
-C=$SCRATCH/auto-psych/agent_trees/$(cat $SCRATCH/auto-psych/rsa_open_plumbing/cells/open_chain_0/agent_tree_id)/repo/_runs/chain_0
-F=$SCRATCH/auto-psych/agent_trees/$(cat $SCRATCH/auto-psych/rsa_open_plumbing/cells/fixed_chain_0/agent_tree_id)/repo/_runs/chain_0
+C=$SCRATCH/auto-psych/agent_trees/$(cat $SCRATCH/auto-psych/rsa_open_plumbing2/cells/open_chain_0/agent_tree_id)/repo/_runs/chain_0
+F=$SCRATCH/auto-psych/agent_trees/$(cat $SCRATCH/auto-psych/rsa_open_plumbing2/cells/fixed_chain_0/agent_tree_id)/repo/_runs/chain_0
 PROLIFIC_MODE=test ARM=open CHAINS=0 PARTICIPANTS=15 SMOKE_FROM=$C/experiment1 LINKS=1 bash scripts/rsa/live/open_launch.sh
 PROLIFIC_MODE=test ARM=fixed CHAINS=0 PARTICIPANTS=15 SMOKE_FROM=$F/experiment1 LINKS=1 bash scripts/rsa/live/open_launch.sh
 ```

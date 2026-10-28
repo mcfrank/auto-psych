@@ -65,9 +65,10 @@ from src.rsa_open.timing import CLOSED_CAMPAIGN, TimingRecord, read_records, rec
 DESIGN_DRAWS = 200
 # The design's own fits (a theory the previous loop did not fit on the same data): the design needs
 # DESIGN_DRAWS posterior draws, not the loop's 4 x 1,000, and no convergence gate (main's design
-# twin until 2026-10-08). A fit not back within DESIGN_FIT_LIMIT_SEC, or failing, leaves its
-# theory out of that design, on record (`design_screened_out.json`): run A's design waited 6 h+
-# on one bar theory's fit, which had no time limit.
+# twin until 2026-10-08). A fit not back within DESIGN_FIT_LIMIT_SEC, or failing, or too far from
+# converging to use (beyond main's near-miss bounds, PI 2026-10-28), leaves its theory out of that
+# design, on record (`design_screened_out.json`): run A's design waited 6 h+ on one bar theory's
+# fit, which had no time limit.
 DESIGN_SETTINGS = FitSettings(num_warmup=500, num_samples=250, num_chains=2, dense_mass=True)
 DESIGN_FIT_LIMIT_SEC = 2 * 3600
 SCREENED_OUT = "design_screened_out.json"
@@ -297,6 +298,11 @@ class Chain:
                 fitted, source = self.design_fit(n, path, name, corpus)
             except ModelFailure as exc:
                 return name, None, f"{type(exc).__name__}: {exc}"
+            if not fitted.converged and not fitted.near_miss:
+                # A design fit may miss the gate (it is short), but not by this much: run C's open
+                # experiment 2 scored its design with two fits at R-hat 2.24 and 1.83, bulk ESS 3.
+                return name, None, ("its design fit is too far from converging to use (beyond main's near-miss "
+                                    f"bounds): {'; '.join(fitted.convergence_problems)}")
             flat = fitted.flat()
             total = len(next(iter(flat.values())))
             take = np.unique(np.linspace(0, total - 1, min(total, DESIGN_DRAWS)).round().astype(int))

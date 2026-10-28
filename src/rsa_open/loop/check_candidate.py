@@ -10,6 +10,9 @@ warning, since the loop's fit is longer. Then it says how hard the posterior was
 (`src.rsa_open.sampler`: steps per draw, step size, correlated parameters) and projects the
 loop's admission fit on ``--full-corpus`` from the short fit; a projection over the loop's
 admission limit (``--limit-minutes``, `src.rsa_open.loop.orchestrator.ADMISSION_FACTOR`) fails, since the loop would reject the theory as too slow. Exit code 0 when nothing fails.
+
+``--quick`` runs only the code gate, the theory's shape and the quick fit (`src.rsa_open.quick`),
+in seconds. Either way the output ends with the session's time left (`brief.time_note`).
 """
 
 from __future__ import annotations
@@ -42,6 +45,8 @@ class Args:
     """The loop's corpus (all the data), for the projected admission fit time."""
     limit_minutes: float
     """The loop's admission limit (its brief gives it; ``inf`` for none)."""
+    quick: bool = False
+    """The quick fit only (`src.rsa_open.quick`): best values and a Laplace approximation, in seconds."""
 
 
 def sampling_lines(fit: CorpusFit, theory, full_blocks: Sequence[Block], limit_sec: float,
@@ -82,9 +87,36 @@ def check(candidate_dir: Path, corpus: Path, full_corpus: Path, limit_sec: float
     return False, f"FAIL: {out.reason}"
 
 
+def quick(candidate_dir: Path, corpus: Path) -> tuple[bool, str]:
+    """The code gate, the theory's shape, then the quick fit on the self-check corpus."""
+    from src.rsa.loop.code_gate import code_problems
+    from src.rsa_open.loop.gates import theory_shape_problems
+    from src.rsa_open.quick import quick_fit
+
+    path = Path(candidate_dir) / "candidate.py"
+    if not path.exists():
+        return False, f"FAIL: no {path}"
+    source = path.read_text(encoding="utf-8")
+    problems = code_problems(source)
+    try:
+        problems = problems or theory_shape_problems(source)
+    except SyntaxError as exc:
+        return False, f"FAIL: candidate.py is not valid Python: {exc}"
+    if problems:
+        return False, "FAIL: " + "; ".join(problems)
+    fit = quick_fit(TheoryModel(path, name="candidate"), read_corpus(corpus))
+    return True, "\n".join(fit.lines())
+
+
 def main(args: Args) -> int:
-    ok, message = check(args.candidate_dir, args.corpus, args.full_corpus, args.limit_minutes * 60)
-    print(message)
+    from src.rsa_open.loop.brief import time_note
+
+    if args.quick:
+        ok, message = quick(args.candidate_dir, args.corpus)
+    else:
+        ok, message = check(args.candidate_dir, args.corpus, args.full_corpus, args.limit_minutes * 60)
+    note = time_note(args.candidate_dir)
+    print(message + (f"\n\n{note}" if note else ""))
     return 0 if ok else 1
 
 

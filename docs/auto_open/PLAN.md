@@ -107,6 +107,7 @@ with the closed campaign's on paradigms neither campaign saw.
 | PI review: the first paradigm of each open chain only | As before | |
 | Infrastructure, spread across nodes; failure rules pre-registered; a frozen code tag; the Gemini 4 model ID pinned and recorded; claim 3's metric in the pre-registration; live monitoring of every response type | Gemini spend is not capped (credits) | |
 | The live path's rules; the integrated harness's rehearsal (PI, evening) | Exclusions: a missed catch trial, failed comprehension on the second reading, a repeat person, an incomplete record; nothing else. One study recruits at a time across the campaign. Rehearsal: run C (plumbing, trimmed loops, three cells) now, then run D (live smoke) | the blocklist covers only studies published earlier; runs B and B′ already tested the loop at full size |
+| Run C's fixes (PI, 2026-10-28) | Every fit the loop runs is limited to 4 h (`IN_PLAY_FIT_LIMIT_SEC`; starting and carried theories too; no admission or fold limit exceeds it), and a theory whose fit fails it is dropped on record. An untrusted theory (fit or folds unconverged) is not carried, even as a reference; the incumbent stays if none is trusted. Theorists: 60 min (was 40), a complete first version asked for within 15 min, the time left in every self-check, and a quick fit (`check_candidate --quick`: best values, a Laplace approximation, trade-offs and multiple optima, in seconds; for exploring only). A repair after a sampling rejection gets a reparameterisation checklist. The live page fetches its own list, with pictures as files (the fixed arm: 360 MB to about 250 kB). Design fits beyond the near-miss bounds are screened out. Not now: an approximate-inference fallback for scoring, and a dedicated inference-debugger agent (after the gate) | run C (`RUN_C_REPORT.md`): 19 of 23 Gemini 4 theorist sessions ran out of time with no candidate; 8-10 h starting fits and a lost 24-h job; three untrusted theories carried; 360 MB fixed-arm pages. The slow and untrusted theories were among the worst against the truth (fixed pair: −677 to −1868 nats on exp1), so dropping them costs little |
 | Subjective randomness: not now | No open branch for subjective randomness until after the RSA feasibility chain | scope |
 
 ## 1. Claims
@@ -591,7 +592,10 @@ The existing protocol covers the rest (PI, 2026-10-20).
    rehearsed on a harness spec). It includes one kill-and-resume and the ground-truth check.
    Expect half a day to a day and about $30. Run D tests the live path: a test deploy of each arm
    (no money), then, with the PI's go-ahead, about 15 real people each (about $25, never
-   modelled). `HANDOFF_rehearsal.md` has the commands.
+   modelled). `HANDOFF_rehearsal.md` has the commands. **Run C** (2026-10-27, `RUN_C_REPORT.md`): every
+   new piece ran end to end, and the fixed-pair loop's incumbent ties the hidden truth; its problems are
+   fixed (Decisions 2026-10-28). **Next: run C′** (an open and a fixed cell, 1 experiment each, on the
+   fixed code), then run D.
 
 **Gemini 4 smoke test (2026-10-20).** The API key sees `gemini-4-argon`. A designer-style call
 (propose one new paradigm, JSON only) returned valid JSON in 6 s for about 430 tokens. It

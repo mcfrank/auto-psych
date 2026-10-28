@@ -110,8 +110,21 @@
       setStatus('<div class="ro-prose"><p class="ro-error">' + escapeHtml(message) + '</p></div>');
       throw new Error(message);
     }
+    // A live page carries no lists (LISTS.list_url, LISTS.n_lists): each participant fetches their own
+    // after assignment, so a page is not every participant's lists at once (run C: 360 MB for the fixed arm).
+    function nLists() { return LISTS.list_url ? LISTS.n_lists : LISTS.lists.length; }
+    function loadList(k) {
+      if (!LISTS.list_url) return Promise.resolve(LISTS.lists[k]);
+      return fetch(LISTS.list_url.replace('{k}', String(k)), { cache: 'no-store' }).then(function (r) {
+        if (!r.ok) throw new Error('your trial list could not be loaded (' + r.status + ')');
+        return r.json();
+      }).then(function (list) {
+        if (list.list_index !== k) throw new Error('the server sent list ' + list.list_index + ' for list ' + k);
+        return list;
+      });
+    }
     function chooseList() {
-      const n = LISTS.lists.length;
+      const n = nLists();
       const raw = urlParam('list');
       if (raw !== null) {
         const k = Number(raw);
@@ -252,8 +265,7 @@
     function nextButton(label) { return function () { return '<button type="button" class="ro-next">' + escapeHtml(label) + '</button>'; }; }
     function prose(inner) { return '<div class="ro-prose">' + inner + '</div>'; }
 
-    function start(chosen) {
-      const LIST = LISTS.lists[chosen.index];
+    function start(chosen, LIST) {
       const jsPsych = initJsPsych({
         display_element: 'ro-jspsych',
         show_progress_bar: true,
@@ -322,7 +334,9 @@
       setStatus('');
       jsPsych.run(timeline);
     }
-    chooseList().then(start).catch(function (e) {
+    chooseList().then(function (chosen) {
+      return loadList(chosen.index).then(function (list) { start(chosen, list); });
+    }).catch(function (e) {
       document.getElementById('ro-jspsych').innerHTML = '';
       setStatus(prose('<p class="ro-error">The study could not start: ' + escapeHtml(e && e.message ? e.message : e) +
                       '. Please contact the researchers.</p>'));

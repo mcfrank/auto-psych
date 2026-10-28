@@ -34,7 +34,7 @@
 # raw responses (Prolific ids) stay in $CELL_DIR/private and the campaign directory, on Sherlock.
 #
 # Overrides: CONFIG (scripts/rsa/live/open_live.yaml), N_EXPERIMENTS (4), MAX_ITERATIONS (5),
-# CANDIDATES (6), CV_FOLDS (5), PILOT_PARTICIPANTS (12), THEORIST_TIMEOUT_SEC (2400), SEED (0),
+# CANDIDATES (6), CV_FOLDS (5), PILOT_PARTICIPANTS (12), THEORIST_TIMEOUT_SEC (3600), SEED (0),
 # RUN2_ROOT (E's source), CODE_TAG (the frozen tag the staged code must be).
 set -euo pipefail
 export REPO="${REPO:-${SLURM_SUBMIT_DIR:-$HOME/auto-psych}}"
@@ -85,7 +85,7 @@ MAX_ITERATIONS="${MAX_ITERATIONS:-5}"
 CANDIDATES="${CANDIDATES:-6}"
 CV_FOLDS="${CV_FOLDS:-5}"
 PILOT_PARTICIPANTS="${PILOT_PARTICIPANTS:-12}"
-THEORIST_TIMEOUT_SEC="${THEORIST_TIMEOUT_SEC:-2400}"
+THEORIST_TIMEOUT_SEC="${THEORIST_TIMEOUT_SEC:-3600}"
 SEED="${SEED:-0}"
 RUN2_ROOT="${RUN2_ROOT:-$(rsa_default_work_root)}"
 EXISTING="$RUN2_ROOT/promote_work/all_trials.csv"   # E: every literature trial
