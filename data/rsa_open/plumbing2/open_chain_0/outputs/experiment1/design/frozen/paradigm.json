@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "name": "Graded Pragmatic Belief Allocation Across Competitor Structures",
+  "summary": "Listeners distribute 10 points across 3 to 4 candidate referents on utterance and prior trials, directly measuring the full graded posterior distribution over objects.",
+  "charter": {
+    "question": "When listeners report their full graded belief distribution over candidate referents rather than a single winner-take-all choice, do their probability assignments across primary and runner-up referents follow recursive pragmatic inference, competitor confusion avoidance, graded truth with extension costs, or a singleton oddity heuristic?"
+  },
+  "instructions": {
+    "welcome": "Welcome! In this study you will look at groups of friendly robots and judge how likely each robot is to be the one a speaker means.",
+    "task": "On each screen you will see 3 or 4 robots. A speaker who sees the exact same robots says a single word that names a part of the robot they mean (or on some screens, you will judge which robot they are most likely to talk about before hearing any word). You have 10 points to split across the robots: put more points on robots that are more likely, give 0 points to any robot that does not have the named part, and if only one robot has that part, put all 10 points on it. Your points on each screen must add up to 10.",
+    "comprehension_checks": [
+      {
+        "question": "How do you answer on each screen?",
+        "options": [
+          "Split all 10 points across the robots based on how likely each robot is to be the one the speaker means.",
+          "Give 10 points to every robot on the screen.",
+          "Type a description of the robots."
+        ],
+        "correct": 0
+      },
+      {
+        "question": "When the speaker names a part, how many points should you give to a robot that does NOT have that part?",
+        "options": [
+          "0 points, because the speaker's word is always true of the robot they mean.",
+          "10 points.",
+          "5 points."
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "robot",
+        "base": "<rect x=\"14\" y=\"44\" width=\"12\" height=\"7\" rx=\"3\" fill=\"#94a3b8\" stroke=\"#334155\" stroke-width=\"2\"/><path d=\"M 14 43 C 7 43 7 52 14 52\" fill=\"none\" stroke=\"#475569\" stroke-width=\"3\" stroke-linecap=\"round\"/><rect x=\"74\" y=\"44\" width=\"12\" height=\"7\" rx=\"3\" fill=\"#94a3b8\" stroke=\"#334155\" stroke-width=\"2\"/><path d=\"M 86 43 C 93 43 93 52 86 52\" fill=\"none\" stroke=\"#475569\" stroke-width=\"3\" stroke-linecap=\"round\"/><rect x=\"35\" y=\"78\" width=\"10\" height=\"14\" rx=\"2\" fill=\"#94a3b8\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"32\" y=\"90\" width=\"14\" height=\"6\" rx=\"2\" fill=\"#64748b\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"55\" y=\"78\" width=\"10\" height=\"14\" rx=\"2\" fill=\"#94a3b8\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"54\" y=\"90\" width=\"14\" height=\"6\" rx=\"2\" fill=\"#64748b\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"26\" y=\"40\" width=\"48\" height=\"38\" rx=\"6\" fill=\"#cbd5e1\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"32\" cy=\"46\" r=\"1.8\" fill=\"#64748b\"/><circle cx=\"68\" cy=\"46\" r=\"1.8\" fill=\"#64748b\"/><rect x=\"27\" y=\"25\" width=\"5\" height=\"8\" rx=\"1.5\" fill=\"#64748b\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"68\" y=\"25\" width=\"5\" height=\"8\" rx=\"1.5\" fill=\"#64748b\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"31\" y=\"18\" width=\"38\" height=\"22\" rx=\"5\" fill=\"#e2e8f0\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"42\" cy=\"27\" r=\"3.5\" fill=\"#0f172a\"/><circle cx=\"41\" cy=\"26\" r=\"1.2\" fill=\"#38bdf8\"/><circle cx=\"58\" cy=\"27\" r=\"3.5\" fill=\"#0f172a\"/><circle cx=\"57\" cy=\"26\" r=\"1.2\" fill=\"#38bdf8\"/><rect x=\"41\" y=\"33\" width=\"18\" height=\"4\" rx=\"1.5\" fill=\"#94a3b8\" stroke=\"#334155\" stroke-width=\"1.5\"/><line x1=\"47\" y1=\"33\" x2=\"47\" y2=\"37\" stroke=\"#334155\" stroke-width=\"1.2\"/><line x1=\"53\" y1=\"33\" x2=\"53\" y2=\"37\" stroke=\"#334155\" stroke-width=\"1.2\"/>",
+        "features": [
+          {
+            "word": "hat",
+            "svg": "<rect x=\"35\" y=\"3\" width=\"30\" height=\"13\" rx=\"3\" fill=\"#ef4444\" stroke=\"#7f1d1d\" stroke-width=\"2\"/><rect x=\"35\" y=\"12\" width=\"30\" height=\"3.5\" fill=\"#facc15\" stroke=\"#7f1d1d\" stroke-width=\"1\"/><rect x=\"27\" y=\"15\" width=\"46\" height=\"4.5\" rx=\"2\" fill=\"#dc2626\" stroke=\"#7f1d1d\" stroke-width=\"2\"/>",
+            "phrase": null
+          },
+          {
+            "word": "glasses",
+            "svg": "<rect x=\"34\" y=\"22\" width=\"14\" height=\"9\" rx=\"2.5\" fill=\"#38bdf8\" fill-opacity=\"0.45\" stroke=\"#1d4ed8\" stroke-width=\"2.5\"/><rect x=\"52\" y=\"22\" width=\"14\" height=\"9\" rx=\"2.5\" fill=\"#38bdf8\" fill-opacity=\"0.45\" stroke=\"#1d4ed8\" stroke-width=\"2.5\"/><line x1=\"48\" y1=\"26\" x2=\"52\" y2=\"26\" stroke=\"#1d4ed8\" stroke-width=\"2.5\"/><line x1=\"31\" y1=\"25\" x2=\"34\" y2=\"25\" stroke=\"#1d4ed8\" stroke-width=\"2.5\"/><line x1=\"66\" y1=\"25\" x2=\"69\" y2=\"25\" stroke=\"#1d4ed8\" stroke-width=\"2.5\"/>",
+            "phrase": null
+          },
+          {
+            "word": "scarf",
+            "svg": "<rect x=\"28\" y=\"37\" width=\"44\" height=\"8\" rx=\"3.5\" fill=\"#22c55e\" stroke=\"#14532d\" stroke-width=\"2\"/><path d=\"M 58 43 L 69 43 L 71 56 L 59 56 Z\" fill=\"#16a34a\" stroke=\"#14532d\" stroke-width=\"2\"/><line x1=\"61\" y1=\"56\" x2=\"61\" y2=\"60\" stroke=\"#14532d\" stroke-width=\"2\"/><line x1=\"65\" y1=\"56\" x2=\"65\" y2=\"60\" stroke=\"#14532d\" stroke-width=\"2\"/><line x1=\"69\" y1=\"56\" x2=\"69\" y2=\"60\" stroke=\"#14532d\" stroke-width=\"2\"/>",
+            "phrase": null
+          },
+          {
+            "word": "belt",
+            "svg": "<rect x=\"25\" y=\"65\" width=\"50\" height=\"8\" rx=\"2\" fill=\"#92400e\" stroke=\"#451a03\" stroke-width=\"2\"/><circle cx=\"33\" cy=\"69\" r=\"1.2\" fill=\"#451a03\"/><circle cx=\"38\" cy=\"69\" r=\"1.2\" fill=\"#451a03\"/><circle cx=\"62\" cy=\"69\" r=\"1.2\" fill=\"#451a03\"/><circle cx=\"67\" cy=\"69\" r=\"1.2\" fill=\"#451a03\"/><rect x=\"44\" y=\"63.5\" width=\"12\" height=\"11\" rx=\"2\" fill=\"#facc15\" stroke=\"#451a03\" stroke-width=\"2\"/><rect x=\"47\" y=\"66.5\" width=\"6\" height=\"5\" rx=\"1\" fill=\"#92400e\" stroke=\"#451a03\" stroke-width=\"1.2\"/><line x1=\"50\" y1=\"69\" x2=\"55\" y2=\"69\" stroke=\"#facc15\" stroke-width=\"2\"/>",
+            "phrase": null
+          }
+        ],
+        "variants": null
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [
+        3,
+        3
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        4,
+        4
+      ]
+    ],
+    "prior_queries": true,
+    "synonyms": false
+  },
+  "response": {
+    "type": "bet",
+    "link": "allocation",
+    "prompt": "The speaker says {message}. Split 10 points across the robots to show how likely each one is to be the robot they mean.",
+    "prior_prompt": "Before the speaker says anything, split 10 points across the robots to show how likely the speaker is to talk about each one.",
+    "scale_labels": null,
+    "scale_points": null,
+    "total_points": 10
+  },
+  "second_response": null,
+  "design": {
+    "n_participants": 150,
+    "trials_per_participant": 24,
+    "distinct_trials": 48,
+    "catch_trials": 2,
+    "minutes": 6.0,
+    "pay_usd": 1.0
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}

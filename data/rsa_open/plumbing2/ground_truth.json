@@ -1,0 +1,67 @@
+{
+ "ground_truth": "crowd_discrim_confusion_chromatic_l2",
+ "original": "/home/users/mcfrank/auto-psych/data/rsa/sherlock_run2/real_rep3/models/crowd_discrim_confusion_chromatic_l2.py",
+ "original_sha256": "8cd36b0b835da59af99c142d5f7e97b4564b0654bf47dbdcb59568df8e481d57",
+ "theory_file": "ground_truth.py",
+ "theory_sha256": "f68486bd09136f4bb4694944db9bb85cd49015743e029af5374a44591f954a6e",
+ "rule": "coherent (the closed rehearsals' rule): fits the literature about as well as the best models and is not one the chain starts with; fixed at its posterior means on E (6703 trials)",
+ "theory_params": {
+  "alpha": 0.4660957157611847,
+  "cost": 0.1450013518333435,
+  "w_confusion": 1.6749011278152466,
+  "w_singleton": -0.06904931366443634,
+  "w_crowd": 1.4250903129577637,
+  "w_color": 0.4341686964035034
+ },
+ "link_params": {
+  "allocation": {
+   "temperature": 1.0,
+   "lapse": 0.11792448163032532
+  },
+  "binary_judgment": {
+   "temperature": 1.0,
+   "lapse": 0.11792448163032532
+  },
+  "choice": {
+   "temperature": 1.0,
+   "lapse": 0.11792448163032532
+  },
+  "ordered_beta": {
+   "temperature": 1.0,
+   "lapse": 0.11792448163032532
+  },
+  "production": {
+   "temperature": 1.0,
+   "lapse": 0.11792448163032532
+  },
+  "rating": {
+   "temperature": 1.0,
+   "lapse": 0.11792448163032532
+  }
+ },
+ "fit": {
+  "settings": {
+   "num_warmup": 1000,
+   "num_samples": 1000,
+   "num_chains": 4,
+   "seed": 0
+  },
+  "block": "E",
+  "n_trials": 6703,
+  "posterior_sd": {
+   "alpha": 0.15009638667106628,
+   "cost": 0.1597878485918045,
+   "lapse@E": 0.007829354144632816,
+   "w_color": 0.13986515998840332,
+   "w_confusion": 0.4176599681377411,
+   "w_crowd": 0.18445342779159546,
+   "w_singleton": 0.16690851747989655
+  }
+ },
+ "bar": "/scratch/users/mcfrank/auto-psych/rsa_open_plumbing2/open_seeds/bar",
+ "provenance": {
+  "ground_truth_key": "real_rep3/crowd_discrim_confusion_chromatic_l2",
+  "rule": "coherent: among run 2's unpromoted, converged models within 150.0 nats of the best on grouped CV, the one farthest (design-pool RMSE) from its nearest seed of the chain",
+  "record": "data/rsa/rehearsal2/ground_truth.json"
+ }
+}

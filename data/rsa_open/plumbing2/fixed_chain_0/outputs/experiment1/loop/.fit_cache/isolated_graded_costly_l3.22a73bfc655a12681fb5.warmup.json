@@ -1,0 +1,1 @@
+{"report": {"steps_per_draw": 16.093333333333334, "step_size": 0.4394114911556244, "correlated": [["alpha", "cost_weight", -0.8521253259384959]], "phase": "warmup"}, "timing": {"warmup_sec": 1732.1150299519068, "warmup_steps": 20666.0}}

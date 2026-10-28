@@ -1,0 +1,1 @@
+{"report": {"steps_per_draw": 204.70666666666668, "step_size": 0.31738272309303284, "correlated": [["alpha", "temperature@exp1", -0.8873415581203642], ["kappa@exp1", "lapse@exp1", 0.8656513971750035]], "phase": "warmup"}, "timing": {"warmup_sec": 1005.11925774673, "warmup_steps": 56908.0}}

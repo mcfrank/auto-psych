@@ -1,0 +1,29 @@
+models:
+- name: rsa_l2_singleton_feat_color_valence_l0
+  rationale: 'RSA pragmatic listener at depth 2 with singleton salience, contextual
+    distinctiveness, visual feature complexity, evaluative valence framing, visual
+    color contrast, and literal L0. Refining rsa_l2_singleton_distinct_feat_color_l0
+    by incorporating the evaluative valence framing component from polarity_congruence_listener:
+    speakers and listeners reason at depth 2 (inverting a speaker who simulates a
+    depth-1 pragmatic listener) with common knowledge of an object prior combining
+    discrete visual singleton salience (favoring unique objects with no duplicates
+    in the scene), continuous contextual distinctiveness (favoring objects with greater
+    feature contrast relative to the rest of the display), visual feature complexity
+    modulated by evaluative framing valence (favoring feature-rich items under neutral/positive
+    framing but inverting to favor sparse, featureless items when referring to a least
+    favorite object), and visual color contrast (favoring fully colored objects over
+    desaturated grayscale distractors). Crucially, the foundational simulated literal
+    listener L0 operates purely on truth-conditional semantics without perceptual
+    bias, preventing redundant prior compounding across reasoning tiers. On prior
+    trials with no informative word, choices are governed directly by the combined
+    perceptual prior. A lapse parameter mixes in uniform guessing.'
+- name: extension_contrast_l2
+  rationale: Listeners and speakers evaluate candidate referents by their figure-ground
+    contrast and perceptual crowding within the active domain of reference rather
+    than against a static, display-wide prior. At the first pragmatic level, hearing
+    a word restricts attention to that word's extension, and the listener weights
+    matching candidates by their divisively normalized feature distance and lack of
+    exponential similarity crowding relative to the other members of that extension.
+    A depth-two pragmatic listener then inverts a speaker who reasons about this extension-relative
+    listener under the full-scene contrast prior, which also governs expectations
+    when no word is heard.

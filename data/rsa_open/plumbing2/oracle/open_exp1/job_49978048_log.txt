@@ -1,0 +1,64 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) devel   2) math
+[_env] REPO=/home/users/mcfrank/auto-psych
+[_env] WORK_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_plumbing2
+[_env] UV_PROJECT_ENVIRONMENT=/home/groups/mcfrank/venvs/auto-psych
+[rsa_env] WORK_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_plumbing2 DATA_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_plumbing2/data AGENT_TREES_ROOT=/scratch/users/mcfrank/auto-psych/agent_trees
+[env_check] OK: 13 packages and 11 harness modules import; resvg renders
+[oracle] loop /scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/repo/_runs/chain_0/experiment1/loop; truth /scratch/users/mcfrank/auto-psych/rsa_open_plumbing2/private/ground_truth; out /scratch/users/mcfrank/auto-psych/rsa_open_plumbing2/private/oracle_open_chain_0_exp1; code 
+/home/groups/mcfrank/venvs/auto-psych/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+[open loop] admission limit 30 min: 2 x the median of the starting fits (competitor_confusion_l2 10, competitor_confusion_speaker 8, extension_contrast_l2 16, ground_truth 14, isolated_graded_costly_l3 25, oddity_heuristic_listener 9, rsa_l1 6, rsa_l2 10, rsa_l2_singleton_feat_color_valence_l0 14 min)
+/home/groups/mcfrank/venvs/auto-psych/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/home/groups/mcfrank/venvs/auto-psych/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/home/groups/mcfrank/venvs/auto-psych/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+Warning: invalid value encountered in sqrt
+/home/groups/mcfrank/venvs/auto-psych/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/home/groups/mcfrank/venvs/auto-psych/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/home/groups/mcfrank/venvs/auto-psych/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+# The loop's theories against the hidden truth
+
+ELPD-CV on the loop's corpus and folds; "− truth" is the theory's minus the truth's (negative: worse), ± the unit-clustered SE. E is real people; the later blocks are the truth's.
+
+| theory | ended live | E elpd_cv | E − truth | exp1 elpd_cv | exp1 − truth |
+|---|---|---|---|---|---|
+| rsa_l2 (untrusted) | pruned | -5078.6 | -156.8 ± 50.1 | 121409.4 | +137590.6 ± 39762.7 |
+| ground_truth | truth | -4921.8 | +0.0 ± 0.0 | -16181.2 | +0.0 ± 0.0 |
+| extension_contrast_l2 | yes | -4914.1 | +7.7 ± 16.6 | -16264.0 | -82.7 ± 16.5 |
+| rsa_l2_singleton_feat_color_valence_l0 | yes | -4828.4 | +93.4 ± 57.7 | -16399.8 | -218.6 ± 40.5 |
+| isolated_graded_costly_l3 | pruned | -4973.4 | -51.6 ± 27.8 | -16578.6 | -397.4 ± 84.7 |
+| competitor_confusion_speaker | pruned | -5023.6 | -101.8 ± 42.5 | -16969.4 | -788.2 ± 159.1 |
+| competitor_confusion_l2 (untrusted) | pruned | — | — | — | — |
+| oddity_heuristic_listener (untrusted) | pruned | — | — | — | — |
+| rsa_l1 (untrusted) | pruned | — | — | — | — |
+
+[oracle] done: /scratch/users/mcfrank/auto-psych/rsa_open_plumbing2/private/oracle_open_chain_0_exp1/oracle.md

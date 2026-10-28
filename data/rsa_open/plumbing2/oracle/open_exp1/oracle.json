@@ -1,0 +1,116 @@
+{
+ "loop_dir": "/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/repo/_runs/chain_0/experiment1/loop",
+ "blocks": [
+  "E",
+  "exp1"
+ ],
+ "dropped": [],
+ "theories": {
+  "extension_contrast_l2": {
+   "trusted": true,
+   "by_block": {
+    "E": {
+     "elpd_cv": -4914.115754365921,
+     "minus_truth": 7.686662673950195,
+     "dse": 16.63892580355732
+    },
+    "exp1": {
+     "elpd_cv": -16263.979888916016,
+     "minus_truth": -82.7351016998291,
+     "dse": 16.464298143424866
+    }
+   }
+  },
+  "rsa_l2_singleton_feat_color_valence_l0": {
+   "trusted": true,
+   "by_block": {
+    "E": {
+     "elpd_cv": -4828.387567996979,
+     "minus_truth": 93.41484904289246,
+     "dse": 57.656281353426415
+    },
+    "exp1": {
+     "elpd_cv": -16399.83368206024,
+     "minus_truth": -218.58889484405518,
+     "dse": 40.487456422695765
+    }
+   }
+  },
+  "competitor_confusion_l2": {
+   "trusted": false,
+   "by_block": {}
+  },
+  "competitor_confusion_speaker": {
+   "trusted": true,
+   "by_block": {
+    "E": {
+     "elpd_cv": -5023.59667301178,
+     "minus_truth": -101.79425597190857,
+     "dse": 42.490575466937834
+    },
+    "exp1": {
+     "elpd_cv": -16969.4260597229,
+     "minus_truth": -788.1812725067139,
+     "dse": 159.10077784959265
+    }
+   }
+  },
+  "isolated_graded_costly_l3": {
+   "trusted": true,
+   "by_block": {
+    "E": {
+     "elpd_cv": -4973.370503425598,
+     "minus_truth": -51.56808638572693,
+     "dse": 27.80181129960468
+    },
+    "exp1": {
+     "elpd_cv": -16578.60048532486,
+     "minus_truth": -397.3556981086731,
+     "dse": 84.68184657199376
+    }
+   }
+  },
+  "oddity_heuristic_listener": {
+   "trusted": false,
+   "by_block": {}
+  },
+  "rsa_l1": {
+   "trusted": false,
+   "by_block": {}
+  },
+  "rsa_l2": {
+   "trusted": false,
+   "by_block": {
+    "E": {
+     "elpd_cv": -5078.58940911293,
+     "minus_truth": -156.78699207305908,
+     "dse": 50.120819783636755
+    },
+    "exp1": {
+     "elpd_cv": 121409.35216259956,
+     "minus_truth": 137590.59694981575,
+     "dse": 39762.71848326303
+    }
+   }
+  },
+  "ground_truth": {
+   "trusted": true,
+   "by_block": {
+    "E": {
+     "elpd_cv": -4921.802417039871,
+     "minus_truth": 0.0,
+     "dse": 0.0
+    },
+    "exp1": {
+     "elpd_cv": -16181.244787216187,
+     "minus_truth": 0.0,
+     "dse": 0.0
+    }
+   }
+  }
+ },
+ "ended_live": [
+  "extension_contrast_l2",
+  "rsa_l2_singleton_feat_color_valence_l0"
+ ]
+}

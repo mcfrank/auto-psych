@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "name": "Graded Pragmatic Belief Allocation Across Competitor Structures",
+  "summary": "Listeners distribute 10 confidence points across candidate referents on utterance and prior trials, directly measuring the full graded posterior distribution over objects.",
+  "charter": {
+    "question": "When listeners report their full graded belief distribution over candidate referents rather than a single winner-take-all choice, do their secondary and tertiary probability assignments follow recursive pragmatic inference, competitor confusion avoidance, or a binary singleton heuristic?"
+  },
+  "instructions": {
+    "welcome": "Welcome! In this study you will look at groups of friendly robots and judge how likely each robot is to be the one a speaker means.",
+    "task": "On each screen you will see several robots. A speaker who sees the exact same robots says a single word that describes a part of the robot they mean (or on some screens, you will judge which robot they are most likely to talk about before hearing any word). You have 10 points to split across the robots: put more points on robots you think are more likely, and 0 points on robots that cannot be the one. Your points on each screen must add up to 10.",
+    "comprehension_checks": [
+      {
+        "question": "How do you answer on each screen?",
+        "options": [
+          "Split all 10 points across the robots based on how likely each robot is to be the one the speaker means.",
+          "Give 10 points to every robot on the screen.",
+          "Type a description of the robots."
+        ],
+        "correct": 0
+      },
+      {
+        "question": "Can the speaker see the same group of robots that you see?",
+        "options": [
+          "Yes, the speaker sees the exact same robots.",
+          "No, the speaker only sees one robot.",
+          "No, the speaker cannot see the screen."
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "robots",
+        "base": "<rect x=\"28\" y=\"38\" width=\"44\" height=\"42\" rx=\"8\" fill=\"#cbd5e1\" stroke=\"#334155\" stroke-width=\"2.5\"/><rect x=\"33\" y=\"18\" width=\"34\" height=\"22\" rx=\"6\" fill=\"#e2e8f0\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"43\" cy=\"28\" r=\"3.5\" fill=\"#1e293b\"/><circle cx=\"57\" cy=\"28\" r=\"3.5\" fill=\"#1e293b\"/><path d=\"M 43 34 Q 50 38 57 34\" fill=\"none\" stroke=\"#1e293b\" stroke-width=\"2\" stroke-linecap=\"round\"/><rect x=\"36\" y=\"80\" width=\"10\" height=\"12\" rx=\"3\" fill=\"#94a3b8\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"54\" y=\"80\" width=\"10\" height=\"12\" rx=\"3\" fill=\"#94a3b8\" stroke=\"#334155\" stroke-width=\"2\"/>",
+        "features": [
+          {
+            "word": "hat",
+            "svg": "<polygon points=\"32,18 50,3 68,18\" fill=\"#ef4444\" stroke=\"#7f1d1d\" stroke-width=\"2\"/><rect x=\"29\" y=\"16\" width=\"42\" height=\"4\" rx=\"2\" fill=\"#dc2626\" stroke=\"#7f1d1d\" stroke-width=\"1.5\"/>"
+          },
+          {
+            "word": "glasses",
+            "svg": "<rect x=\"36\" y=\"23\" width=\"12\" height=\"9\" rx=\"2\" fill=\"#38bdf8\" fill-opacity=\"0.55\" stroke=\"#0284c7\" stroke-width=\"2\"/><rect x=\"52\" y=\"23\" width=\"12\" height=\"9\" rx=\"2\" fill=\"#38bdf8\" fill-opacity=\"0.55\" stroke=\"#0284c7\" stroke-width=\"2\"/><line x1=\"48\" y1=\"27\" x2=\"52\" y2=\"27\" stroke=\"#0284c7\" stroke-width=\"2\"/>"
+          },
+          {
+            "word": "scarf",
+            "svg": "<rect x=\"30\" y=\"36\" width=\"40\" height=\"8\" rx=\"3\" fill=\"#22c55e\" stroke=\"#14532d\" stroke-width=\"2\"/><path d=\"M 56 42 L 62 58 L 52 58 L 50 42 Z\" fill=\"#16a34a\" stroke=\"#14532d\" stroke-width=\"2\"/>"
+          },
+          {
+            "word": "belt",
+            "svg": "<rect x=\"27\" y=\"64\" width=\"46\" height=\"8\" rx=\"2\" fill=\"#a16207\" stroke=\"#422006\" stroke-width=\"2\"/><rect x=\"45\" y=\"63\" width=\"10\" height=\"10\" rx=\"1.5\" fill=\"#facc15\" stroke=\"#422006\" stroke-width=\"2\"/>"
+          }
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [3, 3],
+      [4, 3],
+      [4, 4]
+    ],
+    "prior_queries": true,
+    "synonyms": false
+  },
+  "response": {
+    "type": "bet",
+    "link": "allocation",
+    "prompt": "The speaker says {message}. Split 10 points across the robots to show how likely each one is to be the robot they mean.",
+    "prior_prompt": "Before the speaker says anything, split 10 points across the robots to show how likely the speaker is to talk about each one.",
+    "total_points": 10
+  },
+  "design": {
+    "n_participants": 150,
+    "trials_per_participant": 24,
+    "distinct_trials": 48,
+    "catch_trials": 2,
+    "minutes": 6.0,
+    "pay_usd": 1.00
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}

@@ -1,0 +1,11 @@
+{
+ "estimated": [],
+ "unpriced_models": [
+  {
+   "model": "gemini-3.8-flash",
+   "records": 149,
+   "tokens": 466492
+  }
+ ],
+ "estimated_usd": 0.0
+}

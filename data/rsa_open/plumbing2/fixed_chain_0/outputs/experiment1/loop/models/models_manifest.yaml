@@ -1,0 +1,25 @@
+models:
+- name: contrastive_prototype_euclidean_l2
+  rationale: 'Listeners and speakers ground reference in Tverskyan contrastive categorization
+    and Euclidean psychological space: a word''s literal prototype fit narrows toward
+    minimal-feature objects in proportion to the fraction of display distractors the
+    word eliminates, while a non-contrastive word shared by every object in the display
+    attenuates the speaker''s pragmatic penalty on residual ambiguity. Perceptual
+    salience over referents combines sublinear Euclidean feature distance across the
+    display with singleton uniqueness, visual complexity under evaluative framing,
+    and color contrast. Contrastive diagnosticity is separated from global speaker
+    rationality by contrasting scenes where the heard word eliminates sparse distractors
+    against scenes where the heard word applies to every object in the display.'
+- name: rsa_l2_shepard_distinct_valence_l0
+  rationale: Pragmatic listeners and speakers at depth 2 reason over a perceptual
+    object prior where contextual distinctiveness follows Shepard's law of exponential
+    psychological similarity rather than raw linear Hamming distance, so that each
+    additional differing feature between two objects yields diminishing marginal perceptual
+    separation. Refining rsa_l2_singleton_feat_color_valence_l0 by replacing the linear
+    sum of pairwise feature differences in the contextual distinctiveness term with
+    the sum of exponentially saturating pairwise dissimilarities while keeping recursion
+    depth 2 (L2 inverting a speaker over L1 over literal L0), all six parameters (alpha,
+    w_singleton, w_distinct, w_features, w_valence, w_color), and all other terms
+    unchanged, this prevents extreme multi-feature objects and clones from dominating
+    intermediate singletons and specific minimal-feature referents when sparse distractors
+    are present.

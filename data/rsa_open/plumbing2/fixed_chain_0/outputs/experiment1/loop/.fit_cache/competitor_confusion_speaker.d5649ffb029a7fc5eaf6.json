@@ -1,0 +1,1 @@
+{"theory_name": "competitor_confusion_speaker", "blocks": ["E", "exp1"], "param_names": ["alpha", "w_confusion", "lapse@E", "lapse@exp1", "temperature@exp1"], "convergence_problems": [], "offsets": {"E": [0, 6703], "exp1": [6703, 11903]}, "timing": {"warmup_sec": 612.3628339279676, "warmup_steps": 14263.0, "sampling_sec": 282.0117262590211, "sampling_steps": 6996.0}}

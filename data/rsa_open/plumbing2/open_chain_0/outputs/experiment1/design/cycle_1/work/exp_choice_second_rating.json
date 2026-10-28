@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "name": "Two-Stage Choice and Rated Referent Likelihood",
+  "summary": "Listeners first choose the referent they think the speaker means, then rate the likelihood of a probed referent on a 7-point scale.",
+  "charter": {
+    "question": "Does probing both a listener's top referent choice and their graded endorsement of a specific competitor referent distinguish recursive pragmatic reasoning from competitor-confusion and oddity heuristics?"
+  },
+  "instructions": {
+    "welcome": "Welcome! In this study you will look at groups of friendly robots and figure out which robot a speaker is talking about.",
+    "task": "On each screen you will see several robots. First, click the robot you think the speaker means when they say a word (or before they speak). Second, rate how likely a highlighted robot is from 1 (not at all likely) to 7 (extremely likely).",
+    "comprehension_checks": [
+      {
+        "question": "What are the two steps on each screen?",
+        "options": [
+          "First click the robot you think the speaker means, then rate how likely the highlighted robot is from 1 to 7.",
+          "Click every robot on the screen.",
+          "Type a word for each robot."
+        ],
+        "correct": 0
+      },
+      {
+        "question": "Can the speaker see the same group of robots that you see?",
+        "options": [
+          "Yes, the speaker sees the exact same robots.",
+          "No, the speaker only sees one robot.",
+          "No, the speaker cannot see the screen."
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "robots",
+        "base": "<rect x=\"28\" y=\"38\" width=\"44\" height=\"42\" rx=\"8\" fill=\"#cbd5e1\" stroke=\"#334155\" stroke-width=\"2.5\"/><rect x=\"33\" y=\"18\" width=\"34\" height=\"22\" rx=\"6\" fill=\"#e2e8f0\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"43\" cy=\"28\" r=\"3.5\" fill=\"#1e293b\"/><circle cx=\"57\" cy=\"28\" r=\"3.5\" fill=\"#1e293b\"/><path d=\"M 43 34 Q 50 38 57 34\" fill=\"none\" stroke=\"#1e293b\" stroke-width=\"2\" stroke-linecap=\"round\"/><rect x=\"36\" y=\"80\" width=\"10\" height=\"12\" rx=\"3\" fill=\"#94a3b8\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"54\" y=\"80\" width=\"10\" height=\"12\" rx=\"3\" fill=\"#94a3b8\" stroke=\"#334155\" stroke-width=\"2\"/>",
+        "features": [
+          {
+            "word": "hat",
+            "svg": "<polygon points=\"32,18 50,3 68,18\" fill=\"#ef4444\" stroke=\"#7f1d1d\" stroke-width=\"2\"/><rect x=\"29\" y=\"16\" width=\"42\" height=\"4\" rx=\"2\" fill=\"#dc2626\" stroke=\"#7f1d1d\" stroke-width=\"1.5\"/>"
+          },
+          {
+            "word": "glasses",
+            "svg": "<rect x=\"36\" y=\"23\" width=\"12\" height=\"9\" rx=\"2\" fill=\"#38bdf8\" fill-opacity=\"0.55\" stroke=\"#0284c7\" stroke-width=\"2\"/><rect x=\"52\" y=\"23\" width=\"12\" height=\"9\" rx=\"2\" fill=\"#38bdf8\" fill-opacity=\"0.55\" stroke=\"#0284c7\" stroke-width=\"2\"/><line x1=\"48\" y1=\"27\" x2=\"52\" y2=\"27\" stroke=\"#0284c7\" stroke-width=\"2\"/>"
+          },
+          {
+            "word": "scarf",
+            "svg": "<rect x=\"30\" y=\"36\" width=\"40\" height=\"8\" rx=\"3\" fill=\"#22c55e\" stroke=\"#14532d\" stroke-width=\"2\"/><path d=\"M 56 42 L 62 58 L 52 58 L 50 42 Z\" fill=\"#16a34a\" stroke=\"#14532d\" stroke-width=\"2\"/>"
+          },
+          {
+            "word": "belt",
+            "svg": "<rect x=\"27\" y=\"64\" width=\"46\" height=\"8\" rx=\"2\" fill=\"#a16207\" stroke=\"#422006\" stroke-width=\"2\"/><rect x=\"45\" y=\"63\" width=\"10\" height=\"10\" rx=\"1.5\" fill=\"#facc15\" stroke=\"#422006\" stroke-width=\"2\"/>"
+          }
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [3, 3],
+      [4, 3],
+      [4, 4]
+    ],
+    "prior_queries": true,
+    "synonyms": false
+  },
+  "response": {
+    "type": "choice",
+    "link": "choice",
+    "prompt": "The speaker says {message}. Click the robot they mean.",
+    "prior_prompt": "Before the speaker says anything, click the robot you think they are most likely to talk about."
+  },
+  "second_response": {
+    "type": "rating",
+    "link": "rating",
+    "prompt": "Now rate how likely it is that the speaker meant the highlighted robot when saying {message}.",
+    "prior_prompt": "Now rate how likely it is that the speaker will talk about the highlighted robot.",
+    "scale_points": 7,
+    "scale_labels": ["1 (Not at all likely)", "7 (Extremely likely)"]
+  },
+  "design": {
+    "n_participants": 150,
+    "trials_per_participant": 24,
+    "distinct_trials": 48,
+    "catch_trials": 2,
+    "minutes": 4.0,
+    "pay_usd": 0.70
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}

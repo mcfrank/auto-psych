@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "name": "Pragmatic Reference Across Competitor Structures",
+  "summary": "Listener referent choice and prior elicitation across multi-object scenes with varying competitor similarity, singleton status, and feature overlap.",
+  "charter": {
+    "question": "How do listeners combine recursive pragmatic inference, competitor confusion penalties, and perceptual singleton/isolation priors when interpreting referring expressions across diverse scene geometries?"
+  },
+  "instructions": {
+    "welcome": "Welcome! In this short study you will look at sets of friendly robots and figure out which robot a speaker is talking about.",
+    "task": "On each screen you will see several robots. A speaker who can see the same robots says a single word that describes a part of the robot they mean (or on some screens, you will simply pick which robot stands out before hearing a word). Click the robot you think the speaker means.",
+    "comprehension_checks": [
+      {
+        "question": "What is your task when the speaker says a word?",
+        "options": [
+          "Click the robot you think the speaker is referring to.",
+          "Click every robot that does not have that part.",
+          "Type a new name for the robot."
+        ],
+        "correct": 0
+      },
+      {
+        "question": "Can the speaker see the same robots on the screen that you see?",
+        "options": [
+          "Yes, the speaker sees the exact same group of robots.",
+          "No, the speaker cannot see any of the robots.",
+          "The speaker only sees one robot."
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "robots",
+        "base": "<rect x=\"28\" y=\"38\" width=\"44\" height=\"42\" rx=\"8\" fill=\"#cbd5e1\" stroke=\"#334155\" stroke-width=\"2.5\"/><rect x=\"33\" y=\"18\" width=\"34\" height=\"22\" rx=\"6\" fill=\"#e2e8f0\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"43\" cy=\"28\" r=\"3.5\" fill=\"#1e293b\"/><circle cx=\"57\" cy=\"28\" r=\"3.5\" fill=\"#1e293b\"/><path d=\"M 43 34 Q 50 38 57 34\" fill=\"none\" stroke=\"#1e293b\" stroke-width=\"2\" stroke-linecap=\"round\"/><rect x=\"36\" y=\"80\" width=\"10\" height=\"12\" rx=\"3\" fill=\"#94a3b8\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"54\" y=\"80\" width=\"10\" height=\"12\" rx=\"3\" fill=\"#94a3b8\" stroke=\"#334155\" stroke-width=\"2\"/>",
+        "features": [
+          {
+            "word": "hat",
+            "svg": "<polygon points=\"32,18 50,3 68,18\" fill=\"#ef4444\" stroke=\"#7f1d1d\" stroke-width=\"2\"/><rect x=\"29\" y=\"16\" width=\"42\" height=\"4\" rx=\"2\" fill=\"#dc2626\" stroke=\"#7f1d1d\" stroke-width=\"1.5\"/>"
+          },
+          {
+            "word": "glasses",
+            "svg": "<rect x=\"36\" y=\"23\" width=\"12\" height=\"9\" rx=\"2\" fill=\"#38bdf8\" fill-opacity=\"0.55\" stroke=\"#0284c7\" stroke-width=\"2\"/><rect x=\"52\" y=\"23\" width=\"12\" height=\"9\" rx=\"2\" fill=\"#38bdf8\" fill-opacity=\"0.55\" stroke=\"#0284c7\" stroke-width=\"2\"/><line x1=\"48\" y1=\"27\" x2=\"52\" y2=\"27\" stroke=\"#0284c7\" stroke-width=\"2\"/>"
+          },
+          {
+            "word": "scarf",
+            "svg": "<rect x=\"30\" y=\"36\" width=\"40\" height=\"8\" rx=\"3\" fill=\"#22c55e\" stroke=\"#14532d\" stroke-width=\"2\"/><path d=\"M 56 42 L 62 58 L 52 58 L 50 42 Z\" fill=\"#16a34a\" stroke=\"#14532d\" stroke-width=\"2\"/>"
+          },
+          {
+            "word": "belt",
+            "svg": "<rect x=\"27\" y=\"64\" width=\"46\" height=\"8\" rx=\"2\" fill=\"#a16207\" stroke=\"#422006\" stroke-width=\"2\"/><rect x=\"45\" y=\"63\" width=\"10\" height=\"10\" rx=\"1.5\" fill=\"#facc15\" stroke=\"#422006\" stroke-width=\"2\"/>"
+          }
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [3, 3],
+      [4, 3],
+      [4, 4]
+    ],
+    "prior_queries": true,
+    "synonyms": false
+  },
+  "response": {
+    "type": "choice",
+    "link": "choice",
+    "prompt": "The speaker says {message}. Click the robot they mean.",
+    "prior_prompt": "Before the speaker says anything, click the robot you think they are most likely to talk about."
+  },
+  "design": {
+    "n_participants": 150,
+    "trials_per_participant": 32,
+    "distinct_trials": 64,
+    "catch_trials": 3,
+    "minutes": 3.5,
+    "pay_usd": 0.60
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}

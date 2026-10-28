@@ -1,0 +1,596 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) devel   2) math
+[_env] REPO=/home/users/mcfrank/auto-psych
+[_env] WORK_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_plumbing2
+[_env] UV_PROJECT_ENVIRONMENT=/home/groups/mcfrank/venvs/auto-psych
+[rsa_env] WORK_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_plumbing2 DATA_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_plumbing2/data AGENT_TREES_ROOT=/scratch/users/mcfrank/auto-psych/agent_trees
+[rsa_env] opencode 1.18.35 at /home/groups/mcfrank/software/npm-global/bin/opencode
+[rsa_env] GOOGLE_API_KEY is set
+Warning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+[env_check] OK: 13 packages and 11 harness modules import; resvg renders
+[stage] staging harness repo -> /scratch/users/mcfrank/auto-psych/rsa_open_plumbing2/harness_repo
+[stage] staging agent source -> /scratch/users/mcfrank/auto-psych/rsa_open_plumbing2/agent_src
+[stage] staged code a5a62604518b50128c7bd8f96e283bd68d1fad32
+{
+ "ground_truth": "crowd_discrim_confusion_chromatic_l2",
+ "theory_params": {
+  "alpha": 0.4660957157611847,
+  "cost": 0.1450013518333435,
+  "w_confusion": 1.6749011278152466,
+  "w_singleton": -0.06904931366443634,
+  "w_crowd": 1.4250903129577637,
+  "w_color": 0.4341686964035034
+ },
+ "rule": "coherent (the closed rehearsals' rule): fits the literature about as well as the best models and is not one the chain starts with; fixed at its posterior means on E (6703 trials)"
+}
+[scrub] agent tools: /scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/repo/.agent_bin/{uv,python,python3} -> /scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/bin/python
+[check] withheld seed crowd_discrim_confusion_chromatic_l2: no file, no manifest entry, no copy
+[check] agent tree OK: /scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/repo
+[open rehearsal] withheld from the agents' environment: AGENT_SRC CELLS_ROOT DATA_ROOT HARNESS_REPO HF_HOME OLDPWD PIP_CACHE_DIR PWD REPO SLURM_EXPORT_ENV SLURM_SUBMIT_DIR UV_CACHE_DIR WORK_ROOT
+[open rehearsal] open arm, chain 0, 1 experiments, 1 rounds of 3 theorists, 3 folds, literature pragmods (/home/users/mcfrank/auto-psych/src/pipelines/outer_loop/projects/rsa_reference/data/pragmods_trials.csv) -> /scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/repo/_runs/chain_0
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+  [step] tokens=17616  cost=$0.0395
+  [step] tokens=25146  cost=$0.0250
+  [step] tokens=32806  cost=$0.0239
+  [step] tokens=36182  cost=$0.0154
+  [step] tokens=50050  cost=$0.0735
+  [step] tokens=50548  cost=$0.0177
+  [step] tokens=51048  cost=$0.0124
+  [step] tokens=52075  cost=$0.0191
+  [step] tokens=52489  cost=$0.0132
+  [step] tokens=71467  cost=$0.0451
+  [step] tokens=81248  cost=$0.0995
+  [step] tokens=82139  cost=$0.0325
+  [step] tokens=83372  cost=$0.0230
+  [step] tokens=84287  cost=$0.0188
+  [step] tokens=85514  cost=$0.0205
+  [step] tokens=110219  cost=$0.0945
+  [step] tokens=110761  cost=$0.0229
+  [step] tokens=125923  cost=$0.1094
+  [step] tokens=126350  cost=$0.0324
+  [step] tokens=127719  cost=$0.0288
+  [step] tokens=134704  cost=$0.0823
+  [step] tokens=146583  cost=$0.1431
+  [step] tokens=149012  cost=$0.0580
+  [step] tokens=153574  cost=$0.0629
+  [step] tokens=159310  cost=$0.0790
+  [step] tokens=160448  cost=$0.0329
+  [step] tokens=165042  cost=$0.0337
+  [step] tokens=166633  cost=$0.0375
+  … I have designed, validated, evaluated, and submitted the paradigm specification `/scratch/users/mcfrank/auto-psych/agent
+  [step] tokens=167833  cost=$0.0304
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+[open loop] admission limit 30 min: 2 x the median of the starting fits (competitor_confusion_speaker 8, isolated_graded_costly_l3 25, oddity_heuristic_listener 9, rsa_l1 6, rsa_l2 10, rsa_l2_singleton_feat_color_valence_l0 14 min)
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+Warning: invalid value encountered in sqrt
+Warning: invalid value encountered in sqrt
+  [step] tokens=13713  cost=$0.0307
+  [step] tokens=25543  cost=$0.0276
+  [step] tokens=31142  cost=$0.0164
+  [step] tokens=41497  cost=$0.0256
+  [step] tokens=42852  cost=$0.0126
+  [step] tokens=50465  cost=$0.0216
+  [step] tokens=60453  cost=$0.0272
+  [step] tokens=67704  cost=$0.0228
+  [step] tokens=80626  cost=$0.0344
+  [step] tokens=81383  cost=$0.0170
+  [step] tokens=87156  cost=$0.0244
+  [step] tokens=93239  cost=$0.0239
+  [step] tokens=131705  cost=$0.2034
+  [step] tokens=183902  cost=$0.4013
+  [critique] attempt 1: no usable test statistic in /scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/repo/_runs/chain_0/experiment1/loop/round_1/critique/test_stats
+  … I will check the node environment and read the incumbent theory code and experiment dataset.
+  [step] tokens=13918  cost=$0.0318
+  [step] tokens=29101  cost=$0.0348
+  [step] tokens=34220  cost=$0.0163
+  [step] tokens=44749  cost=$0.0269
+  [step] tokens=46281  cost=$0.0139
+  [step] tokens=57355  cost=$0.0291
+  [step] tokens=82894  cost=$0.0602
+  [step] tokens=88679  cost=$0.0232
+  [step] tokens=113185  cost=$0.1563
+  … I will create the `test_stats` directory in `/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/repo/_runs/c
+  [step] tokens=149451  cost=$0.2758
+  [step] tokens=149675  cost=$0.0568
+  … I have written 8 posterior-predictive test statistics into `/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51
+  [step] tokens=150523  cost=$0.0260
+  [critique] 3 of 8 evaluated statistics show a significant discrepancy
+  [step] tokens=23858  cost=$0.0516
+  [step] tokens=24714  cost=$0.0536
+  [step] tokens=23678  cost=$0.0527
+  [step] tokens=34228  cost=$0.0275
+  [step] tokens=30137  cost=$0.0242
+  [step] tokens=45728  cost=$0.0322
+  [step] tokens=34042  cost=$0.0160
+  [step] tokens=52889  cost=$0.0214
+  [step] tokens=54278  cost=$0.0141
+  [step] tokens=80065  cost=$0.0585
+  [step] tokens=39018  cost=$0.0163
+  [step] tokens=89259  cost=$0.0301
+  [step] tokens=67404  cost=$0.0641
+  [step] tokens=68731  cost=$0.0155
+  [step] tokens=69288  cost=$0.0147
+  [step] tokens=31685  cost=$0.0246
+  [step] tokens=90203  cost=$0.0173
+  [step] tokens=92207  cost=$0.0176
+  [step] tokens=81530  cost=$0.0403
+  [step] tokens=34732  cost=$0.0136
+  [step] tokens=102435  cost=$0.0329
+  [step] tokens=81977  cost=$0.0178
+  [step] tokens=104362  cost=$0.0189
+  [step] tokens=84350  cost=$0.0150
+  [step] tokens=54365  cost=$0.0453
+  [step] tokens=105070  cost=$0.0203
+  [step] tokens=85658  cost=$0.0222
+  [step] tokens=58724  cost=$0.0204
+  [step] tokens=108663  cost=$0.0235
+  [step] tokens=61503  cost=$0.0176
+  [step] tokens=91658  cost=$0.0312
+  [step] tokens=70817  cost=$0.0291
+  [step] tokens=91898  cost=$0.0167
+  [step] tokens=109227  cost=$0.0207
+  [step] tokens=77036  cost=$0.0211
+  [step] tokens=90629  cost=$0.0400
+  … I will run a brief inspection command using the pipeline Python environment to view the posterior parameter summaries of
+  [step] tokens=95203  cost=$0.0237
+  [step] tokens=95424  cost=$0.0170
+  [step] tokens=110843  cost=$0.0297
+  [step] tokens=112266  cost=$0.0195
+  [step] tokens=94575  cost=$0.0213
+  [step] tokens=118058  cost=$0.0266
+  [step] tokens=105606  cost=$0.0381
+  [step] tokens=120522  cost=$0.0190
+  [step] tokens=94852  cost=$0.0154
+  [step] tokens=126792  cost=$0.0278
+  … I will run a short Python script to inspect the posterior means, standard deviations, and correlations of the fitted par
+  [step] tokens=102423  cost=$0.0288
+  [step] tokens=115782  cost=$0.0487
+  … I will re-run the script using `'response'` as the log-likelihood key to inspect the fitted models.
+  [step] tokens=127376  cost=$0.0225
+  [step] tokens=127583  cost=$0.0189
+  [step] tokens=120939  cost=$0.0359
+  [step] tokens=103480  cost=$0.0212
+  [step] tokens=121193  cost=$0.0204
+  [step] tokens=131791  cost=$0.0222
+  … I will run a Python script to inspect the sampler diagnostics (steps per draw, parameter correlations) and compare `rsa_
+  [step] tokens=135730  cost=$0.0252
+  [step] tokens=105868  cost=$0.0271
+  [step] tokens=123721  cost=$0.0254
+  [step] tokens=136450  cost=$0.0254
+  … I will run a Python script to break down the log-likelihoods by source/condition in `E` and by trial type/scene properti
+  [step] tokens=137883  cost=$0.0232
+  [step] tokens=125852  cost=$0.0220
+  [step] tokens=107783  cost=$0.0299
+  [step] tokens=138869  cost=$0.0249
+  … I will re-run the breakdown script using `c.familiarization is not None`.
+  [step] tokens=126895  cost=$0.0262
+  [step] tokens=108749  cost=$0.0264
+  [step] tokens=140192  cost=$0.0261
+  … I will run a Python script to inspect the units of `exp1` and compare `rsa_l2_singleton_feat_color_valence_l0`, `isolate
+  [step] tokens=133137  cost=$0.0468
+  [step] tokens=110275  cost=$0.0257
+  [step] tokens=135616  cost=$0.0265
+  … I will run a short Python script to understand why `alpha` in `rsa_l2` is small vs. `rsa_l2_singleton_feat_color_valence
+  [step] tokens=143079  cost=$0.0393
+  [step] tokens=136334  cost=$0.0249
+  [step] tokens=146543  cost=$0.0324
+  [step] tokens=153577  cost=$0.0612
+  [step] tokens=142201  cost=$0.0526
+  [step] tokens=156888  cost=$0.0509
+  [step] tokens=157479  cost=$0.0257
+  [step] tokens=142923  cost=$0.0271
+  [step] tokens=158030  cost=$0.0253
+  [step] tokens=148740  cost=$0.0500
+  [step] tokens=163613  cost=$0.0594
+  [step] tokens=151577  cost=$0.0457
+  [step] tokens=169418  cost=$0.0674
+  [step] tokens=155057  cost=$0.0383
+  [step] tokens=174419  cost=$0.0628
+  [step] tokens=115139  cost=$0.0314
+  … I will run a short Python script to evaluate `rsa_l2`'s log-likelihood on `E` and `exp1` at different values of `alpha` 
+  [step] tokens=179820  cost=$0.0774
+  [step] tokens=117189  cost=$0.0262
+  [step] tokens=169610  cost=$0.1317
+  … I will run a Python script to inspect the scenes in `exp1` and compare observed point allocations with the predictions o
+  [step] tokens=119383  cost=$0.0305
+  [step] tokens=194673  cost=$0.1497
+  … I will run a Python script to evaluate the three significant test statistics from `critiques.md` on the observed data an
+  [step] tokens=127343  cost=$0.0542
+  … I will run a Python script to list the units contributing to each of the three significant test statistics and compare t
+  [step] tokens=128930  cost=$0.0335
+  … I will re-run the Python script without the escaped quotes in the f-string.
+  [step] tokens=130418  cost=$0.0306
+  [step] tokens=181055  cost=$0.1504
+  [step] tokens=205485  cost=$0.1443
+  … I will run a Python script to test how each difference between `isolated_graded_costly_l3`, `rsa_l2`, `competitor_confus
+  [step] tokens=208358  cost=$0.0683
+  [step] tokens=210176  cost=$0.0425
+  [step] tokens=142423  cost=$0.1031
+  … I will run a Python script to evaluate several candidate single-change refinements of `rsa_l2`, `competitor_confusion_sp
+  [step] tokens=146478  cost=$0.0680
+  [step] tokens=146686  cost=$0.0237
+  [step] tokens=210785  cost=$0.0305
+  [step] tokens=191203  cost=$0.1205
+  [step] tokens=192955  cost=$0.0485
+  … I will run a Python script to compare depth-1 (`L1`) vs. depth-2 (`L2`) pragmatic reasoning with perceptual object prior
+  [step] tokens=195236  cost=$0.0447
+  [step] tokens=197603  cost=$0.0460
+  [step] tokens=155823  cost=$0.0839
+  [step] tokens=202156  cost=$0.0683
+  … I will run a Python script to test how `gamma` (graded semantics in `L0`), `cost_weight`, and different perceptual prior
+  [step] tokens=212214  cost=$0.0345
+  [step] tokens=213905  cost=$0.0363
+  [step] tokens=213541  cost=$0.1391
+  [step] tokens=216108  cost=$0.0398
+  [step] tokens=162879  cost=$0.0952
+  … I will run a Python script to test how different distance/isolation definitions and prior/speaker formulations affect `E
+  [step] tokens=220898  cost=$0.0605
+  [step] tokens=224445  cost=$0.0608
+  [step] tokens=225675  cost=$0.0401
+  [step] tokens=239957  cost=$0.2955
+  [step] tokens=227195  cost=$0.0412
+  [step] tokens=241784  cost=$0.0884
+  [step] tokens=229533  cost=$0.0484
+  [step] tokens=166425  cost=$0.0624
+  [step] tokens=242136  cost=$0.0341
+  [step] tokens=243917  cost=$0.0436
+  … I will run a Python script to test `rsa_l2` and `competitor_confusion_speaker` variants with the exponential similarity 
+  [step] tokens=232434  cost=$0.0531
+  [step] tokens=245264  cost=$0.0407
+  [step] tokens=248070  cost=$0.0531
+  [step] tokens=235999  cost=$0.0626
+  [step] tokens=250196  cost=$0.0458
+  [step] tokens=170471  cost=$0.0582
+  [step] tokens=251859  cost=$0.0425
+  [step] tokens=239033  cost=$0.0586
+  [step] tokens=253398  cost=$0.0398
+  … I will run a Python script to compute the unit-clustered standard error comparison between `ccs_l2_with_prior` and the i
+  [step] tokens=176723  cost=$0.0830
+  [step] tokens=242852  cost=$0.0648
+  … I will now write the initial versions of `hypothesis.md`, `model_name.txt`, and `candidate.py` in `/scratch/users/mcfran
+  [step] tokens=180691  cost=$0.0637
+  … I will run the quick self-check (`--quick`) on our candidate directory to verify the code gate, shape checks, and Laplac
+  [step] tokens=181090  cost=$0.0278
+  … I will now run the full self-check command from `CONTEXT.md` to verify all admission gates, NUTS convergence, and projec
+  [step] tokens=253702  cost=$0.0339
+  [step] tokens=254432  cost=$0.0349
+  … Proposed `rsa_l2_confusion_valence_l0`, refining `rsa_l2_singleton_feat_color_valence_l0` by incorporating speaker compe
+  [step] tokens=256616  cost=$0.0323
+  [step] tokens=246639  cost=$0.0634
+  [step] tokens=251056  cost=$0.0704
+  [step] tokens=181934  cost=$0.0290
+  … I will run a Python script to verify that our candidate passes the novelty gate (`RMSE >= 0.002`) against every live the
+  [step] tokens=252988  cost=$0.0491
+  [step] tokens=254783  cost=$0.0500
+  [step] tokens=184219  cost=$0.0433
+  [step] tokens=184932  cost=$0.0278
+  … I have written and verified `hypothesis.md`, `model_name.txt` (`competitor_confusion_l2`), and `candidate.py` in `/scrat
+  [step] tokens=188222  cost=$0.0291
+  [step] tokens=258215  cost=$0.0607
+  [step] tokens=260141  cost=$0.0489
+  [step] tokens=260475  cost=$0.0360
+  [step] tokens=262870  cost=$0.0518
+  [step] tokens=265496  cost=$0.0544
+  [step] tokens=267275  cost=$0.0477
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+  [step] tokens=24743  cost=$0.0538
+  [step] tokens=31462  cost=$0.0145
+  [step] tokens=36513  cost=$0.0165
+  [step] tokens=39073  cost=$0.0109
+  [step] tokens=45402  cost=$0.0186
+  [step] tokens=45722  cost=$0.0110
+  [step] tokens=46210  cost=$0.0114
+  [step] tokens=50701  cost=$0.0157
+  [step] tokens=54647  cost=$0.0177
+  [step] tokens=63431  cost=$0.0263
+  [step] tokens=68745  cost=$0.0184
+  [step] tokens=71408  cost=$0.1463
+  [step] tokens=73024  cost=$0.0184
+  [step] tokens=74573  cost=$0.0165
+  [step] tokens=82754  cost=$0.0337
+  [step] tokens=83467  cost=$0.0394
+  [step] tokens=98396  cost=$0.0590
+  [step] tokens=99082  cost=$0.0447
+  [step] tokens=99784  cost=$0.0212
+  [step] tokens=100179  cost=$0.0199
+  [step] tokens=101912  cost=$0.0315
+  [step] tokens=103640  cost=$0.0250
+  [step] tokens=104516  cost=$0.0244
+  [step] tokens=105835  cost=$0.0234
+  [step] tokens=110338  cost=$0.0314
+  [step] tokens=111878  cost=$0.0222
+  [step] tokens=114361  cost=$0.0251
+  [step] tokens=114889  cost=$0.0194
+  [step] tokens=129144  cost=$0.0461
+  [step] tokens=130155  cost=$0.0263
+  [step] tokens=131550  cost=$0.0254
+  [step] tokens=133920  cost=$0.0333
+  [step] tokens=135633  cost=$0.0338
+  [step] tokens=135942  cost=$0.0198
+  [step] tokens=154151  cost=$0.0620
+  [step] tokens=158415  cost=$0.0641
+  [step] tokens=159488  cost=$0.0339
+  [step] tokens=160318  cost=$0.0288
+  [step] tokens=160880  cost=$0.0253
+  [step] tokens=163635  cost=$0.0445
+  [step] tokens=164146  cost=$0.0251
+  [step] tokens=165931  cost=$0.0346
+  [step] tokens=169234  cost=$0.0473
+  [step] tokens=170491  cost=$0.0340
+  [step] tokens=171048  cost=$0.0266
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+/scratch/users/mcfrank/auto-psych/agent_trees/510e4bc2d15e51db/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+  [tokens] RSA open chain: 32,708,033 tokens over 156 LLM call(s)  cost=$11.08
+  [tokens]   input=1,959,215 output=155,552 reasoning=427,194 cache_read=30,166,072 cache_write=0
+  [tokens]   rsa:candidate: 27,430,032 tokens (4 call(s))
+  [tokens]   rsa:critique: 1,951,411 tokens (2 call(s))
+  [tokens]   rsa_open:designer: 2,860,098 tokens (1 call(s))
+  [tokens]   rsa_open:pilot: 466,492 tokens (149 call(s))
+  [tokens]   unpriced by the backend: 0 record(s) estimated at $0.00 from their models' priced records; gemini-3.8-flash: 149 record(s), 466,492 tokens, no priced record to estimate from
+[
+ {
+  "best_model": "extension_contrast_l2",
+  "live": [
+   "extension_contrast_l2",
+   "rsa_l2_singleton_feat_color_valence_l0"
+  ]
+ }
+]
+[open rehearsal] done: /scratch/users/mcfrank/auto-psych/rsa_open_plumbing2/cells/open_chain_0/outputs (the truth: /scratch/users/mcfrank/auto-psych/rsa_open_plumbing2/private/ground_truth)

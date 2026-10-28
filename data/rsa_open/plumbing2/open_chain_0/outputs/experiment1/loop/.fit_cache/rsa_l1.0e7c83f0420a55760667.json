@@ -1,0 +1,1 @@
+{"theory_name": "rsa_l1", "blocks": ["E", "exp1"], "param_names": ["alpha", "lapse@E", "kappa@exp1", "lapse@exp1", "temperature@exp1"], "convergence_problems": [], "offsets": {"E": [0, 4467], "exp1": [4467, 6867]}, "timing": {"warmup_sec": 128.21335509512573, "warmup_steps": 7015.0, "sampling_sec": 59.079088979400694, "sampling_steps": 3492.0}}

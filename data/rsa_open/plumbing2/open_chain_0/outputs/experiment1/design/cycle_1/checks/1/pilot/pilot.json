@@ -1,0 +1,118 @@
+{
+  "paradigm_sha256": "b0b54591df5038a0d122e5599708c80662f4d53f5d25769de038663781466504",
+  "design_sha256": "d4f65c54e29b903188353ea485da5a0b40f660b1b4b5ea3989e72ae38ba87ce0",
+  "n_participants": 4,
+  "comprehension_first": 1.0,
+  "comprehension_final": 1.0,
+  "catch_pass": 1.0,
+  "practice_pass": 1.0,
+  "readable": 1.0,
+  "unreadable_examples": [],
+  "declared_minutes": 6.0,
+  "estimated_minutes": 6.037250982517958,
+  "time_model_minutes": 14.142500000000002,
+  "time_calibration": 0.42688711207480695,
+  "time_calibration_basis": "9 experiment(s) of other response types (none of bet yet)",
+  "legibility": {
+    "items": 11,
+    "legibility": 1.0,
+    "illegible": [],
+    "unrecognised_bases": [],
+    "by_item": [
+      {
+        "item": "robot: the base",
+        "kind": "name",
+        "right": 3,
+        "of": 3,
+        "answer": "robot",
+        "wrong_answers": []
+      },
+      {
+        "item": "robot: hat",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "hat",
+        "wrong_answers": []
+      },
+      {
+        "item": "robot: glasses",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "glasses",
+        "wrong_answers": []
+      },
+      {
+        "item": "robot: scarf",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "scarf",
+        "wrong_answers": []
+      },
+      {
+        "item": "robot: belt",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "belt",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 1 (robot): belt",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "1, 2",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 2 (robot): glasses",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "4",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 3 (robot): belt",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "2, 3",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 4 (robot): scarf",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "1, 2, 4",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 5 (robot): hat",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "3, 4",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 6 (robot): scarf",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "2, 4",
+        "wrong_answers": []
+      }
+    ]
+  },
+  "data_parse": "ok",
+  "time_ratio": 1.0062084970863263,
+  "problems": [],
+  "warnings": [],
+  "passed": true,
+  "participant_model": "gemini-3.8-flash"
+}
