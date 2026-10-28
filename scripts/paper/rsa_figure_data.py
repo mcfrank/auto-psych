@@ -159,6 +159,7 @@ def chain_record(chain: str, final: str, starting: List[str], prereg: Dict[str, 
         "pruned_outcome": mine["removed_outcome"],
         "pruned_unscored": mine["unscored"],
         "pruned_order": _pruned_order(live_root, chain, sorted(mine["pruned_during_run"])),
+        "others_order": _pruned_order(live_root, chain, sorted(mine["others_at_end"])),
     }
 
 

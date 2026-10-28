@@ -1,14 +1,15 @@
 # Human-readable names of the models Figure 2 labels: every starting model
 # and every best discovered model, per domain. Drafted from each model's
-# docstring (2026-10-20) and kept to about 30 characters so each fits on one
+# docstring (2026-10-20; the starting models' authors moved to
+# seed_papers.yaml 2026-10-21) and kept to about 30 characters so each fits on one
 # line beside its panel; edit freely. scripts/paper/figures.py raises if a
 # labelled model has no name here.
 subjective_randomness:
   # starting models (the literature seeds)
-  falk_konold_dp: Falk & Konold difficulty
-  finite_experience_occurrence: Hahn & Warren finite experience
+  falk_konold_dp: Difficulty predictor
+  finite_experience_occurrence: Finite experience
   local_representativeness: Local representativeness
-  motif_stack: Griffiths et al. motif model
+  motif_stack: Motif model
   # best discovered models (each run's final winner)
   personal_pattern_detection_gain: Personal pattern-detection gain
   edge_streak_primacy_recency_pattern_rule: Edge-streak primacy/recency
@@ -33,8 +34,8 @@ rsa:
   competition_endpoint_binding_lapse_l2: Competition + endpoint binding
 number_game:
   # starting models (the literature seeds)
-  bigelow_piantadosi_independent: Bigelow & Piantadosi, rules
-  bigelow_piantadosi_interval: Bigelow & Piantadosi, intervals
-  tenenbaum_rules_similarity: Tenenbaum rules and similarity
+  bigelow_piantadosi_independent: Learned rule prior
+  bigelow_piantadosi_interval: Learned rule and interval prior
+  tenenbaum_rules_similarity: Rules and similarity
   # best discovered model
   even_rule_digit_size_principle_counting: Digit similarity + even rule

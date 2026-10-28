@@ -70,11 +70,12 @@ def _run(tmp_path, prereg, panels, chains=None, chain_models=None):
 
 
 def _write_ledgers(live_root, chain_models):
-    """Each chain's ledger: its removed models admitted in reverse name order."""
+    """Each chain's ledger: its removed models admitted in reverse name
+    order, then its other live models."""
     for chain, scores in chain_models["chains"].items():
         loop = live_root / f"live_rsa_{chain}" / "outputs" / "experiment1" / "model_loop"
         loop.mkdir(parents=True)
-        names = sorted(scores["pruned_during_run"], reverse=True)
+        names = sorted(scores["pruned_during_run"], reverse=True) + sorted(scores["others_at_end"])
         (loop / "attempted_hypotheses.jsonl").write_text("".join(
             json.dumps({"name": n, "outcome": "admitted", "detail": "", "hypothesis": "h",
                         "context": f"round {i} candidate 0 explore"}) + "\n"
@@ -97,11 +98,20 @@ def test_each_chains_other_models_are_against_the_same_bar(tmp_path):
     assert c0["others_at_end"] == {"live_x": 20.0}  # -80 against the bar's -100
     assert c0["pruned_during_run"] == {"gone_y": -20.0, "gone_z": 10.0}
     assert c0["pruned_order"] == {"gone_z": 0, "gone_y": 1}  # the ledger's order
+    assert c0["others_order"] == {"live_x": 2}  # in the same order: Figure 2 merges them
+    assert c1["others_order"] == {}
     assert c0["pruned_unscored"] == {"broken": "not converged (r_hat)"}
     assert c1["others_at_end"] == {}
     # The starting models get their paired SEs from the chain-model job.
     assert c0["vs_best_seed"]["p2"] == {"diff": -5.0, "se": 2.5}
     assert c0["vs_best_seed"]["p3"] == {"diff": -8.0, "se": 3.0}
+
+
+def test_chain_model_scores_without_the_bars_paired_ses_raise(tmp_path):
+    scores = _chain_models()
+    del scores["bar_vs_best_promoted"]  # scored before the job computed them
+    with pytest.raises(KeyError, match="bar_vs_best_promoted"):
+        _run(tmp_path, _prereg(), _panels(), chain_models=scores)
 
 
 def test_chain_models_scored_against_another_bar_raise(tmp_path):

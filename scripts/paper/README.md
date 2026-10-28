@@ -24,11 +24,20 @@ it to four decimals).
 
 What each figure shows:
 
-- **Figure 2** (`fig2_elpd`): per domain, a forest plot in ELPD difference
-  from the best starting model, the runs collapsed: the best discovered
-  models and the starting models as named points with ±2 SE of the paired
-  difference (names: `model_names.yaml`), the other models live at the end
-  and the models pruned during the runs as strips. A point whose paired SE
+- **Figure 2**, in two layouts of the same comparison: `fig2_elpd` (models
+  across, ELPD up) and `fig2_elpd_horizontal` (a forest plot: one row per
+  model, ELPD across). Per domain, each model's ELPD (a dashed line marks
+  the best starting model's), the runs collapsed: the best discovered
+  models and the starting models as points with ±2 SE of the paired
+  difference (names: `model_names.yaml`; the paper each starting model
+  implements, or null: `seed_papers.yaml`), and the non-winning models
+  (the other models live at the end and those pruned during the runs) as
+  one strip, each run's in the order it admitted them (`pruned_order`,
+  `others_order`); every model the loop wrote is coloured by its run
+  (`RUN_COLORS`). The vertical layout
+  names the best discovered models at the top and, at the bottom, the
+  starting models a paper proposed (by the paper) and the best starting
+  model; the horizontal one names every row. A point whose paired SE
   is not computed yet is drawn hollow, a strip not scored yet "pending".
   Subjective randomness is drawn from all runs pooled (each run is scored on
   its own data); reference games from every chain on the pre-registered
@@ -94,6 +103,17 @@ What each figure shows:
   domain's Figure 3 model, `pseudocode/<domain>.yaml`. Each spec records its
   model file's SHA-256, and the figure script refuses a spec whose model
   changed or that is not Figure 3's best model.
+
+- **Ablation figure** (`fig_ablation`, `uv run python -m scripts.paper.ablation_figure`,
+  seconds): the backward elimination of each domain's overall winner, one
+  panel each: the subjective-randomness final best on all runs pooled
+  (Figure 3's, `pooled.best_model`; its elimination in `docs/sr_ablation.md`)
+  and the reference-game consolidation (`data/rsa/consolidate/eliminate/`).
+  The number game was not ablated. Each panel is the path of the model kept
+  after each round: its grouped-CV ELPD against the full model's, by its
+  number of mechanisms, each step named by the mechanism it dropped; the
+  path's last step is the removal that stopped the elimination, below the dashed
+  grey line 2 clustered SEs (of that comparison) under the final model.
 
 `figures.py --mock-domains <domain> ...` marks those domains' titles "(MOCK
 DATA)", for drafting the figures' look from invented figure data.

@@ -255,6 +255,17 @@ the final, tested), and backward elimination by 5-fold CV grouped by stimulus
 pair on all runs pooled. Slurm plan/worker arrays:
 `scripts/subjective_randomness/slurm/submit_ablation.sh`.
 
+### Ablating the number-game final
+
+`src/number_game/ablation/` (`docs/ng_ablation.md`): the dataset run's final
+(`even_rule_digit_size_principle_counting`) rewritten with its 13 logit terms switchable
+(`final.py`), and the same backward elimination on the run's own 7,560 responses, by 5-fold CV
+grouped by example set (`number_set`) with SEs clustered by example set. The rule, the variants
+and plan/worker are shared with the sr-oct26 ablation in `src/ablation/` (each domain's
+`eliminate.py` names its finals, CV unit and clusters); a change there changes both. Slurm:
+`scripts/number_game/slurm/submit_ablation.sh` (each worker array task fits 5 (model, fold)
+tasks; one fit is ~6 min).
+
 ### Inspecting results
 
 `src/viewer/` (`python -m src.viewer.server`; `freeze.py` makes a static site);

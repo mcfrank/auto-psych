@@ -228,6 +228,16 @@ def test_a_loop_record_without_the_winner_raises():
         sr.others_at_end(posterior, _record())
 
 
+def test_the_pooled_live_and_removed_models_keep_their_runs_admission_order():
+    extras = {"run1__live": {"role": "live", "order": 5},
+              "run1__gone": {"role": "removed", "outcome": "pruned", "order": 2}}
+    scored = {"elpd": {"run1__live": -90.0, "run1__gone": -120.0}, "unscored": {}}
+    fields = sr.pooled_extras_fields(extras, scored, {"elpd": {"s1": -100.0}, "best_seed": "s1"})
+    assert fields["others_at_end"] == {"run1__live": 10.0}
+    assert fields["pruned_order"] == {"run1__gone": 2}
+    assert fields["others_order"] == {"run1__live": 5}
+
+
 # --- an accepted convergence failure (pooled only) --------------------------
 
 

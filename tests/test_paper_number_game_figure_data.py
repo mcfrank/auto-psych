@@ -95,6 +95,8 @@ def test_the_committed_run_gives_its_settings_live_models_and_seed_files():
     assert live["winner"] == "even_rule_digit_size_principle_counting"
     assert len(live["others"]) == 3
     assert live["n_trials"] == 7560
+    # Figure 2 draws them in admission order with the pruned models.
+    assert len(ng.rm.pruned_order(final_dir, live["others"])) == 3
 
     seeds = json.loads((ng.DEFAULT_RUN_DIR / "starting_models.json").read_text())["starting_models"]
     for seed in seeds:  # pruned in experiment 1: found in its pruned/ directory

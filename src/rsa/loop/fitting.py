@@ -70,6 +70,8 @@ def fingerprint(model_path: Path, responses_path: Path, settings: FitSettings) -
     key = asdict(settings)
     if not key["dense_mass"]:
         del key["dense_mass"]  # the default: cache keys from before the setting existed stay valid
+    if key["init"] == "uniform":
+        del key["init"]  # likewise
     h.update(json.dumps(key, sort_keys=True).encode())
     return h.hexdigest()[:20]
 

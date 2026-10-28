@@ -21,7 +21,7 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import List, Literal
 
 import numpy as np
 import pandas as pd
@@ -44,6 +44,9 @@ class Args:
     num_samples: int = 1000
     num_chains: int = 4
     seed: int = 0
+    init: Literal["uniform", "map"] = "uniform"
+    """Where each chain starts (`src.rsa.fit.FitSettings.init`). The recorded 2026-10-17 run used
+    "uniform"; "map" starts every chain in the full superset's main mode, not its minor one."""
 
 
 def versus(a: np.ndarray, b: np.ndarray, units: np.ndarray) -> dict:
@@ -76,7 +79,7 @@ def main(args: Args) -> dict:
         raise ValueError(f"{args.test} has catch trials: score the modelled trials")
     units = pd.factorize(conditions)[0]
     settings = FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains,
-                           seed=args.seed, dense_mass=True)
+                           seed=args.seed, dense_mass=True, init=args.init)
 
     def one(entry):
         label, path = entry

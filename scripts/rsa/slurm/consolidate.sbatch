@@ -25,6 +25,8 @@ PREREG_ROOT="${PREREG_ROOT:-$SCRATCH/auto-psych/rsa_prereg}"
 source "$REPO/scripts/rsa/slurm/_env.sh"
 STAGE="${STAGE:?set STAGE=eliminate or score}"
 [[ "$STAGE" =~ ^(eliminate|score)$ ]] || { echo "ERROR: STAGE must be eliminate or score, not $STAGE" >&2; exit 1; }
+# Where the chains start (src.rsa.fit.FitSettings.init): "map" since 2026-10-27 (docs/auto_rsa/CONSOLIDATION.md).
+INIT="${INIT:?set INIT=map (or uniform, as the 2026-10-17 run started)}"
 mkdir -p "$WORK_ROOT"
 CODE_ROOT="$WORK_ROOT/code_$STAGE"
 mkdir -p "$CODE_ROOT"
@@ -44,7 +46,7 @@ cd "$CODE_ROOT/harness_repo"
 case "$STAGE" in
   eliminate)
     "$VENV_PY" -m src.rsa.consolidate.eliminate --data "$POOL/pooled.csv" --out "$WORK_ROOT/eliminate" \
-      --cache "$POOL/.fit_cache" --workers "$WORKERS"
+      --cache "$POOL/.fit_cache" --workers "$WORKERS" --init "$INIT"
     ;;
   score)
     TEST="$PREREG_ROOT/cells/prereg/run/experiment1/data/modelled.csv"
@@ -56,7 +58,7 @@ case "$STAGE" in
       --models "lean=$LEAN" "full=$FULL" "c0=$F/boundary_avoidable_ambiguity_listener.py" \
                "c1=$F/feature_surprisal_ensemble_listener.py" "c2=$F/competition_endpoint_binding_lapse_l2.py" \
                "promoted=$REPO/data/rsa/live_seeds/models/rsa_l2_singleton_distinct_feat_color_l0.py" \
-      --reference c0 --out "$WORK_ROOT/score.json" --workers 6
+      --reference c0 --out "$WORK_ROOT/score.json" --workers 6 --init "$INIT"
     ;;
 esac
 echo "[consolidate $STAGE] done"

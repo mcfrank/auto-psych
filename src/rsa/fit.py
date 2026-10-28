@@ -24,8 +24,9 @@ Posterior predictions over many draws are computed in batches of draws
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Mapping, Sequence
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import arviz as az
 import jax
@@ -33,7 +34,7 @@ import jax.numpy as jnp
 import numpy as np
 import numpyro
 import numpyro.distributions as dist
-from numpyro.infer import MCMC, NUTS
+from numpyro.infer import MCMC, NUTS, init_to_median, init_to_value
 
 from src.models.loo_reliability import LooDiagnostics
 from src.models.pymc_inference import convergence_problems
@@ -56,6 +57,25 @@ class FitSettings:
     # default so every earlier fit's cache key stands; the live loop turns it on
     # (src.rsa.outer.run.OuterConfig.dense_mass, 2026-10-09).
     dense_mass: bool = False
+    # Where the chains start. "uniform" (numpyro's default): each chain at its own point drawn
+    # uniformly in (-2, 2) on the unconstrained scale. "map": every chain at the highest-density
+    # point found by optimisation (`map_start`). The full consolidation superset has a minor mode
+    # (~1e-5 of the posterior mass, ~500 nats of barrier away) that caught a third of uniform
+    # starts, so its chains never mixed (R-hat 1.74; 2026-10-27, docs/auto_rsa/CONSOLIDATION.md).
+    # The prior median is no fix: with interior off it lies in a mode 19.6 nats below the best.
+    # Uniform by default so every earlier fit's cache key stands.
+    init: str = "uniform"
+
+    def __post_init__(self):
+        if self.init not in INIT_STRATEGIES:
+            raise ValueError(f"init {self.init!r} is not one of {INIT_STRATEGIES}")
+
+
+INIT_STRATEGIES = ("uniform", "map")
+MAP_STARTS = 20  # the uniform starts `map_start` optimises from, besides the prior median
+SAME_MODE_BARRIER_NATS = 0.5  # two optima joined by a straight path rising no more than this are one mode
+MODE_WINDOW_NATS = 30.0  # optima further than this below the best are negligible; their mass is not estimated
+MINOR_MODE_MAX_SHARE = 0.01  # the largest posterior share a mode the chains do not start in may hold
 
 
 class ZeroProbabilityChoice(ValueError):
@@ -224,6 +244,131 @@ def pattern_log_lik(model: RSAModel, prep: Prepared, flat: Mapping[str, np.ndarr
     return out
 
 
+@dataclass
+class Mode:
+    """An optimum of the potential energy (minus NUTS's log density, on the unconstrained scale)."""
+
+    energy: float
+    log_mass: float  # Laplace: -energy - log det(Hessian) / 2; nan when not estimated
+    starts: int  # the optimisations that ended in this mode
+    x: np.ndarray  # the optimum, unconstrained
+    params: Dict[str, float] = field(default_factory=dict)  # the optimum, constrained (`map_start` fills it)
+
+
+def _barrier_free(energy_and_grad, a: Mode, x: np.ndarray, energy: float, points: int = 21) -> bool:
+    top = max(a.energy, energy) + SAME_MODE_BARRIER_NATS
+    for t in np.linspace(0.0, 1.0, points)[1:-1]:
+        e = energy_and_grad((1.0 - t) * a.x + t * x)[0]
+        if not np.isfinite(e) or e > top:
+            return False
+    return True
+
+
+def find_modes(energy_and_grad: Callable, hessian: Callable,
+               starts: Sequence[np.ndarray]) -> Tuple[List[Mode], int]:
+    """L-BFGS from every start; optima joined by a barrier-free straight path are one mode.
+    Modes best first, each with its Laplace log mass (within ``MODE_WINDOW_NATS`` of the best),
+    and the number of optimisations that ended at a non-finite energy (a step into a region
+    where the model is undefined, e.g. rsa_l1 at alpha ~ 44)."""
+    from scipy.optimize import minimize
+
+    optima = []
+    for x0 in starts:
+        r = minimize(energy_and_grad, np.asarray(x0, dtype=np.float64), jac=True, method="L-BFGS-B")
+        if np.isfinite(r.fun):
+            optima.append((float(r.fun), r.x))
+    if not optima:
+        raise ValueError(f"no optimisation from {len(starts)} starts reached a finite density")
+    optima.sort(key=lambda o: o[0])
+    modes: List[Mode] = []
+    for energy, x in optima:
+        same = next((m for m in modes if _barrier_free(energy_and_grad, m, x, energy)), None)
+        if same is not None:
+            same.starts += 1
+        else:
+            modes.append(Mode(energy=energy, log_mass=float("nan"), starts=1, x=x))
+    for m in modes:
+        if m.energy - modes[0].energy <= MODE_WINDOW_NATS:
+            eig = np.linalg.eigvalsh(hessian(m.x))
+            if np.all(eig > 0):
+                m.log_mass = -m.energy - 0.5 * float(np.sum(np.log(eig)))
+    return modes, len(starts) - len(optima)
+
+
+def mode_shares(modes: Sequence[Mode]) -> List[float]:
+    """Each mode's Laplace share of the mass (nan when not estimated; 0 beyond the window)."""
+    masses = np.array([m.log_mass for m in modes])
+    known = np.isfinite(masses)
+    shares = np.full(len(modes), np.nan)
+    if known.any():
+        shares[known] = np.exp(masses[known] - np.logaddexp.reduce(masses[known]))
+    for i, m in enumerate(modes):
+        if m.energy - modes[0].energy > MODE_WINDOW_NATS:
+            shares[i] = 0.0
+    return shares.tolist()
+
+
+def visited_by_draws(draws: np.ndarray, points: Sequence[np.ndarray], quantile: float = 0.999) -> List[bool]:
+    """Whether each point lies inside the cloud of posterior ``draws`` (draws x parameters): its
+    squared Mahalanobis distance from their mean within the chi-square ``quantile``."""
+    from scipy.stats import chi2
+
+    mean = draws.mean(axis=0)
+    precision = np.linalg.pinv(np.atleast_2d(np.cov(draws, rowvar=False)))
+    limit = chi2.ppf(quantile, draws.shape[1])
+    return [bool((p - mean) @ precision @ (p - mean) <= limit) for p in points]
+
+
+def minor_mode_problem(modes: Sequence[Mode], visited: Optional[Sequence[bool]] = None) -> Optional[str]:
+    """Why the chains, all started in the best mode, may not represent the posterior; None if they do.
+    ``visited``: per mode, whether the posterior draws reached it (`visited_by_draws`). Optima the
+    straight-line test split but the chains reached are one mode (a curved ridge) and no problem."""
+    if visited is None:
+        visited = [False] * len(modes)
+    unvisited = [(m, share) for m, share, seen in zip(modes[1:], mode_shares(modes)[1:], visited[1:]) if not seen]
+    if not unvisited:
+        return None
+    if not np.isfinite(mode_shares(modes)[0]):
+        return "the best optimum's mass could not be estimated (Hessian not positive definite)"
+    for m, share in unvisited:
+        if not np.isfinite(share):
+            return (f"an optimum {m.energy - modes[0].energy:.1f} nats below the best has a mass that could not be "
+                    f"estimated (Hessian not positive definite)")
+        if share > MINOR_MODE_MAX_SHARE:
+            return (f"a second mode {m.energy - modes[0].energy:.1f} nats below the best holds {100 * share:.0f}% "
+                    f"of the mass (Laplace); the chains, started in the best mode, never visit it")
+    return None
+
+
+def map_start(model: RSAModel, prep: Prepared, seed: int,
+              n_uniform: int = MAP_STARTS) -> Tuple[Dict[str, float], List[Mode], int]:
+    """The best optimum of the posterior density from the prior median and ``n_uniform`` uniform
+    starts in (-2, 2) on the unconstrained scale (as numpyro's init_to_uniform), as constrained
+    parameter values, every mode the optimisations found and how many failed (`find_modes`)."""
+    from jax.flatten_util import ravel_pytree
+    from numpyro.infer.util import initialize_model
+
+    (median, _, _), potential_fn, postprocess, _ = initialize_model(
+        jax.random.PRNGKey(seed), _numpyro_model, model_args=(model, prep), init_strategy=init_to_median)
+    flat_median, unravel = ravel_pytree(median)
+    energy = lambda x: potential_fn(unravel(x))
+    value_and_grad = jax.jit(jax.value_and_grad(energy))
+    hessian = jax.jit(jax.hessian(energy))
+
+    def energy_and_grad(x):
+        e, grad = value_and_grad(jnp.asarray(x, dtype=flat_median.dtype))
+        return float(e), np.asarray(grad, dtype=np.float64)
+
+    uniform = jax.random.uniform(jax.random.PRNGKey(seed), (n_uniform, flat_median.size), minval=-2.0, maxval=2.0)
+    modes, failed = find_modes(energy_and_grad,
+                       lambda x: np.asarray(hessian(jnp.asarray(x, dtype=flat_median.dtype)), dtype=np.float64),
+                       [np.asarray(flat_median), *np.asarray(uniform)])
+    for m in modes:
+        point = postprocess(unravel(jnp.asarray(m.x, dtype=flat_median.dtype)))
+        m.params = {name: float(point[name]) for name in model.params}
+    return dict(modes[0].params), modes, failed
+
+
 def fit(
     model: RSAModel,
     contexts: Sequence[Context],
@@ -234,6 +379,11 @@ def fit(
     check_contract(model, {g.shape: g for g in prep.groups})
     _check_possible(model, prep)
     kernel = NUTS(_numpyro_model, target_accept_prob=settings.target_accept, dense_mass=settings.dense_mass)
+    if settings.init == "map":
+        start_values, modes, failed_starts = map_start(model, prep, settings.seed)
+        start = init_to_value(values=start_values)
+        kernel = NUTS(_numpyro_model, target_accept_prob=settings.target_accept, dense_mass=settings.dense_mass,
+                      init_strategy=start)
     mcmc = MCMC(
         kernel,
         num_warmup=settings.num_warmup,
@@ -254,12 +404,18 @@ def fit(
         constant_data={"trial_pattern": prep.trial_pattern, "pattern_count": prep.pattern_count},
     )
     names = list(model.params)
-    return RSAFit(
-        model_name=model.name,
-        idata=idata,
-        param_names=names,
-        convergence_problems=convergence_problems(idata, names),
-    )
+    problems = convergence_problems(idata, names)
+    if settings.init == "map":
+        draws = np.stack([samples[n].reshape(-1) for n in names], axis=1)
+        visited = visited_by_draws(draws, [np.array([m.params[n] for n in names]) for m in modes])
+        problem = minor_mode_problem(modes, visited)
+        if problem is not None:
+            problems.append(problem)
+        idata.posterior.attrs["map_modes"] = json.dumps(
+            [dict(energy=m.energy, log_mass=m.log_mass, share=share, starts=m.starts, visited=seen, params=m.params)
+             for m, share, seen in zip(modes, mode_shares(modes), visited)])
+        idata.posterior.attrs["map_failed_starts"] = failed_starts
+    return RSAFit(model_name=model.name, idata=idata, param_names=names, convergence_problems=problems)
 
 
 def mean_probs(model: RSAModel, flat: Mapping[str, np.ndarray], contexts: Sequence[Context],

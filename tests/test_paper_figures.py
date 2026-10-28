@@ -22,6 +22,7 @@ def _domain_data(domain, winner="w", seed="s1"):
         "runs": [
             {
                 "run": run, "n_trials": 100, "best_model": winners[k], "best_seed": seed,
+                "elpd": {winners[k]: -88.0 + k, seed: -100.0, "s2": -108.0},
                 "vs_best_seed": {
                     winners[k]: {"diff": 12.0 + k, "se": 3.0},
                     seed: {"diff": 0.0, "se": 0.0},
@@ -59,17 +60,20 @@ def _setup(tmp_path, *, winner_in_spec="w", corrupt_sha=False):
         }, allow_unicode=True))
     names = tmp_path / "model_names.yaml"
     names.write_text(yaml.safe_dump({d: NAMES for d in ("subjective_randomness", "rsa")}))
+    papers = tmp_path / "seed_papers.yaml"
+    papers.write_text(yaml.safe_dump({d: PAPERS for d in ("subjective_randomness", "rsa")}))
     return figures.Args(figure_data=data_dir, pseudocode=spec_dir, out_dir=tmp_path / "out",
-                        model_names=names, pending_domains=["number_game"])
+                        model_names=names, seed_papers=papers, pending_domains=["number_game"])
 
 
 NAMES = {"w": "Winner one", "w_b": "Winner two", "s1": "Seed one", "s2": "Seed two"}
+PAPERS = {"s1": "Author & Other, 1999", "s2": None}
 
 
 def test_all_three_figures_are_drawn_with_the_number_game_pending(tmp_path):
     args = _setup(tmp_path)
     figures.main(args)
-    for name in ("fig2_elpd", "fig3_conditions", "fig4_pseudocode"):
+    for name in ("fig2_elpd", "fig2_elpd_horizontal", "fig3_conditions", "fig4_pseudocode"):
         for ext in ("pdf", "png"):
             assert (args.out_dir / f"{name}.{ext}").stat().st_size > 0, (name, ext)
 
@@ -127,47 +131,76 @@ def _labelled(rows):
 
 
 def test_runs_on_one_test_collapse_into_one_forest():
-    rows = figures.forest_rows("rsa", _domain_data("rsa"), NAMES)
-    # Winners first (best first, with their run), then the strips, then the seeds.
+    rows = figures.forest_rows("rsa", _domain_data("rsa"), NAMES, PAPERS)
+    # Winners first (best first), then the strips, then the seeds.
     assert _labelled(rows) == [
-        ("winner", "Winner two (r2)", 13.0, 3.0),
-        ("winner", "Winner one (r1)", 12.0, 3.0),
+        ("winner", "Winner two", 13.0, 3.0),
+        ("winner", "Winner one", 12.0, 3.0),
         ("seed", "Seed one", 0.0, 0.0),
         ("seed", "Seed two", -8.0, None),  # no paired SE recorded: drawn hollow
     ]
     strips = {r["kind"]: r["values"] for r in rows if "values" in r}
-    assert strips == {"others": None, "pruned": None}  # pruned not scored: both pending
+    assert strips == {"nonwinning": None}  # pruned not scored: pending
 
 
-def test_pruned_models_of_every_run_share_one_strip():
+def test_the_non_winning_models_of_every_run_share_one_strip_in_admission_order():
     data = _domain_data("number_game")
     for k, run in enumerate(data["runs"]):
         run["pruned_during_run"] = {f"late_{k}": 4.0 - k, f"early_{k}": -k}
         run["pruned_order"] = {f"late_{k}": 9, f"early_{k}": 2}
-    rows = figures.forest_rows("number_game", data, NAMES)
-    strips = {r["kind"]: r["values"] for r in rows if "values" in r}
-    assert strips == {"others": [9.0, 10.0], "pruned": [0.0, 4.0, -1.0, 3.0]}
-    # Each run's models in admission order, from 0 (first) to 1 (last).
-    assert next(r for r in rows if r["kind"] == "pruned")["progress"] == [0.0, 1.0, 0.0, 1.0]
+        run["others_order"] = {"rival": 5}  # admitted between them, still live
+    rows = figures.forest_rows("number_game", data, NAMES, PAPERS)
+    (strip,) = [r for r in rows if "values" in r]
+    assert strip["kind"] == "nonwinning"
+    # Run by run, in admission order: early, rival (live), late.
+    assert strip["values"] == [0.0, 9.0, 4.0, -1.0, 10.0, 3.0]
+    # Each run's models from 0 (first admitted) to 1 (last).
+    assert strip["progress"] == [0.0, 0.5, 1.0, 0.0, 0.5, 1.0]
+    # Each model's run, for its colour.
+    assert strip["runs"] == [0, 0, 0, 1, 1, 1]
+    assert [(r["model"], r["run"]) for r in rows if r["kind"] == "winner"] == [("w_b", 1), ("w", 0)]
 
 
 def test_subjective_randomness_is_drawn_from_all_runs_pooled():
     data = _domain_data("subjective_randomness")
-    rows = figures.forest_rows("subjective_randomness", data, NAMES)
+    rows = figures.forest_rows("subjective_randomness", data, NAMES, PAPERS)
     # Before the pooled paired SEs exist: differences from the pooled ELPDs.
-    assert _labelled(rows) == [("winner", "Winner one (r1)", 20.0, None),
-                               ("winner", "Winner two (r2)", 5.0, None),
+    assert _labelled(rows) == [("winner", "Winner one", 20.0, None),
+                               ("winner", "Winner two", 5.0, None),
                                ("seed", "Seed one", 0.0, 0.0), ("seed", "Seed two", -30.0, None)]
     data["pooled"]["vs_best_seed"] = {"w": {"diff": 20.0, "se": 4.0}, "w_b": {"diff": 5.0, "se": 2.0},
                                       "s1": {"diff": 0.0, "se": 0.0}, "s2": {"diff": -30.0, "se": 6.0}}
     data["pooled"].update(runs=["r1", "r2"], others_at_end={"r1__x": 15.0},
-                          pruned_during_run={"r2__y": -3.0}, pruned_order={"r2__y": 4})
-    rows = figures.forest_rows("subjective_randomness", data, NAMES)
+                          pruned_during_run={"r2__y": -3.0}, pruned_order={"r2__y": 4},
+                          others_order={"r1__x": 7})
+    rows = figures.forest_rows("subjective_randomness", data, NAMES, PAPERS)
     assert [r["se"] for r in rows if "se" in r] == [4.0, 2.0, 0.0, 6.0]
-    assert {r["kind"]: r["values"] for r in rows if "values" in r} == {"others": [15.0],
-                                                                         "pruned": [-3.0]}
+    (strip,) = [r for r in rows if "values" in r]
+    assert strip["values"] == [15.0, -3.0]
+    # The pooled labels name each model's run.
+    assert strip["runs"] == [0, 1]
 
 
 def test_a_labelled_model_without_a_name_raises():
     with pytest.raises(KeyError, match="'w_b' has no name"):
-        figures.forest_rows("rsa", _domain_data("rsa"), {"w": "Winner one", "s1": "x", "s2": "y"})
+        figures.forest_rows("rsa", _domain_data("rsa"), {"w": "Winner one", "s1": "x", "s2": "y"},
+                            PAPERS)
+
+
+def test_a_starting_model_not_in_seed_papers_raises():
+    with pytest.raises(KeyError, match="'s2' is not in seed_papers.yaml"):
+        figures.forest_rows("rsa", _domain_data("rsa"), NAMES, {"s1": "Author, 1999"})
+
+
+def test_starting_models_are_named_by_their_paper_and_the_best_by_its_name_without_one():
+    def seed(model, diff, paper):
+        return {"kind": "seed", "model": model, "label": model.upper(), "diff": diff, "paper": paper}
+
+    columns = [seed("a", -9.0, "Frank & Goodman, 2012"), seed("b", -5.0, "Frank & Goodman, 2012"),
+               seed("c", -2.0, None), seed("d", 0.0, None)]
+    # One name for a paper's models; uncited models unnamed but the best.
+    assert figures._seed_names(columns) == {"a": "Frank & Goodman (2012)",
+                                            "b": "Frank & Goodman (2012)", "d": "D"}
+    rows = figures.forest_rows("rsa", _domain_data("rsa"), NAMES, PAPERS)
+    assert [figures._row_label(r) for r in rows if r["kind"] == "seed"] == [
+        "Seed one\n(Author & Other, 1999)", "Seed two"]

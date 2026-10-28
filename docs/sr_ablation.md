@@ -104,7 +104,8 @@ bulk ESS ≥ 100) on every **population-level** parameter, on every fold.
   however long it samples (sr_figure_data, 2026-10-18).
 - `--gate all` gates everything.
 
-**Backward elimination** (`src.subjective_randomness.ablation.eliminate`), per final:
+**Backward elimination** (`src.subjective_randomness.ablation.eliminate`; the rule's code is
+shared with the number-game ablation in `src.ablation`, `docs/ng_ablation.md`), per final:
 1. Start from the final, with every mechanism on.
 2. Each round, score the current model and every model with one mechanism removed. Only
    removals that leave a valid model count: person-level variation goes before the

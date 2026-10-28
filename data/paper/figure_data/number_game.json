@@ -487,6 +487,11 @@
         "span_filled_nearest_exemplar": 17,
         "variability_tuned_exemplar_gradient": 40,
         "win_stay_lose_shift_concept": 6
+      },
+      "others_order": {
+        "bayesian_digit_veto_counting_up": 86,
+        "digit_reversal_mirror_concept": 82,
+        "parity_and_digit_size_principle": 85
       }
     }
   ],

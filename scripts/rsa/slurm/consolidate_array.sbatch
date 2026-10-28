@@ -21,7 +21,7 @@
 # Preemption on owners costs only the fold fits in flight: each finished fit is cached and each
 # finished model's CV saved. The code is staged once ($WORK_ROOT/code_array); every round runs on it.
 #
-#   sbatch scripts/rsa/slurm/consolidate_array.sbatch
+#   INIT=map sbatch scripts/rsa/slurm/consolidate_array.sbatch
 set -euo pipefail
 export REPO="${REPO:-${SLURM_SUBMIT_DIR:-$HOME/auto-psych}}"
 export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/rsa_consolidate}"
@@ -34,11 +34,14 @@ WORKER_CPUS="${WORKER_CPUS:-5}"        # one per fold: a model's 5 fits side by 
 WORKER_MEM="${WORKER_MEM:-32GB}"       # within mcfrank's 8 GB per CPU
 WORKER_TIME="${WORKER_TIME:-24:00:00}" # owners' QOS caps at 48 h
 MAX_ATTEMPTS="${MAX_ATTEMPTS:-2}"
+# Where the chains start (src.rsa.fit.FitSettings.init): "map" since 2026-10-27, when uniform starts
+# left the full superset unconverged (docs/auto_rsa/CONSOLIDATION.md); the 2026-10-17 run's was "uniform".
+INIT="${INIT:?set INIT=map (or uniform, as the 2026-10-17 run started)}"
 CODE_ROOT="$WORK_ROOT/code_array"
 POOL="$WORK_ROOT/pool"
 OUT="$WORK_ROOT/eliminate"
 mkdir -p "$WORK_ROOT/logs"
-ELIM=(-m src.rsa.consolidate.eliminate --data "$POOL/pooled.csv" --out "$OUT" --cache "$POOL/.fit_cache")
+ELIM=(-m src.rsa.consolidate.eliminate --data "$POOL/pooled.csv" --out "$OUT" --cache "$POOL/.fit_cache" --init "$INIT")
 
 if [[ "$STAGE" == "worker" ]]; then
   [[ -d "$CODE_ROOT/harness_repo" ]] || { echo "ERROR: no staged code at $CODE_ROOT (the driver stages it)" >&2; exit 1; }
@@ -71,7 +74,7 @@ fi
 SELF="$CODE_ROOT/harness_repo/scripts/rsa/slurm/consolidate_array.sbatch"
 ARRAY=$(sbatch --parsable --job-name=rsa_cons_worker --array="0-$((N - 1))" --partition="$WORKER_PARTITION" --requeue \
   --cpus-per-task="$WORKER_CPUS" --mem="$WORKER_MEM" --time="$WORKER_TIME" \
-  -o "$WORK_ROOT/logs/%x_%A_%a.out" --export=ALL,STAGE=worker,REPO="$REPO",WORK_ROOT="$WORK_ROOT" "$SELF")
+  -o "$WORK_ROOT/logs/%x_%A_%a.out" --export=ALL,STAGE=worker,REPO="$REPO",WORK_ROOT="$WORK_ROOT",INIT="$INIT" "$SELF")
 NEXT=$(sbatch --parsable --dependency="afterany:$ARRAY" -o "$WORK_ROOT/logs/%x_%j.out" \
-  --export=ALL,STAGE=driver,REPO="$REPO",WORK_ROOT="$WORK_ROOT" "$SELF")
+  --export=ALL,STAGE=driver,REPO="$REPO",WORK_ROOT="$WORK_ROOT",INIT="$INIT" "$SELF")
 echo "[driver] round needs $N models (attempt $ATTEMPT): array $ARRAY on $WORKER_PARTITION; next driver $NEXT"
