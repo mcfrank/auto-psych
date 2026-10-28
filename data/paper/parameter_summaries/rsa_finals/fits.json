@@ -1,0 +1,23 @@
+{
+ "boundary_avoidable_ambiguity_listener": {
+  "chain": 0,
+  "name": "boundary_avoidable_ambiguity_listener",
+  "converged": true,
+  "problems": [],
+  "max_abs_diff_from_frozen_preds": 4.997882843138512e-07
+ },
+ "feature_surprisal_ensemble_listener": {
+  "chain": 1,
+  "name": "feature_surprisal_ensemble_listener",
+  "converged": true,
+  "problems": [],
+  "max_abs_diff_from_frozen_preds": 4.999504089608919e-07
+ },
+ "competition_endpoint_binding_lapse_l2": {
+  "chain": 2,
+  "name": "competition_endpoint_binding_lapse_l2",
+  "converged": true,
+  "problems": [],
+  "max_abs_diff_from_frozen_preds": 4.999290406718093e-07
+ }
+}
