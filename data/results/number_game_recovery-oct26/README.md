@@ -48,5 +48,5 @@ retry rounds (the last at 128 GB). Only its `code_commit` and
 The sweep was staged on `25dacd67`. Every cell ran experiment 1 on `01ded870`;
 experiments that stalled in a PyTensor thread race were restarted from their
 model-loop start on `25dacd67` (per-thread `change_flags`; results unchanged),
-as each cell's `code_history.txt` records. `25dacd67` and `e471a07a` are on
-the `cleanup` and `run3-diagnostics` branches, not on `main`.
+as each cell's `code_history.txt` records. `25dacd67` and `e471a07a` reached
+`main` with the `cleanup` merge (`45facd5d`).

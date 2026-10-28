@@ -104,8 +104,8 @@ Code: run 2 ran throughout on `54c48cc7`. Run 3's experiment 1 ran on
 `01ded870`; experiment 2's first attempt (`e471a07a`, log-only diagnostics)
 stalled in a PyTensor thread race and was discarded, and experiments 2–3 ran
 on `25dacd67` (per-thread `change_flags`; results unchanged), per
-`harness/run3/code_history.txt`. Those two commits are on the `cleanup` and
-`run3-diagnostics` branches, not on `main`. An earlier seed-3 start on
+`harness/run3/code_history.txt`. Those two commits reached `main` with the
+`cleanup` merge (`45facd5d`). An earlier seed-3 start on
 cocoflops2 left no result and is not included.
 
 ## What happened in run 1, in order
