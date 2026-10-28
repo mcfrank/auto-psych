@@ -1,0 +1,309 @@
+{
+  "gt_model": "dataset",
+  "run_root": "/scr/wurgaft/auto-psych/agent_trees/7e8e4116c4d40231/repo/_runs/cell_1",
+  "trajectory": [
+    {
+      "experiment": 1,
+      "step": 0,
+      "global_step": 0,
+      "best_model": "bigelow_piantadosi_independent",
+      "incumbent_changed": false,
+      "incumbent_is_discovered": false
+    },
+    {
+      "experiment": 1,
+      "step": 1,
+      "global_step": 1,
+      "best_model": "recency_weighted_exemplar_similarity",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 2,
+      "global_step": 2,
+      "best_model": "coherence_tuned_attention_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 3,
+      "global_step": 3,
+      "best_model": "graded_factor_coherence_tuned_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 4,
+      "global_step": 4,
+      "best_model": "coherence_sharpened_decision_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 5,
+      "global_step": 5,
+      "best_model": "coherence_sharpened_decision_exemplar",
+      "incumbent_changed": false,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 0,
+      "global_step": 6,
+      "best_model": "dual_route_shared_factor_rule_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 1,
+      "global_step": 7,
+      "best_model": "dual_route_factor_and_digit_rule_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 2,
+      "global_step": 8,
+      "best_model": "drifting_criterion_dual_route_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 3,
+      "global_step": 9,
+      "best_model": "span_filling_size_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 4,
+      "global_step": 10,
+      "best_model": "sequence_momentum_span_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 5,
+      "global_step": 11,
+      "best_model": "zigzag_breadth_sequence_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 0,
+      "global_step": 12,
+      "best_model": "zigzag_breadth_sequence_exemplar",
+      "incumbent_changed": false,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 1,
+      "global_step": 13,
+      "best_model": "enumerated_list_concept_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 2,
+      "global_step": 14,
+      "best_model": "saturating_criterion_relaxation",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 3,
+      "global_step": 15,
+      "best_model": "upward_count_start_boundary",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 4,
+      "global_step": 16,
+      "best_model": "leading_digit_string_similarity",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 5,
+      "global_step": 17,
+      "best_model": "relational_analogy_transfer",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    }
+  ],
+  "incumbent": {
+    "starting_models": [
+      "bigelow_piantadosi_independent",
+      "bigelow_piantadosi_interval",
+      "tenenbaum_rules_similarity"
+    ],
+    "n_steps": 18,
+    "n_incumbent_changes": 15,
+    "n_steps_discovered_incumbent": 17,
+    "final_incumbent": "relational_analogy_transfer",
+    "changes": [
+      {
+        "global_step": 1,
+        "experiment": 1,
+        "step": 1,
+        "from": "bigelow_piantadosi_independent",
+        "to": "recency_weighted_exemplar_similarity"
+      },
+      {
+        "global_step": 2,
+        "experiment": 1,
+        "step": 2,
+        "from": "recency_weighted_exemplar_similarity",
+        "to": "coherence_tuned_attention_exemplar"
+      },
+      {
+        "global_step": 3,
+        "experiment": 1,
+        "step": 3,
+        "from": "coherence_tuned_attention_exemplar",
+        "to": "graded_factor_coherence_tuned_exemplar"
+      },
+      {
+        "global_step": 4,
+        "experiment": 1,
+        "step": 4,
+        "from": "graded_factor_coherence_tuned_exemplar",
+        "to": "coherence_sharpened_decision_exemplar"
+      },
+      {
+        "global_step": 6,
+        "experiment": 2,
+        "step": 0,
+        "from": "coherence_sharpened_decision_exemplar",
+        "to": "dual_route_shared_factor_rule_exemplar"
+      },
+      {
+        "global_step": 7,
+        "experiment": 2,
+        "step": 1,
+        "from": "dual_route_shared_factor_rule_exemplar",
+        "to": "dual_route_factor_and_digit_rule_exemplar"
+      },
+      {
+        "global_step": 8,
+        "experiment": 2,
+        "step": 2,
+        "from": "dual_route_factor_and_digit_rule_exemplar",
+        "to": "drifting_criterion_dual_route_exemplar"
+      },
+      {
+        "global_step": 9,
+        "experiment": 2,
+        "step": 3,
+        "from": "drifting_criterion_dual_route_exemplar",
+        "to": "span_filling_size_exemplar"
+      },
+      {
+        "global_step": 10,
+        "experiment": 2,
+        "step": 4,
+        "from": "span_filling_size_exemplar",
+        "to": "sequence_momentum_span_exemplar"
+      },
+      {
+        "global_step": 11,
+        "experiment": 2,
+        "step": 5,
+        "from": "sequence_momentum_span_exemplar",
+        "to": "zigzag_breadth_sequence_exemplar"
+      },
+      {
+        "global_step": 13,
+        "experiment": 3,
+        "step": 1,
+        "from": "zigzag_breadth_sequence_exemplar",
+        "to": "enumerated_list_concept_exemplar"
+      },
+      {
+        "global_step": 14,
+        "experiment": 3,
+        "step": 2,
+        "from": "enumerated_list_concept_exemplar",
+        "to": "saturating_criterion_relaxation"
+      },
+      {
+        "global_step": 15,
+        "experiment": 3,
+        "step": 3,
+        "from": "saturating_criterion_relaxation",
+        "to": "upward_count_start_boundary"
+      },
+      {
+        "global_step": 16,
+        "experiment": 3,
+        "step": 4,
+        "from": "upward_count_start_boundary",
+        "to": "leading_digit_string_similarity"
+      },
+      {
+        "global_step": 17,
+        "experiment": 3,
+        "step": 5,
+        "from": "leading_digit_string_similarity",
+        "to": "relational_analogy_transfer"
+      }
+    ]
+  },
+  "starting_models_prunable": true,
+  "experiments": [
+    {
+      "experiment": 1,
+      "manifest_models": [
+        "coherence_tuned_attention_exemplar",
+        "graded_factor_coherence_tuned_exemplar",
+        "dimension_specific_coherence_exemplar",
+        "coherence_sharpened_decision_exemplar",
+        "independent_retrieval_exemplar_search",
+        "coherence_sharpened_set_factor_exemplar",
+        "shared_factor_rule_sharpened_exemplar",
+        "dual_route_shared_factor_rule_exemplar"
+      ]
+    },
+    {
+      "experiment": 2,
+      "manifest_models": [
+        "span_filling_size_exemplar",
+        "sequence_momentum_span_exemplar",
+        "recency_anchored_span_exemplar",
+        "recency_anchored_span_exemplar_2",
+        "spread_calibrated_size_gradient",
+        "spread_scaled_recency_span_exemplar",
+        "zigzag_breadth_sequence_exemplar",
+        "set_homogeneity_criterion_momentum"
+      ]
+    },
+    {
+      "experiment": 3,
+      "manifest_models": [
+        "leading_digit_string_similarity",
+        "even_number_rule_abstraction",
+        "round_base_multiples_prior",
+        "relational_analogy_transfer",
+        "leading_digit_even_rule_similarity",
+        "range_inference_leading_digit",
+        "trivial_small_number_avoidance"
+      ]
+    }
+  ]
+}

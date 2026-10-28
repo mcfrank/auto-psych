@@ -1,0 +1,13 @@
+{
+  "models": [
+    "coherence_tuned_attention_exemplar",
+    "graded_factor_coherence_tuned_exemplar",
+    "dimension_specific_coherence_exemplar",
+    "coherence_sharpened_decision_exemplar",
+    "independent_retrieval_exemplar_search",
+    "coherence_sharpened_set_factor_exemplar",
+    "shared_factor_rule_sharpened_exemplar",
+    "dual_route_shared_factor_rule_exemplar"
+  ],
+  "ledger_sha256": "f29d5eaa423941c84cf8035db93d9d6a48d3d44c1e0ac13a5114b5461e7df916"
+}

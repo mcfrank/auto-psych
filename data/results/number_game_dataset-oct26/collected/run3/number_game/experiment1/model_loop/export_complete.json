@@ -1,0 +1,12 @@
+{
+  "models": [
+    "decade_concept_bayesian_learning",
+    "decade_concepts_lapsing_learner",
+    "decade_aligned_range_concepts",
+    "log_compressed_range_concepts",
+    "log_compressed_sampling_concepts",
+    "session_drifting_decade_concepts",
+    "session_growing_acquiescence_concepts"
+  ],
+  "ledger_sha256": "96957770a224cb0614de31b31c64df9033f9463053eb98781ae31d876b915fc3"
+}

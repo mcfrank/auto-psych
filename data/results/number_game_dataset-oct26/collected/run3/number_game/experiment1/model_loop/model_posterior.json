@@ -1,0 +1,117 @@
+{
+  "posteriors": {
+    "decade_concept_bayesian_learning": 0.000246,
+    "decade_concepts_lapsing_learner": 0.000188,
+    "decade_aligned_range_concepts": 0.014581,
+    "log_compressed_range_concepts": 0.019633,
+    "log_compressed_sampling_concepts": 0.026806,
+    "session_drifting_decade_concepts": 0.000702,
+    "session_growing_acquiescence_concepts": 0.937844
+  },
+  "elpd_loo": {
+    "decade_concept_bayesian_learning": -1595.8885,
+    "decade_concepts_lapsing_learner": -1596.1583,
+    "decade_aligned_range_concepts": -1591.8077,
+    "log_compressed_range_concepts": -1591.5102,
+    "log_compressed_sampling_concepts": -1591.1988,
+    "session_drifting_decade_concepts": -1594.8416,
+    "session_growing_acquiescence_concepts": -1587.6438
+  },
+  "n_trials": 2520,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "session_growing_acquiescence_concepts": {
+      "rank": 0,
+      "elpd_loo": -1587.6438470381954,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.9378435821246778,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "log_compressed_sampling_concepts": {
+      "rank": 1,
+      "elpd_loo": -1591.1987982409325,
+      "elpd_diff": 3.5549512027371293,
+      "dse": 3.3394583542374465,
+      "dse_clustered": 4.427698516802795,
+      "weight": 0.02680616706920007,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "log_compressed_range_concepts": {
+      "rank": 2,
+      "elpd_loo": -1591.5102161266086,
+      "elpd_diff": 3.866369088413194,
+      "dse": 3.0195313929640295,
+      "dse_clustered": 3.808610656240385,
+      "weight": 0.019633044487922652,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "decade_aligned_range_concepts": {
+      "rank": 3,
+      "elpd_loo": -1591.807708595014,
+      "elpd_diff": 4.163861556818574,
+      "dse": 2.4626920413404045,
+      "dse_clustered": 3.186999771977909,
+      "weight": 0.014581033684355347,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "session_drifting_decade_concepts": {
+      "rank": 4,
+      "elpd_loo": -1594.841615146142,
+      "elpd_diff": 7.197768107946558,
+      "dse": 3.594859527749012,
+      "dse_clustered": 4.576994397017922,
+      "weight": 0.0007017451818695539,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "decade_concept_bayesian_learning": {
+      "rank": 5,
+      "elpd_loo": -1595.8884663106237,
+      "elpd_diff": 8.244619272428281,
+      "dse": 3.7320265100410093,
+      "dse_clustered": 4.9121734837528885,
+      "weight": 0.00024634159859032663,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "decade_concepts_lapsing_learner": {
+      "rank": 6,
+      "elpd_loo": -1596.1582869699546,
+      "elpd_diff": 8.51443993175917,
+      "dse": 3.2403527142309754,
+      "dse_clustered": 4.354545837690911,
+      "weight": 0.00018808585338428275,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "session_growing_acquiescence_concepts"
+}

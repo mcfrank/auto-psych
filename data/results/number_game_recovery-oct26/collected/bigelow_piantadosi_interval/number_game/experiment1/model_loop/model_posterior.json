@@ -1,0 +1,132 @@
+{
+  "posteriors": {
+    "criterion_shifted_tempered_decision": 0.131774,
+    "redundant_examples_decision_gain": 0.000986,
+    "range_bounded_rule_concepts": 0.198962,
+    "round_landmark_interval_prior": 0.182023,
+    "stochastic_example_forgetting": 0.058932,
+    "criterion_shifted_redundant_examples": 0.426433,
+    "split_rule_range_tempering": 0.000399,
+    "win_stay_lose_shift_criterion_shift": 0.000491
+  },
+  "elpd_loo": {
+    "criterion_shifted_tempered_decision": -778.8379,
+    "redundant_examples_decision_gain": -783.7328,
+    "range_bounded_rule_concepts": -778.4259,
+    "round_landmark_interval_prior": -778.5149,
+    "stochastic_example_forgetting": -779.6426,
+    "criterion_shifted_redundant_examples": -777.6636,
+    "split_rule_range_tempering": -784.6382,
+    "win_stay_lose_shift_criterion_shift": -784.4308
+  },
+  "n_trials": 2250,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "criterion_shifted_redundant_examples": {
+      "rank": 0,
+      "elpd_loo": -777.6635699366818,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.4264331942546054,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2250,
+      "not_converged": false
+    },
+    "range_bounded_rule_concepts": {
+      "rank": 1,
+      "elpd_loo": -778.4259102891546,
+      "elpd_diff": 0.7623403524727337,
+      "dse": 1.20541916338554,
+      "dse_clustered": 1.4593018543978753,
+      "weight": 0.1989623010937051,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2250,
+      "not_converged": false
+    },
+    "round_landmark_interval_prior": {
+      "rank": 2,
+      "elpd_loo": -778.5148904187415,
+      "elpd_diff": 0.8513204820596911,
+      "dse": 1.0427432828591243,
+      "dse_clustered": 1.2625456366016807,
+      "weight": 0.18202339730791717,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2250,
+      "not_converged": false
+    },
+    "criterion_shifted_tempered_decision": {
+      "rank": 3,
+      "elpd_loo": -778.8379398890827,
+      "elpd_diff": 1.1743699524008662,
+      "dse": 1.031472193841698,
+      "dse_clustered": 1.2282234662871547,
+      "weight": 0.1317736614849152,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2250,
+      "not_converged": false
+    },
+    "stochastic_example_forgetting": {
+      "rank": 4,
+      "elpd_loo": -779.6426497653111,
+      "elpd_diff": 1.9790798286293239,
+      "dse": 1.5882783072528606,
+      "dse_clustered": 1.7605303613395489,
+      "weight": 0.05893150803985466,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2250,
+      "not_converged": false
+    },
+    "redundant_examples_decision_gain": {
+      "rank": 5,
+      "elpd_loo": -783.7327756915108,
+      "elpd_diff": 6.0692057548289995,
+      "dse": 4.665294800744699,
+      "dse_clustered": 4.999959147220966,
+      "weight": 0.0009863440626583578,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2250,
+      "not_converged": false
+    },
+    "win_stay_lose_shift_criterion_shift": {
+      "rank": 6,
+      "elpd_loo": -784.4308147265555,
+      "elpd_diff": 6.767244789873644,
+      "dse": 5.906309416459564,
+      "dse_clustered": 7.757987041555096,
+      "weight": 0.0004907653967683048,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2250,
+      "not_converged": false
+    },
+    "split_rule_range_tempering": {
+      "rank": 7,
+      "elpd_loo": -784.638249785339,
+      "elpd_diff": 6.974679848657161,
+      "dse": 3.9999520982339867,
+      "dse_clustered": 4.914019028111839,
+      "weight": 0.00039882835957580793,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2250,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "criterion_shifted_redundant_examples"
+}

@@ -1,0 +1,15 @@
+- [Volatile model speed](volatile-model-speed.md) — keeping sequential concept models under the fit time limit; prefer non-volatile base on final repair
+- [MAP screening](map-screening-refinements.md) — 1-min find_MAP screen for incumbent refinements; what gained/failed
+- [Slow-fit diagnosis](slow-fit-diagnosis.md) — Hessian/steps-per-iter diagnosis; prior-only params cause timeouts; centre-weighted ranges = null
+- [Adaptive breadth criterion](adaptive-breadth-criterion.md) — decision criterion tied to expected concept size; +2.2 nats MAP
+- [Decade range extent](decade-boundary-range-extent.md) — decade-crossing range-size penalty gains ~0.4 nats at MAP; LogNormal priors fixed its R-hat failure
+- [Decade/recency screen](decade-and-recency-screen.md) — decade-aligned interval prior null; recency on conservative base +0.5 nats
+- [Incumbent saturation screens](incumbent-saturation-screens.md) — iter_3: decade boost/check lapse null; free rule-weight spread +3.4 nats; fixed-spread repair + LogNormal size_inflation fixes mixing
+- [Order effects null](order-effects-null.md) — surprise weighting and first-example family belief both ~null at MAP; order-blind fits best
+- [Size inflation softplus](size-inflation-softplus.md) — size_inflation limits ESS; softplus(Normal) param fixes convergence
+- [Uneven familiarity graft](uneven-familiarity-graft.md) — iter_4: familiarity prior on conservative base ties incumbent at MAP; update_rate→0.975
+- [Pattern-gated rule share](pattern-gated-rule-share.md) — rule share rising with log set size +1.8 nats MAP; singleton shift null
+- [Iter4 incumbent screens](iter4-incumbent-refinement-screens.md) — singleton critique nulls; breadth-criterion graft +1.9 nats on uneven familiarity base
+- [Concept-space additions null](concept-space-additions-null.md) — iter_4: off-by-one rules, big multiples, digit sums all lose at MAP
+- [Exemplar/prototype screen](exemplar-prototype-screen.md) — iter_4: exemplar/prototype replacements of intervals lose 120-195 nats at MAP
+- [Iter4 exploratory screens](iter4-exploratory-screens.md) — Gaussian clusters -115, graded edges null/slow, best-explanation power β≈1.3 tied

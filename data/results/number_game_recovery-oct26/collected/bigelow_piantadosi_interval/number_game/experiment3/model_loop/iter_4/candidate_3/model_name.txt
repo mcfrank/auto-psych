@@ -1,0 +1,1 @@
+pattern_gated_rule_share

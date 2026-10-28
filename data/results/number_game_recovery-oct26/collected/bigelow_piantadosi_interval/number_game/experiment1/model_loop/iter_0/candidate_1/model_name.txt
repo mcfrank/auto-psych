@@ -1,0 +1,1 @@
+log_magnitude_exemplar_similarity

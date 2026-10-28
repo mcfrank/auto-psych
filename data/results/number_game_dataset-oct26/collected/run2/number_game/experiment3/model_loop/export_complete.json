@@ -1,0 +1,12 @@
+{
+  "models": [
+    "leading_digit_string_similarity",
+    "even_number_rule_abstraction",
+    "round_base_multiples_prior",
+    "relational_analogy_transfer",
+    "leading_digit_even_rule_similarity",
+    "range_inference_leading_digit",
+    "trivial_small_number_avoidance"
+  ],
+  "ledger_sha256": "9bf303100c67172f553452e8ff5a9c7e2fa0d29bd3982dc4fb8144fb068309a6"
+}

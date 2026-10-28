@@ -1,0 +1,2242 @@
+[
+  {
+    "number_set": "67,31,17,61",
+    "target": "1",
+    "eig": 0.458472,
+    "selection_rank": 1,
+    "joint_eig_bits": 0.877446,
+    "source": "eig"
+  },
+  {
+    "number_set": "3,7",
+    "target": "4",
+    "eig": 0.012283,
+    "selection_rank": 2,
+    "joint_eig_bits": 0.963658,
+    "source": "eig"
+  },
+  {
+    "number_set": "83,77",
+    "target": "23",
+    "eig": 0.010828,
+    "selection_rank": 3,
+    "joint_eig_bits": 1.022809,
+    "source": "eig"
+  },
+  {
+    "number_set": "85,19,91",
+    "target": "19",
+    "eig": 0.018259,
+    "selection_rank": 4,
+    "joint_eig_bits": 1.068366,
+    "source": "eig"
+  },
+  {
+    "number_set": "15,11",
+    "target": "41",
+    "eig": 0.079398,
+    "selection_rank": 5,
+    "joint_eig_bits": 1.10436,
+    "source": "eig"
+  },
+  {
+    "number_set": "92,82,27,42",
+    "target": "21",
+    "eig": 0.516587,
+    "selection_rank": 6,
+    "joint_eig_bits": 1.137822,
+    "source": "eig"
+  },
+  {
+    "number_set": "100",
+    "target": "10",
+    "eig": 0.00276,
+    "selection_rank": 7,
+    "joint_eig_bits": 1.164305,
+    "source": "eig"
+  },
+  {
+    "number_set": "3,7",
+    "target": "6",
+    "eig": 0.011856,
+    "selection_rank": 8,
+    "joint_eig_bits": 1.183515,
+    "source": "eig"
+  },
+  {
+    "number_set": "98,83",
+    "target": "28",
+    "eig": 0.139995,
+    "selection_rank": 9,
+    "joint_eig_bits": 1.209339,
+    "source": "eig"
+  },
+  {
+    "number_set": "31,3,1,15",
+    "target": "91",
+    "eig": 0.010182,
+    "selection_rank": 10,
+    "joint_eig_bits": 1.226175,
+    "source": "eig"
+  },
+  {
+    "number_set": "79,59",
+    "target": "60",
+    "eig": 0.012585,
+    "selection_rank": 11,
+    "joint_eig_bits": 1.245525,
+    "source": "eig"
+  },
+  {
+    "number_set": "5,9",
+    "target": "8",
+    "eig": 0.017186,
+    "selection_rank": 12,
+    "joint_eig_bits": 1.261829,
+    "source": "eig"
+  },
+  {
+    "number_set": "37,57",
+    "target": "51",
+    "eig": 0.01641,
+    "selection_rank": 13,
+    "joint_eig_bits": 1.27501,
+    "source": "eig"
+  },
+  {
+    "number_set": "100",
+    "target": "81",
+    "eig": 0.006794,
+    "selection_rank": 14,
+    "joint_eig_bits": 1.290887,
+    "source": "eig"
+  },
+  {
+    "number_set": "91",
+    "target": "88",
+    "eig": 0.001355,
+    "selection_rank": 15,
+    "joint_eig_bits": 1.305082,
+    "source": "eig"
+  },
+  {
+    "number_set": "83,77",
+    "target": "47",
+    "eig": 0.025317,
+    "selection_rank": 16,
+    "joint_eig_bits": 1.319617,
+    "source": "eig"
+  },
+  {
+    "number_set": "5,51",
+    "target": "95",
+    "eig": 0.053448,
+    "selection_rank": 17,
+    "joint_eig_bits": 1.332897,
+    "source": "eig"
+  },
+  {
+    "number_set": "78,48,88",
+    "target": "80",
+    "eig": 0.058938,
+    "selection_rank": 18,
+    "joint_eig_bits": 1.341426,
+    "source": "eig"
+  },
+  {
+    "number_set": "3,33,99",
+    "target": "88",
+    "eig": 0.000201,
+    "selection_rank": 19,
+    "joint_eig_bits": 1.352786,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,64",
+    "target": "27",
+    "eig": 0.000718,
+    "selection_rank": 20,
+    "joint_eig_bits": 1.362627,
+    "source": "eig"
+  },
+  {
+    "number_set": "73,33",
+    "target": "34",
+    "eig": 0.077925,
+    "selection_rank": 21,
+    "joint_eig_bits": 1.369862,
+    "source": "eig"
+  },
+  {
+    "number_set": "81,9",
+    "target": "27",
+    "eig": 0.005633,
+    "selection_rank": 22,
+    "joint_eig_bits": 1.370884,
+    "source": "eig"
+  },
+  {
+    "number_set": "62,32,22",
+    "target": "28",
+    "eig": 0.061339,
+    "selection_rank": 23,
+    "joint_eig_bits": 1.383667,
+    "source": "eig"
+  },
+  {
+    "number_set": "28,98",
+    "target": "84",
+    "eig": 0.014196,
+    "selection_rank": 24,
+    "joint_eig_bits": 1.392829,
+    "source": "eig"
+  },
+  {
+    "number_set": "83,38,58,68",
+    "target": "89",
+    "eig": 0.465587,
+    "selection_rank": 25,
+    "joint_eig_bits": 0.946676,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "92,82,27,42",
+    "target": "23",
+    "eig": 0.516774,
+    "selection_rank": 26,
+    "joint_eig_bits": 0.973252,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "5,9",
+    "target": "6",
+    "eig": 0.01686,
+    "selection_rank": 27,
+    "joint_eig_bits": 0.986752,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "15,17,21,5",
+    "target": "51",
+    "eig": 0.0254,
+    "selection_rank": 28,
+    "joint_eig_bits": 0.9974,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "83,77",
+    "target": "82",
+    "eig": 0.00676,
+    "selection_rank": 29,
+    "joint_eig_bits": 1.006519,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "83,38,58,68",
+    "target": "87",
+    "eig": 0.457981,
+    "selection_rank": 30,
+    "joint_eig_bits": 1.008581,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "98,83",
+    "target": "38",
+    "eig": 0.185505,
+    "selection_rank": 31,
+    "joint_eig_bits": 1.01677,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "10,3",
+    "target": "4",
+    "eig": 0.010344,
+    "selection_rank": 32,
+    "joint_eig_bits": 1.021381,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "83,77",
+    "target": "80",
+    "eig": 0.006628,
+    "selection_rank": 33,
+    "joint_eig_bits": 1.028055,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "10,3",
+    "target": "8",
+    "eig": 0.010296,
+    "selection_rank": 34,
+    "joint_eig_bits": 1.03388,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "98,83",
+    "target": "18",
+    "eig": 0.166579,
+    "selection_rank": 35,
+    "joint_eig_bits": 1.040737,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "92,14,20,5",
+    "target": "52",
+    "eig": 0.018979,
+    "selection_rank": 36,
+    "joint_eig_bits": 1.048358,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "83,77",
+    "target": "37",
+    "eig": 0.021017,
+    "selection_rank": 37,
+    "joint_eig_bits": 1.05466,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "92,82,27,42",
+    "target": "20",
+    "eig": 0.502384,
+    "selection_rank": 38,
+    "joint_eig_bits": 1.063618,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "15,17,21,5",
+    "target": "41",
+    "eig": 0.027847,
+    "selection_rank": 39,
+    "joint_eig_bits": 1.067078,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "1",
+    "target": "64",
+    "eig": 0.009258,
+    "selection_rank": 40,
+    "joint_eig_bits": 1.074681,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "10,3",
+    "target": "7",
+    "eig": 0.009895,
+    "selection_rank": 41,
+    "joint_eig_bits": 1.076428,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "85,19,91",
+    "target": "86",
+    "eig": 0.002127,
+    "selection_rank": 42,
+    "joint_eig_bits": 1.080224,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "1",
+    "target": "81",
+    "eig": 0.002742,
+    "selection_rank": 43,
+    "joint_eig_bits": 1.088062,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "10,3",
+    "target": "6",
+    "eig": 0.00973,
+    "selection_rank": 44,
+    "joint_eig_bits": 1.091766,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "92,14,20,5",
+    "target": "62",
+    "eig": 0.017823,
+    "selection_rank": 45,
+    "joint_eig_bits": 1.097241,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "85,19,91",
+    "target": "88",
+    "eig": 0.002201,
+    "selection_rank": 46,
+    "joint_eig_bits": 1.102041,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "98,83",
+    "target": "8",
+    "eig": 0.160754,
+    "selection_rank": 47,
+    "joint_eig_bits": 1.104993,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "92,14,20,5",
+    "target": "42",
+    "eig": 0.025579,
+    "selection_rank": 48,
+    "joint_eig_bits": 1.107368,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "3,7",
+    "target": "37",
+    "eig": 0.010631,
+    "selection_rank": 49,
+    "joint_eig_bits": 1.112005,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "82,67,72",
+    "target": "69",
+    "eig": 0.006365,
+    "selection_rank": 50,
+    "joint_eig_bits": 1.111487,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "66,78",
+    "target": "73",
+    "eig": 0.01575,
+    "selection_rank": 51,
+    "joint_eig_bits": 1.1189,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "15,11",
+    "target": "51",
+    "eig": 0.079989,
+    "selection_rank": 52,
+    "joint_eig_bits": 1.123396,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "94,70",
+    "target": "83",
+    "eig": 0.029747,
+    "selection_rank": 53,
+    "joint_eig_bits": 1.126365,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "14,47",
+    "target": "94",
+    "eig": 0.111768,
+    "selection_rank": 54,
+    "joint_eig_bits": 1.131329,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "83,77",
+    "target": "33",
+    "eig": 0.015707,
+    "selection_rank": 55,
+    "joint_eig_bits": 1.133019,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "4,16,12",
+    "target": "64",
+    "eig": 0.000841,
+    "selection_rank": 56,
+    "joint_eig_bits": 1.135084,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "31,19,49,100",
+    "target": "30",
+    "eig": 1.6e-05,
+    "selection_rank": 57,
+    "joint_eig_bits": 1.13747,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "92,82,27,42",
+    "target": "25",
+    "eig": 0.514152,
+    "selection_rank": 58,
+    "joint_eig_bits": 1.140112,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "16,26,96",
+    "target": "69",
+    "eig": 0.075291,
+    "selection_rank": 59,
+    "joint_eig_bits": 1.142199,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "66,78",
+    "target": "67",
+    "eig": 0.015811,
+    "selection_rank": 60,
+    "joint_eig_bits": 1.146805,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "3,7",
+    "target": "43",
+    "eig": 0.008886,
+    "selection_rank": 61,
+    "joint_eig_bits": 1.148435,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "10,3",
+    "target": "5",
+    "eig": 0.009378,
+    "selection_rank": 62,
+    "joint_eig_bits": 1.150527,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "98,83",
+    "target": "90",
+    "eig": 0.027443,
+    "selection_rank": 63,
+    "joint_eig_bits": 1.152122,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "46,76,66",
+    "target": "67",
+    "eig": 0.06657,
+    "selection_rank": 64,
+    "joint_eig_bits": 1.157354,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "5,9",
+    "target": "7",
+    "eig": 0.012372,
+    "selection_rank": 65,
+    "joint_eig_bits": 1.161279,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "5,77,89",
+    "target": "82",
+    "eig": 0.010029,
+    "selection_rank": 66,
+    "joint_eig_bits": 1.16405,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "94,70",
+    "target": "93",
+    "eig": 0.019495,
+    "selection_rank": 67,
+    "joint_eig_bits": 1.166186,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "68,58",
+    "target": "59",
+    "eig": 0.004606,
+    "selection_rank": 68,
+    "joint_eig_bits": 1.170965,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "94,70",
+    "target": "81",
+    "eig": 0.030025,
+    "selection_rank": 69,
+    "joint_eig_bits": 1.172158,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "15,17,21,5",
+    "target": "61",
+    "eig": 0.022416,
+    "selection_rank": 70,
+    "joint_eig_bits": 1.174364,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "7,63",
+    "target": "98",
+    "eig": 0.00584,
+    "selection_rank": 71,
+    "joint_eig_bits": 1.17759,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "89",
+    "target": "29",
+    "eig": 0.004356,
+    "selection_rank": 72,
+    "joint_eig_bits": 1.179725,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "4,16,12",
+    "target": "13",
+    "eig": 0.000727,
+    "selection_rank": 73,
+    "joint_eig_bits": 1.182905,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "89",
+    "target": "19",
+    "eig": 0.002856,
+    "selection_rank": 74,
+    "joint_eig_bits": 1.184946,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "83,77",
+    "target": "43",
+    "eig": 0.022123,
+    "selection_rank": 75,
+    "joint_eig_bits": 1.186791,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "70",
+    "eig": 0.028551,
+    "selection_rank": 76,
+    "joint_eig_bits": 1.188803,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "98,83",
+    "target": "95",
+    "eig": 0.027134,
+    "selection_rank": 77,
+    "joint_eig_bits": 1.191067,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "34,86,30,94",
+    "target": "2",
+    "eig": 0.028238,
+    "selection_rank": 78,
+    "joint_eig_bits": 1.192882,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "66,78",
+    "target": "71",
+    "eig": 0.015899,
+    "selection_rank": 79,
+    "joint_eig_bits": 1.19603,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "94,70",
+    "target": "20",
+    "eig": 0.003074,
+    "selection_rank": 80,
+    "joint_eig_bits": 1.197906,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "94,70",
+    "target": "30",
+    "eig": 0.002083,
+    "selection_rank": 81,
+    "joint_eig_bits": 1.199756,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "4,16,12",
+    "target": "15",
+    "eig": 0.000726,
+    "selection_rank": 82,
+    "joint_eig_bits": 1.201335,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "78,48,88",
+    "target": "84",
+    "eig": 0.059491,
+    "selection_rank": 83,
+    "joint_eig_bits": 1.206247,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "3,7",
+    "target": "8",
+    "eig": 0.005827,
+    "selection_rank": 84,
+    "joint_eig_bits": 1.207689,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "1",
+    "target": "27",
+    "eig": 0.005167,
+    "selection_rank": 85,
+    "joint_eig_bits": 1.209489,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "16,26,96",
+    "target": "67",
+    "eig": 0.07532,
+    "selection_rank": 86,
+    "joint_eig_bits": 1.210885,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "81,9",
+    "target": "3",
+    "eig": 0.004324,
+    "selection_rank": 87,
+    "joint_eig_bits": 1.213299,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "3,7",
+    "target": "53",
+    "eig": 0.00785,
+    "selection_rank": 88,
+    "joint_eig_bits": 1.214705,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "81,25",
+    "target": "100",
+    "eig": 0.008632,
+    "selection_rank": 89,
+    "joint_eig_bits": 1.217653,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "63,27,99,33",
+    "target": "33",
+    "eig": 0.000285,
+    "selection_rank": 90,
+    "joint_eig_bits": 1.21711,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "4,16,12",
+    "target": "11",
+    "eig": 0.000725,
+    "selection_rank": 91,
+    "joint_eig_bits": 1.2193,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "63,27,99,33",
+    "target": "39",
+    "eig": 0.000262,
+    "selection_rank": 92,
+    "joint_eig_bits": 1.221724,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "1",
+    "target": "100",
+    "eig": 0.003902,
+    "selection_rank": 93,
+    "joint_eig_bits": 1.224945,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "3,7",
+    "target": "73",
+    "eig": 0.007174,
+    "selection_rank": 94,
+    "joint_eig_bits": 1.228752,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "67,31,17,61",
+    "target": "57",
+    "eig": 0.020347,
+    "selection_rank": 95,
+    "joint_eig_bits": 1.230326,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "96,48",
+    "target": "56",
+    "eig": 0.001309,
+    "selection_rank": 96,
+    "joint_eig_bits": 1.233432,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "81,25",
+    "target": "4",
+    "eig": 0.008135,
+    "selection_rank": 97,
+    "joint_eig_bits": 1.23742,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "66,78",
+    "target": "6",
+    "eig": 0.009686,
+    "selection_rank": 98,
+    "joint_eig_bits": 1.238617,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "66,78",
+    "target": "77",
+    "eig": 0.013894,
+    "selection_rank": 99,
+    "joint_eig_bits": 1.24131,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "67,31,17,61",
+    "target": "63",
+    "eig": 0.019749,
+    "selection_rank": 100,
+    "joint_eig_bits": 1.242261,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "37,57",
+    "target": "97",
+    "eig": 0.00995,
+    "selection_rank": 101,
+    "joint_eig_bits": 1.243046,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "67,31,17,61",
+    "target": "65",
+    "eig": 0.019547,
+    "selection_rank": 102,
+    "joint_eig_bits": 1.246232,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "96,48",
+    "target": "40",
+    "eig": 0.001048,
+    "selection_rank": 103,
+    "joint_eig_bits": 1.245363,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "98,83",
+    "target": "48",
+    "eig": 0.177746,
+    "selection_rank": 104,
+    "joint_eig_bits": 1.247149,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "10,50,100",
+    "target": "90",
+    "eig": 0.000899,
+    "selection_rank": 105,
+    "joint_eig_bits": 1.250883,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "20,32,92",
+    "target": "82",
+    "eig": 0.142093,
+    "selection_rank": 106,
+    "joint_eig_bits": 1.253573,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "96,48",
+    "target": "64",
+    "eig": 0.001407,
+    "selection_rank": 107,
+    "joint_eig_bits": 1.254883,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "81,25",
+    "target": "1",
+    "eig": 0.008279,
+    "selection_rank": 108,
+    "joint_eig_bits": 1.257925,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "31,19,49,100",
+    "target": "32",
+    "eig": 6e-06,
+    "selection_rank": 109,
+    "joint_eig_bits": 1.262004,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "89",
+    "target": "88",
+    "eig": 0.001637,
+    "selection_rank": 110,
+    "joint_eig_bits": 1.263186,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "14,47",
+    "target": "84",
+    "eig": 0.091064,
+    "selection_rank": 111,
+    "joint_eig_bits": 1.263961,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "20,32,92",
+    "target": "22",
+    "eig": 0.128715,
+    "selection_rank": 112,
+    "joint_eig_bits": 1.264565,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "1",
+    "target": "8",
+    "eig": 0.008015,
+    "selection_rank": 113,
+    "joint_eig_bits": 1.268348,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "83,77",
+    "target": "53",
+    "eig": 0.029194,
+    "selection_rank": 114,
+    "joint_eig_bits": 1.272302,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "89",
+    "target": "39",
+    "eig": 0.009068,
+    "selection_rank": 115,
+    "joint_eig_bits": 1.276165,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "15,85,45",
+    "target": "52",
+    "eig": 0.056162,
+    "selection_rank": 116,
+    "joint_eig_bits": 1.2776,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "66,78",
+    "target": "18",
+    "eig": 0.005991,
+    "selection_rank": 117,
+    "joint_eig_bits": 1.280169,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "69",
+    "eig": 0.028372,
+    "selection_rank": 118,
+    "joint_eig_bits": 1.280564,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "66,78",
+    "target": "12",
+    "eig": 0.008121,
+    "selection_rank": 119,
+    "joint_eig_bits": 1.282333,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "66,78",
+    "target": "24",
+    "eig": 0.004611,
+    "selection_rank": 120,
+    "joint_eig_bits": 1.284339,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "83,77",
+    "target": "55",
+    "eig": 0.028106,
+    "selection_rank": 121,
+    "joint_eig_bits": 1.286864,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "5,9",
+    "target": "81",
+    "eig": 0.011086,
+    "selection_rank": 122,
+    "joint_eig_bits": 1.287744,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "38,18,3",
+    "target": "98",
+    "eig": 0.021768,
+    "selection_rank": 123,
+    "joint_eig_bits": 1.289038,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "15,85,45",
+    "target": "50",
+    "eig": 0.02733,
+    "selection_rank": 124,
+    "joint_eig_bits": 1.292481,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "1",
+    "target": "61",
+    "eig": 0.011451,
+    "selection_rank": 125,
+    "joint_eig_bits": 1.293529,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "20,32,92",
+    "target": "62",
+    "eig": 0.144553,
+    "selection_rank": 126,
+    "joint_eig_bits": 1.29523,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "46,76,66",
+    "target": "64",
+    "eig": 0.064519,
+    "selection_rank": 127,
+    "joint_eig_bits": 1.295209,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "46,76,66",
+    "target": "68",
+    "eig": 0.063542,
+    "selection_rank": 128,
+    "joint_eig_bits": 1.297898,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "46,76,66",
+    "target": "62",
+    "eig": 0.065242,
+    "selection_rank": 129,
+    "joint_eig_bits": 1.303156,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "10,3",
+    "target": "9",
+    "eig": 0.007759,
+    "selection_rank": 130,
+    "joint_eig_bits": 1.306757,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "79,59",
+    "target": "61",
+    "eig": 0.005192,
+    "selection_rank": 131,
+    "joint_eig_bits": 1.307611,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "69,19,85",
+    "target": "71",
+    "eig": 0.002879,
+    "selection_rank": 132,
+    "joint_eig_bits": 1.306101,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "28,98",
+    "target": "8",
+    "eig": 0.000293,
+    "selection_rank": 133,
+    "joint_eig_bits": 1.305246,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "20,32,92",
+    "target": "42",
+    "eig": 0.143049,
+    "selection_rank": 134,
+    "joint_eig_bits": 1.306233,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "20,32,92",
+    "target": "2",
+    "eig": 0.132785,
+    "selection_rank": 135,
+    "joint_eig_bits": 1.309057,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "7,67",
+    "target": "70",
+    "eig": 0.054951,
+    "selection_rank": 136,
+    "joint_eig_bits": 1.310642,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "1",
+    "target": "16",
+    "eig": 0.005302,
+    "selection_rank": 137,
+    "joint_eig_bits": 1.310963,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "59,89,79",
+    "target": "97",
+    "eig": 0.033452,
+    "selection_rank": 138,
+    "joint_eig_bits": 1.311144,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "20,32,92",
+    "target": "16",
+    "eig": 0.157871,
+    "selection_rank": 139,
+    "joint_eig_bits": 1.311684,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "20,32,92",
+    "target": "36",
+    "eig": 0.153959,
+    "selection_rank": 140,
+    "joint_eig_bits": 1.312552,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "29,9,3,31",
+    "target": "81",
+    "eig": 0.009145,
+    "selection_rank": 141,
+    "joint_eig_bits": 1.31292,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "69,19,85",
+    "target": "73",
+    "eig": 0.002703,
+    "selection_rank": 142,
+    "joint_eig_bits": 1.315548,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "59,49,99,69",
+    "target": "90",
+    "eig": 0.048361,
+    "selection_rank": 143,
+    "joint_eig_bits": 1.317176,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "18,8,72,98",
+    "target": "80",
+    "eig": 0.023503,
+    "selection_rank": 144,
+    "joint_eig_bits": 1.314608,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "18,8,72,98",
+    "target": "84",
+    "eig": 0.023316,
+    "selection_rank": 145,
+    "joint_eig_bits": 1.316859,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "7,67",
+    "target": "78",
+    "eig": 0.066136,
+    "selection_rank": 146,
+    "joint_eig_bits": 1.318851,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "18,8,72,98",
+    "target": "82",
+    "eig": 0.023705,
+    "selection_rank": 147,
+    "joint_eig_bits": 1.32069,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "18,8,72,98",
+    "target": "86",
+    "eig": 0.023493,
+    "selection_rank": 148,
+    "joint_eig_bits": 1.321035,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "31,3,1",
+    "target": "21",
+    "eig": 0.090433,
+    "selection_rank": 149,
+    "joint_eig_bits": 1.322323,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "28,98",
+    "target": "78",
+    "eig": 0.000543,
+    "selection_rank": 150,
+    "joint_eig_bits": 1.322359,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "1",
+    "target": "51",
+    "eig": 0.003883,
+    "selection_rank": 151,
+    "joint_eig_bits": 1.325646,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "100",
+    "target": "1",
+    "eig": 0.005177,
+    "selection_rank": 152,
+    "joint_eig_bits": 1.325892,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "96,48",
+    "target": "32",
+    "eig": 0.000733,
+    "selection_rank": 153,
+    "joint_eig_bits": 1.329,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "28,98",
+    "target": "88",
+    "eig": 0.000431,
+    "selection_rank": 154,
+    "joint_eig_bits": 1.328713,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "4,66,78,96",
+    "target": "2",
+    "eig": 0.0,
+    "selection_rank": 155,
+    "joint_eig_bits": 1.332596,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "68,14,8,26",
+    "target": "100",
+    "eig": 0.030505,
+    "selection_rank": 156,
+    "joint_eig_bits": 1.334403,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "63,27,99,33",
+    "target": "51",
+    "eig": 0.000202,
+    "selection_rank": 157,
+    "joint_eig_bits": 1.333806,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "63,27,99,33",
+    "target": "57",
+    "eig": 0.000194,
+    "selection_rank": 158,
+    "joint_eig_bits": 1.336411,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "3,7",
+    "target": "23",
+    "eig": 0.010267,
+    "selection_rank": 159,
+    "joint_eig_bits": 1.335356,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "3,7",
+    "target": "47",
+    "eig": 0.008137,
+    "selection_rank": 160,
+    "joint_eig_bits": 1.338222,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "28,98",
+    "target": "68",
+    "eig": 0.000629,
+    "selection_rank": 161,
+    "joint_eig_bits": 1.33935,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "29,9,3,31",
+    "target": "30",
+    "eig": 0.021356,
+    "selection_rank": 162,
+    "joint_eig_bits": 1.339704,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "29,9,3,31",
+    "target": "28",
+    "eig": 0.023137,
+    "selection_rank": 163,
+    "joint_eig_bits": 1.340829,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "3,7",
+    "target": "41",
+    "eig": 0.007037,
+    "selection_rank": 164,
+    "joint_eig_bits": 1.341262,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "63,27,99,33",
+    "target": "69",
+    "eig": 7e-05,
+    "selection_rank": 165,
+    "joint_eig_bits": 1.342893,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "28,98",
+    "target": "58",
+    "eig": 0.000733,
+    "selection_rank": 166,
+    "joint_eig_bits": 1.345621,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "29,9,3,31",
+    "target": "26",
+    "eig": 0.026246,
+    "selection_rank": 167,
+    "joint_eig_bits": 1.346575,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "3,7",
+    "target": "83",
+    "eig": 0.005364,
+    "selection_rank": 168,
+    "joint_eig_bits": 1.348024,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "23,35,95,83",
+    "target": "3",
+    "eig": 0.004108,
+    "selection_rank": 169,
+    "joint_eig_bits": 1.348142,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "5,77,89",
+    "target": "5",
+    "eig": 0.003413,
+    "selection_rank": 170,
+    "joint_eig_bits": 1.350336,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "5,77,89",
+    "target": "80",
+    "eig": 0.009978,
+    "selection_rank": 171,
+    "joint_eig_bits": 1.3541,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "78,48,88",
+    "target": "82",
+    "eig": 0.062703,
+    "selection_rank": 172,
+    "joint_eig_bits": 1.356184,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "3,7",
+    "target": "31",
+    "eig": 0.009259,
+    "selection_rank": 173,
+    "joint_eig_bits": 1.35614,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "64,44",
+    "target": "50",
+    "eig": 0.015301,
+    "selection_rank": 174,
+    "joint_eig_bits": 1.358962,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "64,44",
+    "target": "58",
+    "eig": 0.015226,
+    "selection_rank": 175,
+    "joint_eig_bits": 1.360061,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "59,89,79",
+    "target": "90",
+    "eig": 0.05944,
+    "selection_rank": 176,
+    "joint_eig_bits": 1.361852,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "52,22,94",
+    "target": "30",
+    "eig": 0.001625,
+    "selection_rank": 177,
+    "joint_eig_bits": 1.362734,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "52,22,94",
+    "target": "36",
+    "eig": 0.001872,
+    "selection_rank": 178,
+    "joint_eig_bits": 1.361644,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "98,54,18",
+    "target": "42",
+    "eig": 0.000487,
+    "selection_rank": 179,
+    "joint_eig_bits": 1.360915,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "98,18,50",
+    "target": "46",
+    "eig": 0.000531,
+    "selection_rank": 180,
+    "joint_eig_bits": 1.362372,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "52,22,94",
+    "target": "38",
+    "eig": 0.001977,
+    "selection_rank": 181,
+    "joint_eig_bits": 1.363801,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "82,67,72",
+    "target": "68",
+    "eig": 0.005931,
+    "selection_rank": 182,
+    "joint_eig_bits": 1.36464,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "52,22,94",
+    "target": "28",
+    "eig": 0.014348,
+    "selection_rank": 183,
+    "joint_eig_bits": 1.365902,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "96,90,6,42",
+    "target": "39",
+    "eig": 0.00308,
+    "selection_rank": 184,
+    "joint_eig_bits": 1.366701,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "8,64",
+    "target": "1",
+    "eig": 0.000595,
+    "selection_rank": 185,
+    "joint_eig_bits": 1.368962,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "63,27,81",
+    "target": "3",
+    "eig": 0.002698,
+    "selection_rank": 186,
+    "joint_eig_bits": 1.371749,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "52,22,94",
+    "target": "40",
+    "eig": 0.002146,
+    "selection_rank": 187,
+    "joint_eig_bits": 1.374108,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "83,77",
+    "target": "35",
+    "eig": 0.01731,
+    "selection_rank": 188,
+    "joint_eig_bits": 1.375313,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "85,19,91",
+    "target": "29",
+    "eig": 0.003613,
+    "selection_rank": 189,
+    "joint_eig_bits": 1.377663,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "59,49,99,69",
+    "target": "92",
+    "eig": 0.048401,
+    "selection_rank": 190,
+    "joint_eig_bits": 1.377828,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "61,9,45",
+    "target": "51",
+    "eig": 0.013275,
+    "selection_rank": 191,
+    "joint_eig_bits": 1.37787,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "15,17,21,5",
+    "target": "71",
+    "eig": 0.020716,
+    "selection_rank": 192,
+    "joint_eig_bits": 1.377918,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "96,86,36,66",
+    "target": "61",
+    "eig": 0.04823,
+    "selection_rank": 193,
+    "joint_eig_bits": 1.3796,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "93",
+    "target": "33",
+    "eig": 0.00412,
+    "selection_rank": 194,
+    "joint_eig_bits": 1.380016,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "84",
+    "target": "83",
+    "eig": 0.00167,
+    "selection_rank": 195,
+    "joint_eig_bits": 1.379873,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "31,19,49,100",
+    "target": "34",
+    "eig": 0.000228,
+    "selection_rank": 196,
+    "joint_eig_bits": 1.380207,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "27,37,67",
+    "target": "70",
+    "eig": 0.06582,
+    "selection_rank": 197,
+    "joint_eig_bits": 1.379185,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "83,38,58,68",
+    "target": "86",
+    "eig": 0.443414,
+    "selection_rank": 198,
+    "joint_eig_bits": 1.379898,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "85",
+    "target": "25",
+    "eig": 0.002807,
+    "selection_rank": 199,
+    "joint_eig_bits": 1.380646,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "83,38,58,68",
+    "target": "85",
+    "eig": 0.449017,
+    "selection_rank": 200,
+    "joint_eig_bits": 1.379696,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "43,4,91,9",
+    "target": "100",
+    "eig": 0.008485,
+    "selection_rank": 201,
+    "joint_eig_bits": 1.382937,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "18,45,72",
+    "target": "24",
+    "eig": 0.006506,
+    "selection_rank": 202,
+    "joint_eig_bits": 1.381624,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "7,67",
+    "target": "71",
+    "eig": 0.025893,
+    "selection_rank": 203,
+    "joint_eig_bits": 1.383367,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "81,25",
+    "target": "16",
+    "eig": 0.003287,
+    "selection_rank": 204,
+    "joint_eig_bits": 1.382573,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "81,25",
+    "target": "9",
+    "eig": 0.005865,
+    "selection_rank": 205,
+    "joint_eig_bits": 1.381822,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "67",
+    "eig": 0.02844,
+    "selection_rank": 206,
+    "joint_eig_bits": 1.382291,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "66",
+    "eig": 0.029957,
+    "selection_rank": 207,
+    "joint_eig_bits": 1.382814,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "90,45",
+    "target": "15",
+    "eig": 0.001178,
+    "selection_rank": 208,
+    "joint_eig_bits": 1.380941,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "90,45",
+    "target": "75",
+    "eig": 0.006285,
+    "selection_rank": 209,
+    "joint_eig_bits": 1.380507,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "90,45",
+    "target": "100",
+    "eig": 0.000175,
+    "selection_rank": 210,
+    "joint_eig_bits": 1.380362,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "90,45",
+    "target": "5",
+    "eig": 0.000332,
+    "selection_rank": 211,
+    "joint_eig_bits": 1.383763,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "81,25",
+    "target": "80",
+    "eig": 0.011179,
+    "selection_rank": 212,
+    "joint_eig_bits": 1.383495,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "100",
+    "target": "9",
+    "eig": 0.000993,
+    "selection_rank": 213,
+    "joint_eig_bits": 1.385869,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "33,3,65",
+    "target": "93",
+    "eig": 0.011463,
+    "selection_rank": 214,
+    "joint_eig_bits": 1.387617,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "48,30,78",
+    "target": "45",
+    "eig": 0.012994,
+    "selection_rank": 215,
+    "joint_eig_bits": 1.38962,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "33,17,5,9",
+    "target": "81",
+    "eig": 0.019266,
+    "selection_rank": 216,
+    "joint_eig_bits": 1.39076,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "13",
+    "target": "93",
+    "eig": 0.002457,
+    "selection_rank": 217,
+    "joint_eig_bits": 1.390388,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "98,24,30,3",
+    "target": "26",
+    "eig": 0.004584,
+    "selection_rank": 218,
+    "joint_eig_bits": 1.391401,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "18,45,72",
+    "target": "48",
+    "eig": 0.007088,
+    "selection_rank": 219,
+    "joint_eig_bits": 1.39092,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "3,33,99",
+    "target": "22",
+    "eig": 0.000258,
+    "selection_rank": 220,
+    "joint_eig_bits": 1.390774,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "59,89,79",
+    "target": "9",
+    "eig": 0.002318,
+    "selection_rank": 221,
+    "joint_eig_bits": 1.39353,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "7,67",
+    "target": "73",
+    "eig": 0.02618,
+    "selection_rank": 222,
+    "joint_eig_bits": 1.394471,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "8,80,48",
+    "target": "68",
+    "eig": 0.042509,
+    "selection_rank": 223,
+    "joint_eig_bits": 1.397296,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "7,67",
+    "target": "79",
+    "eig": 0.025836,
+    "selection_rank": 224,
+    "joint_eig_bits": 1.396337,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "43,4,91,9",
+    "target": "8",
+    "eig": 0.005348,
+    "selection_rank": 225,
+    "joint_eig_bits": 1.398104,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "43,4,91,9",
+    "target": "10",
+    "eig": 0.011333,
+    "selection_rank": 226,
+    "joint_eig_bits": 1.399002,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "82,67,72",
+    "target": "81",
+    "eig": 0.011074,
+    "selection_rank": 227,
+    "joint_eig_bits": 1.400577,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "82,67,72",
+    "target": "80",
+    "eig": 0.010588,
+    "selection_rank": 228,
+    "joint_eig_bits": 1.402437,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "81,25",
+    "target": "30",
+    "eig": 0.013825,
+    "selection_rank": 229,
+    "joint_eig_bits": 1.402208,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "81,25",
+    "target": "26",
+    "eig": 0.012434,
+    "selection_rank": 230,
+    "joint_eig_bits": 1.403139,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "81,25",
+    "target": "78",
+    "eig": 0.013266,
+    "selection_rank": 231,
+    "joint_eig_bits": 1.40376,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "43,4,91,9",
+    "target": "6",
+    "eig": 0.004806,
+    "selection_rank": 232,
+    "joint_eig_bits": 1.40631,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "5,9",
+    "target": "27",
+    "eig": 0.015527,
+    "selection_rank": 233,
+    "joint_eig_bits": 1.406411,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "68,58",
+    "target": "65",
+    "eig": 0.005135,
+    "selection_rank": 234,
+    "joint_eig_bits": 1.406833,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "68,58",
+    "target": "67",
+    "eig": 0.004511,
+    "selection_rank": 235,
+    "joint_eig_bits": 1.407387,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "68,58",
+    "target": "61",
+    "eig": 0.004907,
+    "selection_rank": 236,
+    "joint_eig_bits": 1.408897,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "3,7",
+    "target": "29",
+    "eig": 0.008061,
+    "selection_rank": 237,
+    "joint_eig_bits": 1.409597,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "68,58",
+    "target": "63",
+    "eig": 0.004965,
+    "selection_rank": 238,
+    "joint_eig_bits": 1.410335,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "91",
+    "target": "21",
+    "eig": 0.002107,
+    "selection_rank": 239,
+    "joint_eig_bits": 1.411745,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "38,18,3",
+    "target": "19",
+    "eig": 0.017842,
+    "selection_rank": 240,
+    "joint_eig_bits": 1.411581,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "94,70",
+    "target": "40",
+    "eig": 0.004761,
+    "selection_rank": 241,
+    "joint_eig_bits": 1.413065,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "98,54,18",
+    "target": "80",
+    "eig": 0.006036,
+    "selection_rank": 242,
+    "joint_eig_bits": 1.414863,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "13",
+    "target": "73",
+    "eig": 0.004069,
+    "selection_rank": 243,
+    "joint_eig_bits": 1.414715,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "3,7",
+    "target": "19",
+    "eig": 0.007356,
+    "selection_rank": 244,
+    "joint_eig_bits": 1.414382,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "28,98",
+    "target": "21",
+    "eig": 0.000207,
+    "selection_rank": 245,
+    "joint_eig_bits": 1.415779,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "28,98",
+    "target": "35",
+    "eig": 0.00018,
+    "selection_rank": 246,
+    "joint_eig_bits": 1.414402,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "84,56",
+    "target": "83",
+    "eig": 0.020704,
+    "selection_rank": 247,
+    "joint_eig_bits": 1.41562,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "64,4",
+    "target": "100",
+    "eig": 0.000853,
+    "selection_rank": 248,
+    "joint_eig_bits": 1.415698,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "15,17,21,5",
+    "target": "20",
+    "eig": 0.015353,
+    "selection_rank": 249,
+    "joint_eig_bits": 1.417095,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "13",
+    "target": "14",
+    "eig": 0.001603,
+    "selection_rank": 250,
+    "joint_eig_bits": 1.415294,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "43,4,91,9",
+    "target": "12",
+    "eig": 0.020616,
+    "selection_rank": 251,
+    "joint_eig_bits": 1.415775,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "13",
+    "target": "83",
+    "eig": 0.002466,
+    "selection_rank": 252,
+    "joint_eig_bits": 1.41456,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "28,98",
+    "target": "14",
+    "eig": 0.000334,
+    "selection_rank": 253,
+    "joint_eig_bits": 1.415077,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "83,38,58,68",
+    "target": "80",
+    "eig": 0.428791,
+    "selection_rank": 254,
+    "joint_eig_bits": 1.415058,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "68,58",
+    "target": "8",
+    "eig": 0.002187,
+    "selection_rank": 255,
+    "joint_eig_bits": 1.414065,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "68,58",
+    "target": "98",
+    "eig": 0.002384,
+    "selection_rank": 256,
+    "joint_eig_bits": 1.416002,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "43,4,91,9",
+    "target": "20",
+    "eig": 0.041057,
+    "selection_rank": 257,
+    "joint_eig_bits": 1.416384,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "47,2,74",
+    "target": "53",
+    "eig": 0.012646,
+    "selection_rank": 258,
+    "joint_eig_bits": 1.417426,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "98,24,30,3",
+    "target": "20",
+    "eig": 0.009214,
+    "selection_rank": 259,
+    "joint_eig_bits": 1.418125,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "18",
+    "target": "19",
+    "eig": 0.001839,
+    "selection_rank": 260,
+    "joint_eig_bits": 1.418441,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "5,9",
+    "target": "45",
+    "eig": 0.014229,
+    "selection_rank": 261,
+    "joint_eig_bits": 1.418703,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "5,9",
+    "target": "25",
+    "eig": 0.017773,
+    "selection_rank": 262,
+    "joint_eig_bits": 1.420586,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "12",
+    "target": "13",
+    "eig": 0.000875,
+    "selection_rank": 263,
+    "joint_eig_bits": 1.420653,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "15,17,21,5",
+    "target": "81",
+    "eig": 0.019384,
+    "selection_rank": 264,
+    "joint_eig_bits": 1.42059,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "92,68,20",
+    "target": "82",
+    "eig": 0.020151,
+    "selection_rank": 265,
+    "joint_eig_bits": 1.41813,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "92,68,20",
+    "target": "62",
+    "eig": 0.022178,
+    "selection_rank": 266,
+    "joint_eig_bits": 1.417196,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "92,68,20",
+    "target": "42",
+    "eig": 0.020224,
+    "selection_rank": 267,
+    "joint_eig_bits": 1.419062,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "76,44,8,48",
+    "target": "46",
+    "eig": 0.011394,
+    "selection_rank": 268,
+    "joint_eig_bits": 1.421162,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "96,90,6,42",
+    "target": "3",
+    "eig": 0.002881,
+    "selection_rank": 269,
+    "joint_eig_bits": 1.421212,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "92,68,20",
+    "target": "26",
+    "eig": 0.018851,
+    "selection_rank": 270,
+    "joint_eig_bits": 1.422686,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "94,70",
+    "target": "2",
+    "eig": 0.006282,
+    "selection_rank": 271,
+    "joint_eig_bits": 1.423202,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "98,24,30,3",
+    "target": "28",
+    "eig": 0.004672,
+    "selection_rank": 272,
+    "joint_eig_bits": 1.423542,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "96,90,6,42",
+    "target": "63",
+    "eig": 0.003096,
+    "selection_rank": 273,
+    "joint_eig_bits": 1.424611,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "96,90,6,42",
+    "target": "69",
+    "eig": 0.003148,
+    "selection_rank": 274,
+    "joint_eig_bits": 1.424523,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "96,90,6,42",
+    "target": "9",
+    "eig": 0.002992,
+    "selection_rank": 275,
+    "joint_eig_bits": 1.426553,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "98,54,18",
+    "target": "84",
+    "eig": 0.003009,
+    "selection_rank": 276,
+    "joint_eig_bits": 1.428507,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "76,44,8,48",
+    "target": "58",
+    "eig": 0.011599,
+    "selection_rank": 277,
+    "joint_eig_bits": 1.430053,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "81,25",
+    "target": "24",
+    "eig": 0.011427,
+    "selection_rank": 278,
+    "joint_eig_bits": 1.431004,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "3",
+    "target": "63",
+    "eig": 0.007061,
+    "selection_rank": 279,
+    "joint_eig_bits": 1.432411,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "number_set": "81,25",
+    "target": "28",
+    "eig": 0.015831,
+    "selection_rank": 280,
+    "joint_eig_bits": 1.431664,
+    "source": "eig_single_response_fill"
+  }
+]

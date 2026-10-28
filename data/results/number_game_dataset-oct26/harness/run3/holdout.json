@@ -1,0 +1,297 @@
+{
+  "project_id": "number_game",
+  "data_source": "dataset",
+  "seed_models_dir": "/scr/wurgaft/auto-psych/number_game_dataset_s3b/harness_repo/src/pipelines/outer_loop/projects/number_game/seed_models",
+  "n_experiments": 3,
+  "n_participants": 9,
+  "hide_participant_id": true,
+  "inner_loop": {
+    "max_iterations": 5,
+    "candidate_count": 6,
+    "novelty_rmse_threshold": 0.002,
+    "n_critique_proposals": 8,
+    "selection": {
+      "criterion": "grouped_cv",
+      "cv_group": [
+        "number_set"
+      ],
+      "cv_folds": 4,
+      "cv_seed": 0
+    },
+    "starting_models_prunable": true
+  },
+  "fit_kwargs": {
+    "method": "warm_start_nuts",
+    "tune": 200,
+    "draws": 500,
+    "chains": 4
+  },
+  "seed": 3,
+  "eval_pool": {
+    "n_pairs": 500,
+    "lengths": [
+      6,
+      8
+    ],
+    "seed": 11,
+    "min_remaining": 100,
+    "exhaustive": true,
+    "predict_max_draws": null
+  },
+  "seed_params": {
+    "dataset": {}
+  },
+  "metrics_version": 2,
+  "gt_runs": [
+    {
+      "gt_model": "dataset",
+      "run_root": "/scr/wurgaft/auto-psych/agent_trees/80aefb383357367b/repo/_runs/cell_1",
+      "trajectory": [
+        {
+          "experiment": 1,
+          "step": 0,
+          "global_step": 0,
+          "best_model": "bigelow_piantadosi_interval",
+          "incumbent_changed": false,
+          "incumbent_is_discovered": false
+        },
+        {
+          "experiment": 1,
+          "step": 1,
+          "global_step": 1,
+          "best_model": "conservative_evidence_interval_concepts",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 2,
+          "global_step": 2,
+          "best_model": "sample_size_growing_evidence_concepts",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 3,
+          "global_step": 3,
+          "best_model": "lapsing_growing_evidence_concepts",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 4,
+          "global_step": 4,
+          "best_model": "decade_aligned_range_concepts",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 5,
+          "global_step": 5,
+          "best_model": "session_growing_acquiescence_concepts",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 0,
+          "global_step": 6,
+          "best_model": "session_growing_acquiescence_concepts",
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 1,
+          "global_step": 7,
+          "best_model": "evidence_scarce_guessing_concepts",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 2,
+          "global_step": 8,
+          "best_model": "evidence_scarce_guessing_concepts",
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 3,
+          "global_step": 9,
+          "best_model": "outlier_tolerant_rule_concepts",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 4,
+          "global_step": 10,
+          "best_model": "outlier_tolerant_rule_concepts",
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 5,
+          "global_step": 11,
+          "best_model": "outlier_tolerant_rule_concepts",
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 0,
+          "global_step": 12,
+          "best_model": "outlier_tolerant_rule_concepts",
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 1,
+          "global_step": 13,
+          "best_model": "outlier_tolerant_rule_concepts",
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 2,
+          "global_step": 14,
+          "best_model": "outlier_tolerant_rule_concepts",
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 3,
+          "global_step": 15,
+          "best_model": "outlier_tolerant_rule_concepts",
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 4,
+          "global_step": 16,
+          "best_model": "outlier_tolerant_rule_concepts",
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 5,
+          "global_step": 17,
+          "best_model": "outlier_tolerant_rule_concepts",
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        }
+      ],
+      "incumbent": {
+        "starting_models": [
+          "bigelow_piantadosi_independent",
+          "bigelow_piantadosi_interval",
+          "tenenbaum_rules_similarity"
+        ],
+        "n_steps": 18,
+        "n_incumbent_changes": 7,
+        "n_steps_discovered_incumbent": 17,
+        "final_incumbent": "outlier_tolerant_rule_concepts",
+        "changes": [
+          {
+            "global_step": 1,
+            "experiment": 1,
+            "step": 1,
+            "from": "bigelow_piantadosi_interval",
+            "to": "conservative_evidence_interval_concepts"
+          },
+          {
+            "global_step": 2,
+            "experiment": 1,
+            "step": 2,
+            "from": "conservative_evidence_interval_concepts",
+            "to": "sample_size_growing_evidence_concepts"
+          },
+          {
+            "global_step": 3,
+            "experiment": 1,
+            "step": 3,
+            "from": "sample_size_growing_evidence_concepts",
+            "to": "lapsing_growing_evidence_concepts"
+          },
+          {
+            "global_step": 4,
+            "experiment": 1,
+            "step": 4,
+            "from": "lapsing_growing_evidence_concepts",
+            "to": "decade_aligned_range_concepts"
+          },
+          {
+            "global_step": 5,
+            "experiment": 1,
+            "step": 5,
+            "from": "decade_aligned_range_concepts",
+            "to": "session_growing_acquiescence_concepts"
+          },
+          {
+            "global_step": 7,
+            "experiment": 2,
+            "step": 1,
+            "from": "session_growing_acquiescence_concepts",
+            "to": "evidence_scarce_guessing_concepts"
+          },
+          {
+            "global_step": 9,
+            "experiment": 2,
+            "step": 3,
+            "from": "evidence_scarce_guessing_concepts",
+            "to": "outlier_tolerant_rule_concepts"
+          }
+        ]
+      },
+      "starting_models_prunable": true,
+      "experiments": [
+        {
+          "experiment": 1,
+          "manifest_models": [
+            "decade_concept_bayesian_learning",
+            "decade_concepts_lapsing_learner",
+            "decade_aligned_range_concepts",
+            "log_compressed_range_concepts",
+            "log_compressed_sampling_concepts",
+            "session_drifting_decade_concepts",
+            "session_growing_acquiescence_concepts"
+          ]
+        },
+        {
+          "experiment": 2,
+          "manifest_models": [
+            "outlier_tolerant_rule_concepts"
+          ]
+        },
+        {
+          "experiment": 3,
+          "manifest_models": [
+            "outlier_tolerant_rule_concepts",
+            "parity_banded_range_concepts",
+            "late_session_acquiescence_concepts",
+            "parity_banded_session_acquiescence",
+            "single_exception_rule_concepts",
+            "width_preferring_range_concepts",
+            "rule_favoring_width_range_concepts"
+          ]
+        }
+      ]
+    }
+  ],
+  "agent": {
+    "backend": "claude",
+    "model": "claude-opus-5-5",
+    "claude_auth": "subscription_then_api"
+  }
+}

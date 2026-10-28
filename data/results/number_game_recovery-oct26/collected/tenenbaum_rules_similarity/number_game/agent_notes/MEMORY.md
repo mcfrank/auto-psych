@@ -1,0 +1,72 @@
+- [Prime rule included 1](prime-rule-includes-one.md) — lineage models' prime list had 1; removing it gained ~46 nats; check MAP residuals first
+- [Incumbent family saturated](incumbent-family-saturated.md) — exp2 MAP probes: tweaks gain <1 nat, rule-list edits hurt, eps 0.1 optimal
+- [Decision-rule mechanisms null](decision-rule-mechanisms-null.md) — bias/lapse/LLO/Luce add nothing; incumbent calibrated; no-conj base as good and 50x faster
+- [Concept space saturated](concept-space-saturated.md) — exp2 iter_1: no added concept family gains >1 nat at MAP; refit harness in candidate_2/scratch
+- [Incumbent near ceiling (exp2)](incumbent-near-ceiling-exp2.md) — screened eps/tempering/shape/lapse/per-rule: ≤2 nats; find_MAP unreliable
+- [Write candidate first](write-candidate-first.md) — a slot was lost to over-exploring; copy the incumbent, edit, check, then probe
+- [Exemplar soft-min poor fit](exemplar-softmin-poor-fit.md) — exemplar accounts ~840 nats worse; reusable fast similarity code
+- [Two-cluster candidate](two-cluster-candidate.md) — exp2 iter_2: two-block union concepts submitted; no-conj base fast
+- [Compose near-ties](compose-near-ties.md) — iter_2 c5: odd_composite + upper-edge graft; check outcome before reusing
+- [Conj top-edge runtime](conj-top-edge-runtime.md) — top-edge bonus on conjunctions: smoke LL -2056.7, 274s sampling
+- [PyMC speed patterns](pymc-model-speed-patterns.md) — smoke-check pass ≠ admission speed; count@gain matmul trick; SAMPLER_SETTINGS target_accept 0.9 honoured
+- [Graded top-edge duplicate](graded-top-edge-duplicate.md) — nested graded top bonus failed novelty; graft distinct mechanisms instead
+- [Novelty gate vs tiny tweaks](novelty-gate-tiny-tweaks.md) — RMSE<0.002 rejected; conj-only edits too small; graft a mechanism that already passed novelty
+- [PPC critiques null](ppc-critiques-null.md) — iter_0-2 critique stats all null; iter_3 tried non-rule-space concepts
+- [Teacher top-edge form](teacher-top-edge-form.md) — iter_3 c3: top-edge as teacher-shows-top mixture; smoke -3094.7; check OK -3093.1; check outcome
+- [Generative top marking](generative-top-marking.md) — iter_3 c4: width-scaled top-edge credit replacing constant bonus
+- [Log-compressed size principle](log-compressed-size-principle.md) — iter_3 c2: perceived range size on log line in likelihood; smoke -3094.7; check OK -3093.1; check outcome
+- [Uncertain sampling candidate](uncertain-sampling-candidate.md) — iter_3 c0 strong/weak sampling mixture; no order-direction effect in data
+- [Teacher + upper edge](teacher-upper-edge-candidate.md) — iter_3 c5: top_bonus on pedagogical model; smoke -3094.7; check OK -3093.1; check outcome
+- [Extreme examples attention](extreme-examples-attention.md) — iter_3 c1: inner examples partly weak-sampled; cell pooling by covered counts; check OK
+- [Session heterogeneity](session-heterogeneity.md) — exp2 has 10 sessions via trial_index resets; two groups yes 0.42 vs 0.70; no model has individual differences
+- [Attention exemplar similarity](attention-exemplar-similarity.md) — iter_4 c2: agreement-driven attention GCM, smoke LL -2768.6, fast
+- [One-sided thresholds](one-sided-threshold-concepts.md) — iter_4 c0: half-line magnitude concepts ~400 nats worse; session SD critique null
+- [Uncertain sampling + top marking](uncertain-sampling-top-marking.md) — iter_4 c5: generative top credit per sampling mode; smoke -2054.4; session SD critique null
+- [Last-example top marking](last-example-top-marking.md) — iter_4 c3: top credit only if max shown last; order asymmetry in raw data; smoke -3094.7; check OK -3093.1; check outcome
+- [First-shown top marking](first-shown-top-marking.md) — iter_4 c1: order-based top marking (first==max); smoke -3094.7; check OK -3093.1; check outcome
+- [Top-marking + uncertain sampling](top-marking-uncertain-sampling.md) — iter_4 c4 graft; batched_dot speed trick; compile_fn pitfall
+- [Exp3 example rejection](exp3-example-rejection-critique.md) — exp3 iter_0: outlier/last-shown examples rejected in raw data; 8 critique stats; check ppc
+- [Prototype matching poor fit](prototype-matching-poor-fit.md) — exp3 iter_0 c2: centroid prototype smoke LL -4106, worse than exemplar GCM
+- [Breadth-adaptive criterion](breadth-adaptive-criterion.md) — exp3 iter_0 c0: criterion shifts with expected concept breadth; smoke -3096.8; novelty pool lacks trial_index
+- [Last example marks range edge](last-example-marks-range-edge.md) — exp3 iter_0 c4: bottom-edge credit when set ends on min; check OK
+- [Position-weighted top marking](position-weighted-top-marking.md) — exp3 iter_0 c5: last_bias mixes max-last and 1/n marking; check novelty outcome
+- [Digit-sum concepts](digit-sum-concepts.md) — exp3 iter_0 c1: digit-sum rule kind added to incumbent; smoke -3095.3; novelty risk
+- [Near-top closing example](near-top-closing-example.md) — exp3 iter_0 c3: soft top edge, credit decays over ranges ending above max; check OK, fast via batched_dot
+- [Multi-example top marking](multi-example-top-marking.md) — exp3 iter_0 c3 repair: no top credit for singletons (data symmetric there); near-top rho→0 was duplicate
+- [Last-shown top + discounted ranges](last-shown-top-discounted-ranges.md) — order-only top tweaks fail novelty; MAP-RMSE proxy script; c5 repair RMSE 0.0073
+- [Exp3 iter_1 critique stats](exp3-iter1-critique-stats.md) — iter_0 only max-last top edge sig (model over-sharpens); 8 new stats listed
+- [Uncertain sampling + sequence top](uncertain-sampling-sequence-top.md) — exp3 iter_1 c5: parity probes null; mapgen.py MAP proxy; smoke -3094.7; check OK -3093.1; check outcome
+- [Parity representativeness](parity-representativeness.md) — exp3 iter_1 c2: penalty for same-parity sets under mixed-parity concepts; check OK; smoke -3094.7; check OK -3093.1; check outcome
+- [Parity kind + last-shown top](parity-kind-last-shown-top.md) — exp3 iter_1 c3: even/odd own kind; smoke -3094.6; smoke -3094.7; check OK -3093.1; check outcome
+- [Compressed rule size](compressed-rule-size-principle.md) — exp3 iter_1 c1: rules perceived as size**gamma; smoke -3094.2; smoke -3094.7; check OK -3093.1; check outcome
+- [Compressed rule extension](compressed-rule-extension.md) — exp3 iter_1 c0: rule size power ≈1 at MAP; parity gap = opposite-parity just outside span over-predicted
+- [Parity-restricted ranges](parity-restricted-range-concepts.md) — exp3 iter_1 c4: parity critique = opposite-parity outside over-prediction; parity tweaks <0.4 nats
+- [Spread-sampled ranges](spread-sampled-ranges.md) — exp3 iter_1 c1 repair: stratified range sampling strongly rejected when forced; mixture MAP ~0; smoke -3094.7; check OK -3093.1; check outcome
+- [Exp3 iter_2 critique stats](exp3-iter2-critique-stats.md) — 8 stats on parity interp/extrap, unanimity, set size, drift, rules; check ppc
+- [First-shown bottom marking](first-shown-bottom-marking.md) — exp3 iter_2 c4: bottom credit when set opens on min; novelty risk; smoke -3094.7; check OK -3093.1; check outcome
+- [Sequence opens bottom, ends top](sequence-opens-bottom-ends-top.md) — exp3 iter_2 c5: first-shown min marks bottom; smoke -3093.3; smoke -3094.7; check OK -3093.1; check outcome
+- [Bottom-to-top demonstration](bottom-to-top-demonstration.md) — exp3 iter_2 c1: first-shown min marks bottom; smoke -3093.1, 270s; smoke -3094.7; check OK -3093.1; check outcome
+- [Ascending sequence bounds](ascending-sequence-range-bounds.md) — exp3 iter_2 c0: first-shown min marks bottom on incumbent; smoke -3094.7; check OK -3093.1; check outcome
+- [Limited-capacity example memory](limited-capacity-example-memory.md) — exp3 iter_2 c0: WM capacity keeps last+random earlier examples; sparse-entry speed trick; smoke -3094.7; check OK -3093.1; check outcome
+- [Examples bracket range ends](examples-bracket-range-ends.md) — exp3 iter_2 c2: both-ends credit on exact-span range; parity misfit is n=2 same-parity; smoke -3094.7; check OK -3093.1; check outcome
+- [Span-anchored width](span-anchored-width-expectation.md) — exp3 iter_2 c1: width prior scale grows with set span; per-set prior is cheap; smoke -3094.1
+- [Opening example marks edge](opening-example-marks-edge.md) — exp3 iter_2 c4 retry: set-size tempering rejected (±40 nats); 2-example sets over-generalize; opening-edge credit null
+- [Uncertain sampling + compressed rules](uncertain-sampling-compressed-rules.md) — exp3 iter_2 c3: range size power null; weak-sampling mix RMSE 0.004 vs incumbent; pkill -f pitfall
+- [Exp3 iter_3 critique stats](exp3-iter3-critique-stats.md) — 8 stats on residue progressions, primes, divisors, digits, scale ends, gaps; check ppc
+- [Concept-confusion decision noise](concept-confusion-decision-noise.md) — exp3 iter_3 c2: entropy-scaled response gain; smoke -3095.6; smoke -3094.7; check OK -3093.1; check outcome
+- [Loosely held digit rules](loosely-held-digit-rules.md) — exp3 iter_3 c5: digit rules own outlier rate; smoke -3094.7; check OK -3093.1; check outcome
+- [Stray closing example](stray-closing-example.md) — exp3 iter_3 c0: last example may be stray; raw example-yes first .91/mid .84/last .74; smoke -3094.7; check OK -3093.1; check outcome
+- [Paired final-digit rules](paired-final-digit-rules.md) — exp3 iter_3 c4: ends-in-d1-or-d2 union kind; smoke -3093.3; check OK -3093.1; check outcome
+- [Shared final digit similarity](shared-final-digit-similarity.md) — exp3 iter_3 c1: digit-union concept, MAP null (-0.9), RMSE 0.003; check OK
+- [Final-digit pair concepts](final-digit-pair-concepts.md) — exp3 iter_3 c3: "ending in d or e" kind on incumbent; smoke -3093.3 = incumbent; novelty risk
+- [Position-graded stray example](position-graded-stray-example.md) — iter_3 c4 repair: any-position stray + recency slope; parallel slots duplicate obvious critique fixes
+- [Exp3 iter_4 critique stats](exp3-iter4-critique-stats.md) — 8 stats: Weber singletons, span scaling, rule interior violators, order direction, decade crossing; check ppc
+- [Tversky category retrieval](tversky-category-retrieval.md) — exp3 iter_4 c1: first try too slow (alpha unidentified); repair: hard consistency + lapse, smoke -3875, 20s/run
+- [Round-step counting rules](round-step-counting-rules.md) — exp3 iter_4 c0: mult 15/20/25/50 kind; MAP -1.7 nats, RMSE 0.0058; check OK -3094.3 (240s); check outcome
+- [Parity rep + bottom opening](parity-representative-bottom-opening.md) — exp3 iter_4 c5: parity penalty grafted onto incumbent; smoke -3092.6, 249s; check outcome
+- [Previous-trial carryover](previous-trial-concept-carryover.md) — exp3 iter_4 c2: lag-1 concept carryover MAP ≈0 and no trial drift; sequential families null; smoke -3093.8, 90s; check outcome
+- [Weber-blurred range edges](weber-blurred-range-edges.md) — exp3 iter_4 c3: Weber blur on range membership rejected by data (weber→0); speed fix notes; check outcome
+- [Parity-representative sequence edges](parity-representative-sequence-edges.md) — exp3 iter_4 c4: parity penalty on incumbent; MAP +1; singleton-eps/bracket probes null; check OK
+- [Parity-rep stray example](parity-representative-stray-example.md) — iter_4 c5 repair: parity penalty on position-graded stray base; c5 was dup of c4; check OK -3093.2; check outcome
+- [Target suggests membership](target-suggests-membership.md) — iter_4 c2 repair: query-as-hint on incumbent, RMSE 0.0057, smoke -3093.5 at 108 s per run; sequential models always fail novelty (pool lacks trial_index); check outcome
+- [Sequence-only edge marking](sequence-only-edge-marking.md) — iter_4 c3 repair: Weber blur dup (posterior RMSE 0.0003 vs MAP 0.004); singleton no-top graft on incumbent; smoke -3093.7; check outcome

@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  conservative_partial_belief_updating: 0.125
+  inflated_concept_size_principle: 0.125
+  inflated_size_familiar_rule_prior: 0.125
+  log_compressed_range_sampling: 0.125
+  rule_size_prior_anchored_evidence: 0.125
+  volatile_changepoint_inflated_size: 0.125
+  volatile_concept_changepoint: 0.125
+  volatile_log_compressed_ranges: 0.125

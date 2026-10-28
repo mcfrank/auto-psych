@@ -1,0 +1,2 @@
+run1/bigelow_piantadosi_interval: see /scr/wurgaft/auto-psych/number_game_recovery/run1/bigelow_piantadosi_interval/agent_activity.md
+run1/tenenbaum_rules_similarity: see /scr/wurgaft/auto-psych/number_game_recovery/run1/tenenbaum_rules_similarity/agent_activity.md

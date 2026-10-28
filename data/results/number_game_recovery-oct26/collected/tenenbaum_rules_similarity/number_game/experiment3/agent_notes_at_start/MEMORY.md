@@ -1,0 +1,27 @@
+- [Prime rule included 1](prime-rule-includes-one.md) — lineage models' prime list had 1; removing it gained ~46 nats; check MAP residuals first
+- [Incumbent family saturated](incumbent-family-saturated.md) — exp2 MAP probes: tweaks gain <1 nat, rule-list edits hurt, eps 0.1 optimal
+- [Decision-rule mechanisms null](decision-rule-mechanisms-null.md) — bias/lapse/LLO/Luce add nothing; incumbent calibrated; no-conj base as good and 50x faster
+- [Concept space saturated](concept-space-saturated.md) — exp2 iter_1: no added concept family gains >1 nat at MAP; refit harness in candidate_2/scratch
+- [Incumbent near ceiling (exp2)](incumbent-near-ceiling-exp2.md) — screened eps/tempering/shape/lapse/per-rule: ≤2 nats; find_MAP unreliable
+- [Write candidate first](write-candidate-first.md) — a slot was lost to over-exploring; copy the incumbent, edit, check, then probe
+- [Exemplar soft-min poor fit](exemplar-softmin-poor-fit.md) — exemplar accounts ~840 nats worse; reusable fast similarity code
+- [Two-cluster candidate](two-cluster-candidate.md) — exp2 iter_2: two-block union concepts submitted; no-conj base fast
+- [Compose near-ties](compose-near-ties.md) — iter_2 c5: odd_composite + upper-edge graft; check outcome before reusing
+- [Conj top-edge runtime](conj-top-edge-runtime.md) — top-edge bonus on conjunctions: smoke LL -2056.7, 274s sampling
+- [PyMC speed patterns](pymc-model-speed-patterns.md) — smoke-check pass ≠ admission speed; count@gain matmul trick; SAMPLER_SETTINGS target_accept 0.9 honoured
+- [Graded top-edge duplicate](graded-top-edge-duplicate.md) — nested graded top bonus failed novelty; graft distinct mechanisms instead
+- [Novelty gate vs tiny tweaks](novelty-gate-tiny-tweaks.md) — RMSE<0.002 rejected; conj-only edits too small; graft a mechanism that already passed novelty
+- [PPC critiques null](ppc-critiques-null.md) — iter_0-2 critique stats all null; iter_3 tried non-rule-space concepts
+- [Teacher top-edge form](teacher-top-edge-form.md) — iter_3 c3: top-edge as teacher-shows-top mixture; check outcome
+- [Generative top marking](generative-top-marking.md) — iter_3 c4: width-scaled top-edge credit replacing constant bonus
+- [Log-compressed size principle](log-compressed-size-principle.md) — iter_3 c2: perceived range size on log line in likelihood; check outcome
+- [Uncertain sampling candidate](uncertain-sampling-candidate.md) — iter_3 c0 strong/weak sampling mixture; no order-direction effect in data
+- [Teacher + upper edge](teacher-upper-edge-candidate.md) — iter_3 c5: top_bonus on pedagogical model; check outcome
+- [Extreme examples attention](extreme-examples-attention.md) — iter_3 c1: inner examples partly weak-sampled; cell pooling by covered counts; check OK
+- [Session heterogeneity](session-heterogeneity.md) — exp2 has 10 sessions via trial_index resets; two groups yes 0.42 vs 0.70; no model has individual differences
+- [Attention exemplar similarity](attention-exemplar-similarity.md) — iter_4 c2: agreement-driven attention GCM, smoke LL -2768.6, fast
+- [One-sided thresholds](one-sided-threshold-concepts.md) — iter_4 c0: half-line magnitude concepts ~400 nats worse; session SD critique null
+- [Uncertain sampling + top marking](uncertain-sampling-top-marking.md) — iter_4 c5: generative top credit per sampling mode; smoke -2054.4; session SD critique null
+- [Last-example top marking](last-example-top-marking.md) — iter_4 c3: top credit only if max shown last; order asymmetry in raw data; check outcome
+- [First-shown top marking](first-shown-top-marking.md) — iter_4 c1: order-based top marking (first==max); check outcome
+- [Top-marking + uncertain sampling](top-marking-uncertain-sampling.md) — iter_4 c4 graft; batched_dot speed trick; compile_fn pitfall

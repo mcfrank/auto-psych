@@ -1,0 +1,12 @@
+- [Ascending below-start residual](residual-ascending-below-start.md) — exp3 r2: big single-feature gain; MAP-residual workflow
+- [Leading-digit similarity gain](leading-digit-similarity-gain.md) — exp3 r3: +12.6 MAP nats from first-digit match dimension
+- [Exp3 r3 incumbent residual tests](exp3-r3-incumbent-residuals.md) — isolation +6.6, decade +5.6, factor tweaks dead
+- [Order effects exhausted](order-effects-exhausted.md) — exp3 r3: order variants gain ≤2 nats; misfit is set-level
+- [Exp3 r3 residual scan](exp3-r3-residual-scan.md) — even-rule +9 nats; factor-norm changes hurt; list of null additions
+- [Exp3 r4 leading-digit refinements](exp3-r4-leading-digit-refinements.md) — even rule +6.5; log distance -14; set-size +3
+- [Exp3 r4 range + leading digit](exp3-r4-range-leading-digit.md) — graft beats incumbent MAP +2.4; log-range −23
+- [Exp3 r4 incumbent screen](exp3-r4-incumbent-screen.md) — even rule +6.5 on leading-digit model; log compression hurts
+- [Round-base multiples prior](round-base-multiples-prior.md) — exp3 r4: +10.5 MAP; primes/powers/lattice null
+- [Exp3 r4 digit-pattern scan](exp3-r4-digit-pattern-scan.md) — mirror/palindrome +8 nats; prototype item & number categories null
+- [Exp3 r4 screens](exp3-r4-screens.md) — analogy +8, lapse +7, times-table/skip-count rule dead
+- [Trivial small-number avoidance](trivial-small-number-avoidance.md) — exp3 r4: 1-3 penalty +6.5 MAP; sibling-slot duplicate lesson

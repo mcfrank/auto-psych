@@ -1,0 +1,13 @@
+{
+  "models": [
+    "criterion_shifted_tempered_decision",
+    "redundant_examples_decision_gain",
+    "range_bounded_rule_concepts",
+    "round_landmark_interval_prior",
+    "stochastic_example_forgetting",
+    "criterion_shifted_redundant_examples",
+    "split_rule_range_tempering",
+    "win_stay_lose_shift_criterion_shift"
+  ],
+  "ledger_sha256": "c43b7bf7034986d1a4aa1250da73f730a3ec8e561075c1fb8abad9fde4d09a54"
+}

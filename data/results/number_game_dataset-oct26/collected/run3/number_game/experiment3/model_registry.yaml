@@ -1,0 +1,9 @@
+reserved_for_new: 0.0
+theories:
+  late_session_acquiescence_concepts: 0.14285714285714285
+  outlier_tolerant_rule_concepts: 0.14285714285714285
+  parity_banded_range_concepts: 0.14285714285714285
+  parity_banded_session_acquiescence: 0.14285714285714285
+  rule_favoring_width_range_concepts: 0.14285714285714285
+  single_exception_rule_concepts: 0.14285714285714285
+  width_preferring_range_concepts: 0.14285714285714285

@@ -1,0 +1,11 @@
+{
+  "models": [
+    "family_pooled_rule_prior",
+    "range_restricted_rule_concepts",
+    "scale_end_avoiding_ranges",
+    "random_example_forgetting",
+    "weber_blurred_ranges_kind_pooled_rules",
+    "parity_kind_rule_prior"
+  ],
+  "ledger_sha256": "1656bf0e01de5387095702031871c1e8cb766b7b1becd3faece6fb0d710079f4"
+}

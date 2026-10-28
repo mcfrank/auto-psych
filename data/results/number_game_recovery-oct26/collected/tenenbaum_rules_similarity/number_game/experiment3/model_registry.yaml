@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  compressed_rule_extension: 0.125
+  parity_representative_sequence_edges: 0.125
+  parity_representative_stray_example: 0.125
+  parity_representativeness_bias: 0.125
+  position_graded_stray_example: 0.125
+  sequence_only_edge_marking: 0.125
+  sequence_opens_bottom_ends_top: 0.125
+  stray_closing_example: 0.125

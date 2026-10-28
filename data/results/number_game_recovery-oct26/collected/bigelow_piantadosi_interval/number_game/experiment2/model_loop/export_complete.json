@@ -1,0 +1,13 @@
+{
+  "models": [
+    "inflated_concept_size_principle",
+    "rule_size_prior_anchored_evidence",
+    "log_compressed_range_sampling",
+    "inflated_size_familiar_rule_prior",
+    "volatile_concept_changepoint",
+    "conservative_partial_belief_updating",
+    "volatile_changepoint_inflated_size",
+    "volatile_log_compressed_ranges"
+  ],
+  "ledger_sha256": "4ddae08f480b2bd47951494eb6579da446b55179513651e4629f72e35d12167c"
+}

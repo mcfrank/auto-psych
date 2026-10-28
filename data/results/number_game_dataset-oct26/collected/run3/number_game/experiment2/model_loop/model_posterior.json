@@ -1,0 +1,27 @@
+{
+  "posteriors": {
+    "outlier_tolerant_rule_concepts": 1.0
+  },
+  "elpd_loo": {
+    "outlier_tolerant_rule_concepts": -2796.5489
+  },
+  "n_trials": 5040,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "outlier_tolerant_rule_concepts": {
+      "rank": 0,
+      "elpd_loo": -2796.5489440637893,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 1.0,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 5040,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "outlier_tolerant_rule_concepts"
+}

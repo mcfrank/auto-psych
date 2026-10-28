@@ -1,0 +1,3 @@
+experiment 1: 01ded87065f29f630c0ed562f1ea0c88d4cfae09
+experiment 2, first attempt: 01ded87065f29f630c0ed562f1ea0c88d4cfae09; preempted 2026-10-20 in round 4 (stalled by the thread race), its model loop discarded
+experiments 2-3: 25dacd672f09b145d09ed00da3a83a31765e9542 (e471a07a plus per-thread PyTensor change_flags in the inner loop, which stops a thread race that left the harness compiling Python thunks; results unchanged); experiment 2 restarted from its model-loop start on 2026-10-21

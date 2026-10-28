@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  recency_anchored_span_exemplar: 0.125
+  recency_anchored_span_exemplar_2: 0.125
+  sequence_momentum_span_exemplar: 0.125
+  set_homogeneity_criterion_momentum: 0.125
+  span_filling_size_exemplar: 0.125
+  spread_calibrated_size_gradient: 0.125
+  spread_scaled_recency_span_exemplar: 0.125
+  zigzag_breadth_sequence_exemplar: 0.125

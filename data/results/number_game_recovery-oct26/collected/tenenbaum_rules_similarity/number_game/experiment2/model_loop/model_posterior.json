@@ -1,0 +1,132 @@
+{
+  "posteriors": {
+    "prime_concept_excludes_one": 0.0325,
+    "upper_edge_marking_ranges": 0.046719,
+    "upper_edge_discounted_range_size": 0.036699,
+    "uncertain_sampling_assumption": 0.042657,
+    "top_marking_range_sampling": 0.097576,
+    "last_example_marks_range_top": 0.385736,
+    "top_marking_uncertain_sampling": 0.192678,
+    "uncertain_sampling_top_marking": 0.165436
+  },
+  "elpd_loo": {
+    "prime_concept_excludes_one": -2060.6418,
+    "upper_edge_marking_ranges": -2060.2789,
+    "upper_edge_discounted_range_size": -2060.5203,
+    "uncertain_sampling_assumption": -2060.3699,
+    "top_marking_range_sampling": -2059.5424,
+    "last_example_marks_range_top": -2058.1679,
+    "top_marking_uncertain_sampling": -2058.8621,
+    "uncertain_sampling_top_marking": -2059.0145
+  },
+  "n_trials": 4500,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "last_example_marks_range_top": {
+      "rank": 0,
+      "elpd_loo": -2058.1679224836307,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.3857359508079452,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "top_marking_uncertain_sampling": {
+      "rank": 1,
+      "elpd_loo": -2058.8620542023964,
+      "elpd_diff": 0.694131718765675,
+      "dse": 3.1622315133871925,
+      "dse_clustered": 3.3450840885742217,
+      "weight": 0.19267818295781358,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "uncertain_sampling_top_marking": {
+      "rank": 2,
+      "elpd_loo": -2059.0144928475825,
+      "elpd_diff": 0.8465703639517415,
+      "dse": 3.6703203448295874,
+      "dse_clustered": 3.8207452797080244,
+      "weight": 0.16543571761608275,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "top_marking_range_sampling": {
+      "rank": 3,
+      "elpd_loo": -2059.5424473747667,
+      "elpd_diff": 1.374524891135934,
+      "dse": 2.816200370548264,
+      "dse_clustered": 3.1228915861270794,
+      "weight": 0.09757566994429051,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "upper_edge_marking_ranges": {
+      "rank": 4,
+      "elpd_loo": -2060.2789332522625,
+      "elpd_diff": 2.111010768631786,
+      "dse": 2.367953673773661,
+      "dse_clustered": 2.4830086008511865,
+      "weight": 0.046718596691000626,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "uncertain_sampling_assumption": {
+      "rank": 5,
+      "elpd_loo": -2060.3698931879994,
+      "elpd_diff": 2.201970704368705,
+      "dse": 3.2379318185219654,
+      "dse_clustered": 3.2463356189464507,
+      "weight": 0.04265661517886151,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "upper_edge_discounted_range_size": {
+      "rank": 6,
+      "elpd_loo": -2060.520316655192,
+      "elpd_diff": 2.3523941715611727,
+      "dse": 3.329386005391081,
+      "dse_clustered": 3.2721410006783467,
+      "weight": 0.036699344672276854,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "prime_concept_excludes_one": {
+      "rank": 7,
+      "elpd_loo": -2060.6418378603657,
+      "elpd_diff": 2.4739153767350217,
+      "dse": 2.5321865370014196,
+      "dse_clustered": 2.5657890666503245,
+      "weight": 0.03249992213172892,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "last_example_marks_range_top"
+}

@@ -1,0 +1,9 @@
+reserved_for_new: 0.0
+theories:
+  decade_aligned_range_concepts: 0.14285714285714285
+  decade_concept_bayesian_learning: 0.14285714285714285
+  decade_concepts_lapsing_learner: 0.14285714285714285
+  log_compressed_range_concepts: 0.14285714285714285
+  log_compressed_sampling_concepts: 0.14285714285714285
+  session_drifting_decade_concepts: 0.14285714285714285
+  session_growing_acquiescence_concepts: 0.14285714285714285
