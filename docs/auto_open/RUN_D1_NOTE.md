@@ -13,9 +13,23 @@ No money: each job put up its page and a Prolific draft and stopped with a STOP 
 participant. Open: about 360 kB a list (27 trials, pictures as inline SVG). Fixed: about 40 kB
 a list (16 trials: 1 practice, 13 test, 2 catch), against run C's 360 MB fixed-arm page.
 
-**Not yet checked (the user's):** a test submission on each page (`?PROLIFIC_PID=test-<you>`; it
-really submits) and each draft in Prolific's dashboard (name, description, pay, minutes, the
-blocklist filter).
+**Test submissions (the PI, 2026-10-28 evening).** One on each page; both stored in full:
+- open, 21:14: list 1, 32 rows (1 practice, 24 test, 2 catch, 5 other screens). The link carried
+  only `PROLIFIC_PID`, so the row has no study id (the page takes `STUDY_ID` from the URL) and the
+  monitor, which keeps one study's rows, counted 0.
+- fixed, 21:19: list 0, 21 rows (1 practice, 13 test, 2 catch, 5 other screens), with
+  `STUDY_ID` and `SESSION_ID` recorded from the URL. The link carried the open study's id, so this
+  monitor counted 0 too. `/results` scopes rows by page: neither page's fetch returned the other's row.
+- With each row given its own study id in memory, the monitor's per-person code reads both: fixed
+  kept (comprehension and both catch trials passed, 1.2 min); open excluded for a missed catch
+  trial (trial 24, "hat", 10 points on the glasses-and-scarf robot after 2.2 s; the PI was
+  clicking through, and the display order there was the identity, so not a page fault), 3.3 min.
+
+**The drafts** (read through the API): both unpublished, "What do people mean?", the neutral
+description with the paradigm's minutes; open $1.00 for 6 min, fixed $0.50 for 3 min, 15 places
+each, $20.00 and $10.00 with fees. Their filters are country, language and approval rate only: a
+test draft carries no blocklist (`create_draft_study` adds it only in live mode, which creates a
+new study), so D2 publishes new studies, not these drafts. Balance $78.67.
 
 ## Three failures on the way
 
@@ -29,6 +43,5 @@ blocklist filter).
 3. **The provenance record's `git status --porcelain` timed out** (10 s) in the fixed job
    (49995640): the checkout is on `$HOME` (NFS), git 1.8 stats every file, the node's cache was cold
    and the open job ran the same command at the same moment (5.7 s cold, 0.7 s warm on a login
-   node). Relaunched unchanged (49997977), and it passed. Not fixed: two live jobs starting together
-   can hit it again (`_git` in `src/pipelines/outer_loop/deployment/manifest.py`); a longer limit
-   would do.
+   node). Relaunched unchanged (49997977), and it passed. The driver raised the limit to 120 s
+   (e6716ee7).
