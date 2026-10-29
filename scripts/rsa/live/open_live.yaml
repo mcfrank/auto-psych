@@ -7,7 +7,7 @@
 
 confirm_live_recruitment: false   # set to true, deliberately, for a live (paid) launch
 firebase_project: auto-psych-2c5da
-code_tag: ""                      # the frozen tag every live chain runs on (set at registration; a live chain refuses without it)
+code_tag: rsa-open-prereg          # the frozen tag every live chain runs on (OSF_PREREG.md; a live chain refuses any other code)
 series_label: ro                  # Hosting sites <firebase_project>-<series_label>-<arm>-c<k> (<= 30 characters)
 max_concurrent_studies: 8         # studies recruiting at once, campaign-wide: one per chain at stage 2's largest
                                   # (4 chains x 2 arms); a chain's own studies are sequential (PI 2026-10-29)

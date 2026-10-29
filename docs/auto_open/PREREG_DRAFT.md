@@ -7,7 +7,7 @@ refuses any other: `scripts/rsa/live/open_live.yaml`, `code_tag`) and the sha256
 decide the gate (§8). Two registered amendments follow: the scale of stage 2, set at the gate
 (§4), and the bakeoff's analysis (§6, marked **TBD**), before any bakeoff participant is recruited,
 as `rsa-prereg-final` was for the closed campaign (`docs/auto_rsa/PREREG_FINAL.md`). The plan it
-implements is `PLAN.md` (Decisions 2026-10-26 to 2026-10-29).
+implements is `PLAN.md` (Decisions 2026-10-26 to 2026-10-29). `OSF_PREREG.md` gives the same content as answers to OSF's "OSF Preregistration" template, and the registration steps.
 
 ## 1. Question and claims
 
@@ -241,6 +241,6 @@ so the registration can be checked without the repository (computed at tagging):
 
 | file | sha256 |
 |---|---|
-| `src/rsa_open/gate.py` | (at tagging) |
-| `src/rsa_open/fixed_paradigm.json` | (at tagging) |
-| `src/rsa_open/loop/orchestrator.py` (the chance theory, the scores the gate reads) | (at tagging) |
+| `src/rsa_open/gate.py` | `e63c476346883f753902a4871ec0162fe44b47edfdaf439586cfcf83c4acc5ce` |
+| `src/rsa_open/fixed_paradigm.json` | `98247195c5755fcee16ebfe7f65f04c599f224c8774b3c8a6e52c004ba0cdda1` |
+| `src/rsa_open/loop/orchestrator.py` (the chance theory, the scores the gate reads) | `684c1d5a179ba92e8436ca04e6bdfdedef5ea09afc2ee933cce5e91a8045dd36` |
