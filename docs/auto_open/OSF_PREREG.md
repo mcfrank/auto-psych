@@ -215,6 +215,8 @@ never reach the data. An underfilled study's partial data are modelled.
 **Deviations:** any deviation is reported with its reason, in a dated addendum to
 `PREREG_DRAFT.md` and in the paper.
 
+**AI disclosure:** The text of this pre-registration (`PREREG_DRAFT.md` and `OSF_PREREG.md`) was drafted by Claude Opus 5.5 (Anthropic), an AI model, working with Michael C. Frank in Claude Code, which also wrote much of the campaign's code (its commits name it as co-author). Michael C. Frank made every design decision recorded here (`PLAN.md` dates each one), reviewed and approved the text, and is responsible for it. Separately, AI agents are part of the method under study: the designer, theorists and critic are Gemini 4 models, and the pilot's simulated participants Gemini 3.8 Flash (Study information).
+
 **The frozen materials:** the git tag `rsa-open-prereg` of https://github.com/mcfrank/auto-psych,
 commit `<full SHA, given at tagging>`.
 

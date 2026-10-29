@@ -244,3 +244,7 @@ so the registration can be checked without the repository (computed at tagging):
 | `src/rsa_open/gate.py` | `e63c476346883f753902a4871ec0162fe44b47edfdaf439586cfcf83c4acc5ce` |
 | `src/rsa_open/fixed_paradigm.json` | `98247195c5755fcee16ebfe7f65f04c599f224c8774b3c8a6e52c004ba0cdda1` |
 | `src/rsa_open/loop/orchestrator.py` (the chance theory, the scores the gate reads) | `684c1d5a179ba92e8436ca04e6bdfdedef5ea09afc2ee933cce5e91a8045dd36` |
+
+## 9. AI disclosure
+
+The text of this pre-registration (`PREREG_DRAFT.md` and `OSF_PREREG.md`) was drafted by Claude Opus 5.5 (Anthropic), an AI model, working with Michael C. Frank in Claude Code, which also wrote much of the campaign's code (its commits name it as co-author). Michael C. Frank made every design decision recorded here (`PLAN.md` dates each one), reviewed and approved the text, and is responsible for it. Separately, AI agents are part of the method under study: the designer, theorists and critic are Gemini 4 models, and the pilot's simulated participants Gemini 3.8 Flash (§2).
