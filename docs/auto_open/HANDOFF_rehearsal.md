@@ -172,11 +172,16 @@ neutral text, and the blocklist filter lists the earlier RSA studies.
 publish the balance cannot cover fails after the draft is recorded (the closed campaign, 10-12), and
 the harness does not check it. The PI first approves the open smoke
 paradigm (`python -m src.rsa_open.review --frozen <smoke run>/experiment1/design/frozen --by <name>`);
-the fixed arm needs no review. Set `confirm_live_recruitment: true` in `scripts/rsa/live/open_live.yaml`
-**on Sherlock only, never committed**, then:
+the fixed arm needs no review. Confirm live recruitment in a **copy** of the config outside the
+checkout, never in the checkout itself: an edited `open_live.yaml` makes the checkout dirty, and
+`stage_code.sh` refuses to stage from a dirty checkout (run D2's first two jobs stopped there), so:
 
 ```bash
 export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_smoke   # with C and F as in D1
+mkdir -p $WORK_ROOT/private
+sed 's/^confirm_live_recruitment: false/confirm_live_recruitment: true/' scripts/rsa/live/open_live.yaml \
+  > $WORK_ROOT/private/open_live_confirmed.yaml
+export CONFIG=$WORK_ROOT/private/open_live_confirmed.yaml   # every reader takes $CONFIG
 CLEAR_STOP=1 PROLIFIC_MODE=live ARM=open CHAINS=0 PARTICIPANTS=15 SMOKE_FROM=$C/experiment1 LINKS=1 bash scripts/rsa/live/open_launch.sh
 CLEAR_STOP=1 PROLIFIC_MODE=live ARM=fixed CHAINS=0 PARTICIPANTS=15 SMOKE_FROM=$F/experiment1 LINKS=1 bash scripts/rsa/live/open_launch.sh
 ```
@@ -185,7 +190,7 @@ The two studies run one after the other (one study recruits at a time, campaign-
 logs that it is waiting). While one fills: `python -m src.rsa_open.monitor --exp-dir <smoke run>/experiment1`.
 **Report** each study's `data/participants.json` (aggregates: kept, exclusions by reason,
 comprehension, catch, same-answer flags, minutes). **Never bring back** `cells/*/private/` or
-`private/campaign/` (Prolific ids).
+`private/campaign/` (Prolific ids). Delete the confirmed copy afterwards.
 
 ## Restart, 2026-10-22 (answers `DRY_RUN_STATUS.md`)
 

@@ -1,7 +1,8 @@
 # The open campaign's live settings, both arms (docs/auto_open/PLAN.md Phase 3b, item 6; read by
 # src/rsa_open/live.py and scripts/rsa/slurm/open_live.sbatch). Each study's N, pay and minutes
 # are its paradigm's (the fixed arm's: src/rsa_open/fixed_paradigm.json), so they are not here.
-# Live recruitment spends real money: it needs confirm_live_recruitment: true here AND
+# Live recruitment spends real money: it needs confirm_live_recruitment: true (in a copy outside the
+# checkout, passed as CONFIG=: docs/auto_open/HANDOFF_rehearsal.md, D2) AND
 # CONFIRM_LIVE_RECRUITMENT=1 at submit, and the launcher asks for a typed "yes".
 
 confirm_live_recruitment: false   # set to true, deliberately, for a live (paid) launch

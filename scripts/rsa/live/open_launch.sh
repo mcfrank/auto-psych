@@ -12,7 +12,9 @@
 # Checks the config (scripts/rsa/live/open_live.yaml) and shows what the launch recruits and costs.
 # A live launch also needs confirm_live_recruitment: true in the config, a typed "yes" here, and
 # (except a smoke test) the checkout at the config's frozen code_tag, clean; only then is
-# CONFIRM_LIVE_RECRUITMENT=1 passed to the jobs.
+# CONFIRM_LIVE_RECRUITMENT=1 passed to the jobs. Confirm in a copy outside the checkout, passed as
+# CONFIG=$WORK_ROOT/private/open_live_confirmed.yaml: an edited open_live.yaml makes the checkout
+# dirty, and staging refuses a dirty checkout (run D2).
 #
 # Each chain gets a ladder of LINKS jobs (default 4 x 48 h on the first of mcfrank, owners, normal with room), each starting
 # after the previous one ends (afterany): a job that runs out of time leaves the chain for the
