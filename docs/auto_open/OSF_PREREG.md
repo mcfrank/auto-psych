@@ -14,6 +14,8 @@ and the participant rules, before any live data of the campaign. Two registered 
 the scale of stage 2, set at the gate from cost and time only, before any stage-2 study; and the
 bakeoff's analysis, before any bakeoff participant is recruited.
 
+**Registered: https://osf.io/78t69 (2026-10-29), tag `rsa-open-prereg`, commit `5dc1e170a7cca50f14d709386b2eae9007025588`** (`PREREG_DRAFT.md`, Addendum A).
+
 ## Steps
 
 1. **The freeze** (driver): `code_tag: rsa-open-prereg` in `scripts/rsa/live/open_live.yaml`, the
@@ -218,7 +220,7 @@ never reach the data. An underfilled study's partial data are modelled.
 **AI disclosure:** The text of this pre-registration (`PREREG_DRAFT.md` and `OSF_PREREG.md`) was drafted by Claude Opus 5.5 (Anthropic), an AI model, working with Michael C. Frank in Claude Code, which also wrote much of the campaign's code (its commits name it as co-author). Michael C. Frank made every design decision recorded here (`PLAN.md` dates each one), reviewed and approved the text, and is responsible for it. Separately, AI agents are part of the method under study: the designer, theorists and critic are Gemini 4 models, and the pilot's simulated participants Gemini 3.8 Flash (Study information).
 
 **The frozen materials:** the git tag `rsa-open-prereg` of https://github.com/mcfrank/auto-psych,
-commit `<full SHA, given at tagging>`.
+commit `5dc1e170a7cca50f14d709386b2eae9007025588`.
 
 | file (in that commit) | sha256 |
 |---|---|

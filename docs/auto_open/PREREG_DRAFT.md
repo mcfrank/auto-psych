@@ -1,6 +1,6 @@
 # Open and fixed-paradigm discovery loops: draft pre-registration
 
-**Status: final text for registration (2026-10-29), not yet registered.** Registered on OSF
+**Status: registered on OSF, https://osf.io/78t69 (2026-10-29), at the tag `rsa-open-prereg`, commit `5dc1e170a7cca50f14d709386b2eae9007025588` (Addendum A).** Registered on OSF
 **before the feasibility chain (§4) starts**, so the gate is fixed before any data that it judges,
 together with the git tag `rsa-open-prereg` of the code every live chain runs (the live launcher
 refuses any other: `scripts/rsa/live/open_live.yaml`, `code_tag`) and the sha256 of the files that
@@ -248,3 +248,15 @@ so the registration can be checked without the repository (computed at tagging):
 ## 9. AI disclosure
 
 The text of this pre-registration (`PREREG_DRAFT.md` and `OSF_PREREG.md`) was drafted by Claude Opus 5.5 (Anthropic), an AI model, working with Michael C. Frank in Claude Code, which also wrote much of the campaign's code (its commits name it as co-author). Michael C. Frank made every design decision recorded here (`PLAN.md` dates each one), reviewed and approved the text, and is responsible for it. Separately, AI agents are part of the method under study: the designer, theorists and critic are Gemini 4 models, and the pilot's simulated participants Gemini 3.8 Flash (§2).
+
+## Addenda
+
+### Addendum A (2026-10-29): the OSF registration
+
+- **Registered:** https://osf.io/78t69, 2026-10-29, public, from the answers in `OSF_PREREG.md`.
+- **The code:** the annotated tag `rsa-open-prereg` of https://github.com/mcfrank/auto-psych, commit
+  `5dc1e170a7cca50f14d709386b2eae9007025588`; every live chain runs on it (`open_live.yaml`, `code_tag`), and the files of §8 have the
+  sha256 listed there. Commits after the tag on `auto-psych-open` (this addendum among them) change
+  no code a live chain runs.
+- **No data** of the campaign's chains existed at registration: open chain 1 (the code's `chain_0`)
+  had not been designed. The rehearsals' smoke tests (run D2: 30 people) are never modelled.
