@@ -64,7 +64,9 @@ def spec_for(minutes=None):
         p = paradigm_of("choice")
         minutes = round(estimated_minutes(trial_lists(p, units_of(p), seed=0, n_lists=1)), 1)
     pay = math.ceil(minutes * 10 / 60 * 100) / 100  # $10 an hour
-    return paradigm_of("choice", minutes=minutes, pay_usd=pay).model_dump(mode="json")
+    from tests.test_rsa_open_paradigm import varied
+
+    return varied(paradigm_of("choice", minutes=minutes, pay_usd=pay).model_dump(mode="json"))
 
 
 class FakeDesigner:

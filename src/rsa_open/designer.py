@@ -103,8 +103,10 @@ def format_example() -> Dict[str, Any]:
         "instructions": {"welcome": "Placeholder welcome.", "task": "Placeholder task description.",
                          "comprehension_checks": [{"question": "Placeholder question?",
                                                    "options": ["right option", "wrong option"], "correct": 0}]},
-        "materials": {"kind": "svg", "domains": [{"name": "things", "base": '<circle cx="50" cy="50" r="40" fill="#dddddd"/>',
-                                                  "features": [{"word": w, "svg": square} for w in ("alpha", "beta")]}]},
+        "materials": {"kind": "svg", "domains": [
+            {"name": name, "base": f'<circle cx="50" cy="50" r="40" fill="{fill}"/>',
+             "features": [{"word": w, "svg": square} for w in ("alpha", "beta")]}
+            for name, fill in (("things", "#dddddd"), ("others", "#d0e0f0"), ("more", "#f0e0d0"))]},
         "scene_space": {"sizes": [[2, 2], [3, 2]], "prior_queries": False, "synonyms": False},
         "response": {"type": "choice", "link": "choice", "prompt": "Placeholder prompt with the word {message}."},
         "design": {"n_participants": 100, "trials_per_participant": 10, "distinct_trials": 20, "catch_trials": 2,
@@ -113,8 +115,25 @@ def format_example() -> Dict[str, Any]:
     }
 
 
+def experience_md(records: Sequence[Mapping[str, Any]]) -> str:
+    """The designer's digest of how earlier experiments felt to their participants."""
+    if not records:
+        return ("# How earlier experiments felt\n\nNo live experiment has finished yet. Every participant rates how "
+                "enjoyable the study was (1-5) on its last screen.\n")
+    rows = ["# How earlier experiments felt", "",
+            "Each participant's answer to \"How enjoyable was this study?\" (1 not at all, 5 very), on the last screen.",
+            "", "| experiment | paradigm | response | domains | test trials | minutes | people | mean | 1 / 2 / 3 / 4 / 5 |",
+            "|---|---|---|---|---|---|---|---|---|"]
+    for r in records:
+        counts = " / ".join(str(r["counts"].get(str(k), 0)) for k in range(1, 6))
+        rows.append(f"| {r['source']} | {r['paradigm']} | {r['response']} | {r['domains']} | {r['trials']} | "
+                    f"{r['minutes']:g} | {r['n']} | {r['mean']:.2f} | {counts} |")
+    return "\n".join(rows) + "\n"
+
+
 def prepare_workspace(root: Path, *, theories: Mapping[str, Tuple[Path, Mapping[str, np.ndarray]]],
-                      history: Sequence[EarlierParadigm], timing: Sequence[TimingRecord]) -> Workspace:
+                      history: Sequence[EarlierParadigm], timing: Sequence[TimingRecord],
+                      experience: Sequence[Mapping[str, Any]] = ()) -> Workspace:
     """Lay out a designer workspace; the floor's reference is scored here, once."""
     from src.rsa_open.design import DEFAULT_DRAWS, DEFAULT_SCENARIOS, load_context, reference_report, write_context
     from src.rsa_open.paradigm import Paradigm
@@ -130,6 +149,7 @@ def prepare_workspace(root: Path, *, theories: Mapping[str, Tuple[Path, Mapping[
     (ws.inputs / "format_example.json").write_text(json.dumps(format_example(), indent=2))
     write_records(ws.timing, timing)  # the tools' time estimates and the pilot's read these
     (ws.inputs / "timing.md").write_text(digest_md(timing))
+    (ws.inputs / "experience.md").write_text(experience_md(experience))
     hist = ws.inputs / "history"
     hist.mkdir()
     for k, item in enumerate(history):
@@ -159,8 +179,8 @@ def brief(ws: Workspace, *, chain: str, experiment: int, hypotheses: Mapping[str
           history: Sequence[EarlierParadigm], feedback: str = "", submissions_left: int = MAX_SUBMISSIONS,
           seconds_left: int = CYCLE_SECONDS, deadline: Optional[float] = None) -> str:
     from src.rsa_open.design import FLOOR_SHARE
-    from src.rsa_open.paradigm import (BUDGET_USD, MAX_FEATURES, MAX_MINUTES, MAX_OBJECTS, MAX_POOL,
-                                       MIN_HOURLY_USD, MIN_PARTICIPANTS)
+    from src.rsa_open.paradigm import (BUDGET_USD, MAX_FEATURES, MAX_MINUTES, MAX_OBJECTS, MAX_POOL, MAX_TEST_TRIALS,
+                                       MIN_DOMAINS, MIN_HOURLY_USD, MIN_PARTICIPANTS)
     from src.rsa_open.pilot import FLOORS, TIME_TOLERANCE
 
     calls_left = MAX_TOOL_CALLS - len(ws.calls())
@@ -214,6 +234,21 @@ The pilot checks this (see "After you submit"): fresh participants name each dom
 their own words (no options to choose from), say which of your words names the part each single
 feature adds, and say exactly which objects of real trial screens a word is true of.
 
+**People's experience of the study.** Your participants are people paid by the minute, not
+simulated readers, and a tedious study gets worse data: attention drifts, and people fall into
+answering the same way on every screen (the harness watches for it). So:
+- **variety:** at least {MIN_DOMAINS} domains (the page rotates them over trials, so everyone sees a mix),
+  and, where it helps, more than one base picture per domain (`variants`), so screens do not all look
+  alike;
+- **effort per answer:** count the clicks or typing each answer takes. A response that needs many
+  actions per screen (a bet spread over several objects, a slider plus a rating) costs time and
+  patience; use it only when it tells the theories apart better than a quicker one;
+- **length:** at most {MAX_TEST_TRIALS} test trials a person. When two designs give similar information,
+  prefer the one with fewer trials and more people;
+- after the study, every participant rates how enjoyable it was (1-5); earlier experiments' ratings,
+  where there are any, are in `{ws.inputs / 'experience.md'}`.
+Say in your rationale how your design keeps people engaged.
+
 The harness builds the page from your spec: one list per participant (balanced over your design),
 a practice trial, your comprehension checks (shown again once after a wrong answer), catch trials
 with one right answer, objects in a random screen order, words mapped to features at random per
@@ -232,7 +267,9 @@ Their files (read-only) are in `{ws.context / 'theories'}`, their posterior draw
 ## Bounds
 
 - Budget: ${BUDGET_USD:.2f} per experiment (participants x pay x 4/3, Prolific's fee). At least
-  {MIN_PARTICIPANTS} participants, at most {MAX_MINUTES} minutes each, at least ${MIN_HOURLY_USD:.2f} per hour.
+  {MIN_PARTICIPANTS} participants, at most {MAX_MINUTES} minutes and {MAX_TEST_TRIALS} test trials each, at least
+  ${MIN_HOURLY_USD:.2f} per hour.
+- Materials: at least {MIN_DOMAINS} domains for pictures (`validate` refuses fewer).
 - Scenes: 2-{MAX_OBJECTS} objects, 2-{MAX_FEATURES} features, at most {MAX_POOL} scenes in the space.
 - Content (IRB): no deception, no affectively charged stimuli or language, SVG or text materials
   only, no links or requests for personal information.
@@ -316,7 +353,7 @@ def check_submission(ws: Workspace, submitted: Path, out: Path, *, pilot_partici
     """The harness's own checks of a submission record (validation, floor, link, pilot). Its seeds
     come from the spec's sha256 and ``salt`` (the fixed arm's chain and experiment: one spec, a
     fresh draw each time)."""
-    from src.rsa_open.paradigm import ParadigmInvalid, load_paradigm
+    from src.rsa_open.paradigm import ParadigmInvalid, load_designed as load_paradigm
     from src.rsa_open.pilot import run_pilot
     from src.rsa_open.screens import design_units, trial_lists
     from src.rsa_open.tools import eig_report, link_check_report
@@ -400,14 +437,16 @@ def run_designer(root: Path, *, chain: str, experiment: int,
                  history: Sequence[EarlierParadigm], spawn: SpawnFn, pilot_participants: int = 12,
                  participant_factory=None, code_commit: Optional[str] = None,
                  cycle_seconds: int = CYCLE_SECONDS,
-                 timing: Sequence[TimingRecord] = CLOSED_CAMPAIGN) -> Dict[str, Any]:
+                 timing: Sequence[TimingRecord] = CLOSED_CAMPAIGN,
+                 experience: Sequence[Mapping[str, Any]] = ()) -> Dict[str, Any]:
     """Design one experiment: up to ``MAX_CYCLES`` cycles; returns the frozen record. ``timing``
     is every finished experiment's completion times (`src.rsa_open.timing`): the closed
     campaign's, plus this campaign's from every chain."""
     root = Path(root)
     failures: List[str] = []
     for cycle in range(MAX_CYCLES):
-        ws = prepare_workspace(root / f"cycle_{cycle + 1}", theories=theories, history=history, timing=timing)
+        ws = prepare_workspace(root / f"cycle_{cycle + 1}", theories=theories, history=history, timing=timing,
+                               experience=experience)
         feedback = ""
         if failures:
             feedback = ("\n## The previous attempt failed\n\nA previous designer cycle for this experiment "

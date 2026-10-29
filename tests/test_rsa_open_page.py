@@ -113,6 +113,8 @@ def test_answering_the_page_gives_the_link_s_data(kind, browser, cdn, tmp_path):
     # The comprehension check was failed once: the instructions came back, and it was asked again.
     assert [d["task"] for d in data].count("instructions") == 2
     assert [d["correct"] for d in data if d["task"] == "comprehension"] == [False, True]
+    (experience,) = [d for d in data if d["task"] == "experience"]  # the last screen: how enjoyable, 1-5
+    assert experience["rating"] == 1 and experience["comment"] == ""
     rows = page_rows(data)
     assert [r["trial_number"] for r in rows] == list(range(6))
     assert all(r["list_index"] == 1 and r["paradigm_sha256"] == p.sha256 for r in rows)

@@ -537,6 +537,36 @@ def parse_paradigm(spec: Dict[str, Any], where: str = "paradigm") -> Paradigm:
     return paradigm
 
 
+MIN_DOMAINS = 3
+MAX_TEST_TRIALS = 30
+"""A designed paradigm's floor on variety and cap on length (PI 2026-10-29). Run C′'s designer chose
+one robot, a 10-point bet typed per object and 24 near-identical trials: a design scored on
+information per dollar gains nothing from variety, and every extra domain is one more drawing the
+legibility check can fail. The closed campaign showed 6 domains with 3 base pictures each in 13
+trials. Checked on a designer's spec (`load_designed`), not on every spec the harness reads."""
+
+
+def experience_problems(p: "Paradigm") -> List[str]:
+    """What a designed paradigm owes its participants: varied materials, a bounded length."""
+    problems = []
+    if p.materials.kind == "svg" and len(p.materials.domains) < MIN_DOMAINS:
+        problems.append(f"materials: {len(p.materials.domains)} domain(s); a picture paradigm needs at least "
+                        f"{MIN_DOMAINS}, so that people see varied things (the page rotates domains over trials)")
+    if p.design.trials_per_participant > MAX_TEST_TRIALS:
+        problems.append(f"design.trials_per_participant is {p.design.trials_per_participant}; at most "
+                        f"{MAX_TEST_TRIALS} test trials a person (spend the budget on more people instead)")
+    return problems
+
+
+def load_designed(path: Path) -> Paradigm:
+    """`load_paradigm`, plus `experience_problems`: a spec a designer may submit."""
+    p = load_paradigm(path)
+    problems = experience_problems(p)
+    if problems:
+        raise ParadigmInvalid(str(path), problems)
+    return p
+
+
 def load_paradigm(path: Path) -> Paradigm:
     path = Path(path)
     try:

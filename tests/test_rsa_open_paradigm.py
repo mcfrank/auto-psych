@@ -10,6 +10,20 @@ from src.rsa.loop.novelty import plain_pool
 SQUARE = '<rect x="10" y="10" width="20" height="20" fill="#2a78d6"/>'
 
 
+def varied(spec, n=3):
+    """A spec dict with ``n`` domains (copies of its first, renamed and recoloured): what a designer's
+    spec needs (`src.rsa_open.paradigm.MIN_DOMAINS`)."""
+    import copy
+
+    first = spec["materials"]["domains"][0]
+    for k, (name, colour) in enumerate([("critters", "#d9e1e0"), ("beasties", "#e0d9e1")][: n - 1]):
+        d = copy.deepcopy(first)
+        d["name"] = name
+        d["base"] = d["base"].replace("#e1e0d9", colour) if "#e1e0d9" in d["base"] else d["base"]
+        spec["materials"]["domains"].append(d)
+    return spec
+
+
 def closed_like_spec():
     """The closed campaign's paradigm (forced choice over the 1,597-display pool, 200 people,
     13 + 2 trials, $0.50 for 3 minutes), with stand-in SVG materials."""

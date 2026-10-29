@@ -18,13 +18,18 @@ the construct.
 2. **Parsimony.** At equal or better transfer, they use fewer theory parameters, and their
    parameters are more stable across paradigms (each paradigm fitted alone, estimates compared).
 3. **The designer.** Agent-designed paradigms are valid and informative: realized against
-   predicted information gain, comprehension and catch pass rates, pilot against live.
+   predicted information gain, comprehension and catch pass rates, pilot against live, and how
+   participants rated them (an end-of-study "How enjoyable was this study?", 1-5, on every page of
+   both arms).
 
 ## 2. Two arms, one harness
 
 Both arms run the same code (`src/rsa_open/`), and differ only in **who chooses each experiment**:
 - **Open arm:** an agent designer proposes a new paradigm each experiment (`PLAN.md` §4). The
-  harness checks it, scores it, pilots it and freezes it.
+  harness checks it, scores it, pilots it and freezes it. A designed paradigm uses at least 3
+  domains of pictures (or text materials) and at most 30 test trials a person; the designer's
+  brief asks it to weigh variety and the effort of each answer, and it reads earlier experiments'
+  enjoyment ratings (PI 2026-10-29).
 - **Fixed arm:** every experiment uses the closed campaign's forced-choice paradigm (one frozen
   spec). Its displays are chosen by the same information-gain tool, with no designer.
 

@@ -44,9 +44,12 @@ def ws(base_workspace, tmp_path):
     return Workspace(root)
 
 
+from tests.test_rsa_open_paradigm import varied  # noqa: E402
+
+
 def write_spec(ws, response=None, **design):
     spec = small_paradigm(response or response_block("choice"))
-    data = spec.model_dump(mode="json")
+    data = varied(spec.model_dump(mode="json"))
     data["design"].update(design)
     path = ws.work / f"p{len(list(ws.work.glob('*.json')))}.json"
     path.write_text(json.dumps(data))

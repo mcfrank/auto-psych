@@ -159,14 +159,14 @@ def best_scored_spec(ws: Workspace, exclude=frozenset()) -> Optional[Dict[str, A
     """The spec in ``work/`` that a session ending without a submission is submitted with: valid
     as it stands, with a full ``eig`` report of that exact spec that meets the floor, the highest
     bits per dollar; None if there is none. ``exclude``: sha256s that already failed."""
-    from src.rsa_open.paradigm import ParadigmInvalid, load_paradigm
+    from src.rsa_open.paradigm import ParadigmInvalid, load_designed
 
     best = None
     for spec in sorted(ws.work.glob("*.json")):
         if spec.name in (SUBMISSION,):
             continue
         try:
-            p = load_paradigm(spec)
+            p = load_designed(spec)
         except (ParadigmInvalid, ValueError, OSError):
             continue
         report = ws.report_path("eig", p.sha256)
@@ -235,9 +235,9 @@ def time_report(ws: Workspace, paradigm, units: list) -> Dict[str, Any]:
 
 def validate(ws: Workspace, spec: Path) -> Dict[str, Any]:
     from src.rsa_open.design import trial_units
-    from src.rsa_open.paradigm import load_paradigm, paradigm_likelihood, scene_pool
+    from src.rsa_open.paradigm import load_designed, paradigm_likelihood, scene_pool
 
-    p = load_paradigm(spec)
+    p = load_designed(spec)
     scenes = scene_pool(p)
     # The EIG tool's limit on trial units, checked here so a spec eig cannot score fails at once
     # (trial_units raises past it).
@@ -289,9 +289,9 @@ def link_check_report(ws: Workspace, spec: Path, *, theory: Optional[str] = None
 
 
 def submit(ws: Workspace, spec: Path) -> Dict[str, Any]:
-    from src.rsa_open.paradigm import load_paradigm
+    from src.rsa_open.paradigm import load_designed
 
-    p = load_paradigm(spec)
+    p = load_designed(spec)
     problems = []
     eig_path, link_path = ws.report_path("eig", p.sha256), ws.report_path("link-check", p.sha256)
     if not eig_path.exists():

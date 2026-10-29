@@ -261,6 +261,7 @@
       data: { response: { type: ParameterType.OBJECT }, rt: { type: ParameterType.INT } }
     };
     const LISTS_KIND = LISTS.materials_kind;
+    const EXPERIENCE_CHOICES = ['1 (not at all)', '2', '3', '4', '5 (very)'];
 
     function nextButton(label) { return function () { return '<button type="button" class="ro-next">' + escapeHtml(label) + '</button>'; }; }
     function prose(inner) { return '<div class="ro-prose">' + inner + '</div>'; }
@@ -331,6 +332,21 @@
       timeline.push({ type: jsPsychHtmlButtonResponse, stimulus: prose('<p>Now the real questions begin. There are ' +
                       rest.length + ' of them.</p>'), choices: ['Begin'], button_html: nextButton('Begin'), data: { task: 'practice_done' } });
       rest.forEach(function (t) { timeline.push(trialNode(t)); });
+      // How the study felt (PI 2026-10-29): one rating and an optional comment, after the last trial.
+      // The rating reaches the next designers (src/rsa_open/live.py); the comment stays private.
+      let experienceComment = '';
+      timeline.push({ type: jsPsychHtmlButtonResponse,
+                      stimulus: prose('<p><strong>One last question.</strong> How enjoyable was this study?</p>' +
+                                      '<p><label for="ro-comment">Any comments? (optional; please do not include personal ' +
+                                      'information)</label><br><textarea id="ro-comment" rows="3" maxlength="500"></textarea></p>'),
+                      choices: EXPERIENCE_CHOICES,
+                      button_html: function (label) { return '<button type="button" class="ro-option">' + escapeHtml(label) + '</button>'; },
+                      data: { task: 'experience' },
+                      on_load: function () {
+                        const box = document.getElementById('ro-comment');
+                        if (box) box.addEventListener('input', function () { experienceComment = box.value; });
+                      },
+                      on_finish: function (d) { d.rating = d.response + 1; d.comment = experienceComment.slice(0, 500); } });
       setStatus('');
       jsPsych.run(timeline);
     }

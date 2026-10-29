@@ -251,6 +251,14 @@ class Chain:
                 records += read_records(path)
         return records
 
+    def experience(self, n: int) -> List[dict]:
+        """Every finished live experiment's enjoyment rating, this chain's and the other chains'
+        (what experiment n's designer reads, beside the timing)."""
+        paths = [self.exp(k) / "data" / "experience.json" for k in range(1, n)]
+        for other in self.cfg.other_chains:
+            paths += sorted(Path(other).glob("experiment*/data/experience.json"))
+        return [json.loads(p.read_text()) for p in paths if p.exists()]
+
     # ---------- 1. design ----------
     def design_theories(self, n: int) -> Dict[str, tuple]:
         """name -> (theory file, hypothesis) for the design: the carried theories, then every bar
@@ -360,7 +368,7 @@ class Chain:
                      history=self.history(n),
                      spawn=self.designer_spawn,
                      pilot_participants=self.cfg.pilot_participants, participant_factory=self.participant_factory,
-                     code_commit=self.cfg.code_commit, timing=self.timing(n))
+                     code_commit=self.cfg.code_commit, timing=self.timing(n), experience=self.experience(n))
         return frozen
 
     def fixed_design(self, n: int, context: Dict[str, tuple]) -> Dict[str, Any]:
@@ -370,7 +378,7 @@ class Chain:
         from src.rsa_open.paradigm import load_paradigm
 
         ws = prepare_workspace(self.exp(n) / "design" / "fixed", theories=context, history=self.history(n),
-                               timing=self.timing(n))
+                               timing=self.timing(n), experience=self.experience(n))
         spec = ws.work / "paradigm.json"
         shutil.copyfile(self.cfg.fixed_spec or SPEC_PATH, spec)
         submitted = ws.root / "submissions" / "1.json"
@@ -446,6 +454,13 @@ class Chain:
                 f.write(json.dumps(r) + "\n")
         if not (data / "timing.json").exists():
             self.record_timing(n, seconds)
+        if record.get("enjoyment"):  # how the study felt, for every later design (`experience`)
+            (data / "experience.json").write_text(json.dumps({
+                "source": f"{self.cfg.chain}, experiment {n}", "paradigm": paradigm.name,
+                "response": paradigm.response.type + (f" + {paradigm.second_response.type}"
+                                                      if paradigm.second_response else ""),
+                "domains": len(paradigm.materials.domains), "trials": paradigm.design.trials_per_participant,
+                "minutes": paradigm.design.minutes, **record["enjoyment"]}, indent=1))
         out = data / "block.json"
         write_corpus(out, [paradigm_block(f"exp{n}", paradigm, rows)])
         return out

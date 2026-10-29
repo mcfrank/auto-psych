@@ -265,6 +265,8 @@ class Person:
     comprehension_final: Optional[bool]
     seconds: Optional[float]
     problems: List[str] = field(default_factory=list)
+    enjoyment: Optional[int] = None
+    """The end-of-study rating, 1-5 (None: not given). The comment stays in the private raw data."""
 
 
 def _comprehension_final(records: Sequence[Mapping[str, Any]]) -> Optional[bool]:
@@ -299,6 +301,8 @@ def person(pid: str, response: Mapping[str, Any], lists: Mapping[str, Any]) -> P
     if len(rows) != len(expected["trials"]):
         p.problems.append(f"incomplete: {len(rows)} of {len(expected['trials'])} trials")
     p.comprehension_final = _comprehension_final(records)
+    rated = [r.get("rating") for r in records if r.get("task") == "experience"]
+    p.enjoyment = int(rated[-1]) if rated and isinstance(rated[-1], (int, float)) else None
     elapsed = [r.get("time_elapsed") for r in records if isinstance(r.get("time_elapsed"), (int, float))]
     p.seconds = max(elapsed) / 1000.0 if elapsed else None
     from src.rsa_open.chain import TRIAL_DESIGN_FIELDS
@@ -384,6 +388,7 @@ def monitor_report(people: Sequence[Person], excluded: Mapping[str, Sequence[str
             fast[p.id] = f"median {statistics.median(rts):.0f} ms a test trial"
     reasons = Counter(w for ws in excluded.values() for w in ws)
     minutes = [p.seconds / 60 for p in readable if p.seconds]
+    rated = [p.enjoyment for p in readable if p.enjoyment is not None]
     kept = len(people) - len(excluded)
     return {
         "recruited": recruited, "responses": len(people), "readable": len(readable), "kept": kept,
@@ -396,6 +401,8 @@ def monitor_report(people: Sequence[Person], excluded: Mapping[str, Sequence[str
         "fast": {"n": len(fast), "people": fast},
         "minutes": ({"median": statistics.median(minutes), "p10": sorted(minutes)[int(0.1 * (len(minutes) - 1))],
                      "p90": sorted(minutes)[int(0.9 * (len(minutes) - 1))]} if minutes else None),
+        "enjoyment": ({"mean": statistics.mean(rated), "n": len(rated),
+                       "counts": {str(k): rated.count(k) for k in range(1, 6)}} if rated else None),
     }
 
 
@@ -409,7 +416,9 @@ def monitor_lines(report: Mapping[str, Any]) -> List[str]:
              f"comprehension (second reading) {pct(report['comprehension_final'])}, catch trials "
              f"{pct(report['catch_pass'])}, same answer on nearly every trial {report['same_answer']['n']} "
              f"({pct(report['same_answer']['share'])}), fast {report['fast']['n']}"
-             + (f", minutes median {m['median']:.1f} (p10 {m['p10']:.1f}, p90 {m['p90']:.1f})" if m else "")]
+             + (f", minutes median {m['median']:.1f} (p10 {m['p10']:.1f}, p90 {m['p90']:.1f})" if m else "")
+             + (f", enjoyment {report['enjoyment']['mean']:.1f} of 5 (n {report['enjoyment']['n']})"
+                if report.get("enjoyment") else "")]
     for pid, note in sorted(report["same_answer"]["people"].items()):
         lines.append(f"  same answer: {pid}: {note}")
     return lines

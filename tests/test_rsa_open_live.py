@@ -234,6 +234,7 @@ def test_the_live_page_takes_its_list_from_assign_and_posts_what_collection_read
     assert who.comprehension_final is True  # wrong at first, right on the second reading
     assert exclusions(who, repeat=False) == []  # the top rating passes the catch trial
     assert {r["response"]["rating"] for r in who.rows if r["phase"] == "test"} == {5}
+    assert who.enjoyment == 1  # the end-of-study rating (the driver clicks the first option)
 
 
 # --------------------------------------------------------------------------- people
