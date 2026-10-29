@@ -1,10 +1,13 @@
 # Open and fixed-paradigm discovery loops: draft pre-registration
 
-**Status: draft, not registered.** Registered on OSF **before the feasibility chain (§4) starts**,
-so the gate is fixed before any data that it judges. A second, registered amendment fixes the
-bakeoff's analysis (§6, marked **TBD**) before any bakeoff participant is recruited, as
-`rsa-prereg-final` was for the closed campaign (`docs/auto_rsa/PREREG_FINAL.md`). The plan it
-implements is `PLAN.md` (Decisions 2026-10-26).
+**Status: final text for registration (2026-10-29), not yet registered.** Registered on OSF
+**before the feasibility chain (§4) starts**, so the gate is fixed before any data that it judges,
+together with the git tag `rsa-open-prereg` of the code every live chain runs (the live launcher
+refuses any other: `scripts/rsa/live/open_live.yaml`, `code_tag`) and the sha256 of the files that
+decide the gate (§8). Two registered amendments follow: the scale of stage 2, set at the gate
+(§4), and the bakeoff's analysis (§6, marked **TBD**), before any bakeoff participant is recruited,
+as `rsa-prereg-final` was for the closed campaign (`docs/auto_rsa/PREREG_FINAL.md`). The plan it
+implements is `PLAN.md` (Decisions 2026-10-26 to 2026-10-29).
 
 ## 1. Question and claims
 
@@ -20,7 +23,7 @@ the construct.
 3. **The designer.** Agent-designed paradigms are valid and informative: realized against
    predicted information gain, comprehension and catch pass rates, pilot against live, and how
    participants rated them (an end-of-study "How enjoyable was this study?", 1-5, on every page of
-   both arms).
+   both arms). Claim 3 is descriptive; its measures are fixed in §7.
 
 ## 2. Two arms, one harness
 
@@ -29,7 +32,9 @@ Both arms run the same code (`src/rsa_open/`), and differ only in **who chooses 
   harness checks it, scores it, pilots it and freezes it. A designed paradigm uses at least 3
   domains of pictures (or text materials) and at most 30 test trials a person; the designer's
   brief asks it to weigh variety and the effort of each answer, and it reads earlier experiments'
-  enjoyment ratings (PI 2026-10-29).
+  enjoyment ratings (PI 2026-10-29). Its pay is at least $10 an hour at the larger of its
+  declared minutes and the harness's time estimate, which is calibrated on this campaign's own
+  completion times (run D2's two studies from the start; PI 2026-10-29).
 - **Fixed arm:** every experiment uses the closed campaign's forced-choice paradigm (one frozen
   spec). Its displays are chosen by the same information-gain tool, with no designer.
 
@@ -40,8 +45,10 @@ Everything else is identical by construction:
 - the inference limits: every fit is limited to 4 hours, and a theory whose fit or cross-validation
   does not converge (or runs out of time) is not carried into the next experiment (the
   incumbent stays if no theory converges);
-- the theorist and critic (Gemini 4 for every agent), the sandbox, rounds and slots, and theorist
-  tooling (the sampler report, the identification prompt, the corpus-relative admission limit);
+- the agents: designer, theorists and critic are `google/gemini-4-argon` (Gemini 4), the pilot's
+  simulated participants `gemini-3.8-flash`; the sandbox (no network), rounds and slots, and
+  theorist tooling (the sampler report, the identification prompt, the corpus-relative admission
+  limit, the quick approximate fit);
 - the seeds and the chain split, and the literature data E;
 - the per-experiment budget (§3);
 - the page builder and recruitment.
@@ -63,14 +70,17 @@ it ran older code and agents, and its pre-registered data are spent.
 **$266.67 per experiment, for every experiment of both arms** (PI 2026-10-26): twice the closed
 campaign's $133.33 (200 people × $0.50 × Prolific's fee). The open designer spends it as it
 chooses, within the bounds; the fixed arm spends it on the closed paradigm's design, with more
-people at the same pay and length.
+people at the same pay and length: 400 people × $0.50 for 3 minutes (its time estimate is 2.8-2.9
+minutes for any design, and run D2's people took a median of 2.9).
 
 ## 3a. Estimates (the gate's reference, item 5)
 
 From the rehearsals (runs B, B′, C and C′), per experiment at full size:
-- **time:** about 1 day of running: the design 2–3 h, collection 1–24 h (24 h at most, §4a), the
-  loop about 20 h (starting fits 4–5 h, then about 3 rounds of 5–6 h);
-- **money:** the budget's $266.67 (§3), and $55–110 of agent spend.
+- **time:** the design 2–3 h and the loop about 20 h (starting fits 4–5 h, then about 3 rounds of
+  5–6 h): **23 h of running** an experiment, which the gate's time criterion uses (§4, item 5); and
+  collection, 1–24 h (24 h at most, §4a; run D2's 15 people a study took about two hours, at
+  night), which it does not;
+- **money:** the budget's $266.67 (§3), and **at most $110 of agent spend** (from $55).
 
 So the feasibility chain's first 3 experiments: about 3–4 days of running (waits for the PI's
 review excluded), $800 of participant payments and at most $330 of agent spend. On a pass, open
@@ -85,17 +95,32 @@ one, and its data count as the open arm's chain 1 if the gate passes. The gate i
 the method can run with real people. It looks at no comparison with the fixed arm, since there is
 none yet.
 
-**Pass** requires all of these (thresholds accepted by the PI, 2026-10-26):
+**Pass** requires all of these (thresholds accepted by the PI, 2026-10-26; definitions,
+2026-10-29). They are computed by `src/rsa_open/gate.py` (`python -m src.rsa_open.gate --run-dir
+<the chain>`) from the chain's run tree alone, and that script is registered (§8):
 1. **Design:** each experiment freezes a paradigm that passes the pilot, within the designer's two
    cycles (a harness submission counts).
 2. **Data:** in each experiment, among recruited participants: final comprehension ≥ 0.8, catch
-   trials passed ≥ 0.8, exclusions ≤ 25%, and the data parse and pass the monitor's degeneracy
-   checks.
-3. **Information:** each experiment's data separate its design theories: on the new paradigm, the
-   best and worst design theories differ by more than 4 clustered SEs (held-out).
-4. **Loop:** each experiment's loop admits at least 1 new theory, ends with at least 2
-   trusted theories, and finishes without a harness failure.
-5. **Cost and time:** within 1.5× the plan's estimate.
+   trials passed ≥ 0.8, exclusions (§4b) ≤ 25%, the data parse (the experiment's block is written
+   and its loop runs on it), and at most 10% of readable participants give the same answer on
+   nearly every test trial (the monitor's flag: at least 90% of their test answers the same).
+3. **Information:** each experiment's data carry signal its theories capture: the loop's
+   incumbent at its first scoring (the best of the theories carried in, before any new one) beats
+   a **chance theory** on the new paradigm by more than 4 unit-clustered SEs, both scored by the
+   loop's grouped cross-validation. The chance theory ignores the display (uniform over its objects;
+   its derived speaker uniform over the messages) and its link is fitted, so it predicts each
+   paradigm's distribution of answers with no sensitivity to the scene. How far apart the carried
+   theories are is reported, not judged: the loop prunes them to near-ties, and in run B's
+   simulated chain they were 0.4 and 1.0 SEs apart in experiments 2 and 3 although the chain worked.
+4. **Loop:** each experiment's loop ends with at least 2 trusted theories and an export (no
+   harness failure), and **over the 3 experiments** at least one new theory is admitted (run B's
+   experiment 3 admitted none: its loop stopped after two rounds without a change of incumbent).
+5. **Cost and time:** within 1.5× the estimate (§3a): at most 104 h of running for the 3
+   experiments (1.5 × 3 × 23 h), counted from experiment 1's design start to experiment 3's loop
+   finish less each collection stage (recruitment, the deploy, and the wait for the PI's review;
+   queue waits and failures count), from the chain's stage log; and at most $495 of agent spend
+   (1.5 × 3 × $110; every priced call plus an estimate for unpriced ones at their model's rate).
+   Participant payments are bounded by the budget by construction, and are reported.
 
 **If it passes:** open chains 2–4 and fixed chains 1–4 run as registered. **If it fails:** no
 further chains run under this registration. A revision is registered anew, and open chain 1 is
@@ -185,7 +210,21 @@ how it is going.
 ## 7. Also reported (descriptive, not tested)
 
 - Each arm's admission outcomes: too slow, not converged, admitted.
-- Claim 3's designer measures, pilot against live.
+- **Claim 3's measures**, for every experiment, by arm, summarized over chains (each chain one
+  unit: the mean of its experiments, and the range across chains):
+  - **information:** the design's predicted joint information gain (bits, `design/frozen/record.json`)
+    against the realized gain: log2 K minus the entropy of the posterior over the K theories
+    carried in, uniform before and proportional to exp(their out-of-fold lpd on the new paradigm)
+    after (`loop/newest_block_cv.json`); the carried theories' spread on the new paradigm, and the
+    incumbent's lead over chance (§4, item 3);
+  - **validity:** final comprehension, catch pass rate, exclusions by reason, readable share, and
+    the share giving the same answer on nearly every trial;
+  - **pilot against live:** comprehension, catch pass rate and minutes, the pilot's against real
+    people's;
+  - **participants' experience:** the enjoyment rating's mean and distribution (comments stay
+    private), and the median minutes and pay per hour at the median;
+  - **the designer's record:** cycles used, harness submissions, failures (§4a), and the domains,
+    response types and test trials it chose.
 - Returning people per study and arm (§4b), and the first-study sensitivity analysis beside every
   result.
 - The rehearsals: run B, its replay and the ground-truth check, and the integrated harness's
@@ -193,3 +232,15 @@ how it is going.
   rehearsal's design, never modelled).
 - **Scope:** every paradigm shares one abstract scene (referents, features, a message, its
   alternatives). Generalization is claimed within that space of operationalizations.
+
+## 8. Registered files
+
+The tag `rsa-open-prereg` fixes all the code, and a live chain runs only on it (its checkout at the
+tag, clean). These files decide the gate or the fixed arm; their sha256 are given here and on OSF
+so the registration can be checked without the repository (computed at tagging):
+
+| file | sha256 |
+|---|---|
+| `src/rsa_open/gate.py` | (at tagging) |
+| `src/rsa_open/fixed_paradigm.json` | (at tagging) |
+| `src/rsa_open/loop/orchestrator.py` (the chance theory, the scores the gate reads) | (at tagging) |

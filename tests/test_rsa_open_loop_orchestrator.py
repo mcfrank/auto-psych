@@ -19,7 +19,7 @@ def ported(name):
 
 class FakeTheorist:
     """Slot 1 proposes rsa_l1_salience (novel); slot 2 copies rsa_l1's hypothesis (refused, then a
-    repair that copies its file: not novel); slot 3 writes nothing, twice."""
+    repair that keeps its file: refused as unchanged); slot 3 writes nothing, twice."""
 
     def __init__(self):
         self.calls = []
@@ -84,7 +84,7 @@ def test_a_round_admits_refuses_repairs_retries_and_exports(run):
     assert ("salient_prior_listener", "admitted") in outcomes
     rejected = [e for e in ledger if e["outcome"] == "rejected"]
     assert any("word for word" in e["detail"] for e in rejected)  # slot 2 copied rsa_l1's hypothesis
-    assert any("not novel" in e["detail"] for e in rejected)  # its repair, a copy of rsa_l1's file
+    assert any("left candidate.py unchanged" in e["detail"] for e in rejected)  # its repair kept the same file
     assert any(e["detail"] == "the agent wrote no candidate.py" for e in rejected)
     assert [c for c, _ in theorist.calls].count("candidate_3") == 1
     assert "candidate_3_retry_1" in [c for c, _ in theorist.calls]
@@ -99,6 +99,11 @@ def test_a_round_admits_refuses_repairs_retries_and_exports(run):
     # The round was critiqued on the newest block (exp1, a production paradigm) before its theorists ran.
     assert history[1]["critique"]["status"] == "critiqued" and history[1]["critique"]["block"] == "exp1"
     assert [c for c, _ in theorist.calls][0] == "critique"
+    # The feasibility gate's item 3: every scored theory's and the chance theory's out-of-fold lpd on exp1.
+    cv = json.loads((loop.dir / "newest_block_cv.json").read_text())
+    assert cv["block"] == "exp1" and cv["chance_converged"] and len(cv["chance"]) == len(cv["units"])
+    assert {"literal_listener", "rsa_l1"} <= set(cv["theories"])
+    assert sum(cv["theories"][history[0]["best_model"]]) > sum(cv["chance"])
 
 
 @pytest.mark.slow

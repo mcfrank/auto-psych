@@ -54,19 +54,23 @@ def fast(monkeypatch):
     return state
 
 
-def spec_for(minutes=None):
-    """A choice paradigm whose declared minutes match the pilot's estimate (unless ``minutes``)."""
+def spec_for(minutes=None, response=None):
+    """A choice paradigm (or one with ``response``) whose declared minutes are the pilot's estimate,
+    rounded up (unless ``minutes``), paid $10 an hour: the pay floor holds at the estimate too."""
+    from src.rsa_open.paradigm import parse_paradigm
     from src.rsa_open.pilot import estimated_minutes
     from src.rsa_open.screens import trial_lists
+    from tests.test_rsa_open_paradigm import varied
     from tests.test_rsa_open_screens import units_of
 
+    spec = varied(paradigm_of("choice").model_dump(mode="json"))
+    if response is not None:
+        spec["response"] = response
     if minutes is None:
-        p = paradigm_of("choice")
-        minutes = round(estimated_minutes(trial_lists(p, units_of(p), seed=0, n_lists=1)), 1)
-    pay = math.ceil(minutes * 10 / 60 * 100) / 100  # $10 an hour
-    from tests.test_rsa_open_paradigm import varied
-
-    return varied(paradigm_of("choice", minutes=minutes, pay_usd=pay).model_dump(mode="json"))
+        p = parse_paradigm(spec)
+        minutes = math.ceil(estimated_minutes(trial_lists(p, units_of(p), seed=0, n_lists=1)) * 10) / 10
+    spec["design"].update(minutes=minutes, pay_usd=math.ceil(minutes * 10 / 60 * 100) / 100)  # $10 an hour
+    return spec
 
 
 class FakeDesigner:

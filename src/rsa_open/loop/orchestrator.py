@@ -12,6 +12,8 @@ Layout under ``results_dir``::
     .fit_cache/                 content-addressed corpus fits
     round_<k>/candidate_<i>[_retry_1|_repair_1]/   agent working directories
     history.json                one entry per scoring step
+    newest_block_cv.json        every scored theory's out-of-fold lpd on the newest block, and the
+                                chance theory's (`CHANCE_THEORY`): the feasibility gate's item 3
     best_model.py, export.json  the exported incumbent and the live set
 
 Each round, as the closed loop's: every slot's agent concurrently (exploratory slots walk the
@@ -143,6 +145,22 @@ class Live:
     source: str
 
 
+CHANCE_NAME = "chance"
+CHANCE_THEORY = '''"""Chance: a listener who ignores the display, uniform over its objects (its speaker, derived,
+is uniform over the real messages). Under a fitted link it is the responses' distribution with
+no sensitivity to the scene: the feasibility gate's baseline (PREREG_DRAFT.md §4, item 3). Never
+a candidate, never carried, never shown to the theorists."""
+
+import jax.numpy as jnp
+
+PARAMS = {}
+
+
+def listener(params, ctx):
+    return jnp.ones(ctx.lex.shape[1]) / ctx.lex.shape[1]
+'''
+
+
 class OpenLoop:
     def __init__(self, cfg: OpenLoopConfig, spawn: SpawnFn) -> None:
         self.cfg = cfg
@@ -153,6 +171,7 @@ class OpenLoop:
         self.live: Dict[str, Live] = {}
         self.cv: Dict[str, Optional[CorpusCV]] = {}
         self.cv_problems: Dict[str, str] = {}
+        self.chance_cv: Optional[CorpusCV] = None
         self.admission_limit_sec: Optional[float] = None
         self.history: List[dict] = []
         self.step = 0
@@ -281,11 +300,12 @@ class OpenLoop:
         return min(self.cfg.in_play_fit_limit_sec, max(FOLD_MIN_SEC, FOLD_TIME_FACTOR * full))
 
     def _cv_one(self, name: str) -> Optional[CorpusCV]:
-        path = self.models_dir / f"{name}.py"
-        theory = self.live[name].theory
-        limit = self.fold_time_limit(name)
+        return self._cv_file(name, self.models_dir / f"{name}.py", self.live[name].theory, self.live[name].fit,
+                             self.fold_time_limit(name))
 
-        full = self.live[name].fit.flat()
+    def _cv_file(self, name: str, path: Path, theory: TheoryModel, fit: CorpusFit,
+                 limit: Optional[float]) -> Optional[CorpusCV]:
+        full = fit.flat()
         start = {k: float(np.median(v)) for k, v in full.items()}
         fold_settings = replace(self.cfg.settings, num_warmup=self.cfg.cv_warmup, num_samples=self.cfg.cv_samples)
 
@@ -315,6 +335,37 @@ class OpenLoop:
                                       f"{', '.join(impossible)}: a numerical failure), so it is untrusted")
             return CorpusCV(out, False)
         return CorpusCV(out, all(fit.converged for fit in fits))
+
+    def score_chance(self) -> Optional[CorpusCV]:
+        """The chance theory's out-of-fold lpd, as every theory's is computed (``.chance/``, outside
+        what the theorists read). A failure is recorded, never raised: the gate reports it."""
+        path = self.dir / ".chance" / f"{CHANCE_NAME}.py"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(CHANCE_THEORY)
+        try:
+            fitted = loop_fit(path, CHANCE_NAME, self.corpus, self.cfg.settings, self.dir / ".fit_cache",
+                              time_limit_sec=self.live_cfg.time_limit_sec)
+        except ModelFailure as exc:
+            self.cv_problems[CHANCE_NAME] = f"its fit failed: {exc}"
+            return None
+        limit = None if self.live_cfg.time_limit_sec is None else self.cfg.in_play_fit_limit_sec
+        self.chance_cv = self._cv_file(CHANCE_NAME, path, TheoryModel(path, name=CHANCE_NAME), fitted, limit)
+        return self.chance_cv
+
+    def write_newest_cv(self) -> Path:
+        """``newest_block_cv.json``: the newest block's units and every scored theory's out-of-fold lpd
+        there (the chance theory's too), for the feasibility gate (`src.rsa_open.gate`)."""
+        newest = self.blocks[-1]
+        units = np.unique(np.asarray(newest.units), return_inverse=True)[1]
+        out = {"block": newest.name, "units": units.tolist(),
+               "theories": {n: r.pointwise[newest.name].tolist() for n, r in self.cv.items() if r is not None},
+               "converged": {n: bool(r.converged) for n, r in self.cv.items() if r is not None},
+               "chance": None if self.chance_cv is None else self.chance_cv.pointwise[newest.name].tolist(),
+               "chance_converged": None if self.chance_cv is None else bool(self.chance_cv.converged),
+               "chance_problem": self.cv_problems.get(CHANCE_NAME)}
+        path = self.dir / "newest_block_cv.json"
+        path.write_text(json.dumps(out))
+        return path
 
     def standing(self) -> Dict[str, dict]:
         todo = [n for n in self.live if n not in self.cv]
@@ -353,6 +404,7 @@ class OpenLoop:
                      ledger_entries=len(self.ledger.entries()))
         self.history.append(entry)
         (self.dir / "history.json").write_text(json.dumps(self.history, indent=1, default=float))
+        self.write_newest_cv()
         self.step += 1
         return entry
 
@@ -625,6 +677,7 @@ class OpenLoop:
 
     def run(self) -> dict:
         self.setup()
+        self.score_chance()
         self.score(-1, [dict(outcome="seeded", name=n) for n in self.live])
         patience = self.cfg.stop_after_stale_rounds
         for r in range(self.cfg.max_iterations):

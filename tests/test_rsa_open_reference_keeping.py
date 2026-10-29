@@ -29,7 +29,7 @@ def _loop(tmp_path):
         "weak": (-1.0 + noise(), np.full(n, -3.0)),           # behind on both
     }
     loop.cv = {k: CorpusCV({"E": e, "exp1": x}, True) for k, (e, x) in pointwise.items()}
-    loop.cv_problems, loop.admission_limit_sec = {}, None
+    loop.cv_problems, loop.admission_limit_sec, loop.chance_cv = {}, None, None
     loop.live_cfg = SimpleNamespace(time_limit_sec=None)
     loop.live = {}
     for name in pointwise:

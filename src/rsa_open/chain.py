@@ -43,6 +43,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import shutil
 import time
 from dataclasses import dataclass, field, replace
@@ -495,18 +496,36 @@ class Chain:
             raise OutOfJobTime(f"{self.cfg.chain}, experiment {n}: {left:.1f} h of the job left, under the "
                                f"{need:g} h a {stage} needs; the chain's next job starts it")
 
+    def _stage(self, stage: str, n: int, done: Path, fn: Callable[[], Any]) -> Any:
+        """Run a stage, logging when it starts and finishes (``stage_times.jsonl``, which the
+        feasibility gate's time criterion reads: `src.rsa_open.gate`) unless its output exists."""
+        if done.exists():
+            return fn()
+        log = Path(self.cfg.out_dir) / "stage_times.jsonl"
+
+        def mark(event: str) -> None:
+            log.parent.mkdir(parents=True, exist_ok=True)
+            with log.open("a") as f:
+                f.write(json.dumps({"experiment": n, "stage": stage, "event": event, "at": time.time(),
+                                    "job": os.environ.get("SLURM_JOB_ID")}) + "\n")
+
+        mark("started")
+        out = fn()
+        mark("finished")
+        return out
+
     def run(self) -> List[dict]:
         exports = []
         for n in range(1, self.cfg.n_experiments + 1):
             if not (self.exp(n) / "design" / "frozen" / "record.json").exists():
                 self._time_for("design", n)
-            self.design(n)
-            self.collect(n)
+            self._stage("design", n, self.exp(n) / "design" / "frozen" / "record.json", lambda: self.design(n))
+            self._stage("collect", n, self.exp(n) / "data" / "block.json", lambda: self.collect(n))
             if self.cfg.stop_after_collect:
                 print(f"[chain] {self.cfg.chain}: stopped after experiment {n}'s collection (stop_after_collect)",
                       flush=True)
                 break
             if not (self.exp(n) / "loop" / "export.json").exists():
                 self._time_for("loop", n)
-            exports.append(self.model_loop(n))
+            exports.append(self._stage("loop", n, self.exp(n) / "loop" / "export.json", lambda: self.model_loop(n)))
         return exports

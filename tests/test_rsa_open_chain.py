@@ -21,9 +21,8 @@ SETTINGS = FitSettings(num_warmup=150, num_samples=150, num_chains=2, seed=0, de
 def specs():
     """The designer's two paradigms: forced choice, then production (each in its pilot's time)."""
     choice = spec_for()
-    production = spec_for()
-    production["response"] = {"type": "production", "link": "production",
-                              "prompt": "Which word would you use to point out the marked creature?"}
+    production = spec_for(response={"type": "production", "link": "production",
+                                    "prompt": "Which word would you use to point out the marked creature?"})
     return choice, production
 
 

@@ -194,6 +194,6 @@ def test_the_floor_is_half_the_closed_paradigm_s_information_per_dollar(context)
     paradigm = small_paradigm(response_block("choice"))
     report = score_paradigm(paradigm, load_context(context), n_draws=16, n_scenarios=200, seed=0)
     ref = report["reference"]
-    assert ref["design_size"] == 52 and ref["responses_per_unit"] == 50
+    assert ref["design_size"] == 52 and ref["responses_per_unit"] == 100  # 400 people x 13 test trials (2x budget)
     assert report["floor_bits_per_dollar"] == pytest.approx(FLOOR_SHARE * ref["bits_per_dollar"])
     assert report["meets_floor"] == (report["bits_per_dollar"] >= report["floor_bits_per_dollar"])
