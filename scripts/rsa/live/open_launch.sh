@@ -14,7 +14,7 @@
 # (except a smoke test) the checkout at the config's frozen code_tag, clean; only then is
 # CONFIRM_LIVE_RECRUITMENT=1 passed to the jobs.
 #
-# Each chain gets a ladder of LINKS jobs (default 4 x 48 h on the normal partition), each starting
+# Each chain gets a ladder of LINKS jobs (default 4 x 48 h on the first of mcfrank, owners, normal with room), each starting
 # after the previous one ends (afterany): a job that runs out of time leaves the chain for the
 # next, which resumes it; one that stops (finished, awaiting review, a test deploy, a failure)
 # writes the cell's STOP, and the ladder's later jobs exit at once. A stopped chain is relaunched
@@ -26,7 +26,7 @@ PROLIFIC_MODE="${PROLIFIC_MODE:?set PROLIFIC_MODE=test or live}"
 ARM="${ARM:?set ARM=open or fixed}"
 read -r -a CHAIN_LIST <<< "${CHAINS:?set CHAINS, e.g. \"0\" or \"0 1 2 3\"}"
 WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/rsa_open_live}"
-PARTITION="${PARTITION:-normal}"
+PARTITION="${PARTITION:-mcfrank,owners,normal}"  # the first with room (run D1: a whole node waited hours on normal)
 TIME="${TIME:-48:00:00}"
 LINKS="${LINKS:-4}"
 N_EXPERIMENTS="${N_EXPERIMENTS:-4}"

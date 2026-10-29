@@ -510,7 +510,7 @@ def test_each_chain_gets_a_ladder_of_jobs_and_a_stopped_chain_is_not_relaunched(
     out, calls = _launch(tmp_path, dict(PROLIFIC_MODE="test", ARM="fixed", CHAINS="0 1", LINKS="3"))
     assert out.returncode == 0, out.stderr
     assert "400 people x $0.50 for 3 min: $266.67 a study" in out.stderr
-    assert len(calls) == 6 and all("--partition=normal --time=48:00:00" in c for c in calls)
+    assert len(calls) == 6 and all("--partition=mcfrank,owners,normal --time=48:00:00" in c for c in calls)
     assert [("--dependency=afterany:" in c) for c in calls] == [False, True, True] * 2
     assert all("CONFIRM= " in c for c in calls)  # a test launch is never confirmed
     stop = tmp_path / "scratch" / "auto-psych" / "rsa_open_live" / "cells" / "fixed_chain_0" / "STOP"

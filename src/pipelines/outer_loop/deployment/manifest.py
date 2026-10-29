@@ -56,7 +56,9 @@ def git_metadata(repo_root: Path) -> dict[str, Any]:
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=10,
+                # A cold NFS checkout with git 1.8 took 5.7 s for `status --porcelain`, and two jobs
+                # starting together timed out at 10 s (RSA open run D1, 2026-10-28).
+                timeout=120,
             )
         except (OSError, subprocess.SubprocessError) as exc:
             detail = (getattr(exc, "stderr", "") or "").strip() or str(exc)
