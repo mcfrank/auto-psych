@@ -1,0 +1,33 @@
+{
+ "collection": "live",
+ "prolific_mode": "live",
+ "study_id": "6ae2d13d8059323f7c4caf6d",
+ "target": 15,
+ "smoke_test": true,
+ "other_study": 0,
+ "second_submissions": 0,
+ "recruited": 15,
+ "responses": 15,
+ "readable": 15,
+ "kept": 15,
+ "excluded": 0,
+ "exclusion_rate": 0.0,
+ "exclusion_reasons": {},
+ "comprehension_final": 1.0,
+ "catch_pass": 1.0,
+ "same_answer": {
+  "n": 0,
+  "share": 0.0,
+  "people": {}
+ },
+ "fast": {
+  "n": 0,
+  "people": {}
+ },
+ "minutes": {
+  "median": 7.852066666666667,
+  "p10": 5.427099999999999,
+  "p90": 14.572983333333333
+ },
+ "excluded_people": {}
+}

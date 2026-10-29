@@ -1,0 +1,29 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) math   2) devel
+[_env] REPO=/home/users/mcfrank/auto-psych
+[_env] WORK_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_smoke
+[_env] UV_PROJECT_ENVIRONMENT=/home/groups/mcfrank/venvs/auto-psych
+[rsa_env] WORK_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_smoke DATA_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_smoke/data AGENT_TREES_ROOT=/scratch/users/mcfrank/auto-psych/agent_trees
+[rsa_env] opencode 1.18.35 at /home/groups/mcfrank/software/npm-global/bin/opencode
+[rsa_env] GOOGLE_API_KEY is set
+[env_check] OK: 13 packages and 11 harness modules import; resvg renders
+[stage] staging harness repo -> /scratch/users/mcfrank/auto-psych/rsa_open_smoke/harness_repo
+[stage] staging agent source -> /scratch/users/mcfrank/auto-psych/rsa_open_smoke/agent_src
+[stage] staged code 6c532b05fe5fc491da1f8eb8d5a31f6370483c86
+[render] wrote /scratch/users/mcfrank/auto-psych/rsa_open_smoke/harness_repo/src/pipelines/outer_loop/projects/rsa_reference/prolific_config.yaml
+[provenance] recorded /home/users/mcfrank/auto-psych's commit in /scratch/users/mcfrank/auto-psych/rsa_open_smoke/cells/open_chain_0_smoke/deploy_repo/code_provenance.json
+[scrub] agent tools: /scratch/users/mcfrank/auto-psych/agent_trees/9f4e8dc5f6d2a57f/repo/.agent_bin/{uv,python,python3} -> /scratch/users/mcfrank/auto-psych/agent_trees/9f4e8dc5f6d2a57f/venv/bin/python
+[check] agent tree OK: /scratch/users/mcfrank/auto-psych/agent_trees/9f4e8dc5f6d2a57f/repo
+[open live] open_chain_0_smoke: test, 1 experiments, site auto-psych-2c5da-ro-open-c0s, code 6c532b05fe5fc491da1f8eb8d5a31f6370483c86 -> /scratch/users/mcfrank/auto-psych/agent_trees/9f4e8dc5f6d2a57f/repo/_runs/chain_0
+/scratch/users/mcfrank/auto-psych/agent_trees/9f4e8dc5f6d2a57f/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+  [deploy] Functions live: /results refuses reads without the token
+[chain] STOPPED, test mode: the page is at https://auto-psych-2c5da-ro-open-c0s.web.app/e1-open-c0-smoke/ and Prolific study 6ae246b913c7bfe61f451c26 is a draft to preview; nothing to collect
+  [tokens] RSA open chain: 0 tokens over 0 LLM call(s)
+  [tokens]   input=0 output=0 reasoning=0 cache_read=0 cache_write=0
+[open live] STOP: test deploy done: the page and a Prolific draft are up (see the log); relaunch live with CLEAR_STOP=1

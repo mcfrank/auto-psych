@@ -1,0 +1,15 @@
+[
+  {
+    "source": "chain_0, experiment 1",
+    "response_type": "choice",
+    "materials": "svg",
+    "trials": 16,
+    "objects_per_trial": 3.87,
+    "words_per_trial": 26.2,
+    "instruction_words": 158,
+    "n_people": 11,
+    "median_s": 173.254,
+    "p10_s": 117.019,
+    "p90_s": 411.055
+  }
+]

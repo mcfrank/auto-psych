@@ -1,0 +1,51 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) math   2) devel
+[_env] REPO=/home/users/mcfrank/auto-psych
+[_env] WORK_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_smoke
+[_env] UV_PROJECT_ENVIRONMENT=/home/groups/mcfrank/venvs/auto-psych
+[rsa_env] WORK_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_smoke DATA_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_smoke/data AGENT_TREES_ROOT=/scratch/users/mcfrank/auto-psych/agent_trees
+[rsa_env] opencode 1.18.35 at /home/groups/mcfrank/software/npm-global/bin/opencode
+[rsa_env] GOOGLE_API_KEY is set
+[env_check] OK: 13 packages and 11 harness modules import; resvg renders
+[stage] code already staged for this sweep (fd20e6690f40e0e92ddac98028ffc1267a1cc08a); not re-staging
+[render] wrote /scratch/users/mcfrank/auto-psych/rsa_open_smoke/harness_repo/src/pipelines/outer_loop/projects/rsa_reference/prolific_config.yaml
+[provenance] recorded /home/users/mcfrank/auto-psych's commit in /scratch/users/mcfrank/auto-psych/rsa_open_smoke/cells/open_chain_0_smoke/deploy_repo/code_provenance.json
+[scrub] agent tools: /scratch/users/mcfrank/auto-psych/agent_trees/9f4e8dc5f6d2a57f/repo/.agent_bin/{uv,python,python3} -> /scratch/users/mcfrank/auto-psych/agent_trees/9f4e8dc5f6d2a57f/venv/bin/python
+[check] agent tree OK: /scratch/users/mcfrank/auto-psych/agent_trees/9f4e8dc5f6d2a57f/repo
+[open live] open_chain_0_smoke: live, 1 experiments, site auto-psych-2c5da-ro-open-c0s, code fd20e6690f40e0e92ddac98028ffc1267a1cc08a -> /scratch/users/mcfrank/auto-psych/agent_trees/9f4e8dc5f6d2a57f/repo/_runs/chain_0
+  [deploy] Functions live: /results refuses reads without the token
+[monitor] responses 2 (recruited 2), kept 2, excluded 0 (0%): {}
+[monitor] comprehension (second reading) 100%, catch trials 100%, same answer on nearly every trial 0 (0%), fast 0, minutes median 5.2 (p10 5.0, p90 5.0)
+[monitor] responses 3 (recruited 3), kept 3, excluded 0 (0%): {}
+[monitor] comprehension (second reading) 100%, catch trials 100%, same answer on nearly every trial 0 (0%), fast 0, minutes median 5.4 (p10 5.0, p90 5.4)
+[monitor] responses 6 (recruited 6), kept 6, excluded 0 (0%): {}
+[monitor] comprehension (second reading) 100%, catch trials 100%, same answer on nearly every trial 0 (0%), fast 0, minutes median 6.7 (p10 5.0, p90 7.9)
+[monitor] responses 9 (recruited 9), kept 9, excluded 0 (0%): {}
+[monitor] comprehension (second reading) 100%, catch trials 100%, same answer on nearly every trial 0 (0%), fast 0, minutes median 7.7 (p10 5.0, p90 9.6)
+[monitor] responses 11 (recruited 11), kept 11, excluded 0 (0%): {}
+[monitor] comprehension (second reading) 100%, catch trials 100%, same answer on nearly every trial 0 (0%), fast 0, minutes median 7.9 (p10 5.4, p90 14.6)
+[monitor] responses 12 (recruited 12), kept 12, excluded 0 (0%): {}
+[monitor] comprehension (second reading) 100%, catch trials 100%, same answer on nearly every trial 0 (0%), fast 0, minutes median 7.8 (p10 5.4, p90 9.6)
+[monitor] responses 13 (recruited 13), kept 13, excluded 0 (0%): {}
+[monitor] comprehension (second reading) 100%, catch trials 100%, same answer on nearly every trial 0 (0%), fast 0, minutes median 7.8 (p10 5.4, p90 9.6)
+[monitor] responses 13 (recruited 13), kept 13, excluded 0 (0%): {}
+[monitor] comprehension (second reading) 100%, catch trials 100%, same answer on nearly every trial 0 (0%), fast 0, minutes median 7.8 (p10 5.4, p90 9.6)
+[monitor] responses 13 (recruited 13), kept 13, excluded 0 (0%): {}
+[monitor] comprehension (second reading) 100%, catch trials 100%, same answer on nearly every trial 0 (0%), fast 0, minutes median 7.8 (p10 5.4, p90 9.6)
+[monitor] responses 13 (recruited 13), kept 13, excluded 0 (0%): {}
+[monitor] comprehension (second reading) 100%, catch trials 100%, same answer on nearly every trial 0 (0%), fast 0, minutes median 7.8 (p10 5.4, p90 9.6)
+[monitor] responses 13 (recruited 13), kept 13, excluded 0 (0%): {}
+[monitor] comprehension (second reading) 100%, catch trials 100%, same answer on nearly every trial 0 (0%), fast 0, minutes median 7.8 (p10 5.4, p90 9.6)
+[monitor] responses 14 (recruited 14), kept 14, excluded 0 (0%): {}
+[monitor] comprehension (second reading) 100%, catch trials 100%, same answer on nearly every trial 0 (0%), fast 0, minutes median 7.8 (p10 5.4, p90 13.0)
+[monitor] responses 15 (recruited 15), kept 15, excluded 0 (0%): {}
+[monitor] comprehension (second reading) 100%, catch trials 100%, same answer on nearly every trial 0 (0%), fast 0, minutes median 7.9 (p10 5.4, p90 14.6)
+[live] chain_0, experiment 1: responses 15 (recruited 15), kept 15, excluded 0 (0%): {}
+[live] chain_0, experiment 1: comprehension (second reading) 100%, catch trials 100%, same answer on nearly every trial 0 (0%), fast 0, minutes median 7.9 (p10 5.4, p90 14.6)
+[chain] chain_0: stopped after experiment 1's collection (stop_after_collect)
+  [tokens] RSA open chain: 0 tokens over 0 LLM call(s)
+  [tokens]   input=0 output=0 reasoning=0 cache_read=0 cache_write=0
+[]
+[open live] STOP: finished

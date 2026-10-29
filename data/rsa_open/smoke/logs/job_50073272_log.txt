@@ -1,0 +1,52 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) math   2) devel
+[_env] REPO=/home/users/mcfrank/auto-psych
+[_env] WORK_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_smoke
+[_env] UV_PROJECT_ENVIRONMENT=/home/groups/mcfrank/venvs/auto-psych
+[rsa_env] WORK_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_smoke DATA_ROOT=/scratch/users/mcfrank/auto-psych/rsa_open_smoke/data AGENT_TREES_ROOT=/scratch/users/mcfrank/auto-psych/agent_trees
+[rsa_env] opencode 1.18.35 at /home/groups/mcfrank/software/npm-global/bin/opencode
+[rsa_env] GOOGLE_API_KEY is set
+[env_check] OK: 13 packages and 11 harness modules import; resvg renders
+[stage] RE-STAGING 6c532b05fe5fc491da1f8eb8d5a31f6370483c86 -> fd20e6690f40e0e92ddac98028ffc1267a1cc08a: Run D1 loose ends (git limit, 24-h window), PI 2026-10-29
+[stage] staging harness repo -> /scratch/users/mcfrank/auto-psych/rsa_open_smoke/harness_repo
+[stage] staging agent source -> /scratch/users/mcfrank/auto-psych/rsa_open_smoke/agent_src
+[stage] staged code fd20e6690f40e0e92ddac98028ffc1267a1cc08a
+[render] wrote /scratch/users/mcfrank/auto-psych/rsa_open_smoke/harness_repo/src/pipelines/outer_loop/projects/rsa_reference/prolific_config.yaml
+[provenance] recorded /home/users/mcfrank/auto-psych's commit in /scratch/users/mcfrank/auto-psych/rsa_open_smoke/cells/fixed_chain_0_smoke/deploy_repo/code_provenance.json
+[scrub] agent tools: /scratch/users/mcfrank/auto-psych/agent_trees/480ca6f75a4f1c5f/repo/.agent_bin/{uv,python,python3} -> /scratch/users/mcfrank/auto-psych/agent_trees/480ca6f75a4f1c5f/venv/bin/python
+[check] agent tree OK: /scratch/users/mcfrank/auto-psych/agent_trees/480ca6f75a4f1c5f/repo
+[open live] fixed_chain_0_smoke: live, 1 experiments, site auto-psych-2c5da-ro-fixed-c0s, code fd20e6690f40e0e92ddac98028ffc1267a1cc08a -> /scratch/users/mcfrank/auto-psych/agent_trees/480ca6f75a4f1c5f/repo/_runs/chain_0
+[live] chain_0, experiment 1: every recruiting slot is held by another chain's study; waiting
+[live] chain_0, experiment 1: recruiting slot 0 free
+  [deploy] Functions live: /results refuses reads without the token
+[monitor] responses 3 (recruited 3), kept 3, excluded 0 (0%): {}
+[monitor] comprehension (second reading) 100%, catch trials 100%, same answer on nearly every trial 0 (0%), fast 0, minutes median 2.0 (p10 1.7, p90 2.0)
+[monitor] responses 6 (recruited 6), kept 5, excluded 1 (17%): {'missed a catch trial': 1}
+[monitor] comprehension (second reading) 100%, catch trials 83%, same answer on nearly every trial 0 (0%), fast 0, minutes median 2.0 (p10 0.8, p90 2.7)
+[monitor] responses 9 (recruited 9), kept 7, excluded 2 (22%): {'missed a catch trial': 1, 'failed the comprehension checks on the second reading': 1}
+[monitor] comprehension (second reading) 89%, catch trials 89%, same answer on nearly every trial 0 (0%), fast 0, minutes median 2.0 (p10 0.8, p90 4.1)
+[monitor] responses 11 (recruited 11), kept 8, excluded 3 (27%): {'missed a catch trial': 2, 'failed the comprehension checks on the second reading': 2}
+[monitor] comprehension (second reading) 82%, catch trials 86%, same answer on nearly every trial 0 (0%), fast 0, minutes median 2.7 (p10 1.7, p90 4.1)
+[monitor] responses 11 (recruited 11), kept 8, excluded 3 (27%): {'missed a catch trial': 2, 'failed the comprehension checks on the second reading': 2}
+[monitor] comprehension (second reading) 82%, catch trials 86%, same answer on nearly every trial 0 (0%), fast 0, minutes median 2.7 (p10 1.7, p90 4.1)
+[monitor] responses 14 (recruited 14), kept 10, excluded 4 (29%): {'missed a catch trial': 3, 'failed the comprehension checks on the second reading': 2}
+[monitor] comprehension (second reading) 86%, catch trials 86%, same answer on nearly every trial 0 (0%), fast 0, minutes median 2.8 (p10 1.7, p90 6.9)
+[monitor] responses 14 (recruited 14), kept 10, excluded 4 (29%): {'missed a catch trial': 3, 'failed the comprehension checks on the second reading': 2}
+[monitor] comprehension (second reading) 86%, catch trials 86%, same answer on nearly every trial 0 (0%), fast 0, minutes median 2.8 (p10 1.7, p90 6.9)
+[monitor] responses 14 (recruited 14), kept 10, excluded 4 (29%): {'missed a catch trial': 3, 'failed the comprehension checks on the second reading': 2}
+[monitor] comprehension (second reading) 86%, catch trials 86%, same answer on nearly every trial 0 (0%), fast 0, minutes median 2.8 (p10 1.7, p90 6.9)
+[monitor] responses 14 (recruited 14), kept 10, excluded 4 (29%): {'missed a catch trial': 3, 'failed the comprehension checks on the second reading': 2}
+[monitor] comprehension (second reading) 86%, catch trials 86%, same answer on nearly every trial 0 (0%), fast 0, minutes median 2.8 (p10 1.7, p90 6.9)
+[monitor] responses 14 (recruited 14), kept 10, excluded 4 (29%): {'missed a catch trial': 3, 'failed the comprehension checks on the second reading': 2}
+[monitor] comprehension (second reading) 86%, catch trials 86%, same answer on nearly every trial 0 (0%), fast 0, minutes median 2.8 (p10 1.7, p90 6.9)
+[monitor] responses 15 (recruited 15), kept 11, excluded 4 (27%): {'missed a catch trial': 3, 'failed the comprehension checks on the second reading': 2}
+[monitor] comprehension (second reading) 87%, catch trials 87%, same answer on nearly every trial 0 (0%), fast 0, minutes median 2.9 (p10 1.7, p90 6.9)
+[live] chain_0, experiment 1: responses 15 (recruited 15), kept 11, excluded 4 (27%): {'missed a catch trial': 3, 'failed the comprehension checks on the second reading': 2}
+[live] chain_0, experiment 1: comprehension (second reading) 87%, catch trials 87%, same answer on nearly every trial 0 (0%), fast 0, minutes median 2.9 (p10 1.7, p90 6.9)
+[chain] chain_0: stopped after experiment 1's collection (stop_after_collect)
+  [tokens] RSA open chain: 0 tokens over 0 LLM call(s)
+  [tokens]   input=0 output=0 reasoning=0 cache_read=0 cache_write=0
+[]
+[open live] STOP: finished

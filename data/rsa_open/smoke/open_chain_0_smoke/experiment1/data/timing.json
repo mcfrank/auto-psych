@@ -1,0 +1,15 @@
+[
+  {
+    "source": "chain_0, experiment 1",
+    "response_type": "bet",
+    "materials": "svg",
+    "trials": 27,
+    "objects_per_trial": 3.96,
+    "words_per_trial": 23.7,
+    "instruction_words": 214,
+    "n_people": 15,
+    "median_s": 471.124,
+    "p10_s": 325.626,
+    "p90_s": 1096.723
+  }
+]

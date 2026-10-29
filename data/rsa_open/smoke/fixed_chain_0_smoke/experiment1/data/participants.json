@@ -1,0 +1,50 @@
+{
+ "collection": "live",
+ "prolific_mode": "live",
+ "study_id": "6ae2ef7343bb24748f612f57",
+ "target": 15,
+ "smoke_test": true,
+ "other_study": 0,
+ "second_submissions": 0,
+ "recruited": 15,
+ "responses": 15,
+ "readable": 15,
+ "kept": 11,
+ "excluded": 4,
+ "exclusion_rate": 0.26666666666666666,
+ "exclusion_reasons": {
+  "missed a catch trial": 3,
+  "failed the comprehension checks on the second reading": 2
+ },
+ "comprehension_final": 0.8666666666666667,
+ "catch_pass": 0.8666666666666667,
+ "same_answer": {
+  "n": 0,
+  "share": 0.0,
+  "people": {}
+ },
+ "fast": {
+  "n": 0,
+  "people": {}
+ },
+ "minutes": {
+  "median": 2.8875666666666664,
+  "p10": 1.7379,
+  "p90": 6.8509166666666665
+ },
+ "excluded_people": {
+  "p20": [
+   "missed a catch trial"
+  ],
+  "p22": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p24": [
+   "failed the comprehension checks on the second reading",
+   "missed a catch trial"
+  ],
+  "p27": [
+   "missed a catch trial"
+  ]
+ }
+}
