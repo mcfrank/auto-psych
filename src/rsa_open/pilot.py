@@ -461,14 +461,14 @@ def run_participant(lists: Mapping[str, Any], index: int, participant: Participa
 # --------------------------------------------------------------------------- the gate
 
 def _records(timing: Optional[Sequence]) -> Sequence:
-    from src.rsa_open.timing import CLOSED_CAMPAIGN
+    from src.rsa_open.timing import DEFAULT_RECORDS
 
-    return CLOSED_CAMPAIGN if timing is None else timing
+    return DEFAULT_RECORDS if timing is None else timing
 
 
 def estimated_minutes(lists: Mapping[str, Any], timing: Optional[Sequence] = None) -> float:
     """A participant's minutes under these lists, calibrated on ``timing`` records (default: the
-    closed campaign's; `src.rsa_open.timing.estimate`)."""
+    closed campaign's and run D2's; `src.rsa_open.timing.estimate`)."""
     from src.rsa_open.timing import estimate
 
     return estimate(lists, _records(timing))["estimated_minutes"]
@@ -526,6 +526,14 @@ def gate(paradigm, lists: Mapping[str, Any], sessions: Sequence[Session],
         problems.append(f"time: estimated {report['estimated_minutes']:.1f} minutes against the declared "
                         f"{paradigm.design.minutes:g} (more than {TIME_TOLERANCE:.0%} apart): change the trials or "
                         f"the minutes (and the pay)")
+    from src.rsa_open.paradigm import MIN_HOURLY_USD
+    from src.rsa_open.timing import hourly_usd
+
+    report["hourly_usd"] = hourly_usd(paradigm.design.pay_usd, paradigm.design.minutes, report["estimated_minutes"])
+    if report["hourly_usd"] < MIN_HOURLY_USD - 1e-9:
+        problems.append(f"pay: ${paradigm.design.pay_usd:.2f} for the estimated {report['estimated_minutes']:.1f} "
+                        f"minutes is ${report['hourly_usd']:.2f} per hour, below ${MIN_HOURLY_USD:.2f} (the floor holds "
+                        f"at the larger of the declared and the estimated minutes): raise the pay or shorten the study")
     if legibility is not None and legibility["legibility"] is not None:
         bad = "; ".join(f"{r['item']} ({r['right']} of {r['of']} chose '{r['answer']}'"
                         + (f"; others chose {', '.join(r['wrong_answers'])}" if r["wrong_answers"] else "") + ")"

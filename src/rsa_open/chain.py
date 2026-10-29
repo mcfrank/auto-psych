@@ -60,7 +60,7 @@ from src.rsa_open.designer import EarlierParadigm, SpawnFn as DesignerSpawn, run
 from src.rsa_open.fit import TheoryModel, simulate
 from src.rsa_open.loop.fitting import cached_loop_fit, fit_cached, read_corpus, write_corpus
 from src.rsa_open.loop.orchestrator import OpenLoop, OpenLoopConfig
-from src.rsa_open.timing import CLOSED_CAMPAIGN, TimingRecord, read_records, record_from_sessions, write_records
+from src.rsa_open.timing import DEFAULT_RECORDS, TimingRecord, read_records, record_from_sessions, write_records
 
 DESIGN_DRAWS = 200
 # The design's own fits (a theory the previous loop did not fit on the same data): the design needs
@@ -120,7 +120,7 @@ class ChainConfig:
     """OpenLoopConfig overrides (max_iterations, candidate_count, settings, ...)."""
     settings: FitSettings = field(default_factory=lambda: FitSettings(dense_mass=True))
     pilot_participants: int = 12
-    timing: Sequence[TimingRecord] = CLOSED_CAMPAIGN
+    timing: Sequence[TimingRecord] = DEFAULT_RECORDS
     code_commit: Optional[str] = None
     seed: int = 0
     bar_dir: Optional[Path] = None
@@ -239,7 +239,8 @@ class Chain:
         return record
 
     def timing(self, n: int) -> List[TimingRecord]:
-        """What experiment n's designer reads: the configured records (the closed campaign's), this
+        """What experiment n's designer reads: the configured records (the closed campaign's and run
+        D2's), this
         chain's earlier experiments' and every finished experiment of the other chains."""
         records = list(self.cfg.timing)
         for k in range(1, n):

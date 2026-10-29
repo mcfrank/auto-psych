@@ -46,7 +46,7 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
-from src.rsa_open.timing import CLOSED_CAMPAIGN, TimingRecord, digest_md, write_records
+from src.rsa_open.timing import DEFAULT_RECORDS, TimingRecord, digest_md, write_records
 from src.rsa_open.tools import MAX_TOOL_CALLS, Workspace, best_scored_spec, seed_for, write_deadline
 
 DESIGNER_MODEL = "google/gemini-4-argon"
@@ -268,7 +268,7 @@ Their files (read-only) are in `{ws.context / 'theories'}`, their posterior draw
 
 - Budget: ${BUDGET_USD:.2f} per experiment (participants x pay x 4/3, Prolific's fee). At least
   {MIN_PARTICIPANTS} participants, at most {MAX_MINUTES} minutes and {MAX_TEST_TRIALS} test trials each, at least
-  ${MIN_HOURLY_USD:.2f} per hour.
+  ${MIN_HOURLY_USD:.2f} per hour at the larger of your declared minutes and the pilot's time estimate.
 - Materials: at least {MIN_DOMAINS} domains for pictures (`validate` refuses fewer).
 - Scenes: 2-{MAX_OBJECTS} objects, 2-{MAX_FEATURES} features, at most {MAX_POOL} scenes in the space.
 - Content (IRB): no deception, no affectively charged stimuli or language, SVG or text materials
@@ -318,7 +318,8 @@ The harness re-scores your spec with its own seed (the design that runs is its),
 link, builds the page and pilots it with LLM participants. The pilot passes when at least
 {FLOORS['comprehension']:.0%} of them understand the instructions (by their second reading), at least
 {FLOORS['catch']:.0%} of catch trials are passed, {FLOORS['readable']:.0%} of answers are usable, the data parse, its
-time estimate is within {TIME_TOLERANCE:.0%} of your declared minutes, and (SVG materials) at least {FLOORS['legibility']:.0%} of
+time estimate is within {TIME_TOLERANCE:.0%} of your declared minutes, the pay meets the hourly floor at that
+estimate too, and (SVG materials) at least {FLOORS['legibility']:.0%} of
 its materials questions are answered right, with no feature or trial screen misread by half of them (a base
 named otherwise counts against that rate). If anything fails you get the report
 and may revise: {submissions_left} submission(s) left in this cycle, about {seconds_left // 60} minutes of your time.
@@ -437,7 +438,7 @@ def run_designer(root: Path, *, chain: str, experiment: int,
                  history: Sequence[EarlierParadigm], spawn: SpawnFn, pilot_participants: int = 12,
                  participant_factory=None, code_commit: Optional[str] = None,
                  cycle_seconds: int = CYCLE_SECONDS,
-                 timing: Sequence[TimingRecord] = CLOSED_CAMPAIGN,
+                 timing: Sequence[TimingRecord] = DEFAULT_RECORDS,
                  experience: Sequence[Mapping[str, Any]] = ()) -> Dict[str, Any]:
     """Design one experiment: up to ``MAX_CYCLES`` cycles; returns the frozen record. ``timing``
     is every finished experiment's completion times (`src.rsa_open.timing`): the closed

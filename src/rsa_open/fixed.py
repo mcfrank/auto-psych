@@ -91,7 +91,7 @@ def build_pair() -> Dict[str, Any]:
     """The fixed paradigm with a second question about the same screen (rehearsal only, PI
     2026-10-26: a designer chooses its own format, so the two-measure path is rehearsed on a spec
     the harness writes): after each choice, a 5-point rating of how likely Bob means the marked
-    picture. 288 people (72 responses a display) for 4 minutes keep it within the budget."""
+    picture. 288 people (72 responses a display) at $0.68 for 4 minutes keep it within the budget."""
     spec = build()
     spec["name"] = "Which one does Bob mean, and how likely is the marked one? (two measures, rehearsal)"
     spec["summary"] += " Then Bob marks one picture, and they rate how likely it is that he meant that one."
@@ -101,7 +101,7 @@ def build_pair() -> Dict[str, Any]:
                                "prompt": "Bob said {message}. How likely is it that he means the marked one?",
                                "prior_prompt": "Bob mumbled. How likely is it that he means the marked one?",
                                "scale_points": 5, "scale_labels": ["not at all", "certainly"]}
-    spec["design"].update(n_participants=288, minutes=4, pay_usd=0.67)
+    spec["design"].update(n_participants=288, minutes=4, pay_usd=0.68)  # $10/h at the 4.03-min estimate (run D2)
     return spec
 
 

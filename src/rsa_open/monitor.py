@@ -6,7 +6,8 @@ Reads the experiment's deployment manifest and frozen trial lists, fetches the s
 responses from ``/results`` (needs ``AUTO_PSYCH_RESULTS_TOKEN``) and prints: responses and
 exclusions by reason, comprehension and catch-trial rates, people who gave the same answer on
 nearly every test trial (for every response type: `src.rsa_open.live.answer_key`), people who
-answered implausibly fast, and completion times. People are numbered here (``r<k>``, in order of
+answered implausibly fast, completion times, and the pay per hour at the median time (a warning
+near Prolific's $8 floor). People are numbered here (``r<k>``, in order of
 submission); nothing written or printed carries a Prolific id. The chain's own job prints the
 same report every 10 minutes while a study fills.
 """
@@ -30,6 +31,7 @@ def main(args: Args) -> dict:
     from src.pipelines.outer_loop.deployment.manifest import manifest_path
     from src.rsa.live.collect import fetch_responses
     from src.rsa_open.live import _pids, exclusions, monitor_lines, monitor_report, read_people
+    from src.rsa_open.paradigm import load_paradigm
 
     manifest = json.loads(manifest_path(args.exp_dir).read_text())
     lists = json.loads((Path(args.exp_dir) / "design" / "frozen" / "lists.json").read_text())
@@ -39,7 +41,9 @@ def main(args: Args) -> dict:
     responses = fetch_responses(manifest)
     pids = _pids(responses, study)
     people, skipped = read_people(responses, study, lists, {pid: f"r{i}" for i, pid in enumerate(pids)})
-    report = {**monitor_report(people, {p.id: w for p in people if (w := exclusions(p, False))}), **skipped}
+    pay = load_paradigm(Path(args.exp_dir) / "design" / "frozen" / "paradigm.json").design.pay_usd
+    report = {**monitor_report(people, {p.id: w for p in people if (w := exclusions(p, False))}, pay_usd=pay),
+              **skipped}
     if args.json:
         print(json.dumps(report, indent=1))
     else:

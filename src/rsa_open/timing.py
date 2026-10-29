@@ -14,11 +14,16 @@ clock). Two sources:
   PI ruled that durations are not closed-campaign data in the sense of the drift rule (§5).
 - **this campaign's finished experiments**, every chain's (`record_from_sessions`).
 
+- **run D2** (`OPEN_PAGE_SMOKE`): 15 real people on each arm's smoke paradigm on this campaign's
+  page (`docs/auto_open/RUN_D2_REPORT.md`): completion times only, as the closed campaign's are.
+
 **Calibration** (`calibration`): the ratio of people's median to the model's estimate, as a
-median over the records of the same response type when there are any, else over every record.
-`estimated_minutes` is the model times that ratio; the record says which basis it used. With
-the closed campaign alone, a choice paradigm's estimate is scaled by its own records, and any
-other response type by the same choice records, until this campaign has run one of its kind.
+median over records. This campaign's page comes first (PI 2026-10-29): in run D2 people took
+about 1.3 times what the closed campaign's records predicted, on both arms (0.53-0.56 of the
+model's estimate against the closed campaign's 0.43), so the page, not the response type, made the
+difference. The basis is this campaign's records of the same response type, else all of this
+campaign's records, and only when this campaign has none, the closed campaign's (of the same type,
+else all). `estimated_minutes` is the model times that ratio; the record says which basis it used.
 """
 
 from __future__ import annotations
@@ -72,6 +77,16 @@ CLOSED_CAMPAIGN: Tuple[TimingRecord, ...] = (
 )
 
 
+# docs/auto_open/RUN_D2_REPORT.md; data/rsa_open/smoke/*_chain_0_smoke/experiment1/data/timing.json.
+OPEN_PAGE_SMOKE: Tuple[TimingRecord, ...] = (
+    TimingRecord("run D2 smoke test, open arm", "bet", "svg", 27, 3.96, 23.7, 214, 15, 471.124, 325.626, 1096.723),
+    TimingRecord("run D2 smoke test, fixed arm", "choice", "svg", 16, 3.87, 26.2, 158, 11, 173.254, 117.019,
+                 411.055),
+)
+DEFAULT_RECORDS: Tuple[TimingRecord, ...] = CLOSED_CAMPAIGN + OPEN_PAGE_SMOKE
+"""What every design reads before this campaign's own experiments add theirs."""
+
+
 def model_seconds(response_type: str, materials: str, trials: int, objects_per_trial: float,
                   words_per_trial: float, instruction_words: float) -> float:
     """The uncalibrated estimate of one person's time."""
@@ -102,18 +117,30 @@ def features(lists: Mapping[str, Any]) -> Dict[str, Any]:
 
 
 def calibration(records: Sequence[TimingRecord], response_type: str) -> Tuple[float, str]:
-    """(people's median / the model's estimate, the basis), over records of this type if any."""
+    """(people's median / the model's estimate, the basis): over this campaign's page's records if
+    there are any, else the closed campaign's; within them, over records of this type if any."""
     def ratio(r: TimingRecord) -> float:
         return r.median_s / model_seconds(r.response_type, r.materials, r.trials, r.objects_per_trial,
                                           r.words_per_trial, r.instruction_words)
 
-    same = [r for r in records if r.response_type == response_type]
-    use = same or list(records)
-    if not use:
-        return 1.0, "no timing records: the model's estimate, uncalibrated"
-    basis = (f"{len(use)} {response_type} experiment(s)" if same
-             else f"{len(use)} experiment(s) of other response types (none of {response_type} yet)")
-    return float(median(ratio(r) for r in use)), basis
+    closed = set(CLOSED_CAMPAIGN)
+    own = [r for r in records if r not in closed]
+    for pool, page in ((own, "this campaign's page"), ([r for r in records if r in closed], "the closed campaign's page")):
+        if not pool:
+            continue
+        same = [r for r in pool if r.response_type == response_type]
+        use = same or pool
+        basis = (f"{len(use)} {response_type} experiment(s) on {page}" if same
+                 else f"{len(use)} experiment(s) of other response types on {page} (none of {response_type} yet)")
+        return float(median(ratio(r) for r in use)), basis
+    return 1.0, "no timing records: the model's estimate, uncalibrated"
+
+
+def hourly_usd(pay_usd: float, declared_minutes: float, estimated_minutes: float) -> float:
+    """The pay per hour at the larger of the declared and the estimated minutes: the rate the pay
+    floor is checked at (PI 2026-10-29; the pilot's time check alone let a design declare up to 30%
+    under the estimate, and Prolific pauses a study whose people earn under $8 an hour)."""
+    return pay_usd * 60.0 / max(declared_minutes, estimated_minutes)
 
 
 def estimate(lists: Mapping[str, Any], records: Sequence[TimingRecord]) -> Dict[str, Any]:

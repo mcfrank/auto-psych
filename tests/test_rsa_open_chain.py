@@ -157,11 +157,11 @@ def test_the_chain_command_starts_from_its_chain_s_seeds_and_designs_against_the
 
 
 def test_each_design_reads_the_timing_of_every_finished_live_experiment(tmp_path):
-    """PLAN.md, "Timing digest": the closed campaign's records plus every finished experiment's, this
+    """PLAN.md, "Timing digest": the default records (the closed campaign's and run D2's) plus every finished experiment's, this
     chain's and the other chains' (simulated collection records none: simulated people take no time)."""
     from src.rsa_open.chain import Chain, ChainConfig, GroundTruth
     from src.rsa_open.screens import trial_lists
-    from src.rsa_open.timing import CLOSED_CAMPAIGN
+    from src.rsa_open.timing import DEFAULT_RECORDS
     from tests.test_rsa_open_screens import paradigm_of, units_of
 
     def chain(name, others=()):
@@ -176,11 +176,11 @@ def test_each_design_reads_the_timing_of_every_finished_live_experiment(tmp_path
         frozen = c.exp(1) / "design" / "frozen"
         frozen.mkdir(parents=True)
         (frozen / "lists.json").write_text(json.dumps(lists))
-    assert a.timing(1) == list(CLOSED_CAMPAIGN)
+    assert a.timing(1) == list(DEFAULT_RECORDS)
     rec = a.record_timing(1, [100.0, 150.0, 200.0])
     assert rec.n_people == 3 and rec.median_s == 150.0 and rec.source == "chain_0, experiment 1"
-    assert a.timing(2) == list(CLOSED_CAMPAIGN) + [rec]
-    assert b.timing(1) == list(CLOSED_CAMPAIGN) + [rec]  # another chain's finished experiment counts
+    assert a.timing(2) == list(DEFAULT_RECORDS) + [rec]
+    assert b.timing(1) == list(DEFAULT_RECORDS) + [rec]  # another chain's finished experiment counts
     with pytest.raises(FileExistsError):
         a.record_timing(1, [1.0])  # once
 

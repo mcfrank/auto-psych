@@ -222,15 +222,18 @@ def preview_units(paradigm, seed: int = 0) -> list:
 
 def time_report(ws: Workspace, paradigm, units: list) -> Dict[str, Any]:
     """The pilot's time estimate for these units, calibrated on the workspace's timing records."""
+    from src.rsa_open.paradigm import MIN_HOURLY_USD
     from src.rsa_open.pilot import TIME_TOLERANCE
     from src.rsa_open.screens import design_units, trial_lists
-    from src.rsa_open.timing import estimate
+    from src.rsa_open.timing import estimate, hourly_usd
 
     lists = trial_lists(paradigm, design_units({"design": units}), seed=0, n_lists=20)
     t = estimate(lists, ws.timing_records())
     ratio = t["estimated_minutes"] / paradigm.design.minutes
+    hourly = hourly_usd(paradigm.design.pay_usd, paradigm.design.minutes, t["estimated_minutes"])
     return {"estimated_minutes": t["estimated_minutes"], "declared_minutes": paradigm.design.minutes,
-            "within_tolerance": abs(ratio - 1.0) <= TIME_TOLERANCE, "calibration_basis": t["calibration_basis"]}
+            "within_tolerance": abs(ratio - 1.0) <= TIME_TOLERANCE, "calibration_basis": t["calibration_basis"],
+            "hourly_usd": hourly, "pay_ok": hourly >= MIN_HOURLY_USD - 1e-9}
 
 
 def validate(ws: Workspace, spec: Path) -> Dict[str, Any]:
@@ -367,7 +370,8 @@ def _summary(command: str, report: Dict[str, Any]) -> str:
     timing = "" if t is None else (
         f"; time: estimated {t['estimated_minutes']:.1f} min against your {t['declared_minutes']:g} "
         f"({'within' if t['within_tolerance'] else 'NOT within'} the pilot's 30%; calibrated on "
-        f"{t['calibration_basis']})")
+        f"{t['calibration_basis']}); pay ${t['hourly_usd']:.2f} per hour at the larger of the two"
+        + ("" if t["pay_ok"] else " (BELOW the floor: the pilot will fail it)"))
     if command == "validate":
         units = "" if report["units"] is None else f" ({report['units']} trial units)"
         return (f"valid: {report['scenes']} scenes{units}, {report['response']} via {report['link']}, "

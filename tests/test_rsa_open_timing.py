@@ -53,11 +53,47 @@ def test_a_finished_experiment_becomes_a_record_and_a_digest_row():
 def test_the_pilot_s_estimate_is_the_calibrated_one():
     from src.rsa_open.pilot import estimated_minutes
     from src.rsa_open.screens import trial_lists
-    from src.rsa_open.timing import CLOSED_CAMPAIGN, estimate
+    from src.rsa_open.timing import DEFAULT_RECORDS, estimate
 
     p = paradigm_of("choice")
     lists = trial_lists(p, units_of(p), seed=0, n_lists=5)
-    t = estimate(lists, CLOSED_CAMPAIGN)
+    t = estimate(lists, DEFAULT_RECORDS)
     assert estimated_minutes(lists) == pytest.approx(t["estimated_minutes"])
     assert t["estimated_minutes"] == pytest.approx(t["model_minutes"] * t["calibration"])
     assert estimated_minutes(lists, []) == pytest.approx(t["model_minutes"])
+
+
+def test_run_d2_s_records_are_its_committed_timing_files():
+    import json
+    from pathlib import Path
+
+    from src.rsa_open.timing import CLOSED_CAMPAIGN, DEFAULT_RECORDS, OPEN_PAGE_SMOKE, TimingRecord
+
+    smoke = Path(__file__).resolve().parents[1] / "data" / "rsa_open" / "smoke"
+    for record, arm in zip(OPEN_PAGE_SMOKE, ("open", "fixed")):
+        (stored,) = json.loads((smoke / f"{arm}_chain_0_smoke" / "experiment1" / "data" / "timing.json").read_text())
+        stored["source"] = record.source
+        assert TimingRecord.from_json(stored) == record
+    assert DEFAULT_RECORDS == CLOSED_CAMPAIGN + OPEN_PAGE_SMOKE
+
+
+def test_this_campaign_s_page_calibrates_before_the_closed_campaign_s():
+    """PI 2026-10-29: run D2's people took about 1.3 times the closed-calibrated estimate on both arms."""
+    from src.rsa_open.timing import CLOSED_CAMPAIGN, DEFAULT_RECORDS, OPEN_PAGE_SMOKE, calibration
+
+    k_closed, _ = calibration(CLOSED_CAMPAIGN, "choice")
+    k_choice, basis = calibration(DEFAULT_RECORDS, "choice")
+    assert basis == "1 choice experiment(s) on this campaign's page" and 1.15 < k_choice / k_closed < 1.4
+    k_bet, basis = calibration(DEFAULT_RECORDS, "bet")
+    assert basis == "1 bet experiment(s) on this campaign's page" and k_bet > k_closed
+    k_slider, basis = calibration(DEFAULT_RECORDS, "slider")
+    assert basis == "2 experiment(s) of other response types on this campaign's page (none of slider yet)"
+    assert min(k_choice, k_bet) <= k_slider <= max(k_choice, k_bet)
+    assert calibration(OPEN_PAGE_SMOKE, "choice") == (k_choice, "1 choice experiment(s) on this campaign's page")
+
+
+def test_the_pay_rate_is_taken_at_the_larger_of_declared_and_estimated_minutes():
+    from src.rsa_open.timing import hourly_usd
+
+    assert hourly_usd(1.0, 6.0, 7.85) == pytest.approx(60 / 7.85)  # run D2's open study: $7.64 an hour
+    assert hourly_usd(0.5, 3.0, 2.9) == pytest.approx(10.0)

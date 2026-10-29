@@ -357,3 +357,23 @@ def test_a_gemini_participant_sends_only_the_current_screen_s_picture():
     assert [c.role for c in last] == ["user", "model", "user", "model", "user"]
     # Earlier screens keep their words, the participant's answers and a note that the picture is gone.
     assert texts(last)[:5] == ["Welcome. Read the instructions.", "ANSWER: 1", "Screen 1", IMAGE_DROPPED, "ANSWER: 2"]
+
+
+def test_the_pay_floor_holds_at_the_estimated_minutes():
+    """A design declaring 20% under the estimate passes the time check but not the pay floor there."""
+    from src.rsa_open.paradigm import MIN_HOURLY_USD
+    from src.rsa_open.pilot import estimated_minutes, gate, run_participant
+    from src.rsa_open.screens import trial_lists
+
+    p = paradigm_of("choice")
+    lists = trial_lists(p, units_of(p), seed=0, n_lists=8)
+    estimate = estimated_minutes(lists)
+    declared = round(estimate * 0.8, 2)
+    for pay, ok in ((round(declared * MIN_HOURLY_USD / 60 + 0.01, 2), False),
+                    (round(estimate * MIN_HOURLY_USD / 60 + 0.01, 2), True)):
+        q = paradigm_of("choice", minutes=declared, pay_usd=pay)
+        lists = trial_lists(q, units_of(q), seed=0, n_lists=8)
+        report = gate(q, lists, [run_participant(lists, i, Scripted(lists, i)) for i in range(8)])
+        assert not any(x.startswith("time") for x in report["problems"])
+        assert any(x.startswith("pay") for x in report["problems"]) is not ok, report["problems"]
+        assert report["hourly_usd"] == pytest.approx(pay * 60 / report["estimated_minutes"])

@@ -578,3 +578,19 @@ def test_a_resumed_collection_continues_its_window_rather_than_starting_it_again
     completed = _wait({"prolific_study_id": "S1"}, 10, log, 24 * 3600, lists, log / "monitor.json", every_sec=60)
     assert completed == 9 and time.time() - t0 < 30  # the window had already run out: one poll, then pause
     assert fake_services["paused"]
+
+
+def test_the_monitor_reports_the_pay_rate_at_the_median_and_warns_near_prolific_s_floor(tmp_path):
+    from src.rsa_open.live import monitor_lines, monitor_report, person
+
+    p, lists, _ = frozen_experiment(tmp_path / "run")
+    people = [person(f"p{k}", stored(f"x{k}", lists["lists"][k], records(lists["lists"][k])), lists) for k in range(3)]
+    for who, minutes in zip(people, (6.0, 7.85, 9.0)):
+        who.seconds = minutes * 60
+    report = monitor_report(people, {}, pay_usd=1.00)  # run D2's open study
+    assert report["hourly_usd_at_median"] == pytest.approx(60 / 7.85)
+    lines = monitor_lines(report)
+    assert "pay $7.64 per hour at the median" in lines[1] and any("Prolific pauses" in x for x in lines)
+    report = monitor_report(people, {}, pay_usd=1.50)
+    assert not any("Prolific pauses" in x for x in monitor_lines(report))
+    assert monitor_report(people, {})["hourly_usd_at_median"] is None

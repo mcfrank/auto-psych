@@ -67,6 +67,9 @@ DEGENERATE_MIN_TRIALS = 6
 FAST_MS = 500
 """A person is flagged when their median test-trial response time is below this."""
 MONITOR_EVERY_SEC = 600
+PROLIFIC_MIN_HOURLY_USD = 8.0
+"""Prolific pauses a study whose people earn less than this at their median time (the PI, 2026-10-29)."""
+PAY_WARNING_HOURLY_USD = 9.0
 
 
 class AwaitingReview(RuntimeError):
@@ -373,8 +376,9 @@ def degenerate(rows: Sequence[Mapping[str, Any]]) -> Optional[str]:
 
 
 def monitor_report(people: Sequence[Person], excluded: Mapping[str, Sequence[str]],
-                   recruited: Optional[int] = None) -> Dict[str, Any]:
-    """Aggregates for the PI and the gate (`PREREG_DRAFT.md` §4, item 2); run ids only."""
+                   recruited: Optional[int] = None, pay_usd: Optional[float] = None) -> Dict[str, Any]:
+    """Aggregates for the PI and the gate (`PREREG_DRAFT.md` §4, item 2); run ids only. With
+    ``pay_usd``, also the pay per hour at people's median time (run D2's open study earned $7.64)."""
     from src.rsa_open.screens import catch_passed
 
     readable = [p for p in people if not p.problems]
@@ -403,6 +407,8 @@ def monitor_report(people: Sequence[Person], excluded: Mapping[str, Sequence[str
                      "p90": sorted(minutes)[int(0.9 * (len(minutes) - 1))]} if minutes else None),
         "enjoyment": ({"mean": statistics.mean(rated), "n": len(rated),
                        "counts": {str(k): rated.count(k) for k in range(1, 6)}} if rated else None),
+        "hourly_usd_at_median": (pay_usd * 60 / statistics.median(minutes) if pay_usd is not None and minutes
+                                 else None),
     }
 
 
@@ -411,6 +417,7 @@ def monitor_lines(report: Mapping[str, Any]) -> List[str]:
         return "-" if x is None else f"{x:.0%}"
 
     m = report.get("minutes") or {}
+    hourly = report.get("hourly_usd_at_median")
     lines = [f"responses {report['responses']} (recruited {report.get('recruited')}), kept {report['kept']}, "
              f"excluded {report['excluded']} ({pct(report['exclusion_rate'])}): {report['exclusion_reasons']}",
              f"comprehension (second reading) {pct(report['comprehension_final'])}, catch trials "
@@ -418,7 +425,11 @@ def monitor_lines(report: Mapping[str, Any]) -> List[str]:
              f"({pct(report['same_answer']['share'])}), fast {report['fast']['n']}"
              + (f", minutes median {m['median']:.1f} (p10 {m['p10']:.1f}, p90 {m['p90']:.1f})" if m else "")
              + (f", enjoyment {report['enjoyment']['mean']:.1f} of 5 (n {report['enjoyment']['n']})"
-                if report.get("enjoyment") else "")]
+                if report.get("enjoyment") else "")
+             + (f", pay ${hourly:.2f} per hour at the median" if hourly is not None else "")]
+    if hourly is not None and hourly < PAY_WARNING_HOURLY_USD:
+        lines.append(f"  WARNING: pay at the median time is ${hourly:.2f} per hour; Prolific pauses a study under "
+                     f"${PROLIFIC_MIN_HOURLY_USD:.2f}. Raise the reward in Prolific's dashboard if it pauses.")
     for pid, note in sorted(report["same_answer"]["people"].items()):
         lines.append(f"  same answer: {pid}: {note}")
     return lines
@@ -472,7 +483,7 @@ def check_review(frozen: Path, paradigm_sha256: str) -> dict:
 
 
 def _wait(manifest: Mapping[str, Any], target: int, log_dir: Path, max_wait_sec: float, lists,
-          snapshot: Path, every_sec: float = MONITOR_EVERY_SEC) -> int:
+          snapshot: Path, every_sec: float = MONITOR_EVERY_SEC, pay_usd: Optional[float] = None) -> int:
     """Poll Prolific until ``target`` people have finished or the wait ends (then pause the study,
     as main's collection does), printing the monitor every ``every_sec``. The window runs from the
     first wait (``collection_started.json`` in ``log_dir``), so a resumed job continues it rather
@@ -494,7 +505,8 @@ def _wait(manifest: Mapping[str, Any], target: int, log_dir: Path, max_wait_sec:
             responses = fetch_responses(manifest)
             pids = _pids(responses, study)
             people, _ = read_people(responses, study, lists, {pid: f"r{i}" for i, pid in enumerate(pids)})
-            report = monitor_report(people, {p.id: w for p in people if (w := exclusions(p, False))}, completed)
+            report = monitor_report(people, {p.id: w for p in people if (w := exclusions(p, False))}, completed,
+                                    pay_usd)
             snapshot.write_text(json.dumps(report, indent=1))
             for line in monitor_lines(report):
                 print(f"[monitor] {line}", flush=True)
@@ -549,7 +561,7 @@ def collect(*, exp_dir: Path, chain: str, arm: str, n: int, cfg: LiveConfig) -> 
             completed = json.loads(ended.read_text())["completed"]
         else:
             completed = _wait(manifest, n_people, exp_dir / "deployment", cfg.max_wait_sec or _PROLIFIC_MAX_WAIT_SEC,
-                              lists, exp_dir / "deployment" / "monitor.json")
+                              lists, exp_dir / "deployment" / "monitor.json", pay_usd=paradigm.design.pay_usd)
             ended.write_text(json.dumps({"completed": completed, "target": n_people,
                                          "at": time.strftime("%Y-%m-%dT%H:%M:%S")}))
     responses = fetch_responses(manifest)
@@ -561,7 +573,7 @@ def collect(*, exp_dir: Path, chain: str, arm: str, n: int, cfg: LiveConfig) -> 
     if not people:
         raise RuntimeError(f"{label}: no response of study {study} was stored ({len(responses)} responses in all)")
     excluded = {p.id: w for p in people if (w := exclusions(p, p.id in repeats))}
-    report = monitor_report(people, excluded, completed)
+    report = monitor_report(people, excluded, completed, paradigm.design.pay_usd)
     for line in monitor_lines(report):
         print(f"[live] {label}: {line}", flush=True)
     kept = [p for p in people if p.id not in excluded]

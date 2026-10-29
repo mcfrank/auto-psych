@@ -178,6 +178,8 @@ def test_validate_and_eig_report_the_pilot_s_time_estimate(ws, monkeypatch):
         t = run(command(workspace=ws.root, spec=spec))["time"]
         assert t["declared_minutes"] == 4 and t["estimated_minutes"] > 0
         assert t["within_tolerance"] == (abs(t["estimated_minutes"] / 4 - 1) <= TIME_TOLERANCE)
+        assert t["hourly_usd"] == pytest.approx(0.70 * 60 / max(4, t["estimated_minutes"]))
+        assert t["pay_ok"] == (t["hourly_usd"] >= 10 - 1e-9)
 
 
 def test_a_workspace_without_timing_records_is_refused(ws, capsys):
