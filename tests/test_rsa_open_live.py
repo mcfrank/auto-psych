@@ -537,6 +537,12 @@ def test_a_live_launch_needs_the_frozen_tag_and_a_typed_yes(tmp_path):
     assert "--cpus-per-task=4 --mem=16G" in call  # a smoke test fits nothing
 
 
+def test_the_live_job_makes_its_cell_only_after_staging_the_code():
+    # stage_code.sh refuses a work root with cells but no code_commit: D1 (2026-10-28) failed so
+    text = (SLURM / "open_live.sbatch").read_text()
+    assert text.index('mkdir -p "$CELL_DIR/private"') > text.index('9>"$WORK_ROOT/.setup.lock"')
+
+
 def test_the_live_job_is_double_gated_stops_on_record_and_resumes_after_a_time_limit():
     text = (SLURM / "open_live.sbatch").read_text()
     assert 'confirm_live_recruitment)" == "True"' in text and 'CONFIRM_LIVE_RECRUITMENT:-}" == "1"' in text
