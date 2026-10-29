@@ -553,3 +553,21 @@ def test_the_live_job_is_double_gated_stops_on_record_and_resumes_after_a_time_l
     from src.rsa_open.run_chain import EXIT_AWAITING_REVIEW, EXIT_DRAFT_ONLY, EXIT_OUT_OF_JOB_TIME
 
     assert (EXIT_AWAITING_REVIEW, EXIT_DRAFT_ONLY, EXIT_OUT_OF_JOB_TIME) == (3, 4, 5)
+
+
+def test_a_resumed_collection_continues_its_window_rather_than_starting_it_again(tmp_path, fake_services):
+    """PI 2026-10-29: a 24-h window (the pool shrinks as the campaign runs); a job restarted mid-wait
+    must not give the study a fresh one."""
+    from src.rsa_open.live import _wait, load_live_config
+
+    assert load_live_config(prolific_mode="test", confirm_live_recruitment=False, firebase_project="p",
+                            run_label="x", repo_root=tmp_path, private_dir=tmp_path,
+                            campaign_dir=tmp_path).max_wait_sec == 24 * 3600
+    p, lists, run = frozen_experiment(tmp_path / "run")
+    log = tmp_path / "deployment"
+    log.mkdir()
+    (log / "collection_started.json").write_text(json.dumps({"at": time.time() - 25 * 3600}))
+    t0 = time.time()
+    completed = _wait({"prolific_study_id": "S1"}, 10, log, 24 * 3600, lists, log / "monitor.json", every_sec=60)
+    assert completed == 9 and time.time() - t0 < 30  # the window had already run out: one poll, then pause
+    assert fake_services["paused"]

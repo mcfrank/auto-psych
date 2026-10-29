@@ -465,16 +465,21 @@ def check_review(frozen: Path, paradigm_sha256: str) -> dict:
 def _wait(manifest: Mapping[str, Any], target: int, log_dir: Path, max_wait_sec: float, lists,
           snapshot: Path, every_sec: float = MONITOR_EVERY_SEC) -> int:
     """Poll Prolific until ``target`` people have finished or the wait ends (then pause the study,
-    as main's collection does), printing the monitor every ``every_sec``."""
+    as main's collection does), printing the monitor every ``every_sec``. The window runs from the
+    first wait (``collection_started.json`` in ``log_dir``), so a resumed job continues it rather
+    than starting it again."""
     from src.pipelines.outer_loop.collect import _pause_unfilled_study, _poll_prolific_until_target
     from src.rsa.live.collect import fetch_responses
 
     study = manifest.get("prolific_study_id")
     if not study:
         raise RuntimeError("the deployment recorded no Prolific study: nothing to collect from")
-    start, completed = time.monotonic(), 0
+    started = Path(log_dir) / "collection_started.json"
+    if not started.exists():
+        started.write_text(json.dumps({"at": time.time(), "max_wait_sec": max_wait_sec}))
+    start, completed = json.loads(started.read_text())["at"], 0
     while True:
-        left = max_wait_sec - (time.monotonic() - start)
+        left = max_wait_sec - (time.time() - start)
         completed = _poll_prolific_until_target(study, target, log_dir, max_wait_sec=max(1.0, min(every_sec, left)))
         try:  # advisory: a failed snapshot is reported, and the final fetch must succeed
             responses = fetch_responses(manifest)
@@ -486,7 +491,7 @@ def _wait(manifest: Mapping[str, Any], target: int, log_dir: Path, max_wait_sec:
                 print(f"[monitor] {line}", flush=True)
         except Exception as exc:  # noqa: BLE001 (a snapshot must not stop the collection)
             print(f"[monitor] WARNING: the snapshot failed: {type(exc).__name__}: {exc}", flush=True)
-        if completed >= target or time.monotonic() - start >= max_wait_sec:
+        if completed >= target or time.time() - start >= max_wait_sec:
             break
     if completed < target:
         _pause_unfilled_study(study, completed, target, log_dir)

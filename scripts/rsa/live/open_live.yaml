@@ -9,7 +9,8 @@ firebase_project: auto-psych-2c5da
 code_tag: ""                      # the frozen tag every live chain runs on (set at registration; a live chain refuses without it)
 series_label: ro                  # Hosting sites <firebase_project>-<series_label>-<arm>-c<k> (<= 30 characters)
 max_concurrent_studies: 1         # one study recruits at a time across the campaign (the blocklist applies at publish)
-max_wait_hours: 3                 # then an unfilled study is paused and its partial data modelled (PREREG_DRAFT.md §4a)
+max_wait_hours: 24                # then an unfilled study is paused and its partial data modelled (PREREG_DRAFT.md §4a);
+                                  # a whole day, as the pool shrinks (PI 2026-10-29: main's 3 h filled in ~1 h so far)
 review_first_paradigm: true       # an open chain's experiment 1 is published only after the PI's approval
 
 study:                            # one neutral text for both arms: the listing does not say which arm a study is
