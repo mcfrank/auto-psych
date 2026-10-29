@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 from .firebase import (
     firebase_project_from_rc,
@@ -58,6 +58,7 @@ def run_deployment(
     run_label: str | None = None,
     publish_another_prolific_study: bool = False,
     recruitment_overrides: Mapping[str, Any] | None = None,
+    earlier_study_ids: Sequence[str] | None = None,
 ) -> Path:
     if deploy_target == "none":
         raise ValueError(
@@ -165,6 +166,7 @@ def run_deployment(
                 n_participants,
                 prolific_mode,
                 **({"recruitment_overrides": recruitment_overrides} if recruitment_overrides else {}),
+                **({"earlier_study_ids": earlier_study_ids} if earlier_study_ids is not None else {}),
             )
             _record_plan(manifest, plan)
             write_client_config(exp_dir, manifest, existing=existing_config)

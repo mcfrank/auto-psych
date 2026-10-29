@@ -88,7 +88,8 @@ def test_the_committed_campaign_config_is_valid_and_states_no_study_terms_of_its
 
     cfg = read_campaign_config()
     assert cfg["confirm_live_recruitment"] is False  # set deliberately for a paid launch, never committed true
-    assert cfg["prolific"]["exclude_earlier_participants_from"] == "project"
+    assert cfg["prolific"]["exclude_earlier_participants_from"] == "listed"  # once per chain (PI 2026-10-29)
+    assert cfg["max_concurrent_studies"] > 1  # studies recruit in parallel
     assert hosting_site(cfg, "fixed", 3) == "auto-psych-2c5da-ro-fixed-c3"
     bad = yaml.safe_load(OPEN_LIVE_CONFIG.read_text())
     bad["prolific"]["reward"] = 50
@@ -251,7 +252,7 @@ def test_exclusions_are_a_missed_catch_failed_checks_a_repeat_or_an_incomplete_r
         "failed the comprehension checks on the second reading"]
     assert exclusions(person("p3", stored("d", lst, records(lst, catch_ok=False)), lists), False) == [
         "missed a catch trial"]
-    assert exclusions(ok, True) == ["took part in an earlier study of the campaign"]
+    assert exclusions(ok, True) == ["took part in an earlier experiment of this chain"]
     short = records(lst)[:-2]
     assert any("incomplete" in w for w in exclusions(person("p4", stored("e", lst, short), lists), False))
     other = person("p5", stored("f", lists["lists"][1], records(lists["lists"][1]), at=1) | {"list_index": 10**6}, lists)
@@ -280,18 +281,45 @@ def test_the_monitor_flags_the_same_answer_on_every_trial_for_each_response_type
 
 # --------------------------------------------------------------------------- the campaign
 
-def test_campaign_ids_are_unique_and_a_person_seen_in_another_study_is_a_repeat(tmp_path):
+def test_campaign_ids_are_unique_and_a_repeat_is_someone_seen_in_the_same_chain(tmp_path):
+    """PI 2026-10-29: a person takes part once per chain; other chains, either arm, are allowed."""
     from src.rsa_open.live import campaign_ids
 
-    ids, repeats = campaign_ids(tmp_path, "open/chain_0/experiment1/open-c0", ["a", "b"])
-    assert ids == {"a": "p0", "b": "p1"} and repeats == []
-    again, repeats = campaign_ids(tmp_path, "open/chain_0/experiment1/open-c0", ["a", "b"])
-    assert again == ids and repeats == []  # a resumed collection reads its own people back
-    ids, repeats = campaign_ids(tmp_path, "fixed/chain_1/experiment1/fixed-c1", ["c", "b"])
-    assert ids == {"c": "p2", "b": "p1"} and repeats == ["p1"]
+    first = campaign_ids(tmp_path, "open/chain_0/experiment1/open-c0", ["a", "b"])
+    assert first.ids == {"a": "p0", "b": "p1"} and first.repeats == [] and first.earlier == {"p0": 0, "p1": 0}
+    again = campaign_ids(tmp_path, "open/chain_0/experiment1/open-c0", ["a", "b"])
+    assert again == first  # a resumed collection reads its own people back
+    other = campaign_ids(tmp_path, "fixed/chain_1/experiment1/fixed-c1", ["c", "b"])
+    assert other.ids == {"c": "p2", "b": "p1"} and other.repeats == [] and other.earlier == {"p2": 0, "p1": 1}
+    same = campaign_ids(tmp_path, "open/chain_0/experiment2/open-c0", ["b", "d"])
+    assert same.repeats == ["p1"] and same.earlier == {"p1": 2, "p3": 0}
+    assert campaign_ids(tmp_path, "open/chain_0/experiment2/open-c0", ["b"]).earlier == {"p1": 2}  # resumed
+    known = json.loads((tmp_path / "participant_ids.json").read_text())
+    assert known["b"]["studies"] == ["open/chain_0/experiment1/open-c0", "fixed/chain_1/experiment1/fixed-c1",
+                                     "open/chain_0/experiment2/open-c0"]
+    # The open arm's chain 0 and the fixed arm's chain 0 are different chains.
+    assert campaign_ids(tmp_path, "fixed/chain_0/experiment1/fixed-c0", ["a"]).repeats == []
 
 
-def test_one_study_recruits_at_a_time_across_the_campaign(tmp_path):
+def test_a_study_s_blocklist_is_its_own_chain_s_earlier_live_studies(tmp_path):
+    from src.pipelines.outer_loop.deployment.manifest import manifest_path
+    from src.rsa_open.live import chain_study_ids
+
+    run = tmp_path / "run"
+    for k, entries in ((1, {"deployment_manifest.json": ("live", "S1"),
+                            "deployment_manifest.superseded-20261029T000000Z.json": ("live", "S0")}),
+                       (2, {"deployment_manifest.json": ("test", "DRAFT2")}),  # a draft never had participants
+                       (3, {"deployment_manifest.json": ("live", "S3")})):
+        d = manifest_path(run / f"experiment{k}").parent
+        d.mkdir(parents=True)
+        for name, (mode, study) in entries.items():
+            (d / name).write_text(json.dumps({"prolific_mode": mode, "prolific_study_id": study}))
+    assert chain_study_ids(run / "experiment1", 1) == []
+    assert chain_study_ids(run / "experiment3", 3) == ["S1", "S0"]
+    assert chain_study_ids(run / "experiment4", 4) == ["S1", "S0", "S3"]
+
+
+def test_studies_recruit_in_as_many_slots_as_the_campaign_allows(tmp_path):
     from src.rsa_open.live import study_slot
 
     order = []
@@ -325,7 +353,8 @@ def fake_services(monkeypatch):
 
     def deploy(*, exp_dir, prolific_mode, n_participants, run_label, recruitment_overrides, **kw):
         calls["deploy"].append(dict(mode=prolific_mode, n=n_participants, label=run_label,
-                                    overrides=recruitment_overrides, project=kw["project_id"]))
+                                    overrides=recruitment_overrides, project=kw["project_id"],
+                                    blocklist=kw["earlier_study_ids"]))
         assert (Path(exp_dir) / "experiment" / "index.html").exists()
         path = manifest_path(exp_dir)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -351,13 +380,15 @@ def test_a_live_experiment_is_deployed_collected_and_cleaned(tmp_path, fake_serv
 
     p, lists, run = frozen_experiment(tmp_path / "run")
     L = lists["lists"]
-    campaign_ids(tmp_path / "campaign", "fixed/chain_1/experiment1/fixed-c1", ["seen-before"])
+    campaign_ids(tmp_path / "campaign", "fixed/chain_1/experiment1/fixed-c1", ["seen-before", "other-chain"])
+    campaign_ids(tmp_path / "campaign", "fixed/chain_0/experiment0/open-c0", ["seen-before"])  # this chain's (a stand-in)
     fake_services["responses"][:] = [
         stored("a", L[0], records(L[0]), at=1), stored("b", L[1], records(L[1]), at=2),
         stored("a", L[0], records(L[0]), at=3),                                         # a reload's second post
         stored("c", L[2], records(L[2], catch_ok=False), at=4),
         stored("d", L[3], records(L[3], comprehension="wrong"), at=5),
         stored("seen-before", L[4], records(L[4]), at=6),
+        stored("other-chain", L[6], records(L[6]), at=6),                                # another chain's: kept
         stored("z", L[5], records(L[5]), study="DRAFT", at=7),                           # a preview of the draft
     ]
     cfg = live_cfg(tmp_path)
@@ -365,16 +396,19 @@ def test_a_live_experiment_is_deployed_collected_and_cleaned(tmp_path, fake_serv
     (d,) = fake_services["deploy"]
     assert d["mode"] == "live" and d["n"] == p.design.n_participants and d["project"] == "rsa_reference"
     assert d["overrides"]["reward"] == round(p.design.pay_usd * 100) and d["label"] == "open-c0"
+    assert d["blocklist"] == []  # experiment 1: no earlier study of this chain
     assert fake_services["paused"]  # one short of its target after the wait: paused, partial data kept
-    assert {r["participant"] for r in rows} == {"p1", "p2"}  # a, b; "seen-before" took p0 in another study
-    assert record["kept"] == 2 and record["excluded"] == 3 and record["second_submissions"] == 1
+    assert {r["participant"] for r in rows} == {"p1", "p2", "p3"}  # other-chain (p1), a, b; seen-before is p0
+    assert record["kept"] == 3 and record["excluded"] == 3 and record["second_submissions"] == 1
+    assert record["returning"]["kept"] == {"n": 1, "share": 1 / 3, "earlier_studies": {"1": 1}}
+    assert record["returning"]["all"]["n"] == 2 and record["returning"]["all"]["earlier_studies"] == {"1": 1, "2": 1}
     assert record["other_study"] == 1 and record["exclusion_reasons"] == {
         "missed a catch trial": 1, "failed the comprehension checks on the second reading": 1,
-        "took part in an earlier study of the campaign": 1}
-    assert len(seconds) == 2 and all(s > 0 for s in seconds)
+        "took part in an earlier experiment of this chain": 1}
+    assert len(seconds) == 3 and all(s > 0 for s in seconds)
     raw = json.loads((tmp_path / "private" / "raw_collected" / "experiment1.json").read_text())
     assert {r["prolific_pid"] for r in raw} >= {"a", "b"}  # the private copy, with Prolific ids
-    assert "abc" not in json.dumps(record) and not any(k in json.dumps(rows) for k in ('"a"', "seen-before"))
+    assert "abc" not in json.dumps(record) and not any(k in json.dumps(rows + [record]) for k in ('"a"', "seen-before", "other-chain"))
     assert (run / "experiment1" / "deployment" / "monitor.json").exists()
     # A job that stopped after the wait ended resumes at the fetch, without waiting or deploying again.
     import src.pipelines.outer_loop.collect as main_collect

@@ -50,12 +50,10 @@ Everything else is identical by construction:
 is set at the gate (§4). Chain k of each arm starts from the same seeds; chain 4 repeats chain 1's
 (the closed campaign's chain 0 seeds), so one pair of chains measures chain-to-chain variance from
 one start.
-After the feasibility chain, the two arms' chains run concurrently, with recruitment interleaved,
-so time, Prolific's pool and the agents' model versions are shared. One study recruits at a time
-across the campaign, in the order the chains are ready, so Prolific's blocklist (applied when a
-study is published) covers every earlier study. Every study excludes everyone who took part in
-any earlier RSA study (§4b). Each study's listing uses one neutral name and description for both
-arms, with the paradigm's own pay and minutes.
+After the feasibility chain, the two arms' chains run concurrently, their studies recruiting in
+parallel (PI 2026-10-29), so time, Prolific's pool and the agents' model versions are shared. A
+person takes part at most once in each chain (§4b). Each study's listing uses one neutral name and
+description for both arms, with the paradigm's own pay and minutes.
 
 The closed campaign (October 2026) is reported as history and pilot evidence. It is not an arm:
 it ran older code and agents, and its pre-registered data are spent.
@@ -129,24 +127,33 @@ how it is going.
   any restart of its job). It is then paused, and the partial data are modelled.
 - **The fixed arm** cannot fail at design; its infrastructure failures resume like any other.
 
-## 4b. Participants (accepted by the PI, 2026-10-26)
+## 4b. Participants (accepted by the PI, 2026-10-26; reuse, 2026-10-29)
 
-- **No one takes part twice within this campaign**, in either arm. Taking one referent game
-  changes how a person approaches the next, and the arms must not share people.
-- **People from earlier auto-psych studies:**
-  - those from the closed RSA campaign are excluded (the same task);
-  - those from the subjective-randomness studies are **allowed** (a different task), which
-    widens the pool.
+- **A person takes part at most once in each chain** (PI 2026-10-29). Each study's Prolific
+  blocklist names its own chain's earlier studies, so a chain's experiments are independent
+  samples and each committed model is scored on people new to that chain (claim 2). People may
+  take part in other chains, of either arm, and people from the closed RSA campaign and the
+  subjective-randomness studies may take part. The campaign needs roughly 14,000 responses;
+  excluding everyone who had done any RSA study asked more of Prolific's pool than it holds (run
+  D2: 15 people took about two hours to recruit). Taking one referent game can change how a
+  person approaches the next, and a returning person in the fixed arm repeats nearly the same
+  task, so this is measured (next item) rather than assumed away.
+- **Returning people are recorded and analysed.** Every study a person takes part in is recorded
+  privately (`src.rsa_open.live.campaign_ids`), and each study reports how many of its people had
+  taken part in earlier studies of this campaign, and in how many (aggregates). **Sensitivity
+  analysis:** every pre-registered result is recomputed on each person's first study of the
+  campaign only, and both are reported. The closed campaign's people cannot be identified as
+  returning (its ids are not in this campaign's record), which the report states.
 - **Exclusions (accepted by the PI, 2026-10-26):** a participant's data are left out if
   they missed any catch trial (the closed campaign's rule), failed the comprehension checks on the
-  second reading, had taken part in an earlier study of the campaign (a backstop to the
+  second reading, had taken part in an earlier experiment of the same chain (a backstop to the
   blocklist), or left an incomplete record. Nothing else: no exclusions by time or by answer
   pattern. People who give the same answer on nearly every trial are monitored and reported, not
   excluded. The gate's "exclusions ≤ 25%" (§4) counts these exclusions.
-- About 32 experiments × 400 people plus the bakeoff is roughly 14,000 people. As the blocklist
-  grows the pool shrinks, so each study recruits for up to 24 hours (§4a; the closed campaign's
-  studies filled in about an hour, against a 3-hour window). Recruitment speed is monitored and
-  reported. The exclusions are never relaxed mid-campaign.
+- About 32 experiments × 400 people plus the bakeoff is roughly 14,000 responses. Each study
+  recruits for up to 24 hours (§4a; the closed campaign's studies filled in about an hour, against
+  a 3-hour window; run D2's took about two). Recruitment speed is monitored and reported. The
+  exclusions are never relaxed mid-campaign.
 
 ## 5. Competitors in the bakeoff
 
@@ -179,6 +186,8 @@ how it is going.
 
 - Each arm's admission outcomes: too slow, not converged, admitted.
 - Claim 3's designer measures, pilot against live.
+- Returning people per study and arm (§4b), and the first-study sensitivity analysis beside every
+  result.
 - The rehearsals: run B, its replay and the ground-truth check, and the integrated harness's
   rehearsal (run C, simulated) and live smoke test (run D: about 15 people per arm on a
   rehearsal's design, never modelled).

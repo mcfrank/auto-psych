@@ -9,7 +9,8 @@ confirm_live_recruitment: false   # set to true, deliberately, for a live (paid)
 firebase_project: auto-psych-2c5da
 code_tag: ""                      # the frozen tag every live chain runs on (set at registration; a live chain refuses without it)
 series_label: ro                  # Hosting sites <firebase_project>-<series_label>-<arm>-c<k> (<= 30 characters)
-max_concurrent_studies: 1         # one study recruits at a time across the campaign (the blocklist applies at publish)
+max_concurrent_studies: 8         # studies recruiting at once, campaign-wide: one per chain at stage 2's largest
+                                  # (4 chains x 2 arms); a chain's own studies are sequential (PI 2026-10-29)
 max_wait_hours: 24                # then an unfilled study is paused and its partial data modelled (PREREG_DRAFT.md §4a);
                                   # a whole day, as the pool shrinks (PI 2026-10-29: main's 3 h filled in ~1 h so far)
 review_first_paradigm: true       # an open chain's experiment 1 is published only after the PI's approval
@@ -26,4 +27,6 @@ prolific:                         # rendered into the rsa_reference project's pr
   device_compatibility: [desktop]
   min_approval_rate: 98           # percent
   exclude_earlier_participants: true
-  exclude_earlier_participants_from: project   # every earlier RSA study, closed and open; subjective randomness allowed (PI 2026-10-26)
+  exclude_earlier_participants_from: listed    # this chain's earlier studies only (src.rsa_open.live.chain_study_ids):
+                                               # once per chain; other chains, either arm, and the closed campaign may
+                                               # take part (PI 2026-10-29)

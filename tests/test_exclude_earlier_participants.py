@@ -178,7 +178,23 @@ def test_a_project_can_exclude_only_its_own_earlier_participants(prolific, tmp_p
     assert _blocklist(payload)["selected_values"] == ["rsa_c0_e1", "rsa_c1_e1"]
 
 
-def test_the_exclusion_scope_is_all_or_project(prolific):
+def test_the_exclusion_scope_is_all_project_or_listed(prolific):
     prolific["settings"].write_text("exclude_earlier_participants_from: sr\n", encoding="utf-8")
-    with pytest.raises(ValueError, match="'all' or 'project'"):
+    with pytest.raises(ValueError, match="'all', 'project' or 'listed'"):
         deploy_prolific.create_draft_study(PROJECT, _manifest(), 40, "live")
+
+
+def test_a_listed_scope_blocks_only_the_studies_the_caller_names(prolific):
+    # The open RSA campaign (PI 2026-10-29): a person takes part once per chain, so a study blocks
+    # only its own chain's earlier studies, which the caller reads from its manifests.
+    prolific["settings"].write_text("exclude_earlier_participants_from: listed\n", encoding="utf-8")
+    deploy_prolific.create_draft_study(PROJECT, _manifest(), 40, "live", earlier_study_ids=["c0_e1", "c0_e2"])
+    deploy_prolific.create_draft_study(PROJECT, _manifest(), 40, "live", earlier_study_ids=[])
+    first, second = prolific["created"]
+    assert _blocklist(first)["selected_values"] == ["c0_e1", "c0_e2"]
+    assert _blocklist(second) is None  # a chain's first study blocks no one
+    with pytest.raises(ValueError, match="exactly when"):  # the caller must name them
+        deploy_prolific.create_draft_study(PROJECT, _manifest(), 40, "live")
+    prolific["settings"].write_text("exclude_earlier_participants_from: project\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="exactly when"):  # and may not name them otherwise
+        deploy_prolific.create_draft_study(PROJECT, _manifest(), 40, "live", earlier_study_ids=["x"])

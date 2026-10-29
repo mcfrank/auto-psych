@@ -247,12 +247,16 @@ def excludes_earlier_participants(cfg: dict[str, Any]) -> bool:
 def earlier_participants_scope(cfg: dict[str, Any]) -> str:
     """Whose earlier participants a live study excludes
     (``exclude_earlier_participants_from``): every pipeline study ("all", the
-    default) or only this project's ("project"; the RSA campaign, PI
+    default), only this project's ("project"; the RSA campaign, PI
     2026-10-10: subjective randomness is a different enough task that its
-    participants may take part)."""
+    participants may take part), or the studies the caller lists ("listed";
+    the open RSA campaign blocks only a chain's own earlier studies, PI
+    2026-10-29)."""
     value = cfg.get("exclude_earlier_participants_from", "all")
-    if value not in ("all", "project"):
-        raise ValueError(f"exclude_earlier_participants_from must be 'all' or 'project', got {value!r}.")
+    if value not in ("all", "project", "listed"):
+        raise ValueError(
+            f"exclude_earlier_participants_from must be 'all', 'project' or 'listed', got {value!r}."
+        )
     return value
 
 
@@ -378,6 +382,7 @@ def create_draft_study(
     n_participants: int,
     mode: str,
     recruitment_overrides: Mapping[str, Any] | None = None,
+    earlier_study_ids: Sequence[str] | None = None,
 ) -> ProlificStudyPlan:
     """Create a DRAFT Prolific study. It is never published here — the caller
     publishes only for live mode. Test mode creates the same draft (no test
@@ -387,19 +392,28 @@ def create_draft_study(
     the account (``earlier_pipeline_study_ids``), unless the settings say
     ``exclude_earlier_participants: false``. The IDs are read now, just before
     the study is created and published, so they include the studies of
-    parallel runs created so far.
+    parallel runs created so far. With ``exclude_earlier_participants_from:
+    listed`` the caller names the studies instead (``earlier_study_ids``,
+    required then and refused otherwise).
     """
     from src.runtime.prolific import create_study
 
     recruitment = load_recruitment_config(project_id, n_participants, recruitment_overrides)
     exclude = excludes_earlier_participants(recruitment)
     scope = earlier_participants_scope(recruitment)
+    if (scope == "listed") != (earlier_study_ids is not None):
+        raise ValueError(
+            "earlier_study_ids are given exactly when exclude_earlier_participants_from is "
+            f"'listed' (it is {scope!r}; earlier_study_ids {earlier_study_ids!r})"
+        )
     excluded: list[str] = []
     # Live studies recruit paid participants gated by hardcoded choice IDs, so
     # confirm those IDs still mean what we think before any study is created.
     if mode == "live":
         verify_live_eligibility()
-        if exclude:
+        if exclude and scope == "listed":
+            excluded = [str(s) for s in earlier_study_ids or ()]
+        elif exclude:
             excluded = earlier_pipeline_study_ids(project_id if scope == "project" else None)
     plan = build_prolific_plan(
         project_id=project_id,

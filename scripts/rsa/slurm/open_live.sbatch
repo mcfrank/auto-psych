@@ -29,9 +29,10 @@
 # are skipped, a recorded study is never deployed or published again (main's guard), and a design
 # or loop that stopped part way starts again (its attempt kept as <stage>.abandoned_<i>).
 #
-# One study recruits at a time across the campaign (a lock in $WORK_ROOT/private/campaign), so the
-# chains' studies interleave in the order they are ready. Participant ids are the campaign's; the
-# raw responses (Prolific ids) stay in $CELL_DIR/private and the campaign directory, on Sherlock.
+# Studies recruit in parallel, up to the config's max_concurrent_studies (slot locks in
+# $WORK_ROOT/private/campaign); each blocks only its own chain's earlier studies (once per chain,
+# PI 2026-10-29). Participant ids are the campaign's; the raw responses (Prolific ids) stay in
+# $CELL_DIR/private and the campaign directory, on Sherlock.
 #
 # Overrides: CONFIG (scripts/rsa/live/open_live.yaml), N_EXPERIMENTS (4), MAX_ITERATIONS (5),
 # CANDIDATES (6), CV_FOLDS (5), PILOT_PARTICIPANTS (12), THEORIST_TIMEOUT_SEC (3600), SEED (0),

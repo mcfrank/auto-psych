@@ -8,19 +8,23 @@ collected; its data become the same rows and block a simulated experiment writes
   (`src.rsa.live.site.LIVE_JS`: the list from ``/assign``, the data to ``/submit``, then
   Prolific's completion URL). The deployment injects the IRB consent gate;
 - **the deployment** is main's (`run_deployment`), under the closed campaign's Prolific project
-  (``rsa_reference``), so the project-scoped blocklist excludes everyone from any earlier RSA
-  study, closed or open, and admits the subjective-randomness studies' people
-  (`PREREG_DRAFT.md` §4b). A resumed experiment never deploys or publishes twice (main's guard);
+  (``rsa_reference``). A resumed experiment never deploys or publishes twice (main's guard);
+- **a person takes part once per chain** (PI 2026-10-29; `PREREG_DRAFT.md` §4b): each study's
+  blocklist is its own chain's earlier studies (`chain_study_ids`, main's
+  ``exclude_earlier_participants_from: listed``), so people from other chains, either arm, and
+  the closed campaign may take part. ~14,000 people who had never done an RSA study were more than
+  Prolific's pool gives (run D2: 15 people took about two hours);
 - **the study's terms are the paradigm's**: its N, its pay and its minutes
   (``recruitment_overrides``), under one neutral name and description for both arms
   (``scripts/rsa/live/open_live.yaml``), so the listing does not say which arm a study is;
-- **one study recruits at a time** across the campaign (`study_slot`, a lock in the campaign
-  directory that every chain's job shares): Prolific applies the blocklist when a study is
-  published, so two studies open at once could share a person. Chains publish in the order
-  they are ready, which interleaves the arms;
+- **studies recruit in parallel** (PI 2026-10-29): `study_slot` allows ``max_concurrent_studies``
+  at once across the campaign (a lock per slot in the campaign directory). A chain's own studies
+  are sequential, so its blocklist is complete when each is published;
 - **participant ids** are the campaign's (`campaign_ids`: ``p<k>`` from one map of Prolific ids
-  in the campaign directory). A person seen in an earlier study keeps that id and is excluded
-  here, on record (the blocklist should make this impossible; this is the check);
+  in the campaign directory, which also records every study a person took part in). A person
+  seen in an earlier study of the same chain is excluded, on record (the blocklist should make
+  this impossible; this is the check); one seen only in other chains is kept, and each study's
+  record counts them (``returning``) for the pre-registered first-study sensitivity analysis;
 - **exclusions** (`exclusions`): a missed catch trial (the closed campaign's rule), failed
   comprehension checks on the second reading, a repeat person, or an incomplete record;
 - **monitoring** (`monitor_report`): while the study fills and at the end, the share of people
@@ -96,6 +100,7 @@ class LiveConfig:
     review_first_paradigm: bool = True
     """An open chain's experiment 1 is published only after the PI's approval (PI 2026-10-26)."""
     max_concurrent_studies: int = 1
+    """Studies recruiting at once, campaign-wide (``open_live.yaml``: one per chain, PI 2026-10-29)."""
     max_wait_sec: Optional[float] = None
     """How long a study may take to fill before it is paused (default: main's 3 h)."""
     participants: Optional[int] = None
@@ -238,24 +243,74 @@ def study_slot(campaign_dir: Path, slots: int = 1, *, poll_sec: float = 60.0, la
         time.sleep(poll_sec)
 
 
-def campaign_ids(campaign_dir: Path, study_key: str, prolific_pids: Sequence[str]) -> Tuple[Dict[str, str], List[str]]:
-    """Each Prolific id's campaign participant id (``p<k>``, assigned in the order given) and the
-    run ids of people first seen in another study (repeats). The map lives in the campaign
-    directory, private, under a lock (every chain writes it)."""
+def returning(people: Sequence["Person"], kept: Sequence["Person"], earlier: Mapping[str, int]) -> Dict[str, Any]:
+    """How many people had taken part in earlier studies of the campaign (other chains'), among
+    everyone and among those kept, and how many studies before: aggregates only."""
+    def count(group):
+        k = [earlier.get(p.id, 0) for p in group]
+        back = [x for x in k if x > 0]
+        return {"n": len(back), "share": len(back) / len(k) if k else None,
+                "earlier_studies": {str(x): back.count(x) for x in sorted(set(back))}}
+
+    return {"all": count(people), "kept": count(kept)}
+
+
+def chain_of(study_key: str) -> str:
+    """The chain a study belongs to: its arm, chain and run label (`study_key` without the experiment)."""
+    arm, chain, _, run_label = study_key.split("/")
+    return f"{arm}/{chain}/{run_label}"
+
+
+@dataclass
+class CampaignIds:
+    ids: Dict[str, str]
+    """Prolific id -> campaign participant id (``p<k>``)."""
+    repeats: List[str]
+    """Run ids of people who took part in an earlier study of this chain (excluded)."""
+    earlier: Dict[str, int]
+    """Run id -> how many earlier studies of the campaign the person took part in (other chains')."""
+
+
+def campaign_ids(campaign_dir: Path, study_key: str, prolific_pids: Sequence[str]) -> CampaignIds:
+    """Each Prolific id's campaign participant id (``p<k>``, assigned in the order given), and every
+    study each person took part in, in order (``studies``). The map lives in the campaign directory,
+    private, under a lock (every chain writes it). An entry written before 2026-10-29 has only its
+    ``first_study``."""
     path = Path(campaign_dir) / "participant_ids.json"
+    out = CampaignIds({}, [], {})
     with _locked(path.with_suffix(".lock")):
         known = json.loads(path.read_text()) if path.exists() else {}
-        ids, repeats = {}, []
         for pid in prolific_pids:
             if pid not in known:
                 known[pid] = {"id": f"p{len(known)}", "first_study": study_key}
-            ids[pid] = known[pid]["id"]
-            if known[pid]["first_study"] != study_key:
-                repeats.append(known[pid]["id"])
+            entry = known[pid]
+            studies = entry.setdefault("studies", [entry["first_study"]])
+            before = studies[:studies.index(study_key)] if study_key in studies else list(studies)
+            if study_key not in studies:
+                studies.append(study_key)
+            out.ids[pid] = entry["id"]
+            out.earlier[entry["id"]] = len(before)
+            if any(chain_of(s) == chain_of(study_key) for s in before):
+                out.repeats.append(entry["id"])
         tmp = path.with_suffix(".tmp")
         tmp.write_text(json.dumps(known, indent=1))
         tmp.replace(path)
-    return ids, repeats
+    return out
+
+
+def chain_study_ids(exp_dir: Path, n: int) -> List[str]:
+    """The live Prolific studies of this chain's experiments before ``n`` (a superseded study
+    included): the studies experiment ``n``'s blocklist names."""
+    from src.pipelines.outer_loop.deployment.manifest import manifest_path
+
+    out = []
+    for k in range(1, n):
+        current = manifest_path(Path(exp_dir).parent / f"experiment{k}")
+        for path in sorted(current.parent.glob("deployment_manifest*.json")):
+            m = json.loads(path.read_text())
+            if m.get("prolific_mode") == "live" and m.get("prolific_study_id"):
+                out.append(str(m["prolific_study_id"]))
+    return out
 
 
 # --------------------------------------------------------------------------- one person's data
@@ -326,7 +381,7 @@ def exclusions(p: Person, repeat: bool) -> List[str]:
 
     why = list(p.problems)
     if repeat:
-        why.append("took part in an earlier study of the campaign")
+        why.append("took part in an earlier experiment of this chain")
     if p.comprehension_final is False:
         why.append("failed the comprehension checks on the second reading")
     catches = [r for r in p.rows if r["phase"] == "catch"]
@@ -551,7 +606,8 @@ def collect(*, exp_dir: Path, chain: str, arm: str, n: int, cfg: LiveConfig) -> 
                            prolific_mode=cfg.prolific_mode, agent_backend="opencode",
                            collection_owner=cfg.collection_owner, firebase_project=cfg.firebase_project,
                            firebase_region=cfg.firebase_region, n_participants=n_people, repo_root=cfg.repo_root,
-                           run_label=cfg.run_label, recruitment_overrides=recruitment_overrides(paradigm, cfg))
+                           run_label=cfg.run_label, recruitment_overrides=recruitment_overrides(paradigm, cfg),
+                           earlier_study_ids=chain_study_ids(exp_dir, n))
         manifest = json.loads(manifest_path(exp_dir).read_text())
         if cfg.prolific_mode == "test":
             raise DraftOnly(f"test mode: the page is at {manifest.get('experiment_url')} and Prolific study "
@@ -568,11 +624,11 @@ def collect(*, exp_dir: Path, chain: str, arm: str, n: int, cfg: LiveConfig) -> 
     raw.parent.mkdir(parents=True, exist_ok=True)
     raw.write_text(json.dumps(responses))
     study = manifest["prolific_study_id"]
-    ids, repeats = campaign_ids(cfg.campaign_dir, study_key(chain, arm, n, cfg.run_label), _pids(responses, study))
-    people, skipped = read_people(responses, study, lists, ids)
+    seen = campaign_ids(cfg.campaign_dir, study_key(chain, arm, n, cfg.run_label), _pids(responses, study))
+    people, skipped = read_people(responses, study, lists, seen.ids)
     if not people:
         raise RuntimeError(f"{label}: no response of study {study} was stored ({len(responses)} responses in all)")
-    excluded = {p.id: w for p in people if (w := exclusions(p, p.id in repeats))}
+    excluded = {p.id: w for p in people if (w := exclusions(p, p.id in seen.repeats))}
     report = monitor_report(people, excluded, completed, paradigm.design.pay_usd)
     for line in monitor_lines(report):
         print(f"[live] {label}: {line}", flush=True)
@@ -582,6 +638,7 @@ def collect(*, exp_dir: Path, chain: str, arm: str, n: int, cfg: LiveConfig) -> 
     rows = [r for p in kept for r in p.rows]
     record = {"collection": "live", "prolific_mode": cfg.prolific_mode, "study_id": study,
               "target": n_people, "smoke_test": cfg.participants is not None, **skipped, **report,
+              "returning": returning(people, kept, seen.earlier),
               "excluded_people": {pid: w for pid, w in excluded.items()}}
     return rows, record, [p.seconds for p in kept if p.seconds]
 
@@ -658,7 +715,7 @@ def launch_summary(cfg: Mapping[str, Any], arm: str, chains: Sequence[int], n_ex
             f"arm, chains    : {arm}, {list(chains)} (sites {', '.join(hosting_site(cfg, arm, k) for k in chains)})",
             f"per study      : {terms}",
             f"this launch    : up to {studies} studies{total} (finished experiments are not rerun)",
-            f"one at a time  : {cfg.get('max_concurrent_studies', 1)} study recruiting at once, campaign-wide",
+            f"in parallel    : up to {cfg.get('max_concurrent_studies', 1)} studies recruiting at once, campaign-wide",
             f"confirmed      : {cfg.get('confirm_live_recruitment', False)}"]
 
 
