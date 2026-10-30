@@ -29,11 +29,12 @@ mkdir -p "$WORK_ROOT"
 
 # --- tools -----------------------------------------------------------------
 if [[ "$CLUSTER" == coco ]]; then
-  # No module system: uv from the user's miniconda, bubblewrap from its
-  # conda-forge env (unprivileged user namespaces are enabled), the system gcc
-  # (13.3) for PyTensor, and the agent CLIs from the AFS home.
-  export PATH="/scr/$USER/miniconda3/envs/bwrap/bin:/scr/$USER/miniconda3/bin:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
-  command -v bwrap >/dev/null || { echo "FATAL: bwrap not on PATH (conda create -p /scr/$USER/miniconda3/envs/bwrap -c conda-forge bubblewrap)" >&2; exit 1; }
+  # No module system: uv, bubblewrap and the agent CLIs from the shared home,
+  # so any node can run a cell (unprivileged user namespaces must be enabled),
+  # and the system gcc (13.3) for PyTensor. bwrap is conda-forge's 0.13.0 with
+  # its libcap in ~/.local/lib (its RPATH is $ORIGIN/../lib).
+  export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
+  command -v bwrap >/dev/null || { echo "FATAL: bwrap not on PATH (copy conda-forge's bin/bwrap to ~/.local/bin and lib/libcap.so.2* to ~/.local/lib)" >&2; exit 1; }
   command -v uv >/dev/null || { echo "FATAL: uv not on PATH" >&2; exit 1; }
 else
 # uv drives the Python env; opencode is the coding-agent backend.
@@ -87,8 +88,8 @@ fi
 # (.python-version; memo, the RSA domain's model language, needs >= 3.12), on
 # Sherlock and on coco (Ubuntu 24.04, where the setup job syncs the lock itself).
 export UV_PYTHON="${UV_PYTHON:-3.12}"
-# uv's own interpreters only: on coco miniconda's bin (for uv) is on PATH, and
-# a missing managed Python must fail, not quietly build on conda's or the system's.
+# uv's own interpreters only: a submitting shell's conda may be on PATH, and a
+# missing managed Python must fail, not quietly build on conda's or the system's.
 export UV_PYTHON_PREFERENCE=only-managed
 # sbatch --export=ALL passes on the submitting shell's activated conda env or
 # virtualenv, which uv would take as the environment to use.

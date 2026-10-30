@@ -441,3 +441,12 @@ def test_coco_jobs_go_to_the_chosen_node(tmp_path, env, node):
     assert result.returncode == 0, result.stderr
     for call in _submissions(tmp_path / "sbatch_calls"):
         assert call["args"][call["args"].index("-w") + 1] == node
+
+
+@pytest.mark.parametrize("env, partition", [({}, "cocoflops"), ({"COCO_PARTITION": "sc-loprio"}, "sc-loprio")])
+def test_coco_jobs_go_to_the_chosen_partition(tmp_path, env, partition):
+    # sc-loprio reaches SC nodes outside the cocoflops partition.
+    result = _run_submit(tmp_path, script="../../number_game/slurm/submit_dataset_run.sh", USER="me", **env)
+    assert result.returncode == 0, result.stderr
+    for call in _submissions(tmp_path / "sbatch_calls"):
+        assert f"--partition={partition}" in call["args"]

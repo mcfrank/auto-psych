@@ -1,9 +1,10 @@
 # Holdout-recovery test-retest (Sherlock; the SC cluster with CLUSTER=coco)
 
 On the SC cluster set `CLUSTER=coco` (jobs on `cocoflops1`, account
-`cocoflops`; work under `/scr/$USER/auto-psych/`). One-time setup there:
-`conda create -p /scr/$USER/miniconda3/envs/bwrap -c conda-forge bubblewrap`,
-and `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`) in `.secrets`. The
+`cocoflops`; work under `/scr/$USER/auto-psych/`; any SC node with `-w`, as
+`COCO_NODE`). One-time setup, shared by every node: conda-forge's bubblewrap
+(`bin/bwrap` in `~/.local/bin`, `lib/libcap.so.2*` in `~/.local/lib`) and uv in
+`~/.local/bin`, and `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`) in `.secrets`. The
 number game submits through `scripts/number_game/slurm/submit_recovery.sh`
 (`CLUSTER=coco` by default), e.g. `N_REPEATS=1 MAX_PARALLEL=3 CELL_CPUS=20 bash
 scripts/number_game/slurm/submit_recovery.sh`.
