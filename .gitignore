@@ -13,7 +13,7 @@ __pycache__/
 *.so
 .Python
 venv/
-.venv/
+.venv
 env/
 *.egg-info/
 .eggs/
