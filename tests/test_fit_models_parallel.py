@@ -281,6 +281,19 @@ def test_in_process_cache_hits_never_reach_the_pool(tmp_path, monkeypatch):
     assert fits == {"hit": cached, "miss": fitted}
 
 
+def test_evict_fits_on_drops_only_the_fits_on_that_responses_file(tmp_path):
+    models_dir, responses = _stub_models(tmp_path, ["a", "b"])
+    other = tmp_path / "other.csv"
+    other.write_text("chose_left\n0\n", encoding="utf-8")
+    for name in ("a", "b"):
+        pi._FIT_CACHE[pi._cache_key(name, models_dir, responses, {})] = object()
+    kept = pi._cache_key("a", models_dir, other, {})
+    pi._FIT_CACHE[kept] = object()
+
+    assert pi.evict_fits_on(responses) == 2
+    assert list(pi._FIT_CACHE) == [kept]
+
+
 def test_a_failed_child_fit_raises_that_failure_after_caching_the_others(
     tmp_path, monkeypatch
 ):

@@ -1203,6 +1203,60 @@ def test_evaluate_trajectory_scores_every_history_step(tmp_path, monkeypatch):
     assert rows[0]["rmse"] > 0.0
 
 
+def test_evaluate_trajectory_evicts_each_experiments_fits_once_it_is_scored(tmp_path, monkeypatch):
+    # The final scoring held every experiment's fits in memory and was
+    # OOM-killed; an experiment's fits are not needed after its last step.
+    run_root = tmp_path / "run"
+    _write_loop_artifacts(
+        run_root,
+        1,
+        [_history_step(0, None, "model_a"), _history_step(1, 0, "model_b")],
+    )
+    _write_loop_artifacts(run_root, 2, [_history_step(0, None, "model_b")])
+    gt_p = np.array([0.2, 0.5, 0.9])
+    monkeypatch.setattr(
+        holdout_eval, "p_left_fixed_params", lambda model_name, models_dir, stimuli, params, **kw: gt_p
+    )
+    monkeypatch.setattr(holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)})
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
+    events = []
+
+    class Fitted:
+        model = None
+
+        def predict_p_left(self, stim_data, var_name="p_left"):
+            return gt_p
+
+    def fit(name, models_dir, responses_path, **kw):
+        events.append(("fit", responses_path.parent.parent.name, name))
+        return Fitted()
+
+    monkeypatch.setattr(holdout_eval, "fit_model", fit)
+    monkeypatch.setattr(
+        holdout_eval, "evict_fits_on", lambda path: events.append(("evict", path.parent.parent.name))
+    )
+
+    evaluate_trajectory(
+        run_root,
+        "local_representativeness",
+        {"theta_alt": 0.65},
+        EVAL_STIMULI,
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=2,
+        cache_dir=None,
+        fit_kwargs={},
+        task=SUBJECTIVE_RANDOMNESS,
+    )
+
+    assert events == [
+        ("fit", "experiment1", "model_a"),
+        ("fit", "experiment1", "model_b"),
+        ("evict", "experiment1"),
+        ("fit", "experiment2", "model_b"),
+        ("evict", "experiment2"),
+    ]
+
+
 def test_evaluate_trajectory_computes_bayesian_model_average(tmp_path, monkeypatch):
     # At a step where the posterior is split across models, the trajectory must
     # report both the single best model's correlation *and* the

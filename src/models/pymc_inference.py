@@ -2217,3 +2217,18 @@ def evict_fit_cache(model_name: str) -> int:
     for k in keys:
         del _FIT_CACHE[k]
     return len(keys)
+
+
+def evict_fits_on(responses_path: Path) -> int:
+    """Drop every cached fit made on ``responses_path``; return how many.
+
+    Used once the holdout evaluation is done with an experiment's responses:
+    the recovery's final scoring otherwise holds every fit of every experiment
+    in memory (OOM-killed at 160 GB). The ``.nc`` on disk stays, so a later
+    request reloads it. The cache key's third element is the responses' sha256.
+    """
+    digest = _sha256_file(Path(responses_path))
+    keys = [k for k in _FIT_CACHE if k[2] == digest]
+    for k in keys:
+        del _FIT_CACHE[k]
+    return len(keys)

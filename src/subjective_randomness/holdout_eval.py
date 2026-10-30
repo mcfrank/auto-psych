@@ -18,7 +18,7 @@ import numpy as np
 from src.model_comparison.cv import LOO, Selection, cv_pointwise
 from src.models.data_binding import make_stim_data
 from src.models.model_loading import model_source_file, pm_data_inputs
-from src.models.pymc_inference import InvalidPredictions, fit_model, is_model_failure
+from src.models.pymc_inference import InvalidPredictions, evict_fits_on, fit_model, is_model_failure
 from src.subjective_randomness.holdout_data import (
     _raw_eval_rows,
     p_left_fixed_params,
@@ -679,6 +679,9 @@ def evaluate_trajectory(
                 }
             )
             global_step += 1
+        # No later step fits on this experiment's responses: free its fits
+        # (held, they OOM-killed the scoring); the .nc cache keeps them.
+        evict_fits_on(loop_dir / "responses.csv")
     return rows
 
 
