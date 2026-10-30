@@ -77,6 +77,13 @@ from src.models.data_binding import (
     make_stim_data,
 )
 
+# A forked PyMC chain inherits HDF5's lock on any fit file open at the time,
+# so the writer's reopen fails. Fit files are write-once; no lock needed.
+# HDF5 reads this when h5py is first imported.
+if "h5py" in sys.modules:
+    raise RuntimeError("import src.models.pymc_inference before h5py")
+os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
+
 
 # Errors that mean the *harness* (or the environment) is broken rather than
 # "this model cannot be fit to this data". Reporting them through a
@@ -1063,10 +1070,13 @@ def write_fit_file(idata: Any, nc_path: Path) -> None:
     The fit is written to a temporary file beside ``nc_path`` and renamed into
     place, so a process killed mid-write (an out-of-memory kill, a time limit)
     leaves no ``.nc`` at all rather than a truncated one that every later run
-    would find in the cache. The temporary name does not end in ``.nc``.
+    would find in the cache. The temporary name does not end in ``.nc`` and
+    is unique per thread.
     """
     nc_path = Path(nc_path)
-    partial = nc_path.with_name(f".{nc_path.name}.{os.getpid()}.partial")
+    partial = nc_path.with_name(
+        f".{nc_path.name}.{os.getpid()}.{threading.get_native_id()}.partial"
+    )
     try:
         idata.to_netcdf(str(partial))
         os.replace(partial, nc_path)

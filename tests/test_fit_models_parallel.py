@@ -1077,6 +1077,60 @@ def test_a_fit_file_appears_only_once_it_is_complete(tmp_path):
     assert nc.read_bytes() == b"half a fit"
 
 
+def test_a_fit_file_is_written_while_another_thread_forks_mid_write(tmp_path, monkeypatch):
+    # A child forked mid-write (as PyMC forks chains) holds the file open.
+    import time
+
+    import arviz as az
+    import h5py
+    import numpy as np
+
+    children = []
+    open_file = h5py.File.__init__
+
+    def open_then_fork(self, name, mode="r", *args, **kwargs):
+        open_file(self, name, mode, *args, **kwargs)
+        if mode == "w":
+            pid = os.fork()
+            if pid == 0:
+                time.sleep(2)
+                os._exit(0)
+            children.append(pid)
+
+    monkeypatch.setattr(h5py.File, "__init__", open_then_fork)
+    idata = az.from_dict(
+        posterior={"theta": np.zeros((2, 5))}, observed_data={"y": np.zeros(3)}
+    )
+    nc = tmp_path / "a.0123abcd.nc"
+    try:
+        pi.write_fit_file(idata, nc)
+    finally:
+        for pid in children:
+            os.waitpid(pid, 0)
+    assert [p.name for p in tmp_path.iterdir()] == [nc.name]
+
+
+def test_concurrent_writers_of_one_fit_never_share_a_partial_file(tmp_path):
+    import threading
+
+    partials = []
+    barrier = threading.Barrier(2)
+
+    class Idata:
+        def to_netcdf(self, path):
+            partials.append(path)
+            barrier.wait(timeout=5)  # both writers hold their partial at once
+            Path(path).write_bytes(b"fit")
+
+    nc = tmp_path / "a.0123abcd.nc"
+    writers = [threading.Thread(target=pi.write_fit_file, args=(Idata(), nc)) for _ in range(2)]
+    for w in writers:
+        w.start()
+    for w in writers:
+        w.join()
+    assert len(set(partials)) == 2
+
+
 def test_predictions_that_are_not_probabilities_raise_with_the_affected_stimuli():
     import numpy as np
 
