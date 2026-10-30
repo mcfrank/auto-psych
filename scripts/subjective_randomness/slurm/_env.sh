@@ -143,8 +143,11 @@ export GOOGLE_GENERATIVE_AI_API_KEY="${GOOGLE_GENERATIVE_AI_API_KEY:-${GOOGLE_AP
 
 # --- threading -------------------------------------------------------------
 # PyMC samples one chain per core; keep BLAS from oversubscribing within a chain.
-export OMP_NUM_THREADS="${OMP_NUM_THREADS:-1}"
-export MKL_NUM_THREADS="${MKL_NUM_THREADS:-1}"
+# Set unconditionally: Sherlock pre-exports every *_NUM_THREADS as the job's
+# CPU count, so a "${VAR:-1}" default never applies and each chain process
+# (scipy's OpenBLAS) spun up one thread per allocated CPU.
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
+export GOTO_NUM_THREADS=1 BLIS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
 
 cd "$REPO"
 echo "[_env] REPO=$REPO"
