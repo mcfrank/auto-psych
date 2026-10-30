@@ -1,19 +1,22 @@
 """Bayesian concept learning over rules and intervals, with a prior weight
-inferred for every rule (Bigelow & Piantadosi 2016).
+inferred for every rule: the Independent model of Bigelow & Piantadosi (2016).
 
-A PyMC port of Eric Bigelow's numpyro model (`number_bpl_model`,
-`prior_type='basic'`; reference copy in `scripts/number_game/numpyro_reference/`,
-checked by `tests/test_number_game_seed_port.py`). A learner who sees the
-example set D considers 42 rule concepts (powers, multiples, final digit,
-contained digit, primes, even, odd, squares, cubes) and the 5,050 intervals
-[m, n] of 1..100. Each example is drawn from the concept with probability
-0.9 (uniformly: the size principle) and from 1..100 otherwise. The prior puts
-p_mix on the rules, shared by Dirichlet(2, ..., 2) weights, and 1 - p_mix
-uniformly on the intervals. (The reference draws Gamma(2, 1) weights and
-normalises them, which is the same prior on the normalised weights; their
-unnormalised total entered nothing but the prior and mixed slowly.) The
-probability of answering "yes" to a target is the posterior probability that
-the concept contains it.
+"Inferring priors in compositional cognitive models" (CogSci 2016). A learner
+who sees the example set D considers 45 rule concepts (odd, even, primes,
+squares, cubes, powers of 2-10, powers of 2 without 32, powers of 2 with 37,
+multiples of 3-9, 11 and 12, numbers ending in 0-9, numbers containing the
+digit 0-9) and the 5,050 intervals [m, n] of 1..100. The grammar's first
+choice is a rule, with probability lambda_0, or an interval; a rule is then
+drawn with its own weight, and an interval as two numbers of 1..100, so each
+interval has prior (1 - lambda_0) / 100^2 (a pair with m > n is the empty set
+and no concept). Each example is drawn from the concept with probability 0.9
+(uniformly: the size principle) and from 1..100 otherwise. The probability of
+answering "yes" to a target is the posterior probability that the concept
+contains it. Every grammar weight has a Gamma(2, 1) prior; normalised, the
+rule weights are Dirichlet(2, ..., 2) and lambda_0 is Beta(2, 2).
+
+The concepts are those of the paper's implementation, LOTlib's
+`independent_grammar`, except that odd numbers include 1 and primes exclude it.
 """
 
 import numpy as np
@@ -21,41 +24,51 @@ import pymc as pm
 import pytensor.tensor as pt
 from scipy.special import logsumexp
 
-EPSILON = 0.1
+ALPHA = 0.9
 NUMBERS = np.arange(1, 101)
 
 
-def concept_sets():
-    """The reference's `np_utils.get_concept_sets`: 42 rules, then 5,050 intervals."""
-    rules = [
-        [2, 4, 8, 16, 32, 64], [3, 9, 27, 81], [4, 16, 64], [5, 25], [6, 36],
-        [7, 49], [8, 64], [9, 81], [10, 100],
-    ]
-    rules += [[i for i in NUMBERS if i % n == 0] for n in range(3, 13)]
-    rules += [[i for i in NUMBERS if i % 10 == d] for d in range(1, 10)]
-    rules += [[i for i in NUMBERS if str(d) in str(i)] for d in range(1, 10)]
-    rules.append([1, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97])
-    rules.append([i for i in NUMBERS if i % 2 == 0])
-    rules.append([i for i in NUMBERS if i % 2 == 1])
-    rules.append([1, 4, 9, 16, 25, 36, 49, 64, 81, 100])
-    rules.append([1, 8, 27, 64])
-    intervals = [list(range(m, n + 1)) for m in range(1, 101) for n in range(m, 101)]
-    return rules, intervals
+def rule_concepts():
+    rules = {
+        "odd": [n for n in NUMBERS if n % 2 == 1],
+        "primes": [n for n in NUMBERS if n > 1 and all(n % a for a in range(2, int(n**0.5) + 1))],
+        "squares": [n * n for n in range(1, 11)],
+        "cubes": [n**3 for n in range(1, 5)],
+        "powers of 2, not 32": [2, 4, 8, 16, 64],
+        "powers of 2, or 37": [2, 4, 8, 16, 32, 37, 64],
+        "even": list(range(2, 101, 2)),
+    }
+    rules.update({f"multiples of {m}": list(range(m, 101, m)) for m in [3, 4, 5, 6, 7, 8, 9, 11, 12]})
+    rules.update({f"powers of {m}": [m**k for k in range(1, 8) if m**k <= 100] for m in range(2, 11)})
+    rules.update({f"ends in {d}": [n for n in NUMBERS if n % 10 == d] for d in range(10)})
+    rules.update({f"contains digit {d}": [n for n in NUMBERS if str(d) in str(n)] for d in range(10)})
+    return rules
 
 
-RULES, INTERVALS = concept_sets()
-N_RULES, N_INTERVALS = len(RULES), len(INTERVALS)
+_RULES = rule_concepts()
+RULE_NAMES, RULES = list(_RULES), list(_RULES.values())
+N_RULES = len(RULES)
+INTERVALS = [list(range(m, n + 1)) for m in NUMBERS for n in range(m, 101)]
 MEMBERSHIP = np.array([np.isin(NUMBERS, c) for c in RULES + INTERVALS], dtype="float64")
 # log P(x | h) of one example x (column x - 1) under each hypothesis.
-EXAMPLE_LOG_LIK = np.log(MEMBERSHIP * (1 - EPSILON) / MEMBERSHIP.sum(axis=1, keepdims=True) + EPSILON / 100)
+EXAMPLE_LOG_LIK = np.log(ALPHA * MEMBERSHIP / MEMBERSHIP.sum(axis=1, keepdims=True) + (1 - ALPHA) / 100)
 RULE_MEMBERSHIP = MEMBERSHIP[:N_RULES]
 
-# Every interval has the same prior, (1 - p_mix) / N_INTERVALS, and a likelihood
-# free of parameters, so for each example set the 5,050 intervals act as one
-# hypothesis: total evidence sum_j P(D | interval j), and in-concept probability
-# for each target the share of that evidence from intervals containing it.
-# prepare_observed computes both per set; the posterior below is exactly the
-# one over all 5,092 hypotheses, at ~1/100 of the cost per gradient.
+# "ends in 0" and "contains digit 0" are one set, {10, 20, ..., 100}, so the
+# data fix only the sum of their weights, and sampling both mixes slowly. The
+# weights are sampled instead as one per distinct set, the shared set's
+# concentration 4, and an independent Beta(2, 2) split of it: by Dirichlet
+# aggregation, exactly the Dirichlet(2, ..., 2) prior on the 45 rule weights.
+END_0, CONTAINS_0 = RULE_NAMES.index("ends in 0"), RULE_NAMES.index("contains digit 0")
+SET_CONCENTRATION = np.full(N_RULES - 1, 2.0)
+SET_CONCENTRATION[END_0] = 4.0
+
+# Every interval has the same prior and a likelihood free of parameters, so
+# for each example set the 5,050 intervals act as one hypothesis: total
+# evidence sum_j P(D | interval j), and in-concept probability for each target
+# the share of that evidence from intervals containing it. prepare_observed
+# computes both per set; the posterior below is exactly the one over all 5,095
+# hypotheses, at ~1/100 of the cost per gradient.
 
 with pm.Model() as model:
     rule_log_lik = pm.Data("rule_log_lik", np.zeros((1, N_RULES)))  # (sets, rules): log P(D | rule)
@@ -64,14 +77,20 @@ with pm.Model() as model:
     row_cell = pm.Data("row_cell", np.zeros(1, dtype="int64"))  # set index * 100 + target - 1
     rating = pm.Data("rating", np.zeros(1, dtype="int64"))
 
-    p_mix = pm.Beta("p_mix", 4, 4)
-    rule_weights = pm.Dirichlet("rule_weights", a=np.full(N_RULES, 2.0))
+    lambda_0 = pm.Beta("lambda_0", 2, 2)
+    set_weights = pm.Dirichlet("set_weights", a=SET_CONCENTRATION)  # without "contains digit 0"
+    zero_split = pm.Beta("zero_split", 2, 2)  # "ends in 0"'s share of {10, 20, ..., 100}
+    shared = set_weights[END_0]
+    rule_weights = pm.Deterministic("rule_weights", pt.concatenate([
+        set_weights[:END_0], (zero_split * shared)[None], set_weights[END_0 + 1:CONTAINS_0],
+        ((1 - zero_split) * shared)[None], set_weights[CONTAINS_0:],
+    ]))
 
-    log_rules = pt.log(p_mix) + pt.log(rule_weights)[None, :] + rule_log_lik
-    log_intervals = pt.log1p(-p_mix) - np.log(N_INTERVALS) + interval_log_evidence
+    log_rules = pt.log(lambda_0) + pt.log(rule_weights)[None, :] + rule_log_lik
+    log_intervals = pt.log1p(-lambda_0) - 2 * np.log(100) + interval_log_evidence
     log_joint = pt.concatenate([log_rules, log_intervals[:, None]], axis=1)
     posterior = pt.exp(log_joint - pt.logsumexp(log_joint, axis=1, keepdims=True))  # (sets, rules + 1)
-    in_concept = posterior[:, :N_RULES] @ pt.as_tensor(RULE_MEMBERSHIP) + posterior[:, N_RULES:] * interval_in_concept
+    in_concept = posterior[:, :N_RULES] @ pt.as_tensor(RULE_MEMBERSHIP) + posterior[:, N_RULES][:, None] * interval_in_concept
 
     # One flat index per response: half the gradient cost of 2-D indexing.
     # Rounding can put a sure membership a few ulps above 1.

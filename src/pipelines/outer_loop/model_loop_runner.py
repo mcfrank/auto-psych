@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Optional, Sequence
 import yaml
 
 from src.pipelines.inner_loop.hypothesis_ledger import LEDGER_FILENAME
+from src.pipelines.inner_loop.round_checkpoint import CHECKPOINT_DIRNAME
 from src.pipelines.inner_loop.task_description import TASK_DESCRIPTION_NAME
 from src.models.model_manifest import (
     manifest_path,
@@ -500,7 +501,9 @@ def begin_model_loop_stage(exp_dir: Path) -> None:
     (not archived: anything kept in the run tree is readable by later agents).
     Either way, ``model_loop/`` is emptied and the registry reset to the
     placeholder ``init_registry`` writes, so the stage redoes everything from
-    scratch; ``finish_model_loop_stage`` marks it complete.
+    scratch; ``finish_model_loop_stage`` marks it complete. The exception is a
+    loop that checkpointed a round: ``model_loop/`` and the notes are kept,
+    and the loop resumes from its checkpoint (``round_checkpoint``).
 
     Each step is atomic and idempotent, so a crash in here is recovered by the
     next call. A ``model_loop/`` with content but no recorded input was left by
@@ -513,11 +516,17 @@ def begin_model_loop_stage(exp_dir: Path) -> None:
     loop_dir = exp_dir / "model_loop"
     notes = agent_notes_dir(exp_dir)
     notes_at_start = exp_dir / AGENT_NOTES_SNAPSHOT_DIRNAME
+    resumable = recorded_input.is_dir() and (loop_dir / CHECKPOINT_DIRNAME).is_dir()
 
     if recorded_input.is_dir():
         print(
-            f"  [model-loop] Restart: restoring {models_dir.name}/ and the agent notes "
-            f"to what the stage started from; discarding the unfinished attempt",
+            f"  [model-loop] Restart: restoring {models_dir.name}/; "
+            + (
+                "the loop resumes from its last completed round"
+                if resumable
+                else "the agent notes go back to what the stage started from and "
+                "the unfinished attempt is discarded"
+            ),
             flush=True,
         )
         copy_directory_atomically(recorded_input, models_dir)
@@ -533,16 +542,18 @@ def begin_model_loop_stage(exp_dir: Path) -> None:
             )
         copy_directory_atomically(models_dir, recorded_input)
 
-    if notes_at_start.is_dir():
-        copy_directory_atomically(notes_at_start, notes)
-    elif notes.is_dir():
-        copy_directory_atomically(notes, notes_at_start)
-    else:
-        replace_directory(notes_at_start, lambda staging: None)
+    if not resumable:  # a resumed loop restores its checkpoint's notes
+        if notes_at_start.is_dir():
+            copy_directory_atomically(notes_at_start, notes)
+        elif notes.is_dir():
+            copy_directory_atomically(notes, notes_at_start)
+        else:
+            replace_directory(notes_at_start, lambda staging: None)
 
-    if loop_dir.exists():
-        shutil.rmtree(loop_dir)
-    loop_dir.mkdir(parents=True)
+    if not resumable:
+        if loop_dir.exists():
+            shutil.rmtree(loop_dir)
+        loop_dir.mkdir(parents=True)
     (exp_dir / "model_registry.yaml").unlink(missing_ok=True)
     init_registry(exp_dir)
 

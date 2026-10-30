@@ -95,5 +95,31 @@ def test_the_env_script_stops_when_bubblewrap_is_unavailable(env_script, tmp_pat
     assert "FATAL: bwrap not on PATH" in result.stderr
 
 
+def test_on_coco_bwrap_and_uv_come_from_the_shared_home(tmp_path):
+    # /scr is node-local: a tool kept there exists only on the nodes it was
+    # installed on, so a cell on any other node would stop.
+    home_bin = tmp_path / ".local" / "bin"
+    home_bin.mkdir(parents=True)
+    for tool in ("bwrap", "uv"):
+        (home_bin / tool).write_text("#!/bin/sh\n", encoding="utf-8")
+        (home_bin / tool).chmod(0o755)
+    tools = tmp_path / "tools"
+    tools.mkdir()
+    for tool in TOOLS:
+        (tools / tool).symlink_to(shutil.which(tool))
+    result = subprocess.run(
+        [str(tools / "bash"), "-c", 'source "$1" >/dev/null && command -v bwrap && command -v uv && echo "$PATH"', "_",
+         str(REPO_ROOT / "scripts" / "subjective_randomness" / "slurm" / "_env.sh")],
+        env={"PATH": str(tools), "HOME": str(tmp_path), "USER": "me", "CLUSTER": "coco",
+             "REPO": str(tmp_path / "repo"), "WORK_ROOT": str(tmp_path / "work"),
+             "SCRATCH": str(tmp_path / "scr"), "L_SCRATCH": str(tmp_path / "scr")},
+        capture_output=True, text=True, timeout=60,
+    )
+    assert result.returncode == 0, result.stderr
+    bwrap, uv, path = result.stdout.splitlines()[-3:]
+    assert (bwrap, uv) == (str(home_bin / "bwrap"), str(home_bin / "uv"))
+    assert "/scr/" not in path
+
+
 def test_every_env_script_is_checked():
     assert sorted(REPO_ROOT.glob("scripts/**/_env.sh")) == sorted(AGENT_JOB_ENV_SCRIPTS)

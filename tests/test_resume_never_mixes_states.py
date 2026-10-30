@@ -200,6 +200,25 @@ def test_a_restart_after_a_crash_redoes_the_stage_from_its_recorded_input(
     ) == "notes from experiment 1\n"
 
 
+def test_a_restart_keeps_a_loop_that_checkpointed_a_round(tmp_path):
+    # The loop resumes from its round checkpoint (round_checkpoint), which also
+    # restores the notes; the stage only puts back its input and registry.
+    exp = _experiment(tmp_path)
+    mlr.begin_model_loop_stage(exp)
+    _fake_loop_and_export(exp)
+    (exp / "model_loop" / "checkpoint").mkdir()
+
+    mlr.begin_model_loop_stage(exp)
+
+    assert read_manifest_names(exp / "cognitive_models") == ["seed_a", "carried_b"]
+    assert get_model_weights(exp / "model_registry.yaml") == {}
+    assert sorted(p.name for p in (exp / "model_loop").iterdir()) == [
+        "checkpoint", "history.json", "model_posterior.json", "models", "report.md"
+    ]
+    notes = mlr.agent_notes_dir(exp)
+    assert sorted(p.name for p in notes.iterdir()) == ["MEMORY.md", "attempt.md"]
+
+
 def test_a_crash_while_restoring_the_input_is_itself_recoverable(tmp_path, monkeypatch):
     exp = _experiment(tmp_path)
     mlr.begin_model_loop_stage(exp)

@@ -90,6 +90,10 @@ from src.pipelines.inner_loop.critique_round import (
     _run_critique_round,
     critique_disabled_status,
 )
+from src.pipelines.inner_loop.round_checkpoint import (
+    restore_round_checkpoint,
+    save_round_checkpoint,
+)
 from src.pipelines.inner_loop.scoring import (
     _compare,
     _export,
@@ -283,52 +287,62 @@ def run_pymc_inner_loop(
     results_dir.mkdir(parents=True, exist_ok=True)
     models_dir = results_dir / "models"
 
-    seeded_entries = _seed_model_set(Path(seed_models_dir), models_dir)
-    seeded_names = {e.get("name") for e in seeded_entries if e.get("name")}
-    # Every starting model, carried or not, is a name no candidate may take
-    # (with those pruned or retired so far; see reserved_names).
-    starting_models = (
-        set(starting_models) if starting_models is not None else set(seeded_names)
-    )
-    # The loop's memory: every hypothesis tried, continuing the ledger the
-    # previous experiment carried beside its model set.
-    ledger = HypothesisLedger.create(
-        results_dir / LEDGER_FILENAME,
-        inherit_from=Path(seed_models_dir) / LEDGER_FILENAME,
-    )
-    _drop_unfittable_models(
-        models_dir,
-        responses_path,
-        ledger=ledger,
-        ledger_context=ledger_context,
-        starting_models=starting_models,
-    )
     fit_kwargs = fit_kwargs or {}
-    # A carried-forward model can score a finite ELPD on a prior experiment's data
-    # yet NaN on this one's; drop those before scoring so a single one can't crash
-    # model_posterior and abort the whole run.
-    _drop_nonfinite_elpd_models(
-        models_dir,
-        responses_path,
-        cache_dir=cache_dir,
-        fit_kwargs=fit_kwargs,
-        ledger=ledger,
-        ledger_context=ledger_context,
-    )
-    # Under grouped CV, every model is fitted on every fold now and one whose
-    # ELPD-CV cannot be computed is dropped (no time limit: these are the
-    # starting and carried models). Models admitted later are screened after
-    # their round, their fold fits under the admission time limit.
-    _drop_unscorable_cv_models(
-        models_dir,
-        responses_path,
-        selection,
-        cache_dir=cache_dir,
-        fit_kwargs=fit_kwargs,
-        ledger=ledger,
-        ledger_context=ledger_context,
-    )
-    loop_start_models = set(_manifest_names(models_dir))
+    # A stopped loop resumes after its last completed round.
+    checkpoint = restore_round_checkpoint(results_dir, agent_notes_dir)
+    if checkpoint is None:
+        seeded_entries = _seed_model_set(Path(seed_models_dir), models_dir)
+        seeded_names = {e.get("name") for e in seeded_entries if e.get("name")}
+        # Every starting model, carried or not, is a name no candidate may take
+        # (with those pruned or retired so far; see reserved_names).
+        starting_models = (
+            set(starting_models) if starting_models is not None else set(seeded_names)
+        )
+        # The loop's memory: every hypothesis tried, continuing the ledger the
+        # previous experiment carried beside its model set.
+        ledger = HypothesisLedger.create(
+            results_dir / LEDGER_FILENAME,
+            inherit_from=Path(seed_models_dir) / LEDGER_FILENAME,
+        )
+        _drop_unfittable_models(
+            models_dir,
+            responses_path,
+            ledger=ledger,
+            ledger_context=ledger_context,
+            starting_models=starting_models,
+        )
+        # A carried-forward model can score a finite ELPD on a prior experiment's data
+        # yet NaN on this one's; drop those before scoring so a single one can't crash
+        # model_posterior and abort the whole run.
+        _drop_nonfinite_elpd_models(
+            models_dir,
+            responses_path,
+            cache_dir=cache_dir,
+            fit_kwargs=fit_kwargs,
+            ledger=ledger,
+            ledger_context=ledger_context,
+        )
+        # Under grouped CV, every model is fitted on every fold now and one whose
+        # ELPD-CV cannot be computed is dropped (no time limit: these are the
+        # starting and carried models). Models admitted later are screened after
+        # their round, their fold fits under the admission time limit.
+        _drop_unscorable_cv_models(
+            models_dir,
+            responses_path,
+            selection,
+            cache_dir=cache_dir,
+            fit_kwargs=fit_kwargs,
+            ledger=ledger,
+            ledger_context=ledger_context,
+        )
+        loop_start_models = set(_manifest_names(models_dir))
+    else:
+        if starting_models is None:
+            starting_models = _manifest_names(Path(seed_models_dir))
+        starting_models = set(starting_models)
+        ledger = HypothesisLedger(results_dir / LEDGER_FILENAME)
+        history = json.loads((results_dir / "history.json").read_text(encoding="utf-8"))
+        loop_start_models = set(history[0]["posteriors"])
     # The novelty pool: generated once from the loop's own seed and recorded in
     # the run tree, so every candidate this run gates is compared on the same
     # stimuli and what the gate saw is auditable. None when the gate is off.
@@ -358,11 +372,19 @@ def run_pymc_inner_loop(
     # The comparison table (ELPD rank + PSIS-LOO reliability) is what selects
     # the best model at every step; it reuses the fits _score just made.
     comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs, selection)
-    history: List[Dict[str, Any]] = []
-    _record_history_step(history, results_dir, posterior, comparison, iteration=None)
 
-    rounds_abandoned = 0
-    for iteration in range(max_iterations):
+    def checkpoint_round(next_round: int) -> None:
+        save_round_checkpoint(
+            results_dir, agent_notes_dir, next_round=next_round, rounds_abandoned=rounds_abandoned
+        )
+
+    if checkpoint is None:
+        history: List[Dict[str, Any]] = []
+        _record_history_step(history, results_dir, posterior, comparison, iteration=None)
+        checkpoint = {"next_round": 0, "rounds_abandoned": 0}
+    rounds_abandoned = checkpoint["rounds_abandoned"]
+    checkpoint_round(checkpoint["next_round"])
+    for iteration in range(checkpoint["next_round"], max_iterations):
         round_dir = results_dir / f"iter_{iteration}"
         critique_path: Optional[Path] = None
         critique_status = critique_disabled_status()
@@ -692,6 +714,7 @@ def run_pymc_inner_loop(
                 f"next round.",
                 flush=True,
             )
+            checkpoint_round(iteration + 1)
             continue
 
         _drop_unscorable_cv_models(
@@ -716,6 +739,7 @@ def run_pymc_inner_loop(
             iteration=iteration,
             critique=critique_status,
         )
+        checkpoint_round(iteration + 1)
 
     if rounds_abandoned == max_iterations and max_iterations > 0:
         raise AllCandidatesNoFileError(

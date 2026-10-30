@@ -98,8 +98,9 @@ if [[ "${AGENT_BACKEND:-}" == "claude" && -z "${CLAUDE_AUTH:-}" ]]; then
   exit 1
 fi
 
-# CLUSTER=coco: the SC cluster's COCO_NODE (default cocoflops1; account and
-# partition cocoflops; /scr is node-local, so the whole chain runs on that node);
+# CLUSTER=coco: the SC cluster's COCO_NODE (default cocoflops1; account
+# cocoflops) in COCO_PARTITION (default cocoflops; sc-loprio reaches any SC
+# node, preemptibly); /scr is node-local, so the whole chain runs on that node;
 # its flags override the scripts' Sherlock #SBATCH lines. Cells get CELL_CPUS
 # (default 24: ~6 concurrent 4-chain fits) and CELL_MEM. Exported, so retry
 # rounds resubmit on the same cluster.
@@ -107,8 +108,8 @@ export CLUSTER="${CLUSTER:-sherlock}"
 CLUSTER_FLAGS=()
 CELL_FLAGS=()
 if [[ "$CLUSTER" == coco ]]; then
-  export COCO_NODE="${COCO_NODE:-cocoflops1}"
-  CLUSTER_FLAGS=(--account=cocoflops --partition=cocoflops -w "$COCO_NODE")
+  export COCO_NODE="${COCO_NODE:-cocoflops1}" COCO_PARTITION="${COCO_PARTITION:-cocoflops}"
+  CLUSTER_FLAGS=(--account=cocoflops --partition="$COCO_PARTITION" -w "$COCO_NODE")
   CELL_FLAGS=(--cpus-per-task="${CELL_CPUS:-24}" --mem="${CELL_MEM:-96G}" --time="${CELL_TIME:-7-00:00:00}")
   export SCRATCH="${SCRATCH:-/scr/$USER}"  # as in _env.sh
 fi

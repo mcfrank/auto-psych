@@ -25,7 +25,7 @@ from src.subjective_randomness.holdout_recovery import run_holdout_recovery_from
 from src.tasks import number_game
 
 SEEDS_DIR = REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects" / "number_game" / "seed_models"
-SEEDS = ["tenenbaum_rules_similarity", "bigelow_piantadosi_independent", "bigelow_piantadosi_interval"]
+SEEDS = ["tenenbaum_rules_similarity", "bigelow_piantadosi_mixture", "bigelow_piantadosi_independent"]
 
 
 def _scripted_agent(run, *, allowed_dirs, usage_label, **kwargs):

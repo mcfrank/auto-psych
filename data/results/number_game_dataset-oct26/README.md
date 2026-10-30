@@ -8,8 +8,11 @@ real responses per item from Bigelow & Piantadosi's (2016) bank of 272,700,
 never reusing a response (`data_source: dataset`,
 `scripts/number_game/configs/dataset_run.yaml`, submitted with
 `scripts/number_game/slurm/submit_dataset_run.sh` on the SC cluster). The loop
-started from the three literature seeds (Tenenbaum 2000 and two ports of
-Bigelow's numpyro models) and selected models by grouped cross-validation over
+started from the three seeds of the time (Tenenbaum 2000, and two earlier
+Bigelow & Piantadosi seeds: independent rule weights with uniform intervals,
+and a variant with a prior over interval midpoints, which no paper proposed).
+Those two have since been replaced by the 2016 paper's Mixture and
+Independent models, so these results are not comparable with later runs. It selected models by grouped cross-validation over
 example sets (4 folds; no PSIS-LOO), with `hide_participant_id`. The runs
 differ only in their seed, so each drew its own items and responses.
 

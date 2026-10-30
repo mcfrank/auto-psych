@@ -1,7 +1,9 @@
 # Number-game recovery sweep, October 2026
 
-Model recovery on the number game: each of the three literature seeds is in
-turn the simulated ground truth, and the loop starts from the other two (the
+Model recovery on the number game: each of the three seeds of the time
+(Tenenbaum 2000, and two earlier Bigelow & Piantadosi seeds, since replaced
+by the 2016 paper's Mixture and Independent models; not comparable with
+later runs) is in turn the simulated ground truth, and the loop starts from the other two (the
 ground truth is held out of the agents' tree). One repeat, three experiments
 per cell, 450 designed (example set, target) items × 5 simulated responses
 per experiment, Claude Opus 5.5 agents, five rounds of six candidates per

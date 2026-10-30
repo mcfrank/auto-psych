@@ -35,6 +35,7 @@ rsa:
 number_game:
   # starting models (the literature seeds)
   bigelow_piantadosi_independent: Learned rule prior
+  bigelow_piantadosi_mixture: Uniform rule prior
   bigelow_piantadosi_interval: Learned rule and interval prior
   tenenbaum_rules_similarity: Rules and similarity
   # best discovered models (each run's winner)

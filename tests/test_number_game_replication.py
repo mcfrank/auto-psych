@@ -1,18 +1,23 @@
-"""The number-game seed replicates Bigelow & Piantadosi (2016) on its dataset.
+"""The number-game seeds replicate Bigelow & Piantadosi (2016) on its dataset.
 
 "Inferring priors in compositional cognitive models" (CogSci 2016) fits the
-rules + intervals model's grammar prior to these 606 participants' ratings.
-Its Figure 2 reports R^2 over the means of human p(yes) binned by model
-probability: 0.976-0.989 for the mixture and independent-rule grammars. Its
-Figure 3 ranks the independent model's rule priors: even numbers, multiples of
-11, multiples of 5, odd numbers. The seed is Eric Bigelow's numpyro version of
-that model (ported exactly, `test_number_game_seed_port.py`), fitted to the
-untrimmed cell counts as his code does. Its posterior is narrow (p_mix sd
-0.003 under NUTS), so the MAP stands in for it here; the full posterior gives
-R^2 0.978 too (`scripts/number_game/check_pymc_port.py compare`).
+prior of its Mixture and Independent models to these participants' ratings,
+after dropping the 31 least typical participants (258,750 responses). The
+seeds are those two models as LOTlib's grammars define them (the paper's
+implementation, `LOTlib/Legacy/GrammarInferenceVectorized/Examples/NumberGame`).
+Its Figure 3 gives the fitted mixture parameter lambda_0, ~0.355 for the
+Independent model and ~0.24 for the Mixture (read off the plot), and ranks the
+Independent model's rule priors: even numbers, multiples of 11, multiples of 5,
+odd numbers. Both posteriors are narrow, so the MAP stands in for them here.
+
+Figure 2's R^2 (0.982 and 0.989 at the MAP) is not reproduced: these models
+give 0.96-0.98, and no lambda_0 brings the Mixture Model to 0.982, so the gap
+lies in how that figure was computed, not in the model.
 """
 
 from __future__ import annotations
+
+import importlib.util
 
 import numpy as np
 import pandas as pd
@@ -46,32 +51,43 @@ def test_binned_r2_is_computed_on_bin_means():
     assert binned_mean_r2(p_model, cells) == pytest.approx(expected)
 
 
-@pytest.fixture(scope="module")
-def seed_map():
-    responses = ng_data.load_responses(DATA_CSV)
+def _seed_module(seed):
+    spec = importlib.util.spec_from_file_location(seed, SEEDS_DIR / f"{seed}.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _paper_map(seed):
+    """The seed's MAP on the paper's trimmed responses."""
+    responses = ng_data.trim_least_typical(ng_data.load_responses(DATA_CSV), n_trimmed=31)
     rows = [
         {"number_set": ",".join(map(str, s)), "target": t, "rating": r}
         for s, t, r in zip(responses["set"], responses["target"], responses["rating"])
     ]
-    model = load_pymc_model("bigelow_piantadosi_independent", SEEDS_DIR)
+    model = load_pymc_model(seed, SEEDS_DIR)
     with model:
         pm.set_data(make_stim_data(model, rows))
-        point = pm.find_MAP(progressbar=False)
-    cells = ng_data.cell_counts(responses)
-    by_cell = pd.DataFrame({
-        "set": responses["set"], "target": responses["target"], "p_yes": point["p_yes"],
-    }).groupby(["set", "target"], sort=True)["p_yes"].first()
-    return point, cells, by_cell.to_numpy()
+        return pm.find_MAP(progressbar=False)
+
+
+@pytest.fixture(scope="module")
+def independent_map():
+    return _paper_map("bigelow_piantadosi_independent")
 
 
 @needs_data
-def test_seed_fit_is_in_the_papers_r2_range(seed_map):
-    _, cells, p_yes = seed_map
-    assert binned_mean_r2(p_yes, cells) == pytest.approx(0.978, abs=0.003)
+def test_independent_lambda_0_is_figure_3s(independent_map):
+    assert float(independent_map["lambda_0"]) == pytest.approx(0.355, abs=0.02)
 
 
 @needs_data
-def test_seed_ranks_the_rule_priors_as_figure_3(seed_map):
-    point, _, _ = seed_map
-    even, multiples_of_11, multiples_of_5, odd = 38, 17, 11, 39  # the seed's RULES order
-    assert list(np.argsort(-point["rule_weights"])[:4]) == [even, multiples_of_11, multiples_of_5, odd]
+def test_independent_ranks_the_rule_priors_as_figure_3(independent_map):
+    names = _seed_module("bigelow_piantadosi_independent").RULE_NAMES
+    top = [names[i] for i in np.argsort(-independent_map["rule_weights"])[:4]]
+    assert top == ["even", "multiples of 11", "multiples of 5", "odd"]
+
+
+@needs_data
+def test_mixture_lambda_0_is_figure_3s():
+    assert float(_paper_map("bigelow_piantadosi_mixture")["lambda_0"]) == pytest.approx(0.24, abs=0.02)

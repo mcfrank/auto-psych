@@ -26,12 +26,12 @@ from src.subjective_randomness.holdout_recovery import run_holdout_recovery_from
 SEEDS_DIR = REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects" / "number_game" / "seed_models"
 GT = "bigelow_piantadosi_independent"
 START = "tenenbaum_rules_similarity"
-INTERVAL = "bigelow_piantadosi_interval"
+MIXTURE = "bigelow_piantadosi_mixture"
 N_SETS = 20
 GT_PARAMS = {
-    GT: {"p_mix": 0.47, "rule_weights": list(np.full(42, 1 / 42))},
+    GT: {"lambda_0": 0.36, "set_weights": list(np.full(44, 1 / 44)), "zero_split": 0.5},
     START: {"lambda_rules": 0.5, "sigma": 10.0},
-    INTERVAL: {"p_mix": 0.5, "rule_weights": list(np.full(42, 1 / 42)), "midpoint_shape": [2.0, 2.0]},
+    MIXTURE: {"lambda_0": 0.25},
 }
 
 
@@ -102,7 +102,7 @@ def test_number_game_recovery_cell_end_to_end(tmp_path, monkeypatch):
 
     # The loop starts from the other seeds only.
     starting = json.loads((run_root / "starting_models.json").read_text())["starting_models"]
-    assert sorted(starting) == sorted([START, INTERVAL])
+    assert sorted(starting) == sorted([START, MIXTURE])
     assert GT not in (run_root / "experiment1" / "cognitive_models" / "models_manifest.yaml").read_text()
 
     # The agents see only the raw number-game columns, never the generator,
@@ -140,4 +140,4 @@ def test_number_game_recovery_cell_end_to_end(tmp_path, monkeypatch):
     assert [row["experiment"] for row in trajectory][:1] == [1] and trajectory[-1]["experiment"] == 2
     for row in trajectory:
         assert np.isfinite(row["rmse"]) and np.isfinite(row["kl_regret"]) and -1 <= row["pearson_r"] <= 1
-    assert set(gt_run["fitted_baseline"]["per_model"]) == {START, INTERVAL}
+    assert set(gt_run["fitted_baseline"]["per_model"]) == {START, MIXTURE}
