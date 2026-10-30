@@ -325,6 +325,11 @@ def test_critique_round_does_not_swallow_a_usage_limit(tmp_path, monkeypatch):
             "You've hit your session limit · resets 11:20pm (America/Los_Angeles)",
             datetime(2026, 9, 28, 23, 20, tzinfo=LA),
         ),
+        # The message of the 2026-10-30 logs (claude CLI's rolling window).
+        (
+            "You've hit your 5-hour limit · resets 4pm (America/Los_Angeles)",
+            datetime(2026, 9, 28, 16, 0, tzinfo=LA),
+        ),
         # A reset that has just passed is this one, not tomorrow's.
         (
             "You've hit your session limit · resets 1:55pm (America/Los_Angeles)",

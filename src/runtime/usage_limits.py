@@ -6,8 +6,8 @@ from an agent that wrote nothing:
 
 - Claude, subscription login: the terminal ``result`` event (``subtype
   "success"``) carries ``You've hit your session limit · resets 2:20pm
-  (America/Los_Angeles)`` as its text, also after the agent had worked for a
-  while. Older CLIs wrote ``Claude AI usage limit reached|<unix time>``.
+  (America/Los_Angeles)`` (newer CLIs: ``You've hit your 5-hour limit``) as
+  its text, also after the agent had worked for a while. Older CLIs wrote ``Claude AI usage limit reached|<unix time>``.
 - Claude, API key: after its own retries the CLI ends with ``API Error: 429
   {... "rate_limit_error" ...}``, ``API Error: 529 {... "overloaded_error"
   ...}`` or ``API Error: Repeated 529 Overloaded errors``.
@@ -41,10 +41,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Iterable, Optional
 from zoneinfo import ZoneInfo
 
-# Claude: "You've hit your session limit · resets 12am (America/Los_Angeles)";
-# other CLIs phrase it as a usage/rate/weekly limit.
+# Claude: "You've hit your session limit · resets 12am (America/Los_Angeles)"
+# or "You've hit your 5-hour limit · resets 4am (...)"; other CLIs phrase it
+# as a usage/rate/weekly limit.
 LIMIT_RE = re.compile(
-    r"(?:(?:hit|reached|exceeded) (?:your |the )?(?:session |usage |weekly |rate |plan )?limit"
+    r"(?:(?:hit|reached|exceeded) (?:your |the )?(?:session |usage |weekly |rate |plan |\d+-hour )?limit"
     r"|(?:usage|rate|session|weekly|plan) limit (?:reached|exceeded|hit)"
     r"|usage_limit)",
     re.IGNORECASE,
