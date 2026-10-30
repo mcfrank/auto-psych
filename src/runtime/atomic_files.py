@@ -13,15 +13,20 @@ from __future__ import annotations
 
 import os
 import shutil
+import uuid
 from pathlib import Path
 from typing import Callable
 
 
 def write_text_atomically(path: Path, text: str) -> None:
-    """Write ``text`` to ``path`` through a temporary file in the same directory."""
+    """Write ``text`` to ``path`` through a temporary file in the same directory.
+
+    The temporary name is unique to this call, so concurrent writers of one
+    file (array tasks on different nodes) never rename each other's file away.
+    """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    partial = path.with_name(f".{path.name}.partial")
+    partial = path.with_name(f".{path.name}.{uuid.uuid4().hex}.partial")
     partial.write_text(text, encoding="utf-8")
     os.replace(partial, path)
 
