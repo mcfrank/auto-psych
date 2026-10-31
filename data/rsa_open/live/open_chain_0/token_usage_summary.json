@@ -1,0 +1,68 @@
+{
+  "n_calls": 468,
+  "n_calls_missing_usage": 0,
+  "input_tokens": 22895488,
+  "output_tokens": 1906436,
+  "reasoning_tokens": 3332448,
+  "cache_read_tokens": 407879531,
+  "cache_write_tokens": 0,
+  "total_tokens": 436013903,
+  "cost_usd": 109.5191485,
+  "n_usage_limit_hits": 0,
+  "usage_limit_wait_sec": 0.0,
+  "by_source": {
+    "rsa:candidate": {
+      "n_calls": 45,
+      "n_calls_missing_usage": 0,
+      "input_tokens": 20695166,
+      "output_tokens": 1699546,
+      "reasoning_tokens": 2922652,
+      "cache_read_tokens": 400974060,
+      "cache_write_tokens": 0,
+      "total_tokens": 426291424,
+      "cost_usd": 104.51213630000001,
+      "n_usage_limit_hits": 0,
+      "usage_limit_wait_sec": 0.0
+    },
+    "rsa:critique": {
+      "n_calls": 5,
+      "n_calls_missing_usage": 0,
+      "input_tokens": 827079,
+      "output_tokens": 153182,
+      "reasoning_tokens": 104811,
+      "cache_read_tokens": 4950424,
+      "cache_write_tokens": 0,
+      "total_tokens": 6035496,
+      "cost_usd": 3.4954055000000004,
+      "n_usage_limit_hits": 0,
+      "usage_limit_wait_sec": 0.0
+    },
+    "rsa_open:designer": {
+      "n_calls": 1,
+      "n_calls_missing_usage": 0,
+      "input_tokens": 284416,
+      "output_tokens": 48857,
+      "reasoning_tokens": 25870,
+      "cache_read_tokens": 1955047,
+      "cache_write_tokens": 0,
+      "total_tokens": 2314190,
+      "cost_usd": 1.5116066999999997,
+      "n_usage_limit_hits": 0,
+      "usage_limit_wait_sec": 0.0
+    },
+    "rsa_open:pilot": {
+      "n_calls": 417,
+      "n_calls_missing_usage": 0,
+      "input_tokens": 1088827,
+      "output_tokens": 4851,
+      "reasoning_tokens": 279115,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "total_tokens": 1372793,
+      "cost_usd": null,
+      "n_usage_limit_hits": 0,
+      "usage_limit_wait_sec": 0.0
+    }
+  },
+  "claude_auth": []
+}

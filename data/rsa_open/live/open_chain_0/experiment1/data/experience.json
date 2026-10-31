@@ -1,0 +1,17 @@
+{
+ "source": "chain_0, experiment 1",
+ "paradigm": "pragmatic_reference_bet_allocation",
+ "response": "bet",
+ "domains": 3,
+ "trials": 24,
+ "minutes": 7.8,
+ "mean": 3.8865248226950353,
+ "n": 141,
+ "counts": {
+  "1": 4,
+  "2": 12,
+  "3": 29,
+  "4": 47,
+  "5": 49
+ }
+}

@@ -1,0 +1,82 @@
+models:
+- name: rsa_l2_singleton_feat_color_valence_l0
+  rationale: 'RSA pragmatic listener at depth 2 with singleton salience, contextual
+    distinctiveness, visual feature complexity, evaluative valence framing, visual
+    color contrast, and literal L0. Refining rsa_l2_singleton_distinct_feat_color_l0
+    by incorporating the evaluative valence framing component from polarity_congruence_listener:
+    speakers and listeners reason at depth 2 (inverting a speaker who simulates a
+    depth-1 pragmatic listener) with common knowledge of an object prior combining
+    discrete visual singleton salience (favoring unique objects with no duplicates
+    in the scene), continuous contextual distinctiveness (favoring objects with greater
+    feature contrast relative to the rest of the display), visual feature complexity
+    modulated by evaluative framing valence (favoring feature-rich items under neutral/positive
+    framing but inverting to favor sparse, featureless items when referring to a least
+    favorite object), and visual color contrast (favoring fully colored objects over
+    desaturated grayscale distractors). Crucially, the foundational simulated literal
+    listener L0 operates purely on truth-conditional semantics without perceptual
+    bias, preventing redundant prior compounding across reasoning tiers. On prior
+    trials with no informative word, choices are governed directly by the combined
+    perceptual prior. A lapse parameter mixes in uniform guessing.'
+- name: heterogeneous_listener_type_mixture
+  rationale: 'Listeners in reference games come from a heterogeneous population composed
+    of recursive pragmatic listeners who invert a diagnostic-competition speaker across
+    two levels of belief reasoning, shallow literal listeners who ground words directly
+    without recursive elimination, and topic-anchored listeners who follow pre-utterance
+    scene salience. When an expression applies narrowly, pragmatic and literal listeners
+    converge on the matching candidates so two-referent specificity trials identify
+    speaker rationality while uninformative trials identify scene salience, whereas
+    when an expression is over-extended across three or more objects, the fitted literal-listener
+    population share emerges: partially informative three-referent words are grounded
+    as uniform category filters while universal four-referent words are weighted by
+    feature-bundle simplicity.'
+- name: speaker_alternative_necessity_tom
+  rationale: "Speakers in reference games select expressions by evaluating candidate\
+    \ words against a target object's alternative naming options: narrow individuating\
+    \ features strongly inhibit choosing other words, partially diagnostic three-object\
+    \ features compete weakly, and universal scene-wide words serve as last-resort\
+    \ labels that are strongly suppressed for any referent possessing an alternative\
+    \ word whenever a unique sole-label referent in the display can only be named\
+    \ by the universal word. Listeners invert this alternative-constrained speaker\
+    \ across two levels of recursive reasoning while shifting toward direct alternative-necessity\
+    \ grounding (`L0`) on over-extended utterances\u2014distinguishing three-referent\
+    \ category filters that exclude a foil from four-referent universal labels\u2014\
+    and weighting pre-utterance topic salience by contrastive figure completeness\
+    \ when a universal feature anchors the scene background."
+- name: minimal_exemplar_diagnostic_mixture_l2
+  rationale: 'Refining `heterogeneous_listener_type_mixture` by grounding universal-word
+    literal simplicity relative to the scene''s minimal-feature exemplar (`min_fc
+    = jnp.min(ctx.feature_count)` normalized by minimal-exemplar multiplicity `n_min`),
+    distinguishing partially informative three-referent category filters (`heard_ext
+    < n_obj`) from scene-universal utterances (`heard_ext == n_obj`) under fixed listener-type
+    population shares (removing `w_literal` from `PARAMS`), and incorporating graded
+    diagnostic lexical competition (`diag_w = 0.12` on broad features) plus invariant-background
+    figure contrast (`has_univ * jnp.maximum(var_fc - 2.0, 0.0)`), color salience,
+    and familiarization salience in the topic prior. Because a two-feature object
+    is a minimal exemplar in `[2, 2, 3, 3]` scenes (`min_fc = 2`) but carries excess
+    features relative to the unique one-feature exemplar in `[1, 2, 3, 3]` scenes
+    (`min_fc = 1, n_min = 1`), because three-referent words in four-object displays
+    actively exclude a foil and therefore recruit a stronger category-filtering literal
+    share (`0.36`) than three-referent words in three-object displays (`0.16`) without
+    trading off against `temperature@exp1` through a free `w_literal` parameter, and
+    because sharing a universal background feature across all objects sharpens prior
+    salience on the maximal referent possessing all three varying features, this closes
+    `three_referent_simple_matching_points`, `prior_universal_feature_contrast_shift`,
+    and `universal_word_graded_two_feature_points` while improving fit and sampling
+    speed across both `exp1` and `E`. Every difference from `heterogeneous_listener_type_mixture`:
+    recursion depth (`L2` calling `L1` calling `L0`) and `alpha`, `w_salience` in
+    `PARAMS` are unchanged while `w_literal` is removed from `PARAMS`; in `listener`,
+    `feat_ext = jnp.sum(real_lex, axis=1, keepdims=True)` is moved before `salience`,
+    `has_univ = jnp.any((feat_ext == n_obj) * real_mask)`, `var_mask = (feat_ext <
+    n_obj) * real_mask`, and `var_fc = jnp.sum(real_lex * var_mask, axis=0)` are added
+    so `salience` becomes `contrast + (0.22 + 0.50 * ctx.valence) * ctx.feature_count
+    + 0.32 * has_univ * jnp.maximum(var_fc - 2.0, 0.0) + 0.30 * (1.0 - ctx.grayscale)
+    + 0.60 * ctx.familiarization`; `diag_w` changes from `jnp.where(feat_ext <= 2.0,
+    1.0, 0.0) * real_mask` to `jnp.where(feat_ext <= 2.0, 1.0, 0.12) * real_mask`;
+    in shallow literal grounding, `is_overext = jnp.clip(overext, 0.0, 1.0)`, `min_fc
+    = jnp.min(ctx.feature_count)`, `n_min = jnp.maximum(jnp.sum(ctx.feature_count
+    == min_fc), 1.0)`, and `rel_fc = jnp.clip(ctx.feature_count - min_fc, 0.0, 1.0)
+    / n_min` are added so `lit_excess` changes to `0.5 * jnp.maximum(diag_fc[0] -
+    0.8, 0.0) + 1.8 * rel_fc` and `lit_w` changes to `heard_row / (1.0 + 0.65 * univ_crowd
+    * lit_excess)`; and `ret_l0` and `ret_prior` change from `0.48 * params["w_literal"]
+    * overext` and `0.008 * params["w_literal"] * overext` to `(0.16 + 0.20 * jnp.clip(n_obj
+    - heard_ext, 0.0, 1.0)) * is_overext + 0.34 * univ_crowd` and `0.0028 * overext`.'

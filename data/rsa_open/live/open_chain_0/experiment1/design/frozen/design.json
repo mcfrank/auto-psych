@@ -1,0 +1,1590 @@
+{
+  "units": [
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          1
+        ]
+      ],
+      "heard": 3
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": 3
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": 3
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          1
+        ]
+      ],
+      "heard": 3
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 3
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": null
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": 3
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          1
+        ]
+      ],
+      "heard": 3
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": null
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          1
+        ]
+      ],
+      "heard": 3
+    },
+    {
+      "objects": [
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": 2
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": 2
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 0
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": null
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "heard": 2
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ]
+      ],
+      "heard": 3
+    },
+    {
+      "objects": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "heard": 2
+    }
+  ],
+  "eig": {
+    "paradigm_sha256": "d264b957975cf73a7eb53c522b49af1a0e766d8310ced4bce476acd542bbc614",
+    "context_sha256": "e75ce4fb11bce05b60b251725ffe0ce91b5237f4b48b0a2b233466ff74621856",
+    "theories": [
+      "competitor_confusion_speaker",
+      "isolated_graded_costly_l3",
+      "oddity_heuristic_listener",
+      "rsa_l2_singleton_feat_color_valence_l0",
+      "rsa_l2",
+      "rsa_l1",
+      "literal_listener",
+      "rsa_l1_salience",
+      "rsa_l1_shared_prior",
+      "familiar_isolated_graded_costly_l2",
+      "rsa_l2_singleton_distinct_feat_color_l0",
+      "evaluative_prominence_l2",
+      "lexical_preemption_heuristic",
+      "rsa_l2_singleton_feat_color_familiar_l0",
+      "softmax_surprisal_isolated_costly_l4"
+    ],
+    "link": "allocation",
+    "n_units": 681,
+    "design_size": 24,
+    "responses_per_unit": 142,
+    "design": [
+      {
+        "objects": [
+          [
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            0,
+            1
+          ],
+          [
+            1,
+            0,
+            1,
+            1
+          ],
+          [
+            1,
+            0,
+            1,
+            1
+          ]
+        ],
+        "heard": 3,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1
+          ]
+        ],
+        "heard": null,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            0,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            0
+          ]
+        ],
+        "heard": 3,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            0,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1
+          ]
+        ],
+        "heard": null,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            0,
+            1
+          ]
+        ],
+        "heard": 3,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1
+          ]
+        ],
+        "heard": null,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            0,
+            1,
+            1
+          ]
+        ],
+        "heard": 3,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1
+          ]
+        ],
+        "heard": 3,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            0,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1
+          ]
+        ],
+        "heard": 3,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            0,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            0,
+            1
+          ]
+        ],
+        "heard": null,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "heard": null,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            0
+          ]
+        ],
+        "heard": 3,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "heard": 2,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            0,
+            1,
+            1
+          ]
+        ],
+        "heard": 3,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            0,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1
+          ]
+        ],
+        "heard": 2,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            0,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1
+          ]
+        ],
+        "heard": null,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            0,
+            1,
+            1
+          ]
+        ],
+        "heard": 3,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ],
+        "heard": 2,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            0,
+            1
+          ]
+        ],
+        "heard": 2,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            0,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1
+          ]
+        ],
+        "heard": 0,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ],
+        "heard": null,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1
+          ]
+        ],
+        "heard": 2,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            0,
+            1
+          ],
+          [
+            1,
+            1,
+            0,
+            1
+          ]
+        ],
+        "heard": 3,
+        "source": "eig"
+      },
+      {
+        "objects": [
+          [
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            0
+          ]
+        ],
+        "heard": 2,
+        "source": "eig"
+      }
+    ],
+    "joint_eig_bits": 3.6396307654509377,
+    "max_bits": 3.906890595608518,
+    "p_correct": 0.784,
+    "by_theory": {
+      "competitor_confusion_speaker": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 1.0,
+        "n_scenarios": 56
+      },
+      "isolated_graded_costly_l3": {
+        "p_correct": 0.8481012658227848,
+        "mean_posterior_on_truth": 0.8408563559429377,
+        "n_scenarios": 79
+      },
+      "oddity_heuristic_listener": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 1.0,
+        "n_scenarios": 73
+      },
+      "rsa_l2_singleton_feat_color_valence_l0": {
+        "p_correct": 0.2,
+        "mean_posterior_on_truth": 0.1853949809538356,
+        "n_scenarios": 75
+      },
+      "rsa_l2": {
+        "p_correct": 0.8846153846153846,
+        "mean_posterior_on_truth": 0.7107755127892557,
+        "n_scenarios": 52
+      },
+      "rsa_l1": {
+        "p_correct": 0.9642857142857143,
+        "mean_posterior_on_truth": 0.9542444162605618,
+        "n_scenarios": 56
+      },
+      "literal_listener": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 1.0,
+        "n_scenarios": 64
+      },
+      "rsa_l1_salience": {
+        "p_correct": 0.8125,
+        "mean_posterior_on_truth": 0.7852208579374185,
+        "n_scenarios": 64
+      },
+      "rsa_l1_shared_prior": {
+        "p_correct": 0.7611940298507462,
+        "mean_posterior_on_truth": 0.7539283442929079,
+        "n_scenarios": 67
+      },
+      "familiar_isolated_graded_costly_l2": {
+        "p_correct": 0.975609756097561,
+        "mean_posterior_on_truth": 0.9652837506663869,
+        "n_scenarios": 82
+      },
+      "rsa_l2_singleton_distinct_feat_color_l0": {
+        "p_correct": 0.22033898305084745,
+        "mean_posterior_on_truth": 0.25617292815110565,
+        "n_scenarios": 59
+      },
+      "evaluative_prominence_l2": {
+        "p_correct": 0.6666666666666666,
+        "mean_posterior_on_truth": 0.6650285190268427,
+        "n_scenarios": 63
+      },
+      "lexical_preemption_heuristic": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 1.0,
+        "n_scenarios": 68
+      },
+      "rsa_l2_singleton_feat_color_familiar_l0": {
+        "p_correct": 0.4583333333333333,
+        "mean_posterior_on_truth": 0.40465356463954166,
+        "n_scenarios": 72
+      },
+      "softmax_surprisal_isolated_costly_l4": {
+        "p_correct": 1.0,
+        "mean_posterior_on_truth": 1.0,
+        "n_scenarios": 70
+      }
+    },
+    "cost_usd": 265.0666666666666,
+    "bits_per_dollar": 0.0137310013787133,
+    "settings": {
+      "n_draws": 64,
+      "n_scenarios": 1000,
+      "seed": 1752536782
+    },
+    "reference": {
+      "link": "choice",
+      "n_units": 1597,
+      "design_size": 52,
+      "responses_per_unit": 100,
+      "joint_eig_bits": 3.3565784977896524,
+      "max_bits": 3.906890595608518,
+      "p_correct": 0.735,
+      "by_theory": {
+        "competitor_confusion_speaker": {
+          "p_correct": 1.0,
+          "mean_posterior_on_truth": 1.0,
+          "n_scenarios": 62
+        },
+        "isolated_graded_costly_l3": {
+          "p_correct": 0.875,
+          "mean_posterior_on_truth": 0.8788800117764072,
+          "n_scenarios": 64
+        },
+        "oddity_heuristic_listener": {
+          "p_correct": 1.0,
+          "mean_posterior_on_truth": 1.0,
+          "n_scenarios": 62
+        },
+        "rsa_l2_singleton_feat_color_valence_l0": {
+          "p_correct": 0.1891891891891892,
+          "mean_posterior_on_truth": 0.2530832674291828,
+          "n_scenarios": 74
+        },
+        "rsa_l2": {
+          "p_correct": 0.7142857142857143,
+          "mean_posterior_on_truth": 0.5426241983558251,
+          "n_scenarios": 77
+        },
+        "rsa_l1": {
+          "p_correct": 0.9210526315789473,
+          "mean_posterior_on_truth": 0.8172917749000285,
+          "n_scenarios": 76
+        },
+        "literal_listener": {
+          "p_correct": 1.0,
+          "mean_posterior_on_truth": 0.9999999938333255,
+          "n_scenarios": 61
+        },
+        "rsa_l1_salience": {
+          "p_correct": 0.5538461538461539,
+          "mean_posterior_on_truth": 0.5263225343155252,
+          "n_scenarios": 65
+        },
+        "rsa_l1_shared_prior": {
+          "p_correct": 0.7636363636363637,
+          "mean_posterior_on_truth": 0.6688525843848949,
+          "n_scenarios": 55
+        },
+        "familiar_isolated_graded_costly_l2": {
+          "p_correct": 0.953125,
+          "mean_posterior_on_truth": 0.9209751036911185,
+          "n_scenarios": 64
+        },
+        "rsa_l2_singleton_distinct_feat_color_l0": {
+          "p_correct": 0.2033898305084746,
+          "mean_posterior_on_truth": 0.31169360037070304,
+          "n_scenarios": 59
+        },
+        "evaluative_prominence_l2": {
+          "p_correct": 0.4,
+          "mean_posterior_on_truth": 0.4671703256186048,
+          "n_scenarios": 65
+        },
+        "lexical_preemption_heuristic": {
+          "p_correct": 1.0,
+          "mean_posterior_on_truth": 0.9999984941130985,
+          "n_scenarios": 81
+        },
+        "rsa_l2_singleton_feat_color_familiar_l0": {
+          "p_correct": 0.36666666666666664,
+          "mean_posterior_on_truth": 0.3206467987456974,
+          "n_scenarios": 60
+        },
+        "softmax_surprisal_isolated_costly_l4": {
+          "p_correct": 1.0,
+          "mean_posterior_on_truth": 1.0,
+          "n_scenarios": 75
+        }
+      },
+      "cost_usd": 266.66666666666663,
+      "bits_per_dollar": 0.012587169366711198
+    },
+    "floor_bits_per_dollar": 0.006293584683355599,
+    "meets_floor": true,
+    "time": {
+      "estimated_minutes": 7.937593297261612,
+      "declared_minutes": 7.8,
+      "within_tolerance": true,
+      "calibration_basis": "1 bet experiment(s) on this campaign's page",
+      "hourly_usd": 10.582552778180148,
+      "pay_ok": true
+    }
+  }
+}
