@@ -258,3 +258,88 @@ def test_the_figure_data_pool_all_three_runs(tmp_path, monkeypatch):
     assert [r["model"] for r in rows if r["kind"] == "winner"] == list(WINNERS.values())
     (strip,) = [r for r in rows if r["kind"] == "nonwinning"]
     assert sorted(set(strip["runs"])) == [0, 1, 2]
+
+
+POOLED_SETTINGS = {"method": "nuts_no_jitter", "tune": 4000, "draws": 1000, "chains": 4,
+                   "target_accept": 0.95, "random_seed": 20261018}
+RUN_SETTINGS = {"method": "warm_start_nuts", "tune": 200, "draws": 500, "chains": 4}
+
+
+def _settings(kwargs, keys):
+    return {k: kwargs.get(k) for k in keys}
+
+
+def test_pooled_winners_and_seeds_take_the_pooled_settings_and_removed_models_the_runs(
+        tmp_path, monkeypatch):
+    """User decision 2026-11-01: at the runs' settings run 2's winner did not
+    converge on the pooled data, so the pooled winners and seeds are fitted at
+    the finals comparison's longer settings; each run's own comparison and
+    every removed model, pooled or not, keep the runs' settings."""
+    import src.model_comparison.posterior as posterior
+    import src.models.pymc_inference as pymc_inference
+
+    compared, predicted, removed = [], [], []
+
+    def compare(responses, models_dir, *, names=None, **kwargs):
+        compared.append((responses.parent.name, kwargs))
+        top = max(names, key=_stand_in_elpd)
+        return {n: {"elpd_loo": _stand_in_elpd(n), "dse_clustered": 0.0 if n == top else 5.0,
+                    "loo_unreliable": False, "not_converged": False} for n in names}
+
+    def score_removed_model(name, *args, **kwargs):
+        removed.append((name, kwargs))
+        return {"elpd": _stand_in_elpd(name)}
+
+    def posterior_mean_p_yes(name, models_dir, responses, **kwargs):
+        predicted.append((responses.parent.name, kwargs))
+        return np.full(len(ng.sr._read_rows(responses)), 0.5)
+
+    monkeypatch.setattr(posterior, "compare_table", compare)
+    monkeypatch.setattr(pymc_inference, "fit_models_to_cache", lambda names, *a, **k: {})
+    monkeypatch.setattr(pymc_inference, "clear_fit_cache", lambda: None)
+    monkeypatch.setattr(ng, "score_removed_model", score_removed_model)
+    monkeypatch.setattr(ng, "posterior_mean_p_yes", posterior_mean_p_yes)
+    args = ng.Args(work_dir=tmp_path / "work", out=tmp_path / "number_game.json")
+
+    ng.main(ng.Args(**{**vars(args), "removed_shard": 0}))
+    ng.main(args)
+
+    for where, kwargs in compared + predicted:
+        expected = POOLED_SETTINGS if where == "pooled" else RUN_SETTINGS
+        assert _settings(kwargs, expected) == expected, where
+    assert {where for where, _ in compared} == {*RUNS, "pooled"}
+    assert {where for where, _ in predicted} == {"pooled"}
+    assert any("__" in name for name, _ in removed)  # the pooled extras
+    assert all(_settings(k, RUN_SETTINGS) == RUN_SETTINGS for _, k in removed)
+    data = json.loads(args.out.read_text())
+    assert _settings(data["fit_settings"], RUN_SETTINGS) == RUN_SETTINGS
+    assert _settings(data["pooled_fit_settings"], POOLED_SETTINGS) == POOLED_SETTINGS
+
+
+def test_a_pooled_fit_task_fits_one_winner_or_seed_on_one_training_file(tmp_path, monkeypatch):
+    """The pooled winners' and seeds' fits run as a Slurm array, one (model,
+    training file) per task, into the pooled fit cache the assembly reads."""
+    import src.models.pymc_inference as pymc_inference
+
+    fitted = []
+
+    def fit_models_cached(names, *, models_dir, responses_path, cache_dir, **kwargs):
+        fitted.append((tuple(names), responses_path.name, cache_dir, kwargs))
+        return {}
+
+    monkeypatch.setattr(pymc_inference, "fit_models_cached", fit_models_cached)
+    args = ng.Args(work_dir=tmp_path / "work", out=tmp_path / "number_game.json")
+    n_tasks = (len(WINNERS) + len(SEEDS)) * 5  # all data and 4 CV folds
+
+    for task in range(n_tasks):
+        ng.main(ng.Args(**{**vars(args), "pooled_fit_task": task}))
+
+    assert {(names, file) for names, file, _, _ in fitted} == {
+        ((name,), file) for name in [*WINNERS.values(), *SEEDS]
+        for file in ["responses.csv", *(f"train_fold{f}.csv" for f in range(4))]}
+    assert len(fitted) == n_tasks
+    assert {cache for _, _, cache, _ in fitted} == {args.work_dir / "pooled" / "fit_cache"}
+    assert all(_settings(k, POOLED_SETTINGS) == POOLED_SETTINGS for *_, k in fitted)
+    assert not args.out.exists()
+    with pytest.raises(ValueError, match="pooled fit task"):
+        ng.main(ng.Args(**{**vars(args), "pooled_fit_task": n_tasks}))

@@ -26,7 +26,8 @@ settings (both from each run's ``holdout.json``; they must agree).
 - All runs pooled (``pooled``, what Figures 2 and 3 draw: each run is scored
   on its own items, so the runs' differences are not on one scale): every
   run's final data together (``pool_responses``; 22,680 responses), every
-  run's winner and the seeds fitted on them, each against the best seed with
+  run's winner and the seeds fitted on them (at longer sampler settings,
+  ``Args.pooled_*``; ``--pooled-fit-task``), each against the best seed with
   its clustered SE (``vs_best_seed``), and every run's other live and
   removed models, labelled ``<run>__<name>`` (names repeat across runs with
   different code): ``others_at_end``, ``pruned_during_run``,
@@ -43,6 +44,7 @@ which model is best is then not known.
 Usage (on Sherlock, both steps: ``bash scripts/paper/submit_figure_data.sh
 number_game``):
     uv run python -m scripts.paper.number_game_figure_data --removed-shard 0 --removed-shards 1
+    uv run python -m scripts.paper.number_game_figure_data --pooled-fit-task 0   (one per task)
     uv run python -m scripts.paper.number_game_figure_data
 """
 
@@ -92,6 +94,21 @@ class Args:
     ``--removed-shards``) and stop; without it the script assembles the
     figure data, which needs every one's record."""
     removed_shards: int = 1
+    pooled_tune: int = 4000
+    pooled_draws: int = 1000
+    pooled_target_accept: float = 0.95
+    pooled_random_seed: int = 20261018
+    pooled_fit_method: str = "nuts_no_jitter"
+    """Sampler settings of the winners' and seeds' fits on all runs pooled
+    (chains are the runs'), the finals comparison's
+    (``scripts/paper/ng_finals_comparison.py``). At the runs' settings run 2's
+    winner did not converge on the pooled data (R-hat 1.058, bulk ESS 64;
+    2026-10-31). The removed models on the pooled data keep the runs' settings
+    (user decision 2026-11-01)."""
+    pooled_fit_task: Optional[int] = None
+    """Fit only this one (pooled winner or seed, training file) into the
+    pooled fit cache and stop: a Slurm array runs the pooled fits in parallel
+    before the assembly, which then reads them from the cache."""
 
 
 def run_dir(runs_root: Path, run: str) -> Path:
@@ -387,13 +404,15 @@ def score_one_run(args: Args, info: Dict[str, Any], removed_scored: Dict[str, An
     }
 
 
-def score_all_runs_pooled(args: Args, infos: Sequence[Dict[str, Any]], responses: Path,
-                          fit_kwargs: Dict[str, Any], selection: Any) -> Dict[str, Any]:
-    """Every run's winner and the seeds fitted on all runs' data, each against
-    the best seed, and per condition the best winner's and best seed's
-    predictions."""
-    from src.model_comparison.posterior import compare_table
+def pooled_fit_settings(args: Args, fit_kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    """The runs' sampler settings with the pooled fits' own (``Args.pooled_*``)."""
+    return {**fit_kwargs, "tune": args.pooled_tune, "draws": args.pooled_draws,
+            "target_accept": args.pooled_target_accept, "random_seed": args.pooled_random_seed,
+            "method": args.pooled_fit_method}
 
+
+def pooled_model_set(infos: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """The models compared on all runs pooled: every run's winner and the seeds."""
     files = sr.pooled_model_files(
         {i["run"]: {n: i["files"][n] for n in [i["live"]["winner"], *i["seeds"]]} for i in infos})
     winners = {i["live"]["winner"]: i["run"] for i in infos}
@@ -402,6 +421,42 @@ def score_all_runs_pooled(args: Args, infos: Sequence[Dict[str, Any]], responses
     seeds = infos[0]["seeds"]
     if any(i["seeds"] != seeds for i in infos):
         raise RuntimeError(f"the runs started from different seeds: {[i['seeds'] for i in infos]}")
+    return {"files": files, "winners": winners, "seeds": seeds}
+
+
+def fit_one_pooled_model(args: Args, infos: Sequence[Dict[str, Any]], responses: Path,
+                         fit_kwargs: Dict[str, Any], selection: Any) -> None:
+    """Fit task ``args.pooled_fit_task``: one pooled winner or seed on one
+    training file (all the data, or every CV fold but one) into the pooled fit
+    cache, at the pooled settings."""
+    from src.model_comparison.cv import fold_training_files
+    from src.models.pymc_inference import fit_models_cached
+
+    files = pooled_model_set(infos)["files"]
+    _, _, fold_files = fold_training_files(responses, selection)
+    tasks = [(name, path) for name in files for path in [responses, *fold_files]]
+    if not 0 <= args.pooled_fit_task < len(tasks):
+        raise ValueError(f"pooled fit task {args.pooled_fit_task} is not in 0..{len(tasks) - 1}")
+    name, path = tasks[args.pooled_fit_task]
+    # A model directory of its own: concurrent tasks would clear each other's.
+    models_dir = args.work_dir / POOLED_DIR / "fit_tasks" / f"task_{args.pooled_fit_task}" / "models"
+    sr.write_model_set(models_dir, {name: files[name]})
+    print(f"[pooled] fit task {args.pooled_fit_task}: {name} on {path}", flush=True)
+    fit_models_cached([name], models_dir=models_dir, responses_path=path,
+                      cache_dir=args.work_dir / POOLED_DIR / "fit_cache",
+                      **pooled_fit_settings(args, fit_kwargs))
+
+
+def score_all_runs_pooled(args: Args, infos: Sequence[Dict[str, Any]], responses: Path,
+                          fit_kwargs: Dict[str, Any], selection: Any) -> Dict[str, Any]:
+    """Every run's winner and the seeds fitted on all runs' data at the pooled
+    settings (``fit_kwargs`` are the runs'), each against the best seed, and
+    per condition the best winner's and best seed's predictions."""
+    from src.model_comparison.posterior import compare_table
+
+    model_set = pooled_model_set(infos)
+    files, winners, seeds = model_set["files"], model_set["winners"], model_set["seeds"]
+    fit_kwargs = pooled_fit_settings(args, fit_kwargs)
 
     work = args.work_dir / POOLED_DIR
     inputs = sr.run_inputs(responses, files, fit_kwargs, selection=selection.as_record(),
@@ -470,6 +525,9 @@ def main(args: Args) -> None:
                 records_dir=pooled_records, cache_dir=args.work_dir / POOLED_DIR / "fit_cache",
                 inputs=extra_inputs, selection=selection, fit_kwargs=fit_kwargs)
         return
+    if args.pooled_fit_task is not None:
+        fit_one_pooled_model(args, infos, pooled_responses, fit_kwargs, selection)
+        return
 
     # Every removed model's and extra's record first: a missing one stops the
     # script before any fit.
@@ -491,6 +549,7 @@ def main(args: Args) -> None:
                     f"({pooled['pooled']['n_trials']:,} responses)"
                 ),
                 "fit_settings": fit_kwargs,
+                "pooled_fit_settings": pooled_fit_settings(args, fit_kwargs),
                 "selection": selection.as_record(),
                 "runs": runs,
                 **pooled,
