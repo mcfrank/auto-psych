@@ -1,0 +1,781 @@
+{
+ "final": "ng",
+ "rule": {
+  "threshold_dse": 2.0,
+  "start": [
+   "intercept",
+   "similarity",
+   "parity",
+   "parity_preempt",
+   "mutual_standard",
+   "common_factor",
+   "round_factor",
+   "decade_band",
+   "magnitude_preempt",
+   "counting",
+   "count_step_cost",
+   "size_principle",
+   "even_rule"
+  ]
+ },
+ "rounds": [
+  {
+   "model": "ng_full",
+   "mechanisms": [
+    "intercept",
+    "similarity",
+    "parity",
+    "parity_preempt",
+    "mutual_standard",
+    "common_factor",
+    "round_factor",
+    "decade_band",
+    "magnitude_preempt",
+    "counting",
+    "count_step_cost",
+    "size_principle",
+    "even_rule"
+   ],
+   "elpd_cv": -4696.150777559745,
+   "converged": true,
+   "size": {
+    "population": 14,
+    "person_vectors": 0
+   },
+   "candidates": [
+    {
+     "mechanism": "parity_preempt",
+     "model": "ng_minus_parpre",
+     "elpd_cv": -4697.83969479613,
+     "cost": 1.6889172363853504,
+     "se": 2.520563244648527,
+     "cost_in_se": 0.670055488578251,
+     "converged": true
+    },
+    {
+     "mechanism": "count_step_cost",
+     "model": "ng_minus_step",
+     "elpd_cv": -4698.046651463981,
+     "cost": 1.895873904236396,
+     "se": 5.301202859645281,
+     "cost_in_se": 0.3576308914092856,
+     "converged": true
+    },
+    {
+     "mechanism": "size_principle",
+     "model": "ng_minus_size",
+     "elpd_cv": -4705.158004577028,
+     "cost": 9.007227017283185,
+     "se": 9.690884867942767,
+     "cost_in_se": 0.9294535163738136,
+     "converged": true
+    },
+    {
+     "mechanism": "mutual_standard",
+     "model": "ng_minus_std",
+     "elpd_cv": -4708.693261074907,
+     "cost": 12.54248351516253,
+     "se": 14.267133067836413,
+     "cost_in_se": 0.8791173009690431,
+     "converged": true
+    },
+    {
+     "mechanism": "even_rule",
+     "model": "ng_minus_even",
+     "elpd_cv": -4709.771123745535,
+     "cost": 13.620346185790368,
+     "se": 8.143518296658417,
+     "cost_in_se": 1.6725382923716514,
+     "converged": true
+    },
+    {
+     "mechanism": "common_factor",
+     "model": "ng_minus_cf",
+     "elpd_cv": -4720.274067748611,
+     "cost": 24.12329018886612,
+     "se": 12.860317221329826,
+     "cost_in_se": 1.8757927797345302,
+     "converged": true
+    },
+    {
+     "mechanism": "magnitude_preempt",
+     "model": "ng_minus_magpre",
+     "elpd_cv": -4727.317891343063,
+     "cost": 31.1671137833182,
+     "se": 14.613920315656197,
+     "cost_in_se": 2.132700405511875,
+     "converged": true
+    },
+    {
+     "mechanism": "round_factor",
+     "model": "ng_minus_round",
+     "elpd_cv": -4770.643714627307,
+     "cost": 74.4929370675627,
+     "se": 29.81336941845253,
+     "cost_in_se": 2.498642002586143,
+     "converged": true
+    },
+    {
+     "mechanism": "similarity",
+     "model": "ng_minus_sim",
+     "elpd_cv": -4791.341022895692,
+     "cost": 95.19024533594711,
+     "se": 23.750721829557808,
+     "cost_in_se": 4.007888518886307,
+     "converged": true
+    },
+    {
+     "mechanism": "intercept",
+     "model": "ng_minus_int",
+     "elpd_cv": -4821.757291512949,
+     "cost": 125.60651395320474,
+     "se": 30.188570402561737,
+     "cost_in_se": 4.16073077586165,
+     "converged": true
+    }
+   ],
+   "decision": "drop parity_preempt"
+  },
+  {
+   "model": "ng_minus_parpre",
+   "mechanisms": [
+    "intercept",
+    "similarity",
+    "parity",
+    "mutual_standard",
+    "common_factor",
+    "round_factor",
+    "decade_band",
+    "magnitude_preempt",
+    "counting",
+    "count_step_cost",
+    "size_principle",
+    "even_rule"
+   ],
+   "elpd_cv": -4697.83969479613,
+   "converged": true,
+   "size": {
+    "population": 13,
+    "person_vectors": 0
+   },
+   "candidates": [
+    {
+     "mechanism": "count_step_cost",
+     "model": "ng_minus_parpre_step",
+     "elpd_cv": -4700.912878881232,
+     "cost": 3.0731840851021843,
+     "se": 5.547118906856829,
+     "cost_in_se": 0.5540144598853654,
+     "converged": true
+    },
+    {
+     "mechanism": "size_principle",
+     "model": "ng_minus_parpre_size",
+     "elpd_cv": -4706.301921279958,
+     "cost": 8.46222648382809,
+     "se": 9.21247851712356,
+     "cost_in_se": 0.91856132615116,
+     "converged": true
+    },
+    {
+     "mechanism": "even_rule",
+     "model": "ng_minus_parpre_even",
+     "elpd_cv": -4710.680697033038,
+     "cost": 12.841002236908025,
+     "se": 8.071240197672859,
+     "cost_in_se": 1.5909577614367627,
+     "converged": true
+    },
+    {
+     "mechanism": "mutual_standard",
+     "model": "ng_minus_parpre_std",
+     "elpd_cv": -4714.0708835085425,
+     "cost": 16.231188712412404,
+     "se": 14.684603081152371,
+     "cost_in_se": 1.1053202202819543,
+     "converged": true
+    },
+    {
+     "mechanism": "common_factor",
+     "model": "ng_minus_parpre_cf",
+     "elpd_cv": -4723.581332224916,
+     "cost": 25.741637428785907,
+     "se": 12.992817989108273,
+     "cost_in_se": 1.9812205058490637,
+     "converged": true
+    },
+    {
+     "mechanism": "magnitude_preempt",
+     "model": "ng_minus_parpre_magpre",
+     "elpd_cv": -4731.029343949493,
+     "cost": 33.18964915336255,
+     "se": 14.863902141560713,
+     "cost_in_se": 2.2329028297731806,
+     "converged": true
+    },
+    {
+     "mechanism": "parity",
+     "model": "ng_minus_par_parpre",
+     "elpd_cv": -4774.1817469891275,
+     "cost": 76.34205219299747,
+     "se": 26.847358031180615,
+     "cost_in_se": 2.843559209972674,
+     "converged": true
+    },
+    {
+     "mechanism": "round_factor",
+     "model": "ng_minus_parpre_round",
+     "elpd_cv": -4778.755237765306,
+     "cost": 80.91554296917639,
+     "se": 31.420238148437555,
+     "cost_in_se": 2.575268290040001,
+     "converged": true
+    },
+    {
+     "mechanism": "similarity",
+     "model": "ng_minus_sim_parpre",
+     "elpd_cv": -4790.3329983728945,
+     "cost": 92.49330357676445,
+     "se": 23.68786352671099,
+     "cost_in_se": 3.9046705699087982,
+     "converged": true
+    },
+    {
+     "mechanism": "intercept",
+     "model": "ng_minus_int_parpre",
+     "elpd_cv": -4821.8223083809335,
+     "cost": 123.9826135848034,
+     "se": 30.150524108045172,
+     "cost_in_se": 4.112121339599556,
+     "converged": true
+    }
+   ],
+   "decision": "drop count_step_cost"
+  },
+  {
+   "model": "ng_minus_parpre_step",
+   "mechanisms": [
+    "intercept",
+    "similarity",
+    "parity",
+    "mutual_standard",
+    "common_factor",
+    "round_factor",
+    "decade_band",
+    "magnitude_preempt",
+    "counting",
+    "size_principle",
+    "even_rule"
+   ],
+   "elpd_cv": -4700.912878881232,
+   "converged": true,
+   "size": {
+    "population": 12,
+    "person_vectors": 0
+   },
+   "candidates": [
+    {
+     "mechanism": "size_principle",
+     "model": "ng_minus_parpre_step_size",
+     "elpd_cv": -4703.072838082201,
+     "cost": 2.159959200968842,
+     "se": 6.590734682519931,
+     "cost_in_se": 0.32772662002273073,
+     "converged": true
+    },
+    {
+     "mechanism": "counting",
+     "model": "ng_minus_parpre_count_step",
+     "elpd_cv": -4709.036073497052,
+     "cost": 8.123194615819557,
+     "se": 6.110441600514008,
+     "cost_in_se": 1.3293956716870081,
+     "converged": true
+    },
+    {
+     "mechanism": "even_rule",
+     "model": "ng_minus_parpre_step_even",
+     "elpd_cv": -4712.024945578352,
+     "cost": 11.112066697120099,
+     "se": 7.799160480112557,
+     "cost_in_se": 1.424777285382866,
+     "converged": true
+    },
+    {
+     "mechanism": "mutual_standard",
+     "model": "ng_minus_parpre_std_step",
+     "elpd_cv": -4719.156245841277,
+     "cost": 18.243366960045023,
+     "se": 14.344380792825556,
+     "cost_in_se": 1.2718127902160525,
+     "converged": true
+    },
+    {
+     "mechanism": "common_factor",
+     "model": "ng_minus_parpre_cf_step",
+     "elpd_cv": -4723.708023076131,
+     "cost": 22.795144194898967,
+     "se": 11.321775181142678,
+     "cost_in_se": 2.0133895815972482,
+     "converged": true
+    },
+    {
+     "mechanism": "magnitude_preempt",
+     "model": "ng_minus_parpre_magpre_step",
+     "elpd_cv": -4734.757206454701,
+     "cost": 33.844327573468945,
+     "se": 15.533895012032213,
+     "cost_in_se": 2.178740589353403,
+     "converged": true
+    },
+    {
+     "mechanism": "parity",
+     "model": "ng_minus_par_parpre_step",
+     "elpd_cv": -4783.258096270483,
+     "cost": 82.34521738925105,
+     "se": 28.26810186826661,
+     "cost_in_se": 2.913008371520363,
+     "converged": true
+    },
+    {
+     "mechanism": "round_factor",
+     "model": "ng_minus_parpre_round_step",
+     "elpd_cv": -4786.124100328569,
+     "cost": 85.21122144733636,
+     "se": 30.23189922727886,
+     "cost_in_se": 2.8185864476039444,
+     "converged": true
+    },
+    {
+     "mechanism": "similarity",
+     "model": "ng_minus_sim_parpre_step",
+     "elpd_cv": -4797.920372196742,
+     "cost": 97.00749331551015,
+     "se": 24.22062963999296,
+     "cost_in_se": 4.00515984750999,
+     "converged": true
+    },
+    {
+     "mechanism": "intercept",
+     "model": "ng_minus_int_parpre_step",
+     "elpd_cv": -4828.502893412568,
+     "cost": 127.59001453133533,
+     "se": 30.496915232947334,
+     "cost_in_se": 4.183702304208574,
+     "converged": true
+    }
+   ],
+   "decision": "drop size_principle"
+  },
+  {
+   "model": "ng_minus_parpre_step_size",
+   "mechanisms": [
+    "intercept",
+    "similarity",
+    "parity",
+    "mutual_standard",
+    "common_factor",
+    "round_factor",
+    "decade_band",
+    "magnitude_preempt",
+    "counting",
+    "even_rule"
+   ],
+   "elpd_cv": -4703.072838082201,
+   "converged": true,
+   "size": {
+    "population": 11,
+    "person_vectors": 0
+   },
+   "candidates": [
+    {
+     "mechanism": "even_rule",
+     "model": "ng_minus_parpre_step_size_even",
+     "elpd_cv": -4713.919828066986,
+     "cost": 10.846989984785068,
+     "se": 7.351510357692786,
+     "cost_in_se": 1.4754777531442276,
+     "converged": true
+    },
+    {
+     "mechanism": "counting",
+     "model": "ng_minus_parpre_count_step_size",
+     "elpd_cv": -4714.4896819365185,
+     "cost": 11.416843854317449,
+     "se": 6.635740960204194,
+     "cost_in_se": 1.7205077658676615,
+     "converged": true
+    },
+    {
+     "mechanism": "common_factor",
+     "model": "ng_minus_parpre_cf_step_size",
+     "elpd_cv": -4724.625477119051,
+     "cost": 21.55263903684954,
+     "se": 11.254814678938242,
+     "cost_in_se": 1.9149705838499667,
+     "converged": true
+    },
+    {
+     "mechanism": "mutual_standard",
+     "model": "ng_minus_parpre_std_step_size",
+     "elpd_cv": -4730.6064033046305,
+     "cost": 27.533565222429388,
+     "se": 16.13106598859994,
+     "cost_in_se": 1.7068658228717037,
+     "converged": true
+    },
+    {
+     "mechanism": "magnitude_preempt",
+     "model": "ng_minus_parpre_magpre_step_size",
+     "elpd_cv": -4744.34332382267,
+     "cost": 41.27048574046876,
+     "se": 16.341838552688927,
+     "cost_in_se": 2.525449361612865,
+     "converged": true
+    },
+    {
+     "mechanism": "round_factor",
+     "model": "ng_minus_parpre_round_step_size",
+     "elpd_cv": -4770.245771523056,
+     "cost": 67.17293344085465,
+     "se": 24.628154248426505,
+     "cost_in_se": 2.7274854933615797,
+     "converged": true
+    },
+    {
+     "mechanism": "parity",
+     "model": "ng_minus_par_parpre_step_size",
+     "elpd_cv": -4788.352567237241,
+     "cost": 85.2797291550396,
+     "se": 28.54358409405926,
+     "cost_in_se": 2.9877022056521896,
+     "converged": true
+    },
+    {
+     "mechanism": "similarity",
+     "model": "ng_minus_sim_parpre_step_size",
+     "elpd_cv": -4803.341004923111,
+     "cost": 100.26816684090954,
+     "se": 23.955424683803432,
+     "cost_in_se": 4.185614246642938,
+     "converged": true
+    },
+    {
+     "mechanism": "intercept",
+     "model": "ng_minus_int_parpre_step_size",
+     "elpd_cv": -4831.028062411482,
+     "cost": 127.95522432928101,
+     "se": 30.57514498739521,
+     "cost_in_se": 4.1849425205352695,
+     "converged": true
+    }
+   ],
+   "decision": "drop even_rule"
+  },
+  {
+   "model": "ng_minus_parpre_step_size_even",
+   "mechanisms": [
+    "intercept",
+    "similarity",
+    "parity",
+    "mutual_standard",
+    "common_factor",
+    "round_factor",
+    "decade_band",
+    "magnitude_preempt",
+    "counting"
+   ],
+   "elpd_cv": -4713.919828066986,
+   "converged": true,
+   "size": {
+    "population": 10,
+    "person_vectors": 0
+   },
+   "candidates": [
+    {
+     "mechanism": "counting",
+     "model": "ng_minus_parpre_count_step_size_even",
+     "elpd_cv": -4725.764677586691,
+     "cost": 11.84484951970444,
+     "se": 6.819151330684818,
+     "cost_in_se": 1.736997603558816,
+     "converged": true
+    },
+    {
+     "mechanism": "common_factor",
+     "model": "ng_minus_parpre_cf_step_size_even",
+     "elpd_cv": -4739.129835546122,
+     "cost": 25.21000747913604,
+     "se": 11.427375971153536,
+     "cost_in_se": 2.2061064187241595,
+     "converged": true
+    },
+    {
+     "mechanism": "mutual_standard",
+     "model": "ng_minus_parpre_std_step_size_even",
+     "elpd_cv": -4743.648237768361,
+     "cost": 29.728409701374403,
+     "se": 17.287465738731125,
+     "cost_in_se": 1.7196511131628958,
+     "converged": true
+    },
+    {
+     "mechanism": "magnitude_preempt",
+     "model": "ng_minus_parpre_magpre_step_size_even",
+     "elpd_cv": -4758.1815702818185,
+     "cost": 44.26174221483234,
+     "se": 16.776801888231226,
+     "cost_in_se": 2.6382705422468837,
+     "converged": true
+    },
+    {
+     "mechanism": "round_factor",
+     "model": "ng_minus_parpre_round_step_size_even",
+     "elpd_cv": -4789.886693577628,
+     "cost": 75.96686551064158,
+     "se": 26.442699057370067,
+     "cost_in_se": 2.872886211268521,
+     "converged": true
+    },
+    {
+     "mechanism": "similarity",
+     "model": "ng_minus_sim_parpre_step_size_even",
+     "elpd_cv": -4831.236112604725,
+     "cost": 117.3162845377392,
+     "se": 29.685213510202583,
+     "cost_in_se": 3.952010804888382,
+     "converged": true
+    },
+    {
+     "mechanism": "parity",
+     "model": "ng_minus_par_parpre_step_size_even",
+     "elpd_cv": -4838.845766187823,
+     "cost": 124.92593812083669,
+     "se": 38.159131283480406,
+     "cost_in_se": 3.2738150455463537,
+     "converged": true
+    },
+    {
+     "mechanism": "intercept",
+     "model": "ng_minus_int_parpre_step_size_even",
+     "elpd_cv": -4874.347212861534,
+     "cost": 160.42738479454783,
+     "se": 36.892515344063185,
+     "cost_in_se": 4.348507638971928,
+     "converged": true
+    }
+   ],
+   "decision": "drop counting"
+  },
+  {
+   "model": "ng_minus_parpre_count_step_size_even",
+   "mechanisms": [
+    "intercept",
+    "similarity",
+    "parity",
+    "mutual_standard",
+    "common_factor",
+    "round_factor",
+    "decade_band",
+    "magnitude_preempt"
+   ],
+   "elpd_cv": -4725.764677586691,
+   "converged": true,
+   "size": {
+    "population": 9,
+    "person_vectors": 0
+   },
+   "candidates": [
+    {
+     "mechanism": "mutual_standard",
+     "model": "ng_minus_parpre_std_count_step_size_even",
+     "elpd_cv": -4755.728859047476,
+     "cost": 29.964181460785767,
+     "se": 18.519387471513326,
+     "cost_in_se": 1.617989877196366,
+     "converged": true
+    },
+    {
+     "mechanism": "magnitude_preempt",
+     "model": "ng_minus_parpre_magpre_count_step_size_even",
+     "elpd_cv": -4775.019388150538,
+     "cost": 49.254710563847766,
+     "se": 18.577239611877857,
+     "cost_in_se": 2.651347110383151,
+     "converged": true
+    },
+    {
+     "mechanism": "common_factor",
+     "model": "ng_minus_parpre_cf_count_step_size_even",
+     "elpd_cv": -4782.514083941323,
+     "cost": 56.74940635463281,
+     "se": 19.371415184415863,
+     "cost_in_se": 2.929543650496285,
+     "converged": true
+    },
+    {
+     "mechanism": "round_factor",
+     "model": "ng_minus_parpre_round_count_step_size_even",
+     "elpd_cv": -4837.857111254225,
+     "cost": 112.09243366753435,
+     "se": 46.339647109708004,
+     "cost_in_se": 2.418931533987693,
+     "converged": true
+    },
+    {
+     "mechanism": "similarity",
+     "model": "ng_minus_sim_parpre_count_step_size_even",
+     "elpd_cv": -4841.04806539233,
+     "cost": 115.283387805639,
+     "se": 29.749095803171276,
+     "cost_in_se": 3.8751896383132998,
+     "converged": true
+    },
+    {
+     "mechanism": "parity",
+     "model": "ng_minus_par_parpre_count_step_size_even",
+     "elpd_cv": -4857.151049616783,
+     "cost": 131.3863720300924,
+     "se": 41.55285917573093,
+     "cost_in_se": 3.1619093038687693,
+     "converged": true
+    },
+    {
+     "mechanism": "intercept",
+     "model": "ng_minus_int_parpre_count_step_size_even",
+     "elpd_cv": -4878.9519775320305,
+     "cost": 153.18729994533987,
+     "se": 36.535660529700465,
+     "cost_in_se": 4.192815942681843,
+     "converged": true
+    }
+   ],
+   "decision": "drop mutual_standard"
+  },
+  {
+   "model": "ng_minus_parpre_std_count_step_size_even",
+   "mechanisms": [
+    "intercept",
+    "similarity",
+    "parity",
+    "common_factor",
+    "round_factor",
+    "decade_band",
+    "magnitude_preempt"
+   ],
+   "elpd_cv": -4755.728859047476,
+   "converged": true,
+   "size": {
+    "population": 8,
+    "person_vectors": 0
+   },
+   "candidates": [
+    {
+     "mechanism": "magnitude_preempt",
+     "model": "ng_minus_parpre_std_magpre_count_step_size_even",
+     "elpd_cv": -4806.805017452744,
+     "cost": 51.07615840526796,
+     "se": 19.606152559364443,
+     "cost_in_se": 2.605108689765477,
+     "converged": true
+    },
+    {
+     "mechanism": "common_factor",
+     "model": "ng_minus_parpre_std_cf_count_step_size_even",
+     "elpd_cv": -4809.572297489045,
+     "cost": 53.84343844156865,
+     "se": 18.365309607645422,
+     "cost_in_se": 2.9318012923209196,
+     "converged": true
+    },
+    {
+     "mechanism": "round_factor",
+     "model": "ng_minus_parpre_std_round_count_step_size_even",
+     "elpd_cv": -4842.062881393651,
+     "cost": 86.3340223461746,
+     "se": 46.27414588797402,
+     "cost_in_se": 1.8657075282422784,
+     "converged": true
+    },
+    {
+     "mechanism": "parity",
+     "model": "ng_minus_par_parpre_std_count_step_size_even",
+     "elpd_cv": -4884.855984732046,
+     "cost": 129.12712568456936,
+     "se": 34.11534748055948,
+     "cost_in_se": 3.7850156958873726,
+     "converged": true
+    },
+    {
+     "mechanism": "intercept",
+     "model": "ng_minus_int_parpre_std_count_step_size_even",
+     "elpd_cv": -5144.652030052443,
+     "cost": 388.9231710049662,
+     "se": 67.45184103385238,
+     "cost_in_se": 5.765938557700382,
+     "converged": true
+    }
+   ],
+   "decision": "stop: the cheapest removal (magnitude_preempt) costs 51.1 nats, 2.61 SE >= 2.0"
+  }
+ ],
+ "lean": {
+  "model": "ng_minus_parpre_std_count_step_size_even",
+  "mechanisms": [
+   "intercept",
+   "similarity",
+   "parity",
+   "common_factor",
+   "round_factor",
+   "decade_band",
+   "magnitude_preempt"
+  ],
+  "removed": [
+   "parity_preempt",
+   "mutual_standard",
+   "counting",
+   "count_step_cost",
+   "size_principle",
+   "even_rule"
+  ],
+  "size": {
+   "population": 8,
+   "person_vectors": 0
+  },
+  "elpd_cv": -4755.728859047476,
+  "cost_vs_start": 59.57808148773165,
+  "se_vs_start": 20.38705640089236
+ },
+ "config": {
+  "final": "ng",
+  "data_sha256": "910f27f4b82cef889308c1f41f663ef2ab806b3dbb68021a322bfccb917f5343",
+  "folds": 5,
+  "fold_seed": 0,
+  "threshold_dse": 2.0,
+  "start": [
+   "intercept",
+   "similarity",
+   "parity",
+   "parity_preempt",
+   "mutual_standard",
+   "common_factor",
+   "round_factor",
+   "decade_band",
+   "magnitude_preempt",
+   "counting",
+   "count_step_cost",
+   "size_principle",
+   "even_rule"
+  ],
+  "sampler": {
+   "draws": 1000,
+   "tune": 4000,
+   "chains": 4,
+   "target_accept": 0.95,
+   "method": "nuts_no_jitter"
+  },
+  "gate": "population"
+ },
+ "n_trials": 7560,
+ "lean_file_sha256": "fde0b7ceeb6feac21a3c1aeaceb76ce9a22578d30b20e940cd5b2a3fcd49476e"
+}

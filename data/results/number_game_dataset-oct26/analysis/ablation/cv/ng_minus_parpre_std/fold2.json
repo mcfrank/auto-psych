@@ -1,0 +1,16 @@
+{
+ "model": "ng_minus_parpre_std",
+ "fold": 2,
+ "converged": true,
+ "has_lpd": true,
+ "attempts": [
+  {
+   "seed": 20261018,
+   "problems": [],
+   "problems_all": [],
+   "seconds": 228
+  }
+ ],
+ "elpd": -993.8811425930812,
+ "seed": 20261018
+}
