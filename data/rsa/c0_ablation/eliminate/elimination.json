@@ -1,0 +1,1037 @@
+{
+ "final": "c0",
+ "rule": {
+  "threshold_dse": 2.0,
+  "start": [
+   "depth2",
+   "interior",
+   "avoidable",
+   "confusion",
+   "singleton",
+   "distinct",
+   "features",
+   "valence",
+   "color",
+   "typicality",
+   "attention",
+   "popout",
+   "load",
+   "candidate",
+   "inhibit_leak",
+   "outlier"
+  ]
+ },
+ "rounds": [
+  {
+   "model": "c0_full",
+   "mechanisms": [
+    "depth2",
+    "interior",
+    "avoidable",
+    "confusion",
+    "singleton",
+    "distinct",
+    "features",
+    "valence",
+    "color",
+    "typicality",
+    "attention",
+    "popout",
+    "load",
+    "candidate",
+    "inhibit_leak",
+    "outlier"
+   ],
+   "elpd_cv": -35374.24123407652,
+   "converged": true,
+   "size": {
+    "population": 17,
+    "person_vectors": 0
+   },
+   "candidates": [
+    {
+     "mechanism": "distinct",
+     "model": "c0_minus_dist",
+     "elpd_cv": -35373.7980934325,
+     "cost": -0.4431406440198771,
+     "se": 2.011106103475891,
+     "cost_in_se": -0.2203467252443697,
+     "converged": true
+    },
+    {
+     "mechanism": "valence",
+     "model": "c0_minus_val",
+     "elpd_cv": -35374.02206621698,
+     "cost": -0.219167859540903,
+     "se": 0.2975264912069524,
+     "cost_in_se": -0.7366330932476699,
+     "converged": true
+    },
+    {
+     "mechanism": "popout",
+     "model": "c0_minus_pop",
+     "elpd_cv": -35374.03361499118,
+     "cost": -0.2076190853404114,
+     "se": 0.2545764671789118,
+     "cost_in_se": -0.8155470442383836,
+     "converged": true
+    },
+    {
+     "mechanism": "depth2",
+     "model": "c0_minus_d2",
+     "elpd_cv": -35374.26450464593,
+     "cost": 0.02327056940703187,
+     "se": 12.416809229130811,
+     "cost_in_se": 0.0018741183002503805,
+     "converged": true
+    },
+    {
+     "mechanism": "color",
+     "model": "c0_minus_col",
+     "elpd_cv": -35374.28584814344,
+     "cost": 0.04461406691552838,
+     "se": 0.3603264773317979,
+     "cost_in_se": 0.12381567750972294,
+     "converged": true
+    },
+    {
+     "mechanism": "candidate",
+     "model": "c0_minus_cand",
+     "elpd_cv": -35376.33685401427,
+     "cost": 2.09561993774696,
+     "se": 4.648566374203007,
+     "cost_in_se": 0.4508099420450359,
+     "converged": true
+    },
+    {
+     "mechanism": "load",
+     "model": "c0_minus_load",
+     "elpd_cv": -35381.15875199998,
+     "cost": 6.917517923458945,
+     "se": 4.688968105768412,
+     "cost_in_se": 1.4752751068937642,
+     "converged": true
+    },
+    {
+     "mechanism": "avoidable",
+     "model": "c0_minus_avo",
+     "elpd_cv": -35385.318317343445,
+     "cost": 11.077083266922273,
+     "se": 8.280550638343156,
+     "cost_in_se": 1.3377230272138847,
+     "converged": true
+    },
+    {
+     "mechanism": "outlier",
+     "model": "c0_minus_out",
+     "elpd_cv": -35388.02358118432,
+     "cost": 13.782347107800888,
+     "se": 6.395251584194683,
+     "cost_in_se": 2.155090683510056,
+     "converged": true
+    },
+    {
+     "mechanism": "inhibit_leak",
+     "model": "c0_minus_leak",
+     "elpd_cv": -35415.794044337104,
+     "cost": 41.55281026058219,
+     "se": 15.468751773231267,
+     "cost_in_se": 2.6862419715396486,
+     "converged": true
+    },
+    {
+     "mechanism": "typicality",
+     "model": "c0_minus_typ",
+     "elpd_cv": -35418.09762790383,
+     "cost": 43.85639382730733,
+     "se": 12.964643822462694,
+     "cost_in_se": 3.3827688926803545,
+     "converged": true
+    },
+    {
+     "mechanism": "interior",
+     "model": "c0_minus_int",
+     "elpd_cv": -35437.763036643824,
+     "cost": 63.521802567302075,
+     "se": 16.167378007173323,
+     "cost_in_se": 3.929010785738913,
+     "converged": true
+    },
+    {
+     "mechanism": "confusion",
+     "model": "c0_minus_conf",
+     "elpd_cv": -35466.68639827282,
+     "cost": 92.44516419629508,
+     "se": 25.458777467228845,
+     "cost_in_se": 3.631170597853441,
+     "converged": true
+    },
+    {
+     "mechanism": "features",
+     "model": "c0_minus_feat",
+     "elpd_cv": -35596.31301476341,
+     "cost": 222.07178068688518,
+     "se": 33.77467873015622,
+     "cost_in_se": 6.575096759946532,
+     "converged": true
+    },
+    {
+     "mechanism": "singleton",
+     "model": "c0_minus_sing",
+     "elpd_cv": -35658.99684340961,
+     "cost": 284.7556093330859,
+     "se": 49.293707920495365,
+     "cost_in_se": 5.776713121122098,
+     "converged": true
+    }
+   ],
+   "decision": "drop distinct"
+  },
+  {
+   "model": "c0_minus_dist",
+   "mechanisms": [
+    "depth2",
+    "interior",
+    "avoidable",
+    "confusion",
+    "singleton",
+    "features",
+    "valence",
+    "color",
+    "typicality",
+    "attention",
+    "popout",
+    "load",
+    "candidate",
+    "inhibit_leak",
+    "outlier"
+   ],
+   "elpd_cv": -35373.7980934325,
+   "converged": true,
+   "size": {
+    "population": 16,
+    "person_vectors": 0
+   },
+   "candidates": [
+    {
+     "mechanism": "color",
+     "model": "c0_minus_dist_col",
+     "elpd_cv": -35373.77158910101,
+     "cost": -0.026504331493924838,
+     "se": 0.2812957941395403,
+     "cost_in_se": -0.09422228147775658,
+     "converged": true
+    },
+    {
+     "mechanism": "valence",
+     "model": "c0_minus_dist_val",
+     "elpd_cv": -35373.81001682479,
+     "cost": 0.011923392288736068,
+     "se": 0.1863006507862708,
+     "cost_in_se": 0.0640008085769647,
+     "converged": true
+    },
+    {
+     "mechanism": "popout",
+     "model": "c0_minus_dist_pop",
+     "elpd_cv": -35373.86032288052,
+     "cost": 0.06222944801993435,
+     "se": 0.2816862045969409,
+     "cost_in_se": 0.22091762750319,
+     "converged": true
+    },
+    {
+     "mechanism": "candidate",
+     "model": "c0_minus_dist_cand",
+     "elpd_cv": -35375.76618643092,
+     "cost": 1.968092998416978,
+     "se": 4.601886679706866,
+     "cost_in_se": 0.4276708957427745,
+     "converged": true
+    },
+    {
+     "mechanism": "depth2",
+     "model": "c0_minus_d2_dist",
+     "elpd_cv": -35381.526251216754,
+     "cost": 7.72815778425138,
+     "se": 12.201877373989667,
+     "cost_in_se": 0.6333580929706141,
+     "converged": true
+    },
+    {
+     "mechanism": "load",
+     "model": "c0_minus_dist_load",
+     "elpd_cv": -35382.12364153332,
+     "cost": 8.325548100816377,
+     "se": 5.002093533820827,
+     "cost_in_se": 1.6644127192993419,
+     "converged": true
+    },
+    {
+     "mechanism": "avoidable",
+     "model": "c0_minus_avo_dist",
+     "elpd_cv": -35384.339188805796,
+     "cost": 10.541095373293501,
+     "se": 8.275994231211632,
+     "cost_in_se": 1.2736953505283257,
+     "converged": true
+    },
+    {
+     "mechanism": "outlier",
+     "model": "c0_minus_dist_out",
+     "elpd_cv": -35390.340700975175,
+     "cost": 16.542607542673068,
+     "se": 6.926129076896175,
+     "cost_in_se": 2.38843477489541,
+     "converged": true
+    },
+    {
+     "mechanism": "inhibit_leak",
+     "model": "c0_minus_dist_leak",
+     "elpd_cv": -35416.87677365145,
+     "cost": 43.07868021894683,
+     "se": 15.315133780125176,
+     "cost_in_se": 2.8128177551312734,
+     "converged": true
+    },
+    {
+     "mechanism": "interior",
+     "model": "c0_minus_int_dist",
+     "elpd_cv": -35439.79311537663,
+     "cost": 65.99502194413071,
+     "se": 16.385042718223097,
+     "cost_in_se": 4.027760139479676,
+     "converged": true
+    },
+    {
+     "mechanism": "confusion",
+     "model": "c0_minus_conf_dist",
+     "elpd_cv": -35465.19960767435,
+     "cost": 91.40151424185024,
+     "se": 25.15347561693309,
+     "cost_in_se": 3.633752871126866,
+     "converged": true
+    },
+    {
+     "mechanism": "typicality",
+     "model": "c0_minus_dist_typ",
+     "elpd_cv": -35561.25189704193,
+     "cost": 187.4538036094309,
+     "se": 30.365293782562667,
+     "cost_in_se": 6.17329128944824,
+     "converged": true
+    },
+    {
+     "mechanism": "singleton",
+     "model": "c0_minus_sing_dist",
+     "elpd_cv": -35715.703174972485,
+     "cost": 341.90508153998235,
+     "se": 54.255378309615026,
+     "cost_in_se": 6.301773062734145,
+     "converged": true
+    },
+    {
+     "mechanism": "features",
+     "model": "c0_minus_dist_feat",
+     "elpd_cv": -35829.48895030065,
+     "cost": 455.6908568681465,
+     "se": 54.08490265280136,
+     "cost_in_se": 8.425472442715837,
+     "converged": true
+    }
+   ],
+   "decision": "drop color"
+  },
+  {
+   "model": "c0_minus_dist_col",
+   "mechanisms": [
+    "depth2",
+    "interior",
+    "avoidable",
+    "confusion",
+    "singleton",
+    "features",
+    "valence",
+    "typicality",
+    "attention",
+    "popout",
+    "load",
+    "candidate",
+    "inhibit_leak",
+    "outlier"
+   ],
+   "elpd_cv": -35373.77158910101,
+   "converged": true,
+   "size": {
+    "population": 15,
+    "person_vectors": 0
+   },
+   "candidates": [
+    {
+     "mechanism": "popout",
+     "model": "c0_minus_dist_col_pop",
+     "elpd_cv": -35373.80732298132,
+     "cost": 0.03573388031509239,
+     "se": 0.207410663047171,
+     "cost_in_se": 0.17228564717989212,
+     "converged": true
+    },
+    {
+     "mechanism": "valence",
+     "model": "c0_minus_dist_val_col",
+     "elpd_cv": -35373.84290285305,
+     "cost": 0.071313752043352,
+     "se": 0.2175921926812925,
+     "cost_in_se": 0.32774039897564394,
+     "converged": true
+    },
+    {
+     "mechanism": "candidate",
+     "model": "c0_minus_dist_col_cand",
+     "elpd_cv": -35375.507235233265,
+     "cost": 1.735646132256079,
+     "se": 4.531048643557232,
+     "cost_in_se": 0.38305616840464096,
+     "converged": true
+    },
+    {
+     "mechanism": "depth2",
+     "model": "c0_minus_d2_dist_col",
+     "elpd_cv": -35381.637553396424,
+     "cost": 7.865964295415324,
+     "se": 12.217524802549704,
+     "cost_in_se": 0.6438263414676071,
+     "converged": true
+    },
+    {
+     "mechanism": "load",
+     "model": "c0_minus_dist_col_load",
+     "elpd_cv": -35381.84535363666,
+     "cost": 8.073764535649389,
+     "se": 5.040148773966706,
+     "cost_in_se": 1.6018901222423958,
+     "converged": true
+    },
+    {
+     "mechanism": "avoidable",
+     "model": "c0_minus_avo_dist_col",
+     "elpd_cv": -35384.52177876165,
+     "cost": 10.750189660640899,
+     "se": 8.363413455157174,
+     "cost_in_se": 1.2853830219301134,
+     "converged": true
+    },
+    {
+     "mechanism": "outlier",
+     "model": "c0_minus_dist_col_out",
+     "elpd_cv": -35390.2137826939,
+     "cost": 16.44219359289127,
+     "se": 7.0210642531151555,
+     "cost_in_se": 2.3418377898473275,
+     "converged": true
+    },
+    {
+     "mechanism": "inhibit_leak",
+     "model": "c0_minus_dist_col_leak",
+     "elpd_cv": -35416.776054856906,
+     "cost": 43.0044657558974,
+     "se": 15.395624089007397,
+     "cost_in_se": 2.7932914903139876,
+     "converged": true
+    },
+    {
+     "mechanism": "interior",
+     "model": "c0_minus_int_dist_col",
+     "elpd_cv": -35440.16652240145,
+     "cost": 66.39493330044206,
+     "se": 16.206900192142854,
+     "cost_in_se": 4.0967077302438435,
+     "converged": true
+    },
+    {
+     "mechanism": "confusion",
+     "model": "c0_minus_conf_dist_col",
+     "elpd_cv": -35465.388948430205,
+     "cost": 91.61735932919692,
+     "se": 25.235151186303042,
+     "cost_in_se": 3.6305452918754195,
+     "converged": true
+    },
+    {
+     "mechanism": "typicality",
+     "model": "c0_minus_dist_col_typ",
+     "elpd_cv": -35560.763637341835,
+     "cost": 186.992048240827,
+     "se": 30.37190612278034,
+     "cost_in_se": 6.1567439160683515,
+     "converged": true
+    },
+    {
+     "mechanism": "singleton",
+     "model": "c0_minus_sing_dist_col",
+     "elpd_cv": -35714.71789328487,
+     "cost": 340.9463041838608,
+     "se": 54.2334096845982,
+     "cost_in_se": 6.286647034856937,
+     "converged": true
+    },
+    {
+     "mechanism": "features",
+     "model": "c0_minus_dist_feat_col",
+     "elpd_cv": -35830.033712033626,
+     "cost": 456.2621229326178,
+     "se": 54.121987238553686,
+     "cost_in_se": 8.430254434700439,
+     "converged": true
+    }
+   ],
+   "decision": "drop popout"
+  },
+  {
+   "model": "c0_minus_dist_col_pop",
+   "mechanisms": [
+    "depth2",
+    "interior",
+    "avoidable",
+    "confusion",
+    "singleton",
+    "features",
+    "valence",
+    "typicality",
+    "attention",
+    "load",
+    "candidate",
+    "inhibit_leak",
+    "outlier"
+   ],
+   "elpd_cv": -35373.80732298132,
+   "converged": true,
+   "size": {
+    "population": 14,
+    "person_vectors": 0
+   },
+   "candidates": [
+    {
+     "mechanism": "valence",
+     "model": "c0_minus_dist_val_col_pop",
+     "elpd_cv": -35374.03605204235,
+     "cost": 0.22872906102566049,
+     "se": 0.21921487069840564,
+     "cost_in_se": 1.0434012085810749,
+     "converged": true
+    },
+    {
+     "mechanism": "candidate",
+     "model": "c0_minus_dist_col_pop_cand",
+     "elpd_cv": -35375.77703113196,
+     "cost": 1.9697081506383256,
+     "se": 4.520912061838707,
+     "cost_in_se": 0.4356882247864876,
+     "converged": true
+    },
+    {
+     "mechanism": "depth2",
+     "model": "c0_minus_d2_dist_col_pop",
+     "elpd_cv": -35381.240814462915,
+     "cost": 7.433491481591773,
+     "se": 12.201030599917502,
+     "cost_in_se": 0.6092511137249369,
+     "converged": true
+    },
+    {
+     "mechanism": "load",
+     "model": "c0_minus_dist_col_pop_load",
+     "elpd_cv": -35382.249451927644,
+     "cost": 8.442128946320736,
+     "se": 4.98732835527031,
+     "cost_in_se": 1.6927156876285476,
+     "converged": true
+    },
+    {
+     "mechanism": "avoidable",
+     "model": "c0_minus_avo_dist_col_pop",
+     "elpd_cv": -35384.278764995564,
+     "cost": 10.471442014240893,
+     "se": 8.246260145475636,
+     "cost_in_se": 1.269841337710661,
+     "converged": true
+    },
+    {
+     "mechanism": "outlier",
+     "model": "c0_minus_dist_col_pop_out",
+     "elpd_cv": -35390.01064038426,
+     "cost": 16.203317402934772,
+     "se": 6.985905392834554,
+     "cost_in_se": 2.3194298364753867,
+     "converged": true
+    },
+    {
+     "mechanism": "inhibit_leak",
+     "model": "c0_minus_dist_col_pop_leak",
+     "elpd_cv": -35417.17509694593,
+     "cost": 43.367773964608205,
+     "se": 15.362471732421307,
+     "cost_in_se": 2.8229685118367946,
+     "converged": true
+    },
+    {
+     "mechanism": "interior",
+     "model": "c0_minus_int_dist_col_pop",
+     "elpd_cv": -35440.3819236357,
+     "cost": 66.57460065437772,
+     "se": 16.260416358022628,
+     "cost_in_se": 4.094274044928184,
+     "converged": true
+    },
+    {
+     "mechanism": "confusion",
+     "model": "c0_minus_conf_dist_col_pop",
+     "elpd_cv": -35465.15753776166,
+     "cost": 91.35021478033741,
+     "se": 25.185853711410942,
+     "cost_in_se": 3.6270446031753694,
+     "converged": true
+    },
+    {
+     "mechanism": "typicality",
+     "model": "c0_minus_dist_col_typ_pop",
+     "elpd_cv": -35561.16135781876,
+     "cost": 187.3540348374372,
+     "se": 30.39786593053745,
+     "cost_in_se": 6.16339434043042,
+     "converged": true
+    },
+    {
+     "mechanism": "singleton",
+     "model": "c0_minus_sing_dist_col_pop",
+     "elpd_cv": -35715.403217836625,
+     "cost": 341.5958948553016,
+     "se": 54.312874272687196,
+     "cost_in_se": 6.289409268606559,
+     "converged": true
+    },
+    {
+     "mechanism": "features",
+     "model": "c0_minus_dist_feat_col_pop",
+     "elpd_cv": -35829.584137122234,
+     "cost": 455.7768141409106,
+     "se": 54.11300331813579,
+     "cost_in_se": 8.422685605922718,
+     "converged": true
+    }
+   ],
+   "decision": "drop valence"
+  },
+  {
+   "model": "c0_minus_dist_val_col_pop",
+   "mechanisms": [
+    "depth2",
+    "interior",
+    "avoidable",
+    "confusion",
+    "singleton",
+    "features",
+    "typicality",
+    "attention",
+    "load",
+    "candidate",
+    "inhibit_leak",
+    "outlier"
+   ],
+   "elpd_cv": -35374.03605204235,
+   "converged": true,
+   "size": {
+    "population": 13,
+    "person_vectors": 0
+   },
+   "candidates": [
+    {
+     "mechanism": "candidate",
+     "model": "c0_minus_dist_val_col_pop_cand",
+     "elpd_cv": -35375.63347879156,
+     "cost": 1.5974267492129002,
+     "se": 4.546158247738141,
+     "cost_in_se": 0.35137948618653364,
+     "converged": true
+    },
+    {
+     "mechanism": "depth2",
+     "model": "c0_minus_d2_dist_val_col_pop",
+     "elpd_cv": -35381.17220848701,
+     "cost": 7.1361564446633565,
+     "se": 12.174461783343647,
+     "cost_in_se": 0.5861578582822125,
+     "converged": true
+    },
+    {
+     "mechanism": "load",
+     "model": "c0_minus_dist_val_col_pop_load",
+     "elpd_cv": -35382.29674182572,
+     "cost": 8.260689783368434,
+     "se": 4.960120320839558,
+     "cost_in_se": 1.6654212496946477,
+     "converged": true
+    },
+    {
+     "mechanism": "avoidable",
+     "model": "c0_minus_avo_dist_val_col_pop",
+     "elpd_cv": -35384.46050789152,
+     "cost": 10.424455849170045,
+     "se": 8.19771783588843,
+     "cost_in_se": 1.2716290140572144,
+     "converged": true
+    },
+    {
+     "mechanism": "outlier",
+     "model": "c0_minus_dist_val_col_pop_out",
+     "elpd_cv": -35390.21757118166,
+     "cost": 16.181519139310694,
+     "se": 6.96021589961898,
+     "cost_in_se": 2.3248587935607734,
+     "converged": true
+    },
+    {
+     "mechanism": "inhibit_leak",
+     "model": "c0_minus_dist_val_col_pop_leak",
+     "elpd_cv": -35417.169219456315,
+     "cost": 43.133167413965566,
+     "se": 15.339796649396016,
+     "cost_in_se": 2.811847405790994,
+     "converged": true
+    },
+    {
+     "mechanism": "interior",
+     "model": "c0_minus_int_dist_val_col_pop",
+     "elpd_cv": -35439.690078677966,
+     "cost": 65.6540266356169,
+     "se": 16.275546178886618,
+     "cost_in_se": 4.033906199767741,
+     "converged": true
+    },
+    {
+     "mechanism": "confusion",
+     "model": "c0_minus_conf_dist_val_col_pop",
+     "elpd_cv": -35465.17847005361,
+     "cost": 91.142418011259,
+     "se": 25.219097697746808,
+     "cost_in_se": 3.614023749128903,
+     "converged": true
+    },
+    {
+     "mechanism": "typicality",
+     "model": "c0_minus_dist_val_col_typ_pop",
+     "elpd_cv": -35561.129243957184,
+     "cost": 187.0931919148352,
+     "se": 30.37302333796771,
+     "cost_in_se": 6.1598475012844665,
+     "converged": true
+    },
+    {
+     "mechanism": "singleton",
+     "model": "c0_minus_sing_dist_val_col_pop",
+     "elpd_cv": -35715.14056475164,
+     "cost": 341.1045127092875,
+     "se": 54.250964371383674,
+     "cost_in_se": 6.287529017442011,
+     "converged": true
+    },
+    {
+     "mechanism": "features",
+     "model": "c0_minus_dist_feat_val_col_pop",
+     "elpd_cv": -35829.65722380005,
+     "cost": 455.62117175770254,
+     "se": 54.073754690842414,
+     "cost_in_se": 8.425920751437364,
+     "converged": true
+    }
+   ],
+   "decision": "drop candidate"
+  },
+  {
+   "model": "c0_minus_dist_val_col_pop_cand",
+   "mechanisms": [
+    "depth2",
+    "interior",
+    "avoidable",
+    "confusion",
+    "singleton",
+    "features",
+    "typicality",
+    "attention",
+    "load",
+    "inhibit_leak",
+    "outlier"
+   ],
+   "elpd_cv": -35375.63347879156,
+   "converged": true,
+   "size": {
+    "population": 12,
+    "person_vectors": 0
+   },
+   "candidates": [
+    {
+     "mechanism": "avoidable",
+     "model": "c0_minus_avo_dist_val_col_pop_cand",
+     "elpd_cv": -35395.02131682148,
+     "cost": 19.387838029921113,
+     "se": 10.486064726550246,
+     "cost_in_se": 1.8489145866925631,
+     "converged": true
+    },
+    {
+     "mechanism": "depth2",
+     "model": "c0_minus_d2_dist_val_col_pop_cand",
+     "elpd_cv": -35395.92256837815,
+     "cost": 20.28908958658576,
+     "se": 13.517103818211401,
+     "cost_in_se": 1.5009938415395285,
+     "converged": true
+    },
+    {
+     "mechanism": "load",
+     "model": "c0_minus_dist_val_col_pop_load_cand",
+     "elpd_cv": -35411.923849873834,
+     "cost": 36.29037108227203,
+     "se": 10.966810659418721,
+     "cost_in_se": 3.309108929596086,
+     "converged": true
+    },
+    {
+     "mechanism": "inhibit_leak",
+     "model": "c0_minus_dist_val_col_pop_cand_leak",
+     "elpd_cv": -35421.07859364826,
+     "cost": 45.445114856695,
+     "se": 15.712893049735547,
+     "cost_in_se": 2.892218174772077,
+     "converged": true
+    },
+    {
+     "mechanism": "outlier",
+     "model": "c0_minus_dist_val_col_pop_cand_out",
+     "elpd_cv": -35425.77867976579,
+     "cost": 50.14520097422792,
+     "se": 10.424807731402561,
+     "cost_in_se": 4.810179934846755,
+     "converged": true
+    },
+    {
+     "mechanism": "interior",
+     "model": "c0_minus_int_dist_val_col_pop_cand",
+     "elpd_cv": -35437.572309583804,
+     "cost": 61.93883079224179,
+     "se": 15.691323431615434,
+     "cost_in_se": 3.9473299407904143,
+     "converged": true
+    },
+    {
+     "mechanism": "confusion",
+     "model": "c0_minus_conf_dist_val_col_pop_cand",
+     "elpd_cv": -35463.45849121658,
+     "cost": 87.82501242501894,
+     "se": 24.22323751742181,
+     "cost_in_se": 3.6256512929724414,
+     "converged": true
+    },
+    {
+     "mechanism": "typicality",
+     "model": "c0_minus_dist_val_col_typ_pop_cand",
+     "elpd_cv": -35562.09753076244,
+     "cost": 186.46405197087734,
+     "se": 29.953707108527073,
+     "cost_in_se": 6.225074288644415,
+     "converged": true
+    },
+    {
+     "mechanism": "singleton",
+     "model": "c0_minus_sing_dist_val_col_pop_cand",
+     "elpd_cv": -35710.65473276883,
+     "cost": 335.0212539772692,
+     "se": 53.3501385856366,
+     "cost_in_se": 6.279669797661343,
+     "converged": true
+    },
+    {
+     "mechanism": "features",
+     "model": "c0_minus_dist_feat_val_col_pop_cand",
+     "elpd_cv": -35833.1167146334,
+     "cost": 457.48323584183527,
+     "se": 54.02968659214093,
+     "cost_in_se": 8.467256885927966,
+     "converged": true
+    }
+   ],
+   "decision": "drop avoidable"
+  },
+  {
+   "model": "c0_minus_avo_dist_val_col_pop_cand",
+   "mechanisms": [
+    "depth2",
+    "interior",
+    "confusion",
+    "singleton",
+    "features",
+    "typicality",
+    "attention",
+    "load",
+    "inhibit_leak",
+    "outlier"
+   ],
+   "elpd_cv": -35395.02131682148,
+   "converged": true,
+   "size": {
+    "population": 11,
+    "person_vectors": 0
+   },
+   "candidates": [
+    {
+     "mechanism": "load",
+     "model": "c0_minus_avo_dist_val_col_pop_load_cand",
+     "elpd_cv": -35428.94266056648,
+     "cost": 33.921343744994374,
+     "se": 10.050056307244667,
+     "cost_in_se": 3.3752391735896934,
+     "converged": true
+    },
+    {
+     "mechanism": "depth2",
+     "model": "c0_minus_d2_avo_dist_val_col_pop_cand",
+     "elpd_cv": -35434.16994279868,
+     "cost": 39.14862597719912,
+     "se": 11.798797414337393,
+     "cost_in_se": 3.3180183202084126,
+     "converged": true
+    },
+    {
+     "mechanism": "outlier",
+     "model": "c0_minus_avo_dist_val_col_pop_cand_out",
+     "elpd_cv": -35438.03666268133,
+     "cost": 43.015345859843364,
+     "se": 9.197714278011262,
+     "cost_in_se": 4.676742999364423,
+     "converged": true
+    },
+    {
+     "mechanism": "inhibit_leak",
+     "model": "c0_minus_avo_dist_val_col_pop_cand_leak",
+     "elpd_cv": -35446.75734290691,
+     "cost": 51.73602608542569,
+     "se": 15.905004182368936,
+     "cost_in_se": 3.252814365354036,
+     "converged": true
+    },
+    {
+     "mechanism": "interior",
+     "model": "c0_minus_int_avo_dist_val_col_pop_cand",
+     "elpd_cv": -35479.76472466472,
+     "cost": 84.74340784323431,
+     "se": 18.63938312230662,
+     "cost_in_se": 4.546470625512168,
+     "converged": true
+    },
+    {
+     "mechanism": "confusion",
+     "model": "c0_minus_avo_conf_dist_val_col_pop_cand",
+     "elpd_cv": -35500.673528344036,
+     "cost": 105.65221152255253,
+     "se": 26.080101719409726,
+     "cost_in_se": 4.051065929851127,
+     "converged": true
+    },
+    {
+     "mechanism": "typicality",
+     "model": "c0_minus_avo_dist_val_col_typ_pop_cand",
+     "elpd_cv": -35582.21238757402,
+     "cost": 187.1910707525385,
+     "se": 30.0143357635515,
+     "cost_in_se": 6.23672208597925,
+     "converged": true
+    },
+    {
+     "mechanism": "singleton",
+     "model": "c0_minus_avo_sing_dist_val_col_pop_cand",
+     "elpd_cv": -35840.370441678475,
+     "cost": 445.3491248569917,
+     "se": 78.39437597228799,
+     "cost_in_se": 5.680881049610247,
+     "converged": true
+    },
+    {
+     "mechanism": "features",
+     "model": "c0_minus_avo_dist_feat_val_col_pop_cand",
+     "elpd_cv": -35884.860790469145,
+     "cost": 489.8394736476621,
+     "se": 54.1480029651811,
+     "cost_in_se": 9.046307284178967,
+     "converged": true
+    }
+   ],
+   "decision": "stop: the cheapest removal (load) costs 33.9 nats, 3.38 SE >= 2.0"
+  }
+ ],
+ "lean": {
+  "model": "c0_minus_avo_dist_val_col_pop_cand",
+  "mechanisms": [
+   "depth2",
+   "interior",
+   "confusion",
+   "singleton",
+   "features",
+   "typicality",
+   "attention",
+   "load",
+   "inhibit_leak",
+   "outlier"
+  ],
+  "removed": [
+   "avoidable",
+   "distinct",
+   "valence",
+   "color",
+   "popout",
+   "candidate"
+  ],
+  "size": {
+   "population": 11,
+   "person_vectors": 0
+  },
+  "elpd_cv": -35395.02131682148,
+  "cost_vs_start": 20.780082744960964,
+  "se_vs_start": 11.059061642945524
+ },
+ "config": {
+  "final": "c0",
+  "data_sha256": "19af0f544ed5c0e0cf902fdce55c259ad2fbaf697ccef6a21f9617375f114f23",
+  "folds": 5,
+  "fold_seed": 0,
+  "threshold_dse": 2.0,
+  "start": [
+   "depth2",
+   "interior",
+   "avoidable",
+   "confusion",
+   "singleton",
+   "distinct",
+   "features",
+   "valence",
+   "color",
+   "typicality",
+   "attention",
+   "popout",
+   "load",
+   "candidate",
+   "inhibit_leak",
+   "outlier"
+  ],
+  "fit": {
+   "num_warmup": 1000,
+   "num_samples": 1000,
+   "num_chains": 4,
+   "target_accept": 0.9,
+   "seed": 0,
+   "dense_mass": true,
+   "init": "map"
+  }
+ },
+ "n_trials": 70841,
+ "lean_file_sha256": "0562d92498143bf0115f023212146a2c9aaab33d66d40ed0eb1870eec98bfd85"
+}

@@ -68,4 +68,5 @@ CVs, removes `popout` before `attention`, and stops with an error on an unconver
 
 with `$WORK_ROOT/pool/pooled.csv` the consolidation's pooled data. A driver per round submits the
 round's models as one array (one model's 5-fold CV per task) and queues the next driver. The
-result: `$WORK_ROOT/ablation/elimination.json`, `summary.md`, `lean/`.
+result: `$WORK_ROOT/ablation/elimination.json`, `summary.md`, `lean/`. The run of 2026-10-28
+(lean model `c0_minus_avo_dist_val_col_pop_cand`) is committed in `data/rsa/c0_ablation/eliminate/`.
