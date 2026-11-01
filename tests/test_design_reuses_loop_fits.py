@@ -23,7 +23,16 @@ import shutil
 import pytest
 
 import src.models.pymc_inference as pymc_inference
-from src.models.pymc_inference import FitNotCached, fit_model, load_cached_fit
+from src.models.pymc_inference import (
+    FitNotCached,
+    cached_fit_path,
+    file_cached_fit_under,
+    fit_fingerprint,
+    fit_model,
+    load_cached_fit,
+    refit_settings,
+    resolve_fit_settings,
+)
 from src.pipelines.outer_loop import eig as eig_mod
 from src.pipelines.outer_loop.orchestrator import run_design_programmatic
 from src.tasks.subjective_randomness import SUBJECTIVE_RANDOMNESS
@@ -61,6 +70,43 @@ def test_a_fit_missing_from_the_cache_raises_instead_of_sampling(tmp_path, monke
             PYMC_MODEL_FIXTURES_DIR / "responses.csv",
             cache_dir=tmp_path / "fit_cache",
             **LOOP_SETTINGS,
+        )
+
+
+def _cached(cache, name, models_dir, responses, settings):
+    path = cached_fit_path(cache, name, fit_fingerprint(name, models_dir, responses, settings))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(b"a fit")
+    return path
+
+
+def test_a_cached_fit_and_its_refit_are_filed_under_a_second_name(tmp_path):
+    models_dir = _models(tmp_path)
+    responses = PYMC_MODEL_FIXTURES_DIR / "responses.csv"
+    cache = tmp_path / "fit_cache"
+    settings = resolve_fit_settings("bayesian_fair_coin", models_dir, LOOP_SETTINGS)
+    first = _cached(cache, "bayesian_fair_coin", models_dir, responses, settings)
+    refit = _cached(
+        cache, "bayesian_fair_coin", models_dir, responses,
+        refit_settings(settings, first.name.split(".")[1]),
+    )
+
+    file_cached_fit_under(
+        "bayesian_fair_coin", models_dir, "inner_loop_model", responses,
+        cache_dir=cache, **LOOP_SETTINGS,
+    )
+
+    for path in (first, refit):
+        alias = path.with_name(path.name.replace("bayesian_fair_coin", "inner_loop_model", 1))
+        assert alias.samefile(path)
+
+
+def test_filing_a_fit_that_is_not_cached_raises(tmp_path):
+    with pytest.raises(FitNotCached, match="bayesian_fair_coin"):
+        file_cached_fit_under(
+            "bayesian_fair_coin", _models(tmp_path), "inner_loop_model",
+            PYMC_MODEL_FIXTURES_DIR / "responses.csv",
+            cache_dir=tmp_path / "fit_cache", **LOOP_SETTINGS,
         )
 
 
@@ -223,3 +269,38 @@ def test_run_py_designs_from_the_previous_experiments_loop_fits(tmp_path, monkey
     assert seen["loop_fit_cache_dir"] == prev / "model_loop" / ".fit_cache"
     assert seen["fit_kwargs"] == LOOP_SETTINGS
     assert seen["n_responses"] == 40
+
+
+@pytest.mark.slow
+def test_a_fallback_named_winner_is_loaded_under_its_export_name(tmp_path, monkeypatch):
+    """A fallback-named winner (``iterN_candidateM``) is exported as
+    ``inner_loop_model``; the next design loads it by that name, so the export
+    files the loop's fit under it too (2026-10-30: a number-game recovery cell
+    raised ``FitNotCached`` at experiment 2's design)."""
+    from src.pipelines.outer_loop.model_loop_runner import _export_inner_loop_models
+
+    exp_dir = tmp_path / "experiment1"
+    _models(exp_dir)
+    loop_dir = exp_dir / "model_loop"
+    zoo_dir = loop_dir / "models"
+    zoo_dir.mkdir(parents=True)
+    shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / "bayesian_fair_coin.py", zoo_dir / "iter4_candidate5.py")
+    (zoo_dir / "models_manifest.yaml").write_text(
+        "models:\n- name: iter4_candidate5\n  rationale: An unnamed hypothesis.\n",
+        encoding="utf-8",
+    )
+    responses = loop_dir / "responses.csv"
+    shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / "responses.csv", responses)
+    cache = loop_dir / ".fit_cache"
+    monkeypatch.setattr(pymc_inference, "_refit_decision", lambda name, f, s: False)
+    fitted = fit_model("iter4_candidate5", zoo_dir, responses, cache_dir=cache, **LOOP_SETTINGS)
+
+    _export_inner_loop_models(
+        exp_dir, loop_dir, best_model="iter4_candidate5", cache_dir=cache, fit_kwargs=LOOP_SETTINGS
+    )
+
+    _never_sample(monkeypatch)
+    loaded = load_cached_fit(
+        "inner_loop_model", exp_dir / "cognitive_models", responses, cache_dir=cache, **LOOP_SETTINGS
+    )
+    assert loaded.fingerprint == fitted.fingerprint

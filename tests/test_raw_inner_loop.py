@@ -69,7 +69,7 @@ def _patch_inner_loop(monkeypatch):
     monkeypatch.setattr(
         mlr,
         "_export_inner_loop_models",
-        lambda e, l, *, best_model: e,
+        lambda e, l, *, best_model, cache_dir, fit_kwargs: e,
     )
     return captured
 

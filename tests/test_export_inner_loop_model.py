@@ -79,7 +79,7 @@ def test_new_descriptive_winner_is_exported_with_its_hypothesis(tmp_path):
         ],
     )
     path = _export_inner_loop_models(
-        exp_dir, loop_dir, best_model="recency_weighted_runs"
+        exp_dir, loop_dir, best_model="recency_weighted_runs", cache_dir=None, fit_kwargs=None
     )
     assert path == exp_dir / "cognitive_models" / "recency_weighted_runs.py"
     assert path.exists()
@@ -103,7 +103,7 @@ def test_winning_seed_is_not_duplicated(tmp_path):
             {"name": "seed_b", "rationale": "mechanism seed_b"},
         ],
     )
-    _export_inner_loop_models(exp_dir, loop_dir, best_model="seed_a")
+    _export_inner_loop_models(exp_dir, loop_dir, best_model="seed_a", cache_dir=None, fit_kwargs=None)
     # No inner_loop_model copy, no duplicate manifest entry.
     assert _manifest_names(exp_dir) == ["seed_a", "seed_b"]
     assert not (exp_dir / "cognitive_models" / "inner_loop_model.py").exists()
@@ -118,12 +118,43 @@ def test_fallback_named_winner_exports_as_inner_loop_model(tmp_path):
             {"name": "iter0_candidate2", "rationale": "An unnamed hypothesis."},
         ],
     )
-    path = _export_inner_loop_models(exp_dir, loop_dir, best_model="iter0_candidate2")
+    path = _export_inner_loop_models(exp_dir, loop_dir, best_model="iter0_candidate2", cache_dir=None, fit_kwargs=None)
     # Zoo names must never enter the carried manifest (the validator rejects
     # them), so the fallback maps to the legacy stable export name.
     assert path == exp_dir / "cognitive_models" / "inner_loop_model.py"
     assert "inner_loop_model" in _manifest_names(exp_dir)
     assert "iter0_candidate2" not in _manifest_names(exp_dir)
+
+
+def test_a_renamed_models_cached_fit_is_filed_under_its_export_name(tmp_path):
+    from src.models.pymc_inference import cached_fit_path, fit_fingerprint, resolve_fit_settings
+
+    exp_dir, loop_dir = _setup(
+        tmp_path,
+        cognitive_names=["seed_a"],
+        zoo_entries=[
+            {"name": "seed_a", "rationale": "mechanism seed_a"},
+            {"name": "iter0_candidate2", "rationale": "An unnamed hypothesis."},
+        ],
+    )
+    responses = loop_dir / "responses.csv"
+    responses.write_text("participant_id\n", encoding="utf-8")
+    cache, settings = loop_dir / ".fit_cache", {"draws": 60}
+    cache.mkdir()
+    for name in ("seed_a", "iter0_candidate2"):
+        fingerprint = fit_fingerprint(
+            name, loop_dir / "models", responses,
+            resolve_fit_settings(name, loop_dir / "models", settings),
+        )
+        cached_fit_path(cache, name, fingerprint).write_bytes(b"a fit")
+
+    _export_inner_loop_models(
+        exp_dir, loop_dir, best_model="iter0_candidate2", cache_dir=cache, fit_kwargs=settings
+    )
+
+    # Only the renamed model gains a second name (the files share a fingerprint).
+    names = sorted(path.name.split(".")[0] for path in cache.iterdir())
+    assert names == ["inner_loop_model", "iter0_candidate2", "seed_a"]
 
 
 def test_export_missing_zoo_rationale_raises(tmp_path):
@@ -133,7 +164,7 @@ def test_export_missing_zoo_rationale_raises(tmp_path):
         zoo_entries=[{"name": "seed_a", "rationale": "mechanism seed_a"}],
     )
     with pytest.raises(ValueError, match="no_such_model"):
-        _export_inner_loop_models(exp_dir, loop_dir, best_model="no_such_model")
+        _export_inner_loop_models(exp_dir, loop_dir, best_model="no_such_model", cache_dir=None, fit_kwargs=None)
 
 
 def _write_loop_outputs(exp_dir, best):

@@ -216,7 +216,12 @@ def _project_seed_names(project_id: str, models_dir: Path) -> set[str]:
 
 
 def _export_inner_loop_models(
-    exp_dir: Path, loop_dir: Path, *, best_model: str
+    exp_dir: Path,
+    loop_dir: Path,
+    *,
+    best_model: str,
+    cache_dir: Optional[Path],
+    fit_kwargs: Optional[Dict[str, Any]],
 ) -> Path:
     """Record the inner loop's live set in `cognitive_models/` + manifest.
 
@@ -238,8 +243,10 @@ def _export_inner_loop_models(
     ``inner_loop_model`` (``inner_loop_model_2``, ... for further ones),
     because zoo names must never enter the carried manifest (the model-set
     validator rejects them); the best model is named first so a zoo-named best
-    maps to ``inner_loop_model`` as ``_validate_model_loop`` expects. Returns
-    the best model's path in ``cognitive_models/``.
+    maps to ``inner_loop_model`` as ``_validate_model_loop`` expects. A
+    renamed model's fit in ``cache_dir`` (the loop's, at its ``fit_kwargs``)
+    is filed under its export name too, where the next experiment's design
+    loads it. Returns the best model's path in ``cognitive_models/``.
     """
     zoo_dir = loop_dir / "models"
     zoo_entries = read_manifest_entries(zoo_dir)
@@ -338,6 +345,15 @@ def _export_inner_loop_models(
     # Built beside the set and renamed over it: never a manifest that lists
     # deleted files or misses copied ones.
     replace_directory(out_dir, build)
+    if cache_dir is not None:
+        from src.models.pymc_inference import file_cached_fit_under
+
+        for name, export_name in export_names.items():
+            if export_name != name:
+                file_cached_fit_under(
+                    name, zoo_dir, export_name, responses_csv,
+                    cache_dir=cache_dir, **(fit_kwargs or {}),
+                )
 
     best_export = export_names.get(best_model, best_model)
     print(
@@ -463,7 +479,10 @@ def run_inner_model_loop_programmatic(
         ),
         **extra,
     )
-    _export_inner_loop_models(exp_dir, loop_dir, best_model=result["best_model"])
+    _export_inner_loop_models(
+        exp_dir, loop_dir, best_model=result["best_model"],
+        cache_dir=cache_dir, fit_kwargs=fit_kwargs,
+    )
     return loop_dir
 
 

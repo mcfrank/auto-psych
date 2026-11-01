@@ -55,7 +55,7 @@ def _capture_the_loop(monkeypatch):
         captured.update(kwargs)
         return {"best_model": "falk_konold_dp"}
 
-    def fake_export(exp_dir, loop_dir, *, best_model):
+    def fake_export(exp_dir, loop_dir, *, best_model, cache_dir, fit_kwargs):
         return exp_dir
 
     monkeypatch.setattr(mlr, "_pooled_response_rows", lambda e: [{"chose_left": "1"}])

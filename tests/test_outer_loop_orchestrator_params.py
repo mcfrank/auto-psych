@@ -101,7 +101,7 @@ def _run_programmatic_loop(tmp_path, monkeypatch, exp_dir, **kwargs):
 
     monkeypatch.setattr(mlr, "_pooled_response_rows", lambda e: [{"chose_left": "1"}])
     monkeypatch.setattr(mlr, "write_responses_csv", lambda rows, out: out)
-    monkeypatch.setattr(mlr, "_export_inner_loop_models", lambda e, l, *, best_model: e)
+    monkeypatch.setattr(mlr, "_export_inner_loop_models", lambda e, l, *, best_model, cache_dir, fit_kwargs: e)
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",
         fake_inner_loop,

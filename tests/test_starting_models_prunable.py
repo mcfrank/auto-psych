@@ -384,7 +384,7 @@ def test_a_pruned_starting_model_leaves_the_carried_set_and_the_design_prior(tmp
         pruned=["seed_b"],  # seed_c was dropped as unfittable: in neither
     )
 
-    _export_inner_loop_models(exp1, loop, best_model="winner")
+    _export_inner_loop_models(exp1, loop, best_model="winner", cache_dir=None, fit_kwargs=None)
     update_registry_from_interpretation(exp1)
     exp2 = tmp_path / "experiment2"
     assert carry_forward_cognitive_models(exp1, exp2)
@@ -461,7 +461,7 @@ def test_the_wrapper_passes_the_starting_models_as_names_only(tmp_path, monkeypa
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",
         fake_inner_loop,
     )
-    monkeypatch.setattr(mlr, "_export_inner_loop_models", lambda e, l, *, best_model: e)
+    monkeypatch.setattr(mlr, "_export_inner_loop_models", lambda e, l, *, best_model, cache_dir, fit_kwargs: e)
 
     mlr.run_inner_model_loop_programmatic(
         exp_dir, max_iterations=0, candidate_count=0, project_id="subjective_randomness"

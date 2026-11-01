@@ -121,7 +121,7 @@ def test_next_experiment_starts_from_the_live_set_with_its_ledger_and_a_uniform_
         pruned=["carried_old", "loser"],
     )
 
-    _export_inner_loop_models(exp1, loop, best_model="winner")
+    _export_inner_loop_models(exp1, loop, best_model="winner", cache_dir=None, fit_kwargs=None)
     update_registry_from_interpretation(exp1)
     exp2 = tmp_path / "experiment2"
     assert carry_forward_cognitive_models(exp1, exp2)
@@ -155,7 +155,7 @@ def test_export_removes_a_starting_model_the_loop_dropped_as_unfittable(tmp_path
         zoo=["seed_a", "winner"],
         pruned=[],
     )
-    _export_inner_loop_models(exp1, loop, best_model="winner")
+    _export_inner_loop_models(exp1, loop, best_model="winner", cache_dir=None, fit_kwargs=None)
     assert _manifest_names(exp1) == ["seed_a", "winner"]
     assert not (exp1 / "cognitive_models" / "seed_b.py").exists()
 
@@ -168,7 +168,7 @@ def test_export_is_idempotent(tmp_path):
         pruned=["carried_old"],
     )
     for _ in range(2):
-        _export_inner_loop_models(exp1, loop, best_model="winner")
+        _export_inner_loop_models(exp1, loop, best_model="winner", cache_dir=None, fit_kwargs=None)
     assert _manifest_names(exp1) == ["seed_a", "winner"]
     assert (exp1 / "cognitive_models" / LEDGER_FILENAME).exists()
 
@@ -178,7 +178,7 @@ def test_export_refuses_a_best_model_outside_the_zoo(tmp_path):
         tmp_path, cognitive=["seed_a"], zoo=["seed_a", "winner"], pruned=[]
     )
     with pytest.raises(ValueError, match="not in the inner-loop zoo"):
-        _export_inner_loop_models(exp1, loop, best_model="ghost")
+        _export_inner_loop_models(exp1, loop, best_model="ghost", cache_dir=None, fit_kwargs=None)
 
 
 def test_carry_forward_without_a_ledger_copies_the_model_set_only(tmp_path):
@@ -186,7 +186,7 @@ def test_carry_forward_without_a_ledger_copies_the_model_set_only(tmp_path):
         tmp_path, cognitive=["seed_a"], zoo=["seed_a", "winner"], pruned=[]
     )
     (loop / LEDGER_FILENAME).unlink()
-    _export_inner_loop_models(exp1, loop, best_model="winner")
+    _export_inner_loop_models(exp1, loop, best_model="winner", cache_dir=None, fit_kwargs=None)
     exp2 = tmp_path / "experiment2"
     assert carry_forward_cognitive_models(exp1, exp2)
     assert _manifest_names(exp2) == ["seed_a", "winner"]
@@ -229,7 +229,7 @@ def test_wrapper_names_the_run_starting_models_and_labels_the_ledger(
         fake_inner_loop,
     )
 
-    def fake_export(e, l, *, best_model):
+    def fake_export(e, l, *, best_model, cache_dir, fit_kwargs):
         captured["export_best"] = best_model
         return e
 

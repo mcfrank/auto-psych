@@ -201,7 +201,10 @@ def reprune_experiment(
         # selection), so the end-of-experiment step must too.
         selection=LOO,
     )
-    _export_inner_loop_models(exp_dir, loop_dir, best_model=result["best_model"])
+    _export_inner_loop_models(
+        exp_dir, loop_dir, best_model=result["best_model"],
+        cache_dir=cache_dir, fit_kwargs=fit_kwargs,
+    )
     finish_model_loop_stage(exp_dir)
 
     now_retired = json.loads(history_path.read_text(encoding="utf-8"))[-1].get(

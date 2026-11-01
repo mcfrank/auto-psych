@@ -196,7 +196,7 @@ def _outer_wrapper_capture(tmp_path, monkeypatch, exp_dir):
     monkeypatch.setattr(
         mlr,
         "_export_inner_loop_models",
-        lambda e, l, *, best_model: e,
+        lambda e, l, *, best_model, cache_dir, fit_kwargs: e,
     )
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",

@@ -872,6 +872,37 @@ def load_cached_fit(
     return fitted
 
 
+def file_cached_fit_under(
+    name: str,
+    models_dir: Path,
+    alias: str,
+    responses_path: Path,
+    *,
+    cache_dir: Path,
+    **fit_kwargs: Any,
+) -> None:
+    """Hard-link ``name``'s cached fit, and its near-miss refit when one is
+    cached, under ``alias``, for a model whose file is copied under that name.
+
+    The fingerprint is built from the file's bytes, not its name, so
+    :func:`load_cached_fit` of ``alias`` then finds the same fits. Raises
+    :class:`FitNotCached` when the first fit is missing.
+    """
+    models_dir, responses_path, cache_dir = Path(models_dir), Path(responses_path), Path(cache_dir)
+    settings = resolve_fit_settings(name, models_dir, fit_kwargs)
+    first = fit_fingerprint(name, models_dir, responses_path, settings)
+    refit = fit_fingerprint(name, models_dir, responses_path, refit_settings(settings, first))
+    if not cached_fit_path(cache_dir, name, first).exists():
+        raise FitNotCached(
+            f"No cached fit of {name!r} on {responses_path} in {cache_dir} "
+            f"(settings {settings}) to file under {alias!r}."
+        )
+    for fingerprint in (first, refit):
+        source = cached_fit_path(cache_dir, name, fingerprint)
+        if source.exists():
+            os.link(source, cached_fit_path(cache_dir, alias, fingerprint))
+
+
 def refit_settings(settings: Dict[str, Any], first_fingerprint: str) -> Dict[str, Any]:
     """The settings of a near miss's refit: ``ESCALATED_TARGET_ACCEPT`` and a
     random seed of its own.

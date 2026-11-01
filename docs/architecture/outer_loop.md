@@ -21,7 +21,9 @@ renamed in, `src/runtime/atomic_files.py`), which makes `--resume` and
   posterior on all data so far, **loaded from the previous model loop's own
   fits** (`load_cached_fit`, at the run's sampler settings): nothing is
   sampled, and a missing fit raises `FitNotCached` (user decision 2026-10-08;
-  `DESIGN_TWIN_*` survive only for `validate_lazy_eig.py`).
+  `DESIGN_TWIN_*` survive only for `validate_lazy_eig.py`). A fallback-named
+  survivor exported as `inner_loop_model[_k]` has its fit filed under that
+  name by the export (`file_cached_fit_under`).
   The search is lazy batched greedy in float32 (an approximation validated by
   `scripts/subjective_randomness/validate_lazy_eig.py`), and each Monte Carlo
   scenario **leaves out the draw that generated it** (`DESIGN_LEAVE_ONE_OUT`),
