@@ -1,0 +1,13 @@
+{
+  "models": [
+    "heading_direction_range_extrapolation",
+    "digit_sum_open_ended_range_discount",
+    "probe_as_weak_example",
+    "open_ended_ranges_heading_direction",
+    "margin_beyond_examples_range_prior",
+    "first_example_marks_range_edge",
+    "margin_and_heading_range_prior",
+    "probe_with_margin_range_prior"
+  ],
+  "ledger_sha256": "76669edda065626af645a1586c66b8d6a4e233a18824f9794ed51d08fcdfd5cc"
+}

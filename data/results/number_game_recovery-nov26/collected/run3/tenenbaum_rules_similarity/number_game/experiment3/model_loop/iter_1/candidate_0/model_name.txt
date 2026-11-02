@@ -1,0 +1,1 @@
+single_kind_commitment_inference

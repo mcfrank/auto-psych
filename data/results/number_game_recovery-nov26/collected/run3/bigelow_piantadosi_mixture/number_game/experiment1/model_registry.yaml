@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  complement_stray_reliability_concepts: 0.125
+  compressed_number_line_ranges: 0.125
+  digit_sum_concepts: 0.125
+  family_pooled_rule_prior: 0.125
+  family_pooled_uncertain_reliability: 0.125
+  family_pooled_win_stay_lose_sample: 0.125
+  inner_loop_model: 0.125
+  uncertain_reliability_noise_concepts: 0.125

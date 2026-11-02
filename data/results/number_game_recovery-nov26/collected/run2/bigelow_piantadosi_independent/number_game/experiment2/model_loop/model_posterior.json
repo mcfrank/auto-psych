@@ -1,0 +1,57 @@
+{
+  "posteriors": {
+    "sparse_rule_familiarity_within_kinds": 0.018074,
+    "rule_or_range_kind_commitment": 0.155512,
+    "parity_veto_sparse_familiar_rules": 0.826414
+  },
+  "elpd_loo": {
+    "sparse_rule_familiarity_within_kinds": -2029.2168,
+    "rule_or_range_kind_commitment": -2027.0645,
+    "parity_veto_sparse_familiar_rules": -2025.3941
+  },
+  "n_trials": 4500,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "parity_veto_sparse_familiar_rules": {
+      "rank": 0,
+      "elpd_loo": -2025.3941158675889,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.826414048884667,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "rule_or_range_kind_commitment": {
+      "rank": 1,
+      "elpd_loo": -2027.064487713178,
+      "elpd_diff": 1.6703718455892158,
+      "dse": 3.34118928020271,
+      "dse_clustered": 3.358594913948766,
+      "weight": 0.15551218243346643,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "sparse_rule_familiarity_within_kinds": {
+      "rank": 2,
+      "elpd_loo": -2029.2167501423462,
+      "elpd_diff": 3.82263427475732,
+      "dse": 2.835693954367716,
+      "dse_clustered": 3.0911640094199972,
+      "weight": 0.018073768681866564,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "parity_veto_sparse_familiar_rules"
+}

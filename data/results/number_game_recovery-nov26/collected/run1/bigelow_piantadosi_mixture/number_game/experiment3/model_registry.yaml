@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  distance_hesitant_concept_extension: 0.125
+  evidence_graded_misfit_tolerance: 0.125
+  gamma_width_range_prior_guess: 0.125
+  range_reestimating_span_hesitant_guess: 0.125
+  rule_only_distance_hesitation: 0.125
+  rule_only_span_extrapolation_guess: 0.125
+  span_extrapolation_hesitant_guess: 0.125
+  span_extrapolation_hesitant_guess_2: 0.125

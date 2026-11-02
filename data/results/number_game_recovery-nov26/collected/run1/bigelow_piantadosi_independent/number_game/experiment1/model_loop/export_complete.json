@@ -1,0 +1,13 @@
+{
+  "models": [
+    "graded_profile_with_neighborhoods",
+    "log_compressed_number_line_intervals",
+    "log_compressed_interval_sampling",
+    "round_boundary_interval_prior",
+    "parity_restricted_range_conjunctions",
+    "erlang_width_compressed_intervals",
+    "parity_restricted_compressed_intervals",
+    "weber_scaled_profile_neighborhoods"
+  ],
+  "ledger_sha256": "99e78b745dc17831726e3cb45f8e464ff3967f700d0db27c1d975a49039b6b16"
+}

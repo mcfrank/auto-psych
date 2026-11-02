@@ -1,0 +1,1 @@
+partial_strong_sampling_rules_intervals

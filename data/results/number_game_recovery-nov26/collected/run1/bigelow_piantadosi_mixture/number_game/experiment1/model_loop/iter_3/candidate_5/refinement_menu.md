@@ -1,0 +1,117 @@
+# Refinement menu
+
+The models you may refine, other than the incumbent `first_guess_win_stay_concepts`. Each entry is one mechanism: its hypothesis in full as its author stated it, how it stands, and where its source is. This is a menu, not a list of what is ruled out: a pruned model lost to the best model on the data it was scored on, by the stated margin, but its mechanism may be partly right — and a model that lost narrowly is the most promising target here. Read the source of the model you pick before you write anything.
+
+## Live models other than the incumbent (in the set; best first)
+
+### power_law_endpoints_erlang_width — rank 1, 1.9 ± 3.3 nats behind the best (0.6× dse: statistically tied with the best), ELPD-LOO -868.5
+
+**Hypothesis:** Refinement of power_law_interval_endpoints: people do the same Bayesian concept learning over the 45 rules and all intervals of 1-100 (size principle, 10% noisy examples, a prior weight per rule) with interval endpoints whose prior plausibility follows a fitted power law over the number line, but the one change is that they also expect a numerical range to have a characteristic width: the interval prior is additionally weighted by an Erlang density on the interval's size with a fitted typical size (the component taken from erlang_interval_prior_concepts). So where a range lies on the number line and how broad it is both shape the prior, which jointly sets how far people generalise beyond the examples' span for small- versus large-number sets.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/power_law_endpoints_erlang_width.py`
+
+### round_endpoint_interval_concepts — rank 2, 2.6 ± 2.6 nats behind the best (1.0× dse: statistically tied with the best), ELPD-LOO -869.3
+
+**Hypothesis:** Refinement of erlang_interval_prior_concepts: people do the same Bayesian concept learning over the 45 rules and all intervals of 1-100 (size principle, 10% noisy examples, a free prior weight per rule, an Erlang prior on interval size), but when they imagine the program picking a numerical range they favour ranges with round-number boundaries (starting at 1 or a multiple of ten, ending at a multiple of ten, e.g. "20 to 40" or "1 to 50") over arbitrary ones like "17 to 43". The one change is a fitted prior boost for each round endpoint, so generalisation from clustered examples extends to, and then drops off sharply at, the nearest decade boundaries rather than fading smoothly with width alone.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/round_endpoint_interval_concepts.py`
+
+### erlang_interval_prior_concepts — rank 3, 2.9 ± 2.6 nats behind the best (1.1× dse: statistically tied with the best), ELPD-LOO -869.6
+
+**Hypothesis:** Refinement of bigelow_piantadosi_independent: people do the same Bayesian concept learning over the 45 rules and all intervals of 1-100 (size principle, 10% noisy examples, a free prior weight per rule), but they do not regard every interval as equally plausible a priori. Instead, their prior over intervals follows an Erlang density on the interval's size with a fitted characteristic size, so very narrow ranges hugging the examples are a priori implausible and ranges of a typical intermediate width are favoured; this one change controls how far beyond the examples' span people generalise when they think in terms of a numerical range.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/erlang_interval_prior_concepts.py`
+
+### power_law_interval_endpoints — rank 4, 4.4 ± 4.4 nats behind the best (1.0× dse: statistically tied with the best), ELPD-LOO -871.1
+
+**Hypothesis:** Refinement of bigelow_piantadosi_independent: people do the same Bayesian concept learning over the 45 rules and all intervals of 1-100 (size principle, 10% noisy examples, a prior weight per rule), but when they imagine the program picking a numerical range they do not treat every endpoint as equally likely: the two endpoints are drawn from a power-law distribution over 1-100 whose exponent is fitted, so a range's prior plausibility depends on where on the number line it lies (among small versus large numbers), not just on whether it exists. This magnitude-dependent prior on interval endpoints is the one change; an exponent of zero recovers the incumbent's uniform endpoints. It changes how strongly range concepts compete with rules for small-number versus large-number examples.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/power_law_interval_endpoints.py`
+
+### similarity_route_erlang_concepts — rank 5, 4.7 ± 2.6 nats behind the best (1.8× dse: statistically tied with the best), ELPD-LOO -871.4
+
+**Hypothesis:** Refinement of erlang_interval_prior_concepts: people do the same Bayesian concept learning over the 45 rules and all intervals of 1-100 (size principle, 10% noisy examples, a free prior weight per rule, an Erlang prior on interval size), but on a fitted fraction of judgements they do not consult the inferred concept at all and instead answer by number-line similarity, saying "yes" more the closer the target is to the nearest example (a component taken from the exemplar-similarity models). The one change is this similarity route: it makes people endorse far-away numbers that fit a rule only through a surface property (such as sharing an example's last digit) less than pure concept learning predicts, and near neighbours of the examples more.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/similarity_route_erlang_concepts.py`
+
+### erlang_width_interval_concepts — rank 6, 5.9 ± 3.2 nats behind the best (1.9× dse: statistically tied with the best), ELPD-LOO -872.6
+
+**Hypothesis:** Refinement of bayesian_concepts_logodds_readout: people do the same Bayesian concept learning over the 45 mathematical rules and all intervals of 1-100 (size principle, 10% noisy examples) and answer through the same scaled, shifted log-odds readout, but they do not consider all interval sizes equally plausible a priori. The one change: an interval's prior depends on its width through an Erlang density with a fitted typical width, so people expect the program's range of numbers to have a characteristic breadth, which sets how far they generalise beyond the span of the examples independently of the size principle.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/erlang_width_interval_concepts.py`
+
+### bigelow_piantadosi_independent — rank 7, 6.1 ± 3.9 nats behind the best (1.6× dse: statistically tied with the best), ELPD-LOO -872.8
+
+**Hypothesis:** Bayesian concept learning over 45 rules (odd, even, primes, squares, cubes, powers of 2-10, powers of 2 without 32 or with 37, multiples of 3-9, 11 and 12, ending in 0-9, containing the digit 0-9) and every interval of 1-100, with a prior weight inferred for each rule separately and a share lambda_0 for the rules as a group; each interval has prior (1 - lambda_0) / 100^2. Examples are sampled from the concept (the size principle), 10% of them uniformly from 1-100, and "yes" is the posterior probability that the concept contains the target.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/bigelow_piantadosi_independent.py`
+
+### bayesian_concepts_logodds_readout — rank 8, 6.5 ± 3.8 nats behind the best (1.7× dse: statistically tied with the best), ELPD-LOO -873.2
+
+**Hypothesis:** Refinement of bigelow_piantadosi_independent: people do the same Bayesian concept learning over the 45 rules and all intervals (size principle, 10% noisy examples), but they do not report the posterior probability of membership directly; instead they answer "yes" through a graded, possibly biased decision readout in which the log-odds of membership is scaled by a free confidence factor and shifted by a free yes/no criterion. This lets near-certain posteriors (e.g. for the examples themselves, or for numbers far outside the concept) map onto less extreme, empirically observed yes rates, and lets judges be more or less liberal than the posterior.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/bayesian_concepts_logodds_readout.py`
+
+### inferred_sampling_reliability_concepts — rank 9, 6.8 ± 4.9 nats behind the best (1.4× dse: statistically tied with the best), ELPD-LOO -873.5
+
+**Hypothesis:** Refinement of bigelow_piantadosi_independent: people do Bayesian concept learning over the same 45 rules and all intervals of 1-100, with the size principle, but how strongly they believe the examples were drawn from the concept (rather than at random from 1-100) is a free parameter inferred from the data instead of being fixed at 90%. This one change sets how sharply the size principle favours small, specific concepts over broad ones, and so how tightly people generalise from a few examples.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/inferred_sampling_reliability_concepts.py`
+
+### leaky_memory_concept_learning — rank 10, 7.7 ± 4.0 nats behind the best (1.9× dse: statistically tied with the best), ELPD-LOO -874.4
+
+**Hypothesis:** People do Bayesian concept learning over mathematical rules and intervals (with the size principle), but they read the examples one at a time and their memory of earlier examples fades: each example's evidence is discounted by a free forgetting factor for every example shown after it, so the most recent example counts fully and the first one of a long set counts least. As a result, concepts that fit only the later examples (and rules or intervals violated by an early example) remain plausible, and generalisation from long sets is broader and recency-biased.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/leaky_memory_concept_learning.py`
+
+### lapse_biased_guess_concepts — rank 11, 9.0 ± 3.8 nats behind the best (2.4× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -875.7
+
+**Hypothesis:** People do the same Bayesian concept learning over the 45 rules and all intervals of 1-100 as the simplest model (size principle, 10% noisy examples, a prior weight per rule), and on most trials they answer by reporting the posterior probability that the concept contains the target; but on a fitted fraction of trials they lapse — they do not consult the inferred concept at all and instead guess, answering "yes" with a fitted guessing bias. This all-or-none attentional lapse with a biased guess is the one change: it puts a floor and a ceiling on yes rates that are the same for every stimulus, rather than graded softening of confident posteriors.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/lapse_biased_guess_concepts.py`
+
+### serial_position_weighted_concepts — rank 12, 9.0 ± 4.2 nats behind the best (2.1× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -875.7
+
+**Hypothesis:** People do Bayesian concept learning over the same 45 mathematical rules and all intervals of 1-100 (size principle, 10% noisy examples), but they do not weigh the examples equally: because the examples are seen in sequence, each example's evidence is weighted by its serial position, with a single fitted order-bias parameter that shifts weight toward the most recent examples (recency) or toward the first ones (primacy) while keeping the total amount of evidence fixed. So the same examples shown in different orders lead to different generalisations, favouring concepts that fit the weighted-up examples.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/serial_position_weighted_concepts.py`
+
+### partial_strong_sampling_rules_intervals — rank 13, 94.2 ± 22.0 nats behind the best (4.3× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -960.9
+
+**Hypothesis:** Refinement of the dropped `tenenbaum_rules_similarity` model (Bayesian concept learning over 33 mathematical rules and all intervals of 1-100, rules sharing a prior fraction equally and intervals weighted by an Erlang density on their size). The one change: learners do not assume every example was deliberately sampled from the concept (pure strong sampling, the size principle); they treat each example as drawn from the concept with probability theta (likelihood 1/|concept|) and otherwise as an arbitrary number that merely happens to fall in it (weak sampling, likelihood independent of concept size), with theta fitted — so the size principle is only partly applied, and generalisation is broader, e.g. beyond the examples' range and to larger rules, than strong sampling predicts. (The original's crash on cross-validation folds, a data-shape dependence on the fold, is also fixed.)
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/partial_strong_sampling_rules_intervals.py`
+
+### map_single_concept_selection — rank 14, 235.9 ± 23.1 nats behind the best (10.2× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -1102.6
+
+**Hypothesis:** People do not average over all the concepts consistent with the examples: they commit to the single most probable concept (a rule such as "powers of 2" or "multiples of 10", or a numeric interval, chosen by a fixed prior and the size principle) and answer "yes" exactly when the target belongs to that one concept, apart from occasional response errors. Generalisation is therefore all-or-none relative to the winning concept, with no graded uncertainty from runner-up concepts.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/map_single_concept_selection.py`
+
+### spread_scaled_exemplar_similarity — rank 15, 264.6 ± 29.6 nats behind the best (8.9× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -1131.3
+
+**Hypothesis:** People do not infer any mathematical rule; they generalize by numerical similarity alone, judging a target more likely to be produced the closer it lies to the individual examples on the number line. The breadth of that similarity gradient is set by how spread out the examples are: tightly clustered examples yield a narrow gradient, widely scattered examples a broad one, so the same distance counts for less when the examples cover a wide range.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/spread_scaled_exemplar_similarity.py`
+
+### exemplar_digit_magnitude_gcm — rank 16, 269.2 ± 25.6 nats behind the best (10.5× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -1135.9
+
+**Hypothesis:** People do not infer a hidden rule; they judge a target by its summed similarity to the remembered examples (an exemplar, generalized-context-model process). Similarity to each example decays exponentially with a city-block psychological distance built from how far apart the two numbers are in magnitude and whether they differ in their tens digit and in their ones digit, and the probability of "yes" grows with the target's total similarity to the examples relative to a response criterion.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/exemplar_digit_magnitude_gcm.py`
+
+### exemplar_similarity_number_line — rank 17, 298.9 ± 28.0 nats behind the best (10.7× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -1165.6
+
+**Hypothesis:** People do not induce any rule or interval: they judge a target by its summed perceptual similarity on the number line to the examples shown, with similarity decaying exponentially with numeric distance (an exemplar / GCM account), and say "yes" in proportion to that summed similarity relative to a fixed response criterion. This disagrees most sharply with the rule-and-interval learner in the gaps between widely spaced examples (e.g. 50 for the set 92,14,20,5, where an interval spanning the examples predicts "yes" but similarity predicts "no") and for targets just outside the examples' range (where the interval predicts "no" but similarity predicts "yes").
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/exemplar_similarity_number_line.py`
+
+### tversky_feature_contrast_similarity — rank 18, 310.0 ± 25.8 nats behind the best (12.0× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -1176.7
+
+**Hypothesis:** People do not infer a hidden rule or range; they judge a target by Tversky-style feature similarity to the examples. Each number is represented by its salient properties (parity, primality, being a square, cube or power, multiples, final digit, digits it contains, and which band of ten it falls in), each property weighted by how distinctive it is (rarer properties count more), and the target's similarity to the examples is the weighted features it shares with them relative to the features the examples have that it lacks and the features it has that the examples lack (Tversky's ratio contrast model); the probability of "yes" rises with that similarity.
+
+**Source:** `/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1/experiment1/model_loop/models/tversky_feature_contrast_similarity.py`
+
+## Pruned models (out of the set; narrowest margin first)
+
+No model has been pruned yet in this project.

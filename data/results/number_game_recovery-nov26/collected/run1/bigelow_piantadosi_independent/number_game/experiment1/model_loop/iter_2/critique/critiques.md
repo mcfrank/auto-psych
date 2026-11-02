@@ -1,0 +1,12 @@
+# Critique of `exception_tolerant_tempered_mixture`
+
+5 of 8 evaluated test statistics show a significant discrepancy (p ≤ 0.05), over 1000 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **fine_proximity_gradient** — Among non-example targets within 10 of the nearest example, yes rate at distance 1-3 minus at distance 4-10; observed above null means human generalisation decays over short numerical distances more steeply than the model's interval hypotheses predict, below null means flatter. (observed -0.151 vs null mean -0.068, z=-3.53, p=0.004, q=0.0107) [survives FDR]
+- **outlier_example_neighborhood** — For sets of >=3 examples where exactly one example breaks the majority last digit, yes rate among non-example targets within 3 of that outlier example that do not end in the majority digit; observed above null means people treat the exceptional example as a genuine member and generalise around it (e.g. 27 -> 20s) more than the model, which discounts it as noise. (observed 0.45 vs null mean 0.658, z=-3.40, p=0.004, q=0.0107) [survives FDR]
+- **any_shared_digit_far** — Among non-example targets more than 5 from the nearest example, yes rate for targets sharing any digit (either position) with at least one example minus targets sharing no digit with any example; observed above null means people use digit-level similarity to individual examples more than the model's whole-rule hypotheses predict. (observed 0.209 vs null mean 0.151, z=3.40, p=0.002, q=0.0107) [survives FDR]
+- **set_breadth_spread** — Standard deviation across example sets (with >=20 responses) of each set's mean yes rate; observed above null means sets differ in how broadly people generalise more than the model predicts (some sets near-zero, others very broad), below null means less. (observed 0.18 vs null mean 0.159, z=2.49, p=0.02, q=0.032) [survives FDR]
+- **cell_unanimity** — Fraction of (set, target) cells with >=2 responses in which all responses agree; observed above null means responses are more deterministic/extreme (closer to 0 or 1 per item) than the model's graded posterior predicts, below null means more disagreement. (observed 0.62 vs null mean 0.558, z=2.46, p=0.00999, q=0.02) [survives FDR]

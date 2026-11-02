@@ -1,0 +1,5 @@
+reserved_for_new: 0.0
+theories:
+  parity_veto_sparse_familiar_rules: 0.3333333333333333
+  rule_or_range_kind_commitment: 0.3333333333333333
+  sparse_rule_familiarity_within_kinds: 0.3333333333333333

@@ -1,0 +1,25 @@
+- [Digit concepts are key](digit-concepts-key.md) — contains-digit rules explain most of the fit gap
+- [All-or-none rule commitment fails](all-or-none-rule-commitment-fails.md) — MAP smallest-rule learner ~170 nats behind
+- [Number-game ceiling](number-game-ceiling.md) — one-parameter tweaks gain only 0-6 nats; round-2 screens (sampling mix, decade intervals, drift, size prior) listed
+- [Lapse small gain](lapse-small-gain.md) — lapse/noise tweaks on digit model gain only ~2-4 nats; don't trust ad-hoc MAP loglik
+- [Fit speed budget](fit-speed-budget.md) — admission is 7000 iters/chain; benchmark grad time; sparse CSR + target_accept 0.9 tricks
+- [Soft criterion decision rule](soft-criterion-decision-rule.md) — criterion/gain response map ties the lapse model (~-906); decision-rule slot saturated
+- [Hierarchical rule prior shrinks](hierarchical-rule-prior-shrinks.md) — pooled rule saliences collapse to equal prior (tau≈0.15), ELPD tied
+- [Iter-2 screens](iter2-screens.md) — concept-family additions don't help; rule-breadth prior +1.3 nats submitted
+- [Concept exemplar summed similarity](concept-exemplar-summed-similarity.md) — additive exemplar over concept similarity ~-1141 LL, ruled out
+- [Iter-3 screens](iter3-screens.md) — without-replacement sampling +0.5 nats (0 params) submitted; fuzzy edges/quad prior no gain
+- [Iter-3 noise ceiling + WOR](iter3-noise-ceiling-wor.md) — model at binomial ceiling; 5 homogeneous participants; without-replacement ties incumbent, 0 params
+- [Iter-3 free outlier](iter3-free-outlier.md) — free stray rate on incumbent: +1.1 nats; p_yes compile pitfall
+- [Iter-3 concept-family screens](iter3-concept-family-screens.md) — residue classes, APs, rule∩range all at ceiling; twos-runs submitted
+- [Iter-3 process screens](iter3-process-screens.md) — forgetting/carry-over/log-line/pedagogical all tie; Chebyshev tabulation speed trick
+- [Iter-4 critique proxy stats](iter4-critique-proxy-stats.md) — stimulus-only Bayesian proxy for slicing PPC stats; earlier critiques never significant
+- [Critique stats: no imports](critique-stat-no-imports.md) — any import line (even pandas) gets a test stat rejected; np/pd/math are injected
+- [Iter-4 occam+WOR](iter4-occam-wor.md) — occam all-concept prior + without-replacement submitted, smoke -903.5
+- [Iter-4 sampling-weight screens](iter4-sampling-weight-screens.md) — magnitude/round-number production weights and trial drift tie; round-number model submitted; novelty pool lacks trial_index
+- [Iter-4 WOR free stray](iter4-wor-free-stray.md) — free stray rate on WOR incumbent +1.2 nats; in-set discount +0.3; Chebyshev interval template
+- [Iter-4 WOR + free outlier](iter4-wor-free-outlier.md) — +1.1 nats in-sample, Chebyshev log-eps tables, submitted
+- [Iter-4 process screens](iter4-process-screens.md) — generative judgment -40, fixed arbitration -117, rest tie; description-length cost submitted
+- [Iter-4 magnitude sampling screens](iter4-magnitude-sampling-screens.md) — magnitude-biased sampling, interval evidence weight, family temperature: all null
+- [Iter-4 range-space screens](iter4-range-space-screens.md) — log-line/width prior/decade ranges lose; multiple-of-5 ranges -5.6 nats submitted
+- [Iter-4 shown-target repair](iter4-shown-target-repair.md) — dup-rejected free stray; resubmitted shown-target no-repeat discount
+- [Iter-4 WSLS repair](iter4-wsls-repair.md) — desc-length cost near-duplicate; win-stay/lose-shift ~48 nats worse, submitted

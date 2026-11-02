@@ -1,0 +1,7 @@
+- [check_candidate runtime](check_candidate_runtime.md) — ~7 min for sticky-guess models; use long timeout
+- [gamma width scale ridge](gamma_width_scale_ridge.md) — log_sigma ridge slows gamma_width fits; use linear rate parameterisation
+- [interval space is load-bearing](interval_space_is_load_bearing.md) — single range-estimate replacements of intervals lose ~230+ nats
+- [debugging pymc predictions](debugging_pymc_predictions.md) — compile_fn samples RVs; CSR/closed-form trick for fast interval sums
+- [concept space saturated](concept_space_saturated.md) — added rule families (progressions, unions, named sequences) don't help the best model
+- [extend factor tweaks duplicate](extend_factor_tweaks_duplicate.md) — small reach/skew tweaks fail novelty; change update dynamics
+- [hesitation variants flat](hesitation_variants_flat.md) — span-hesitation tweaks fit equal; check novelty RMSE on novelty_pool.json first

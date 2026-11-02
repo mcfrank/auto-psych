@@ -1,0 +1,103 @@
+- [Digit concepts are key](digit-concepts-key.md) — contains-digit rules explain most of the fit gap
+- [All-or-none rule commitment fails](all-or-none-rule-commitment-fails.md) — MAP smallest-rule learner ~170 nats behind
+- [Number-game ceiling](number-game-ceiling.md) — one-parameter tweaks gain only 0-6 nats; round-2 screens (sampling mix, decade intervals, drift, size prior) listed
+- [Lapse small gain](lapse-small-gain.md) — lapse/noise tweaks on digit model gain only ~2-4 nats; don't trust ad-hoc MAP loglik
+- [Fit speed budget](fit-speed-budget.md) — admission is 7000 iters/chain; benchmark grad time; sparse CSR + target_accept 0.9 tricks
+- [Soft criterion decision rule](soft-criterion-decision-rule.md) — criterion/gain response map ties the lapse model (~-906); decision-rule slot saturated
+- [Hierarchical rule prior shrinks](hierarchical-rule-prior-shrinks.md) — pooled rule saliences collapse to equal prior (tau≈0.15), ELPD tied
+- [Iter-2 screens](iter2-screens.md) — concept-family additions don't help; rule-breadth prior +1.3 nats submitted
+- [Concept exemplar summed similarity](concept-exemplar-summed-similarity.md) — additive exemplar over concept similarity ~-1141 LL, ruled out
+- [Iter-3 screens](iter3-screens.md) — without-replacement sampling +0.5 nats (0 params) submitted; fuzzy edges/quad prior no gain
+- [Iter-3 noise ceiling + WOR](iter3-noise-ceiling-wor.md) — model at binomial ceiling; 5 homogeneous participants; without-replacement ties incumbent, 0 params
+- [Iter-3 free outlier](iter3-free-outlier.md) — free stray rate on incumbent: +1.1 nats; p_yes compile pitfall
+- [Iter-3 concept-family screens](iter3-concept-family-screens.md) — residue classes, APs, rule∩range all at ceiling; twos-runs submitted
+- [Iter-3 process screens](iter3-process-screens.md) — forgetting/carry-over/log-line/pedagogical all tie; Chebyshev tabulation speed trick
+- [Iter-4 critique proxy stats](iter4-critique-proxy-stats.md) — stimulus-only Bayesian proxy for slicing PPC stats; earlier critiques never significant
+- [Critique stats: no imports](critique-stat-no-imports.md) — any import line (even pandas) gets a test stat rejected; np/pd/math are injected
+- [Iter-4 occam+WOR](iter4-occam-wor.md) — occam all-concept prior + without-replacement submitted, smoke -903.5
+- [Iter-4 sampling-weight screens](iter4-sampling-weight-screens.md) — magnitude/round-number production weights and trial drift tie; round-number model submitted; novelty pool lacks trial_index
+- [Iter-4 WOR free stray](iter4-wor-free-stray.md) — free stray rate on WOR incumbent +1.2 nats; in-set discount +0.3; Chebyshev interval template
+- [Iter-4 WOR + free outlier](iter4-wor-free-outlier.md) — +1.1 nats in-sample, Chebyshev log-eps tables, submitted
+- [Iter-4 process screens](iter4-process-screens.md) — generative judgment -40, fixed arbitration -117, rest tie; description-length cost submitted
+- [Iter-4 magnitude sampling screens](iter4-magnitude-sampling-screens.md) — magnitude-biased sampling, interval evidence weight, family temperature: all null
+- [Iter-4 range-space screens](iter4-range-space-screens.md) — log-line/width prior/decade ranges lose; multiple-of-5 ranges -5.6 nats submitted
+- [Iter-4 shown-target repair](iter4-shown-target-repair.md) — dup-rejected free stray; resubmitted shown-target no-repeat discount
+- [Iter-4 WSLS repair](iter4-wsls-repair.md) — desc-length cost near-duplicate; win-stay/lose-shift ~48 nats worse, submitted
+- [Exp2 iter-0 critique](exp2-iter0-critique.md) — exp2 data layout, residual hot spots, proxy template path
+- [Exp2 pure rule induction](exp2-pure-rule-induction.md) — no-ranges model ~420 nats worse on exp2; ranges essential
+- [Exp2 position-graded trust](exp2-position-graded-trust.md) — order-graded stray rate +1.1 nats, submitted
+- [Exp2 iter-0 range Occam](exp2-iter0-range-occam.md) — exp2 screens all within 1.2 nats; outlier 0.9 sharp; range-only occam submitted
+- [Exp2 narrow-range prior](exp2-iter0-narrow-range-prior.md) — exp2 MAP screens; guess_yes→1; width^-k interval prior +1.2 nats submitted
+- [Exp2 iter-0 distortion screens](exp2-iter0-distortion-screens.md) — noise/rule-check errors/sampling mix/sample-size neglect null; range-width prior +1.2 submitted
+- [Exp2 iter-0 screens](exp2-iter0-screens.md) — stray rate peaked at 0.9; interval width prior +1.2 nats submitted
+- [Exp2 separate rule/range specificity](exp2-iter0-separate-specificity.md) — repair of dup range occam: added rule breadth h (≈-0.06), novelty RMSE ~0.006; compile_fn buffer pitfall
+- [Exp2 final-digit rule discount](exp2-final-digit-rule-discount.md) — width-prior dup rejected; ends-in family weight submitted, RMSE 0.004
+- [Exp2 relative-width prior](exp2-iter0-relative-width-prior.md) — Weber (width/midpoint)^-k range prior +2.7 nats MAP, distinct from abs width; submitted
+- [Exp2 iter-1 critique](exp2-iter1-critique.md) — narrow-range incumbent MAP, tight-cluster/edge/below-asymmetry hot spots, MAP-proxy stats
+- [Exp2 majority-vote decision](exp2-iter1-majority-vote.md) — k-sample majority vote (betainc) ties, submitted
+- [Exp2 set feature contrast](exp2-set-feature-contrast.md) — Tversky set-shared-feature similarity ~-2470 LL, similarity slots lose ~540 nats
+- [Exp2 digit-sum concepts](exp2-iter1-digit-sum-concepts.md) — near-miss/union families null; digit-sum family +2 nats MAP, submitted
+- [Exp2 iter-1 heterogeneous width bias](exp2-iter1-heterogeneous-width-bias.md) — gamma population spread +0.8 submitted; endpoint-position priors ≈ rel-width
+- [Exp2 open-ended range discount](exp2-iter1-open-ended-range.md) — exp2 has 2 participant groups on different cells; edge screens null; open-ended range discount +1.6 submitted
+- [Exp2 iter-1 range location prior](exp2-iter1-range-location-prior.md) — lo-bound range prior +1.8 nats MAP submitted; fuzzy edges null; Taylor-moment 25x speed trick
+- [Exp2 iter-2 critique](exp2-iter2-critique.md) — digit-sum MAP 1928; recency z=2.1 top residual; raw-slice stats submitted
+- [Exp2 iter-2 open-ended + digit sums](exp2-iter2-open-ended-digit-sums.md) — digit-sum graft on open-ended ranges, MAP +1.4 over parent, ~4 over incumbent; submitted
+- [Exp2 iter-2 open-ended + digit-sum](exp2-iter2-open-ended-digit-sum.md) — endpoint discount on digit_sum incumbent +2.2 nats MAP, submitted
+- [Exp2 multiplicative exemplar](exp2-iter2-multiplicative-exemplar.md) — geometric-mean concept-similarity exemplar ~-2813 LL, ~880 nats behind; product form degenerate
+- [Exp2 iter-2 open-range graft](exp2-iter2-open-range-graft.md) — open-ended discount on digit-sum incumbent +2.2 MAP, submitted
+- [Exp2 iter-2 sequence direction](exp2-iter2-sequence-direction.md) — forgetting ruled out; direction-of-travel range credit +0.5 nats submitted; NaN grad pitfall
+- [Exp2 iter-2 heading direction](exp2-iter2-heading-direction.md) — forgetting null; last-step heading range prior +2.0 nats MAP submitted; beta**0 NaN grad
+- [Exp2 iter-2 digit-sum + location prior](exp2-iter2-digit-sum-location-prior.md) — sibling slots duplicate grafts; lo-bound prior on digit_sum resubmitted
+- [Exp2 iter-3 critique](exp2-iter3-critique.md) — raw-slice contrasts submitted; participant groups share identical trials, homogeneous within group
+- [Exp2 iter-3 open-ended + heading](exp2-iter3-open-ended-heading.md) — heading graft on open-ended incumbent, smoke -1925.7, submitted
+- [Exp2 iter-3 probe as weak example](exp2-iter3-probe-as-weak-example.md) — target as tempered extra example, smoke -1926.7, submitted
+- [Exp2 iter-3 margin beyond examples](exp2-iter3-margin-beyond-examples.md) — range-prior screens on open-ended incumbent ≤1.2 nats; overhang prior submitted
+- [Exp2 iter-3 consideration set](exp2-iter3-consideration-set.md) — kind commitment κ→1 dup; consideration-set 1-(1-π)^N flat LL, submitted
+- [Exp2 iter-3 heading+open graft](exp2-iter3-heading-open-graft.md) — open discount on heading model, MAP +1.3 over parents, submitted
+- [Exp2 iter-3 spread coverage](exp2-iter3-spread-coverage.md) — new families/reversal/decades null; examples-spread-across-concept likelihood +0.45 MAP, submitted
+- [Exp2 iter-4 critique](exp2-iter4-critique.md) — 8 new raw-slice stats on margin incumbent; iter-3 got 0/8
+- [Exp2 iter-4 probe+margin graft](exp2-iter4-probe-margin-graft.md) — margin prior on probe model, submitted; critique 0/8
+- [Exp2 iter-4 prototype ratio similarity](exp2-iter4-prototype-ratio-similarity.md) — share-weighted feature prototype Tversky ratio ~-2154, best similarity model, submitted
+- [Exp2 iter-4 strong/weak sampling](exp2-iter4-strong-weak-sampling.md) — strong/weak sampling mixture on margin incumbent submitted; 14 Taylor terms suffice (2x faster)
+- [Exp2 iter-4 first example edge](exp2-iter4-first-example-edge.md) — order screens ≤0.35 nats; first-shown-end margin submitted (0 params)
+- [Exp2 iter-4 size principle rules only](exp2-iter4-size-principle-rules-only.md) — weak sampling for ranges ~60 nats worse; mixture at boundary = dup
+- [Exp3 iter-0 critique](exp3-iter0-critique.md) — exp3 layout (no pid, session drift, all-even set low yes); 8 raw-slice stats
+- [Exp3 set-adaptive attention exemplar](exp3-iter0-set-adaptive-attention-exemplar.md) — GCM with attention to set-shared dimensions, smoke LL -4240 (~1000 behind), submitted
+- [Exp3 drifting criterion](exp3-iter0-drifting-criterion.md) — session criterion drift ties base; raw drift is stimulus-driven
+- [Exp3 iter-0 forward-reach heading](exp3-iter0-forward-reach-heading.md) — exp3 heading beta≈0; all screens ≤0.7 nats; alpha peaked at 0.9; forward-reach heading submitted
+- [Exp3 iter-0 upward room](exp3-iter0-upward-room.md) — exp3 margin/probe/heading screens all tie at ~-3190 MAP; stray 0.9 exact; upward-only room submitted
+- [Exp3 iter-0 concept-family screens](exp3-iter0-concept-family-screens.md) — near-miss/named sequences null on exp3; MAP lapse→0 inflates screen losses; decades +0.5 submitted
+- [Exp3 iter-0 Weber heading](exp3-iter0-weber-heading.md) — exp3 at noise ceiling, screens ≤1.7 nats; Weber width on heading model submitted
+- [Exp3 decade stated prior](exp3-iter0-decade-stated-prior.md) — free-share family additions collapse to dup; pin share with tight stated prior
+- [Exp3 iter-1 critique](exp3-iter1-critique.md) — 8 new stats (reversal/doubling/AP/decade/edges); iter-0 0/8
+- [Exp3 iter-1 upward room + Weber](exp3-iter1-upward-room-weber.md) — Weber width grafted on upward-room model, smoke -3193.0, submitted
+- [Exp3 iter-1 set-size rule search](exp3-iter1-set-size-rule-search.md) — rule prior log-odds shifted by example count, smoke -3193.6, submitted
+- [Exp3 iter-1 kind ambiguity aversion](exp3-iter1-kind-ambiguity-aversion.md) — rule-vs-range ambiguity withholds yes; smoke -3194.5, submitted
+- [Exp3 iter-1 upward reach + Weber](exp3-iter1-upward-reach-weber.md) — digit-product spurious (one set); upward room replaces heading, MAP +0.55, submitted
+- [Exp3 iter-1 digit-alphabet](exp3-iter1-digit-alphabet.md) — only-digits-D concept family, smoke -3195, submitted; reversal targets already fit
+- [Exp3 iter-1 upward graft](exp3-iter1-upward-graft.md) — exp3 screens ≤0.7 nats on Weber-heading; upward-room graft via 3-D Taylor submitted
+- [Exp3 iter-1 two-sided margin](exp3-iter1-two-sided-margin.md) — heading-replacement dup; margin graft on Weber-heading +1.07 MAP submitted
+- [Exp3 iter-1 two-sided room + Weber](exp3-iter1-two-sided-room-weber.md) — dup repair; pool RMSE ≈ half observed; separate above/below room +0.64 MAP submitted
+- [Exp3 iter-1 example-blind lapse](exp3-iter1-example-blind-lapse.md) — counting-order/stray-schedule null; prior-predictive lapse submitted, non-nested swap for novelty
+- [Exp3 iter-2 critique](exp3-iter2-critique.md) — 8 new stats on upward-counting incumbent; iter-1 near-misses doubling/per-set SD
+- [Exp3 iter-2 place-value grid](exp3-iter2-place-value-grid.md) — grid blocks replacing ranges ~440 nats worse, submitted as loud test
+- [Exp3 iter-2 kind ambiguity + upward](exp3-iter2-kind-ambiguity-upward.md) — ambiguity aversion grafted on upward-counting incumbent, smoke -3194.0, submitted
+- [Exp3 iter-2 outermost-examples ranges](exp3-iter2-outermost-examples-range.md) — extremes-only range evidence ~172 nats worse MAP; evidence-scale pitfall
+- [Exp3 iter-2 with-replacement swap](exp3-iter2-with-replacement-swap.md) — reach/ambiguity grafts dup; WR sampling ties with RMSE 0.0067, submitted
+- [Exp3 iter-2 LLO confidence distortion](exp3-iter2-llo-confidence-distortion.md) — encoding noise/size exponent/stray dists/temperatures all sharp at normative; LLO-for-lapse swap submitted
+- [Exp3 iter-2 rule-breadth graft](exp3-iter2-rule-breadth-graft.md) — exp3 screens tie; rule breadth +0.31 MAP submitted; loop var h shadowing pitfall
+- [Exp3 iter-3 critique](exp3-iter3-critique.md) — 8 stats incl. within-cell disagreement/drift and prefix-extension; iter-2 0/8
+- [Exp3 iter-3 set-size criterion](exp3-iter3-set-size-criterion.md) — yes log-odds shift per example shown, smoke -3193.3, submitted
+- [Exp3 iter-3 tightest shared description](exp3-iter3-tightest-shared-description.md) — specificity-loss similarity smoke -4012; magnitude-only metrics ~-4300+
+- [Exp3 iter-3 trend origin room](exp3-iter3-trend-origin-room.md) — prefix stat = one set; stray/evidence schedules lose big; first→last trend heading submitted
+- [Exp3 iter-3 set-size evidence weight](exp3-iter3-set-size-evidence-weight.md) — n^-kappa log-lik tempering +1.34 MAP on WR incumbent, 4-D Taylor axis trick, submitted
+- [Exp3 iter-3 position-decaying evidence](exp3-iter3-position-decaying-evidence.md) — per-position evidence decay rho≈0 (null); equal-range-prior base ties at MAP; sparse pattern×width classes 14 ms/grad
+- [Exp3 iter-3 set-size evidence](exp3-iter3-set-size-evidence.md) — evidence ×(n/2.5)^-rho +1.35 MAP submitted; 4-D Taylor with small K is 6x faster
+- [Exp3 iter-4 critique](exp3-iter4-critique.md) — 8 stats on position-decaying incumbent; prefix re-test + dropped Weber/upward probes; iter-3 1/8
+- [Exp3 iter-4 representativeness lift](exp3-iter4-representativeness-lift.md) — base-rate-discounted yes judgment, smoke -3192.9, submitted
+- [Exp3 iter-4 position decay + upward room](exp3-iter4-position-decay-upward-room.md) — upward-room graft on position-decay incumbent via Taylor class moments, smoke -3192.6, submitted
+- [Exp3 iter-4 span-filling evidence](exp3-iter4-span-filling-evidence.md) — interior-example weight +0.58 MAP (gamma<0, against critique); open-ended/breadth null; submitted
+- [Exp3 iter-4 nearest exemplar](exp3-iter4-nearest-exemplar.md) — max-over-examples concept resemblance smoke -4248 (~1050 behind), submitted
+- [Exp3 iter-4 offset progressions](exp3-iter4-offset-progressions.md) — stepped runs rejected ~30+ nats; families null; residue classes +0.28 submitted
+- [Exp3 iter-4 interior example weight](exp3-iter4-interior-example-weight.md) — all tweaks on set-size base null; interior ω→1 submitted; Taylor contract-check guard
+- [Exp3 iter-4 generative predictive strength](exp3-iter4-generative-predictive-strength.md) — representativeness dup repaired with a predictive-probability judgment, MAP ~390 nats behind, submitted

@@ -1,0 +1,49 @@
+- [Exponent concept cost finding](exponent-concept-cost-finding.md) — powers/squares cost extra; MAP-screen tips
+- [Incumbent null changes round 3](incumbent-null-changes-round3.md) — which refinements fit to ~0; digit-notation discount gained 21
+- [Final-digit salience finding](final-digit-salience-finding.md) — ends-in-d bonus +38 nats; noise/gamma/shape/decade tweaks gave nothing
+- [Data coverage quirks](data-coverage-quirks.md) — no power targets in power sets; shared-last-digit yes 0.96
+- [Contains-digit cost finding](contains-digit-cost-finding.md) — contains-d extra cost +16 nats on exponent-cost base; tens-digit rules -43
+- [Incumbent digit screens round 4](incumbent-digit-screens-round4.md) — ends-in bonus on incumbent +26 nats MAP; contains cost redundant
+- [Ends bonus + exponent cost](ends-bonus-plus-exponent-cost.md) — combined MAP -799.5, ~27 nats over incumbent
+- [Contains-digit cost on incumbent](contains-digit-cost-on-incumbent.md) — +16 nats on multiplicative incumbent; null-on-old-base tweaks can revive
+- [Contains-digit cost finding](contains-digit-cost-finding.md) — contains-d extra cost +17 nats on the multiplicative base
+- [Ending bonus on incumbent](ending-bonus-on-incumbent.md) — ends-in-d bonus on multiplicative model +26 nats MAP; contains cost adds <1
+- [Disjunctive contains finding](disjunctive-contains-finding.md) — contains-d as 3-primitive disjunction +15 nats, no new param; log-width intervals -2
+- [Squares cost split](squares-cost-split-finding.md) — separate squares cost +4 nats on final-digit model; parity ranges/upward bias null
+- [Forward-counting tilt](forward-counting-tilt-finding.md) — upward interval tilt g≈0.46, only +2.8 log-post; sparse trick for speed
+- [Experiment2 data quirks](experiment2-data-quirks.md) — examples-as-targets only 0.83 yes; yes rate drifts down over the session
+- [Session drift response](session-drift-response-finding.md) — exp2 default-no fatigue only +1.2 MAP; logit criterion drift worse
+- [Position stray rate](position-stray-rate-finding.md) — first-example stray rate split +3.7 MAP; first example dismissed more; recency null
+- [Session drift default](session-drift-default-finding.md) — lapse default drifting with trial_index; smoke loglik -2211.6
+- [Session drift finding](session-drift-finding.md) — exp2 logit yes-bias drift only +5.6 log-post; beta/sigma drift null
+- [Session drift null](session-drift-null-finding.md) — trial_index drift variants gain ~0; trial_index absent in novelty pool
+- [Session drift response stage](session-drift-response-stage.md) — trial drift weak on exp2; drifting guess rate +2.8 log-post, best form
+- [Stimulus-only default lapse](stimulus-only-default-lapse.md) — trial_index rejected at admission; fitted default-yes lapse smoke -2211.6
+- [trial_index banned](trial-index-banned.md) — admission rejects models binding trial_index; use stimulus-only mechanisms
+- [trial_index forbidden](trial-index-forbidden.md) — admission rejects trial_index; magnitude-slope proxy used instead
+- [Factor-graded multiples](factor-graded-multiples-finding.md) — exp2 log(m) multiples cost +34 loglik; compile_fn p_yes gotcha
+- [Incumbent LOG_FACTOR misindexed](incumbent-log-factor-misindexed.md) — factor-graded slice off by 2; multiples are rows 16:25
+- [Chain-length powers + incumbent index bug](chain-length-powers-finding.md) — incumbent log_m mask offset (fixing it hurts); power-chain cost +7 loglik
+- [Uncertainty-triggered guessing](uncertainty-triggered-guessing.md) — guess rising with 4p(1-p) +23 loglik on costly_squares; other lapse gates null
+- [Prime salience finding](prime-salience-finding.md) — exp2 primes prior bonus +20 loglik; new concept families (residues, progressions, digit sums, rule∩range) null
+- [Sieve prime concept](sieve-prime-concept.md) — sieve-primes bonus on row-range incumbent, smoke -2166.5; 49/77/91 untested
+- [Prime bonus on hundred chart](prime-bonus-on-hundred-chart.md) — iter_2 cand_3 graft, smoke loglik -2141.8
+- [Attention exemplar finding](attention-exemplar-finding.md) — exp2 diagnostic-attention exemplar MAP -2683 vs incumbent -2151; exemplar family ~500 nats behind
+- [Prime + chart rows](prime-plus-chart-rows.md) — incumbent+prime bonus candidate, smoke loglik -2141.8
+- [Marked odd cost](marked-odd-cost-finding.md) — odd-only prior cost +13 loglik on hundred_chart; response-stage/gating screens null
+- [Prime + marked odd](prime-plus-marked-odd.md) — repair graft odd cost on prime_salient_hundred_chart; A+B=B+A duplicate gotcha
+- [Prime-over-odd swap](prime-over-odd-swap.md) — one delta odd→primes +24 MAP on incumbent; prime membership tweaks null
+- [Odd mult-3 set pattern](odd-mult3-set-pattern.md) — 69,9,39,21 → yes to 19/29/49, not to other multiples of 3
+- [Big-step multiples](big-step-multiples-finding.md) — multiples of 13..50 +9 MAP on prime_over_odd; repdigits +4.8; eff-n null
+- [Hidden div-3 cost](hidden-div3-cost.md) — cost on multiples of 3/6/9/12 +5.6 MAP on marked-odd base; other tweaks null
+- [Set-size amplified evidence](set-size-amplified-evidence.md) — loglik×n**g on incumbent +5 MAP; prior tempering null; ugs +2.8
+- [Fives bonus](fives-bonus-finding.md) — exp2 mult-of-5 bonus +15.8 MAP on prime_over_odd; mult3 cost +6.6; guessing gate null
+- [Hidden triples finding](hidden-triples-finding.md) — mult-3 cost +6.6 on prime_over_odd; most other tweaks null there
+- [Normalised attention similarity](normalized-attention-similarity.md) — exp2 attention-budget similarity MAP ~2636, best of exemplar family, still ~480 behind
+- [Grouped interval speedup](grouped-interval-speedup.md) — exact 2x faster interval sum; round-3 models died as too slow in CV
+- [Fives + div3](fives-plus-div3-finding.md) — fives bonus on hidden_div3 +16.4 MAP; shared readability param only +9
+- [Fives fluent resubmit](fives-fluent-resubmit.md) — fives bonus +18.7 MAP; dense dot beats per-pair gather; plateau params may slow NUTS
+- [Fives coupling + speed](fives-coupling-and-speed.md) — fives alone best MAP 2107.9; legibility coupling null; gather/cumsum rewrites slower than dense dot
+- [Order effects on prime_over_odd](order-effects-on-prime-over-odd.md) — all order variants ≤1.6 nats MAP; sticky-first worse; graded stray trust chosen
+- [Fives duplicate rejection](fives-duplicate-rejection.md) — fives bonus = existing fives_fluent_skip_counting; check live models first
+- [Repdigit concept repair](repdigit-concept-repair.md) — fives repair rejected as dup; repdigit rule on prime_over_odd; novelty pool composition

@@ -1,0 +1,10 @@
+{
+  "models": [
+    "rule_plus_exception_neighbourhood",
+    "rule_plus_decade_exception",
+    "example_anchored_exception_neighbourhood",
+    "rule_with_exception_side_channel",
+    "seen_final_digits_decade_exception"
+  ],
+  "ledger_sha256": "43b692d9cc32d4992c7cdeacdb57dacbb39e9bcd0916897a71fa36bf9f061ac7"
+}

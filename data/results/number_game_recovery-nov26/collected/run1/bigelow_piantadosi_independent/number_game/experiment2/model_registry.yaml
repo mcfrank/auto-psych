@@ -1,0 +1,7 @@
+reserved_for_new: 0.0
+theories:
+  example_anchored_exception_neighbourhood: 0.2
+  rule_plus_decade_exception: 0.2
+  rule_plus_exception_neighbourhood: 0.2
+  rule_with_exception_side_channel: 0.2
+  seen_final_digits_decade_exception: 0.2

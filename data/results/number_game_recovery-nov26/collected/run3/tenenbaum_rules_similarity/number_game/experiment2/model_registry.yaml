@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  beta_share_width_exception_concepts: 0.125
+  boundary_examples_anchor_ranges: 0.125
+  individual_rule_vs_range_tendency: 0.125
+  mixed_sampling_prior_leaking_judgment: 0.125
+  mixed_strong_weak_sampling_concepts: 0.125
+  range_size_misperception_concepts: 0.125
+  specificity_biased_rule_prior: 0.125
+  uncertainty_shifted_criterion: 0.125

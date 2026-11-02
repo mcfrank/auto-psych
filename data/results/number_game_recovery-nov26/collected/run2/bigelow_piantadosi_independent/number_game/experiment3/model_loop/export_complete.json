@@ -1,0 +1,11 @@
+{
+  "models": [
+    "individual_range_sampling_looseness",
+    "effortful_computed_rule_search",
+    "shifted_sequence_near_miss_rules",
+    "final_digit_glance_effortful_search",
+    "retrieval_vs_checking_rule_search",
+    "target_cued_rule_retrieval"
+  ],
+  "ledger_sha256": "d998cc2ae05ffe5274b47d02f8a95aeded0337dcf0ed5a75e533b61b71cfcfbb"
+}

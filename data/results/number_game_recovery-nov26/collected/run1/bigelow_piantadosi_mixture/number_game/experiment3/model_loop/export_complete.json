@@ -1,0 +1,13 @@
+{
+  "models": [
+    "evidence_graded_misfit_tolerance",
+    "distance_hesitant_concept_extension",
+    "gamma_width_range_prior_guess",
+    "rule_only_distance_hesitation",
+    "span_extrapolation_hesitant_guess",
+    "span_extrapolation_hesitant_guess_2",
+    "range_reestimating_span_hesitant_guess",
+    "rule_only_span_extrapolation_guess"
+  ],
+  "ledger_sha256": "099484678f6588cc5fa9ea6e90c254675b6c6925cf0a52307649e0b0b09f1007"
+}

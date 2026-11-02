@@ -1,0 +1,432 @@
+diff --git a/scripts/subjective_randomness/redo_abandoned_rounds.py b/scripts/subjective_randomness/redo_abandoned_rounds.py
+new file mode 100644
+index 00000000..9ca50c51
+--- /dev/null
++++ b/scripts/subjective_randomness/redo_abandoned_rounds.py
+@@ -0,0 +1,63 @@
++"""Redo the rounds a finished experiment abandoned, from ``--from-round`` on.
++
++For a holdout cell whose model loop lost rounds (2026-10-30: a usage limit the
++harness did not recognise) and then ended the experiment as if they had run.
++The cell's run tree is first copied to ``<cell>/superseded/<time>/`` (outside
++the agent tree), later experiments are moved there, and the experiment's loop
++is checkpointed before the round (``checkpoint_before_round``); resuming the
++cell then continues the loop from that round.
++
++    python scripts/subjective_randomness/redo_abandoned_rounds.py \\
++        --cell <WORK_ROOT>/run2/<gt> --experiment 1 --from-round 1
++"""
++
++from __future__ import annotations
++
++import shutil
++import sys
++import time
++from dataclasses import dataclass
++from pathlib import Path
++
++import tyro
++from pyprojroot import here
++
++sys.path.insert(0, str(here()))
++
++from src.pipelines.inner_loop.round_checkpoint import checkpoint_before_round  # noqa: E402
++from src.pipelines.outer_loop.model_loop_runner import (  # noqa: E402
++    AGENT_NOTES_SNAPSHOT_DIRNAME,
++    agent_notes_dir,
++)
++from src.pipelines.outer_loop.orchestrator_validators import EXPORT_RECORD_FILENAME  # noqa: E402
++from src.runtime.atomic_files import copy_directory_atomically  # noqa: E402
++
++
++@dataclass
++class Args:
++    cell: Path
++    """The holdout cell directory (holds ``repo/``)."""
++    experiment: int
++    from_round: int
++    """The first abandoned round."""
++
++
++def main(args: Args) -> None:
++    (run_root,) = [p for p in (args.cell / "repo" / "_runs").iterdir() if p.is_dir()]
++    exp = run_root / f"experiment{args.experiment}"
++    later = [p for p in run_root.glob("experiment*") if int(p.name[len("experiment"):]) > args.experiment]
++    superseded = args.cell / "superseded" / time.strftime("%Y%m%dT%H%M%S")
++    shutil.copytree(run_root, superseded / "before_repair")
++    # The notes as the experiment ended: the next experiment's snapshot of them.
++    snapshots = [p / AGENT_NOTES_SNAPSHOT_DIRNAME for p in sorted(later) if (p / AGENT_NOTES_SNAPSHOT_DIRNAME).is_dir()]
++    if snapshots:
++        copy_directory_atomically(snapshots[0], agent_notes_dir(exp))
++    checkpoint_before_round(exp / "model_loop", args.from_round, agent_notes_dir(exp), ledger_context=exp.name)
++    for p in later:
++        shutil.rmtree(p)
++    (exp / "model_loop" / EXPORT_RECORD_FILENAME).unlink()
++    print(f"[redo] {exp}: resumes from round {args.from_round}; prior state in {superseded}")
++
++
++if __name__ == "__main__":
++    main(tyro.cli(Args))
+diff --git a/src/pipelines/inner_loop/pymc_orchestrator.py b/src/pipelines/inner_loop/pymc_orchestrator.py
+index aeddb30c..78b83c67 100644
+--- a/src/pipelines/inner_loop/pymc_orchestrator.py
++++ b/src/pipelines/inner_loop/pymc_orchestrator.py
+@@ -90,6 +90,10 @@ from src.pipelines.inner_loop.critique_round import (
+     _run_critique_round,
+     critique_disabled_status,
+ )
++from src.pipelines.inner_loop.round_checkpoint import (
++    restore_round_checkpoint,
++    save_round_checkpoint,
++)
+ from src.pipelines.inner_loop.scoring import (
+     _compare,
+     _export,
+@@ -283,52 +287,62 @@ def run_pymc_inner_loop(
+     results_dir.mkdir(parents=True, exist_ok=True)
+     models_dir = results_dir / "models"
+ 
+-    seeded_entries = _seed_model_set(Path(seed_models_dir), models_dir)
+-    seeded_names = {e.get("name") for e in seeded_entries if e.get("name")}
+-    # Every starting model, carried or not, is a name no candidate may take
+-    # (with those pruned or retired so far; see reserved_names).
+-    starting_models = (
+-        set(starting_models) if starting_models is not None else set(seeded_names)
+-    )
+-    # The loop's memory: every hypothesis tried, continuing the ledger the
+-    # previous experiment carried beside its model set.
+-    ledger = HypothesisLedger.create(
+-        results_dir / LEDGER_FILENAME,
+-        inherit_from=Path(seed_models_dir) / LEDGER_FILENAME,
+-    )
+-    _drop_unfittable_models(
+-        models_dir,
+-        responses_path,
+-        ledger=ledger,
+-        ledger_context=ledger_context,
+-        starting_models=starting_models,
+-    )
+     fit_kwargs = fit_kwargs or {}
+-    # A carried-forward model can score a finite ELPD on a prior experiment's data
+-    # yet NaN on this one's; drop those before scoring so a single one can't crash
+-    # model_posterior and abort the whole run.
+-    _drop_nonfinite_elpd_models(
+-        models_dir,
+-        responses_path,
+-        cache_dir=cache_dir,
+-        fit_kwargs=fit_kwargs,
+-        ledger=ledger,
+-        ledger_context=ledger_context,
+-    )
+-    # Under grouped CV, every model is fitted on every fold now and one whose
+-    # ELPD-CV cannot be computed is dropped (no time limit: these are the
+-    # starting and carried models). Models admitted later are screened after
+-    # their round, their fold fits under the admission time limit.
+-    _drop_unscorable_cv_models(
+-        models_dir,
+-        responses_path,
+-        selection,
+-        cache_dir=cache_dir,
+-        fit_kwargs=fit_kwargs,
+-        ledger=ledger,
+-        ledger_context=ledger_context,
+-    )
+-    loop_start_models = set(_manifest_names(models_dir))
++    # A stopped loop resumes after its last completed round.
++    checkpoint = restore_round_checkpoint(results_dir, agent_notes_dir)
++    if checkpoint is None:
++        seeded_entries = _seed_model_set(Path(seed_models_dir), models_dir)
++        seeded_names = {e.get("name") for e in seeded_entries if e.get("name")}
++        # Every starting model, carried or not, is a name no candidate may take
++        # (with those pruned or retired so far; see reserved_names).
++        starting_models = (
++            set(starting_models) if starting_models is not None else set(seeded_names)
++        )
++        # The loop's memory: every hypothesis tried, continuing the ledger the
++        # previous experiment carried beside its model set.
++        ledger = HypothesisLedger.create(
++            results_dir / LEDGER_FILENAME,
++            inherit_from=Path(seed_models_dir) / LEDGER_FILENAME,
++        )
++        _drop_unfittable_models(
++            models_dir,
++            responses_path,
++            ledger=ledger,
++            ledger_context=ledger_context,
++            starting_models=starting_models,
++        )
++        # A carried-forward model can score a finite ELPD on a prior experiment's data
++        # yet NaN on this one's; drop those before scoring so a single one can't crash
++        # model_posterior and abort the whole run.
++        _drop_nonfinite_elpd_models(
++            models_dir,
++            responses_path,
++            cache_dir=cache_dir,
++            fit_kwargs=fit_kwargs,
++            ledger=ledger,
++            ledger_context=ledger_context,
++        )
++        # Under grouped CV, every model is fitted on every fold now and one whose
++        # ELPD-CV cannot be computed is dropped (no time limit: these are the
++        # starting and carried models). Models admitted later are screened after
++        # their round, their fold fits under the admission time limit.
++        _drop_unscorable_cv_models(
++            models_dir,
++            responses_path,
++            selection,
++            cache_dir=cache_dir,
++            fit_kwargs=fit_kwargs,
++            ledger=ledger,
++            ledger_context=ledger_context,
++        )
++        loop_start_models = set(_manifest_names(models_dir))
++    else:
++        if starting_models is None:
++            starting_models = _manifest_names(Path(seed_models_dir))
++        starting_models = set(starting_models)
++        ledger = HypothesisLedger(results_dir / LEDGER_FILENAME)
++        history = json.loads((results_dir / "history.json").read_text(encoding="utf-8"))
++        loop_start_models = set(history[0]["posteriors"])
+     # The novelty pool: generated once from the loop's own seed and recorded in
+     # the run tree, so every candidate this run gates is compared on the same
+     # stimuli and what the gate saw is auditable. None when the gate is off.
+@@ -358,11 +372,19 @@ def run_pymc_inner_loop(
+     # The comparison table (ELPD rank + PSIS-LOO reliability) is what selects
+     # the best model at every step; it reuses the fits _score just made.
+     comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs, selection)
+-    history: List[Dict[str, Any]] = []
+-    _record_history_step(history, results_dir, posterior, comparison, iteration=None)
+ 
+-    rounds_abandoned = 0
+-    for iteration in range(max_iterations):
++    def checkpoint_round(next_round: int) -> None:
++        save_round_checkpoint(
++            results_dir, agent_notes_dir, next_round=next_round, rounds_abandoned=rounds_abandoned
++        )
++
++    if checkpoint is None:
++        history: List[Dict[str, Any]] = []
++        _record_history_step(history, results_dir, posterior, comparison, iteration=None)
++        checkpoint = {"next_round": 0, "rounds_abandoned": 0}
++    rounds_abandoned = checkpoint["rounds_abandoned"]
++    checkpoint_round(checkpoint["next_round"])
++    for iteration in range(checkpoint["next_round"], max_iterations):
+         round_dir = results_dir / f"iter_{iteration}"
+         critique_path: Optional[Path] = None
+         critique_status = critique_disabled_status()
+@@ -692,6 +714,7 @@ def run_pymc_inner_loop(
+                 f"next round.",
+                 flush=True,
+             )
++            checkpoint_round(iteration + 1)
+             continue
+ 
+         _drop_unscorable_cv_models(
+@@ -716,6 +739,7 @@ def run_pymc_inner_loop(
+             iteration=iteration,
+             critique=critique_status,
+         )
++        checkpoint_round(iteration + 1)
+ 
+     if rounds_abandoned == max_iterations and max_iterations > 0:
+         raise AllCandidatesNoFileError(
+diff --git a/src/pipelines/inner_loop/round_checkpoint.py b/src/pipelines/inner_loop/round_checkpoint.py
+new file mode 100644
+index 00000000..7d92864e
+--- /dev/null
++++ b/src/pipelines/inner_loop/round_checkpoint.py
+@@ -0,0 +1,122 @@
++"""The model loop's state after its last completed round, so a stopped loop
++resumes with the next round instead of starting over.
++
++Saved after every round: the model set, the ledger, the history and the run's
++agent notes. A restore puts them back and removes the working dirs of the
++rounds that follow. ``checkpoint_before_round`` builds one for a finished loop.
++"""
++
++from __future__ import annotations
++
++import json
++import re
++import shutil
++from pathlib import Path
++from typing import Dict, Optional
++
++from src.pipelines.inner_loop.hypothesis_ledger import LEDGER_FILENAME
++from src.pipelines.inner_loop.model_zoo import _manifest_entries, _write_manifest
++from src.runtime.atomic_files import (
++    copy_directory_atomically,
++    replace_directory,
++    write_text_atomically,
++)
++
++CHECKPOINT_DIRNAME = "checkpoint"
++_STATE_FILES = (LEDGER_FILENAME, "history.json")
++
++
++def save_round_checkpoint(
++    results_dir: Path, notes_dir: Optional[Path], *, next_round: int, rounds_abandoned: int
++) -> None:
++    results_dir = Path(results_dir)
++
++    def build(staging: Path) -> None:
++        shutil.copytree(results_dir / "models", staging / "models")
++        for name in _STATE_FILES:
++            shutil.copyfile(results_dir / name, staging / name)
++        if notes_dir is not None and Path(notes_dir).is_dir():
++            shutil.copytree(notes_dir, staging / "agent_notes")
++        state = {"next_round": next_round, "rounds_abandoned": rounds_abandoned}
++        (staging / "state.json").write_text(json.dumps(state), encoding="utf-8")
++
++    replace_directory(results_dir / CHECKPOINT_DIRNAME, build)
++
++
++def restore_round_checkpoint(results_dir: Path, notes_dir: Optional[Path]) -> Optional[Dict[str, int]]:
++    """Put the loop back to its checkpoint and return its state; None when it has none."""
++    results_dir = Path(results_dir)
++    checkpoint = results_dir / CHECKPOINT_DIRNAME
++    if not checkpoint.is_dir():
++        return None
++    state = json.loads((checkpoint / "state.json").read_text(encoding="utf-8"))
++    copy_directory_atomically(checkpoint / "models", results_dir / "models")
++    for name in _STATE_FILES:
++        write_text_atomically(results_dir / name, (checkpoint / name).read_text(encoding="utf-8"))
++    if notes_dir is not None:
++        if (checkpoint / "agent_notes").is_dir():
++            copy_directory_atomically(checkpoint / "agent_notes", notes_dir)
++        elif Path(notes_dir).exists():
++            shutil.rmtree(notes_dir)
++    for round_dir in results_dir.glob("iter_*"):
++        match = re.fullmatch(r"iter_(\d+)(_retry_\d+)?", round_dir.name)
++        if match and int(match.group(1)) >= state["next_round"]:
++            shutil.rmtree(round_dir)
++    return state
++
++
++def checkpoint_before_round(
++    results_dir: Path, next_round: int, notes_dir: Optional[Path], *, ledger_context: str
++) -> None:
++    """Checkpoint a finished loop as it stood before round ``next_round``.
++
++    For a loop whose rounds from ``next_round`` on were abandoned (which
++    changes nothing) and that then ended the experiment: the end-of-experiment
++    pruning is undone, and the ledger lines of those rounds and of the end are
++    dropped. ``notes_dir`` must already hold the notes of that point.
++    """
++    results_dir = Path(results_dir)
++    models_dir = results_dir / "models"
++    history = json.loads((results_dir / "history.json").read_text(encoding="utf-8"))
++    if any(s["iteration"] is not None and s["iteration"] >= next_round for s in history):
++        raise ValueError(f"{results_dir}: a round from {next_round} on completed")
++    history[-1].pop("retired_at_experiment_end", None)
++
++    end = f"{ledger_context} end of experiment".strip()
++    round_prefix = f"{ledger_context} round ".lstrip()
++    lines = (results_dir / LEDGER_FILENAME).read_text(encoding="utf-8").splitlines()
++    entries = [json.loads(line) for line in lines]
++
++    def undone(context: str) -> bool:
++        return context == end or (
++            context.startswith(round_prefix)
++            and int(context[len(round_prefix):].split(" ")[0]) >= next_round
++        )
++
++    cut = next(i for i, e in enumerate(entries) if undone(e["context"]))
++    if not all(undone(e["context"]) for e in entries[cut:]):
++        raise ValueError(f"{results_dir}: the ledger continues past round {next_round - 1}")
++
++    restored = {e["name"]: e["hypothesis"] for e in entries[cut:] if e["outcome"] == "pruned"}
++    for name in restored:
++        for suffix in (".py", ".hypothesis.md"):
++            if (models_dir / "pruned" / f"{name}{suffix}").exists():
++                shutil.move(str(models_dir / "pruned" / f"{name}{suffix}"), str(models_dir))
++    by_name = {e["name"]: e for e in _manifest_entries(models_dir)}
++    by_name |= {name: {"name": name, "rationale": why} for name, why in restored.items()}
++    order = list(history[-1]["posteriors"])  # the set as last scored, before the end
++    if set(order) != set(by_name):
++        raise ValueError(f"{results_dir}: restored {sorted(by_name)} != last scored {sorted(order)}")
++    _write_manifest(models_dir, [by_name[name] for name in order])
++
++    write_text_atomically(results_dir / LEDGER_FILENAME, "".join(f"{line}\n" for line in lines[:cut]))
++    write_text_atomically(results_dir / "history.json", json.dumps(history, indent=2))
++    save_round_checkpoint(
++        results_dir,
++        notes_dir,
++        next_round=next_round,
++        rounds_abandoned=sum(
++            e["outcome"] == "round_abandoned" and e["context"].startswith(round_prefix)
++            for e in entries[:cut]
++        ),
++    )
+diff --git a/src/pipelines/outer_loop/model_loop_runner.py b/src/pipelines/outer_loop/model_loop_runner.py
+index 62d1dbd6..456f7b44 100644
+--- a/src/pipelines/outer_loop/model_loop_runner.py
++++ b/src/pipelines/outer_loop/model_loop_runner.py
+@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Optional, Sequence
+ import yaml
+ 
+ from src.pipelines.inner_loop.hypothesis_ledger import LEDGER_FILENAME
++from src.pipelines.inner_loop.round_checkpoint import CHECKPOINT_DIRNAME
+ from src.pipelines.inner_loop.task_description import TASK_DESCRIPTION_NAME
+ from src.models.model_manifest import (
+     manifest_path,
+@@ -500,7 +501,9 @@ def begin_model_loop_stage(exp_dir: Path) -> None:
+     (not archived: anything kept in the run tree is readable by later agents).
+     Either way, ``model_loop/`` is emptied and the registry reset to the
+     placeholder ``init_registry`` writes, so the stage redoes everything from
+-    scratch; ``finish_model_loop_stage`` marks it complete.
++    scratch; ``finish_model_loop_stage`` marks it complete. The exception is a
++    loop that checkpointed a round: ``model_loop/`` and the notes are kept,
++    and the loop resumes from its checkpoint (``round_checkpoint``).
+ 
+     Each step is atomic and idempotent, so a crash in here is recovered by the
+     next call. A ``model_loop/`` with content but no recorded input was left by
+@@ -513,11 +516,17 @@ def begin_model_loop_stage(exp_dir: Path) -> None:
+     loop_dir = exp_dir / "model_loop"
+     notes = agent_notes_dir(exp_dir)
+     notes_at_start = exp_dir / AGENT_NOTES_SNAPSHOT_DIRNAME
++    resumable = recorded_input.is_dir() and (loop_dir / CHECKPOINT_DIRNAME).is_dir()
+ 
+     if recorded_input.is_dir():
+         print(
+-            f"  [model-loop] Restart: restoring {models_dir.name}/ and the agent notes "
+-            f"to what the stage started from; discarding the unfinished attempt",
++            f"  [model-loop] Restart: restoring {models_dir.name}/; "
++            + (
++                "the loop resumes from its last completed round"
++                if resumable
++                else "the agent notes go back to what the stage started from and "
++                "the unfinished attempt is discarded"
++            ),
+             flush=True,
+         )
+         copy_directory_atomically(recorded_input, models_dir)
+@@ -533,16 +542,18 @@ def begin_model_loop_stage(exp_dir: Path) -> None:
+             )
+         copy_directory_atomically(models_dir, recorded_input)
+ 
+-    if notes_at_start.is_dir():
+-        copy_directory_atomically(notes_at_start, notes)
+-    elif notes.is_dir():
+-        copy_directory_atomically(notes, notes_at_start)
+-    else:
+-        replace_directory(notes_at_start, lambda staging: None)
+-
+-    if loop_dir.exists():
+-        shutil.rmtree(loop_dir)
+-    loop_dir.mkdir(parents=True)
++    if not resumable:  # a resumed loop restores its checkpoint's notes
++        if notes_at_start.is_dir():
++            copy_directory_atomically(notes_at_start, notes)
++        elif notes.is_dir():
++            copy_directory_atomically(notes, notes_at_start)
++        else:
++            replace_directory(notes_at_start, lambda staging: None)
++
++    if not resumable:
++        if loop_dir.exists():
++            shutil.rmtree(loop_dir)
++        loop_dir.mkdir(parents=True)
+     (exp_dir / "model_registry.yaml").unlink(missing_ok=True)
+     init_registry(exp_dir)
+ 

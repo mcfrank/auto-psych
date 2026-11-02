@@ -1,0 +1,13 @@
+{
+  "models": [
+    "uncertain_reliability_noise_concepts",
+    "family_pooled_rule_prior",
+    "digit_sum_concepts",
+    "family_pooled_uncertain_reliability",
+    "complement_stray_reliability_concepts",
+    "family_pooled_win_stay_lose_sample",
+    "compressed_number_line_ranges",
+    "inner_loop_model"
+  ],
+  "ledger_sha256": "b827914d99042b1af2cf3c66d1137e7cfec7459e66c553c85ffd832f2f196174"
+}

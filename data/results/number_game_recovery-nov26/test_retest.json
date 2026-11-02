@@ -1,0 +1,447 @@
+{
+  "runs_root": "/sailhome/wurgaft/auto-psych-runs/nov26b-collect/assembled/runs_root",
+  "metric": "pearson_r",
+  "n_runs_found": 3,
+  "runs_found": [
+    "run1",
+    "run2",
+    "run3"
+  ],
+  "runs_missing_tidy": [],
+  "gt_models": [
+    "bigelow_piantadosi_independent",
+    "bigelow_piantadosi_mixture",
+    "tenenbaum_rules_similarity"
+  ],
+  "runs_in_complete_matrix": [
+    "run1",
+    "run2",
+    "run3"
+  ],
+  "icc_2_1": 0.48229967944743013,
+  "mean_pairwise_corr": 0.8055419338463308,
+  "per_gt_model": {
+    "bigelow_piantadosi_independent": {
+      "n_runs": 3,
+      "mean": 0.9649655145831552,
+      "sd": 0.02792702093175935,
+      "cv": 0.02894095230317452,
+      "min": 0.9375782424442677,
+      "max": 0.9934026743737387,
+      "values": [
+        0.937578,
+        0.993403,
+        0.963916
+      ],
+      "modal_best_model": "salient_decade_place_value_rules",
+      "best_model_agreement": 0.3333333333333333
+    },
+    "bigelow_piantadosi_mixture": {
+      "n_runs": 3,
+      "mean": 0.997384862404779,
+      "sd": 0.003475528080742663,
+      "cv": 0.0034846408961560454,
+      "min": 0.9933820129531892,
+      "max": 0.9996356716548749,
+      "values": [
+        0.999137,
+        0.999636,
+        0.993382
+      ],
+      "modal_best_model": "range_reestimating_span_hesitant_guess",
+      "best_model_agreement": 0.3333333333333333
+    },
+    "tenenbaum_rules_similarity": {
+      "n_runs": 3,
+      "mean": 0.9958255021184935,
+      "sd": 0.0030270155649809484,
+      "cv": 0.003039704806255065,
+      "min": 0.9930243522535388,
+      "max": 0.9990365998501052,
+      "values": [
+        0.993024,
+        0.995416,
+        0.999037
+      ],
+      "modal_best_model": "digit_reversal_pair_concepts",
+      "best_model_agreement": 0.3333333333333333
+    }
+  },
+  "per_metric": {
+    "rmse": {
+      "per_gt_model": {
+        "bigelow_piantadosi_independent": {
+          "n_runs": 3,
+          "mean": 0.07010353227657852,
+          "sd": 0.03459470415251044,
+          "min": 0.03274616600879255,
+          "max": 0.10103431500811551,
+          "values": [
+            0.101034,
+            0.032746,
+            0.07653
+          ]
+        },
+        "bigelow_piantadosi_mixture": {
+          "n_runs": 3,
+          "mean": 0.017363368490510265,
+          "sd": 0.012806723824505933,
+          "min": 0.007546149526924485,
+          "max": 0.031849495081811584,
+          "values": [
+            0.012694,
+            0.007546,
+            0.031849
+          ]
+        },
+        "tenenbaum_rules_similarity": {
+          "n_runs": 3,
+          "mean": 0.026995113264779852,
+          "sd": 0.011639169424888334,
+          "min": 0.014689643314982825,
+          "max": 0.037827786475086736,
+          "values": [
+            0.037828,
+            0.028468,
+            0.01469
+          ]
+        }
+      }
+    },
+    "kl_regret": {
+      "per_gt_model": {
+        "bigelow_piantadosi_independent": {
+          "n_runs": 3,
+          "mean": 0.01694883060459072,
+          "sd": 0.01396310627847342,
+          "min": 0.002812794152157119,
+          "max": 0.030732330347835558,
+          "values": [
+            0.030732,
+            0.002813,
+            0.017301
+          ]
+        },
+        "bigelow_piantadosi_mixture": {
+          "n_runs": 3,
+          "mean": 0.0011621500553353431,
+          "sd": 0.0011713610613706589,
+          "min": 0.00037824721226505895,
+          "max": 0.0025086741485750236,
+          "values": [
+            0.0006,
+            0.000378,
+            0.002509
+          ]
+        },
+        "tenenbaum_rules_similarity": {
+          "n_runs": 3,
+          "mean": 0.0021499998679185635,
+          "sd": 0.0014532172881705316,
+          "min": 0.0005741934728755398,
+          "max": 0.0034373689207733964,
+          "values": [
+            0.003437,
+            0.002438,
+            0.000574
+          ]
+        }
+      }
+    }
+  },
+  "eval_exclusions": {
+    "steps": [],
+    "fitted_seed_baseline": [],
+    "cells_without_record": []
+  },
+  "cells": {
+    "root": "/sailhome/wurgaft/auto-psych-runs/nov26b-collect/assembled/runs_root",
+    "expected_from": "stated: 3 repeats; ground truths tenenbaum_rules_similarity, bigelow_piantadosi_mixture, bigelow_piantadosi_independent",
+    "n_expected": 9,
+    "complete": [
+      "run1/bigelow_piantadosi_independent",
+      "run1/bigelow_piantadosi_mixture",
+      "run1/tenenbaum_rules_similarity",
+      "run2/bigelow_piantadosi_independent",
+      "run2/bigelow_piantadosi_mixture",
+      "run2/tenenbaum_rules_similarity",
+      "run3/bigelow_piantadosi_independent",
+      "run3/bigelow_piantadosi_mixture",
+      "run3/tenenbaum_rules_similarity"
+    ],
+    "partial": {},
+    "missing": {}
+  },
+  "loop_vs_fitted_baseline": [
+    {
+      "gt_model": "bigelow_piantadosi_independent",
+      "experiment": 1,
+      "metric": "pearson_r",
+      "n_cells": 3,
+      "loop_mean": 0.9206148523410095,
+      "fitted_baseline_mean": 0.7575676923516461,
+      "mean_difference": 0.16304715998936334,
+      "cells": [
+        "run1/bigelow_piantadosi_independent",
+        "run2/bigelow_piantadosi_independent",
+        "run3/bigelow_piantadosi_independent"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_independent",
+      "experiment": 1,
+      "metric": "rmse",
+      "n_cells": 3,
+      "loop_mean": 0.11270696322422187,
+      "fitted_baseline_mean": 0.19502224153466793,
+      "mean_difference": -0.08231527831044606,
+      "cells": [
+        "run1/bigelow_piantadosi_independent",
+        "run2/bigelow_piantadosi_independent",
+        "run3/bigelow_piantadosi_independent"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_independent",
+      "experiment": 2,
+      "metric": "pearson_r",
+      "n_cells": 3,
+      "loop_mean": 0.9592304798978551,
+      "fitted_baseline_mean": 0.7513783158020434,
+      "mean_difference": 0.20785216409581175,
+      "cells": [
+        "run1/bigelow_piantadosi_independent",
+        "run2/bigelow_piantadosi_independent",
+        "run3/bigelow_piantadosi_independent"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_independent",
+      "experiment": 2,
+      "metric": "rmse",
+      "n_cells": 3,
+      "loop_mean": 0.0763348380943155,
+      "fitted_baseline_mean": 0.2017456004525007,
+      "mean_difference": -0.12541076235818518,
+      "cells": [
+        "run1/bigelow_piantadosi_independent",
+        "run2/bigelow_piantadosi_independent",
+        "run3/bigelow_piantadosi_independent"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_independent",
+      "experiment": 3,
+      "metric": "pearson_r",
+      "n_cells": 3,
+      "loop_mean": 0.9649655145831552,
+      "fitted_baseline_mean": 0.7673091122953709,
+      "mean_difference": 0.19765640228778422,
+      "cells": [
+        "run1/bigelow_piantadosi_independent",
+        "run2/bigelow_piantadosi_independent",
+        "run3/bigelow_piantadosi_independent"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_independent",
+      "experiment": 3,
+      "metric": "rmse",
+      "n_cells": 3,
+      "loop_mean": 0.07010353227657852,
+      "fitted_baseline_mean": 0.19377726624805836,
+      "mean_difference": -0.12367373397147984,
+      "cells": [
+        "run1/bigelow_piantadosi_independent",
+        "run2/bigelow_piantadosi_independent",
+        "run3/bigelow_piantadosi_independent"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_mixture",
+      "experiment": 1,
+      "metric": "pearson_r",
+      "n_cells": 3,
+      "loop_mean": 0.9950916023791753,
+      "fitted_baseline_mean": 0.9951392324372542,
+      "mean_difference": -4.7630058078951265e-05,
+      "cells": [
+        "run1/bigelow_piantadosi_mixture",
+        "run2/bigelow_piantadosi_mixture",
+        "run3/bigelow_piantadosi_mixture"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_mixture",
+      "experiment": 1,
+      "metric": "rmse",
+      "n_cells": 3,
+      "loop_mean": 0.029820552274304326,
+      "fitted_baseline_mean": 0.026977769039680466,
+      "mean_difference": 0.002842783234623858,
+      "cells": [
+        "run1/bigelow_piantadosi_mixture",
+        "run2/bigelow_piantadosi_mixture",
+        "run3/bigelow_piantadosi_mixture"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_mixture",
+      "experiment": 2,
+      "metric": "pearson_r",
+      "n_cells": 3,
+      "loop_mean": 0.9962983890323347,
+      "fitted_baseline_mean": 0.9970733385294056,
+      "mean_difference": -0.0007749494970708352,
+      "cells": [
+        "run1/bigelow_piantadosi_mixture",
+        "run2/bigelow_piantadosi_mixture",
+        "run3/bigelow_piantadosi_mixture"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_mixture",
+      "experiment": 2,
+      "metric": "rmse",
+      "n_cells": 3,
+      "loop_mean": 0.026263765468650294,
+      "fitted_baseline_mean": 0.02069797491539229,
+      "mean_difference": 0.005565790553258004,
+      "cells": [
+        "run1/bigelow_piantadosi_mixture",
+        "run2/bigelow_piantadosi_mixture",
+        "run3/bigelow_piantadosi_mixture"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_mixture",
+      "experiment": 3,
+      "metric": "pearson_r",
+      "n_cells": 3,
+      "loop_mean": 0.997384862404779,
+      "fitted_baseline_mean": 0.9979145436798874,
+      "mean_difference": -0.0005296812751083291,
+      "cells": [
+        "run1/bigelow_piantadosi_mixture",
+        "run2/bigelow_piantadosi_mixture",
+        "run3/bigelow_piantadosi_mixture"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "bigelow_piantadosi_mixture",
+      "experiment": 3,
+      "metric": "rmse",
+      "n_cells": 3,
+      "loop_mean": 0.017363368490510265,
+      "fitted_baseline_mean": 0.01752753437607567,
+      "mean_difference": -0.0001641658855654054,
+      "cells": [
+        "run1/bigelow_piantadosi_mixture",
+        "run2/bigelow_piantadosi_mixture",
+        "run3/bigelow_piantadosi_mixture"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "tenenbaum_rules_similarity",
+      "experiment": 1,
+      "metric": "pearson_r",
+      "n_cells": 3,
+      "loop_mean": 0.992439632777465,
+      "fitted_baseline_mean": 0.9847046333647366,
+      "mean_difference": 0.007734999412728483,
+      "cells": [
+        "run1/tenenbaum_rules_similarity",
+        "run2/tenenbaum_rules_similarity",
+        "run3/tenenbaum_rules_similarity"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "tenenbaum_rules_similarity",
+      "experiment": 1,
+      "metric": "rmse",
+      "n_cells": 3,
+      "loop_mean": 0.038454205635515944,
+      "fitted_baseline_mean": 0.06297896413694044,
+      "mean_difference": -0.024524758501424496,
+      "cells": [
+        "run1/tenenbaum_rules_similarity",
+        "run2/tenenbaum_rules_similarity",
+        "run3/tenenbaum_rules_similarity"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "tenenbaum_rules_similarity",
+      "experiment": 2,
+      "metric": "pearson_r",
+      "n_cells": 3,
+      "loop_mean": 0.9980377769896194,
+      "fitted_baseline_mean": 0.9870603052035519,
+      "mean_difference": 0.010977471786067486,
+      "cells": [
+        "run1/tenenbaum_rules_similarity",
+        "run2/tenenbaum_rules_similarity",
+        "run3/tenenbaum_rules_similarity"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "tenenbaum_rules_similarity",
+      "experiment": 2,
+      "metric": "rmse",
+      "n_cells": 3,
+      "loop_mean": 0.019194719529002383,
+      "fitted_baseline_mean": 0.05938677373147455,
+      "mean_difference": -0.040192054202472176,
+      "cells": [
+        "run1/tenenbaum_rules_similarity",
+        "run2/tenenbaum_rules_similarity",
+        "run3/tenenbaum_rules_similarity"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "tenenbaum_rules_similarity",
+      "experiment": 3,
+      "metric": "pearson_r",
+      "n_cells": 3,
+      "loop_mean": 0.9958255021184935,
+      "fitted_baseline_mean": 0.9882469022272308,
+      "mean_difference": 0.007578599891262823,
+      "cells": [
+        "run1/tenenbaum_rules_similarity",
+        "run2/tenenbaum_rules_similarity",
+        "run3/tenenbaum_rules_similarity"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "tenenbaum_rules_similarity",
+      "experiment": 3,
+      "metric": "rmse",
+      "n_cells": 3,
+      "loop_mean": 0.026995113264779852,
+      "fitted_baseline_mean": 0.05479511674068718,
+      "mean_difference": -0.027800003475907328,
+      "cells": [
+        "run1/tenenbaum_rules_similarity",
+        "run2/tenenbaum_rules_similarity",
+        "run3/tenenbaum_rules_similarity"
+      ],
+      "excluded": {}
+    }
+  ]
+}

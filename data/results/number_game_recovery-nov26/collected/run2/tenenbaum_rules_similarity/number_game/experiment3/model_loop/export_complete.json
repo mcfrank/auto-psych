@@ -1,0 +1,13 @@
+{
+  "models": [
+    "graded_ratio_ceiling_criterion",
+    "example_retention_limited_memory",
+    "sample_count_scaled_ceiling",
+    "directional_edge_bias_criterion",
+    "new_set_criterion_ratio_ceiling",
+    "new_set_criterion_tank_ceiling",
+    "evidence_sufficiency_commitment",
+    "extrapolated_step_ceiling"
+  ],
+  "ledger_sha256": "8fbef7ad5670035b0ccf5faa88e026fc92edda27142296bae240ace7c23f236f"
+}

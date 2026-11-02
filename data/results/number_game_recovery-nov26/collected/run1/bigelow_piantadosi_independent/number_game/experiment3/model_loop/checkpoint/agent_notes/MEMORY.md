@@ -1,0 +1,9 @@
+- [Interval prefix-sum speedup](interval-prefix-sum-speedup.md) — 5x faster interval likelihood for number-game models; avoids too-slow rejections; nested refinements fail novelty gate
+- [Contained-digit salience gain](contained-digit-salience-gain.md) — contains-digit kappa +20 nats; decade rules kappa_t +5.7 more; range+exception graft only +0.5 on top
+- [Decision-rule MAP screen](decision-rule-map-screen.md) — bias/lapse fit to null on incumbent; only odds compression (d≈0.9) helps
+- [Participant segmentation](participant-segmentation.md) — exp3: trial_index resets give 15 participants; use for participant-level stats
+- [Prototype slot data point](prototype-slot-datapoint.md) — naive-Bayes prototype: fast, smoke log-lik -3350, far behind the rule learner
+- [Production-odds readout screen](production-odds-readout-screen.md) — target-side size-principle readout loses ~143 nats MAP; membership readout wins
+- [Concept-family MAP screen](concept-family-map-screen.md) — repdigits +11, decades +6, progressions/digit-sums/specials null
+- [Individual rule-vs-range style](individual-rule-range-style.md) — per-participant lambda +17 nats MAP; nested concept tweaks ~+1.5
+- [Iter4 refinement screens](iter4-refinement-screens.md) — recognition/progressions null on incumbent; per-person criterion +9 MAP; bare-row marginal trick

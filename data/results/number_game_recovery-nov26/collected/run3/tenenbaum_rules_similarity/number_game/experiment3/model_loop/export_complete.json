@@ -1,0 +1,13 @@
+{
+  "models": [
+    "uncertainty_shifted_criterion",
+    "kind_uncertainty_shifted_criterion",
+    "rule_family_doubt_criterion",
+    "first_impression_kind_anchoring",
+    "two_cluster_rule_family_doubt",
+    "representative_coverage_sampling",
+    "mixed_sampling_rule_family_doubt",
+    "representative_coverage_family_doubt"
+  ],
+  "ledger_sha256": "54d0e665a5153ac2e042c5e96dcabb389d08fd667f99062926c32375f903580e"
+}

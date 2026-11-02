@@ -1,0 +1,19 @@
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how it stands on the current data by ELPD-LOO (best first). `elpd_diff ± dse` is a model's deficit against the best and the standard error of that difference (with the responses to each stimulus pair counted together, as they are correlated): within about 2·dse the two are statistically tied on this data; beyond it the model has lost. "PSIS-LOO unreliable" means the estimate itself is untrustworthy (too many high-Pareto-k trials), not that the model is bad. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## without_replacement_example_sampling  — rank 0, the best model on this data, ELPD-LOO -1699.3
+
+People do the same Bayesian concept learning as the current best model (45 independently weighted rules, ranges of 1-100 with a preferred typical width, an inferred share of random examples), but they assume the program never produces the same number twice, so they treat the examples as drawn from the concept without replacement: each further example that fits a concept is taken as one of that concept's members not yet shown. This makes several examples far stronger evidence for a concept that has barely more members than were shown (cubes, powers of 3 or 4, squares, a tight range) than the best model's with-replacement size principle allows, so the sharpest disagreement lives on three- and four-example sets that nearly exhaust a small rule or range, where this model predicts fewer "yes" answers to targets outside that small concept.
+
+## conservative_evidence_weighting  — no comparison row
+
+People do the same Bayesian concept learning as the current best model (45 independently weighted rules, ranges of 1-100 with a preferred typical width, an inferred share of random examples, examples drawn from the concept without replacement), but they are conservative updaters: they under-weight (or over-weight) the evidence of the examples relative to their prior beliefs about which concepts are plausible, as if the examples' likelihood were raised to a single power below (or above) one. This predicts that generalisation tightens toward the smallest consistent concept more slowly (or faster) as examples accumulate than calibrated inference implies, while the relative plausibility of concepts before any evidence is unchanged.
+
+## most_specific_concept_only  — no comparison row
+
+People do not weigh many candidate concepts; they adopt the single most specific concept that covers all the examples — the smallest of the arithmetic or digit rules (odd, primes, squares, powers, multiples, final digit, contained digit) or the tightest range spanning the examples — and answer "yes" when the target belongs to that concept and "no" otherwise, apart from a constant rate of response noise. This minimal-generalization strategy predicts no graded size-principle averaging: a single example generalizes to almost nothing, and "yes" falls off sharply at the edge of the one concept chosen.
+
+## first_example_trust_concepts  — no comparison row
+
+People do the same Bayesian concept learning as the current best model (45 independently weighted rules, ranges of 1-100 with a preferred typical width, examples drawn without replacement, an inferred share of random examples), but they trust the first example more than the later ones: the first number shown is taken as the one most surely produced by the concept, while later examples are more readily dismissed as random outputs. The one change is that the chance an example is random is smaller for the first example (by an inferred factor) than for later ones, so concepts that exclude the first example are penalised more than concepts that exclude a later example, and the same set in a different order generalises differently.

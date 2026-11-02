@@ -1,0 +1,13 @@
+{
+  "models": [
+    "variable_rule_range_expectation",
+    "min_max_bounded_range",
+    "tightness_cued_rule_range_expectation",
+    "variable_min_max_bounded_range",
+    "approximate_near_miss_rules",
+    "previous_set_concept_intrusion",
+    "tightness_cued_min_max_range",
+    "example_count_scaled_hull"
+  ],
+  "ledger_sha256": "9f5a84007b4d3a2e3e2c068b85be46119bf2587e52917702a2a037ebf1f172d6"
+}

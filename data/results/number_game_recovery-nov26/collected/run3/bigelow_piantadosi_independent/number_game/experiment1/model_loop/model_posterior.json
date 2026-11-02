@@ -1,0 +1,42 @@
+{
+  "posteriors": {
+    "place_value_disjunctive_contains": 2.1e-05,
+    "costly_squares_final_digit_concepts": 0.999979
+  },
+  "elpd_loo": {
+    "place_value_disjunctive_contains": -821.4069,
+    "costly_squares_final_digit_concepts": -810.617
+  },
+  "n_trials": 2250,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "costly_squares_final_digit_concepts": {
+      "rank": 0,
+      "elpd_loo": -810.6169910733274,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.9999793948858029,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2250,
+      "not_converged": false
+    },
+    "place_value_disjunctive_contains": {
+      "rank": 1,
+      "elpd_loo": -821.406941718981,
+      "elpd_diff": 10.789950645653562,
+      "dse": 7.677474496546211,
+      "dse_clustered": 8.054110982212167,
+      "weight": 2.060511419721241e-05,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2250,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "costly_squares_final_digit_concepts"
+}

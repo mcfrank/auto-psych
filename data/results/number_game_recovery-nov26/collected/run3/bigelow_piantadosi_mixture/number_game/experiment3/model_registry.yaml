@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  approximate_near_miss_rules: 0.125
+  example_count_scaled_hull: 0.125
+  min_max_bounded_range: 0.125
+  previous_set_concept_intrusion: 0.125
+  tightness_cued_min_max_range: 0.125
+  tightness_cued_rule_range_expectation: 0.125
+  variable_min_max_bounded_range: 0.125
+  variable_rule_range_expectation: 0.125

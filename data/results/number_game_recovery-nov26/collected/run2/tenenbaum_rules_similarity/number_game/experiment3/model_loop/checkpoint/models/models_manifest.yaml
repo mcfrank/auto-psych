@@ -1,0 +1,327 @@
+models:
+- name: no_digit_containment_span_concepts
+  rationale: 'People do the same Bayesian concept learning as the current best model
+    (arithmetic and final-digit rules plus multiples of 13-50, rule runs confined
+    to a stretch of the number line, ranges of a typical width, an inferred share
+    of random examples, examples drawn without replacement), except that they never
+    entertain "contains the digit d" concepts: a digit that merely appears somewhere
+    in the written numbers (such as a shared tens digit) is not noticed as a pattern.
+    This simpler concept space predicts that near targets get no extra "yes" for sharing
+    an example''s decade and that sets like 8, 80, 48 do not generalise to other numbers
+    containing an 8.'
+- name: above_max_stricter_criterion
+  rationale: 'People do the same Bayesian concept learning as the current best model,
+    but when they turn their belief into a yes/no answer they demand more certainty
+    for a target larger than every example shown: the largest example acts as a soft
+    ceiling, so going beyond it needs stronger evidence than going below the smallest.
+    This one decision-stage criterion shift (its size inferred, zero recovering the
+    best model) predicts fewer "yes" answers just above the largest example than just
+    below the smallest one, at equal belief that the concept contains the target.'
+- name: off_by_one_sequence_concepts
+  rationale: 'People do the same Bayesian concept learning as the current best model
+    (arithmetic and final-digit rules plus multiples of 13-50, rule runs confined
+    to a stretch of the number line, ranges of a typical width, an inferred share
+    of random examples, examples drawn without replacement), but they also entertain
+    "near-miss" sequences: one more or one less than the members of a familiar sparse
+    sequence (squares, cubes, powers of 2 to 10), such as 2, 5, 10, 17, 26 (squares
+    plus one) or 1, 3, 7, 15, 31, 63 (powers of two minus one). Each such shifted
+    sequence is equally likely a priori, the family taking an inferred share of the
+    rule prior, so sets like 31, 3, 1, 15 or 33, 17, 5, 9 generalise sharply to the
+    other members of the shifted sequence (7, 63 or 65) and not to broad rules such
+    as odd numbers.'
+- name: feature_prototype_typicality
+  rationale: "People do not infer a rule; they abstract a prototype of the example\
+    \ set \u2014 a summary of how often each familiar number property (odd/even, prime,\
+    \ square, cube, power, multiple of 3-12) and each final digit occurs among the\
+    \ examples, plus the examples' average magnitude and spread \u2014 with each property\
+    \ tracked independently and the estimates hedged toward how common the property\
+    \ is among all numbers when there are few examples. They say \"yes\" to the degree\
+    \ that the target looks more typical of this prototype than of numbers in general\
+    \ (the summed property-by-property and magnitude likelihood ratio), so a target\
+    \ lacking a property every example shares is rejected more firmly the more examples\
+    \ showed it, and a target near the examples' centre is favoured whatever rule\
+    \ it fits."
+- name: digit_grid_block_concepts
+  rationale: "People do the same Bayesian concept learning as the current best model\
+    \ (arithmetic and final-digit rules plus multiples of 13-50, rule runs confined\
+    \ to a stretch of the number line, an inferred share of random examples, examples\
+    \ drawn without replacement, a preferred typical concept size), but they do not\
+    \ picture \"ranges\" as stretches of the number line: they picture each number\
+    \ by its two written digits, laid out on a decades-by-final-digits grid, and their\
+    \ magnitude concepts are rectangular blocks of that grid \u2014 a run of decades\
+    \ combined with a run of final digits (e.g. \"the 40s to 60s ending in 3 to 5\"\
+    , or a whole decade such as \"the 30s\"). The sharpest disagreement with the best\
+    \ model lives on examples that fit no rule but share a final-digit band across\
+    \ decades: 44, 64 should generalise to 54 (and 34 or 74) far more than to 45 or\
+    \ 47, which sit closer on the number line, and a stretch such as 38-42 that crosses\
+    \ a decade line is a priori an unnatural concept."
+- name: yes_bias_logodds_concepts
+  rationale: 'A refinement of the incumbent no_digit_containment_span_concepts: people
+    do the same Bayesian concept learning (arithmetic and final-digit rules plus multiples
+    of 13-50, rule runs confined to a stretch of the number line, ranges of a typical
+    width, an inferred share of random examples, examples drawn without replacement,
+    no "contains digit d" concepts), but they do not answer "yes" exactly as often
+    as they believe the concept contains the target: they carry a general response
+    bias, a single shift of the log-odds of their belief (its size and sign inferred,
+    zero recovering the incumbent). This predicts that targets the learner is unsure
+    about (beliefs near 50%) are pushed systematically toward "no" (or "yes"), while
+    targets almost surely in or out of the concept are barely affected.'
+- name: gaussian_cluster_magnitude_concepts
+  rationale: 'People infer arithmetic and final-digit rules (and stretches of them)
+    by the same Bayesian concept learning as the current best model, but when the
+    examples suggest a "region of magnitudes" they do not picture a sharp-edged range:
+    they picture a fuzzy cluster around a central number, from which the program emits
+    numbers more often the closer they are to the centre (with a spread on a scale
+    they have learned to expect), and they judge a target''s membership by how typical
+    it is of that cluster, which fades smoothly with its distance from the centre.
+    So, for examples that fit no rule, "yes" is strongest near the middle of the examples,
+    weaker at and just beyond the outermost examples, and fades gradually with no
+    sharp cut-off at the edges of the examples'' span.'
+- name: graded_ratio_ceiling_criterion
+  rationale: I chose above_max_stricter_criterion and refined it. People do the same
+    Bayesian concept learning as the best model (arithmetic and final-digit rules
+    plus multiples of 13-50, rule runs confined to a stretch of the number line, ranges
+    of a typical width, an inferred share of random examples, examples drawn without
+    replacement, no "contains digit d" concepts), and they treat the largest example
+    as a soft ceiling when they turn belief into a yes/no answer. The one change is
+    that the extra certainty they demand is not a fixed step but grows with how far
+    beyond the largest example the target lies, judged as a ratio (Weber-like "how
+    much bigger"), so a target just above the largest example is barely penalised,
+    one twice as large needs much stronger evidence, and the same absolute overshoot
+    counts for more above small examples than above large ones.
+- name: example_retention_limited_memory
+  rationale: 'People do the same Bayesian concept learning as the best model (arithmetic
+    and final-digit rules plus multiples of 13-50, rule runs confined to a stretch
+    of the number line, ranges of a typical width, an inferred share of random examples,
+    examples drawn without replacement, the largest example as a graded soft ceiling),
+    but their working memory for the examples is unreliable: by the time they judge
+    the target, each example has independently been lost with some inferred probability
+    (at least one is always kept), and they generalise only from the examples they
+    still hold, including taking the largest example they remember as their ceiling.
+    Because a forgotten example removes its evidence entirely, this predicts broader,
+    less rule-tight generalisation from larger sets than full-memory inference and
+    partial "yes" to targets that fit only some of the examples.'
+- name: prelec_weighted_concept_belief
+  rationale: 'People do the same normative Bayesian concept learning as no_digit_containment_span_concepts
+    (arithmetic and final-digit rules plus multiples of 13-50, rule runs confined
+    to a stretch of the number line, ranges of a typical width, an inferred share
+    of random examples, examples drawn without replacement, no "contains digit d"
+    concepts), but they distort their belief through a prospect-theory probability-weighting
+    function when answering: small beliefs that the target belongs are overweighted
+    and near-certain beliefs underweighted (an inverse-S Prelec curve whose curvature
+    is inferred, one recovering calibrated answers). Unlike a symmetric confidence
+    scaling of log-odds, this distortion is asymmetric, so near-impossible targets
+    get noticeably more "yes" while near-certain ones lose only a little, and the
+    crossover sits below 50% belief.'
+- name: pattern_or_random_guessing
+  rationale: Before generalising, people first ask whether the examples follow any
+    pattern at all, or whether the program could just be producing arbitrary numbers.
+    They weigh "no pattern" against the concepts they know (the same arithmetic and
+    final-digit rules, rule stretches and ranges as the current models) by how well
+    each explains the examples, and to the degree they conclude there is no pattern
+    they stop using concepts and guess at their own fixed yes-rate. So short or weakly
+    patterned sets (one or two examples, or examples sharing only a broad property
+    like being even) get noisy, middling answers to every target, including the examples
+    themselves, while sets with a striking pattern (powers of 2, squares) get crisp
+    yes/no answers.
+- name: sample_count_scaled_ceiling
+  rationale: "I refined the incumbent graded_ratio_ceiling_criterion. People do the\
+    \ same Bayesian concept learning (arithmetic and final-digit rules plus multiples\
+    \ of 13-50, rule runs confined to a stretch of the number line, ranges of a typical\
+    \ width, an inferred share of random examples, examples drawn without replacement,\
+    \ no \"contains digit d\" concepts) and treat the largest example as a soft ceiling\
+    \ whose extra demanded certainty grows with the ratio by which the target overshoots\
+    \ it. The one change is that this ceiling is inferred like an upper bound from\
+    \ samples (\"German tank\" reasoning): every example that fell at or below the\
+    \ largest one is further evidence that nothing much larger is produced, so the\
+    \ penalty for overshooting scales with the number of examples shown \u2014 a single\
+    \ example sets only a weak ceiling, while four examples all below 20 make 40 strongly\
+    \ implausible."
+- name: two_sided_ratio_span_criterion
+  rationale: 'I refined the incumbent graded_ratio_ceiling_criterion. People do the
+    same Bayesian concept learning (arithmetic and final-digit rules plus multiples
+    of 13-50, rule runs confined to a stretch of the number line, ranges of a typical
+    width, an inferred share of random examples, examples drawn without replacement,
+    no "contains digit d" concepts), and when they turn belief into a yes/no answer
+    they judge how far outside the examples'' span the target lies as a ratio, both
+    above the largest example and below the smallest. The one change is that the smallest
+    example also acts as a soft, ratio-graded bound, with its own inferred strength
+    and sign (zero recovers the incumbent): the criterion shifts in proportion to
+    how many times smaller the target is than the smallest example, separately from
+    the shift above the largest, so "yes" below the examples can fall off more slowly
+    (or faster) than above them.'
+- name: directional_edge_bias_criterion
+  rationale: 'I chose above_max_stricter_criterion and refined it. People do the same
+    Bayesian concept learning as the best model (arithmetic and final-digit rules
+    plus multiples of 13-50, rule runs confined to a stretch of the number line, ranges
+    of a typical width, an inferred share of random examples, examples drawn without
+    replacement, no "contains digit d" concepts), and when they turn belief into a
+    yes/no answer the edges of the examples are directional: just past the largest
+    example they demand more certainty to say "yes", and just past the smallest example
+    they demand less. The one change is that the criterion shift is not a fixed step
+    for every target above the largest example but a single signed edge bias, mirrored
+    at both ends and fading over about eight numbers beyond the edge. So at equal
+    belief, people say "yes" more to a target a few numbers below the smallest example
+    than to one a few numbers above the largest, and targets far outside the examples
+    are judged on belief alone.'
+- name: last_example_ratio_ceiling
+  rationale: 'People do the same Bayesian concept learning as the best model (arithmetic
+    and final-digit rules plus multiples of 13-50, rule runs confined to a stretch
+    of the number line, ranges of a typical width, an inferred share of random examples,
+    examples drawn without replacement, no "contains digit d" concepts), and when
+    they turn belief into a yes/no answer they use a magnitude anchor as a soft ceiling
+    whose demanded extra certainty grows with the ratio by which the target overshoots
+    it. The one change is that the anchor is not the largest example but the most
+    recently shown one (recency anchoring): the last example read sets the magnitude
+    reference, so the same set in a different order generalises differently, and targets
+    larger than the last example are penalised even when an earlier example was larger
+    still.'
+- name: nearest_example_ratio_similarity
+  rationale: "People do the same Bayesian concept learning as the current best models\
+    \ (arithmetic and final-digit rules plus multiples of 13-50, rule runs confined\
+    \ to a stretch of the number line, ranges of a typical width, an inferred share\
+    \ of random examples, examples drawn without replacement, no \"contains digit\
+    \ d\" concepts), but their answer is also pulled by magnitude similarity: the\
+    \ further the target lies from its nearest example on a ratio (Weber-like, logarithmic)\
+    \ scale, the more certainty they demand before saying \"yes\", with the demand\
+    \ growing in proportion to that log-ratio distance. Unlike a ceiling at the largest\
+    \ example, this similarity gradient is symmetric and applies everywhere \u2014\
+    \ above the largest example, below the smallest, and in wide gaps between examples\
+    \ \u2014 so at equal belief a target close in proportion to some example (e.g.\
+    \ 9 after 8) gets more \"yes\" than one in a large proportional gap (e.g. 30 after\
+    \ 8 and 64)."
+- name: new_set_criterion_ratio_ceiling
+  rationale: 'I refined the incumbent graded_ratio_ceiling_criterion, grafting the
+    new-set caution of the pruned new_set_cautious_erlang_concepts. People do the
+    same Bayesian concept learning (arithmetic and final-digit rules plus multiples
+    of 13-50, rule runs confined to a stretch of the number line, ranges of a typical
+    width, an inferred share of random examples, examples drawn without replacement,
+    no "contains digit d" concepts) and treat the largest example as a soft, ratio-graded
+    ceiling; the one change is that their yes/no criterion also depends on whether
+    the set is new: on the first question after the examples change (or at session
+    start) they demand a different amount of certainty to say "yes" than on a repeated
+    question about the same set, a single log-odds criterion shift whose size and
+    sign are inferred (zero recovers the incumbent). This predicts that, at equal
+    belief, the first query about a new set gets fewer "yes" answers than later queries
+    about that same set, as the posterior-predictive critique of the incumbent suggests.'
+- name: new_set_criterion_tank_ceiling
+  rationale: "I chose sample_count_scaled_ceiling and refined it. People do the same\
+    \ Bayesian concept learning (arithmetic and final-digit rules plus multiples of\
+    \ 13-50, rule runs confined to a stretch of the number line, ranges of a typical\
+    \ width, an inferred share of random examples, examples drawn without replacement,\
+    \ no \"contains digit d\" concepts) with the largest example as a soft ceiling\
+    \ whose penalty grows with the overshoot ratio and the number of examples shown.\
+    \ The one change, grafted from the pruned new_set_cautious_erlang_concepts but\
+    \ recast as a decision criterion: on the first question after a new set of examples\
+    \ appears, people demand extra certainty before saying \"yes\" (a log-odds shift\
+    \ of their belief, its size and sign inferred, zero recovering the parent), relaxing\
+    \ to their plain criterion once they have been asked about that set before \u2014\
+    \ so uncertain targets get fewer \"yes\" answers on a first query than on repeat\
+    \ queries, while near-certain members and non-members barely change."
+- name: noisy_belief_certainty_criterion
+  rationale: 'People do the same Bayesian concept learning as no_digit_containment_span_concepts
+    (arithmetic and final-digit rules plus multiples of 13-50, rule runs confined
+    to a stretch of the number line, ranges of a typical width, an inferred share
+    of random examples, examples drawn without replacement, no "contains digit d"
+    concepts), but they do not answer "yes" as often as they believe the target belongs:
+    they compare that belief against an internal criterion of how sure they must be,
+    with noise in the comparison (the criterion and the noise inferred). Because the
+    comparison is made on the probability itself, beliefs comfortably above the criterion
+    all get similarly high "yes" rates and beliefs below it similarly low ones, so
+    graded beliefs are pushed toward all-or-none answers around the criterion, and
+    even certain beliefs keep a non-zero rate of the opposite answer.'
+- name: upper_limit_tail_ceiling
+  rationale: 'I refined the incumbent graded_ratio_ceiling_criterion. People do the
+    same Bayesian concept learning (arithmetic and final-digit rules plus multiples
+    of 13-50, rule runs confined to a stretch of the number line, ranges of a typical
+    width, an inferred share of random examples, examples drawn without replacement,
+    no "contains digit d" concepts) and treat the largest example as a soft ceiling
+    graded by the ratio of the target to it. The one change is what the ceiling does:
+    rather than raising the certainty they demand (a log-odds criterion shift that
+    barely touches confident beliefs), people believe the program has an unknown upper
+    output limit somewhere at or above the largest example, with larger limits proportionally
+    less likely (a power-law tail whose steepness is inferred), and they say "yes"
+    only if the target fits the concept and also lies under that limit. So the chance
+    of "yes" is their belief multiplied by the chance the limit reaches the target,
+    which cuts even near-certain rule members above the largest example (e.g. 64 after
+    2, 4, 8, 16) by the same proportion as uncertain ones.'
+- name: digit_order_concepts
+  rationale: "People do the same Bayesian concept learning as graded_ratio_ceiling_criterion\
+    \ (arithmetic and final-digit rules plus multiples of 13-50, rule runs confined\
+    \ to a stretch of the number line, ranges of a typical width, an inferred share\
+    \ of random examples, examples drawn without replacement, no \"contains digit\
+    \ d\" concepts, the largest example as a ratio-graded soft ceiling), but they\
+    \ also notice how the two written digits of a number relate. So they entertain\
+    \ two digit-order concepts: \"two-digit numbers whose digits rise\" (12, 37, 89,\
+    \ ... \u2014 36 numbers) and \"two-digit numbers whose digits fall\" (10, 53,\
+    \ 97, ... \u2014 45 numbers). The two are equally likely a priori, and together\
+    \ they take an inferred share of the rule prior. This predicts that a set such\
+    \ as 93, 43, 83, 53 (all with falling digits) generalises somewhat to other falling-digit\
+    \ numbers such as 81 or 20, and not to rising-digit numbers such as 19 or single-digit\
+    \ numbers, beyond what its magnitude and arithmetic rules imply."
+- name: selective_attention_exemplar_similarity
+  rationale: 'People do not infer a rule; they judge the target by its summed similarity
+    to the stored examples (an exemplar model in the Generalized Context Model tradition),
+    but where they direct their attention is set by the examples themselves: number
+    properties (odd/even, prime, square, cube, powers, multiples of 3-12, final digit)
+    that the examples share and that are rare among 1-100 capture attention, while
+    the rest are largely ignored, alongside a ratio-scale sense of magnitude. A target
+    is then similar to an example to the extent it matches it on the attended properties
+    and is close to it in proportion, and people say "yes" in proportion to that summed
+    similarity relative to a fixed criterion, so a target sharing the examples'' distinctive
+    common property is accepted even when far away, and with no shared property acceptance
+    falls off smoothly with proportional distance from the nearest examples.'
+- name: participant_lapse_ratio_ceiling
+  rationale: 'I refined the incumbent new_set_criterion_ratio_ceiling. People do the
+    same Bayesian concept learning (arithmetic and final-digit rules plus multiples
+    of 13-50, rule runs confined to a stretch of the number line, ranges of a typical
+    width, an inferred share of random examples, examples drawn without replacement,
+    no "contains digit d" concepts), with the largest example as a ratio-graded soft
+    ceiling and a criterion shift on the first question about a new set. The one change:
+    participants differ in how attentively they answer. On some share of trials each
+    person does not consult their inference and simply guesses (at a guessing rate
+    everyone shares), and that share is a personal trait drawn from a population distribution,
+    so some people answer "no" even to the examples themselves far more often than
+    others do.'
+- name: familiarity_faded_set_criterion
+  rationale: 'I chose graded_ratio_ceiling_criterion and refined it. People do the
+    same Bayesian concept learning (arithmetic and final-digit rules plus multiples
+    of 13-50, rule runs confined to a stretch of the number line, ranges of a typical
+    width, an inferred share of random examples, examples drawn without replacement,
+    no "contains digit d" concepts) and treat the largest example as a ratio-graded
+    soft ceiling; the one change is that their yes/no criterion depends on how familiar
+    the example set is within the session: the first time they ever meet a set their
+    criterion is shifted by an inferred log-odds amount (size and sign inferred, zero
+    recovering the parent), and that shift fades in proportion to how often they have
+    already been asked about the set (half on the second encounter, a third on the
+    third, ...), regardless of whether other sets came in between. Unlike a shift
+    on every switch back to a set, this predicts that a set people return to after
+    seeing others is judged with its familiarity, so answers to an often-seen set
+    drift steadily toward the plain criterion over the session.'
+- name: evidence_sufficiency_commitment
+  rationale: "People do the same Bayesian concept learning as graded_ratio_ceiling_criterion\
+    \ (arithmetic and final-digit rules plus multiples of 13-50, rule runs confined\
+    \ to a stretch of the number line, ranges of a typical width, an inferred share\
+    \ of random examples, examples drawn without replacement, the largest example\
+    \ as a ratio-graded soft ceiling), but how firmly they act on that belief depends\
+    \ on how much evidence they were shown: a metacognitive sense of evidence sufficiency\
+    \ scales the log-odds of their belief by a commitment factor that grows (or shrinks)\
+    \ as a power of the number of examples, its exponent inferred and zero recovering\
+    \ the parent. With a positive exponent, after one or two examples people hedge\
+    \ toward 50/50 \u2014 saying \"yes\" to some targets they believe are out and\
+    \ \"no\" to some they believe are in \u2014 and only give crisp yes/no answers\
+    \ once three or four examples are shown."
+- name: extrapolated_step_ceiling
+  rationale: 'I refined the incumbent new_set_criterion_ratio_ceiling. People do the
+    same Bayesian concept learning (arithmetic and final-digit rules plus multiples
+    of 13-50, rule runs confined to a stretch of the number line, ranges of a typical
+    width, an inferred share of random examples, examples drawn without replacement,
+    no "contains digit d" concepts), with a ratio-graded soft ceiling and a criterion
+    shift on the first question about a new set; the one change is that the ceiling
+    is extrapolated rather than pinned at the largest example: people expect the program
+    could continue past its largest example by an inferred number of the examples''
+    typical proportional steps (how many times larger each sorted example is than
+    the one before), and only targets beyond that extrapolated point make them demand
+    extra certainty (zero steps recovers the incumbent). So widely spread sets (2,
+    8, 32) license "yes" well above their largest example without penalty, while tightly
+    clustered sets (40, 44, 47) keep their ceiling almost at the largest example.'

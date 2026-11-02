@@ -1,0 +1,21 @@
+---
+name: ppc-null-statistics
+description: Number-game PPC test-stat ideas already tried (iter_0-2) that all came back non-significant
+metadata:
+  type: project
+---
+In iters 0-2 (2026-10-30), 24 PPC statistics found 0 significant discrepancies: early-vs-late drift, lag-1 perseveration, target-in-set yes rate, far-target yes rate, proximity gradients, inside-vs-outside range, upward vs downward extension, parity and shared-last-digit rule match, set-size slope, single-example yes rate, isolated-outlier neighbourhood, recency vs primacy, round-number bias, decade similarity, within-set spread.
+iter_3 tried new ones: item unanimity, Weber-magnitude breadth, outlier-vs-clean last-digit rule, gcd multiples contrast, 1/100 edge extension, within-run position slope, participant-by-set breadth variance, single-example last digit.
+iter_4 proposed (results pending): order-permuted set gap (only 16,8 vs 8,16), digit-reversal targets, sum/difference-of-examples targets, off-rule residue class mod gcd, between-set yes variance, shared non-last digit, prime vs odd-composite in prime sets, in-hull non-rule targets for small-rule sets.
+**Why:** avoids re-proposing duplicates. Data facts: each (set, target) item was answered by all 5 participants; trial_index→set is shared across participants.
+**How to apply:** check iter_3/critique/ppc_results.json for which new ones hit; see [[number-game-refinement-findings]].
+
+experiment2 (2026-11-01, different data: noisy/outlier sets, yes rate 0.36, no participant_id, items answered 5x) iter_0 proposed: hull-gap interior yes, near-miss in last-digit sets, decade match outside range, majority-digit rule with outlier, shared contained digit (non-final), arithmetic relation v2, single-example magnitude gradient, late-minus-early yes. Check experiment2/model_loop/iter_0/critique/ppc_results.json for hits. Generator script pattern: iter_0/critique/scratch/gen.py (shared vectorised set parsing).
+
+experiment2 iter_0: all 8 null (0/8). iter_1 (critiquing first_example_anchored_reliability) proposed: item unanimity rate, outlier-position parity-rule contrast (stray first vs last), nearest-example first vs later contrast, random-set in-range breadth, small-vs-large far-target asymmetry, rule-member distance decay (shared-last-digit sets), stray-parity generalisation, digit-reversal targets. Generator: experiment2/model_loop/iter_1/critique/scratch/gen.py. Exp2 data: each (set,target) item answered 5x (9 items 10x); 41% of items unanimous.
+
+experiment2 iter_2 (critiquing familiar_strays_family_level_prior, 2026-11-01) proposed: target-is-example yes rate, familiar vs plain example-as-target contrast, familiar vs plain outlier majority-rule contrast, power-of-2 member yes (no tiny rule), tiny powers-of-m sets -> broad familiar-rule members, square members in square sets, even parity-only yes, gcd>=3 multiple contrast. Targets the family-only prior (tiny rules like {8,64} steal mass) and the familiar-stray mechanism. Generator: experiment2/model_loop/iter_2/critique/scratch/gen/gen.py.
+
+experiment2 iter_3 (critiquing graded_exemplar_concept_retrieval — note: no lapse term, r≈0.015) proposed: prime vs odd-composite in all-prime sets, far-target yes in tight sets (lapse floor), parity-violating in-hull minus parity-matching far, non-example yes slope on set size, outlier near-vs-far majority-rule contrast, final-digit sets -> tens-digit-match targets, single-example multiple/divisor contrast, between-set non-example yes SD. Generator: experiment2/model_loop/iter_3/critique/scratch2/gen.py (unique-item mask helper). iter_2 result: only familiar_vs_plain_outlier_rule_contrast hit (p=0.02); gcd_multiple_contrast p=0.09.
+
+experiment2 iter_3 result: 0/8 significant. iter_4 (critiquing familiar_strays_equal_rule_prior, 2026-11-01) proposed: familiar-outlier excuse contrast (re-test of the iter_2 hit), clean small-rule member yes (n>=3), clean-rule in-hull non-member yes, clean-rule member inside-minus-outside hull, unsupported familiar-target bias, outlier-neighbourhood generalisation, full-cover broad vs partial narrow rule contrast, single-example tiny-rule partner yes. Generator (with the model's 45-rule list as a helper): experiment2/model_loop/iter_4/critique/scratch2/gen.py.

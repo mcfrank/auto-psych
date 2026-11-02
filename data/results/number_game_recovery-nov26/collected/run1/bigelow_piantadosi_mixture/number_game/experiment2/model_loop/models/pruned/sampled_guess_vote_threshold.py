@@ -1,0 +1,162 @@
+"""Sampled-guess vote with a yes criterion (decision rule on a sticky-guess learner).
+
+Hypothesis: people form guesses about the concept as in the simplest
+sticky-guess learner (first_guess_win_stay_concepts: a working guess drawn from
+the Bayesian posterior after the first example, kept with probability `stay`
+while later examples fit it, redrawn from all examples so far otherwise), but
+they answer by calling to mind several such guesses and saying "yes" only if a
+sufficient share of them contain the target. With q the probability that one
+guess contains the target, k the effective number of guesses and theta the
+share required, P(yes) = I_q(k theta, k (1 - theta)) (the regularised
+incomplete beta, a continuous form of the binomial tail). k = 2, theta = 0.5
+gives I_q(1, 1) = q, plain probability matching; larger k sharpens, smaller k
+softens, and theta shifts the criterion toward liberal or conservative.
+
+For speed, intervals are grouped per example set by (size, which examples they
+contain), exactly as in first_guess_win_stay_concepts.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+ALPHA = 0.9
+NUMBERS = np.arange(1, 101)
+MAX_N = 4
+G_MAX = 480  # interval groups per set (padded)
+EMPTY_LOG_COUNT = -1e4
+
+
+def rule_concepts():
+    rules = {
+        "odd": [n for n in NUMBERS if n % 2 == 1],
+        "primes": [n for n in NUMBERS if n > 1 and all(n % a for a in range(2, int(n**0.5) + 1))],
+        "squares": [n * n for n in range(1, 11)],
+        "cubes": [n**3 for n in range(1, 5)],
+        "powers of 2, not 32": [2, 4, 8, 16, 64],
+        "powers of 2, or 37": [2, 4, 8, 16, 32, 37, 64],
+        "even": list(range(2, 101, 2)),
+    }
+    rules.update({f"multiples of {m}": list(range(m, 101, m)) for m in [3, 4, 5, 6, 7, 8, 9, 11, 12]})
+    rules.update({f"powers of {m}": [m**k for k in range(1, 8) if m**k <= 100] for m in range(2, 11)})
+    rules.update({f"ends in {d}": [n for n in NUMBERS if n % 10 == d] for d in range(10)})
+    rules.update({f"contains digit {d}": [n for n in NUMBERS if str(d) in str(n)] for d in range(10)})
+    return rules
+
+
+_RULES = rule_concepts()
+RULE_NAMES, RULES = list(_RULES), list(_RULES.values())
+N_RULES = len(RULES)
+RULE_MEMBERSHIP = np.array([np.isin(NUMBERS, c) for c in RULES], dtype="float64")
+RULE_EX_LOG_LIK = np.log(ALPHA * RULE_MEMBERSHIP / RULE_MEMBERSHIP.sum(axis=1, keepdims=True) + (1 - ALPHA) / 100)
+LO = np.array([m for m in NUMBERS for n in range(m, 101)])
+HI = np.array([n for m in NUMBERS for n in range(m, 101)])
+INTERVAL_SIZE = (HI - LO + 1).astype("float64")
+INTERVAL_MEMBERSHIP = ((NUMBERS[None, :] >= LO[:, None]) & (NUMBERS[None, :] <= HI[:, None])).astype("float64")
+N_HYP = N_RULES + G_MAX
+
+with pm.Model() as model:
+    prefix_log_lik = pm.Data("prefix_log_lik", np.zeros((1, MAX_N, N_HYP)))  # log lik of examples 1..k
+    contains = pm.Data("contains", np.ones((1, MAX_N, N_HYP)))  # example k lies in hypothesis
+    step_mask = pm.Data("step_mask", np.zeros((1, MAX_N)))  # example k exists
+    group_log_count = pm.Data("group_log_count", np.zeros((1, G_MAX)))
+    group_size = pm.Data("group_size", np.ones((1, G_MAX)))
+    cell_set = pm.Data("cell_set", np.zeros(1, dtype="int64"))  # set of each asked (set, target) cell
+    cell_member = pm.Data("cell_member", np.zeros((1, N_HYP)))  # share of hypothesis containing the target
+    row_cell = pm.Data("row_cell", np.zeros(1, dtype="int64"))  # cell of each trial
+    rating = pm.Data("rating", np.zeros(1, dtype="int64"))
+
+    # Rules share prior mass lambda_0 equally (kept lean so the fit is well identified).
+    lambda_0 = pm.Beta("lambda_0", 2, 2)
+    log_sigma = pm.Normal("log_sigma", mu=np.log(10.0), sigma=1.0)
+    sigma = pt.exp(log_sigma)
+    size = pt.as_tensor(INTERVAL_SIZE)
+    log_norm = pt.logsumexp(pt.log(size) - size / sigma)
+    group_log_prior = pt.log(group_size) - group_size / sigma - log_norm + group_log_count
+    log_prior = pt.concatenate([
+        pt.zeros((group_size.shape[0], N_RULES)) + (pt.log(lambda_0) - np.log(N_RULES)),
+        pt.log1p(-lambda_0) + group_log_prior,
+    ], axis=1)  # (sets, hyp)
+
+    # Probability of keeping a guess that the new example fits.
+    stay = pm.Beta("stay", 2, 2)
+
+    log_joint = log_prior[:, None, :] + prefix_log_lik
+    post = pt.exp(log_joint - pt.logsumexp(log_joint, axis=2, keepdims=True))  # (sets, steps, hyp)
+
+    q = post[:, 0, :]
+    for k in range(1, MAX_N):
+        kept = stay * q * contains[:, k, :]
+        updated = kept + (1 - kept.sum(axis=1, keepdims=True)) * post[:, k, :]
+        m = step_mask[:, k][:, None]
+        q = m * updated + (1 - m) * q
+
+    in_cell = pt.clip((q[cell_set] * cell_member).sum(axis=1), 1e-6, 1 - 1e-6)
+
+    # Decision: vote over ~k sampled guesses, "yes" if a share >= theta contain the target.
+    log_k = pm.Normal("log_k", mu=np.log(2.0), sigma=0.75)
+    k = pt.exp(log_k)
+    theta = pm.Beta("theta", 4, 4)
+    vote = pt.betainc(k * theta, k * (1 - theta), in_cell)
+    p_yes = pm.Deterministic("p_yes", pt.clip(vote[row_cell], 1e-6, 1 - 1e-6))
+    pm.Bernoulli("response", p=p_yes, observed=rating)
+
+
+def prepare_observed(rows):
+    """Rows carry `number_set` ("16,8", in presented order), `target` and `rating`."""
+    sets = [tuple(int(x) for x in str(r["number_set"]).split(",")) for r in rows]
+    unique = list(dict.fromkeys(sets))
+    index = {s: i for i, s in enumerate(unique)}
+    n_sets = len(unique)
+    prefix = np.zeros((n_sets, MAX_N, N_HYP))
+    contains = np.ones((n_sets, MAX_N, N_HYP))
+    mask = np.zeros((n_sets, MAX_N))
+    log_count = np.full((n_sets, G_MAX), EMPTY_LOG_COUNT)
+    gsize = np.ones((n_sets, G_MAX))
+    in_concept = np.zeros((n_sets, G_MAX, 100))
+    for i, s in enumerate(unique):
+        inside = np.stack([(LO <= x) & (HI >= x) for x in s], axis=1)  # (intervals, examples)
+        code = (inside * (1 << np.arange(len(s)))).sum(axis=1)
+        keys, group = np.unique(np.stack([INTERVAL_SIZE.astype(int), code], axis=1), axis=0, return_inverse=True)
+        group = group.reshape(-1)
+        n_g = len(keys)
+        assert n_g <= G_MAX
+        count = np.bincount(group, minlength=n_g).astype("float64")
+        members = np.zeros((n_g, 100))
+        np.add.at(members, group, INTERVAL_MEMBERSHIP)
+        log_count[i, :n_g] = np.log(count)
+        gsize[i, :n_g] = keys[:, 0]
+        in_concept[i, :n_g] = members / count[:, None]
+        g_in = np.zeros((n_g, len(s)))
+        for j in range(len(s)):
+            g_in[:, j] = (keys[:, 1] >> j) & 1
+        g_ex_ll = np.where(g_in > 0, np.log(ALPHA / keys[:, :1] + (1 - ALPHA) / 100), np.log((1 - ALPHA) / 100))
+        running = np.zeros(N_HYP)
+        for k in range(MAX_N):
+            if k < len(s):
+                step_ll = np.zeros(N_HYP)
+                step_ll[:N_RULES] = RULE_EX_LOG_LIK[:, s[k] - 1]
+                step_ll[N_RULES:N_RULES + n_g] = g_ex_ll[:, k]
+                running = running + step_ll
+                contains[i, k, :N_RULES] = RULE_MEMBERSHIP[:, s[k] - 1]
+                contains[i, k, N_RULES:] = 0.0
+                contains[i, k, N_RULES:N_RULES + n_g] = g_in[:, k]
+                mask[i, k] = 1.0
+            prefix[i, k] = running
+    cells = list(dict.fromkeys((index[s], int(r["target"])) for s, r in zip(sets, rows)))
+    cell_index = {c: j for j, c in enumerate(cells)}
+    cell_member = np.zeros((len(cells), N_HYP))
+    for j, (i, t) in enumerate(cells):
+        cell_member[j, :N_RULES] = RULE_MEMBERSHIP[:, t - 1]
+        cell_member[j, N_RULES:] = in_concept[i, :, t - 1]
+    return {
+        "prefix_log_lik": prefix,
+        "contains": contains,
+        "step_mask": mask,
+        "group_log_count": log_count,
+        "group_size": gsize,
+        "cell_set": np.array([i for i, _ in cells], dtype="int64"),
+        "cell_member": cell_member,
+        "row_cell": np.array([cell_index[(index[s], int(r["target"]))] for s, r in zip(sets, rows)], dtype="int64"),
+        "rating": np.array([int(r["rating"]) for r in rows], dtype="int64"),
+    }

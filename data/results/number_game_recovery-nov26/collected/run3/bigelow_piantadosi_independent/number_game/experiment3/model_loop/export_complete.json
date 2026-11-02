@@ -1,0 +1,13 @@
+{
+  "models": [
+    "round_landmark_veto",
+    "first_example_anchored_trust",
+    "forward_continuation_response_bias",
+    "round_veto_spacing_sparsity",
+    "square_pair_concepts",
+    "pedagogical_example_selection",
+    "forward_continuation_spacing_sparsity",
+    "widest_gap_sparsity_round_veto"
+  ],
+  "ledger_sha256": "2549d5fd3c7eb21d89b9b9c1dfff71ee6f00fb28012a7ee2a0de88c846e06d5b"
+}

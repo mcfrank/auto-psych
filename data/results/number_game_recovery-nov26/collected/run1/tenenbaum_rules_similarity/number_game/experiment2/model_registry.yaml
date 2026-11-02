@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  centre_weighted_range_sampling: 0.125
+  centre_weighted_ranges_with_thresholds: 0.125
+  first_example_evidence_weight: 0.125
+  round_number_range_boundaries: 0.125
+  round_number_ranges_primes_family: 0.125
+  threshold_concepts_primes_family: 0.125
+  without_replacement_primes_family: 0.125
+  without_replacement_size_principle: 0.125

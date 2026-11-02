@@ -1,0 +1,13 @@
+{
+  "models": [
+    "exception_rule_family_prior",
+    "exception_rule_family_prior_2",
+    "erlang_interval_size_family_prior",
+    "erlang_interval_size_family_prior_2",
+    "erlang_interval_size_exception_prior",
+    "power_base_family_prior",
+    "powers_own_family_erlang_interval",
+    "parity_bounded_range_concepts"
+  ],
+  "ledger_sha256": "8071d4a7946cbcca02c6e4ee53e253ae434543f0f11c52fccd9c62e8d5491d19"
+}

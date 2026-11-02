@@ -1,0 +1,45 @@
+- [Exp2 MAP probes](exp2-map-probe-results.md) — which refinements of Erlang incumbent gain nothing on exp2 data; threshold family worked; novelty RMSE probe; raw exp2 response patterns; concept-family probes (digit sums best); similarity-model probes (mean beats sum, ~780 nats worse than concept learning); centre-weighted range sampling probe + speed tricks; exemplar averaging of single-example generalisation (-2995); range-only size-principle exponent; without-replacement sampling (+0.2); without-replacement + digit sums (+0.5); round-number + primes family (+0.76, iter_4); geometric-mean category similarity -2990 (iter_4)
+- [Exp2 pedagogical probe](exp2-pedagogical-sampling-probe.md) — teacher-sampling strength pinned at 0; fixed pedagogy -39 nats; fast teacher-likelihood trick; nested version too slow, fixed-reference repair
+- [Exp2 memory/conservatism probes](exp2-memory-and-prior-anchoring-probes.md) — conservatism, recency memory, family sharpening, digit confusion all pin at normative; round-number range edges is the one interior optimum (iter_3)
+- [Exp2 iter3 saturation probes](exp2-iter3-saturation-probes.md) — divisors, units-digit ranges, capped rules, family-first sharpening, spread sampling all collapse; Gaussian prototype ranges -70 nats; iter4: set-size amplification dead on WR base, WR+primes+digit sums -2243.66
+- [Exp2 simplicity prior](exp2-simplicity-prior-probe.md) — description-length prior instead of family masses loses ~875 nats (iter_4)
+- [Exp2 iter4 round-number refinements](exp2-iter4-round-number-refinements.md) — lo/hi split, threshold round bonus, set-size exponent dead on round incumbent; primes +0.76, digit sums +0.60
+- [Exp2 iter4 order probes](exp2-iter4-order-probes.md) — position gradient pinned at 0; first-example weight 0.96 (+1.1 nats, submitted)
+- [Exp3 prototype probe](exp3-prototype-probe.md) — attention-weighted set prototype -4466 MAP vs constant -4617; similarity accounts still ~900 nats behind (exp3 iter_0)
+- [Exp3 centre-weighted + round edges](exp3-iter0-centre-weighted-round-edges.md) — round-edge bonus on centre_weighted_ranges_with_thresholds +1.0 nats MAP, bonus -0.76 (exp3 iter_0)
+- [Exp3 decision-rule probes](exp3-decision-rule-probes.md) — lapse+guess bias dead (e=0); logit gain+criterion +1.7 nats, submitted (exp3 iter_0)
+- [Exp3 iter0 centre-weighted probes](exp3-iter0-centre-weighted-probes.md) — primes +1.5, round +0.9 on the exp3 incumbent; centre weight ~0.02 at MAP
+- [Exp3 iter0 centre-weighted probes](exp3-iter0-centre-weighted-probes.md) — alpha/gamma-shape/progressions dead on exp3 incumbent; digit sums, primes +1.5, round +0.95
+- [Exp3 concept-family probes](exp3-concept-family-probes.md) — near-misses, progressions, digit structure dead on exp3; digit sums +1.5, graded digit-sum prior +3.0 (submitted)
+- [Exp3 raw response patterns](exp3-raw-response-patterns.md) — target-is-example yes 0.65, no odd-set parity effect, flat proximity, low yes for 71-90 (iter_1 critique)
+- [Exp3 iter1 graded-dsum refinements](exp3-iter1-graded-dsum-refinements.md) — primes own family +1.3 on graded digit-sum incumbent (submitted); dsum quadratic, location slope, graded multiples, powers family dead
+- [Exp3 iter1 graded-incumbent probes](exp3-iter1-graded-incumbent-probes.md) — cand_4: round edges +0.67 submitted; primes dup of cand_3; gain/first-example/digit product+difference/graded multiples dead; check siblings first
+- [Exp3 iter1 refinement probes](exp3-iter1-refinement-probes.md) — location prior and digit vocabulary dead; round edges on cw digit sums +1 (submitted); thresholds -0.6 on the incumbent structure
+- [Exp3 iter1 incumbent probes](exp3-iter1-incumbent-probes.md) — order, location, decades, trial drift dead on graded digit-sum incumbent; multiples 13-50 +0.28 submitted
+- [Exp3 iter1 saturation probes](exp3-iter1-saturation-probes.md) — incumbent at noise ceiling (dev 646/1227 cells); decades/geometric/digit-gap/anything/odd-even split dead; location slope +0.18 (iter_1)
+- [Exp3 iter1 process probes](exp3-iter1-process-probes.md) — target-as-evidence, previous-set carry-over, random generator, odd own family, kind sharpening all pin at normative; compile_fn RV bug (iter_1)
+- [Exp3 iter1 repair probes](exp3-iter1-repair-familiarity-weak-sampling.md) — target familiarity bias dead; weak-sampling elimination -495 nats MAP (submitted exploratory)
+- [Exp3 iter1 speed repair](exp3-iter1-speed-repair.md) — graded models time out (170ms/eval, dsum_decay unidentified); width-grouped Chebyshev precompute → 9 min/chain
+- [Exp3 iter2 critique stats](exp3-iter2-critique-stats.md) — rule-slice stats; digit-sum sets show no same-sum preference in raw data, targets 1/100 rejected
+- [Exp3 iter2 sequential-kind probes](exp3-iter2-sequential-kind-probes.md) — learned reliability pins at 0.9; kind revision weight w≈1.03 (+0.4), submitted sequential_kind_revision
+- [Exp3 iter2 verification/sharpening probes](exp3-iter2-verification-and-sharpening-probes.md) — rule verification errors, rules-only strength, kind sharpening all pin at 1/0; submitted kind_level_overcommitment
+- [Exp3 iter2 equal rule prior](exp3-iter2-equal-rule-prior-probes.md) — alpha 0.9 sharp optimum, endpoint bias dead, equal per-rule prior -1.3 MAP with 5 fewer params (submitted)
+- [Exp3 iter2 disjunction probe](exp3-iter2-disjunction-probe.md) — two-rule unions dead with 10% noise; no-noise+unions ~820 nats worse (submitted exploratory)
+- [Exp3 iter2 graded-incumbent probes](exp3-iter2-graded-incumbent-probes.md) — centre weight useless; dsum gain is the set 89; ends-in graded +0.65 submitted; other prior tweaks dead
+- [Exp3 iter2 menu-refinement probes](exp3-iter2-menu-refinement-probes.md) — range size exponent, Weber width dead on cw digit sums; multiples-of-5 edge bias +0.5 (submitted)
+- [Exp3 iter2 convergence repair](exp3-iter2-convergence-repair.md) — Dirichlet→softmax Normal logits + dsum_decay sigma 0.5 fixes R-hat on family-prior models
+- [Exp3 novelty gate MAP vs posterior](exp3-iter2-novelty-gate-map-vs-posterior.md) — MAP pool RMSE overstates posterior RMSE ~3x for weak params; nov.py probe script; primes split ~0.0035 passes
+- [Exp3 iter3 critique participant structure](exp3-iter3-critique-participant-structure.md) — rows are 15 participants x 450 in order (3 lists x 5); harness keeps order; iter_3 stats mostly null vs MAP
+- [Exp3 iter3 place-value similarity](exp3-iter3-place-value-similarity.md) — tens/units grid GCM, smoke loglik -4552, fast (iter_3 cand_1)
+- [Exp3 iter3 order weights](exp3-iter3-order-weight-probes.md) — last/first-example weights pin at 1 (≈+0.7 nats); submitted last_example_recency_weight
+- [Exp3 iter3 round-edge graded final digit](exp3-iter3-round-edge-graded-final-digit.md) — round edges on graded_final_digit +0.6 MAP, post RMSE 0.0027 vs parent, submitted; post.py posterior novelty probe
+- [Exp3 iter3 decision-rule probes](exp3-iter3-decision-rule-probes.md) — coverage-relative criterion dead; Prelec weighting +0.93 (submitted); set-size gain +1.2
+- [Exp3 iter3 equal-prior incumbent probes](exp3-iter3-equal-prior-incumbent-probes.md) — re-exposure and rule-size prior dead; round edges +0.8 (RMSE 0.0027); graded ends-in +0.88 submitted
+- [Exp3 iter3 round edge on equal prior](exp3-iter3-round-edge-equal-prior.md) — round-edge bonus on the equal-prior incumbent +1.15 MAP, grouped precompute 46ms/grad (submitted)
+- [Exp3 iter4 critique stats](exp3-iter4-critique-stats.md) — observed values for 8 new slices; target=first example endorsed more than target=last (-0.12)
+- [Exp3 iter4 factorisation exemplar](exp3-iter4-factorization-exemplar.md) — lcm/gcd + magnitude GCM, smoke -4580, submitted (iter_4)
+- [Exp3 iter4 set-size decisiveness](exp3-iter4-set-size-decisiveness.md) — logit gain by set size on recency incumbent +1.0 MAP, RMSE 0.007, submitted
+- [Exp3 iter4 reversal-pair concepts](exp3-iter4-reversal-pair-concepts.md) — reversal pairs {ab,ba} +0.83 MAP (submitted); Fibonacci/triangular/digit product/vocabulary dead
+- [Exp3 iter4 set-size trust](exp3-iter4-set-size-trust.md) — trust slope over set size dead (-0.025), +0.9 MAP from alpha 0.908; submitted (iter_4 cand_3)
+- [Exp3 iter4 individual kind preference](exp3-iter4-individual-kind-preference.md) — per-participant range-vs-rule logits +7.7 MAP (fixed effects); repair: unique-pair mat-vec trick 3.9 ms/grad, ~19 min fit
+- [Exp3 iter4 sampling/generation probes](exp3-iter4-sampling-generation-probes.md) — limited prior-sample generation (unidentified) and enumeration-order rule sampling (pinned 0) dead; hard first anchor -1257; submitted evidence_quantity_decisiveness (+1.2)

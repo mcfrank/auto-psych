@@ -1,0 +1,87 @@
+{
+  "posteriors": {
+    "rule_plus_exception_neighbourhood": 0.610131,
+    "rule_plus_decade_exception": 0.274215,
+    "example_anchored_exception_neighbourhood": 0.005398,
+    "rule_with_exception_side_channel": 0.005658,
+    "seen_final_digits_decade_exception": 0.104597
+  },
+  "elpd_loo": {
+    "rule_plus_exception_neighbourhood": -1760.3317,
+    "rule_plus_decade_exception": -1761.1315,
+    "example_anchored_exception_neighbourhood": -1765.0593,
+    "rule_with_exception_side_channel": -1765.0122,
+    "seen_final_digits_decade_exception": -1762.0953
+  },
+  "n_trials": 4500,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "rule_plus_exception_neighbourhood": {
+      "rank": 0,
+      "elpd_loo": -1760.33169913193,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.6101310215774022,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "rule_plus_decade_exception": {
+      "rank": 1,
+      "elpd_loo": -1761.1314587595157,
+      "elpd_diff": 0.7997596275856722,
+      "dse": 3.977996443434022,
+      "dse_clustered": 4.623908873448493,
+      "weight": 0.2742154458086129,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "seen_final_digits_decade_exception": {
+      "rank": 2,
+      "elpd_loo": -1762.095260107806,
+      "elpd_diff": 1.7635609758760893,
+      "dse": 4.529239639032807,
+      "dse_clustered": 5.341103413541969,
+      "weight": 0.1045967779583012,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "rule_with_exception_side_channel": {
+      "rank": 3,
+      "elpd_loo": -1765.0122248068299,
+      "elpd_diff": 4.6805256748998545,
+      "dse": 3.6909146907396466,
+      "dse_clustered": 4.287511145620646,
+      "weight": 0.0056584389408753065,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "example_anchored_exception_neighbourhood": {
+      "rank": 4,
+      "elpd_loo": -1765.0592858552518,
+      "elpd_diff": 4.727586723321792,
+      "dse": 2.583080202599421,
+      "dse_clustered": 2.8904366674662283,
+      "weight": 0.005398315714808503,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "rule_plus_exception_neighbourhood"
+}

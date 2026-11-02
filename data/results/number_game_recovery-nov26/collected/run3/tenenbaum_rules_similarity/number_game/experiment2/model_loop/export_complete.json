@@ -1,0 +1,13 @@
+{
+  "models": [
+    "beta_share_width_exception_concepts",
+    "uncertainty_shifted_criterion",
+    "specificity_biased_rule_prior",
+    "boundary_examples_anchor_ranges",
+    "range_size_misperception_concepts",
+    "mixed_strong_weak_sampling_concepts",
+    "individual_rule_vs_range_tendency",
+    "mixed_sampling_prior_leaking_judgment"
+  ],
+  "ledger_sha256": "c3d88e510f541556437410f2ad720e68cbc88a5faa302f3aac60139700ecc263"
+}

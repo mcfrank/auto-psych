@@ -1,0 +1,4 @@
+2026-10-30T10:42:17-07:00 applied main 81b6e2a4..2543dc56 (src/ only: 5-hour usage limit; HDF5 lock off) on top of 81b6e2a432c3948f22c22fab13811566e16efed2
+2026-10-30T12:38:06-07:00 applied 2543dc56..d07c467a on top of 81b6e2a432c3948f22c22fab13811566e16efed2
+2026-11-01T11:11:38-08:00 applied the export fit-alias fix (uncommitted, on a38c7f7b: _export_inner_loop_models files a renamed model's cached fit under its export name) on top of 81b6e2a432c3948f22c22fab13811566e16efed2
+a38c7f7b+export_fit_alias.src.patch was committed as e534c4c6 (branch export-files-renamed-fit), 2026-11-01.

@@ -1,0 +1,13 @@
+{
+  "models": [
+    "round_endpoint_interval_concepts",
+    "power_law_endpoints_erlang_width",
+    "first_guess_win_stay_concepts",
+    "sticky_guess_power_law_ranges",
+    "magnitude_compressed_sampling_concepts",
+    "fuzzy_trace_example_memory",
+    "digit_rule_discount_sticky_guess",
+    "sticky_guess_last_digit_rule_prior"
+  ],
+  "ledger_sha256": "e5aaac268b2797e06badbabd3253e32a267afddc2029c96b56327350b21091c5"
+}

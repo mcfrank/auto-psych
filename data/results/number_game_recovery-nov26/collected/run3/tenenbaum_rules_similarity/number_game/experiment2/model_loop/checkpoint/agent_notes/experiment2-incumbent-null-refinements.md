@@ -1,0 +1,2 @@
+
+What DID help (submitted as beta_share_width_exception_concepts, iter_0/candidate_3): replacing the gamma width prior with a beta prior over the share (L-0.5)/100, mean ≈0.48 and concentration ≈5.4. Quick LOO -2273.1 vs -2278.4 (+5.2); paired difference +4.6 ± 2.2 grouped by stimulus pair. Largest gain on 43,4,91,9, where near-full ranges are penalised. p_yes RMSE vs incumbent 0.017. Lognormal width: -2281.6 (worse).

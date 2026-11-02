@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  first_example_anchored_trust: 0.125
+  forward_continuation_response_bias: 0.125
+  forward_continuation_spacing_sparsity: 0.125
+  pedagogical_example_selection: 0.125
+  round_landmark_veto: 0.125
+  round_veto_spacing_sparsity: 0.125
+  square_pair_concepts: 0.125
+  widest_gap_sparsity_round_veto: 0.125

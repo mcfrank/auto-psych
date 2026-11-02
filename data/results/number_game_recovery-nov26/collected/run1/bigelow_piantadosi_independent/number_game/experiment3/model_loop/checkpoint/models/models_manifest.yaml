@@ -1,0 +1,351 @@
+models:
+- name: rule_plus_exception_neighbourhood
+  rationale: "Refinement of `rule_plus_exception_concepts`: people do the same tempered,\
+    \ exception-tolerant Bayesian concept learning over the same 45 rules (final-digit\
+    \ rules salient), moderate-width ranges on a compressed number line, and \"rule\
+    \ plus exception\" concepts, but the exception they add to a rule is not a single\
+    \ isolated number \u2014 it is a small fuzzy region of the number line around\
+    \ it (\"ends in 2, and also numbers around 27\"), whose radius (zero, one, two\
+    \ \u2026 up to three steps) is a priori more likely the smaller it is, with the\
+    \ fall-off fitted. The one change is this neighbourhood-sized exception: when\
+    \ one example breaks the others' pattern (for instance, the one odd number among\
+    \ even ones), people still endorse it and still extend the rule to distant numbers,\
+    \ but they also endorse the off-pattern example's close neighbours more than the\
+    \ point-exception model predicts, as the critique reports."
+- name: rule_plus_decade_exception
+  rationale: 'Refinement of `rule_plus_exception_concepts`: people do the same tempered,
+    exception-tolerant Bayesian concept learning over the same 45 rules (final-digit
+    rules salient), moderate-width ranges on a compressed number line, and "rule plus
+    one exception" concepts, but they can also code the exception at the place-value
+    level, as the whole decade the off-pattern number falls in ("ends in 2, and also
+    the twenties"), with a fitted share of the exception prior going to these rule-plus-decade
+    concepts. The one change is this decade-level exception: when one example breaks
+    the others'' pattern, people endorse not only that example but also its same-decade
+    neighbours (closing the critique that they generalise around the off-parity example
+    more than the incumbent predicts), while still rejecting its neighbours just across
+    a decade boundary and still extending the rule to distant numbers.'
+- name: example_anchored_exception_neighbourhood
+  rationale: 'Refinement of `rule_plus_exception_neighbourhood`: people do the same
+    tempered, exception-tolerant Bayesian concept learning over the same 45 rules
+    (final-digit rules salient), moderate-width ranges on a compressed number line,
+    and "rule plus a small fuzzy neighbourhood" concepts (radius zero to three, smaller
+    radii a priori likelier), but they build those exceptions bottom-up from what
+    they saw: a rule''s exception region is only ever centred on an example that the
+    rule fails to cover ("ends in 2, and also numbers around 27" because 27 was shown),
+    never at an arbitrary place on the number line, and these anchored variants share
+    a fitted part of the rule''s prior. The one change is this example-anchored proposal
+    of exceptions, replacing the incumbent''s uniform prior over every possible exception
+    location: when one example breaks the others'' pattern, the rule-plus-neighbourhood
+    account gets far more belief and is centred squarely on the outlier, so people
+    endorse the outlier''s close neighbours, falling off with distance from it, much
+    more than mere neighbours of the majority examples that break the rule (closing
+    the critique''s outlier-versus-majority neighbour contrast).'
+- name: rule_with_exception_side_channel
+  rationale: 'Refinement of `rule_plus_decade_exception`: people do the same tempered,
+    exception-tolerant Bayesian concept learning over the same 45 rules (final-digit
+    rules salient), moderate-width ranges on a compressed number line, and "rule plus
+    exception" concepts (a rule plus one extra number, or plus that number''s whole
+    decade), but they believe such a program works as a main rule with an occasional
+    side-output: most of the time it emits a rule member, and now and then (at a fitted
+    rate) a member of its exception, instead of drawing uniformly from rule and exception
+    pooled together. The one change is this two-channel sampling of exception concepts:
+    a larger exception (a whole decade) no longer weakens the evidence the rule-following
+    examples give for the rule, so when several examples share a rule and one breaks
+    it, people readily credit the off-pattern example''s whole decade and endorse
+    its neighbours far more than its mere proximity to other examples would warrant,
+    while still extending the rule to distant numbers and rejecting rule-violating
+    numbers next to the majority examples.'
+- name: seen_final_digits_decade_exception
+  rationale: "Refinement of `rule_plus_decade_exception`: people do the same tempered,\
+    \ exception-tolerant Bayesian concept learning over the same 45 rules (final-digit\
+    \ rules salient), moderate-width ranges on a compressed number line, and \"rule\
+    \ plus exception\" concepts (one extra number or its whole decade), but when the\
+    \ examples end in two to four different digits they also read a disjunctive final-digit\
+    \ rule straight off them \u2014 \"ends in one of the digits I saw\" (for 33, 17,\
+    \ 5, 9: ends in 3, 5, 7 or 9) \u2014 an example-cued concept as salient as a single\
+    \ final-digit rule, its prior scaled by a fitted factor. The one change is this\
+    \ seen-final-digits rule: because it is smaller than parity, the size principle\
+    \ favours it over \"odd\" or \"even\", so people extend the examples' endings\
+    \ to distant numbers while rejecting same-parity numbers whose final digit was\
+    \ never shown (e.g. 61, 71, 81 after 33, 17, 5, 9)."
+- name: isolation_weighted_exemplar_memory
+  rationale: "People do not infer a concept: they store each example as a separate\
+    \ exemplar and say yes in proportion to the target's average similarity to the\
+    \ stored examples, where similarity falls off with distance on a compressed mental\
+    \ number line and with mismatches in final digit and in parity. Exemplars are\
+    \ not stored equally strongly \u2014 an example that is isolated, sharing its\
+    \ final digit with none of the other examples (the one odd-one-out in the set),\
+    \ is remembered more vividly (a von Restorff isolation effect), so it carries\
+    \ more weight in the comparison and people generalise to its neighbours more than\
+    \ to equally close neighbours of the conforming examples."
+- name: anchored_neighbourhood_side_channel
+  rationale: "Refinement of `rule_with_exception_side_channel`: people do the same\
+    \ tempered, exception-tolerant Bayesian concept learning over the same 45 rules\
+    \ (final-digit rules salient) and moderate-width ranges on a compressed number\
+    \ line, and they picture a \"rule plus exception\" program the same way \u2014\
+    \ a main rule channel that, at a fitted rate, emits a member of its exception\
+    \ instead \u2014 but the exception is a small fuzzy neighbourhood (radius zero\
+    \ to three, smaller radii a priori likelier) centred on an example the rule fails\
+    \ to cover, rather than an arbitrary single number or a whole decade. The one\
+    \ change is this example-anchored neighbourhood as the side channel's exception\
+    \ (grafted from `example_anchored_exception_neighbourhood`): because a wider neighbourhood\
+    \ only dilutes the off-pattern example's own likelihood, not the rule-following\
+    \ examples', people readily posit a broad region around the outlier and endorse\
+    \ its close neighbours (falling off with distance) much more than off-rule neighbours\
+    \ of the majority examples \u2014 more strongly than when rule and neighbourhood\
+    \ are sampled as one pooled set."
+- name: iter0_candidate3
+  rationale: 'Refinement of `example_anchored_exception_neighbourhood`: people do
+    the same tempered, exception-tolerant Bayesian concept learning over the same
+    rules (final-digit rules salient), moderate-width ranges on a compressed number
+    line, and "rule plus exception" concepts whose exception is built only around
+    a shown example the rule fails to cover, but that exception can be coded in one
+    of two ways: as a small fuzzy neighbourhood around the off-pattern example (as
+    before) or, at a fitted rate, as the whole decade it falls in ("ends in 2, and
+    also the twenties"), the decade-level exception grafted from `rule_plus_decade_exception`.
+    The one change is this place-value coding of the anchored exception: when one
+    example breaks the others'' pattern, people endorse its same-decade neighbours,
+    even ones four to nine steps away, far more than off-rule neighbours of the majority
+    examples, while rejecting its neighbours just across a decade boundary and still
+    extending the rule to distant numbers (closing the critique''s outlier-versus-majority
+    neighbour gap).'
+- name: anchored_side_channel_neighbourhood
+  rationale: 'Refinement of example_anchored_exception_neighbourhood: people do the
+    same tempered, exception-tolerant Bayesian concept learning over the same 45 rules
+    (final-digit rules salient), moderate-width ranges on a compressed number line,
+    and "rule plus a small fuzzy neighbourhood" concepts whose exception region is
+    centred only on a shown example the rule fails to cover, but they picture such
+    a program as a main rule with an occasional side-output: most of the time it emits
+    a rule member and, at a fitted rate, a number from the exception neighbourhood,
+    rather than drawing evenly from rule and neighbourhood pooled together (the two-channel
+    sampling grafted from rule_with_exception_side_channel). The one change is this
+    side-channel sampling of the anchored neighbourhood: a wider region around the
+    outlier no longer weakens the evidence the rule-following examples give for the
+    rule, so people credit a broader region around the off-pattern example and endorse
+    its close neighbours even more than the anchored model predicts, while still rejecting
+    off-rule neighbours of the majority examples (closing the critique''s outlier-versus-majority
+    neighbour gap).'
+- name: pedagogical_teacher_sampling
+  rationale: "People assume the examples were picked by a helpful teacher who wanted\
+    \ them to guess the program, not drawn at random from it (pedagogical sampling):\
+    \ when they ask how well a candidate concept explains the examples, they expect\
+    \ a teacher of that concept to have chosen numbers that point unambiguously to\
+    \ it and to avoid numbers that also belong to many other concepts (such as 16\
+    \ or 64, which are powers, squares and even). So an ambiguous \"special\" number\
+    \ among the examples counts as strong evidence for the rule it is special for\
+    \ and as weak evidence for a mere range around it, while unremarkable numbers\
+    \ favour ranges \u2014 which changes how broadly people generalise from each set,\
+    \ in a way no random-sampling learner can express."
+- name: set_size_discounted_evidence
+  rationale: 'Refinement of `anchored_neighbourhood_side_channel`: people do the same
+    tempered, exception-tolerant Bayesian concept learning over the same rules (final-digit
+    rules salient), moderate-width ranges on a compressed number line, and rule-plus-neighbourhood
+    exceptions anchored on an off-pattern example and emitted through a side channel,
+    but they treat the examples of a set as partly redundant evidence rather than
+    independent draws, so the weight each example carries in the size principle changes
+    with how many examples are shown (shrinking or growing at a fitted rate). The
+    one change is this set-size-dependent evidence per example: a single example is
+    weighed exactly as before, while with three or four examples people tighten their
+    generalisation from broad rules and wide ranges to narrow ones less (or more)
+    than a learner who counts every example in full, which changes how much sets of
+    different sizes differ in breadth.'
+- name: parity_markedness_odd_cost
+  rationale: 'People code parity asymmetrically: "even" (divisible by two) is the
+    default, unmarked concept, while "odd" is represented as its negation ("not divisible
+    by two"), so considering it carries an extra cognitive cost that lowers its prior
+    plausibility; otherwise they infer the program''s concept as the best tempered,
+    exception-tolerant Bayesian learner does (salient final-digit rules, moderate-width
+    ranges, rule-plus-neighbourhood exceptions around an off-pattern example emitted
+    through a side channel). Because of this cost, when a set mixes odd and even examples,
+    "even, plus an exception around the odd one" beats "odd, plus an exception around
+    the even one", so people endorse even targets more than odd ones, and they extend
+    all-odd sets to distant odd numbers less readily than all-even sets to distant
+    even numbers.'
+- name: weak_sampling_doubt
+  rationale: "People reason like the best Bayesian concept learner (tempered, exception-tolerant\
+    \ inference over salient final-digit and other rules, moderate-width ranges on\
+    \ a compressed number line, and rule-plus-neighbourhood exceptions around an off-pattern\
+    \ example emitted through a side channel), with one distortion: they are not fully\
+    \ convinced the examples were produced by the program itself, and give some fitted\
+    \ weight to the possibility that the numbers were picked arbitrarily and merely\
+    \ confirmed to belong. Under that \"picked, not produced\" reading, a concept's\
+    \ size carries no evidential cost, so people discount the size principle \u2014\
+    \ most when the examples fit both small and large concepts \u2014 and generalise\
+    \ more broadly than an ideal strong-sampling learner, extending to large rules,\
+    \ wide ranges and wide regions around an outlier example."
+- name: even_leaning_rule_prior
+  rationale: "People expect a number-producing program to be \"about\" even numbers\
+    \ more readily than about odd ones: in their prior over candidate rules, a rule\
+    \ is more plausible the larger the share of its members that are even (so \"even\"\
+    , \"multiples of 4\", \"powers of 2\", \"ends in 6\" start ahead of \"odd\", \"\
+    ends in 7\", \"powers of 3\" or \"primes\"), while otherwise doing the same tempered,\
+    \ exception-tolerant Bayesian concept learning as the best model (salient final-digit\
+    \ rules, moderate-width ranges on a compressed number line, and rule-plus-neighbourhood\
+    \ exceptions anchored on an off-pattern example and emitted through a side channel).\
+    \ Because ranges are parity-neutral, this even-leaning rule prior shows up wherever\
+    \ the examples leave both parities open \u2014 most clearly in sets mixing odd\
+    \ and even examples, where even-based rule-plus-exception concepts win and people\
+    \ endorse even non-example targets more than odd ones."
+- name: gamma_shaped_range_width_prior
+  rationale: 'Refinement of `anchored_neighbourhood_side_channel`: people do the same
+    tempered, exception-tolerant Bayesian concept learning (the same rules with salient
+    final-digit rules, ranges sampled along a compressed number line, and rule-plus-neighbourhood
+    exceptions anchored on an off-pattern example and emitted through a side channel),
+    but their prior expectation of how wide a "range of numbers" program is does not
+    have the fixed Erlang shape, which makes ranges of one or two numbers unlikely.
+    Instead it is a gamma-shaped width prior whose shape is fitted, so it can favour
+    tight ranges hugging an example while keeping a long tail of broad ones. The one
+    change is this free shape of the range-width prior: if people find tight ranges
+    plausible, they generalise from a lone example steeply to its close neighbours
+    and drop off fast with distance, more than the incumbent allows (the critique''s
+    single-example distance gradient), while still extending broad rules to distant
+    numbers.'
+- name: even_salient_pedagogical_teacher
+  rationale: 'Refinement of `pedagogical_teacher_sampling`: people do the same helpful-teacher
+    concept learning (they expect a teacher to pick unambiguous examples) over the
+    same rules, ranges and example-anchored rule-plus-neighbourhood exceptions, but
+    "even numbers" is a more natural, more readily entertained concept than "odd numbers",
+    so the even rule gets its own fitted prior boost on top of the shared parity/final-digit
+    salience. The one change is this even-over-odd asymmetry in the rule prior: when
+    a set mixes odd and even examples people lean towards "even, with an exception"
+    and endorse even non-example targets more than odd ones (the critique''s mixed-parity
+    even-target bias), and they extend all-even sets to distant evens more readily
+    than all-odd sets to distant odds.'
+- name: range_plus_exception_side_channel
+  rationale: 'Refinement of `anchored_neighbourhood_side_channel`: people do the same
+    tempered, exception-tolerant Bayesian concept learning (salient final-digit rules,
+    moderate-width ranges on a compressed number line, and "rule plus exception" programs
+    whose side channel emits a small fuzzy neighbourhood around an off-pattern example),
+    but the main channel of such a "program plus exception" can also be a range of
+    numbers, not only an arithmetic rule: "numbers from 20 to 35, and now and then
+    something around 87". The one change is this range-plus-exception program, which
+    takes the same share of prior belief, the same neighbourhood radii and the same
+    side-channel rate as the rule version. So when most examples cluster on the number
+    line and one lies far away, people fill in the cluster''s stretch and also endorse
+    the outlier''s close neighbours, while rejecting the empty gap between them, instead
+    of falling back on one wide range or on a rule.'
+- name: pattern_violation_anchored_exception
+  rationale: 'People read the examples in the order shown and only treat an example
+    as an exception when it breaks a pattern that earlier examples have already set
+    up: they do the same tempered, exception-tolerant Bayesian concept learning as
+    the best model (salient final-digit rules, moderate-width ranges on a compressed
+    number line, and "rule plus a fuzzy neighbourhood around an off-pattern example"
+    programs emitted through a side channel), but the exception neighbourhood can
+    be centred only on an off-rule example that comes after at least one example the
+    rule covers. So an off-pattern example shown first, before any pattern exists,
+    is never singled out as the program''s exception, and people generalise to its
+    close neighbours less than they would if the same outlier came later in the list.'
+- name: nearest_example_radius_concepts
+  rationale: 'People''s magnitude-based guesses about the program are similarity neighbourhoods
+    around the examples, not stretches of the number line: besides arithmetic and
+    digit rules (and rule-plus-exception concepts), the only numerical concept they
+    consider is "numbers within some distance of one of the examples I saw", with
+    smaller similarity radii a priori likelier, weighed by the same tempered, exception-tolerant
+    size principle. So endorsement of a non-rule target falls off with its numerical
+    distance to the nearest example, whatever lies between the examples: an empty
+    gap between two distant examples is not filled in, while each example''s own close
+    neighbours are endorsed even when they lie outside the span of the set.'
+- name: conservative_belief_reporting
+  rationale: 'People infer the program''s concept just as the best Bayesian concept
+    learner does, but they report their belief conservatively: when deciding whether
+    to answer "yes", they hedge toward fifty-fifty, so their odds of saying yes are
+    a compressed (less extreme) version of their belief''s odds, by a fitted degree
+    of conservatism. Targets they are fairly but not fully sure belong (or do not
+    belong) are therefore endorsed (or rejected) less consistently than their belief
+    implies, with no lapses and no overall lean toward yes or no.'
+- name: salient_contained_digit_rules
+  rationale: 'Refinement of `gamma_shaped_range_width_prior`: people do the same tempered,
+    exception-tolerant Bayesian concept learning (salient final-digit rules, ranges
+    on a compressed number line with a gamma-shaped width prior, and rule-plus-neighbourhood
+    exceptions anchored on an off-pattern example and emitted through a side channel),
+    but rules about a digit the numeral contains ("has a 4 in it") are also perceptually
+    salient. They are read straight off the written numerals, so they get their own
+    fitted prior boost instead of starting no more likely than an arbitrary arithmetic
+    rule. The one change is this contained-digit salience: when every example contains
+    a common digit in different places, people extend that digit to distant numbers
+    that contain it (especially numbers in that digit''s decade, such as 47 after
+    34, 43, 74), more than the incumbent predicts (the critique''s shared-contained-digit
+    tens statistic).'
+- name: gamma_width_range_plus_exception
+  rationale: 'Refinement of `gamma_shaped_range_width_prior`: people do the same tempered,
+    exception-tolerant Bayesian concept learning (salient final-digit rules, ranges
+    sampled along a compressed number line under a gamma-shaped width prior that can
+    favour tight ranges, and rule-plus-neighbourhood exceptions anchored on an off-pattern
+    example and emitted through a side channel), but the main channel of such a "program
+    plus exception" can also be a range of numbers, not only an arithmetic rule: "numbers
+    from 20 to 35, and now and then something around 87". The one change is this range-plus-exception
+    program (grafted from `range_plus_exception_side_channel`), taking the same share
+    of prior belief, neighbourhood radii and side-channel rate as the rule version.
+    So when most examples cluster on the number line and one lies far away, people
+    fill in the cluster''s (possibly tight) stretch and also endorse the outlier''s
+    close neighbours, while rejecting the empty gap between them, instead of falling
+    back on one wide range or on a rule.'
+- name: pedagogical_teacher_gamma_width
+  rationale: 'Refinement of `pedagogical_teacher_sampling`: people assume the examples
+    were picked by a helpful teacher who chose numbers that point unambiguously to
+    the program (so an ambiguous "special" number such as 16 or 64 is strong evidence
+    for the rule it is special for and weak evidence for a mere range around it),
+    and otherwise do the same tempered, exception-tolerant concept learning over salient
+    final-digit and other rules, ranges, and rule-plus-neighbourhood exceptions anchored
+    on an off-pattern example and emitted through a side channel. The one change,
+    grafted from `gamma_shaped_range_width_prior`, is their prior expectation of how
+    wide a "range of numbers" program is: not the fixed Erlang shape that makes ranges
+    of one or two numbers unlikely, but a gamma shape whose shape is fitted, so that
+    when a helpful teacher shows unremarkable numbers people may read them as pointing
+    to a tight range hugging the examples and generalise steeply to close neighbours,
+    while special numbers still pull them towards the rules they exemplify.'
+- name: independent_feature_prototype
+  rationale: "People do not search a space of rules or ranges; they summarise the\
+    \ examples as a single category prototype \u2014 a central tendency with a spread\
+    \ on a compressed mental number line, plus how often each final digit and each\
+    \ parity occurred among the examples (shrunk toward an even spread by prior uncertainty)\
+    \ \u2014 and say \"yes\" in proportion to how typical the target is of that prototype\
+    \ relative to a number picked at random. Each feature is judged independently,\
+    \ so a target is endorsed if it lies within the examples' magnitude spread and\
+    \ shares their dominant parity and final digit, and the prototype tightens smoothly\
+    \ as more consistent examples accumulate."
+- name: generative_production_odds_judgement
+  rationale: People answer not by asking whether the target belongs to the concept
+    they inferred, but by imagining the program running and judging how likely it
+    is to produce that very number compared with a number picked at random; the larger
+    this production-to-chance ratio, the more likely they say yes (their concept inference
+    is the same tempered, exception-tolerant Bayesian learning as the best model).
+    So a target from a small concept (a tight range around the examples, a sparse
+    rule, the neighbourhood of an off-pattern example) is endorsed more than an equally
+    certain member of a broad concept such as "even numbers", and people extend broad
+    rules to distant numbers less than their membership belief alone implies.
+- name: salient_decade_place_value_rules
+  rationale: 'Refinement of `salient_contained_digit_rules`: people do the same tempered,
+    exception-tolerant Bayesian concept learning (salient final-digit and contained-digit
+    rules, ranges on a compressed number line with a gamma-shaped width prior, and
+    rule-plus-neighbourhood exceptions anchored on an off-pattern example and emitted
+    through a side channel), but they also read the tens digit of a numeral as a place-value
+    category: "numbers in the forties" (tens digit 4) is a rule they entertain directly,
+    with its own fitted salience, not only as one range among the thousands of possible
+    stretches of the number line. The one change is this set of salient decade rules:
+    when the examples share a tens digit (e.g. 42, 47, 45), people fill in exactly
+    that decade, endorsing its members, even those far from any example, and rejecting
+    numbers just across the decade boundary (39, 50) more sharply than a learner whose
+    only magnitude concepts are ranges with arbitrary edges.'
+- name: individual_rule_vs_range_style
+  rationale: 'Refinement of `salient_contained_digit_rules`: people do the same tempered,
+    exception-tolerant Bayesian concept learning (salient final-digit and contained-digit
+    rules, ranges on a compressed number line with a gamma-shaped width prior, and
+    rule-plus-neighbourhood exceptions emitted through a side channel), but individuals
+    differ stably in how readily they think of the hidden program as an arithmetic
+    or digit rule rather than a range of magnitudes. The one change is this person-specific
+    prior share for rules versus ranges, fitted for each person: some participants
+    consistently extend shared rules to distant numbers, while others consistently
+    stay near the examples'' stretch of the number line across every set they judge.'
+- name: individual_response_criteria
+  rationale: 'Refinement of `conservative_belief_reporting`: people infer the program''s
+    concept exactly as the best Bayesian concept learner does (tempered, exception-tolerant
+    inference over salient final-digit and contained-digit rules, ranges on a compressed
+    number line with a gamma-shaped width prior, and rule-plus-neighbourhood exceptions
+    anchored on an off-pattern example), and they depart from that learner only in
+    how they turn belief into a yes/no answer. The one change is that this report
+    stage is not one conservative compression shared by everyone: each person brings
+    their own stable response criterion, a personal lean toward "yes" or toward "no"
+    that shifts every answer they give. So the same belief is endorsed consistently
+    more by some people than by others across all their trials, and the population
+    hedges toward fifty-fifty only through the spread of these individual criteria.'

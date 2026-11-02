@@ -1,0 +1,1 @@
+default_no_lapse_costly_squares

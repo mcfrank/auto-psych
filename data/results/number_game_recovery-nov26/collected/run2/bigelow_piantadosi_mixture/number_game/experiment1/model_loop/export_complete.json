@@ -1,0 +1,13 @@
+{
+  "models": [
+    "rule_breadth_prior_concepts",
+    "counting_by_twos_run_concepts",
+    "breadth_prior_concepts_free_outlier_rate",
+    "concepts_sampled_without_replacement",
+    "without_replacement_size_principle",
+    "round_number_salient_sampling",
+    "without_replacement_free_outlier_rate",
+    "shown_examples_not_repeated"
+  ],
+  "ledger_sha256": "da4be3a9e8e10f7356f822e6369d1b9f23dde4f0c3759fabdb9374785b4e8ea7"
+}

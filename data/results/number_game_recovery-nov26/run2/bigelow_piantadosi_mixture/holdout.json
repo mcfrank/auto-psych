@@ -1,0 +1,1826 @@
+{
+  "project_id": "number_game",
+  "data_source": "simulation",
+  "seed_models_dir": "/scr/wurgaft/auto-psych/number_game_recovery-nov26b-jag28/harness_repo/src/pipelines/outer_loop/projects/number_game/seed_models",
+  "n_experiments": 3,
+  "n_participants": 5,
+  "hide_participant_id": true,
+  "inner_loop": {
+    "max_iterations": 5,
+    "candidate_count": 6,
+    "novelty_rmse_threshold": 0.002,
+    "n_critique_proposals": 8,
+    "selection": {
+      "criterion": "grouped_cv",
+      "cv_group": [
+        "number_set"
+      ],
+      "cv_folds": 4,
+      "cv_seed": 0
+    },
+    "starting_models_prunable": true
+  },
+  "fit_kwargs": {
+    "method": "warm_start_nuts",
+    "tune": 200,
+    "draws": 500,
+    "chains": 4
+  },
+  "seed": 2,
+  "eval_pool": {
+    "n_pairs": 500,
+    "lengths": [
+      6,
+      8
+    ],
+    "seed": 11,
+    "min_remaining": 100,
+    "exhaustive": true,
+    "predict_max_draws": 500
+  },
+  "seed_params": {
+    "tenenbaum_rules_similarity": {
+      "lambda_rules": 0.456141,
+      "sigma": 111.590091
+    },
+    "bigelow_piantadosi_mixture": {
+      "lambda_0": 0.19238
+    },
+    "bigelow_piantadosi_independent": {
+      "lambda_0": 0.310239,
+      "set_weights": [
+        0.069975,
+        0.01473,
+        1e-05,
+        7e-06,
+        0.001296,
+        2.5e-05,
+        0.163617,
+        0.003756,
+        0.009198,
+        0.083532,
+        0.002627,
+        0.000257,
+        0.001904,
+        0.000607,
+        0.130781,
+        0.015654,
+        1.5e-05,
+        0.00029,
+        0.000155,
+        0.001694,
+        0.003126,
+        0.004489,
+        0.000494,
+        0.00011,
+        0.005874,
+        0.040912,
+        0.016566,
+        0.027939,
+        0.015025,
+        0.025137,
+        0.017073,
+        0.018735,
+        0.019998,
+        0.033598,
+        0.028487,
+        0.001565,
+        0.003277,
+        0.041268,
+        0.022184,
+        0.034088,
+        0.03622,
+        0.023488,
+        0.012783,
+        0.067436
+      ],
+      "zero_split": 0.500481
+    }
+  },
+  "metrics_version": 2,
+  "gt_runs": [
+    {
+      "gt_model": "bigelow_piantadosi_mixture",
+      "params": {
+        "lambda_0": 0.19238
+      },
+      "run_root": "/scr/wurgaft/auto-psych/agent_trees/88c1bd3cf1e5f7a8/repo/_runs/cell_1",
+      "n_eval_stimuli": 24193,
+      "n_eval_dropped": 1307,
+      "trajectory": [
+        {
+          "experiment": 1,
+          "step": 0,
+          "iteration": null,
+          "global_step": 0,
+          "best_model": "bigelow_piantadosi_independent",
+          "pearson_r": 0.9961458769134007,
+          "rmse": 0.02508781705678067,
+          "kl_regret": 0.0017741309542688491,
+          "bias": -0.007620041444961537,
+          "calib_slope": 0.9832476201356294,
+          "calib_intercept": -0.0029126229114356805,
+          "pearson_r_bma": 0.9961458769134007,
+          "rmse_bma": 0.02508781705678067,
+          "kl_regret_bma": 0.0017741309542688491,
+          "bias_bma": -0.007620041444961537,
+          "calib_slope_bma": 0.9832476201356294,
+          "calib_intercept_bma": -0.0029126229114356805,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": false
+        },
+        {
+          "experiment": 1,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 1,
+          "best_model": "tenenbaum_digit_concepts",
+          "pearson_r": 0.9953404071062679,
+          "rmse": 0.028202011635820725,
+          "kl_regret": 0.002509923315388986,
+          "bias": -0.010550397829822823,
+          "calib_slope": 0.9942408912317372,
+          "calib_intercept": -0.008932088337571475,
+          "pearson_r_bma": 0.9953494959741471,
+          "rmse_bma": 0.028177749606862878,
+          "kl_regret_bma": 0.0025045763651534206,
+          "bias_bma": -0.010550145956988131,
+          "calib_slope_bma": 0.9941951511161786,
+          "calib_intercept_bma": -0.00891898349283371,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 2,
+          "best_model": "equal_prior_concepts_with_guess_lapse",
+          "pearson_r": 0.9993042440496154,
+          "rmse": 0.016489443354071737,
+          "kl_regret": 0.0015043721466882424,
+          "bias": -0.007445573206215483,
+          "calib_slope": 0.959200946392427,
+          "calib_intercept": 0.0040189603500631055,
+          "pearson_r_bma": 0.9993040386063848,
+          "rmse_bma": 0.01649276144231378,
+          "kl_regret_bma": 0.0015047891391090783,
+          "bias_bma": -0.007449973203920912,
+          "calib_slope_bma": 0.9591981763866546,
+          "calib_intercept_bma": 0.0040153387239453275,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 3,
+          "best_model": "rule_breadth_prior_concepts",
+          "pearson_r": 0.9980651939050995,
+          "rmse": 0.022754857871880734,
+          "kl_regret": 0.002167420670461775,
+          "bias": -0.011547673801672046,
+          "calib_slope": 0.9592400882575608,
+          "calib_intercept": -9.413910900918365e-05,
+          "pearson_r_bma": 0.9989612154428715,
+          "rmse_bma": 0.019561258885785825,
+          "kl_regret_bma": 0.0017866816451153158,
+          "bias_bma": -0.01065915329352192,
+          "calib_slope_bma": 0.9581520648194921,
+          "calib_intercept_bma": 0.0011001159717056175,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 4,
+          "best_model": "concepts_sampled_without_replacement",
+          "pearson_r": 0.9984029403994602,
+          "rmse": 0.020463977662092857,
+          "kl_regret": 0.0020409248706809873,
+          "bias": -0.009999634592456522,
+          "calib_slope": 0.96299238435352,
+          "calib_intercept": 0.0003995049439119991,
+          "pearson_r_bma": 0.9989787746451334,
+          "rmse_bma": 0.019621295083056284,
+          "kl_regret_bma": 0.0018494705977525993,
+          "bias_bma": -0.010476832644647573,
+          "calib_slope_bma": 0.9567138765389966,
+          "calib_intercept_bma": 0.0016865675095113497,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 5,
+          "best_model": "without_replacement_free_outlier_rate",
+          "pearson_r": 0.9976511526364465,
+          "rmse": 0.027706661467566406,
+          "kl_regret": 0.0027945103276984435,
+          "bias": -0.013235115250621621,
+          "calib_slope": 0.9373763630669325,
+          "calib_intercept": 0.004362125948671691,
+          "pearson_r_bma": 0.9988299221921102,
+          "rmse_bma": 0.020948171553272145,
+          "kl_regret_bma": 0.0020495708191105473,
+          "bias_bma": -0.011071915790712913,
+          "calib_slope_bma": 0.9533807554110947,
+          "calib_intercept_bma": 0.0020280913589298954,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 0,
+          "iteration": null,
+          "global_step": 6,
+          "best_model": "without_replacement_size_principle",
+          "pearson_r": 0.9994355698086523,
+          "rmse": 0.009272328465285237,
+          "kl_regret": 0.0006425223652122189,
+          "bias": -0.000861986295038599,
+          "calib_slope": 0.9932606727266675,
+          "calib_intercept": 0.001031764584945638,
+          "pearson_r_bma": 0.9994048068790232,
+          "rmse_bma": 0.009698805477976087,
+          "kl_regret_bma": 0.0005887451164967945,
+          "bias_bma": -0.001395459101421468,
+          "calib_slope_bma": 0.990830107065412,
+          "calib_intercept_bma": 0.0011812806991446934,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 7,
+          "best_model": "narrow_range_specificity_bias",
+          "pearson_r": 0.9991566108917767,
+          "rmse": 0.013503143776253718,
+          "kl_regret": 0.0009794716538553297,
+          "bias": -0.006345804935149986,
+          "calib_slope": 0.9825948372119904,
+          "calib_intercept": -0.0014549544082007593,
+          "pearson_r_bma": 0.9993827036851053,
+          "rmse_bma": 0.010660996338324031,
+          "kl_regret_bma": 0.0007132376271965357,
+          "bias_bma": -0.0036322704845079394,
+          "calib_slope_bma": 0.9872343260143942,
+          "calib_intercept_bma": -4.511625332925817e-05,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 8,
+          "best_model": "digit_sum_concepts",
+          "pearson_r": 0.9976692412541273,
+          "rmse": 0.020454636719818144,
+          "kl_regret": 0.001475169626943517,
+          "bias": -0.006845147569859935,
+          "calib_slope": 0.9753735716838972,
+          "calib_intercept": 7.487848066700664e-05,
+          "pearson_r_bma": 0.9992051646755136,
+          "rmse_bma": 0.013008729657758483,
+          "kl_regret_bma": 0.0008641948780562782,
+          "bias_bma": -0.005610032376277491,
+          "calib_slope_bma": 0.9815170094837966,
+          "calib_intercept_bma": -0.0004163122711116074,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 9,
+          "best_model": "digit_sum_open_ended_range_discount",
+          "pearson_r": 0.9982014616027912,
+          "rmse": 0.018791279835924643,
+          "kl_regret": 0.0012830165933661749,
+          "bias": -0.007997075499603781,
+          "calib_slope": 0.9779533247774623,
+          "calib_intercept": -0.0018019600362822463,
+          "pearson_r_bma": 0.9984033801547291,
+          "rmse_bma": 0.017684167120044753,
+          "kl_regret_bma": 0.001189039492524099,
+          "bias_bma": -0.007200510213684361,
+          "calib_slope_bma": 0.9778651304459305,
+          "calib_intercept_bma": -0.000980612144299342,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 10,
+          "best_model": "margin_beyond_examples_range_prior",
+          "pearson_r": 0.9980059557188309,
+          "rmse": 0.01930131445267155,
+          "kl_regret": 0.0013413545437362272,
+          "bias": -0.006304429941183899,
+          "calib_slope": 0.9727093302374803,
+          "calib_intercept": 0.0013642479226489423,
+          "pearson_r_bma": 0.9981661996053854,
+          "rmse_bma": 0.018683211611648234,
+          "kl_regret_bma": 0.0012756213359314944,
+          "bias_bma": -0.0069949370069510375,
+          "calib_slope_bma": 0.9758623099327786,
+          "calib_intercept_bma": -0.00021224639828093528,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 11,
+          "best_model": "margin_and_heading_range_prior",
+          "pearson_r": 0.9978575214414489,
+          "rmse": 0.01972891776148924,
+          "kl_regret": 0.001448037088235514,
+          "bias": -0.0057573407310028395,
+          "calib_slope": 0.9719782167490143,
+          "calib_intercept": 0.0021167800139955673,
+          "pearson_r_bma": 0.9980456258715186,
+          "rmse_bma": 0.0190827280613852,
+          "kl_regret_bma": 0.0013263453728087475,
+          "bias_bma": -0.006459674965704914,
+          "calib_slope_bma": 0.9741519637467386,
+          "calib_intercept_bma": 0.0008036228999694917,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 0,
+          "iteration": null,
+          "global_step": 12,
+          "best_model": "heading_direction_range_extrapolation",
+          "pearson_r": 0.9996541045467018,
+          "rmse": 0.007452710626573797,
+          "kl_regret": 0.0005429829002292609,
+          "bias": -0.0007501193054578727,
+          "calib_slope": 0.9917854436811022,
+          "calib_intercept": 0.001558170917981605,
+          "pearson_r_bma": 0.9996963553469804,
+          "rmse_bma": 0.0070231980276199025,
+          "kl_regret_bma": 0.000498382357138387,
+          "bias_bma": -0.0004244245030526539,
+          "calib_slope_bma": 0.9915409081200345,
+          "calib_intercept_bma": 0.0019525802100053835,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 13,
+          "best_model": "heading_extrapolation_weber_width",
+          "pearson_r": 0.9995709858744573,
+          "rmse": 0.008946912317874098,
+          "kl_regret": 0.0006386010047982121,
+          "bias": -0.0027048676731749348,
+          "calib_slope": 0.9876555742567696,
+          "calib_intercept": 0.00076391580713564,
+          "pearson_r_bma": 0.9996546226064139,
+          "rmse_bma": 0.007804420685711324,
+          "kl_regret_bma": 0.0005552746989257903,
+          "bias_bma": -0.0016523089187042022,
+          "calib_slope_bma": 0.9892528390263404,
+          "calib_intercept_bma": 0.0013676431812233991,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 14,
+          "best_model": "heading_weber_with_upward_counting",
+          "pearson_r": 0.9996112644933595,
+          "rmse": 0.008103015533450207,
+          "kl_regret": 0.0005249821908989583,
+          "bias": -0.0012715158928582376,
+          "calib_slope": 0.9895145788051525,
+          "calib_intercept": 0.001674887332478614,
+          "pearson_r_bma": 0.9996560227441804,
+          "rmse_bma": 0.007826794616301778,
+          "kl_regret_bma": 0.0005379771173027245,
+          "bias_bma": -0.0016018514068898144,
+          "calib_slope_bma": 0.9887802433432955,
+          "calib_intercept_bma": 0.0015509000740953627,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 15,
+          "best_model": "heading_weber_upward_with_replacement",
+          "pearson_r": 0.9997263052148102,
+          "rmse": 0.007931538938422553,
+          "kl_regret": 0.00042092052670495534,
+          "bias": -0.002602239818542832,
+          "calib_slope": 0.9847345260028608,
+          "calib_intercept": 0.0016873581847847707,
+          "pearson_r_bma": 0.9996987983973571,
+          "rmse_bma": 0.007507229238448557,
+          "kl_regret_bma": 0.000461826606960846,
+          "bias_bma": -0.001688541966163899,
+          "calib_slope_bma": 0.9881785477648453,
+          "calib_intercept_bma": 0.0016332859648820475,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 16,
+          "best_model": "position_decaying_example_evidence",
+          "pearson_r": 0.9996356716548749,
+          "rmse": 0.007546149526924485,
+          "kl_regret": 0.00037824721226505895,
+          "bias": -0.000925108865682161,
+          "calib_slope": 0.9933689581567288,
+          "calib_intercept": 0.0009382138098016912,
+          "pearson_r_bma": 0.9997010194336347,
+          "rmse_bma": 0.007052723044699668,
+          "kl_regret_bma": 0.00038946751842526415,
+          "bias_bma": -0.001239220686225836,
+          "calib_slope_bma": 0.991774069621005,
+          "calib_intercept_bma": 0.001072265647959536,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 17,
+          "best_model": "position_decaying_example_evidence",
+          "pearson_r": 0.9996356716548749,
+          "rmse": 0.007546149526924485,
+          "kl_regret": 0.00037824721226505895,
+          "bias": -0.000925108865682161,
+          "calib_slope": 0.9933689581567288,
+          "calib_intercept": 0.0009382138098016912,
+          "pearson_r_bma": 0.9996960194944209,
+          "rmse_bma": 0.006974802606145399,
+          "kl_regret_bma": 0.00037333580435986076,
+          "bias_bma": -0.0006149785599067661,
+          "calib_slope_bma": 0.9923869611809825,
+          "calib_intercept_bma": 0.001524285253547919,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        }
+      ],
+      "incumbent": {
+        "starting_models": [
+          "bigelow_piantadosi_independent",
+          "tenenbaum_rules_similarity"
+        ],
+        "n_steps": 18,
+        "n_incumbent_changes": 16,
+        "n_steps_discovered_incumbent": 17,
+        "final_incumbent": "position_decaying_example_evidence",
+        "changes": [
+          {
+            "global_step": 1,
+            "experiment": 1,
+            "step": 1,
+            "from": "bigelow_piantadosi_independent",
+            "to": "tenenbaum_digit_concepts"
+          },
+          {
+            "global_step": 2,
+            "experiment": 1,
+            "step": 2,
+            "from": "tenenbaum_digit_concepts",
+            "to": "equal_prior_concepts_with_guess_lapse"
+          },
+          {
+            "global_step": 3,
+            "experiment": 1,
+            "step": 3,
+            "from": "equal_prior_concepts_with_guess_lapse",
+            "to": "rule_breadth_prior_concepts"
+          },
+          {
+            "global_step": 4,
+            "experiment": 1,
+            "step": 4,
+            "from": "rule_breadth_prior_concepts",
+            "to": "concepts_sampled_without_replacement"
+          },
+          {
+            "global_step": 5,
+            "experiment": 1,
+            "step": 5,
+            "from": "concepts_sampled_without_replacement",
+            "to": "without_replacement_free_outlier_rate"
+          },
+          {
+            "global_step": 6,
+            "experiment": 2,
+            "step": 0,
+            "from": "without_replacement_free_outlier_rate",
+            "to": "without_replacement_size_principle"
+          },
+          {
+            "global_step": 7,
+            "experiment": 2,
+            "step": 1,
+            "from": "without_replacement_size_principle",
+            "to": "narrow_range_specificity_bias"
+          },
+          {
+            "global_step": 8,
+            "experiment": 2,
+            "step": 2,
+            "from": "narrow_range_specificity_bias",
+            "to": "digit_sum_concepts"
+          },
+          {
+            "global_step": 9,
+            "experiment": 2,
+            "step": 3,
+            "from": "digit_sum_concepts",
+            "to": "digit_sum_open_ended_range_discount"
+          },
+          {
+            "global_step": 10,
+            "experiment": 2,
+            "step": 4,
+            "from": "digit_sum_open_ended_range_discount",
+            "to": "margin_beyond_examples_range_prior"
+          },
+          {
+            "global_step": 11,
+            "experiment": 2,
+            "step": 5,
+            "from": "margin_beyond_examples_range_prior",
+            "to": "margin_and_heading_range_prior"
+          },
+          {
+            "global_step": 12,
+            "experiment": 3,
+            "step": 0,
+            "from": "margin_and_heading_range_prior",
+            "to": "heading_direction_range_extrapolation"
+          },
+          {
+            "global_step": 13,
+            "experiment": 3,
+            "step": 1,
+            "from": "heading_direction_range_extrapolation",
+            "to": "heading_extrapolation_weber_width"
+          },
+          {
+            "global_step": 14,
+            "experiment": 3,
+            "step": 2,
+            "from": "heading_extrapolation_weber_width",
+            "to": "heading_weber_with_upward_counting"
+          },
+          {
+            "global_step": 15,
+            "experiment": 3,
+            "step": 3,
+            "from": "heading_weber_with_upward_counting",
+            "to": "heading_weber_upward_with_replacement"
+          },
+          {
+            "global_step": 16,
+            "experiment": 3,
+            "step": 4,
+            "from": "heading_weber_upward_with_replacement",
+            "to": "position_decaying_example_evidence"
+          }
+        ]
+      },
+      "starting_models_prunable": true,
+      "baseline": {
+        "mean_r": 0.8940304997734015,
+        "per_model": {
+          "tenenbaum_rules_similarity": 0.9678561597804487,
+          "bigelow_piantadosi_independent": 0.8202048397663544
+        }
+      },
+      "fitted_baseline": {
+        "mean_r_models": [
+          "bigelow_piantadosi_independent",
+          "tenenbaum_rules_similarity"
+        ],
+        "mean_rmse_models": [
+          "bigelow_piantadosi_independent",
+          "tenenbaum_rules_similarity"
+        ],
+        "per_model": {
+          "bigelow_piantadosi_independent": {
+            "pearson_r": 0.9972831851564896,
+            "rmse": 0.020033219429349124,
+            "elpd_loo": -3227.217044063756,
+            "trusted": true,
+            "n_eval_excluded": 0
+          },
+          "tenenbaum_rules_similarity": {
+            "pearson_r": 0.9808550155842394,
+            "rmse": 0.05424830365809749,
+            "elpd_loo": -3541.494960468201,
+            "trusted": true,
+            "n_eval_excluded": 0
+          }
+        },
+        "criterion": "grouped_cv",
+        "elpd_best_model": "bigelow_piantadosi_independent",
+        "elpd_best_r": 0.9972831851564896,
+        "elpd_best_rmse": 0.020033219429349124,
+        "elpd_best_reason": null,
+        "mean_r": 0.9890691003703644,
+        "mean_rmse": 0.03714076154372331,
+        "n_responses": 6750
+      },
+      "fitted_baseline_by_experiment": [
+        {
+          "experiment": 1,
+          "mean_r_models": [
+            "bigelow_piantadosi_independent",
+            "tenenbaum_rules_similarity"
+          ],
+          "mean_rmse_models": [
+            "bigelow_piantadosi_independent",
+            "tenenbaum_rules_similarity"
+          ],
+          "per_model": {
+            "bigelow_piantadosi_independent": {
+              "pearson_r": 0.9961458769134007,
+              "rmse": 0.02508781705678067,
+              "elpd_loo": -926.5676039581646,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "tenenbaum_rules_similarity": {
+              "pearson_r": 0.9796833840052829,
+              "rmse": 0.05586732451513593,
+              "elpd_loo": -1249.0506261973674,
+              "trusted": true,
+              "n_eval_excluded": 0
+            }
+          },
+          "criterion": "grouped_cv",
+          "elpd_best_model": "bigelow_piantadosi_independent",
+          "elpd_best_r": 0.9961458769134007,
+          "elpd_best_rmse": 0.02508781705678067,
+          "elpd_best_reason": null,
+          "mean_r": 0.9879146304593418,
+          "mean_rmse": 0.0404775707859583,
+          "n_responses": 2250
+        },
+        {
+          "experiment": 2,
+          "mean_r_models": [
+            "bigelow_piantadosi_independent",
+            "tenenbaum_rules_similarity"
+          ],
+          "mean_rmse_models": [
+            "bigelow_piantadosi_independent",
+            "tenenbaum_rules_similarity"
+          ],
+          "per_model": {
+            "bigelow_piantadosi_independent": {
+              "pearson_r": 0.9967032900682914,
+              "rmse": 0.02227431098108429,
+              "elpd_loo": -1957.6378050320445,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "tenenbaum_rules_similarity": {
+              "pearson_r": 0.9804894151334024,
+              "rmse": 0.05441153937408558,
+              "elpd_loo": -2232.8837488598774,
+              "trusted": true,
+              "n_eval_excluded": 0
+            }
+          },
+          "criterion": "grouped_cv",
+          "elpd_best_model": "bigelow_piantadosi_independent",
+          "elpd_best_r": 0.9967032900682914,
+          "elpd_best_rmse": 0.02227431098108429,
+          "elpd_best_reason": null,
+          "mean_r": 0.9885963526008469,
+          "mean_rmse": 0.03834292517758493,
+          "n_responses": 4500
+        },
+        {
+          "experiment": 3,
+          "mean_r_models": [
+            "bigelow_piantadosi_independent",
+            "tenenbaum_rules_similarity"
+          ],
+          "mean_rmse_models": [
+            "bigelow_piantadosi_independent",
+            "tenenbaum_rules_similarity"
+          ],
+          "per_model": {
+            "bigelow_piantadosi_independent": {
+              "pearson_r": 0.9972831851564896,
+              "rmse": 0.020033219429349124,
+              "elpd_loo": -3227.217044063756,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "tenenbaum_rules_similarity": {
+              "pearson_r": 0.9808550155842394,
+              "rmse": 0.05424830365809749,
+              "elpd_loo": -3541.494960468201,
+              "trusted": true,
+              "n_eval_excluded": 0
+            }
+          },
+          "criterion": "grouped_cv",
+          "elpd_best_model": "bigelow_piantadosi_independent",
+          "elpd_best_r": 0.9972831851564896,
+          "elpd_best_rmse": 0.020033219429349124,
+          "elpd_best_reason": null,
+          "mean_r": 0.9890691003703644,
+          "mean_rmse": 0.03714076154372331,
+          "n_responses": 6750
+        }
+      ],
+      "leakage": {
+        "files": [
+          {
+            "path": "experiment1/cognitive_models/breadth_prior_concepts_free_outlier_rate.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "group_col",
+              "group_log_count",
+              "group_ptr",
+              "group_val",
+              "n_examples",
+              "rating",
+              "row_set",
+              "rule_col",
+              "rule_k",
+              "rule_ptr",
+              "rule_val"
+            ],
+            "n_data_cols": 11
+          },
+          {
+            "path": "experiment1/cognitive_models/concepts_sampled_without_replacement.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/cognitive_models/counting_by_twos_run_concepts.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "run_in_concept",
+              "run_log_evidence"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment1/cognitive_models/round_number_salient_sampling.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "iev_coef",
+              "iic_coef",
+              "rating",
+              "row_cell",
+              "rule_coef"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/cognitive_models/rule_breadth_prior_concepts.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/cognitive_models/shown_examples_not_repeated.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "target_shown"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/cognitive_models/without_replacement_free_outlier_rate.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "example_used",
+              "int_coef_e",
+              "int_coef_t",
+              "rating",
+              "row_cell",
+              "rule_rate"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/cognitive_models/without_replacement_size_principle.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_in_concept",
+              "rule_log_evidence"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/model_loop/models/breadth_prior_concepts_free_outlier_rate.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "group_col",
+              "group_log_count",
+              "group_ptr",
+              "group_val",
+              "n_examples",
+              "rating",
+              "row_set",
+              "rule_col",
+              "rule_k",
+              "rule_ptr",
+              "rule_val"
+            ],
+            "n_data_cols": 11
+          },
+          {
+            "path": "experiment1/model_loop/models/concepts_sampled_without_replacement.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/model_loop/models/counting_by_twos_run_concepts.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "run_in_concept",
+              "run_log_evidence"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment1/model_loop/models/round_number_salient_sampling.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "iev_coef",
+              "iic_coef",
+              "rating",
+              "row_cell",
+              "rule_coef"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/model_loop/models/rule_breadth_prior_concepts.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/model_loop/models/shown_examples_not_repeated.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "target_shown"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/model_loop/models/without_replacement_free_outlier_rate.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "example_used",
+              "int_coef_e",
+              "int_coef_t",
+              "rating",
+              "row_cell",
+              "rule_rate"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/model_loop/models/without_replacement_size_principle.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_in_concept",
+              "rule_log_evidence"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/cognitive_models/digit_sum_open_ended_range_discount.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "rating",
+              "row_cell",
+              "rule_in_concept",
+              "rule_log_evidence",
+              "sum_in_concept",
+              "sum_log_evidence",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment2/cognitive_models/first_example_marks_range_edge.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 11
+          },
+          {
+            "path": "experiment2/cognitive_models/heading_direction_range_extrapolation.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 11
+          },
+          {
+            "path": "experiment2/cognitive_models/margin_and_heading_range_prior.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "interval_log_scale",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 8
+          },
+          {
+            "path": "experiment2/cognitive_models/margin_beyond_examples_range_prior.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 11
+          },
+          {
+            "path": "experiment2/cognitive_models/open_ended_ranges_heading_direction.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 11
+          },
+          {
+            "path": "experiment2/cognitive_models/probe_as_weak_example.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "rating",
+              "row_cell",
+              "rule_in_concept",
+              "rule_log_evidence",
+              "rule_member_post",
+              "sum_in_concept",
+              "sum_log_evidence",
+              "sum_member_post",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 11
+          },
+          {
+            "path": "experiment2/cognitive_models/probe_with_margin_range_prior.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "rule_member_post",
+              "sum_in_cell",
+              "sum_log_evidence",
+              "sum_member_post"
+            ],
+            "n_data_cols": 13
+          },
+          {
+            "path": "experiment2/model_loop/models/digit_sum_open_ended_range_discount.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "rating",
+              "row_cell",
+              "rule_in_concept",
+              "rule_log_evidence",
+              "sum_in_concept",
+              "sum_log_evidence",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment2/model_loop/models/first_example_marks_range_edge.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 11
+          },
+          {
+            "path": "experiment2/model_loop/models/heading_direction_range_extrapolation.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 11
+          },
+          {
+            "path": "experiment2/model_loop/models/margin_and_heading_range_prior.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "interval_log_scale",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 8
+          },
+          {
+            "path": "experiment2/model_loop/models/margin_beyond_examples_range_prior.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 11
+          },
+          {
+            "path": "experiment2/model_loop/models/open_ended_ranges_heading_direction.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 11
+          },
+          {
+            "path": "experiment2/model_loop/models/probe_as_weak_example.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "rating",
+              "row_cell",
+              "rule_in_concept",
+              "rule_log_evidence",
+              "rule_member_post",
+              "sum_in_concept",
+              "sum_log_evidence",
+              "sum_member_post",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 11
+          },
+          {
+            "path": "experiment2/model_loop/models/probe_with_margin_range_prior.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "rule_member_post",
+              "sum_in_cell",
+              "sum_log_evidence",
+              "sum_member_post"
+            ],
+            "n_data_cols": 13
+          },
+          {
+            "path": "experiment3/cognitive_models/heading_weber_upward_with_replacement.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "set_heading",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 12
+          },
+          {
+            "path": "experiment3/cognitive_models/heading_weber_with_upward_counting.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "set_heading",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 12
+          },
+          {
+            "path": "experiment3/cognitive_models/offset_progression_concepts.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "cell_target",
+              "class_count",
+              "class_gain",
+              "class_pattern",
+              "class_set",
+              "entry_cell",
+              "entry_class",
+              "entry_count",
+              "example_mask",
+              "finite_cover",
+              "pattern_cover",
+              "rating",
+              "row_cell"
+            ],
+            "n_data_cols": 14
+          },
+          {
+            "path": "experiment3/cognitive_models/position_decay_upward_room.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "cell_target",
+              "class_gain",
+              "class_moments",
+              "class_pattern",
+              "class_set",
+              "entry_cell",
+              "entry_class",
+              "entry_moments",
+              "example_mask",
+              "finite_cover",
+              "pattern_cover",
+              "rating",
+              "row_cell",
+              "set_moments"
+            ],
+            "n_data_cols": 15
+          },
+          {
+            "path": "experiment3/cognitive_models/position_decaying_example_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "cell_target",
+              "class_count",
+              "class_gain",
+              "class_pattern",
+              "class_set",
+              "entry_cell",
+              "entry_class",
+              "entry_count",
+              "example_mask",
+              "finite_cover",
+              "pattern_cover",
+              "rating",
+              "row_cell"
+            ],
+            "n_data_cols": 14
+          },
+          {
+            "path": "experiment3/cognitive_models/rule_breadth_heading_upward_counting.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "rule_member",
+              "set_heading",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 12
+          },
+          {
+            "path": "experiment3/cognitive_models/set_size_scaled_evidence_weight.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_ll",
+              "rule_mem",
+              "set_heading",
+              "set_size",
+              "sum_ll",
+              "sum_mem"
+            ],
+            "n_data_cols": 13
+          },
+          {
+            "path": "experiment3/cognitive_models/span_filling_example_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "cell_target",
+              "class_count",
+              "class_gain",
+              "class_pattern",
+              "class_set",
+              "entry_cell",
+              "entry_class",
+              "entry_count",
+              "example_mask",
+              "finite_cover",
+              "inside_span",
+              "pattern_cover",
+              "rating",
+              "row_cell"
+            ],
+            "n_data_cols": 15
+          },
+          {
+            "path": "experiment3/model_loop/models/heading_weber_upward_with_replacement.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "set_heading",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 12
+          },
+          {
+            "path": "experiment3/model_loop/models/heading_weber_with_upward_counting.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_in_cell",
+              "rule_log_evidence",
+              "set_heading",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 12
+          },
+          {
+            "path": "experiment3/model_loop/models/offset_progression_concepts.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "cell_target",
+              "class_count",
+              "class_gain",
+              "class_pattern",
+              "class_set",
+              "entry_cell",
+              "entry_class",
+              "entry_count",
+              "example_mask",
+              "finite_cover",
+              "pattern_cover",
+              "rating",
+              "row_cell"
+            ],
+            "n_data_cols": 14
+          },
+          {
+            "path": "experiment3/model_loop/models/position_decay_upward_room.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "cell_target",
+              "class_gain",
+              "class_moments",
+              "class_pattern",
+              "class_set",
+              "entry_cell",
+              "entry_class",
+              "entry_moments",
+              "example_mask",
+              "finite_cover",
+              "pattern_cover",
+              "rating",
+              "row_cell",
+              "set_moments"
+            ],
+            "n_data_cols": 15
+          },
+          {
+            "path": "experiment3/model_loop/models/position_decaying_example_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "cell_target",
+              "class_count",
+              "class_gain",
+              "class_pattern",
+              "class_set",
+              "entry_cell",
+              "entry_class",
+              "entry_count",
+              "example_mask",
+              "finite_cover",
+              "pattern_cover",
+              "rating",
+              "row_cell"
+            ],
+            "n_data_cols": 14
+          },
+          {
+            "path": "experiment3/model_loop/models/rule_breadth_heading_upward_counting.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "rule_member",
+              "set_heading",
+              "sum_in_cell",
+              "sum_log_evidence"
+            ],
+            "n_data_cols": 12
+          },
+          {
+            "path": "experiment3/model_loop/models/set_size_scaled_evidence_weight.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "evidence_moments",
+              "interval_log_scale",
+              "member_moments",
+              "prior_moments",
+              "rating",
+              "row_cell",
+              "rule_ll",
+              "rule_mem",
+              "set_heading",
+              "set_size",
+              "sum_ll",
+              "sum_mem"
+            ],
+            "n_data_cols": 13
+          },
+          {
+            "path": "experiment3/model_loop/models/span_filling_example_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_set",
+              "cell_target",
+              "class_count",
+              "class_gain",
+              "class_pattern",
+              "class_set",
+              "entry_cell",
+              "entry_class",
+              "entry_count",
+              "example_mask",
+              "finite_cover",
+              "inside_span",
+              "pattern_cover",
+              "rating",
+              "row_cell"
+            ],
+            "n_data_cols": 15
+          }
+        ],
+        "any_identical": false,
+        "any_mention": false,
+        "any_value_mention": false,
+        "any_gt_named": false,
+        "csv_generating_model_files": [],
+        "any_csv_generating_model": false,
+        "manifest_gt_named_files": [],
+        "any_manifest_gt_named": false,
+        "max_data_cols": 15
+      },
+      "experiments": [
+        {
+          "experiment": 1,
+          "manifest_models": [
+            "rule_breadth_prior_concepts",
+            "counting_by_twos_run_concepts",
+            "breadth_prior_concepts_free_outlier_rate",
+            "concepts_sampled_without_replacement",
+            "without_replacement_size_principle",
+            "round_number_salient_sampling",
+            "without_replacement_free_outlier_rate",
+            "shown_examples_not_repeated"
+          ]
+        },
+        {
+          "experiment": 2,
+          "manifest_models": [
+            "heading_direction_range_extrapolation",
+            "digit_sum_open_ended_range_discount",
+            "probe_as_weak_example",
+            "open_ended_ranges_heading_direction",
+            "margin_beyond_examples_range_prior",
+            "first_example_marks_range_edge",
+            "margin_and_heading_range_prior",
+            "probe_with_margin_range_prior"
+          ]
+        },
+        {
+          "experiment": 3,
+          "manifest_models": [
+            "heading_weber_with_upward_counting",
+            "rule_breadth_heading_upward_counting",
+            "heading_weber_upward_with_replacement",
+            "position_decaying_example_evidence",
+            "set_size_scaled_evidence_weight",
+            "offset_progression_concepts",
+            "span_filling_example_evidence",
+            "position_decay_upward_room"
+          ]
+        }
+      ]
+    }
+  ],
+  "agent": {
+    "backend": "claude",
+    "model": "claude-opus-5-5",
+    "claude_auth": "subscription"
+  }
+}

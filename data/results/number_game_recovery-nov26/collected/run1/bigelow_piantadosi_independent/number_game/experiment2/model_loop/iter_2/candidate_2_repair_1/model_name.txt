@@ -1,0 +1,1 @@
+arithmetic_progression_residue_rules
