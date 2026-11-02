@@ -117,7 +117,7 @@ def run_stub(tmp_path, monkeypatch, agent, *, backend, n_limited, message):
 
     monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
     return coding_agent.run_coding_agent(
-        "p",
+        "p", network=True,
         cwd=tmp_path,
         log_path=agent["dir"] / "agent.jsonl",
         backend=backend,
@@ -407,7 +407,7 @@ def test_a_sandboxed_agent_compiles_in_a_claimed_cell_dir(tmp_path, monkeypatch,
 
     monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
     coding_agent.run_coding_agent(
-        "p", cwd=tmp_path, log_path=agent["dir"] / "agent.jsonl", backend="opencode",
+        "p", network=True, cwd=tmp_path, log_path=agent["dir"] / "agent.jsonl", backend="opencode",
         allowed_dirs=[agent["dir"]], writable_dirs=[agent["dir"]], sandbox=True,
         on_summary=None, timeout_secs=60, usage_label="inner:candidate",
     )

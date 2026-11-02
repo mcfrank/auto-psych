@@ -223,6 +223,7 @@ def _patch_critique_agent_process(monkeypatch, on_run):
         memory_dir=None,
         sandbox=False,
         writable_dirs=None,
+        network,
     ):
         calls.append({"prompt": prompt, "log_path": log_path})
         on_run(log_path.parent)

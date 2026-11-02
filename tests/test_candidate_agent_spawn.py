@@ -43,6 +43,7 @@ def _spawn(tmp_path, monkeypatch):
         memory_dir=None,
         sandbox=False,
         writable_dirs=None,
+        network,
     ):
         captured["stock"] = stock
         captured["memory_dir"] = memory_dir

@@ -99,7 +99,7 @@ def _run(tmp_path: Path, tree: Path, *, allowed_dirs=(), env=None) -> dict:
     agent_dir = tmp_path / "model_loop" / "iter_0" / "candidate_0"
     agent_dir.mkdir(parents=True)
     ok, text = coding_agent.run_coding_agent(
-        "hello",
+        "hello", network=True,
         cwd=tree,
         log_path=agent_dir / "agent.jsonl",
         allowed_dirs=list(allowed_dirs),
@@ -312,7 +312,7 @@ def test_run_coding_agent_raises_when_denied_its_own_directory(tmp_path, monkeyp
     log_path = candidate_dir / "agent.jsonl"
     with pytest.raises(coding_agent.AgentPermissionDenied):
         coding_agent.run_coding_agent(
-            "hello",
+            "hello", network=True,
             cwd=tree,
             log_path=log_path,
             backend="opencode",
@@ -330,7 +330,7 @@ def test_an_agent_refused_a_directory_outside_its_own_carries_on(tmp_path, monke
     monkeypatch.setenv("FAKE_DENIED_DIR", str(tmp_path / "another_run"))
     summaries = []
     success, text = coding_agent.run_coding_agent(
-        "hello",
+        "hello", network=True,
         cwd=tree,
         log_path=candidate_dir / "agent.jsonl",
         backend="opencode",

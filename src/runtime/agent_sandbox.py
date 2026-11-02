@@ -53,6 +53,7 @@ SYSTEM_LINKS = {
     "/lib64": "usr/lib64",
 }
 SCRATCH_NAME = "scratch"  # mounted at /tmp
+AGENT_SHELL_MOUNT = Path("/.agent_shell")  # an offline agent's shell wrapper, read-only
 HOME_NAME = ".home"  # mounted at $HOME
 HOME_REMOVAL_ATTEMPTS = 6  # about 30 s in all
 HOME_REMOVAL_BACKOFF_SECS = 2.0
@@ -292,6 +293,7 @@ def sandbox_command(
     env: Mapping[str, str],
     readable_dirs: Sequence[Path] = (),
     compile_dir: Optional[Path] = None,
+    shell_dir: Optional[Path] = None,
 ) -> Tuple[List[str], Dict[str, str]]:
     """``cmd`` wrapped in a bubblewrap sandbox, and the environment to run it with.
 
@@ -302,7 +304,9 @@ def sandbox_command(
     ``cwd`` (the agent's tree) and ``readable_dirs`` are mounted read-only;
     ``writable_dirs`` and ``agent_dir`` (the agent's own directory, the one
     holding its log) read-write. The agent dir's ``scratch/`` becomes /tmp and
-    its ``.home/`` becomes $HOME.
+    its ``.home/`` becomes $HOME. ``shell_dir`` (an offline agent's no-network
+    shell, `no_network.offline_shell_dir`) is mounted read-only at
+    ``AGENT_SHELL_MOUNT``, where no directory the agent writes can reach it.
     """
     bwrap = shutil.which("bwrap")
     if bwrap is None:
@@ -350,6 +354,8 @@ def sandbox_command(
     executable, cli_mount = _cli_install(cmd[0], backend)
     if cli_mount is not None:
         args += ["--ro-bind", str(cli_mount), str(cli_mount)]
+    if shell_dir is not None:
+        args += ["--ro-bind", str(shell_dir), str(AGENT_SHELL_MOUNT)]
     args += _login(backend, env, user_home, private_home, claude_auth)
 
     env["TMPDIR"] = "/tmp"

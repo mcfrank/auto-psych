@@ -32,7 +32,6 @@ import json
 import os
 import re
 import shutil
-import sys
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -800,34 +799,16 @@ def _read(path: Path) -> str:
 
 def coding_agent_spawner(*, models_dir: Path, responses_path: Path, timeout_sec: int, backend: Optional[str],
                          model: Optional[str], agent_root: Optional[Path], sandbox: bool,
-                         network: bool = False, shell_dir: Optional[Path] = None) -> SpawnFn:
+                         network: bool = False) -> SpawnFn:
     """The real spawner: one coding agent per candidate directory.
 
-    Without ``network`` (the default; PI decision 2026-10-08) the agent's shell
-    commands run under the no-internet filter and opencode's web tools are
-    denied (`src.rsa.loop.no_network`); the wrapper is written to
-    ``shell_dir``, which the agent must be able to read. An agent whose log
-    shows a completed web tool call stops the run.
+    Without ``network`` (the default; PI decision 2026-10-08) the agent has no
+    internet (`run_coding_agent(network=False)`, `src.runtime.no_network`): its
+    shell commands run under the no-internet filter, its CLI's web tools are
+    denied, and an agent whose log shows a web tool call stops the run.
     """
-    from src.runtime.coding_agent import run_coding_agent, select_backend
+    from src.runtime.coding_agent import run_coding_agent
     from src.runtime.config import REPO_ROOT
-
-    env = None
-    if not network:
-        from src.rsa.loop import no_network
-
-        if select_backend(backend) != "opencode":
-            raise ValueError("agents without network are implemented for the opencode backend only")
-        if shell_dir is None:
-            raise ValueError("agents without network need shell_dir for their shell wrapper")
-        bash = shutil.which("bash")
-        if bash is None:
-            raise FileNotFoundError("no bash on PATH for the agents' shell wrapper")
-        wrapper = no_network.write_shell_wrapper(Path(shell_dir), sys.executable, bash)
-        no_network.verify_wrapper(wrapper, sys.executable)  # before any agent runs
-        env = dict(os.environ)
-        env["SHELL"] = str(wrapper)
-        env["OPENCODE_PERMISSION"] = no_network.opencode_permission(env.get("OPENCODE_PERMISSION"))
 
     def spawn(candidate_dir: Path, prompt: str) -> bool:
         log = candidate_dir / "agent.jsonl"
@@ -839,15 +820,8 @@ def coding_agent_spawner(*, models_dir: Path, responses_path: Path, timeout_sec:
                 allowed_dirs=[candidate_dir, models_dir, responses_path.parent], writable_dirs=[candidate_dir],
                 timeout_secs=timeout_sec, backend=backend, model=model,
                 usage_label="rsa:critique" if candidate_dir.name.startswith("critique") else "rsa:candidate",
-                stock=True, sandbox=sandbox, env=env,
+                stock=True, sandbox=sandbox, network=network,
             )
-        if not network:
-            from src.rsa.loop.no_network import web_tool_uses
-
-            used = web_tool_uses(log)
-            if used:
-                raise RuntimeError(f"{candidate_dir}: the agent used the web although its web tools are denied "
-                                   f"(a harness bug): {used[:3]}")
         return ok
 
     return spawn

@@ -8,7 +8,12 @@ Moved verbatim from `CLAUDE.md` (2026-10-28); `CLAUDE.md` keeps the rules that s
   bubblewrap (jobs stop without `bwrap`), their tree read-only, only their own
   directories writable, with an allowlisted environment (the backend's own
   login, no other secrets, no `SLURM_*`). Agent trees hold only `src/` and the
-  run tree (`agent_tree.exclude`). `scan_gt_name.sh --before-agents` stops a
+  run tree (`agent_tree.exclude`). The candidate and critique agents also have
+  **no internet** (`run_coding_agent(network=False)`, `src/runtime/no_network.py`,
+  user decision 2026-11-01: the number-game bank is public): their shell runs
+  under a seccomp filter refusing internet sockets, Claude gets only
+  `CLAUDE_OFFLINE_TOOLS` (no web tools), and a log showing a denied tool
+  raises. The CLI itself still reaches its API. `scan_gt_name.sh --before-agents` stops a
   cell whose tree names its held-out ground truth — **never write a
   ground-truth model name into anything under `src/` that agents see.**
 - **Raw-only data.** `responses.csv` carries only `sequence_a, sequence_b,

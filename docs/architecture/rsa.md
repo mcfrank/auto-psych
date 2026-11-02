@@ -11,7 +11,7 @@ decision and run); `LOOP_ALGORITHM.md` spells out the live loop.
 
 - Models are memo files (`src/rsa/model_file.py`) fitted with numpyro NUTS
   (`src/rsa/fit.py`); selection by grouped cross-validation; candidate agents
-  have **no network** (`src/rsa/loop/no_network.py`); self-check
+  have **no network** (`src/runtime/no_network.py`, shared with the main pipeline); self-check
   `python -m src.rsa.loop.check_candidate`.
 - **Data**: schema and coding decisions in
   `src/pipelines/outer_loop/projects/rsa_reference/data/README.md`, licences in

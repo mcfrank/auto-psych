@@ -37,6 +37,7 @@ from src.pipelines.inner_loop.model_zoo import _manifest_entries
 from src.runtime.coding_agent import AgentPermissionDenied
 from src.runtime.usage_limits import AgentInfrastructureError
 from src.runtime.config import REPO_ROOT
+from src.runtime.no_network import NO_INTERNET_NOTE
 
 
 # CriticAL critique defaults. Before each candidate round the inner loop runs a
@@ -249,6 +250,7 @@ def _build_critique_prompt(
         f"EOF\n"
         f"```\n"
         f"Do NOT use the `write` tool — use `bash` with `cat << 'EOF' > path`.\n\n"
+        f"{NO_INTERNET_NOTE}\n\n"
         f"The critique context below is also on disk at "
         f"`{critique_dir}/CRITIQUE_CONTEXT.md` for reference.",
         f"## CRITIQUE_CONTEXT.md\n\n{context_text}",
@@ -360,6 +362,7 @@ def _spawn_critique_agent(
             stock=True,  # a subject of the experiment: none of the user's Claude setup
             memory_dir=notes_dir,  # notes shared with later agents of this run only
             sandbox=True,  # sees only its own tree, scratch (/tmp) and a private home
+            network=False,  # no internet: nothing reaches it but the data its run drew
         )
         usable, broken = _usable_test_statistics(
             test_stats_dir, observed_df, n_replicates=n_replicates

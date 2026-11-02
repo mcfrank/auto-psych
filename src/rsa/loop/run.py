@@ -89,7 +89,7 @@ class Args:
     agent_network: bool = False
     """Give agents internet access. Off by default (PI decision 2026-10-08:
     contamination risk outweighs the upside): their shell commands get no
-    network and opencode's web tools are denied (src.rsa.loop.no_network)."""
+    network and the CLI's web tools are denied (src.runtime.no_network)."""
     no_sandbox: bool = False
     """Run agents without bubblewrap. Only in a disposable container."""
     title: str = "RSA inner loop"
@@ -134,7 +134,7 @@ def main(args: Args) -> int:
         models_dir=results / "models", responses_path=results / "responses.csv",
         timeout_sec=args.agent_timeout_sec, backend=args.coding_agent, model=args.agent_model,
         agent_root=args.agent_root, sandbox=not args.no_sandbox,
-        network=args.agent_network, shell_dir=results / ".agent_shell",
+        network=args.agent_network,
     )
     # The agents' spend, written in a finally so an aborted loop still accounts for it.
     # The summary covers the whole log: a resumed loop appends to it, and the summary

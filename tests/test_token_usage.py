@@ -97,7 +97,7 @@ def test_run_coding_agent_opencode_records_usage(tmp_path, monkeypatch):
     marker = token_usage.start_usage_log(tmp_path / "usage.jsonl")
 
     success, result = run_coding_agent(
-        "do the thing",
+        "do the thing", network=True,
         cwd=tmp_path,
         log_path=tmp_path / "log.jsonl",
         backend="opencode",
@@ -163,7 +163,7 @@ def test_run_coding_agent_claude_records_usage(tmp_path, monkeypatch):
     marker = token_usage.start_usage_log(tmp_path / "usage.jsonl")
 
     success, result = run_coding_agent(
-        "do the thing",
+        "do the thing", network=True,
         cwd=tmp_path,
         log_path=tmp_path / "log.jsonl",
         backend="claude",
@@ -197,7 +197,7 @@ def test_run_coding_agent_without_usage_events_flags_missing(tmp_path, monkeypat
     marker = token_usage.start_usage_log(tmp_path / "usage.jsonl")
 
     success, _result = run_coding_agent(
-        "p",
+        "p", network=True,
         cwd=tmp_path,
         log_path=tmp_path / "log.jsonl",
         backend="opencode",
@@ -269,7 +269,7 @@ def test_opencode_locked_db_is_retried(tmp_path, monkeypatch, _no_retry_backoff)
     marker = token_usage.start_usage_log(tmp_path / "usage.jsonl")
 
     success, result = run_coding_agent(
-        "p",
+        "p", network=True,
         cwd=tmp_path,
         log_path=tmp_path / "log.jsonl",
         backend="opencode",
@@ -298,7 +298,7 @@ def test_opencode_locked_db_retries_exhaust(tmp_path, monkeypatch, _no_retry_bac
     marker = token_usage.start_usage_log(tmp_path / "usage.jsonl")
 
     success, result = run_coding_agent(
-        "p",
+        "p", network=True,
         cwd=tmp_path,
         log_path=tmp_path / "log.jsonl",
         backend="opencode",
@@ -336,7 +336,7 @@ exit 1
     monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
 
     success, _result = run_coding_agent(
-        "p",
+        "p", network=True,
         cwd=tmp_path,
         log_path=tmp_path / "log.jsonl",
         backend="opencode",

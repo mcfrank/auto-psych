@@ -338,7 +338,7 @@ def test_a_sandboxed_run_wraps_the_cli_in_the_agents_sandbox(tmp_path, monkeypat
     )
     with pytest.raises(Stop):
         coding_agent.run_coding_agent(
-            "p",
+            "p", network=True,
             cwd=tmp_path,
             log_path=agent_dir / "agent.jsonl",
             backend="opencode",
@@ -360,7 +360,7 @@ def test_a_sandboxed_run_must_say_what_it_may_write(tmp_path):
 
     with pytest.raises(ValueError, match="writable_dirs"):
         run_coding_agent(
-            "p",
+            "p", network=True,
             cwd=tmp_path,
             log_path=tmp_path / "agent.jsonl",
             backend="opencode",
@@ -389,7 +389,7 @@ def test_a_sandboxed_agents_private_home_is_removed_when_it_exits(
 
     monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
     coding_agent.run_coding_agent(
-        "p",
+        "p", network=True,
         cwd=tmp_path,
         log_path=agent_dir / "agent.jsonl",
         backend="opencode",

@@ -41,6 +41,7 @@ from src.pipelines.inner_loop.model_zoo import (
 from src.tasks import task_of_file
 from src.tasks.subjective_randomness import CANDIDATE_HINTS as SUBJECTIVE_RANDOMNESS_LENSES
 from src.runtime.config import REPO_ROOT
+from src.runtime.no_network import NO_INTERNET_NOTE
 
 
 # Exploration lenses, one per exploratory slot per round. Each is a distinct
@@ -672,6 +673,7 @@ def _build_candidate_prompt(
         f"```\n"
         f"Do NOT use the `write` or `edit` tool for creating new files — use "
         f"`bash` with `cat << 'EOF' > path` as shown above.\n\n"
+        f"{NO_INTERNET_NOTE}\n\n"
         f"The context documents below are also on disk there for reference.",
         f"## CONTEXT.md\n\n{docs['context']}",
         f"## CANDIDATE_BRIEF.md\n\n{docs['brief']}",
@@ -729,5 +731,6 @@ def _spawn_candidate_agent(
         stock=True,  # a subject of the experiment: none of the user's Claude setup
         memory_dir=notes_dir,  # notes shared with later agents of this run only
         sandbox=True,  # sees only its own tree, scratch (/tmp) and a private home
+        network=False,  # no internet: nothing reaches it but the data its run drew
     )
     return success

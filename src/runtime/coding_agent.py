@@ -58,9 +58,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Sequence
 
-from src.runtime import token_usage
+from src.runtime import no_network, token_usage
 from src.runtime.agent_sandbox import (
     AGENT_COMPILE_SLOTS_ENV,
+    AGENT_SHELL_MOUNT,
     CLAUDE_AUTH_ENV,
     CLAUDE_AUTH_FALLBACK,
     use_api_key_for,
@@ -373,8 +374,12 @@ def build_command(
     model: Optional[str],
     stock: bool = False,
     memory_dir: Optional[Path] = None,
+    tools: Optional[Sequence[str]] = None,
 ) -> list[str]:
     """Build the CLI argv for the given backend.
+
+    ``tools`` limits a Claude agent to those tools (``--tools``); without it
+    the agent has the CLI's own set.
 
     The prompt is the final element so callers can locate it — or, when
     :func:`prompt_via_stdin` says so, the final element is codex's ``-``
@@ -408,10 +413,14 @@ def build_command(
             cmd += STOCK_CLAUDE_ARGS
         if memory_dir is not None:
             cmd += ["--settings", json.dumps({"autoMemoryDirectory": str(memory_dir)})]
+        if tools is not None:
+            cmd += ["--tools", ",".join(tools)]
         cmd += ["--model", model, "-p"]
         if not prompt_via_stdin(backend, prompt):
             cmd.append(prompt)
         return cmd
+    if tools is not None:
+        raise ValueError(f"tools= limits Claude agents only, not {backend}")
     if backend == "opencode":
         cmd = ["opencode", "run", "--format", "json", "-m", model]
         if not prompt_via_stdin(backend, prompt):
@@ -691,6 +700,7 @@ def run_coding_agent(
     memory_dir: Optional[Path] = None,
     sandbox: bool = False,
     writable_dirs: Optional[list[Path]] = None,
+    network: bool,
 ) -> tuple[bool, str]:
     """Spawn the selected coding agent, stream output to ``log_path``.
 
@@ -701,6 +711,10 @@ def run_coding_agent(
     holds only its working tree and ``allowed_dirs`` (read-only), the
     ``writable_dirs`` and ``memory_dir`` (read-write), a scratch dir at /tmp
     and a private home (see :mod:`src.runtime.agent_sandbox`).
+    ``network=False`` gives the agent no internet (:mod:`src.runtime.no_network`):
+    its shell commands cannot open internet sockets, its CLI has no web tools,
+    and a log showing a denied tool raises afterwards. The CLI itself still
+    reaches its model API.
 
     Returns ``(success, result_text)``. For Claude, success and the final
     result come from the terminal ``result`` stream-json event; for opencode
@@ -736,6 +750,8 @@ def run_coding_agent(
     """
     backend = select_backend(backend)
     model = select_model(backend, model)
+    if not network and backend not in ("claude", "opencode"):
+        raise ValueError(f"agents without network are not implemented for the {backend} backend")
     cmd = build_command(
         backend,
         prompt=prompt,
@@ -743,6 +759,7 @@ def run_coding_agent(
         model=model,
         stock=stock,
         memory_dir=memory_dir,
+        tools=no_network.CLAUDE_OFFLINE_TOOLS if not network and backend == "claude" else None,
     )
     log_path.parent.mkdir(parents=True, exist_ok=True)
     child_env = child_environment(
@@ -753,6 +770,14 @@ def run_coding_agent(
         stock=stock,
         memory_dir=memory_dir,
     )
+    shell_dir = None if network else no_network.offline_shell_dir()
+    if shell_dir is not None:
+        # The wrapper as the agent sees it: on its read-only mount in a sandbox.
+        shell = (AGENT_SHELL_MOUNT if sandbox else shell_dir) / "bash"
+        child_env["SHELL"] = str(shell)
+        child_env["CLAUDE_CODE_SHELL"] = str(shell)
+        if backend == "opencode":
+            child_env["OPENCODE_PERMISSION"] = no_network.opencode_permission(child_env.get("OPENCODE_PERMISSION"))
     if sandbox and writable_dirs is None:
         raise ValueError(
             "A sandboxed agent needs writable_dirs: the directories it may "
@@ -773,6 +798,7 @@ def run_coding_agent(
             agent_dir=log_path.parent,
             env=child_env,
             compile_dir=compile_dir,
+            shell_dir=shell_dir,
         )
 
     # With the cell's pool set (the job script), the agent compiles in a kept
@@ -913,6 +939,12 @@ def run_coding_agent(
             f"  [oc] refused access outside the agent's directories (agent carried on): "
             + ", ".join(refused_outside)
         )
+
+    if not network:
+        denied = no_network.offline_tool_violations(backend, log_path)
+        if denied:
+            raise RuntimeError(f"{log_path}: the agent used tools it was denied (no network; a harness bug): "
+                               f"{denied[:3]}")
 
     if timed_out:
         return False, f"coding agent ({backend}) timed out after {timeout_secs}s"

@@ -96,3 +96,16 @@ def test_write_candidate_context_returns_the_written_documents(tmp_path):
         candidate_dir / "existing_hypotheses.md"
     ).read_text(encoding="utf-8")
     assert docs["critiques"] is None
+
+
+def test_the_candidate_and_critique_prompts_say_there_is_no_internet(tmp_path):
+    """They run offline (run_coding_agent(network=False)); told so, an agent
+    does not spend its turns trying to install packages or fetch papers."""
+    from src.pipelines.inner_loop.critique_round import _build_critique_prompt
+    from src.runtime.no_network import NO_INTERNET_NOTE
+
+    docs = {"context": "c", "brief": "b", "existing_hypotheses": "h", "critiques": None}
+    assert NO_INTERNET_NOTE in _build_candidate_prompt(
+        tmp_path / "candidate_0", docs, theory_prompt=SUBJECTIVE_RANDOMNESS.theory_prompt)
+    assert NO_INTERNET_NOTE in _build_critique_prompt(
+        tmp_path / "critique", "ctx", prompt_path=SUBJECTIVE_RANDOMNESS.critique_prompt)

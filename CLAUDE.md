@@ -70,6 +70,8 @@ prior over the carried set).
 
 - **Never write a ground-truth model name into anything under `src/` that
   agents see** (`scan_gt_name.sh --before-agents` stops the cell).
+- **Loop agents have no internet** (`run_coding_agent(network=False)`,
+  `src/runtime/no_network.py`): never give a candidate or critique agent a web tool.
 - **Raw-only data:** `responses.csv` carries only `sequence_a, sequence_b,
   participant_id, trial_index, chose_left`; every model computes its own
   features. Prolific IDs go only to `<project>/raw_collected/`, which no agent

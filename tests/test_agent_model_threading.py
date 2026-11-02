@@ -52,6 +52,9 @@ def test_candidate_agent_threads_model(tmp_path, monkeypatch):
         agent_model=AGENT_MODEL,
     )
     assert captured["model"] == AGENT_MODEL
+    # The loop's agents write and judge the models: no internet, so nothing
+    # reaches them but the data their run drew (user, 2026-11-01).
+    assert captured["network"] is False
 
 
 def test_critique_agent_threads_model(tmp_path, monkeypatch):
@@ -82,6 +85,9 @@ def test_critique_agent_threads_model(tmp_path, monkeypatch):
         agent_model=AGENT_MODEL,
     )
     assert captured["model"] == AGENT_MODEL
+    # The loop's agents write and judge the models: no internet, so nothing
+    # reaches them but the data their run drew (user, 2026-11-01).
+    assert captured["network"] is False
 
 
 def test_programmatic_wrapper_threads_agent_model(tmp_path, monkeypatch):
@@ -114,3 +120,4 @@ def test_programmatic_wrapper_threads_agent_model(tmp_path, monkeypatch):
     )
 
     assert captured["agent_model"] == AGENT_MODEL
+

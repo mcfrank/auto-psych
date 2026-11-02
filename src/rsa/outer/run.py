@@ -595,7 +595,7 @@ def main(args: Args) -> None:
         return coding_agent_spawner(
             models_dir=models_dir, responses_path=responses, timeout_sec=args.agent_timeout_sec,
             backend=args.coding_agent, model=args.agent_model or DEFAULT_AGENT_MODEL, agent_root=args.agent_root,
-            sandbox=not args.no_sandbox, network=False, shell_dir=models_dir.parent / ".agent_shell")
+            sandbox=not args.no_sandbox, network=False)
 
     cfg = OuterConfig(**{f: getattr(args, f) for f in OuterConfig.__dataclass_fields__})
     OuterRun(cfg, spawner).run()

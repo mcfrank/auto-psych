@@ -192,6 +192,7 @@ def test_critique_prompt_names_the_critique_dir(tmp_path: Path, monkeypatch):
         memory_dir=None,
         sandbox=False,
         writable_dirs=None,
+        network,
     ):
         captured["prompt"] = prompt
         captured["cwd"] = cwd
@@ -404,6 +405,7 @@ def _patch_agent(monkeypatch, on_run):
         memory_dir=None,
         sandbox=False,
         writable_dirs=None,
+        network,
     ):
         calls.append({"prompt": prompt, "log_path": log_path})
         on_run(log_path.parent)

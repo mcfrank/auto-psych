@@ -1,21 +1,26 @@
-"""Agents without internet access (PI decision 2026-10-08): no network for anything
-an agent runs, while opencode itself still reaches its model API.
+"""Agents without internet access (PI decisions 2026-10-08 for RSA, 2026-11-01 for
+the main pipeline): no network for anything an agent runs, while the agent CLI
+itself still reaches its model API. ``run_coding_agent(network=False)`` applies
+all of it.
 
 Sherlock allows no network namespaces, so the sandbox cannot cut the network.
 Instead:
 
-* every shell command an opencode agent runs goes through ``$SHELL``, which
-  the RSA spawner points at a ``bash`` wrapper (`write_shell_wrapper`). The
-  wrapper runs this file, which installs a seccomp filter refusing IPv4 and
-  IPv6 sockets (``socket(AF_INET|AF_INET6, ...)`` fails with EACCES) and
-  then execs the real bash. A filter is inherited by every child and cannot
-  be removed, so curl, pip, git, Python and anything else the agent starts
-  have no internet; Unix sockets and files work as before;
-* opencode's own web tools (webfetch, websearch, codesearch) are denied
-  through ``OPENCODE_PERMISSION`` (`DENIED_TOOLS`); user rules override the
-  built-in subagents' defaults;
-* after each agent, `web_tool_uses` reads its log, and the spawner raises if
-  any web tool call completed: a harness bug, not something to carry on past.
+* every shell command an agent runs goes through a ``bash`` wrapper
+  (`write_shell_wrapper`; ``$SHELL`` for opencode, ``CLAUDE_CODE_SHELL`` for
+  Claude Code's Bash and Monitor tools). The wrapper runs this file, which
+  installs a seccomp filter refusing IPv4 and IPv6 sockets
+  (``socket(AF_INET|AF_INET6, ...)`` fails with EACCES) and then execs the
+  real bash. A filter is inherited by every child and cannot be removed, so
+  curl, pip, git, Python and anything else the agent starts have no internet;
+  Unix sockets and files work as before. A sandboxed agent gets the wrapper on
+  a read-only mount (`agent_sandbox.AGENT_SHELL_MOUNT`);
+* the CLI's own web tools are withheld: opencode's (webfetch, websearch,
+  codesearch) are denied through ``OPENCODE_PERMISSION`` (`DENIED_TOOLS`;
+  user rules override the built-in subagents' defaults), and Claude Code gets
+  only `CLAUDE_OFFLINE_TOOLS` (``--tools``), none of which reaches the web;
+* after each agent, `offline_tool_violations` reads its log, and the launcher
+  raises on any web tool call: a harness bug, not something to carry on past.
 
 This file runs standalone (``python -I no_network.py <bash> [args...]``,
 stdlib only): the wrapper calls it by path from wherever the agent's shell
@@ -24,15 +29,32 @@ starts. x86-64 Linux only; anything else raises.
 
 from __future__ import annotations
 
+import atexit
 import ctypes
+import functools
 import json
 import os
 import platform
+import shutil
 import struct
 import sys
+import tempfile
 from pathlib import Path
 
 DENIED_TOOLS = ("webfetch", "websearch", "codesearch")
+# What an offline agent's prompt tells it (the main loop's candidate and critique agents).
+NO_INTERNET_NOTE = (
+    "You have no internet access: shell commands cannot open network connections and there "
+    "are no web tools. Everything you need is in the repository, your directory and the "
+    "responses file; do not try to install packages."
+)
+# The tools an offline Claude agent gets: every tool the loop's agents used in
+# the October 2026 runs (Bash, Monitor, ToolSearch, ScheduleWakeup, TaskStop,
+# Read) and the file editors. Not the web tools, nor the ones that reach
+# outside the agent (Task and Workflow subagents, SendToProject,
+# PushNotification, PublishPlugin, ...). An allowlist, so a tool a later CLI
+# adds stays out.
+CLAUDE_OFFLINE_TOOLS = ("Bash", "Read", "Edit", "Write", "Monitor", "TaskStop", "ScheduleWakeup", "ToolSearch")
 
 # seccomp / BPF constants (linux/seccomp.h, linux/filter.h, linux/audit.h)
 _PR_SET_NO_NEW_PRIVS = 38
@@ -103,8 +125,9 @@ def write_shell_wrapper(directory: Path, python: str, bash: str) -> Path:
     """``<directory>/bash``: runs this file's filter, then the real ``bash``.
 
     The wrapper is named ``bash`` because opencode accepts ``$SHELL`` only by
-    a known shell name. This file is copied beside it, so the wrapper works
-    from any working directory.
+    a known shell name. This file is copied beside it and found through the
+    wrapper's own path, so the wrapper works from any working directory and
+    from wherever its directory is mounted.
     """
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
@@ -113,7 +136,7 @@ def write_shell_wrapper(directory: Path, python: str, bash: str) -> Path:
     if Path(bash).resolve() == (directory / "bash").resolve():
         raise ValueError(f"{bash} is the wrapper itself; pass the real bash")
     wrapper = directory / "bash"
-    wrapper.write_text(f'#!/bin/sh\nexec "{python}" -I "{helper}" "{bash}" "$@"\n', encoding="utf-8")
+    wrapper.write_text(f'#!/bin/sh\nexec "{python}" -I "$(dirname "$0")/{helper.name}" "{bash}" "$@"\n', encoding="utf-8")
     wrapper.chmod(0o755)
     return wrapper
 
@@ -169,6 +192,40 @@ def web_tool_uses(log_path: Path) -> list[str]:
         state = part.get("state") or {}
         if part.get("tool") in DENIED_TOOLS and state.get("status") == "completed":
             used.append(f"{part['tool']}: {json.dumps(state.get('input', {}))[:200]}")
+    return used
+
+
+@functools.cache
+def offline_shell_dir() -> Path:
+    """This process's wrapper directory (a temporary one), verified once."""
+    bash = shutil.which("bash")
+    if bash is None:
+        raise FileNotFoundError("no bash on PATH for the agents' no-network shell")
+    directory = Path(tempfile.mkdtemp(prefix="agent_shell_"))
+    atexit.register(shutil.rmtree, directory)
+    verify_wrapper(write_shell_wrapper(directory, sys.executable, bash), sys.executable)
+    return directory
+
+
+def offline_tool_violations(backend: str, log_path: Path) -> list[str]:
+    """What an offline agent's log shows it used of the tools it was denied."""
+    if backend == "opencode":
+        return web_tool_uses(log_path)
+    if backend != "claude":
+        raise ValueError(f"agents without network are not implemented for the {backend} backend")
+    used = []
+    for line in Path(log_path).read_text(encoding="utf-8", errors="replace").splitlines():
+        if '"tool_use"' not in line:
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:  # the CLI's own non-event output
+            continue
+        if event.get("type") != "assistant":
+            continue
+        for item in event["message"].get("content", []):
+            if item.get("type") == "tool_use" and item["name"] not in CLAUDE_OFFLINE_TOOLS:
+                used.append(item["name"])
     return used
 
 

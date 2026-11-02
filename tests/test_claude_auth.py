@@ -133,7 +133,7 @@ def test_the_mode_is_recorded_with_the_agents_token_usage(tmp_path, monkeypatch)
     monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
     token_usage.reset_usage_log()
     coding_agent.run_coding_agent(
-        "p",
+        "p", network=True,
         cwd=tmp_path,
         log_path=tmp_path / "agent" / "agent.jsonl",
         backend="claude",
