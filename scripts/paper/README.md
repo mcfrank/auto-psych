@@ -94,7 +94,9 @@ What each figure shows:
     unordered sequence pairs.
   - RSA: the fits on the pooled data in `data/rsa/viz/panels.json`; the best
     model is the chain final with the highest held-out density, the best
-    starting model the best promoted seed (panels.json
+    starting model the textbook RSA model with the highest held-out density
+    (the pre-registration's `best_starting`, `rsa_l1_shared_prior`;
+    panels.json's `starting`), not the best promoted seed (panels.json
     records no pooled ELPD). Conditions are (display, object class) cells.
   - Number game: the three runs' final data pooled (22,680 responses; the
     runs hide participant ids, so nothing is renumbered); the best model is
