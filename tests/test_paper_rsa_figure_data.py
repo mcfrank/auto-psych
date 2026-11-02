@@ -41,13 +41,14 @@ def _panels():
         "models": {
             "c0": {"model": "final_a"}, "c1": {"model": "final_b"},
             "promoted": {"model": "p1"},
+            "starting": {"model": "s1"},  # the best textbook model
         },
         "panels": [
             {
                 "dataset": "prereg", "n": 10,
                 "classes": [
-                    {"cls": 0, "count": 7, "preds": {"c0": 0.6, "c1": 0.5, "promoted": 0.4}},
-                    {"cls": 1, "count": 3, "preds": {"c0": 0.4, "c1": 0.5, "promoted": 0.6}},
+                    {"cls": 0, "count": 7, "preds": {"c0": 0.6, "c1": 0.5, "promoted": 0.4, "starting": 0.2}},
+                    {"cls": 1, "count": 3, "preds": {"c0": 0.4, "c1": 0.5, "promoted": 0.6, "starting": 0.8}},
                 ],
             }
         ],
@@ -148,16 +149,16 @@ def test_each_chain_is_its_starting_models_and_final_against_the_best_promoted_s
     assert c0["others_at_end"] == {}
     # The textbook models (the campaign's "starting models") are not drawn.
     assert "shared_models" not in data
-    # Figure 3: the best final by held-out density and the best promoted
-    # seed, both fitted on the pooled data (panels.json).
+    # Figure 3: the best final by held-out density and the best textbook
+    # model by held-out density, both fitted on the pooled data (panels.json).
     assert "best_run" not in data
     assert data["pooled"]["best_model"] == "final_a"
-    assert data["pooled"]["best_seed"] == "p1"
+    assert data["pooled"]["best_seed"] == "s1"
     assert data["pooled"]["winner_runs"] == {"final_a": "c0", "final_b": "c1"}
 
     (cls0, cls1) = data["conditions"]
     assert cls0 == {"dataset": "prereg", "display": 0, "cls": 0, "n": 10,
-                    "observed": 0.7, "best_model": 0.6, "best_seed": 0.4}
+                    "observed": 0.7, "best_model": 0.6, "best_seed": 0.2}
     assert cls1["observed"] == pytest.approx(0.3)
 
 
@@ -178,6 +179,20 @@ def test_panels_whose_promoted_seed_is_not_the_best_raise(tmp_path):
     panels["models"]["promoted"]["model"] = "p2"
     with pytest.raises(RuntimeError, match="panels.json"):
         _run(tmp_path, _prereg(), panels)
+
+
+def test_panels_whose_textbook_model_is_not_the_best_raise(tmp_path):
+    panels = _panels()
+    panels["models"]["starting"]["model"] = "s2"
+    with pytest.raises(RuntimeError, match="best textbook model"):
+        _run(tmp_path, _prereg(), panels)
+
+
+def test_a_best_textbook_model_that_is_not_the_best_by_density_raises(tmp_path):
+    prereg = _prereg()
+    prereg["best_starting"] = "seed:s2"
+    with pytest.raises(RuntimeError, match="best textbook model"):
+        _run(tmp_path, prereg, _panels())
 
 
 def test_a_chain_starting_model_the_test_did_not_score_raises(tmp_path):

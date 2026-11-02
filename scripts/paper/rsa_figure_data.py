@@ -20,13 +20,15 @@ Read from the campaign's aggregates in the repository; nothing is fitted.
 - Figure 3: each display's observed proportion choosing each object class
   (all the campaign's data pooled) beside the posterior-mean class
   probability of the best chain final (highest held-out density) and of the
-  best promoted seed, both fitted on the pooled data: ``data/rsa/viz/
-  panels.json`` (aggregates only). Unlike subjective randomness, the best
-  final is chosen by its held-out density, not by a fit on the pooled data:
-  panels.json records no pooled ELPD.
+  best textbook model (``seed:<name>``, highest held-out density: the
+  pre-registration's ``best_starting``), both fitted on the pooled data:
+  ``data/rsa/viz/panels.json`` (aggregates only). Unlike subjective
+  randomness, both are chosen by their held-out density, not by a fit on the
+  pooled data: panels.json records no pooled ELPD.
 
-The output has the same schema as ``sr_figure_data.py``'s; its ``best_seed``
-is the best promoted seed.
+The output has the same schema as ``sr_figure_data.py``'s; each run's
+``best_seed`` (Figure 2's zero) is the best promoted seed, the ``pooled``
+``best_seed`` (Figure 3's) the best textbook model.
 
 Usage:
     uv run python -m scripts.paper.rsa_figure_data
@@ -52,6 +54,8 @@ DEFAULT_OUT = here() / "data" / "paper" / "figure_data" / "rsa.json"
 
 PROMOTED_PREFIX = "promoted:"
 PROMOTED_PANEL_KEY = "promoted"  # panels.json's key for the best promoted seed
+TEXTBOOK_PREFIX = "seed:"
+TEXTBOOK_PANEL_KEY = "starting"  # panels.json's key for the best textbook model
 
 
 @dataclass
@@ -88,6 +92,20 @@ def _best_promoted(prereg: Dict[str, Any]) -> str:
     if recorded != by_density:
         raise RuntimeError(
             f"the recorded best promoted seed {recorded!r} is not the best by density ({by_density!r})"
+        )
+    return recorded
+
+
+def _best_textbook(prereg: Dict[str, Any]) -> str:
+    textbook = _lpds(prereg, TEXTBOOK_PREFIX)
+    recorded = prereg["best_starting"]
+    if not recorded.startswith(TEXTBOOK_PREFIX):
+        raise RuntimeError(f"best_starting {recorded!r} is not a textbook model")
+    recorded = recorded[len(TEXTBOOK_PREFIX):]
+    by_density = max(textbook, key=textbook.get)
+    if recorded != by_density:
+        raise RuntimeError(
+            f"the recorded best textbook model {recorded!r} is not the best by density ({by_density!r})"
         )
     return recorded
 
@@ -172,7 +190,7 @@ def _pruned_order(live_root: Path, chain: str, names: List[str]) -> Dict[str, in
 
 def condition_table(panels: Dict[str, Any], chain: str) -> List[Dict[str, Any]]:
     """One row per (display, object class): the observed proportion choosing
-    the class and the chain final's and best promoted seed's predicted
+    the class and the chain final's and best textbook model's predicted
     probability."""
     rows = []
     for display, panel in enumerate(panels["panels"]):
@@ -188,7 +206,7 @@ def condition_table(panels: Dict[str, Any], chain: str) -> List[Dict[str, Any]]:
                     "n": n,
                     "observed": int(cls["count"]) / n,
                     "best_model": float(cls["preds"][chain]),
-                    "best_seed": float(cls["preds"][PROMOTED_PANEL_KEY]),
+                    "best_seed": float(cls["preds"][TEXTBOOK_PANEL_KEY]),
                 }
             )
     return rows
@@ -213,6 +231,13 @@ def main(args: Args) -> None:
             f"{panels['models'][PROMOTED_PANEL_KEY]['model']!r}, not the best promoted seed "
             f"{best_promoted!r}"
         )
+    best_textbook = _best_textbook(prereg)
+    if panels["models"][TEXTBOOK_PANEL_KEY]["model"] != best_textbook:
+        raise RuntimeError(
+            f"panels.json's {TEXTBOOK_PANEL_KEY!r} model is "
+            f"{panels['models'][TEXTBOOK_PANEL_KEY]['model']!r}, not the best textbook model "
+            f"{best_textbook!r}"
+        )
     runs = [
         chain_record(c, panels["models"][c]["model"], _chain_starting_models(chain_seeds, c),
                      prereg, best_promoted, chain_models, args.live_root)
@@ -232,7 +257,7 @@ def main(args: Args) -> None:
                 "runs": runs,
                 "pooled": {
                     "best_model": best["best_model"],
-                    "best_seed": best_promoted,
+                    "best_seed": best_textbook,
                     "winner_runs": {r["best_model"]: r["run"] for r in runs},
                     "selected_by": "highest log predictive density on the pre-registered experiment",
                 },
