@@ -112,13 +112,19 @@ What each figure shows:
 - **Ablation figure** (`fig_ablation`, `uv run python -m scripts.paper.ablation_figure`,
   seconds): the backward elimination of each domain's overall winner, one
   panel each: the subjective-randomness final best on all runs pooled
-  (Figure 3's, `pooled.best_model`; its elimination in `docs/sr_ablation.md`)
-  and the reference-game consolidation (`data/rsa/consolidate/eliminate/`).
-  The number game was not ablated. Each panel is the path of the model kept
+  (Figure 3's, `pooled.best_model`; its elimination in `docs/sr_ablation.md`),
+  chain 0's reference-game final, the best on the pre-registered test
+  (`data/rsa/c0_ablation/eliminate/`, `docs/auto_rsa/ABLATION_C0.md`; it
+  replaces the consolidation's superset elimination), and the number-game
+  dataset run's final on run 1's data (`data/results/number_game_dataset-oct26/analysis/ablation/`,
+  `docs/ng_ablation.md`; Figure 3's best). Each panel is the path of the model kept
   after each round: its grouped-CV ELPD against the full model's, by its
-  number of mechanisms, each step named by the mechanism it dropped; the
-  path's last step is the removal that stopped the elimination, below the dashed
-  grey line 2 clustered SEs (of that comparison) under the final model.
+  number of mechanisms, each step named by the mechanism it dropped, with ±1
+  clustered SE of the model's own ELPD-CV (`elpd_se`); the path's last step,
+  grey and dashed, is the removal that stopped the elimination (≥ 2 SEs of
+  its paired comparison). `elpd_se` is recorded since the elimination began
+  recording it: an older `elimination.json` lacks it, and the figure stops
+  until that ablation's plan step is rerun (it replays the saved CVs, no fits).
 
 `figures.py --mock-domains <domain> ...` marks those domains' titles "(MOCK
 DATA)", for drafting the figures' look from invented figure data.

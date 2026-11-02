@@ -89,6 +89,10 @@ def eliminate(V: Variants, final: str, start: Sequence[str],
     """The rule above. ``score`` maps mechanism sets to their CV."""
     from src.models.clustered_se import cluster_dse
 
+    def own_se(s: Scored) -> float:
+        """The clustered SE of a model's own ELPD-CV (its difference from zero)."""
+        return float(cluster_dse(s.pointwise, np.zeros_like(s.pointwise), units))
+
     current = V.canonical(final, start)
     reason = V.invalid_reason(final, current)
     if reason:
@@ -107,12 +111,12 @@ def eliminate(V: Variants, final: str, start: Sequence[str],
             s = scored[d]
             cost = cur.elpd - s.elpd
             se = float(cluster_dse(cur.pointwise, s.pointwise, units))
-            rows.append(dict(mechanism=m, model=V.variant_name(final, d), elpd_cv=s.elpd, cost=float(cost), se=se,
+            rows.append(dict(mechanism=m, model=V.variant_name(final, d), elpd_cv=s.elpd, elpd_se=own_se(s), cost=float(cost), se=se,
                              cost_in_se=float(cost / se) if se > 0 else (0.0 if cost == 0 else float(np.sign(cost)) * np.inf),
                              converged=s.converged))
         rows.sort(key=lambda r: (not np.isfinite(r["cost"]), r["cost"]))
         record = dict(model=V.variant_name(final, current), mechanisms=list(current), elpd_cv=cur.elpd,
-                      converged=cur.converged, size=V.size(final, current), candidates=rows)
+                      elpd_se=own_se(cur), converged=cur.converged, size=V.size(final, current), candidates=rows)
         best = next((r for r in rows if r["converged"]), None)
         if best is not None and (best["cost"] <= 0 or best["cost"] < threshold_dse * best["se"]):
             record["decision"] = f"drop {best['mechanism']}"

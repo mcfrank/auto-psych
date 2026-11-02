@@ -230,6 +230,24 @@ def test_the_rule_drops_free_mechanisms_cheapest_first_and_stops_at_a_costly_one
     assert record["lean"]["size"] == {"population": 5, "person_vectors": 0}  # the core 2, switch 2, final_run 1
 
 
+def test_each_model_records_the_clustered_se_of_its_own_elpd():
+    from src.subjective_randomness.ablation.eliminate import eliminate
+
+    contributions = dict(RULE_CONTRIBUTIONS, final_run=0.1 * UNITS)  # varies across stimulus pairs
+    score = fake_score("run2", contributions)
+    record = eliminate("run2", RULE_START, score, UNITS)
+
+    def own_se(mechanisms):
+        sums = np.bincount(UNITS, weights=score([V.canonical("run2", mechanisms)])[V.canonical("run2", mechanisms)].pointwise)
+        return np.sqrt(N_UNITS * np.var(sums))
+
+    for r in record["rounds"]:
+        assert r["elpd_se"] == pytest.approx(own_se(r["mechanisms"]))
+        for c in r["candidates"]:
+            assert c["elpd_se"] == pytest.approx(own_se(set(r["mechanisms"]) - {c["mechanism"]}))
+    assert record["rounds"][0]["elpd_se"] > 0
+
+
 def test_an_unconverged_candidate_is_never_dropped_and_an_unconverged_start_raises():
     from src.subjective_randomness.ablation.eliminate import eliminate
 
