@@ -44,15 +44,13 @@ class FakeTheorist:
         return True
 
 
-@pytest.fixture(scope="module")
-def run(tmp_path_factory):
+def _inputs(root):
+    """Two seeds and a two-block corpus simulated from rsa_l1_salience: (seeds dir, corpus path)."""
     from src.rsa_open.fit import TheoryModel
     from src.rsa_open.links import likelihood
     from src.rsa_open.loop.fitting import write_corpus
-    from src.rsa_open.loop.orchestrator import OpenLoop, OpenLoopConfig
     from tests.test_rsa_open_corpus import simulated_block
 
-    root = tmp_path_factory.mktemp("open_loop")
     seeds = root / "seeds"
     seeds.mkdir()
     entries = []
@@ -66,7 +64,15 @@ def run(tmp_path_factory):
     gt = TheoryModel(gt_path)
     blocks = [simulated_block(gt, "E", likelihood("choice"), 120, 1, {"temperature": 1.0, "lapse": 0.05}),
               simulated_block(gt, "exp1", likelihood("production"), 120, 2, {"temperature": 1.5, "lapse": 0.05})]
-    corpus = write_corpus(root / "corpus.json", blocks)
+    return seeds, write_corpus(root / "corpus.json", blocks)
+
+
+@pytest.fixture(scope="module")
+def run(tmp_path_factory):
+    from src.rsa_open.loop.orchestrator import OpenLoop, OpenLoopConfig
+
+    root = tmp_path_factory.mktemp("open_loop")
+    seeds, corpus = _inputs(root)
     theorist = FakeTheorist()
     cfg = OpenLoopConfig(corpus_path=corpus, seed_models_dir=seeds, results_dir=root / "loop", max_iterations=1,
                          candidate_count=3, settings=SETTINGS, fit_time_limit_sec=None,
@@ -118,3 +124,92 @@ def test_the_theorist_s_prompt_describes_every_paradigm_and_the_theory_api(run):
     # The round's critique reaches every theorist (it names only significant statistics).
     assert "## critiques.md" in prompt and "# Critique of `" in prompt and "evaluated test statistics" in prompt
     assert (loop.dir / "data" / "exp1.jsonl").exists()
+
+
+class WatchingTheorist(FakeTheorist):
+    """FakeTheorist that notes, when slot 2's repair is spawned, whose CV folds are already running."""
+
+    def __init__(self):
+        super().__init__()
+        self.loop = None
+        self.cv_running_at_repair = None
+
+    def __call__(self, cdir, prompt):
+        if cdir.name == "candidate_2_repair_1":
+            self.cv_running_at_repair = set(self.loop._cv_jobs)
+        return super().__call__(cdir, prompt)
+
+
+@pytest.mark.slow  # every fit in a child of its own: the time-limited loop of a live chain
+def test_a_time_limited_round_scores_admitted_theories_while_repairs_run_and_decides_as_before(run, tmp_path):
+    from src.rsa_open.loop.orchestrator import OpenLoop, OpenLoopConfig
+
+    seeds, corpus = _inputs(tmp_path)
+    theorist = WatchingTheorist()
+    cfg = OpenLoopConfig(corpus_path=corpus, seed_models_dir=seeds, results_dir=tmp_path / "loop", max_iterations=1,
+                         candidate_count=3, settings=SETTINGS, fit_time_limit_sec=600,
+                         paradigm_notes={"exp1": "People chose the word to say for a marked object."})
+    loop = OpenLoop(cfg, theorist)
+    theorist.loop = loop
+    final = loop.run()
+    assert theorist.cv_running_at_repair == {"salient_prior_listener"}  # admitted, folds started before the repair
+    sequential, sequential_final, _ = run
+
+    def outcomes(lp):
+        return [(e["name"], e["outcome"], e["context"]) for e in
+                (json.loads(line) for line in (lp.dir / "attempted_hypotheses.jsonl").read_text().splitlines())]
+
+    assert outcomes(loop) == outcomes(sequential)  # the same decisions, in the same order
+    assert final["best_model"] == sequential_final["best_model"]
+    metas = [m for m in (loop.dir / ".fit_cache").glob("salient_prior_listener.*.json") if "warmup" not in m.name]
+    assert metas and all(json.loads(m.read_text())["peak_rss_mb"] > 0 for m in metas)
+
+
+class Crash(Exception):
+    pass
+
+
+class CrashingTheorist(FakeTheorist):
+    """FakeTheorist whose round-2 repair crashes the job (after round 2's admissions are in the ledger)."""
+
+    def __call__(self, cdir, prompt):
+        if cdir.parent.name == "round_2" and cdir.name == "candidate_2_repair_1":
+            raise Crash("the node went away")
+        return super().__call__(cdir, prompt)
+
+
+@pytest.mark.slow
+def test_an_interrupted_loop_resumes_from_its_last_scored_round(tmp_path):
+    import time
+
+    from src.rsa_open.loop.orchestrator import LoopOutOfTime, OpenLoop, OpenLoopConfig
+
+    seeds, corpus = _inputs(tmp_path)
+    cfg = OpenLoopConfig(corpus_path=corpus, seed_models_dir=seeds, results_dir=tmp_path / "loop", max_iterations=2,
+                         candidate_count=3, settings=SETTINGS, fit_time_limit_sec=None)
+    with pytest.raises(Crash):
+        OpenLoop(cfg, CrashingTheorist()).run()
+    d = tmp_path / "loop"
+    history = json.loads((d / "history.json").read_text())
+    assert [h["round"] for h in history] == [-1, 0]
+    scored_entries = history[-1]["ledger_entries"]
+    assert len((d / "attempted_hypotheses.jsonl").read_text().splitlines()) > scored_entries  # round 2's admissions
+
+    # With too little of the job left, the resumed loop stops before the round (the next job resumes it).
+    late = OpenLoopConfig(**{**cfg.__dict__, "deadline": time.time() + 3600})
+    with pytest.raises(LoopOutOfTime, match="round 2 of 2"):
+        OpenLoop(late, FakeTheorist()).run(resume=True)
+    assert (d / "round_2_abandoned_1" / "ledger_tail.jsonl").exists()
+    assert len((d / "attempted_hypotheses.jsonl").read_text().splitlines()) == scored_entries
+
+    theorist = FakeTheorist()
+    final = OpenLoop(cfg, theorist).run(resume=True)
+    history = json.loads((d / "history.json").read_text())
+    assert [h["round"] for h in history] == [-1, 0, 1, 2]  # seeds, round 1, round 2 (run again), the end
+    assert [c for c, _ in theorist.calls][0] == "critique"  # round 2 again from its critique and agents
+    ledger = [json.loads(line) for line in (d / "attempted_hypotheses.jsonl").read_text().splitlines()]
+    round2 = [(e["name"], e["context"]) for e in ledger if e["context"].startswith("round 2")]
+    assert round2 and len(round2) == len(set(round2))  # the abandoned attempt's lines were cut back
+    export = json.loads((d / "export.json").read_text())
+    assert export["best_model"] == final["best_model"]
+    assert sorted(f.stem for f in (d / "models").glob("*.py")) == export["live"]

@@ -11,10 +11,12 @@
       corpus.json          E, every earlier block and this one
       loop/                the inner loop (`src.rsa_open.loop.orchestrator.OpenLoop`) and its export
 
-Each stage is skipped when its output exists, so a chain resumes where it stopped. A design or
-loop that stopped part way starts again from scratch (as main's model-loop stage does); the
-abandoned attempt is kept beside it as ``design.abandoned_<i>`` / ``loop.abandoned_<i>`` (no agent
-reads it), and a loop's fit cache moves to the new attempt, so no fit is repeated:
+Each stage is skipped when its output exists, so a chain resumes where it stopped. A design
+that stopped part way starts again from scratch (as main's model-loop stage does), and so does
+a loop stopped before its seeds were scored; the abandoned attempt is kept beside it as
+``design.abandoned_<i>`` / ``loop.abandoned_<i>`` (no agent reads it), and a loop's fit cache
+moves to the new attempt, so no fit is repeated. A loop stopped after a scored step resumes from
+it (`src.rsa_open.loop.orchestrator.OpenLoop.resume`, PI 2026-11-02):
 
 1. **design**: (the open arm; the fixed arm's is below) the carried theories and **the bar** (the chain's starting theories, `bar_dir`, kept
    in every design although the loop may prune them, as the closed campaign's design kept its
@@ -60,7 +62,7 @@ from src.rsa_open.corpus import Block
 from src.rsa_open.designer import EarlierParadigm, SpawnFn as DesignerSpawn, run_designer
 from src.rsa_open.fit import TheoryModel, simulate
 from src.rsa_open.loop.fitting import cached_loop_fit, fit_cached, read_corpus, write_corpus
-from src.rsa_open.loop.orchestrator import OpenLoop, OpenLoopConfig
+from src.rsa_open.loop.orchestrator import LoopOutOfTime, OpenLoop, OpenLoopConfig
 from src.rsa_open.timing import DEFAULT_RECORDS, TimingRecord, read_records, record_from_sessions, write_records
 
 DESIGN_DRAWS = 200
@@ -95,12 +97,14 @@ class FixedDesignFailed(RuntimeError):
 
 class OutOfJobTime(RuntimeError):
     """Too little of the job is left to finish the next stage: the next job of the chain starts it
-    (a design or loop killed part way starts again from scratch, so starting one late wastes it)."""
+    (a design killed part way starts again from scratch, so starting one late wastes it; a loop
+    resumes from its last scored round, and starts a round only with time for it)."""
 
 
-STAGE_MIN_HOURS = {"design": 8.0, "loop": 24.0}
+STAGE_MIN_HOURS = {"design": 8.0, "loop": 8.0}
 """The time a job must have left to start a stage (run B: a designer cycle took up to 2 h and a
-design 6 h at worst; its loops 11-27 h)."""
+design 6 h at worst). A loop needed a whole loop's time (24 h) until it could resume from a
+round (2026-11-02): now its setup and one round (chain 1's took 5-6.5 h)."""
 
 
 @dataclass
@@ -280,12 +284,13 @@ class Chain:
         ``design_settings`` within ``design_fit_limit_sec``. Raises ModelFailure (the theory's
         failure, or the time limit)."""
         if n > 1:
-            cached = cached_loop_fit(path, name, corpus, self.cfg.settings, self.exp(n - 1) / "loop" / ".fit_cache")
+            cached = cached_loop_fit(path, name, corpus, self.cfg.settings, self.exp(n - 1) / "loop" / ".fit_cache",
+                                     log_likelihood=False)
             if cached is not None:
                 return cached, "the previous loop's fit"
         settings = replace(self.cfg.design_settings, seed=self.cfg.settings.seed)
         fitted = fit_cached(path, name, corpus, settings, self.exp(n) / ".fit_cache",
-                            time_limit_sec=self.cfg.design_fit_limit_sec)
+                            time_limit_sec=self.cfg.design_fit_limit_sec, log_likelihood=False)
         return fitted, "a design fit" + ("" if fitted.converged else
                                           f" (not converged: {'; '.join(fitted.convergence_problems)})")
 
@@ -474,7 +479,9 @@ class Chain:
         loop_dir = self.exp(n) / "loop"
         if (loop_dir / "export.json").exists():
             return json.loads((loop_dir / "export.json").read_text())
-        set_aside(loop_dir, keep=(".fit_cache",))
+        resume = (loop_dir / "history.json").exists()  # a scored step: resume from it
+        if not resume:
+            set_aside(loop_dir, keep=(".fit_cache",))
         corpus = fresh_corpus(self.exp(n) / "corpus.json", self.blocks_before(n + 1))
         notes = {}
         for k in range(1, n + 1):
@@ -483,8 +490,11 @@ class Chain:
         prev_ledger = self.exp(n - 1) / "loop" / "attempted_hypotheses.jsonl" if n > 1 else None
         cfg = OpenLoopConfig(corpus_path=corpus, seed_models_dir=self.models_input(n), results_dir=loop_dir,
                              settings=self.cfg.settings, paradigm_notes=notes, inherit_ledger=prev_ledger,
-                             **self.cfg.loop)
-        OpenLoop(cfg, self.theorist_spawn(loop_dir)).run()
+                             deadline=self.cfg.deadline, **self.cfg.loop)
+        try:
+            OpenLoop(cfg, self.theorist_spawn(loop_dir)).run(resume=resume)
+        except LoopOutOfTime as exc:
+            raise OutOfJobTime(f"{self.cfg.chain}, experiment {n}'s loop: {exc}") from exc
         return json.loads((loop_dir / "export.json").read_text())
 
     def _time_for(self, stage: str, n: int) -> None:

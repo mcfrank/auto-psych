@@ -182,7 +182,8 @@ def admit(candidate_dir: Path, name: str, *, cfg: GateConfig, blocks: Sequence[B
             return _refuse(f"the theory failed to load or run: {type(exc).__name__}: {exc}")
         raise
     try:
-        fitted = loop_fit(path, name, cfg.corpus_path, cfg.settings, cfg.cache_dir, time_limit_sec=cfg.time_limit_sec)
+        fitted = loop_fit(path, name, cfg.corpus_path, cfg.settings, cfg.cache_dir, time_limit_sec=cfg.time_limit_sec,
+                          log_likelihood=False)
     except ModelFailure as exc:
         return _refuse(f"fitting failed: {exc}")
     if not fitted.converged:

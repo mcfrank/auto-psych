@@ -260,3 +260,32 @@ The text of this pre-registration (`PREREG_DRAFT.md` and `OSF_PREREG.md`) was dr
   no code a live chain runs.
 - **No data** of the campaign's chains existed at registration: open chain 1 (the code's `chain_0`)
   had not been designed. The rehearsals' smoke tests (run D2: 30 people) are never modelled.
+
+### Addendum B (2026-11-02): the loop's scheduling and resuming (infrastructure only)
+
+- **Why:** open chain 1's experiment 2 lost its inner loop twice to the job's memory limit: on
+  2026-11-01 at 96 GB (job 50237409, after round 2's admissions) and on 2026-11-02 at 180 GB (job
+  50692295, after round 3). The scoring step fitted 4 theories x 5 CV folds at once with nothing
+  bounding their memory, and the loop's own process held every live theory's per-trial
+  log-likelihood (about 0.9 GB a fit). Each failure restarted the loop from scratch (§4a,
+  infrastructure); the two cost about 33 h of loop time. Data, designs and studies were not
+  affected.
+- **The change** (PI 2026-11-02; tag `rsa-open-prereg-a1`): (1) every fit child waits for room
+  in the job's memory, at its theory's recorded peak, and one the system kills is fitted again
+  once (fit children ask to be the out-of-memory killer's first choice, so the loop's process survives) (`src/rsa_open/loop/fitting.py`, `FitScheduler`); the loop and the design load fits
+  without the per-trial log-likelihood, which they never read; (2) a round's candidate fits run
+  while retries' agents work, and an admitted theory's CV folds start at admission, while
+  repairs run; admission stays one by one in slot order on finished fits; (3) an interrupted
+  loop resumes from its last scored round (the closed loop's rule), and starts a round only with
+  7 h of the job left; a loop stage then needs 8 h, not 24, to start.
+- **What does not change:** the theorists, critic and designer and their briefs; every fit's
+  settings, seeds and cache key (fits made before the change are reused); the gates, the
+  novelty threshold, the time limits, CV, selection, pruning and the export; `gate.py` and the
+  chance theory. A resumed round is run again from its agents, as a restarted loop's was; what an
+  unfinished round wrote is kept beside it (`round_<k>_abandoned_<i>`, `ledger_tail.jsonl`).
+  Two candidates of a round that choose the same name may now get the suffix the other way round.
+- **Registered files:** `src/rsa_open/loop/orchestrator.py` changes (its §8 hash is
+  superseded: the new sha256 is in this addendum's commit message and tag); `gate.py` and
+  `fixed_paradigm.json` are unchanged.
+- **Experiment 2 of chain 1** resumes from its last scored round (round 2) on the new code; its
+  two failed attempts are reported (`loop.abandoned_1`, and the attempt's round 3).

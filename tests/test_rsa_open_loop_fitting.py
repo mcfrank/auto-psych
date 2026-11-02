@@ -149,3 +149,53 @@ def _choice():
     from src.rsa_open.links import likelihood
 
     return likelihood("choice")
+
+
+def test_a_fit_child_records_its_peak_memory_and_a_light_read_leaves_out_the_log_likelihood(theory_path, corpus,
+                                                                                           tmp_path):
+    from src.rsa.loop.fitting import cache_paths
+    from src.rsa_open.loop.fitting import fingerprint, fit_cached, scheduler
+
+    _, path = corpus
+    light = fit_cached(theory_path, "rsa_l1", path, QUICK, tmp_path, time_limit_sec=600, log_likelihood=False)
+    assert "log_likelihood" not in light.idata.groups() and light.idata.posterior["alpha"].size == 40
+    _, meta = cache_paths(tmp_path, "rsa_l1", fingerprint(theory_path, path, QUICK))
+    peak_mb = json.loads(meta.read_text())["peak_rss_mb"]
+    assert peak_mb > 100  # a child that imported JAX and fitted
+    assert scheduler().estimate("rsa_l1") >= peak_mb * 2**20  # the next fits of the theory are given its room
+    full = fit_cached(theory_path, "rsa_l1", path, QUICK, tmp_path)  # the cached file keeps it
+    assert full.pointwise("exp1").shape == (40, 60)
+    np.testing.assert_array_equal(full.flat()["alpha"], light.flat()["alpha"])
+
+
+def _self_killing(theory_path, tmp_path, times):
+    """The theory, killed by SIGKILL (as the job's out-of-memory killer does) on its first ``times`` loads."""
+    count = str(tmp_path / "loads")
+    path = tmp_path / "killed.py"
+    path.write_text(theory_path.read_text() + (
+        "\n\nimport os as _os, signal as _signal\n"
+        f"_loads = sum(1 for _ in open({count!r})) if _os.path.exists({count!r}) else 0\n"
+        f"with open({count!r}, 'a') as _f:\n    _f.write('x\\n')\n"
+        f"if _loads < {times}:\n    _os.kill(_os.getpid(), _signal.SIGKILL)\n"))
+    return path
+
+
+def test_a_fit_child_killed_by_the_system_is_fitted_again_once(theory_path, corpus, tmp_path, capsys):
+    from src.rsa_open.loop.fitting import fit_cached
+
+    _, path = corpus
+    killed_once = _self_killing(theory_path, tmp_path, times=1)
+    fitted = fit_cached(killed_once, "killed_once", path, QUICK, tmp_path / "cache", time_limit_sec=600)
+    assert fitted.idata.posterior["alpha"].size == 40
+    assert "fitting it again" in capsys.readouterr().out
+
+
+def test_a_fit_child_killed_twice_is_an_infrastructure_failure(theory_path, corpus, tmp_path):
+    from src.rsa.loop.fitting import ModelFailure
+    from src.rsa_open.loop.fitting import fit_cached
+
+    _, path = corpus
+    always = _self_killing(theory_path, tmp_path, times=99)
+    with pytest.raises(RuntimeError, match="killed .* twice") as err:
+        fit_cached(always, "always_killed", path, QUICK, tmp_path / "cache", time_limit_sec=600)
+    assert not isinstance(err.value, ModelFailure)

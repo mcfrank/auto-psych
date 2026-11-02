@@ -12,6 +12,7 @@
 """
 
 import json
+import threading
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -174,6 +175,7 @@ def _loop(tmp_path, timing):
     loop.models_dir, loop.dir, loop.fold_paths = tmp_path, tmp_path, [tmp_path / "f0", tmp_path / "f1"]
     loop.cv, loop.cv_problems, loop.admission_limit_sec = {}, {}, None
     loop.blocks = [SimpleNamespace(name="E")]
+    loop._cv_jobs, loop._cv_pool, loop._parent_jax = {}, None, threading.Lock()
     return loop
 
 
@@ -195,7 +197,7 @@ def test_a_fold_that_fails_leaves_its_theory_unscored_and_untrusted_on_record(tm
 
     limits = []
 
-    def stuck(path, name, corpus, settings, cache, time_limit_sec=None, init=None):
+    def stuck(path, name, corpus, settings, cache, time_limit_sec=None, init=None, log_likelihood=True):
         limits.append(time_limit_sec)
         raise FitTimeLimitExceeded(f"{name}: the fit did not finish within 45 minutes")
 

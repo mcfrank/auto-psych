@@ -14,6 +14,17 @@ far from converging has a geometry problem that a refit repeats at twice the cos
 raised, memo refused it, it broke the contract, it gives an observed response probability
 zero) is a `ModelFailure`, remembered for the process; anything else is infrastructure and
 raises.
+
+**Memory.** Every fit child is started through `FitScheduler`: it runs only when the job's
+memory holds it beside the children already running, at the most a fit of that theory has
+used (its peak, recorded with the fit as ``peak_rss_mb``) or, for a theory never fitted, at
+`DEFAULT_FIT_BYTES`. A child the system kills while running (the job's out-of-memory killer) is
+refitted once with twice the room; killed again, it raises as before. Open chain 1's experiment
+2 lost its loop twice to the job's memory limit (2026-11-01 at 96 GB, 2026-11-02 at 180 GB):
+the scoring step ran 20 fold fits at once, with nothing bounding their memory (PI 2026-11-02).
+A loaded fit may leave out its per-trial log-likelihood (``log_likelihood=False``): the loop and
+the design never read it, and on a whole corpus it is about 0.9 GB a fit (4 chains x 1,000
+draws x 58,069 trials in float32), held in the loop's own process for every live theory.
 """
 
 from __future__ import annotations
@@ -23,17 +34,22 @@ import json
 import math
 import multiprocessing as mp
 import os
+import resource
+import signal
+import sys
 import tempfile
 import threading
+import time
 import traceback
+from contextlib import contextmanager
 from dataclasses import asdict, fields
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence
 
 import numpy as np
 
 from src.rsa.context import Context
-from src.rsa.cpus import CORES
+from src.rsa.cpus import CORES, job_cpus
 from src.rsa.fit import FitSettings
 from src.rsa.loop.fitting import (SINGLE_THREAD_XLA_FLAGS, FitTimeLimitExceeded, ModelFailure, _start_with_cache,
                                   cache_paths, is_model_failure, refit_settings)
@@ -45,6 +61,115 @@ FIT_FORMAT = 1
 
 class ZeroProbabilityResponse(RuntimeError):
     """A theory gives an observed response probability zero (a model failure)."""
+
+
+# --------------------------------------------------------------------------- memory
+
+MEMORY_FRACTION = 0.9
+"""Of the job's memory, what the loop's process and its fit children may use together."""
+DEFAULT_FIT_BYTES = 10 * 2**30
+"""The room reserved for a theory never fitted in this process (chain 1's fits used 5-9 GB)."""
+PEAK_MARGIN = 1.25
+"""A theory fitted before is given its largest recorded peak times this."""
+POLL_SEC = 30.0
+
+
+def _kib_to_bytes(maxrss: int) -> int:
+    return maxrss if sys.platform == "darwin" else maxrss * 1024  # ru_maxrss: bytes on macOS, KiB on Linux
+
+
+def _proc_status_bytes(pid: Any, key: str) -> int:
+    """A /proc/<pid>/status memory line (VmRSS, VmHWM) in bytes; 0 where there is no /proc."""
+    try:
+        for line in open(f"/proc/{pid}/status"):
+            if line.startswith(key + ":"):
+                return int(line.split()[1]) * 1024
+    except OSError:
+        pass
+    return 0
+
+
+def own_rss() -> int:
+    """This process's resident memory now (the loop's own: its fits, CV results, JAX)."""
+    return _proc_status_bytes("self", "VmRSS")
+
+
+def job_memory_bytes() -> int:
+    """The job's memory: Slurm's allocation, else the cgroup's limit, else the machine's."""
+    if os.environ.get("SLURM_MEM_PER_NODE"):
+        return int(os.environ["SLURM_MEM_PER_NODE"]) * 2**20
+    if os.environ.get("SLURM_MEM_PER_CPU"):
+        return int(os.environ["SLURM_MEM_PER_CPU"]) * 2**20 * len(job_cpus())
+    for path in ("/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory/memory.limit_in_bytes"):
+        try:
+            text = Path(path).read_text().strip()
+        except OSError:
+            continue
+        if text.isdigit() and int(text) < 2**60:
+            return int(text)
+    return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
+
+
+class FitScheduler:
+    """Starts fit children only while the job's memory holds them.
+
+    A child is admitted when fewer than ``slots`` run and the room reserved for the running ones,
+    its own and this process's resident memory fit in ``usable`` bytes; one child always may run
+    (a theory needing more than the job runs alone). The room for a theory is its recorded peak
+    (`observe`) times `PEAK_MARGIN`, or `DEFAULT_FIT_BYTES` before its first fit."""
+
+    def __init__(self, usable_bytes: float, slots: int, rss: Callable[[], int] = own_rss) -> None:
+        self.usable = float(usable_bytes)
+        self.slots = max(1, int(slots))
+        self._rss = rss
+        self._cond = threading.Condition()
+        self._running: Dict[int, float] = {}
+        self._peaks: Dict[str, float] = {}
+        self._next = 0
+
+    def estimate(self, name: str) -> float:
+        with self._cond:
+            peak = self._peaks.get(name)
+        return DEFAULT_FIT_BYTES if peak is None else PEAK_MARGIN * peak
+
+    def observe(self, name: str, peak_bytes: float) -> None:
+        if peak_bytes and peak_bytes > 0:
+            with self._cond:
+                self._peaks[name] = max(self._peaks.get(name, 0.0), float(peak_bytes))
+
+    def running(self) -> int:
+        with self._cond:
+            return len(self._running)
+
+    @contextmanager
+    def room(self, name: str, at_least: float = 0.0) -> Iterator[float]:
+        """Wait for room for one of ``name``'s fits (at least ``at_least`` bytes); hold it in the block."""
+        need = max(self.estimate(name), float(at_least))
+        with self._cond:
+            while self._running and (len(self._running) >= self.slots
+                                     or sum(self._running.values()) + need + self._rss() > self.usable):
+                self._cond.wait(timeout=POLL_SEC)  # also re-reads this process's memory as it changes
+            token, self._next = self._next, self._next + 1
+            self._running[token] = need
+        try:
+            yield need
+        finally:
+            with self._cond:
+                del self._running[token]
+                self._cond.notify_all()
+
+
+_SCHEDULER: Optional[FitScheduler] = None
+_SCHEDULER_LOCK = threading.Lock()
+
+
+def scheduler() -> FitScheduler:
+    """The process's scheduler: `MEMORY_FRACTION` of the job's memory, one child per core of the job."""
+    global _SCHEDULER
+    with _SCHEDULER_LOCK:
+        if _SCHEDULER is None:
+            _SCHEDULER = FitScheduler(MEMORY_FRACTION * job_memory_bytes(), len(job_cpus()))
+        return _SCHEDULER
 
 
 # --------------------------------------------------------------------------- the corpus file
@@ -129,7 +254,7 @@ def _is_model_failure(exc: BaseException, theory_path: Path) -> bool:
     return isinstance(exc, _model_failure_types()) or is_model_failure(exc, theory_path)
 
 
-def _write(fitted: CorpusFit, nc_path: Path, meta_path: Path) -> None:
+def _write(fitted: CorpusFit, nc_path: Path, meta_path: Path, record_peak: bool = False) -> None:
     nc_path.parent.mkdir(parents=True, exist_ok=True)
     tmp = nc_path.with_suffix(f".tmp{os.getpid()}.nc")
     fitted.idata.to_netcdf(str(tmp))
@@ -137,17 +262,31 @@ def _write(fitted: CorpusFit, nc_path: Path, meta_path: Path) -> None:
     meta = dict(theory_name=fitted.theory_name, blocks=fitted.blocks, param_names=fitted.param_names,
                 convergence_problems=fitted.convergence_problems,
                 offsets={k: list(v) for k, v in fitted.offsets.items()}, timing=fitted.timing)
+    if record_peak:  # a fit child's peak memory, its write included (an in-process fit's would be the loop's)
+        meta["peak_rss_mb"] = round(_kib_to_bytes(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 2**20)
     tmp_meta = meta_path.with_suffix(f".tmp{os.getpid()}.json")
     tmp_meta.write_text(json.dumps(meta))
     os.replace(tmp_meta, meta_path)
 
 
-def _read(nc_path: Path, meta_path: Path) -> CorpusFit:
+def _without_log_likelihood(idata: Any) -> Any:
+    import arviz as az
+
+    return az.InferenceData(**{g: getattr(idata, g) for g in idata.groups() if g != "log_likelihood"})
+
+
+def _read(nc_path: Path, meta_path: Path, log_likelihood: bool = True) -> CorpusFit:
+    """A cached fit; without its per-trial log-likelihood when ``log_likelihood`` is False. A
+    recorded peak informs the scheduler's room for the theory's next fits (its CV folds)."""
     import arviz as az
 
     meta = json.loads(meta_path.read_text())
     idata = az.from_netcdf(str(nc_path))
+    if not log_likelihood:
+        idata = _without_log_likelihood(idata)
     idata.load()
+    if meta.get("peak_rss_mb"):
+        scheduler().observe(meta["theory_name"], meta["peak_rss_mb"] * 2**20)
     return CorpusFit(meta["theory_name"], meta["blocks"], idata, meta["param_names"], meta["convergence_problems"],
                      {k: tuple(v) for k, v in meta["offsets"].items()}, meta.get("timing", {}))
 
@@ -176,11 +315,20 @@ def _fit_now(theory_path: Path, name: str, corpus_path: Path, settings: FitSetti
     return fitted
 
 
+CHILD_OOM_SCORE_ADJ = "500"
+"""A fit child asks to be the out-of-memory killer's first choice (raising its own score needs no
+privilege): a killed child is fitted again, while the loop's own process holds the run."""
+
+
 def _child(theory_path, name, corpus_path, settings, nc_path, meta_path, queue, init=None) -> None:
     os.environ["XLA_FLAGS"] = (os.environ.get("XLA_FLAGS", "") + " " + SINGLE_THREAD_XLA_FLAGS).strip()
     try:
+        Path("/proc/self/oom_score_adj").write_text(CHILD_OOM_SCORE_ADJ)
+    except OSError:
+        pass  # no /proc (macOS)
+    try:
         _write(_fit_now(Path(theory_path), name, Path(corpus_path), settings, init, warmup_path(Path(nc_path))),
-               Path(nc_path), Path(meta_path))
+               Path(nc_path), Path(meta_path), record_peak=True)
         queue.put(("ok", None, None))
     except BaseException as exc:
         queue.put(("model" if _is_model_failure(exc, Path(theory_path)) else "infrastructure",
@@ -192,11 +340,13 @@ _FAILURES_LOCK = threading.Lock()
 
 
 def fit_cached(theory_path: Path, name: str, corpus_path: Path, settings: FitSettings, cache_dir: Path, *,
-               time_limit_sec: Optional[float] = None, init: Optional[Dict[str, float]] = None) -> CorpusFit:
+               time_limit_sec: Optional[float] = None, init: Optional[Dict[str, float]] = None,
+               log_likelihood: bool = True) -> CorpusFit:
     """The theory's fit to the corpus, from the cache or fitted now (in a time-limited child with
     ``time_limit_sec``). ``init``: start every chain there (the constrained values of the sampled
-    sites; a cross-validation fold starts at its full fit's posterior). Raises `ModelFailure` for
-    the theory's failure (remembered), and RuntimeError for any other."""
+    sites; a cross-validation fold starts at its full fit's posterior). ``log_likelihood`` False:
+    the fit without its per-trial log-likelihood (the cached file keeps it). Raises `ModelFailure`
+    for the theory's failure (remembered), and RuntimeError for any other."""
     fp = fingerprint(theory_path, corpus_path, settings, init)
     nc_path, meta_path = cache_paths(cache_dir, name, fp)
     with _FAILURES_LOCK:
@@ -205,7 +355,7 @@ def fit_cached(theory_path: Path, name: str, corpus_path: Path, settings: FitSet
         raise type(failed)(str(failed))
     try:
         if nc_path.exists() and meta_path.exists():
-            return _read(nc_path, meta_path)
+            return _read(nc_path, meta_path, log_likelihood)
         if time_limit_sec is None:
             try:
                 fitted = _fit_now(theory_path, name, corpus_path, settings, init)
@@ -214,38 +364,77 @@ def fit_cached(theory_path: Path, name: str, corpus_path: Path, settings: FitSet
                     raise ModelFailure(f"{type(exc).__name__}: {exc}") from exc
                 raise
             _write(fitted, nc_path, meta_path)
+            if not log_likelihood:
+                fitted.idata = _without_log_likelihood(fitted.idata)
             return fitted
-        return _fit_in_child(theory_path, name, corpus_path, settings, nc_path, meta_path, time_limit_sec, init)
+        return _fit_in_child(theory_path, name, corpus_path, settings, nc_path, meta_path, time_limit_sec, init,
+                             log_likelihood)
     except ModelFailure as exc:
         with _FAILURES_LOCK:
             _FAILURES[str(nc_path)] = exc
         raise
 
 
-def _fit_in_child(theory_path, name, corpus_path, settings, nc_path, meta_path, time_limit_sec,
-                  init=None) -> CorpusFit:
-    ctx = mp.get_context("spawn")
-    queue = ctx.Queue()
-    proc = ctx.Process(target=_child, args=(str(theory_path), name, str(corpus_path), settings, str(nc_path),
-                                            str(meta_path), queue, init))
+class _Killed(Exception):
+    """A fit child ended by a signal without reporting (the job's out-of-memory killer, as a rule)."""
+
+    def __init__(self, exitcode: Optional[int], peak: int) -> None:
+        super().__init__(exitcode)
+        self.exitcode, self.peak = exitcode, peak
+
+
+def _run_child(proc, queue, name: str, nc_path: Path, time_limit_sec: float) -> tuple:
+    """Start ``proc`` on a core of its own, wait for it (killed at the limit) and return its report."""
     core = CORES.take()
+    peak = 0
     try:
         with tempfile.TemporaryDirectory(prefix="rsa-open-fit-cache-") as own_cache:
             _start_with_cache(proc, own_cache, core)
-            proc.join(None if math.isinf(time_limit_sec) else time_limit_sec)
-            if proc.is_alive():
-                proc.kill()
-                proc.join()
-                raise FitTimeLimitExceeded(f"{name}: the fit did not finish within {time_limit_sec / 60:.0f} minutes"
-                                           + _warmup_note(Path(nc_path)))
+            deadline = None if math.isinf(time_limit_sec) else time.monotonic() + time_limit_sec
+            while proc.is_alive():
+                left = None if deadline is None else deadline - time.monotonic()
+                if left is not None and left <= 0:
+                    proc.kill()
+                    proc.join()
+                    raise FitTimeLimitExceeded(f"{name}: the fit did not finish within {time_limit_sec / 60:.0f} "
+                                               f"minutes" + _warmup_note(Path(nc_path)))
+                proc.join(POLL_SEC if left is None else min(POLL_SEC, left))
+                peak = max(peak, _proc_status_bytes(proc.pid, "VmHWM"))
             if queue.empty():
-                raise RuntimeError(f"{name}: the fit process exited with code {proc.exitcode} without reporting "
-                                   f"(killed? out of memory?): an infrastructure failure, not the theory's")
-            kind, message, tb = queue.get()
+                if proc.exitcode == -signal.SIGKILL:
+                    raise _Killed(proc.exitcode, peak)
+                raise RuntimeError(f"{name}: the fit process exited with code {proc.exitcode} without reporting: "
+                                   f"an infrastructure failure, not the theory's")
+            return queue.get()
     finally:
         CORES.give_back(core)
+
+
+def _fit_in_child(theory_path, name, corpus_path, settings, nc_path, meta_path, time_limit_sec,
+                  init=None, log_likelihood: bool = True) -> CorpusFit:
+    sched, at_least = scheduler(), 0.0
+    for attempt in (1, 2):
+        ctx = mp.get_context("spawn")
+        queue = ctx.Queue()
+        proc = ctx.Process(target=_child, args=(str(theory_path), name, str(corpus_path), settings, str(nc_path),
+                                                str(meta_path), queue, init))
+        with sched.room(name, at_least) as reserved:
+            try:
+                kind, message, tb = _run_child(proc, queue, name, nc_path, time_limit_sec)
+                break
+            except _Killed as killed:
+                sched.observe(name, killed.peak)
+                if attempt == 2:
+                    raise RuntimeError(
+                        f"{name}: the fit process was killed (exit code {killed.exitcode}) twice without reporting, "
+                        f"the second time with {reserved / 2**30:.0f} GB reserved for it (out of memory?): an "
+                        f"infrastructure failure, not the theory's") from None
+                at_least = max(2 * reserved, PEAK_MARGIN * killed.peak)
+                print(f"[fit] {name}: the fit process was killed at {killed.peak / 2**30:.1f} GB (out of memory?) "
+                      f"with {reserved / 2**30:.0f} GB reserved; fitting it again with "
+                      f"{at_least / 2**30:.0f} GB", flush=True)
     if kind == "ok":
-        return _read(nc_path, meta_path)
+        return _read(nc_path, meta_path, log_likelihood)
     if kind == "model":
         raise ModelFailure(message)
     raise RuntimeError(f"{name}: infrastructure failure while fitting: {message}\n{tb}")
@@ -265,25 +454,27 @@ def _warmup_note(nc_path: Path) -> str:
 
 
 def cached_loop_fit(theory_path: Path, name: str, corpus_path: Path, settings: FitSettings,
-                    cache_dir: Path) -> Optional[CorpusFit]:
+                    cache_dir: Path, log_likelihood: bool = True) -> Optional[CorpusFit]:
     """What `loop_fit` would return, if the cache already holds it; never fits (None otherwise)."""
     nc, meta = cache_paths(cache_dir, name, fingerprint(theory_path, corpus_path, settings))
     if not (nc.exists() and meta.exists()):
         return None
-    first = _read(nc, meta)
+    first = _read(nc, meta, log_likelihood)
     if first.converged or not first.near_miss:
         return first
     nc, meta = cache_paths(cache_dir, name, fingerprint(theory_path, corpus_path, refit_settings(settings)))
-    return _read(nc, meta) if nc.exists() and meta.exists() else None
+    return _read(nc, meta, log_likelihood) if nc.exists() and meta.exists() else None
 
 
 def loop_fit(theory_path: Path, name: str, corpus_path: Path, settings: FitSettings, cache_dir: Path, *,
-             time_limit_sec: Optional[float] = None, init: Optional[Dict[str, float]] = None) -> CorpusFit:
+             time_limit_sec: Optional[float] = None, init: Optional[Dict[str, float]] = None,
+             log_likelihood: bool = True) -> CorpusFit:
     """The fit the loop uses: at ``settings``, or, when that fails the convergence gate as a near
     miss (`CorpusFit.near_miss`), the one refit (`src.rsa.loop.fitting.refit_settings`), from
     ``init`` if given. A fit far from converging is returned as it is."""
-    fitted = fit_cached(theory_path, name, corpus_path, settings, cache_dir, time_limit_sec=time_limit_sec, init=init)
+    fitted = fit_cached(theory_path, name, corpus_path, settings, cache_dir, time_limit_sec=time_limit_sec, init=init,
+                        log_likelihood=log_likelihood)
     if fitted.converged or not fitted.near_miss:
         return fitted
     return fit_cached(theory_path, name, corpus_path, refit_settings(settings), cache_dir,
-                      time_limit_sec=time_limit_sec, init=init)
+                      time_limit_sec=time_limit_sec, init=init, log_likelihood=log_likelihood)

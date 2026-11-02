@@ -30,8 +30,18 @@ incumbent is the best eligible theory whose fit and CV converged. At the end, in
 theories are pruned, then every theory more than ``prune_dse_multiplier`` clustered SEs behind
 the incumbent on the newest block, and the live set is capped at ``max_live_models``.
 
-Not yet here (the closed loop has them): the critique step (it needs each link's simulated
-replicates) and resuming an interrupted run.
+**Scheduling** (PI 2026-11-02, after open chain 1's experiment 2 lost its loop twice to the
+job's memory): every fit child waits for room in the job's memory (`src.rsa_open.loop.fitting`,
+``FitScheduler``). The candidates that have files are fitted while the slots that wrote none are
+re-spawned, and an admitted theory's CV folds start as soon as it is admitted, while repairs
+run; admission is still one by one in slot order, on finished fits, so the order of decisions is
+the sequential loop's.
+
+**Resuming** (`resume`, the closed loop's): a loop interrupted after a scored step (a crash, a
+lost node, the job's end) restarts from that step: the ledger is cut back to the step's length,
+theories the unfinished round admitted leave the set, and that round runs again from its agents
+(its directory kept as ``round_<k>_abandoned_<i>``). Fits come back from the cache. With
+``deadline`` a round is started only with ``round_min_hours`` of the job left (`LoopOutOfTime`).
 """
 
 from __future__ import annotations
@@ -39,7 +49,9 @@ from __future__ import annotations
 import json
 import math
 import shutil
-from concurrent.futures import ThreadPoolExecutor
+import threading
+import time
+from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Callable, Dict, List, Mapping, Optional
@@ -57,7 +69,7 @@ from src.rsa.loop.code_gate import code_problems
 from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC, ModelFailure
 from src.rsa.loop.gates import read_candidate
 from src.rsa.loop.novelty import DEFAULT_NOVELTY_RMSE_THRESHOLD, plain_pool
-from src.rsa.loop.orchestrator import NAME_RE, _read, default_fit_workers, prune_margin, stale_rounds
+from src.rsa.loop.orchestrator import NAME_RE, _read, _write_atomic, default_fit_workers, prune_margin, stale_rounds
 from src.rsa_open.corpus import DEFAULT_FOLDS, GUARD_K, CorpusCV, CorpusFit, assign_folds, heldout_lpd, standing
 from src.rsa_open.fit import TheoryModel
 from src.rsa_open.loop import brief as briefs
@@ -94,6 +106,17 @@ stands in for a full fit recorded without its time). A warm-started fold runs 80
 the full fit's 2,000, so a fold past the bound is stuck, not slow: run B's fifth fold of one
 theory sampled 5 h 50 min to R-hat 1.55 while the round waited (PI 2026-10-23). A fold that fails
 leaves the theory unscored and untrusted, with the reason in its standing (``cv_problem``)."""
+CV_FOLD_FAILED = "a cross-validation fold failed, so it is unscored"
+ROUND_MIN_HOURS = 7.0
+"""A round is started only with this much of the job left (``deadline``): chain 1's rounds took
+5-6.5 h; one killed part way is run again from its agents by the next job."""
+CV_THEORIES_AT_ONCE = 8
+"""Theories whose CV folds are in flight at once (each runs its folds together); the scheduler
+decides how many fit children actually run."""
+
+
+class LoopOutOfTime(RuntimeError):
+    """Too little of the job is left for another round: the next job resumes the loop."""
 
 
 @dataclass
@@ -133,6 +156,9 @@ class OpenLoopConfig:
     n_critique_proposals: int = CRITIQUE_N_PROPOSALS
     critique_alpha: float = CRITIQUE_SIGNIFICANCE_ALPHA
     n_critique_replicates: int = CRITIQUE_PPC_REPLICATES
+    deadline: Optional[float] = None
+    """When the job ends (epoch seconds): a round starts only with ``round_min_hours`` left."""
+    round_min_hours: float = ROUND_MIN_HOURS
 
 
 @dataclass
@@ -175,6 +201,9 @@ class OpenLoop:
         self.admission_limit_sec: Optional[float] = None
         self.history: List[dict] = []
         self.step = 0
+        self._cv_jobs: Dict[str, Future] = {}
+        self._cv_pool: Optional[ThreadPoolExecutor] = None
+        self._parent_jax = threading.Lock()
 
     # ---------- setup ----------
     def _prepare(self) -> None:
@@ -241,7 +270,8 @@ class OpenLoop:
               f"of the starting fits ({', '.join(f'{n} {t / 60:.0f}' for n, t in sorted(timed.items()))} min)", flush=True)
 
     def _fit(self, path: Path, name: str, cfg: GateConfig) -> CorpusFit:
-        return loop_fit(path, name, cfg.corpus_path, cfg.settings, cfg.cache_dir, time_limit_sec=cfg.time_limit_sec)
+        return loop_fit(path, name, cfg.corpus_path, cfg.settings, cfg.cache_dir, time_limit_sec=cfg.time_limit_sec,
+                        log_likelihood=False)
 
     def _prefit(self, items, cfg: Optional[GateConfig] = None) -> None:
         """Fit concurrently (cached, failures remembered) so sequential admission reads finished fits."""
@@ -311,24 +341,25 @@ class OpenLoop:
 
         def fold_fit(f: int) -> CorpusFit:
             return loop_fit(path, name, self.fold_paths[f], fold_settings, self.dir / ".fit_cache",
-                            time_limit_sec=limit, init=start)
+                            time_limit_sec=limit, init=start, log_likelihood=False)
 
         workers = self.cfg.cv_folds if self.live_cfg.time_limit_sec is not None else 1
         try:
             with ThreadPoolExecutor(max_workers=workers) as pool:
                 fits = list(pool.map(fold_fit, range(self.cfg.cv_folds)))
         except ModelFailure as exc:
-            self.cv_problems[name] = f"a cross-validation fold failed, so it is unscored: {exc}"
+            self.cv_problems[name] = f"{CV_FOLD_FAILED}: {exc}"
             return None
         bad = [f"fold {f + 1}: " + "; ".join(fit.convergence_problems) for f, fit in enumerate(fits) if not fit.converged]
         if bad:
             self.cv_problems[name] = "cross-validation folds did not converge, so it is untrusted: " + " | ".join(bad)
         out = {b.name: np.empty(b.n) for b in self.blocks}
-        for f, fitted in enumerate(fits):
-            for b in self.blocks:
-                rows = np.where(self.folds[b.name] == f)[0]
-                if len(rows):
-                    out[b.name][rows] = heldout_lpd(theory, fitted, b.subset(rows))
+        with self._parent_jax:  # this process runs on one core: one theory's held-out scores at a time
+            for f, fitted in enumerate(fits):
+                for b in self.blocks:
+                    rows = np.where(self.folds[b.name] == f)[0]
+                    if len(rows):
+                        out[b.name][rows] = heldout_lpd(theory, fitted, b.subset(rows))
         impossible = [b for b, v in out.items() if np.nanmax(v) > IMPOSSIBLE_LPD]
         if impossible:  # every link is a probability mass function: a held-out log probability is <= 0
             self.cv_problems[name] = ("an impossible held-out score (a log probability above 0 on "
@@ -344,7 +375,7 @@ class OpenLoop:
         path.write_text(CHANCE_THEORY)
         try:
             fitted = loop_fit(path, CHANCE_NAME, self.corpus, self.cfg.settings, self.dir / ".fit_cache",
-                              time_limit_sec=self.live_cfg.time_limit_sec)
+                              time_limit_sec=self.live_cfg.time_limit_sec, log_likelihood=False)
         except ModelFailure as exc:
             self.cv_problems[CHANCE_NAME] = f"its fit failed: {exc}"
             return None
@@ -367,14 +398,27 @@ class OpenLoop:
         path.write_text(json.dumps(out))
         return path
 
+    def _start_cv(self, name: str) -> None:
+        """Start ``name``'s CV folds in the background (time-limited fits only: in-process fits run
+        one at a time, in `standing`)."""
+        if self.live_cfg.time_limit_sec is None or name in self.cv or name in self._cv_jobs:
+            return
+        if self._cv_pool is None:
+            self._cv_pool = ThreadPoolExecutor(max_workers=CV_THEORIES_AT_ONCE, thread_name_prefix="cv")
+        self._cv_jobs[name] = self._cv_pool.submit(self._cv_one, name)
+
+    def _stop_background(self) -> None:
+        if self._cv_pool is not None:
+            self._cv_pool.shutdown(wait=False, cancel_futures=True)
+            self._cv_pool = None
+
     def standing(self) -> Dict[str, dict]:
         todo = [n for n in self.live if n not in self.cv]
-        workers = min(len(todo), max(1, (self.cfg.fit_workers or default_fit_workers()) // self.cfg.cv_folds)) or 1
-        if self.live_cfg.time_limit_sec is None:
-            workers = 1
-        with ThreadPoolExecutor(max_workers=workers) as pool:
-            for name, result in zip(todo, pool.map(self._cv_one, todo)):
-                self.cv[name] = result
+        for name in todo:
+            self._start_cv(name)
+        for name in todo:
+            job = self._cv_jobs.pop(name, None)
+            self.cv[name] = job.result() if job is not None else self._cv_one(name)
         # Only converged cross-validation is compared (PI 2026-10-28): run C′'s one unconverged fold
         # scored +121,409 nats, and every other theory was then 138,000 nats "behind" it on that block.
         scored = {n: self.cv[n] for n in self.live if self.cv.get(n) is not None and self.cv[n].converged}
@@ -403,7 +447,7 @@ class OpenLoop:
                      live=[dict(name=m.name, hypothesis=m.hypothesis, source=m.source) for m in self.live.values()],
                      ledger_entries=len(self.ledger.entries()))
         self.history.append(entry)
-        (self.dir / "history.json").write_text(json.dumps(self.history, indent=1, default=float))
+        _write_atomic(self.dir / "history.json", json.dumps(self.history, indent=1, default=float))
         self.write_newest_cv()
         self.step += 1
         return entry
@@ -507,18 +551,27 @@ class OpenLoop:
             self.live[name] = Live(name, hypothesis, TheoryModel(dst, name=name), out.fit, out.pool_preds, context)
             self._write_manifest()
             self._ledger(name, "admitted", "admitted", hypothesis, context)
+            self._start_cv(name)  # its folds run while the round goes on
         else:
             self._ledger(name, "rejected", out.reason, hypothesis, context)
         return out.admitted, out.reason
 
-    def _admit_all(self, slots, key: str, round_index: int, context_suffix: str = "") -> List[tuple]:
-        """Name every slot with a candidate in ``slots[key]``, fit them at once, admit one by one."""
-        taken: set = set()
+    def _name_slots(self, slots, key: str, round_index: int, taken: set) -> list:
+        """Name every slot with a candidate in ``slots[key]``, avoiding ``taken`` (which grows)."""
+        named = []
         for s in slots:
             if (s[key] / "candidate.py").exists():
                 s[key + "_name"] = self._name_for(s[key], f"r{round_index + 1}_c{s['i'] + 1}", frozenset(taken))
                 taken.add(s[key + "_name"])
-        self._prefit([(s[key] / "candidate.py", s[key + "_name"]) for s in slots if key + "_name" in s])
+                named.append(s)
+        return named
+
+    @staticmethod
+    def _fit_items(slots, key: str) -> list:
+        return [(s[key] / "candidate.py", s[key + "_name"]) for s in slots]
+
+    def _admit_named(self, slots, key: str, context_suffix: str = "") -> List[tuple]:
+        """Admit the named slots one by one, in slot order (their fits finished or remembered)."""
         results = []
         for s in slots:
             if key + "_name" not in s:
@@ -526,6 +579,11 @@ class OpenLoop:
             ok, reason = self._try_admit(s[key], s[key + "_name"], s["context"] + context_suffix)
             results.append((s, ok, reason))
         return results
+
+    def _admit_all(self, slots, key: str, round_index: int, context_suffix: str = "") -> List[tuple]:
+        """Name every slot with a candidate in ``slots[key]``, fit them at once, admit one by one."""
+        self._prefit(self._fit_items(self._name_slots(slots, key, round_index, set()), key))
+        return self._admit_named(slots, key, context_suffix)
 
     def run_round(self, round_index: int) -> dict:
         s = self.standing()
@@ -546,21 +604,34 @@ class OpenLoop:
             slots.append(dict(i=i, role=role, lens=lens, dir=rdir / f"candidate_{i + 1}", context=context))
         self._spawn_all([(sl["dir"], self._docs_for(sl["dir"], sl["role"], sl["lens"], round_index, s, incumbent, None,
                                                     critiques)) for sl in slots])
-        retry = []
+        taken: set = set()
+        first = self._name_slots(slots, "dir", round_index, taken)
+        retry, retried = [], []
         for sl in slots:
             if not (sl["dir"] / "candidate.py").exists():
                 sl["dir"] = sl["dir"].with_name(sl["dir"].name + "_retry_1")
                 sl["context"] += " retry 1"
+                retried.append(sl)
                 retry.append((sl["dir"], self._docs_for(sl["dir"], sl["role"], sl["lens"], round_index, s, incumbent,
                                                         briefs.retry_note(), critiques)))
-        self._spawn_all(retry)
+        # The first attempts are fitted while the retries' agents work (in-process fits, untimed, run
+        # one at a time); admission waits for both.
+        with ThreadPoolExecutor(max_workers=1, thread_name_prefix="prefit") as background:
+            fitting = (background.submit(self._prefit, self._fit_items(first, "dir"))
+                       if self.gate_cfg.time_limit_sec is not None else None)
+            if fitting is None:
+                self._prefit(self._fit_items(first, "dir"))
+            self._spawn_all(retry)
+            self._prefit(self._fit_items(self._name_slots(retried, "dir", round_index, taken), "dir"))
+            if fitting is not None:
+                fitting.result()
         events = []
         for sl in slots:
             if not (sl["dir"] / "candidate.py").exists():
                 self._ledger(f"slot_{sl['i'] + 1}", "rejected", "the agent wrote no candidate.py", "", sl["context"])
                 events.append(dict(slot=sl["i"] + 1, role=sl["role"], name=None, outcome="no file", reason=""))
         repairs = []
-        for sl, ok, reason in self._admit_all(slots, "dir", round_index):
+        for sl, ok, reason in self._admit_named(slots, "dir"):
             events.append(dict(slot=sl["i"] + 1, role=sl["role"], name=sl["dir_name"],
                                outcome="admitted" if ok else "rejected", reason=reason,
                                hypothesis=_read(sl["dir"] / "hypothesis.md")))
@@ -668,22 +739,126 @@ class OpenLoop:
         if stopped:
             events.append(dict(name="loop", outcome="stopped", reason=stopped))
         entry = self.score(self.cfg.max_iterations, events)
+        return self._export(entry, stopped)
+
+    def _export(self, entry: dict, stopped: Optional[str]) -> dict:
         shutil.copyfile(self.models_dir / f"{entry['best_model']}.py", self.dir / "best_model.py")
-        export = dict(best_model=entry["best_model"], live=sorted(self.live))
+        export = dict(best_model=entry["best_model"], live=sorted(e["name"] for e in entry["live"]))
         if stopped:
             export["stopped_early"] = stopped
-        (self.dir / "export.json").write_text(json.dumps(export))
+        _write_atomic(self.dir / "export.json", json.dumps(export))
         return entry
 
-    def run(self) -> dict:
-        self.setup()
-        self.score_chance()
-        self.score(-1, [dict(outcome="seeded", name=n) for n in self.live])
+    # ---------- resuming ----------
+    def resume(self) -> int:
+        """Restore an interrupted loop to its last scored step; returns the first round still to run
+        (``max_iterations + 1`` when the end step was scored and only the export is missing).
+
+        The step's history entry holds the live set and the ledger's length (the closed loop's
+        `src.rsa.loop.orchestrator.RSALoop.resume`). What an unfinished round or end did after it
+        is undone: ledger lines past that length are dropped (kept beside the round's directory as
+        ``ledger_tail.jsonl``), theories it admitted leave the set (their files stay in the round's
+        directory), a theory the end had pruned is put back, and the round's directory becomes
+        ``round_<k>_abandoned_<i>``, so the round runs again from its agents. Fits come back from
+        the cache; the admission limit is the one recorded."""
+        hist_path = self.dir / "history.json"
+        if not hist_path.exists():
+            raise FileNotFoundError(f"{hist_path} not found: the loop stopped before its seeds were scored")
+        if (self.dir / "export.json").exists():
+            raise RuntimeError(f"{self.dir} finished (export.json exists); there is nothing to resume")
+        self.history = json.loads(hist_path.read_text())
+        last = self.history[-1]
+        missing = {"step", "round", "live", "ledger_entries", "admission_limit_sec"} - set(last)
+        if missing:
+            raise ValueError(f"{hist_path}'s last step lacks {sorted(missing)}; it cannot be resumed")
+        self._prepare()
+        next_round = last["round"] + 1
+        partial = self.dir / f"round_{next_round + 1}"
+        aside = None
+        if partial.exists():
+            k = 1
+            while (self.dir / f"round_{next_round + 1}_abandoned_{k}").exists():
+                k += 1
+            aside = self.dir / f"round_{next_round + 1}_abandoned_{k}"
+            partial.rename(aside)
+        ledger_path = self.dir / LEDGER_FILENAME
+        lines = [ln for ln in ledger_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
+        if len(lines) < last["ledger_entries"]:
+            raise ValueError(f"{ledger_path} has {len(lines)} entries, fewer than the "
+                             f"{last['ledger_entries']} recorded at step {last['step']}")
+        tail = lines[last["ledger_entries"]:]
+        if tail:
+            where = aside or self.dir
+            _write_atomic(where / ("ledger_tail.jsonl" if aside else f"ledger_tail_step_{last['step']}.jsonl"),
+                          "".join(ln + "\n" for ln in tail))
+        _write_atomic(ledger_path, "".join(ln + "\n" for ln in lines[:last["ledger_entries"]]))
+        self.ledger = HypothesisLedger(ledger_path)
+        self.ledger.entries()  # parses, or raises
+        live = {e["name"]: e for e in last["live"]}
+        pruned_dir = self.models_dir / "pruned"
+        for name in live:
+            if not (self.models_dir / f"{name}.py").exists() and (pruned_dir / f"{name}.py").exists():
+                shutil.move(str(pruned_dir / f"{name}.py"), self.models_dir / f"{name}.py")
+            if not (self.models_dir / f"{name}.py").exists():
+                raise FileNotFoundError(f"{name} was live at step {last['step']} but its file is gone")
+        for f in self.models_dir.glob("*.py"):
+            if f.stem not in live:
+                f.unlink()  # admitted by the unfinished round; its candidate directory keeps the source
+        self.admission_limit_sec = last["admission_limit_sec"]
+        if self.admission_limit_sec is not None:
+            self.gate_cfg = replace(self.gate_cfg, time_limit_sec=self.admission_limit_sec)
+        self._prefit([(self.models_dir / f"{n}.py", n) for n in live], self.live_cfg)
+        for name, e in live.items():
+            path = self.models_dir / f"{name}.py"
+            theory = TheoryModel(path, name=name)
+            fitted = self._fit(path, name, self.live_cfg)  # a theory in play fitted before: from the cache
+            self.live[name] = Live(name, e["hypothesis"], theory, fitted, pool_predictions(theory, fitted, self.pool),
+                                   e["source"])
+        for name, d in last.get("standing", {}).items():
+            # A failed fold is remembered only in its process: keep the step's verdict rather than
+            # refitting the fold (for up to FOLD_TIME_FACTOR x its full fit) to perhaps another one.
+            if name in self.live and str(d.get("cv_problem", "")).startswith(CV_FOLD_FAILED):
+                self.cv[name], self.cv_problems[name] = None, d["cv_problem"]
+        self._write_manifest()
+        self.step = last["step"] + 1
+        print(f"[open loop] resumed after step {last['step']} (round {last['round'] + 1} of {self.cfg.max_iterations}"
+              f" scored; {len(self.live)} live theories)" + (f"; the unfinished round is kept as {aside.name}"
+                                                             if aside else ""), flush=True)
+        return next_round
+
+    def _time_for_round(self, r: int) -> None:
+        if self.cfg.deadline is None:
+            return
+        left = (self.cfg.deadline - time.time()) / 3600
+        if left < self.cfg.round_min_hours:
+            raise LoopOutOfTime(f"round {r + 1} of {self.cfg.max_iterations}: {left:.1f} h of the job left, under the "
+                                f"{self.cfg.round_min_hours:g} h a round needs; the next job resumes the loop")
+
+    def run(self, resume: bool = False) -> dict:
+        try:
+            return self._run(resume)
+        finally:
+            self._stop_background()
+
+    def _run(self, resume: bool) -> dict:
+        if resume:
+            first = self.resume()
+            if first > self.cfg.max_iterations:  # the end was scored; only its export is missing
+                last = self.history[-1]
+                stopped = next((e["reason"] for e in last["events"] if e.get("outcome") == "stopped"), None)
+                return self._export(last, stopped)
+            self.score_chance()
+        else:
+            self.setup()
+            self.score_chance()
+            self.score(-1, [dict(outcome="seeded", name=n) for n in self.live])
+            first = 0
         patience = self.cfg.stop_after_stale_rounds
-        for r in range(self.cfg.max_iterations):
-            self.run_round(r)
-            if patience and r + 1 < self.cfg.max_iterations and stale_rounds(self.history) >= patience:
-                why = (f"stopped after round {r + 1} of {self.cfg.max_iterations}: {patience} rounds in a row left "
+        for r in range(first, self.cfg.max_iterations):
+            if r > 0 and patience and stale_rounds(self.history) >= patience:
+                why = (f"stopped after round {r} of {self.cfg.max_iterations}: {patience} rounds in a row left "
                        f"the incumbent ({self.history[-1]['best_model']}) unchanged")
                 return self.end(stopped=why)
+            self._time_for_round(r)
+            self.run_round(r)
         return self.end()

@@ -26,8 +26,9 @@
 # 48-hour job never starts a stage it cannot finish, src.rsa_open.chain.STAGE_MIN_HOURS); or it
 # failed (STOP with the error: a person looks before it resumes, PREREG_DRAFT.md §4a). A job killed
 # by its time limit or a lost node leaves no STOP, and the next job resumes it: finished stages
-# are skipped, a recorded study is never deployed or published again (main's guard), and a design
-# or loop that stopped part way starts again (its attempt kept as <stage>.abandoned_<i>).
+# are skipped, a recorded study is never deployed or published again (main's guard), a design
+# that stopped part way starts again (its attempt kept as design.abandoned_<i>), and a loop resumes
+# from its last scored round (Addendum B).
 #
 # Studies recruit in parallel, up to the config's max_concurrent_studies (slot locks in
 # $WORK_ROOT/private/campaign); each blocks only its own chain's earlier studies (once per chain,
