@@ -26,8 +26,10 @@ text:
   CPU is in their self-checks, 1-3 at a time, 3.2-3.9 GB each, at a core each.
 - **The round ends on stragglers:** at 07:11 and 07:26 one fit was running and 23 CPUs were idle (one fold, 70+ min of CPU
   at 07:26). Fits began at 03:13.
-- **A resume costs about 35 min on one core** before the critique agent starts (round 3 and round 4 both), beside re-staging
-  when there is any. I haven't measured the same stretch in a round that wasn't resumed.
+- **A resume costs about 35 min on one core** before the critique agent starts (round 4), beside re-staging when there is
+  any. Round 5, not resumed, had no such gap.
+- **Round 4 took 7.3 h with 8-9 fits at once; round 3 took 6.7 h with 7.** So one comparison shows no visible gain from a2.
+- **`normal`'s limit is 48 h, not "up to 7 days" as in the table below:** the partition allows 7 days, the QoS 2.
 
 ## The short version
 
