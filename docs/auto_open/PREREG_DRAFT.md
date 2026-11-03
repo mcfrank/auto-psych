@@ -307,12 +307,16 @@ The text of this pre-registration (`PREREG_DRAFT.md` and `OSF_PREREG.md`) was dr
   3's design or data. By then experiment 1 and experiment 2's rounds 1 and 2 had been scored, and the PI had seen reports
   of them; the decision does not depend on them. A reader may discount the gate's pass accordingly: the running time is
   reported beside it, with and without the failures.
-- **§3a's time estimates are out of date** and are not revised here: a loop has taken 38 h with its failures aside, not
+- **§3a's time estimates are out of date** and are not revised here: experiment 1's loop, with no failure, took 38 h, not
   about 20 h. Stage 2's scale (§4) is still set at the gate, from time and spend against §3a.
 - **A bug in Addendum B's scheduler, fixed:** it read each fit's peak memory from `ru_maxrss`, which in a spawned process
   carries over the parent's size, so every fit recorded the loop's 15.8 GB and at most 7 ran at once with 96 GB free. Fit
   processes now record `VmHWM` (`peak_hwm_mb`; the old key is ignored). It changes how many fits run at once, not what
   they compute.
+- **The code:** the annotated tag `rsa-open-prereg-a2`, commit `12051f8b6b8a10f6b0dede4435f61f136bc0d0bf`; the changed files'
+  tests pass on Sherlock from a clone of it (30, slow ones included). Registered files: `src/rsa_open/gate.py` is now
+  `5de7cd0781743e151f1aa673c8fb20ba9b520044e33df5487ab928299e14e825` (superseding §8's); `src/rsa_open/loop/orchestrator.py` stays at Addendum B's
+  `1511d797b87bdd6d6be5382441110b3ff888d62b364eb790cd3442d2a046e980`; `fixed_paradigm.json` is unchanged, at §8's hash.
 - **A correction to Addendum B:** it says the two failures cost about 33 h of loop time and that each restarted the loop
   from scratch. The second did not: the resume kept rounds 1-2. Measured, about 22 h of loop time was lost and the
   chain stood stopped for about 15 h, about 37 h in all.
