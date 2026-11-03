@@ -160,7 +160,7 @@ def test_a_fit_child_records_its_peak_memory_and_a_light_read_leaves_out_the_log
     light = fit_cached(theory_path, "rsa_l1", path, QUICK, tmp_path, time_limit_sec=600, log_likelihood=False)
     assert "log_likelihood" not in light.idata.groups() and light.idata.posterior["alpha"].size == 40
     _, meta = cache_paths(tmp_path, "rsa_l1", fingerprint(theory_path, path, QUICK))
-    peak_mb = json.loads(meta.read_text())["peak_rss_mb"]
+    peak_mb = json.loads(meta.read_text())["peak_hwm_mb"]
     assert peak_mb > 100  # a child that imported JAX and fitted
     assert scheduler().estimate("rsa_l1") >= peak_mb * 2**20  # the next fits of the theory are given its room
     full = fit_cached(theory_path, "rsa_l1", path, QUICK, tmp_path)  # the cached file keeps it
@@ -199,3 +199,30 @@ def test_a_fit_child_killed_twice_is_an_infrastructure_failure(theory_path, corp
     with pytest.raises(RuntimeError, match="killed .* twice") as err:
         fit_cached(always, "always_killed", path, QUICK, tmp_path / "cache", time_limit_sec=600)
     assert not isinstance(err.value, ModelFailure)
+
+
+def test_a_fit_child_s_peak_is_its_own_not_the_size_of_the_process_that_spawned_it(theory_path, corpus, tmp_path):
+    from src.rsa.loop.fitting import cache_paths
+    from src.rsa_open.loop.fitting import fingerprint, fit_cached, own_rss
+
+    _, path = corpus
+    ballast = bytearray(6 * 2**30)  # 6 GB this process really holds when it spawns the child
+    ballast[::4096] = b"x" * len(ballast[::4096])
+    if own_rss() < 5 * 2**30:
+        pytest.skip("no /proc to read this process's memory from")
+    fit_cached(theory_path, "rsa_l1", path, QUICK, tmp_path, time_limit_sec=600)
+    _, meta = cache_paths(tmp_path, "rsa_l1", fingerprint(theory_path, path, QUICK))
+    assert 100 < json.loads(meta.read_text())["peak_hwm_mb"] < 5 * 1024
+    del ballast
+
+
+def test_a_peak_recorded_by_the_inflating_measure_is_ignored(theory_path, corpus, tmp_path):
+    from src.rsa.loop.fitting import cache_paths
+    from src.rsa_open.loop.fitting import DEFAULT_FIT_BYTES, fingerprint, fit_cached, scheduler
+
+    _, path = corpus
+    fit_cached(theory_path, "old_record", path, QUICK, tmp_path)  # in-process: records no peak
+    _, meta = cache_paths(tmp_path, "old_record", fingerprint(theory_path, path, QUICK))
+    meta.write_text(json.dumps({**json.loads(meta.read_text()), "peak_rss_mb": 15799}))
+    fit_cached(theory_path, "old_record", path, QUICK, tmp_path)
+    assert scheduler().estimate("old_record") == DEFAULT_FIT_BYTES

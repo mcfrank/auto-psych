@@ -294,3 +294,25 @@ The text of this pre-registration (`PREREG_DRAFT.md` and `OSF_PREREG.md`) was dr
   `gate.py` and `fixed_paradigm.json` are unchanged, at §8's hashes.
 - **Experiment 2 of chain 1** resumes from its last scored round (round 2) on the new code; its
   two failed attempts are reported (`loop.abandoned_1`, and the attempt's round 3).
+
+### Addendum C (2026-11-02): item 5's running time; a correction to Addendum B
+
+- **Item 5 changes (PI 2026-11-02).** Running time is **reported, not judged**. Agent spend stays judged, at most $495.
+  §4 otherwise stands, including what a failed gate means. `src/rsa_open/gate.py` changes to match.
+- **This changes a registered criterion after its outcome was foreseeable, and is stated as such.** At the decision,
+  chain 1 had run 97.2 of the 104 h allowed, during experiment 2's round 3, and was projected to finish at about 140-150 h,
+  so under the registered text the gate would have failed on time. The PI's reason: the limit should not have been so
+  strict. It measured two harness failures (about 37 h) and an estimate of about 3 rounds a loop where all 5 run, not
+  whether the method can run with real people. The decision used time and spend only, and was made before experiment
+  3's design or data. By then experiment 1 and experiment 2's rounds 1 and 2 had been scored, and the PI had seen reports
+  of them; the decision does not depend on them. A reader may discount the gate's pass accordingly: the running time is
+  reported beside it, with and without the failures.
+- **§3a's time estimates are out of date** and are not revised here: a loop has taken 38 h with its failures aside, not
+  about 20 h. Stage 2's scale (§4) is still set at the gate, from time and spend against §3a.
+- **A bug in Addendum B's scheduler, fixed:** it read each fit's peak memory from `ru_maxrss`, which in a spawned process
+  carries over the parent's size, so every fit recorded the loop's 15.8 GB and at most 7 ran at once with 96 GB free. Fit
+  processes now record `VmHWM` (`peak_hwm_mb`; the old key is ignored). It changes how many fits run at once, not what
+  they compute.
+- **A correction to Addendum B:** it says the two failures cost about 33 h of loop time and that each restarted the loop
+  from scratch. The second did not: the resume kept rounds 1-2. Measured, about 22 h of loop time was lost and the
+  chain stood stopped for about 15 h, about 37 h in all.

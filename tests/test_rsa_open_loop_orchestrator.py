@@ -162,7 +162,7 @@ def test_a_time_limited_round_scores_admitted_theories_while_repairs_run_and_dec
     assert outcomes(loop) == outcomes(sequential)  # the same decisions, in the same order
     assert final["best_model"] == sequential_final["best_model"]
     metas = [m for m in (loop.dir / ".fit_cache").glob("salient_prior_listener.*.json") if "warmup" not in m.name]
-    assert metas and all(json.loads(m.read_text())["peak_rss_mb"] > 0 for m in metas)
+    assert metas and all(json.loads(m.read_text())["peak_hwm_mb"] > 0 for m in metas)
 
 
 class Crash(Exception):

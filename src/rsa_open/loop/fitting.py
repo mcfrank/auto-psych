@@ -17,7 +17,7 @@ raises.
 
 **Memory.** Every fit child is started through `FitScheduler`: it runs only when the job's
 memory holds it beside the children already running, at the most a fit of that theory has
-used (its peak, recorded with the fit as ``peak_rss_mb``) or, for a theory never fitted, at
+used (its peak, recorded with the fit as ``peak_hwm_mb``) or, for a theory never fitted, at
 `DEFAULT_FIT_BYTES`. A child the system kills while running (the job's out-of-memory killer) is
 refitted once with twice the room; killed again, it raises as before. Open chain 1's experiment
 2 lost its loop twice to the job's memory limit (2026-11-01 at 96 GB, 2026-11-02 at 180 GB):
@@ -87,6 +87,14 @@ def _proc_status_bytes(pid: Any, key: str) -> int:
     except OSError:
         pass
     return 0
+
+
+def _own_peak() -> int:
+    """This process's own peak memory. Not ``ru_maxrss``: a spawned child's starts at the size of the
+    process that spawned it, so chain 1's fits all recorded the loop's 15.8 GB, the scheduler reserved
+    about 20 GB for fits of 7-10 GB, and 7 ran with 96 GB and 17 cores free (peak_rss_mb, 2026-11-02;
+    that key is ignored). ``VmHWM`` starts afresh at exec."""
+    return _proc_status_bytes("self", "VmHWM") or _kib_to_bytes(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
 
 
 def own_rss() -> int:
@@ -263,7 +271,7 @@ def _write(fitted: CorpusFit, nc_path: Path, meta_path: Path, record_peak: bool 
                 convergence_problems=fitted.convergence_problems,
                 offsets={k: list(v) for k, v in fitted.offsets.items()}, timing=fitted.timing)
     if record_peak:  # a fit child's peak memory, its write included (an in-process fit's would be the loop's)
-        meta["peak_rss_mb"] = round(_kib_to_bytes(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 2**20)
+        meta["peak_hwm_mb"] = round(_own_peak() / 2**20)
     tmp_meta = meta_path.with_suffix(f".tmp{os.getpid()}.json")
     tmp_meta.write_text(json.dumps(meta))
     os.replace(tmp_meta, meta_path)
@@ -285,8 +293,8 @@ def _read(nc_path: Path, meta_path: Path, log_likelihood: bool = True) -> Corpus
     if not log_likelihood:
         idata = _without_log_likelihood(idata)
     idata.load()
-    if meta.get("peak_rss_mb"):
-        scheduler().observe(meta["theory_name"], meta["peak_rss_mb"] * 2**20)
+    if meta.get("peak_hwm_mb"):
+        scheduler().observe(meta["theory_name"], meta["peak_hwm_mb"] * 2**20)
     return CorpusFit(meta["theory_name"], meta["blocks"], idata, meta["param_names"], meta["convergence_problems"],
                      {k: tuple(v) for k, v in meta["offsets"].items()}, meta.get("timing", {}))
 

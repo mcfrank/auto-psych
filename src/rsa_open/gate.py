@@ -9,7 +9,8 @@ collection record (``data/participants.json``, aggregates), its loop history and
 chain's stage times (``stage_times.jsonl``) and agent spend (``token_usage.jsonl``). It never
 reads a theory's score against the fixed arm, of which there is none yet.
 
-The items (the definitions accepted by the PI, 2026-10-29), per experiment 1-3 (``EXPERIMENTS``):
+The items (the definitions accepted by the PI, 2026-10-29; item 5 as amended, 2026-11-02, Addendum C),
+per experiment 1-3 (``EXPERIMENTS``):
 1. **Design:** the experiment froze a paradigm (``design/frozen/record.json``): within the
    designer's two cycles, since both failing stops the chain without one.
 2. **Data:** among recruited participants, final comprehension and catch trials passed each at
@@ -28,13 +29,12 @@ The items (the definitions accepted by the PI, 2026-10-29), per experiment 1-3 (
 And for the three experiments together:
 4b. **Admissions:** at least one new theory admitted over experiments 1-3 (run B's experiment 3
    admitted none: its loop stopped after two stale rounds).
-5. **Cost and time:** running time at most ``TIME_FACTOR`` times ``ESTIMATE_HOURS``, and agent spend
-   at most ``TIME_FACTOR`` times ``ESTIMATE_AGENT_USD``. Running time is from experiment 1's design
-   start to experiment 3's loop finish, less each experiment's collection stage (from its first
-   start to its finish: recruitment, which the 24-hour window bounds, the deploy, and the wait for
-   the PI's review). Agent spend is every priced call plus the estimate for unpriced ones
-   (`src.rsa_open.spend`). Participant payments are bounded by the budget by construction and are
-   reported.
+5. **Cost:** agent spend at most ``SPEND_FACTOR`` times ``ESTIMATE_AGENT_USD``: every priced call plus
+   the estimate for unpriced ones (`src.rsa_open.spend`). Running time is reported, not judged: from
+   experiment 1's design start to experiment 3's loop finish, less each experiment's collection
+   stage (from its first start to its finish: recruitment, which the 24-hour window bounds, the
+   deploy, and the wait for the PI's review). Participant payments are bounded by the budget by
+   construction and are reported.
 """
 
 from __future__ import annotations
@@ -53,9 +53,8 @@ MAX_EXCLUSIONS = 0.25
 MAX_SAME_ANSWER = 0.10
 SEPARATION_SE = 4.0
 MIN_TRUSTED_AT_END = 2
-ESTIMATE_HOURS = 3 * 23.0  # §3a: the design 2-3 h and the loop about 20 h, per experiment
 ESTIMATE_AGENT_USD = 330.0  # §3a: at most $110 of agent spend per experiment
-TIME_FACTOR = 1.5
+SPEND_FACTOR = 1.5
 
 
 def _read(path: Path) -> Optional[Any]:
@@ -187,16 +186,15 @@ def participant_usd(exp: Path) -> Optional[float]:
 def cost_item(run_dir: Path) -> Dict[str, Any]:
     hours, usd = running_hours(run_dir), agent_usd(run_dir)
     paid = [participant_usd(run_dir / f"experiment{n}") for n in range(1, EXPERIMENTS + 1)]
-    problems = []
-    if hours is None:
-        problems.append("the stage times do not cover experiments 1-3")
-    elif hours > TIME_FACTOR * ESTIMATE_HOURS:
-        problems.append(f"{hours:.0f} h running > {TIME_FACTOR:g} x {ESTIMATE_HOURS:g} h")
+    time_note = ("the stage times do not cover experiments 1-3" if hours is None
+                 else f"{hours:.0f} h running") + " (reported, not judged)"
     if usd is None:
-        problems.append("no agent spend record")
-    elif usd > TIME_FACTOR * ESTIMATE_AGENT_USD:
-        problems.append(f"${usd:.2f} of agents > {TIME_FACTOR:g} x ${ESTIMATE_AGENT_USD:g}")
-    return _item(not problems, "; ".join(problems) or f"{hours:.0f} h running, ${usd:.2f} of agents",
+        problem = "no agent spend record"
+    elif usd > SPEND_FACTOR * ESTIMATE_AGENT_USD:
+        problem = f"${usd:.2f} of agents > {SPEND_FACTOR:g} x ${ESTIMATE_AGENT_USD:g}"
+    else:
+        problem = None
+    return _item(problem is None, f"{problem or f'${usd:.2f} of agents'}; {time_note}",
                  running_hours=hours, agent_usd=usd,
                  participant_usd=sum(p for p in paid if p is not None) if any(p is not None for p in paid) else None)
 

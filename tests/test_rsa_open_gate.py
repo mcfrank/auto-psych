@@ -92,13 +92,14 @@ def test_admissions_count_over_the_three_experiments(tmp_path):
     assert evaluate(tmp_path)["passed"]
 
 
-def test_running_time_and_agent_spend_are_held_to_one_and_a_half_times_the_estimate(tmp_path):
-    from src.rsa_open.gate import ESTIMATE_AGENT_USD, ESTIMATE_HOURS, TIME_FACTOR, evaluate
+def test_agent_spend_is_held_to_one_and_a_half_times_the_estimate_and_running_time_is_only_reported(tmp_path):
+    from src.rsa_open.gate import ESTIMATE_AGENT_USD, SPEND_FACTOR, evaluate
 
-    write_run(tmp_path, hours=(40, 40, 40), collect_hours=24)  # 120 h of design and loops; collection excluded
+    write_run(tmp_path, hours=(60, 60, 60), collect_hours=24)  # 180 h of design and loops; collection excluded
     c = evaluate(tmp_path)["5_cost_and_time"]
-    assert c["running_hours"] == pytest.approx(120) and 120 > TIME_FACTOR * ESTIMATE_HOURS and not c["passed"]
-    write_run(tmp_path, usd=TIME_FACTOR * ESTIMATE_AGENT_USD + 1)
+    assert c["running_hours"] == pytest.approx(180) and c["passed"]  # Addendum C
+    assert "180 h running (reported, not judged)" in c["detail"]
+    write_run(tmp_path, usd=SPEND_FACTOR * ESTIMATE_AGENT_USD + 1)
     assert not evaluate(tmp_path)["5_cost_and_time"]["passed"]
 
 
