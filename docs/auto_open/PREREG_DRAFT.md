@@ -284,8 +284,13 @@ The text of this pre-registration (`PREREG_DRAFT.md` and `OSF_PREREG.md`) was dr
   chance theory. A resumed round is run again from its agents, as a restarted loop's was; what an
   unfinished round wrote is kept beside it (`round_<k>_abandoned_<i>`, `ledger_tail.jsonl`).
   Two candidates of a round that choose the same name may now get the suffix the other way round.
-- **Registered files:** `src/rsa_open/loop/orchestrator.py` changes (its §8 hash is
-  superseded: the new sha256 is in this addendum's commit message and tag); `gate.py` and
-  `fixed_paradigm.json` are unchanged.
+- **The code:** the annotated tag `rsa-open-prereg-a1`, commit
+  `fc30611239f6705623d7a998d29b518eb0288670`. Tested on Sherlock from a clone of that commit: 109
+  tests of the loop and the open campaign, slow ones included, all pass; of the fast suite, 2,522
+  pass and 13 fail, none in the changed code (packages missing from the shared environment, and
+  subjective-randomness scripts).
+- **Registered files:** `src/rsa_open/loop/orchestrator.py` changes: its sha256 is now
+  `1511d797b87bdd6d6be5382441110b3ff888d62b364eb790cd3442d2a046e980` (superseding §8's).
+  `gate.py` and `fixed_paradigm.json` are unchanged, at §8's hashes.
 - **Experiment 2 of chain 1** resumes from its last scored round (round 2) on the new code; its
   two failed attempts are reported (`loop.abandoned_1`, and the attempt's round 3).
