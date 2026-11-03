@@ -1,0 +1,169 @@
+{
+  "winner_runs": {
+    "even_rule_digit_size_principle_counting": "run1",
+    "relational_analogy_transfer": "run2",
+    "outlier_tolerant_rule_concepts": "run3"
+  },
+  "seeds": [
+    "bigelow_piantadosi_independent",
+    "bigelow_piantadosi_interval",
+    "tenenbaum_rules_similarity"
+  ],
+  "fit_settings": {
+    "method": "nuts_no_jitter",
+    "tune": 4000,
+    "draws": 1000,
+    "chains": 4,
+    "target_accept": 0.95,
+    "random_seed": 20261018
+  },
+  "prediction_draws": 1000,
+  "unseen_items": {
+    "n_responses": 249609,
+    "n_items": 23352,
+    "n_example_sets": 255,
+    "best_seed": "bigelow_piantadosi_interval",
+    "models": {
+      "even_rule_digit_size_principle_counting": {
+        "lpd": -130021.15595301942,
+        "lpd_per_response": -0.5208993103334392,
+        "vs_best_seed": {
+          "diff": 19012.010046499694,
+          "se": 1535.7555896928739
+        },
+        "item_r2": 0.6195619022016149,
+        "ceiling": 0.7557395537702152,
+        "share_of_ceiling": 0.8198087543661827
+      },
+      "relational_analogy_transfer": {
+        "lpd": -131512.24916180698,
+        "lpd_per_response": -0.5268730260599858,
+        "vs_best_seed": {
+          "diff": 17520.916837712135,
+          "se": 1595.6979975379118
+        },
+        "item_r2": 0.6131411373474633,
+        "ceiling": 0.7557395537702152,
+        "share_of_ceiling": 0.811312752242012
+      },
+      "outlier_tolerant_rule_concepts": {
+        "lpd": -131101.78562297046,
+        "lpd_per_response": -0.5252286000223167,
+        "vs_best_seed": {
+          "diff": 17931.38037654863,
+          "se": 1503.0534785387376
+        },
+        "item_r2": 0.6052716370754947,
+        "ceiling": 0.7557395537702152,
+        "share_of_ceiling": 0.800899773018271
+      },
+      "bigelow_piantadosi_independent": {
+        "lpd": -149390.85668595837,
+        "lpd_per_response": -0.5984994799304447,
+        "vs_best_seed": {
+          "diff": -357.69068643924953,
+          "se": 479.0174920555098
+        },
+        "item_r2": 0.5493985468736743,
+        "ceiling": 0.7557395537702152,
+        "share_of_ceiling": 0.7269680991723249
+      },
+      "bigelow_piantadosi_interval": {
+        "lpd": -149033.16599951911,
+        "lpd_per_response": -0.5970664759664881,
+        "vs_best_seed": {
+          "diff": 0.0,
+          "se": 0.0
+        },
+        "item_r2": 0.5262176884027411,
+        "ceiling": 0.7557395537702152,
+        "share_of_ceiling": 0.6962950209203145
+      },
+      "tenenbaum_rules_similarity": {
+        "lpd": -173186.27534977585,
+        "lpd_per_response": -0.6938302519130954,
+        "vs_best_seed": {
+          "diff": -24153.10935025676,
+          "se": 3389.7986621688433
+        },
+        "item_r2": 0.32468996793928556,
+        "ceiling": 0.7557395537702152,
+        "share_of_ceiling": 0.42963209523635504
+      }
+    }
+  },
+  "unseen_example_sets": {
+    "n_responses": 15090,
+    "n_items": 1400,
+    "n_example_sets": 14,
+    "best_seed": "bigelow_piantadosi_independent",
+    "models": {
+      "even_rule_digit_size_principle_counting": {
+        "lpd": -9554.11499458618,
+        "lpd_per_response": -0.6331421467585275,
+        "vs_best_seed": {
+          "diff": 1112.4384159326764,
+          "se": 361.9327923192166
+        },
+        "item_r2": 0.37188119035680056,
+        "ceiling": 0.5716971371975044,
+        "share_of_ceiling": 0.6504863609773975
+      },
+      "relational_analogy_transfer": {
+        "lpd": -9735.644229248122,
+        "lpd_per_response": -0.6451719171138584,
+        "vs_best_seed": {
+          "diff": 930.9091812707347,
+          "se": 352.7815609851372
+        },
+        "item_r2": 0.276315416980963,
+        "ceiling": 0.5716971371975044,
+        "share_of_ceiling": 0.48332482183744824
+      },
+      "outlier_tolerant_rule_concepts": {
+        "lpd": -9678.106143304492,
+        "lpd_per_response": -0.6413589226841944,
+        "vs_best_seed": {
+          "diff": 988.4472672143644,
+          "se": 354.0864520807839
+        },
+        "item_r2": 0.32373514679798115,
+        "ceiling": 0.5716971371975044,
+        "share_of_ceiling": 0.5662703654332631
+      },
+      "bigelow_piantadosi_independent": {
+        "lpd": -10666.553410518856,
+        "lpd_per_response": -0.7068623863829593,
+        "vs_best_seed": {
+          "diff": 0.0,
+          "se": 0.0
+        },
+        "item_r2": 0.2623471308902386,
+        "ceiling": 0.5716971371975044,
+        "share_of_ceiling": 0.4588918044548568
+      },
+      "bigelow_piantadosi_interval": {
+        "lpd": -10980.278640779423,
+        "lpd_per_response": -0.727652660091413,
+        "vs_best_seed": {
+          "diff": -313.7252302605676,
+          "se": 212.61867971025748
+        },
+        "item_r2": 0.24489817582869908,
+        "ceiling": 0.5716971371975044,
+        "share_of_ceiling": 0.42837047781838733
+      },
+      "tenenbaum_rules_similarity": {
+        "lpd": -11899.938141790026,
+        "lpd_per_response": -0.788597623710406,
+        "vs_best_seed": {
+          "diff": -1233.38473127117,
+          "se": 485.9633735759486
+        },
+        "item_r2": 0.1652987489077172,
+        "ceiling": 0.5716971371975044,
+        "share_of_ceiling": 0.28913691910024625
+      }
+    }
+  }
+}
