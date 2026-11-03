@@ -132,3 +132,66 @@ design.
 
 Decisions I'd put to the PI: agents inside steps or as arrays (I recommend inside); steps per round; `owners` plus the lab node
 only for fits; whether the §6 fallback stays open.
+
+## 9. Further optimizations (added at the PI's request)
+
+**Where the compute goes** (experiment 2's loop through round 4, from its sidecars; 46 theories, 271 fits, 230 core-hours):
+
+| | warmup | sampling | total | share |
+|---|---:|---:|---:|---:|
+| fold fits (225) | 124 h | 53 h | 177 h | 77% |
+| full fits (46) | 37 h | 16 h | 53 h | 23% |
+
+So fold warmup alone is 54% of all fitting, and warmup is 70%. A fold's 300 warmup iterations cost 2.3 times its 500 sampling
+iterations. Experiment 1 looks the same (29 h full, 145 h folds). Median minutes: full fit 68, fold 47. Stage 2 at about 230 h
+a loop is the driver's 4,000-6,000 core-hours. On `owners` those hours aren't what's scarce; time per round and queue are.
+
+Most of the size estimates below are **estimates, not measurements**, and I'd test them first (§10).
+
+### A. No result changes: an infrastructure amendment is enough
+
+| | change | evidence | gain |
+|---|---|---|---|
+| A1 | Save CV scores and pool predictions to disk, so a restart needn't rebuild them | a resume costs about 35 min; `standing()` re-reads 5 fold fits per theory (job 50929501 will split this) | most of §2's 3.5-6 h a round |
+| A2 | Stop computing and storing the per-trial log-likelihood, keeping only the zero-probability check | a fold computes it for 2,000 draws, then the score recomputes held-out values separately from 400; the loop loads fits without it. I found no reader in the loop, but this needs a full check, the oracle and gate included | `.nc` files from 57-145 MB to a few MB; less memory and time, size unknown |
+| A3 | Find what makes up a fit's 12-14 GB (compilation, sampling, log-likelihood, the write) | a mid-run fit already sits at 10-13 GB, so A2 alone may not fix it | each GB off adds fits to a node |
+| A4 | A persistent JAX compilation cache, if compile time turns out large | the reference fits' wall time less their sampler time will show it | unknown |
+
+### B. Draws change, scores shouldn't: needs testing and a registered amendment
+
+| | change | evidence | gain |
+|---|---|---|---|
+| B1 | **Folds reuse the full fit's adapted mass matrix and step size**, with a short warmup | fold warmup is 54% of fitting. A mass matrix affects efficiency, not the target posterior, and the convergence gate still applies. Needs the full fit to save its adaptation, which it doesn't now | **perhaps 30-45% of all fit compute**, shorter stragglers |
+| B2 | **Parallel chains: 4 CPUs a fit, not 4 chains vectorized on one** | `chain_method="vectorized"` on one core today. Steps per iteration are the slowest chain's: 15.4 against a mean of 8.7 in one fit's warmup; in sampling 3.2-4.0 of 4 chains are active | **wall time per fit about 4 times shorter** (68 to about 20 min, 47 to about 15), so the largest gain in round time; core-hours same or lower |
+| B3 | Fewer fold draws, say 250 a chain | folds draw 2,000 and score 400 (`MAX_HELDOUT_DRAWS`). The extra draws serve only the convergence gate. **Testable with no new fits** by thinning saved folds and recomputing standings | about 10% of fit compute |
+| B4 | Warm-start carried theories from the previous experiment's fit | starting fits' median rose to 125 min. **Interlock:** the admission limit is 2 x the median starting fit, so warm starts would collapse it unless it's set another way | 2 h or more off each loop's start |
+
+**Together (rough):** B1-B3 could halve fit compute, and with B2 a round might go from 6-7 h to about 3.5-4 h: critique, 60 min of
+theorists, fits, then a repair's agents and fits. That would put a chain nearer 3 days than 4. Agents would then be the
+largest part of a round.
+
+**Two cautions:**
+- B2 multiplies CPUs per task, so the array throttle and the rule about threads matching the allocation have to follow it; the
+  XLA device count must be set before JAX starts.
+- If chain 1 counts with stage 2's chains in any analysis, B changes make them differ in sampler settings. That's a question for the
+  PI and driver before the amendment, even if scores agree.
+
+### C. Considered and not recommended
+
+- **Dropping theories after 1-2 folds:** only 19-25% of live theories are over 100 nats behind at the last step, and it changes selection.
+- **Fewer rounds, fewer folds, a smaller E:** these change the method. Available only by revision.
+- **A shorter theorist limit:** run C's 40-minute limit left 19 of 23 sessions with no file. A shorter critique limit may be safe (26 and 58 min
+  so far), but it's the PI's call.
+- **GPUs:** the `gpu` partition has a long queue, JAX is pinned for the CPU wheels, and these models' small arrays may gain little. Try it only if B
+  falls short.
+- **Single precision:** I found no x64 setting in the fit code, so fits should already run in float32.
+
+## 10. Tests for §9 (small, no agents, no Prolific; not yet submitted)
+
+1. **Thin saved folds** on a copy of chain 1's fits, recompute R-hat, ESS and standings at 250 and 125 draws a chain: B3, no fits.
+2. **The reference full fit three ways:** vectorized (running now), `parallel` on 4 CPUs, `sequential` on 1: wall time, memory, and how far posterior means
+   differ: B2.
+3. **One theory's five folds** with and without the full fit's adaptation: sampler time, convergence, held-out scores: B1. Needs a small patch on a test copy only.
+4. **Memory by stage** in one fit: A2, A3.
+
+About 15-20 core-hours in all. Tests 1 and 3 need chain 1's fits copied, as the resume profile does.

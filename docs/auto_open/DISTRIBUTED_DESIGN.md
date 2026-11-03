@@ -73,6 +73,8 @@ phase checkpoints (the main work: 3-4 days), the fit and agent array scripts (1 
 small-to-large rehearsal: one simulated round, then one simulated chain, then two at once (Mark's
 "start small"). About a week before the rehearsal is done.
 
+**Compute optimizations** (folds' warmup is 54% of fitting; parallel chains; saved CV scores): `DISTRIBUTED_DESIGN_REVIEW_V3.md` §9, proposed, with tests in §10.
+
 **Superseded by §0a:** v1's file queue and workers (§3), v2's driver jobs on `normal` (§0, §4) and
 v1/v2's automatic resume (Slurm requeues failed nodes' jobs; a step's continuation is the resume).
 Still in force: v2's CPU restriction and machine record, clean environments for fit tasks (no
