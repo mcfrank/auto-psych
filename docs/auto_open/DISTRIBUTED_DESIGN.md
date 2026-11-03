@@ -1,10 +1,30 @@
-# Design note: running stage 2 across the cluster (draft for review, 2026-11-03)
+# Design note: running stage 2 across the cluster (v2, 2026-11-03)
 
-**Status: a proposal for the PI and the Sherlock session to check. Nothing here is built.** It
-answers the PI's question of 2026-11-02 (`RUN_CHAIN1_STATUS_2026-11-02.md`, "Parallelizing stage
-2"): one chain now takes the whole lab node for about 100 h, so the 7 chains of stage 2 one after
-another would take about 4 weeks of that node and of the PI's attention. Open chain 1 is not
-affected: it finishes on its tag (`rsa-open-prereg-a2`).
+**Status: a proposal; nothing is built.** v1 answered the PI's question of 2026-11-02
+(`RUN_CHAIN1_STATUS_2026-11-02.md`, "Parallelizing stage 2"). **v2 takes in the Sherlock session's
+review (`DISTRIBUTED_DESIGN_REVIEW.md`)**; the changes are listed in §0. Open chain 1 is not
+affected: it finishes on its tag.
+
+## 0. What changed in v2, and what waits for SRCC
+
+The PI has asked SRCC (2026-11-03) about the three questions in the review's draft. Until the
+answer, v2 builds only what no answer can rule out.
+
+| | v1 | v2 | waits for SRCC? |
+|---|---|---|---|
+| Restarting a failed driver | automatic, up to a cap | **a person (or an attended session) resumes**; failure mail and a status command make it quick | yes: automatic resume only if SRCC is content (Sherlock's rules on unattended agent sessions) |
+| The fit backend | a pool of workers reading task files | **native Slurm: one job per fit** (`sbatch --wait`), if SRCC allows a job to submit jobs; the file queue only as the fallback, with the review's four fixes | yes: which backend |
+| CPU types | accept last-digit differences | **fits run only on the lab node's CPU type** (`-C CPU_GEN:SIE`, about 250 nodes), every fit's node and CPU recorded; time limits decide admission, so hardware must not | no |
+| Where drivers run | 7 on the lab node, 3 CPUs, 24 GB | **`normal` jobs (never preempted, up to 7 days), about 8 CPUs and 48-64 GB**, sized from chain 1's rounds 4-5; a few on the lab node | no |
+| The design's EIG search | inside the driver | **its own 24-core job** (with the fit backend's answer) | yes, as a job submitted by a job |
+| Fit jobs' environment | not addressed | **a clean environment**: no `.secrets` keys, only what a fit needs (a fit runs agent-written code; Slurm passes the submitter's environment by default) | no |
+| A round, a chain | 3.5 h; 3 days | **about 5-6 h** (every round so far had a retry or a repair, which is sequential); a loop 27-32 h; a chain about 4 days; stage 2 about 5-7 days with the reviews. The gain is chains at once, not shorter rounds | no |
+
+**Built first, whatever SRCC says:** the status command, failure mail on every job, the fits'
+node and CPU in their sidecars, and the backend seam in `_fit_in_child` with the local backend
+unchanged. Then the backend SRCC allows, a two-chain rehearsal, and the amendment.
+
+The sections below are v1's text where the table doesn't override it.
 
 ## 1. What costs the time, measured on open chain 1
 
