@@ -1,9 +1,82 @@
-# Design note: running stage 2 across the cluster (v2, 2026-11-03)
+# Design note: running stage 2 across the cluster (v3, 2026-11-03)
 
-**Status: a proposal; nothing is built.** v1 answered the PI's question of 2026-11-02
-(`RUN_CHAIN1_STATUS_2026-11-02.md`, "Parallelizing stage 2"). **v2 takes in the Sherlock session's
-review (`DISTRIBUTED_DESIGN_REVIEW.md`)**; the changes are listed in §0. Open chain 1 is not
-affected: it finishes on its tag.
+**Status: a proposal; nothing of §0a is built.** v1 answered the PI's question of 2026-11-02; v2
+took in the Sherlock session's review (`DISTRIBUTED_DESIGN_REVIEW.md`); **v3 follows SRCC's answer**
+(§0a), which replaces v1's and v2's long-running driver. What v2 built stays (§0, "Built first").
+Open chain 1 is not affected: it finishes on its tag.
+
+## 0a. SRCC's answer, and the design it points to
+
+The PI asked SRCC (ticket #106983, 2026-11-03) the review's three questions. Mark Yoder's reply,
+in short:
+- **It is within Sherlock's policies**, "especially since you are mostly using your own
+  partition", including **a job that submits other jobs**, with a mechanism so it can't run away
+  (Sherlock's QoS limits on jobs per user and group protect the system, but a workflow that hits
+  them can break).
+- **Infrastructure failures are Slurm's:** a failed node is drained and reset, and its jobs are
+  requeued. Keep an eye on it, and on whether our jobs contribute.
+- **Arrays of single-process jobs** for the fits, throttled (`--array=1-100%20`), each at least
+  about 20 minutes (ours are 40-80). **Not** a large allocation running many independent fits
+  (inflexible, under-used), **not** `sbatch --wait` (leaves resources idle).
+- **No orchestrator job alongside**: "that usually does not work out well". Orchestration goes in
+  the steps themselves: each piece of work writes its own output, and **a follow-up job gathers
+  the results and launches the next step** ("aggregating the output from the previous ensemble is
+  part of the setup for the next").
+- "Don't try to invent a scheduler; use the one we have." Start small and simple, then take small
+  steps. (Sherlock office hours: Tuesdays 10:00, Thursdays 15:00.)
+
+**So a chain becomes a sequence of Slurm steps, each launched by the last; nothing waits.**
+
+```
+ step job (small, minutes)                       arrays (owners/normal, -C CPU_GEN:SIE for fits)
+ ─────────────────────────                       ──────────────────────────────────────────────
+ loads the chain's state from disk
+ runs until it needs outside work:
+   fits not in the cache    ── sbatch --array ──▶ fit tasks: 1 core, --mem from the theory's peak,
+   agent sessions not done  ── sbatch --array ──▶ agent tasks: one sandboxed session each (60 min)
+ submits its own continuation
+   --dependency=afterany:<the arrays>
+ and exits                                       each task writes its own result file
+ ─────────────────────────
+ the continuation: same code, finds the work done (cache hits, agents' outputs), goes on
+```
+
+- **The step** is today's `run_chain` and `OpenLoop`, run in a "step mode": where it now fits in a
+  child (`_fit_in_child`, the backend seam built in v2) or runs agents (`_spawn_all`), it instead
+  records what's missing, submits it as an array with its own continuation, and exits. Everything
+  between (admission, scoring, pruning, export, the design's checks) runs inside the step, as now.
+- **Fits** are already content-addressed and cached: a fit task writes its `.nc` and sidecar (and
+  its child's report: ok, the theory's failure, or infrastructure) and the continuation reads them.
+  No shared HDF5: each task's own file is what Mark's "each instance writes its own output" means
+  here, and needs no concurrent writes.
+- **Agent sessions** get a done-marker (exit status, time) beside their outputs, so a continuation
+  never runs a finished session again. Theorists, critics, retries and repairs become arrays; the
+  designer and its EIG search run in one design step (about 8-24 cores, 2-3 h).
+- **Checkpoints:** the steps that change state (an admission pass, a scored step, the end of a loop)
+  write it to disk before going on: the live set and ledger already are; the round's events and
+  each phase's completion are added (`round_<k>/phases.json`). A continuation resumes after the
+  last checkpoint, extending Addendum B's resume from "after a scored round" to "after a phase".
+- **Collection** is one 1-core job per study (up to 24 h; it waits on Prolific, it doesn't compute).
+- **Runaway guards:** every step checks the cell's STOP before submitting; a per-experiment budget
+  of steps (say 60) and of resubmissions per fit (2 after an infrastructure failure, 1 with twice
+  the memory after an out-of-memory kill); arrays throttled (`%24` per chain); and a step refuses
+  to submit when the campaign already has more than a set number of jobs queued (one `squeue`
+  count at submission, never a polling loop).
+- **Unchanged:** every setting, seed, cache key, time limit (measured inside the fit task, as now),
+  gate, admission order, score and rule. Admission stays sequential after its fits are in, as
+  today's prefit-then-admit. So this is an infrastructure amendment, like Addendum B.
+
+**What it costs:** a few minutes of scheduling between steps, perhaps 6-8 steps a round, so about
+30 minutes a round on top of the about 5-6 h critical path the review measured; a chain still
+about 4 days, all 7 at once; nothing idle while fits run. **To build:** the step mode with
+phase checkpoints (the main work: 3-4 days), the fit and agent array scripts (1 day), then a
+small-to-large rehearsal: one simulated round, then one simulated chain, then two at once (Mark's
+"start small"). About a week before the rehearsal is done.
+
+**Superseded by §0a:** v1's file queue and workers (§3), v2's driver jobs on `normal` (§0, §4) and
+v1/v2's automatic resume (Slurm requeues failed nodes' jobs; a step's continuation is the resume).
+Still in force: v2's CPU restriction and machine record, clean environments for fit tasks (no
+`.secrets`), and the status command and mail.
 
 ## 0. What changed in v2, and what waits for SRCC
 
