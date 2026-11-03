@@ -1,7 +1,14 @@
 # Open chain 1 (`chain_0`): status for the driver, 2026-11-02 22:00 PST
 
+Written by Claude Opus 5.5 from the job logs and run tree; not reviewed by a person.
+
 For the PI's strategy discussion with the driver. Experiment 1's report is
 `RUN_CHAIN1_EXP1_REPORT.md`; experiment 2's full report follows when its loop ends.
+
+**Update 2026-11-03 01:10 PST.** Addendum C is posted on OSF. Round 3 was scored at about 00:45 with no fit killed (leader
+`r3_c4_2`, 21 live theories), the step that crashed before. The chain was then restarted on tag `rsa-open-prereg-a2`
+(12051f8): jobs 50889911 → 50889915 → 50889917 → 50889919, lab node, 24 CPUs, 184 GB. The log confirms it resumed after
+step 3; about 6 minutes of round 4's critique were abandoned (`round_4_abandoned_1`). The text below is as of 22:00.
 
 ## The short version
 
