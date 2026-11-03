@@ -7,18 +7,17 @@ For the PI's strategy discussion with the driver. Experiment 1's report is
 
 - **The chain is running and healthy** on tag `rsa-open-prereg-a1` (Addendum B, posted on OSF by the PI): experiment
   2's loop resumed after round 2 and is scoring round 3. No fit has been killed since the fix.
-- **The gate's time criterion will fail.** Item 5 allows 104 h. The chain is at 97.2 h and passes 104 h at about 05:00
-  PST on 11-03, before experiment 2 ends. It should finish at about 140-150 h.
-- **Under §4 that decides a lot:** "no further chains run under this registration. A revision is registered anew, and
-  open chain 1 is then reported as a pilot, not counted."
-- **The next decision is time-sensitive.** Experiment 3's design starts by itself when experiment 2's loop ends (about
-  midday to evening on 11-03), and its study (about $265) publishes about 3 h later. Decision 1 below should be made
-  before then.
+- **The PI decided tonight** (2026-11-02): experiment 3 runs; item 5's running time is reported, not judged (Addendum C,
+  committed in 12051f8, not yet posted on OSF); the scheduler's bug gets fixed.
+- **In progress:** tests of that fix (job 50875639), then tag `rsa-open-prereg-a2`, then a restart just after a round is
+  scored.
+- **The PI's question for the driver: how to parallelize.** A month of babysitting sequential jobs isn't feasible.
+  What's measured for that is under "Parallelizing stage 2" below.
 
 ## Where the time went
 
-Item 5 counts from experiment 1's design start to experiment 3's loop end, less each collection stage; "queue waits and
-failures count".
+The registered item 5 counted from experiment 1's design start to experiment 3's loop end, less each collection stage,
+with "queue waits and failures" included. Under Addendum C the same figure is reported, not judged.
 
 | period | hours | counted | note |
 |---|---:|---:|---|
@@ -68,10 +67,10 @@ its last scored round. No setting, seed, cache key, gate or score changes. Tests
 the fast suite's 13 failures aren't in the changed code (10 are packages missing from the shared environment; 3 are
 subjective-randomness scripts, 2 of them an old-bash error and 1 not diagnosed).
 
-**A bug in my fix, found tonight.** It's safe but slow. The scheduler reads each fit's peak from `ru_maxrss`, which in a
+**A bug in my fix, found tonight (being fixed).** It's safe but slow. The scheduler reads each fit's peak from `ru_maxrss`, which in a
 freshly spawned process carries over the parent's size (16 GB). So every fit records 15.8 GB and is reserved about 20 GB.
 Measured on the node at 22:00: **7 fits running, real peaks 6.7-10.5 GB, 96 GB free, 17 CPUs idle.** Using `VmHWM` is a
-one-line fix, and would allow about 12-15 fits at once. See decision 2.
+one-line fix, and should allow about 12-15 fits at once.
 
 **Measured memory**, for planning: a fit takes 7-10.5 GB, and the loop's own process 16.6 GB with 15 live theories. So
 memory, not CPU, limits a 24-CPU node at 184 GB.
@@ -86,43 +85,58 @@ Loop: the leader changed in rounds 1 and 2 (`prototype_figure_individuated_mixtu
 `polar_figure_ground_topic_tom`); 15 live theories after round 2. Every slot's candidate was admitted in those two rounds except one
 slot that wrote no file. The critique's significant statistics are falling: 6, 5, then 3 of 8 for round 3.
 
-## Decisions for the PI and driver
+## Decided by the PI, 2026-11-02
 
-**1. Does experiment 3 run?** (Before experiment 3's design starts, about midday to evening on 11-03.)
-- *Run it:* about $265 and about $125 of agents, and about 40 more hours. The gate's other four items get measured, and
-  the pilot is complete. Those items can't be computed on 2 experiments.
-- *Stop after experiment 2:* saves that money and time, and the revision can be registered sooner, but items 1-4 are
-  known only for 2 experiments, and the third round of the design-from-data cycle goes unseen.
-- *My recommendation:* run it unless the revision needs that money. The chain's purpose is now to be a good pilot, and a
-  complete 3-experiment record is what the revision's estimates would rest on. To stop, I'd write the STOP file before
-  the design starts.
+1. **Experiment 3 runs.** Its design starts by itself when experiment 2's loop ends (about midday to evening on 11-03),
+   and its study (about $265) publishes about 3 h later.
+2. **The scheduler's peak gets fixed** (`VmHWM`; tag `rsa-open-prereg-a2`). Saves about 2 h per remaining round, up to
+   about 14 h.
+3. **Item 5's running time is reported, not judged; agent spend stays judged at $495** (Addendum C, `gate.py`). Addendum C
+   says plainly that this came after the outcome was foreseeable: at 97.2 of 104 h, on time and spend only, before
+   experiment 3. Without the amendment, §4 would have made chain 1 a pilot and required a revision. The PI still has to
+   post it on OSF.
 
-**2. Fix the scheduler's peak?** It needs a tag `rsa-open-prereg-a2`, a line added to Addendum B, and a restart. I'd
-restart just after a round is scored, so almost nothing is lost. It saves about 2 h per remaining round, up to about 14
-h. *Recommendation: yes*; it's only worth skipping if decision 1 is to stop.
+## Parallelizing stage 2 (the question for the driver)
 
-**3. What happens to item 5?** As registered, it fails and chain 1 becomes a pilot. The alternative is an amendment
-changing the limit or excluding failures, but the text says failures count, and the outcome is already known, so that
-would be a post-hoc change to a criterion. *My recommendation: let it fail as written*, and put realistic estimates in
-the revision. If the PI prefers to keep chain 1 counted, it should be labelled as a deviation and decided now, before
-experiment 3's data, using time and spend only (as §4 requires of scale decisions). That's the PI's call.
+What's registered: open chains 2-4 and fixed chains 1-4, 7 chains of 3 or 4 experiments, scale set at the gate.
 
-**4. Can stage 2 run on this hardware?** One chain takes the lab node whole (24 CPUs, about 184 GB), so 7 more chains one
-after another would take about 4 weeks of that node. In parallel they need other nodes: `normal` fits this size (8 GB per core, on its nodes of 192 GB or more) and isn't
-preemptible, but its queue is long; `owners` is preemptible, and with resume a preemption now costs at most one round;
-`bigmem` allows only 1 day a job. Smaller fits would change this, and the corpus is the place to look: E is 50,587 of the
-58,069 trials in a full fit. But changing that
-would be a change of method for the revision, not an infrastructure fix.
+**Measured here:**
+- One chain now takes a whole lab node: 24 CPUs and about 184 GB. The lab has one such node (`mcfrank`: 192 GB, 24 CPUs),
+  so one after another 7 chains would take about 4 weeks at about 100 h each.
+- **Memory limits it, not CPU:** a fit takes 7-10.5 GB, and the loop's own process 16.6 GB with 15 live theories.
+- **A round's fits are the bulk of its compute:** 6 candidate fits (60-80 min each) and about 30 fold fits (40-60 min
+  each), single-threaded. Agents use all of their 60 minutes.
+- **Studies are not the constraint:** they filled in 79 and 120 min, and `max_concurrent_studies` is already 8.
 
-**5. Revision levers**, if a revision is coming: the time estimates (5 rounds, not 3); round count or the stale-round
-rule; the 60-minute theorist session (agents always use all of it); and the admission limit, which is 2 x the median
-starting fit and rose from 73 to 125 min between experiments.
+**Where chains could run:**
+
+| partition | fits a chain? | catch |
+|---|---|---|
+| `mcfrank` | yes, one chain | one node |
+| `normal` | yes (8 GB per core, nodes of 192 GB or more) | long queue, up to 7 days a job |
+| `owners` | yes (up to 48 GB per core) | preemptible; with resume, a preemption costs at most one round |
+| `bigmem` | yes | 1 day a job; workable now that a loop resumes across jobs, but the queue's small |
+
+**What changes the picture:**
+- *Resume makes short and preemptible jobs usable.* Before, a loop had to finish within one job. So `owners` is now
+  reasonable, with the launcher's ladder of jobs picking up each interruption.
+- *A failure should not need a person:* a failed job writes STOP and stops the ladder (§4a's "a person looks"). That's
+  where the babysitting comes from, and it was also why a crash sat unnoticed for 5 h. The driver could consider
+  automatic resume for infrastructure failures with a cap on attempts, and a notification.
+- *Sherlock's rules:* no unattended agent sessions and no jobs that resubmit themselves (`/etc/agents/AGENTS.md`), so
+  supervision needs job dependencies, as the ladder uses.
+- *Smaller fits, if a revision allows it:* E is 50,587 of the 58,069 trials in a full fit. That would be a change of
+  method, not an infrastructure fix. So would fewer rounds, shorter theorist sessions or a lower admission limit (2 x the
+  median starting fit, which rose from 73 to 125 min between experiments).
+
+**Not measured yet:** how the scheduler does at 12-15 fits at once (that comes with a2), whether `owners` preempts often
+in practice over days (job 1 ran 38 h there without it), and how the shrinking participant pool affects later studies.
 
 ## Corrections to record
 
 - **Addendum B says the two failures "cost about 33 h of loop time" and that each restarted the loop from scratch.** The
   second kept rounds 1-2, because the resume landed before the restart. Measured: about 22 h of loop time lost and about
-  15 h stopped, 37 h in all. Worth correcting in the line that decision 2 adds.
+  15 h stopped, 37 h in all. Addendum C corrects this.
 - Experiment 1's report gave $109.52 as the chain's agent spend; that excludes the estimated pilot calls (above).
 
 ## Running
