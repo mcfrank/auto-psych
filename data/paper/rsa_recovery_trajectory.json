@@ -1,0 +1,162 @@
+{
+ "distance": "RMSE between posterior-mean choice-class probabilities over the novelty pool",
+ "fit_settings": "src.rsa.fit.FitSettings() via src.rsa.loop.fitting.loop_fit",
+ "cells": {
+  "recovery_literal_rep1": {
+   "ground_truth": "literal_listener",
+   "recorded_end_point": 0.005260951915063906,
+   "best_seed": "rsa_l1_salience",
+   "best_seed_rmse_to_gt": 0.048486453830686026,
+   "rmse_threshold": 0.01,
+   "trajectory": [
+    {
+     "step": 0,
+     "best_model": "rsa_l1_shared_prior",
+     "rmse_to_gt": 0.04870758697205992
+    },
+    {
+     "step": 1,
+     "best_model": "literal_salience_listener",
+     "rmse_to_gt": 0.004427037549130535
+    },
+    {
+     "step": 2,
+     "best_model": "graded_specificity_listener",
+     "rmse_to_gt": 0.002377156693020528
+    },
+    {
+     "step": 3,
+     "best_model": "fewest_features_listener",
+     "rmse_to_gt": 0.007455255217258005
+    },
+    {
+     "step": 4,
+     "best_model": "parsimonious_literal_mixture",
+     "rmse_to_gt": 0.005157656814203684
+    },
+    {
+     "step": 5,
+     "best_model": "parsimonious_literal_mixture",
+     "rmse_to_gt": 0.005157656814203684
+    }
+   ]
+  },
+  "recovery_literal_rep2": {
+   "ground_truth": "literal_listener",
+   "recorded_end_point": 0.0032251964510931715,
+   "best_seed": "rsa_l1_shared_prior",
+   "best_seed_rmse_to_gt": 0.048034639891362134,
+   "rmse_threshold": 0.01,
+   "trajectory": [
+    {
+     "step": 0,
+     "best_model": "rsa_l1_shared_prior",
+     "rmse_to_gt": 0.04870744512590221
+    },
+    {
+     "step": 1,
+     "best_model": "feature_contrast_listener",
+     "rmse_to_gt": 0.007462975182381853
+    },
+    {
+     "step": 2,
+     "best_model": "feature_contrast_neutral_prior",
+     "rmse_to_gt": 0.007706185963317319
+    },
+    {
+     "step": 3,
+     "best_model": "distinctiveness_heuristic_listener",
+     "rmse_to_gt": 0.0028852307570812062
+    },
+    {
+     "step": 4,
+     "best_model": "distinctiveness_neutral_prior",
+     "rmse_to_gt": 0.0025992051553787587
+    },
+    {
+     "step": 5,
+     "best_model": "distinctiveness_neutral_prior",
+     "rmse_to_gt": 0.0025992051553787587
+    }
+   ]
+  },
+  "recovery_salience_rep1": {
+   "ground_truth": "rsa_l1_salience",
+   "recorded_end_point": 0.001239949269573229,
+   "best_seed": "rsa_l2",
+   "best_seed_rmse_to_gt": 0.049290008866545804,
+   "rmse_threshold": 0.01,
+   "trajectory": [
+    {
+     "step": 0,
+     "best_model": "rsa_l2",
+     "rmse_to_gt": 0.04952089271663945
+    },
+    {
+     "step": 1,
+     "best_model": "feature_simplicity_listener",
+     "rmse_to_gt": 0.045010908666172834
+    },
+    {
+     "step": 2,
+     "best_model": "base_rate_simplicity_listener",
+     "rmse_to_gt": 0.032272962047215456
+    },
+    {
+     "step": 3,
+     "best_model": "base_rate_simplicity_listener",
+     "rmse_to_gt": 0.032272962047215456
+    },
+    {
+     "step": 4,
+     "best_model": "conservative_base_rate_simplicity",
+     "rmse_to_gt": 0.0018934645812057522
+    },
+    {
+     "step": 5,
+     "best_model": "conservative_base_rate_simplicity",
+     "rmse_to_gt": 0.0018934645812057522
+    }
+   ]
+  },
+  "recovery_salience_rep2": {
+   "ground_truth": "rsa_l1_salience",
+   "recorded_end_point": 0.0029911676391370847,
+   "best_seed": "rsa_l2",
+   "best_seed_rmse_to_gt": 0.04900440110134513,
+   "rmse_threshold": 0.01,
+   "trajectory": [
+    {
+     "step": 0,
+     "best_model": "rsa_l2",
+     "rmse_to_gt": 0.04952089271663945
+    },
+    {
+     "step": 1,
+     "best_model": "base_rate_prior_l2",
+     "rmse_to_gt": 0.02281243157511074
+    },
+    {
+     "step": 2,
+     "best_model": "base_rate_ambiguity_l2",
+     "rmse_to_gt": 0.022179724253611487
+    },
+    {
+     "step": 3,
+     "best_model": "salience_base_rate_ambiguity_l2",
+     "rmse_to_gt": 0.005900391252313025
+    },
+    {
+     "step": 4,
+     "best_model": "salience_base_rate_ambiguity_l1",
+     "rmse_to_gt": 0.003316540608294162
+    },
+    {
+     "step": 5,
+     "best_model": "salience_base_rate_ambiguity_l1",
+     "rmse_to_gt": 0.003316540608294162
+    }
+   ]
+  }
+ }
+}

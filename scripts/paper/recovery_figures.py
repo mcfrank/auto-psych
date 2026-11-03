@@ -8,10 +8,10 @@
   ``bigelow_piantadosi_independent`` cell has no result (its scoring job ran
   out of memory) and is not drawn.
 - Reference games (``fig_recovery_rsa``): the four recovery cells of Sherlock
-  run 2 (``data/rsa/sherlock_run2/recovery_*``; inner loop only, on the
-  published displays). Only the end point is recorded: the exported model's
-  pool RMSE to the ground truth against the closest starting model's, with the
-  campaign's recovery threshold (0.01).
+  run 2 (inner loop only, on the published displays). Each step's best
+  model's pool RMSE to the ground truth, against the starting model that was
+  best at step 0, all refitted by ``rsa_recovery_trajectory.py``
+  (``data/paper/rsa_recovery_trajectory.json``).
 
 Usage:
     uv run python -m scripts.paper.recovery_figures
@@ -62,8 +62,8 @@ STEPS_PER_EXPERIMENT = 6
 class Args:
     ng_root: Path = here() / "data/results/number_game_recovery-oct26/run1"
     """The number-game recovery sweep's cells (``<ground truth>/holdout.{json,csv}``)."""
-    rsa_root: Path = here() / "data/rsa/sherlock_run2"
-    """Sherlock run 2's cells (``recovery_<ground truth>_rep<r>/recovery/recovery.json``)."""
+    rsa_trajectory: Path = here() / "data/paper/rsa_recovery_trajectory.json"
+    """Each recovery cell's step-best models' distances (``rsa_recovery_trajectory.py``)."""
     out_dir: Path = here() / "data/paper/figures"
 
 
@@ -112,41 +112,36 @@ def number_game_plot(df: pd.DataFrame) -> ggplot:
     return plot
 
 
-def rsa_frame(root: Path) -> pd.DataFrame:
+def rsa_frame(path: Path) -> pd.DataFrame:
     """One row per (cell, scoring step) for the best model and the best seed.
 
     The cells run the inner loop on one fixed dataset, so a model's fit, and
-    its pool RMSE to the ground truth, is the same at every step:
-    ``recovery.json`` records it for every model live at the end and every
-    seed. A step's best model that was pruned before the end has no recorded
-    RMSE and is left as a gap. Step 0 is the seeds; the last history step
-    (the end-of-loop prune, which never changes the best model) is not drawn.
+    its pool RMSE to the ground truth, is the same at every step. Step 0 is
+    the seeds, and its best is the baseline; the last step (the end-of-loop
+    prune, which never changes the best model) is not drawn.
     """
     rows = []
-    for cell in sorted(root.glob("recovery_*_rep*")):
-        _, gt, rep = cell.name.split("_")
-        rec = json.loads((cell / "recovery" / "recovery.json").read_text())
-        rmse = {**rec["live_pool_rmse_to_gt"], **rec["seed_pool_rmse_to_gt"]}
-        history = json.loads((cell / "history.json").read_text())[:-1]
-        seed = history[0]["best_model"]
-        for step in history:
+    for cell, record in sorted(json.loads(path.read_text())["cells"].items()):
+        _, gt, rep = cell.split("_")
+        trajectory = record["trajectory"][:-1]
+        for step in trajectory:
             common = dict(gt=f"Ground truth: {RSA_GT_NAMES[gt]}", repeat=f"repeat {rep.removeprefix('rep')}",
                           step=step["step"])
-            rows.append(dict(common, series="best model", rmse=rmse.get(step["best_model"], float("nan"))))
-            rows.append(dict(common, series="best other seed model", rmse=rmse[seed]))
+            rows.append(dict(common, series="best model", rmse=step["rmse_to_gt"]))
+            rows.append(dict(common, series="best other seed model", rmse=trajectory[0]["rmse_to_gt"]))
     return pd.DataFrame(rows)
 
 
 def rsa_plot(df: pd.DataFrame) -> ggplot:
     best = df[df["series"] == "best model"]
-    # The repeats' best seeds are within 0.0005 of each other: one line per panel, their mean.
+    # The repeats share their data and step-0 best seed, so one line per panel (their mean).
     seed = (df[df["series"] == "best other seed model"]
             .groupby(["gt", "series", "step"], as_index=False, observed=True)["rmse"].mean())
     return (
         ggplot(df, aes("step", "rmse", color="series", linetype="series"))
         + geom_line(data=seed, size=0.8)
         + geom_line(aes(group="repeat"), data=best, size=0.8)
-        + geom_point(aes(shape="repeat"), data=best.dropna(), size=2)
+        + geom_point(aes(shape="repeat"), data=best, size=2)
         + facet_wrap("gt", nrow=1)
         + scale_color_manual(values={"best model": BEST_COLOR, "best other seed model": SEED_COLOR})
         + scale_linetype_manual(values={"best model": "solid", "best other seed model": "dotted"})
@@ -163,7 +158,7 @@ def main(args: Args) -> None:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     for name, plot in [
         ("fig_recovery_number_game", number_game_plot(number_game_frame(args.ng_root))),
-        ("fig_recovery_rsa", rsa_plot(rsa_frame(args.rsa_root))),
+        ("fig_recovery_rsa", rsa_plot(rsa_frame(args.rsa_trajectory))),
     ]:
         for ext in ("pdf", "png"):
             path = args.out_dir / f"{name}.{ext}"

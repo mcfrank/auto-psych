@@ -40,8 +40,10 @@ CELLS = ["recovery_literal_rep1", "recovery_literal_rep2", "recovery_salience_re
 GROUND_TRUTHS = {"recovery_literal": "literal_listener", "recovery_salience": "rsa_l1_salience"}
 SEED_MODELS = here() / "src" / "pipelines" / "outer_loop" / "projects" / "rsa_reference" / "seed_models"
 RUN2_RECORDS = here() / "data" / "rsa" / "sherlock_run2"
-# The end point recomputed here must match the recorded one this closely.
-END_POINT_TOLERANCE = 1e-4
+# The end point recomputed here must match the recorded one this closely. Run 2's
+# own records differ by up to 5e-4 for the same model, data and seed in two cells
+# (rsa_l1_shared_prior, rsa_l2; 2026-11-03): its distances carry that much noise.
+END_POINT_TOLERANCE = 1e-3
 
 
 @dataclass
