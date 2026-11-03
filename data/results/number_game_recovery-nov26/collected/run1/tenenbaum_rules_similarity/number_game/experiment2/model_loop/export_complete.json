@@ -1,0 +1,13 @@
+{
+  "models": [
+    "threshold_concepts_primes_family",
+    "centre_weighted_range_sampling",
+    "centre_weighted_ranges_with_thresholds",
+    "without_replacement_size_principle",
+    "round_number_range_boundaries",
+    "without_replacement_primes_family",
+    "first_example_evidence_weight",
+    "round_number_ranges_primes_family"
+  ],
+  "ledger_sha256": "2aee75ba3f678d9258f905cd10da5c86acb395412f02af8bfaf8b1984bad491d"
+}

@@ -1,0 +1,1 @@
+soft_confidence_criterion_decision

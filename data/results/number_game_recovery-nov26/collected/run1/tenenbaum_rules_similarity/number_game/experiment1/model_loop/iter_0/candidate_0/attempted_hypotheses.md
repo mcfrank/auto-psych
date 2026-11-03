@@ -1,0 +1,12 @@
+# Tried before
+
+1 hypothesis proposed earlier in this project is no longer in the model set. Read them before you propose:
+
+- A *pruned* entry entered the set and later lost to the best model by the stated margin, on the data available then. Its mechanism may be partly right: a model that changes it substantively is welcome, but do not re-propose it unchanged or merely re-parameterised, under any name. Pruned models stay readable under `models/pruned/`.
+- A *rejected* entry never entered the set. If it was a near-duplicate of a model still in the set, that region is already covered: do not re-propose it. If it failed on its code or its fit (see its outcome), the idea itself was never tested and a correct implementation may be worth trying.
+
+### bigelow_piantadosi_independent — dropped (experiment1)
+
+**Outcome:** MCMC fit failed on CV fold 3 (AssertionError: Apply node that caused the error: Composite{((i0 * i1) + (eq(i6, i7) * i2) + switch(i3, 0.0, (i4 * i5)))}(IncSubtensor{:, i}.0, Exp.0, Composite{(i0 + (i2 * i3) + i1)}.0, Isinf.0, Composite{...}.1, Composite{...}.1, ExpandDims{axis=1}.0, Join.0) Toposort index: 128 Inputs types: [TensorType(float64, shape=(None, 46)), TensorType(float64, shape=(None, 46)), TensorType(float64, shape=(None, 1)), TensorType(bool, shape=(None, 1)), TensorType(float64, shape=(None, 1)), TensorType(float64, shape=(None, 46)), TensorType(float64, shape=(None, 1)), TensorType(float64, shape=(None, 46))] HINT: Use a linker other than the C linker to print the inputs' shapes and strides. HINT: Re-running with most PyTensor optimizations disabled could provide a back-trace showing when this node was created. This can be done by setting the PyTensor flag 'optimizer=fast_compile'. If that does not work, PyTensor optimizations can be disabled with 'optimizer=None'. HINT: Use the PyTensor flag `exception_verbosity=high` for a debug print-out and storage map footprint of this Apply node.)
+
+**Hypothesis:** Bayesian concept learning over 45 rules (odd, even, primes, squares, cubes, powers of 2-10, powers of 2 without 32 or with 37, multiples of 3-9, 11 and 12, ending in 0-9, containing the digit 0-9) and every interval of 1-100, with a prior weight inferred for each rule separately and a share lambda_0 for the rules as a group; each interval has prior (1 - lambda_0) / 100^2. Examples are sampled from the concept (the size principle), 10% of them uniformly from 1-100, and "yes" is the posterior probability that the concept contains the target.

@@ -1,0 +1,13 @@
+{
+  "models": [
+    "parity_within_range_concepts",
+    "gamma_width_exception_family_concepts",
+    "doubling_chain_concepts",
+    "rule_noticing_grows_with_examples",
+    "gamma_width_parity_range_concepts",
+    "example_recall_limited_concepts",
+    "multiples_within_range_concepts",
+    "decade_and_parity_range_concepts"
+  ],
+  "ledger_sha256": "54fa8be71ae146d8f3bc05b9f55f6a73214040654b9bab6a7de396b45f707b82"
+}

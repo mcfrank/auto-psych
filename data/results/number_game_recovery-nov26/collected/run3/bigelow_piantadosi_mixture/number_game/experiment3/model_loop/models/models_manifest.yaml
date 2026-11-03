@@ -1,0 +1,102 @@
+models:
+- name: variable_rule_range_expectation
+  rationale: 'Refinement of `range_limited_rule_familiar_strays`. People do the same
+    Bayesian concept learning over equally plausible mathematical rules, rules held
+    within a magnitude range, and magnitude ranges of 1-100, with the size principle,
+    an uncertain belief about how often an example is a stray, and strays that are
+    sometimes familiar numbers. The one change is that how strongly people expect
+    the program to follow a mathematical rule rather than produce a magnitude range
+    is not fixed: it varies from one judgement to the next around an inferred average,
+    with an inferred spread. So on some judgements a set that fits a rule is read
+    as a range and the person endorses non-members inside the examples'' span, and
+    on others the same set is read as a rule. This blurs the commitment to rule or
+    range most where the two are close competitors, such as clustered examples that
+    share only a broad rule like "odd", and least where one explanation wins decisively.'
+- name: min_max_bounded_range
+  rationale: 'People take the smallest and largest example shown as the limits of
+    a possible program, so "numbers from the lowest to the highest example" comes
+    to mind as a magnitude explanation much more readily than any other range. Otherwise
+    they learn the concept in the usual Bayesian way: equally plausible mathematical
+    rules, rules held within a range, and magnitude ranges, the size principle, an
+    uncertain stray rate, and strays that are sometimes familiar numbers. So when
+    examples that share a rule sit close together (37, 57 or 4, 16, 12), people often
+    fill in the rule''s non-members between them (44, 7, 13) but do not stretch that
+    magnitude reading past the outermost examples, whereas the min-to-max range of
+    a widely spread set is too large to compete with the rule.'
+- name: tightness_cued_rule_range_expectation
+  rationale: 'Refinement of `variable_rule_range_expectation`: people do the same
+    Bayesian concept learning over equally plausible mathematical rules, rules held
+    within a magnitude range, and magnitude ranges of 1-100 (size principle, uncertain
+    belief about how often an example is a stray, strays sometimes familiar numbers),
+    and their expectation that the program follows a rule rather than produces a magnitude
+    range still varies from one judgement to the next. The one change, taken from
+    `cluster_cued_range_salience`, is that the average of that expectation depends
+    on how the examples look: the more tightly the examples cluster on the number
+    line, the more people expect a "numbers around here" program instead of a rule.
+    So when examples that share a rule sit close together (31, 3, 1, 15 or 37, 57),
+    people fill in the rule''s non-members inside the examples'' span more often than
+    for the same rule spread widely across 1-100.'
+- name: variable_min_max_bounded_range
+  rationale: 'Refinement of `min_max_bounded_range`: people do the same Bayesian concept
+    learning over equally plausible mathematical rules, rules held within a magnitude
+    range, and magnitude ranges of 1-100 (size principle, uncertain stray rate, strays
+    sometimes familiar numbers), and they treat the smallest and largest example as
+    the natural limits of a range, so "numbers from the lowest to the highest example"
+    comes to mind far more readily than any other range. The one change, taken from
+    `variable_rule_range_expectation`, is that how strongly people expect the program
+    to follow a rule rather than produce a magnitude range varies from one judgement
+    to the next around an inferred average. So for clustered examples that share a
+    rule (37, 57 or 4, 16, 12), people on some judgements adopt the min-to-max range
+    and fill in the rule''s non-members between the examples, never beyond them, and
+    on other judgements they keep the rule.'
+- name: approximate_near_miss_rules
+  rationale: 'Besides exact mathematical rules, people entertain approximate versions
+    of sparse rules: "numbers at or just next to a power of 2 / square / multiple
+    of 10", so a set of near-misses of a small rule (1, 3, 15, 31 are each one off
+    a power of 2) is explained by the approximate rule, and people then endorse the
+    rule''s exact members and its other near-misses (2, 4, 16, 17). These approximate
+    rules hold a small stated share of the belief in rules (about 3%), split equally
+    among them; otherwise learning is the incumbent''s Bayesian concept learning over
+    equally plausible rules, rules held within a range, and magnitude ranges with
+    a salient min-to-max range, the size principle, uncertain reliability with familiar
+    strays, and a rule-versus-range expectation that varies across judgements.'
+- name: previous_set_concept_intrusion
+  rationale: 'People judge each target by Bayesian concept learning over the examples
+    in front of them (equally plausible mathematical rules, rules held within a magnitude
+    range, magnitude ranges of 1-100 with the lowest-to-highest-example range especially
+    salient, the size principle, an uncertain stray rate with sometimes-familiar strays,
+    and a rule-versus-range expectation that varies across judgements), but because
+    different example sets are interleaved in a session, the concept from the most
+    recent other example set they judged sometimes intrudes (proactive interference):
+    on a small, stated share of judgements (about 1%) they check the target against
+    the previous set''s concept instead of the current one. So the same (set, target)
+    question is answered differently depending on which set preceded it, with stray
+    "yes" answers to targets that fit the preceding set''s concept but not the current
+    one.'
+- name: tightness_cued_min_max_range
+  rationale: 'Refinement of `variable_min_max_bounded_range`: people do the same Bayesian
+    concept learning over equally plausible mathematical rules, rules held within
+    a magnitude range, and magnitude ranges of 1-100 (size principle, uncertain stray
+    rate, strays sometimes familiar numbers), the range from the smallest to the largest
+    example comes to mind far more readily than any other range, and their expectation
+    of a rule rather than a range varies from one judgement to the next. The one change,
+    taken from `cluster_cued_range_salience`, is that the average of that expectation
+    depends on how the examples look: the more tightly the examples cluster on the
+    number line, the more people expect a "numbers from the lowest to the highest
+    example" program instead of a rule. So clustered examples that share a rule (37,
+    57 or 4, 16, 12) lead people to fill in the rule''s non-members between the examples
+    (but not beyond them) more often than the same rule''s examples spread widely
+    across 1-100.'
+- name: example_count_scaled_hull
+  rationale: 'Refinement of `variable_min_max_bounded_range`. People do the same Bayesian
+    concept learning over equally plausible mathematical rules, rules held within
+    a magnitude range, and magnitude ranges of 1-100 (size principle, uncertain stray
+    rate, strays sometimes familiar numbers), with a rule-versus-range expectation
+    that varies from one judgement to the next, and the range from the smallest to
+    the largest example comes to mind more readily than any other range. The one change
+    is how readily it comes to mind: each example after the first that falls between
+    those limits adds another bit of evidence that "numbers from the lowest to the
+    highest example" is the program, so the extra salience of that range grows in
+    proportion to the number of examples minus one, with no new parameter. With two
+    examples people therefore fill in the span between them less often than the incumbent
+    predicts, and with four clustered examples they fill it in more often.'

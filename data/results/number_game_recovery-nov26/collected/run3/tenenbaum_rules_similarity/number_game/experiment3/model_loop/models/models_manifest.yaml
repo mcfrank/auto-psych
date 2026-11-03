@@ -1,0 +1,88 @@
+models:
+- name: uncertainty_shifted_criterion
+  rationale: 'People infer the hidden concept exactly as the best model''s Bayesian
+    concept learner does, but their yes/no decision criterion depends on how sure
+    they are which concept the program uses: the more their belief is spread over
+    many competing concepts (rules and range widths), the more they shift their answer
+    away from the inferred membership probability toward "no" (uncertainty aversion)
+    or, if the inferred shift is negative, toward "yes". So two targets with the same
+    membership probability get different answers depending on whether the examples
+    point clearly to one concept or leave many open.'
+- name: kind_uncertainty_shifted_criterion
+  rationale: "Refinement of `uncertainty_shifted_criterion`: people infer the hidden\
+    \ concept exactly as its Bayesian concept learner does and shift their yes/no\
+    \ criterion with how unsure they are, but the one change is what that uncertainty\
+    \ is about. It is not their spread of belief over individual concepts (which rule,\
+    \ which range width) but their uncertainty about what kind of program they face\
+    \ \u2014 a parity rule, a prime rule, a power rule, a multiples rule, a digit\
+    \ rule, or a magnitude range \u2014 so examples that leave it open whether the\
+    \ program follows an arithmetic rule or a stretch of the number line move the\
+    \ answer toward \"no\" (or \"yes\"), while examples that clearly point to one\
+    \ kind do not, however many concepts of that kind remain open."
+- name: rule_family_doubt_criterion
+  rationale: "Refinement of `kind_uncertainty_shifted_criterion`: people infer the\
+    \ hidden concept exactly as its Bayesian concept learner does and shift their\
+    \ yes/no criterion with how unsure they are about what kind of program they face.\
+    \ The one change is which part of that kind-level doubt moves the criterion: only\
+    \ doubt about which kind of arithmetic rule it is (parity, primes, powers, multiples,\
+    \ final digit, ...), weighted by how much they believe it is a rule at all, shifts\
+    \ answers toward \"no\" (or \"yes\"), while doubt about whether the program is\
+    \ a rule or a stretch of the number line does not \u2014 the complement of `rule_vs_range_doubt_criterion`,\
+    \ which kept only that rule-versus-range part."
+- name: first_impression_kind_anchoring
+  rationale: People decide what kind of program they face (a parity, prime, square/cube,
+    power, multiples, final-digit, contained-digit or exception rule, or a stretch
+    of the number line) largely from their first impression of the first example,
+    and later examples only partly adjust that impression (anchoring and adjustment),
+    while which particular concept of the favoured kind it is gets worked out from
+    all the examples. So the same examples in a different order lead to different
+    answers, and a set whose first example suggests a different kind than the whole
+    set does (e.g. 50 then 2, 8, 64) keeps the first-suggested kind in play, giving
+    "yes" to targets that only that kind contains more often than a learner who weighs
+    all examples equally would; otherwise they answer as the best model does, including
+    its shift of criterion with doubt about which kind of rule it is.
+- name: two_cluster_rule_family_doubt
+  rationale: "Refinement of `two_cluster_range_concepts`, with one component taken\
+    \ from the incumbent `rule_family_doubt_criterion`. People do Bayesian concept\
+    \ learning over arithmetic rules (organised by kind, with exception rules as their\
+    \ own kind), single magnitude ranges and \"two separate groups\" concepts (two\
+    \ ranges with a gap between them), all judged as a typical share of the 1\u2013\
+    100 line and with the size principle. The one change is the yes/no criterion:\
+    \ only doubt about which kind of arithmetic rule the program follows, weighted\
+    \ by how much they believe it is a rule at all, shifts the answer from the inferred\
+    \ membership probability toward \"no\" (or \"yes\"), while doubt about whether\
+    \ the numbers form one stretch, two groups or a rule does not \u2014 so for widely\
+    \ split sets the two-group concept both carries generalisation away from the empty\
+    \ middle and, by drawing belief away from rules, weakens the criterion shift there."
+- name: representative_coverage_sampling
+  rationale: 'People assume the examples they are shown are representative of the
+    hidden program''s output: a fair sample spreads out over the concept rather than
+    bunching in one corner of it. So, beyond the size principle, they discount a candidate
+    concept (rule or range) to an inferred degree when most of its members lie outside
+    the stretch the examples cover (e.g. "all even numbers" after 2, 4, 6, 8) and
+    favour concepts the examples span well (e.g. powers of 2 after 2, 8, 16, 64),
+    and they say "yes" to the target by how strongly the concepts they then believe
+    contain it.'
+- name: mixed_sampling_rule_family_doubt
+  rationale: "Refinement of the incumbent `rule_family_doubt_criterion`, with one\
+    \ component taken from `mixed_strong_weak_sampling_concepts`: people infer the\
+    \ hidden concept as the incumbent's Bayesian learner does and shift their yes/no\
+    \ criterion with their doubt about which kind of arithmetic rule the program follows\
+    \ (weighted by how much they believe it is a rule at all). The one change is their\
+    \ sampling assumption: they take only an inferred share of the examples as random\
+    \ draws from the concept (the size principle) and the rest as mere members of\
+    \ it, so after examples that fit a narrow rule, broad rules of other kinds (e.g.\
+    \ all even numbers alongside powers of 2) stay in play \u2014 broadening \"yes\"\
+    \ to those rules' other members and raising exactly the rule-kind doubt that shifts\
+    \ the criterion for those sets."
+- name: representative_coverage_family_doubt
+  rationale: 'Refinement of the live model `representative_coverage_sampling`, with
+    one component taken from the incumbent `rule_family_doubt_criterion`. People infer
+    the hidden concept as a Bayesian concept learner does but assume the examples
+    are representative of the program''s output, so they discount (or, if the inferred
+    degree is negative, favour) concepts most of whose members lie outside the stretch
+    the examples cover. The one change is the yes/no criterion: as in the incumbent,
+    whatever doubt remains about which kind of arithmetic rule the program follows
+    (weighted by how much they believe it is a rule at all) shifts their answer toward
+    "no" (or "yes"), so the representativeness judgment both changes which concepts
+    they generalise from and how much rule-kind doubt is left to move the criterion.'

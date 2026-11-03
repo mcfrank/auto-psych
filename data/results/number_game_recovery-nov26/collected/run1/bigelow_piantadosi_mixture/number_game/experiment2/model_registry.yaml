@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  coincidence_gated_all_rules_guess: 0.125
+  coincidence_noticing_guess_vote: 0.125
+  coincidence_salience_guess_revision: 0.125
+  coincidence_triggered_guess_rethink: 0.125
+  compressed_concept_size_sticky_guess: 0.125
+  digit_coincidence_noticing_guess: 0.125
+  graded_digit_salience_guess: 0.125
+  misfit_tolerant_coincidence_rethink: 0.125

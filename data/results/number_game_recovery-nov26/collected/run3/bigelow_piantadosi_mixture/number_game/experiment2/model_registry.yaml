@@ -1,0 +1,7 @@
+reserved_for_new: 0.0
+theories:
+  familiar_strays_equal_rule_prior: 0.2
+  graded_exemplar_equal_rule_prior: 0.2
+  prior_matched_familiar_strays: 0.2
+  rule_count_familiar_strays: 0.2
+  two_source_program_concepts: 0.2

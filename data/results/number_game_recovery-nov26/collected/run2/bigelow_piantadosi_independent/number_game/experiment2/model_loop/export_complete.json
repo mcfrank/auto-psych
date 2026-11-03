@@ -1,0 +1,8 @@
+{
+  "models": [
+    "sparse_rule_familiarity_within_kinds",
+    "rule_or_range_kind_commitment",
+    "parity_veto_sparse_familiar_rules"
+  ],
+  "ledger_sha256": "95c00f68dc87bdb26943cb28d9cb9ae3d510bea3e42c9db51efea3d0e4d1a6c4"
+}

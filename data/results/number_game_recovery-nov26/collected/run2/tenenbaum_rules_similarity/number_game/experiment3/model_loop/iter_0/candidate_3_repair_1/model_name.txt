@@ -1,0 +1,1 @@
+rule_inherited_stretch_prior

@@ -1,0 +1,8 @@
+## c1/cocoflops1
+run1/tenenbaum_rules_similarity: see /scr/wurgaft/auto-psych/number_game_recovery-nov26b-c1/run1/tenenbaum_rules_similarity/agent_activity.md
+## c2/cocoflops2
+run1/bigelow_piantadosi_independent: see /scr/wurgaft/auto-psych/number_game_recovery-nov26b-c2/run1/bigelow_piantadosi_independent/agent_activity.md
+run2/bigelow_piantadosi_independent: see /scr/wurgaft/auto-psych/number_game_recovery-nov26b-c2/run2/bigelow_piantadosi_independent/agent_activity.md
+## final/jag28/tiger5
+run2/bigelow_piantadosi_mixture: see /scr/wurgaft/auto-psych/number_game_recovery-nov26b-jag28/run2/bigelow_piantadosi_mixture/agent_activity.md
+run3/bigelow_piantadosi_mixture: see /scr/wurgaft/auto-psych/number_game_recovery-nov26b-jag28/run3/bigelow_piantadosi_mixture/agent_activity.md

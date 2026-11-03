@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  digit_sum_open_ended_range_discount: 0.125
+  first_example_marks_range_edge: 0.125
+  heading_direction_range_extrapolation: 0.125
+  margin_and_heading_range_prior: 0.125
+  margin_beyond_examples_range_prior: 0.125
+  open_ended_ranges_heading_direction: 0.125
+  probe_as_weak_example: 0.125
+  probe_with_margin_range_prior: 0.125

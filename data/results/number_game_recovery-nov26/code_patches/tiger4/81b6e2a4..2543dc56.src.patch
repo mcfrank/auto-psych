@@ -1,0 +1,64 @@
+diff --git a/src/models/pymc_inference.py b/src/models/pymc_inference.py
+index 46ffdba1..3af70100 100644
+--- a/src/models/pymc_inference.py
++++ b/src/models/pymc_inference.py
+@@ -77,6 +77,13 @@ from src.models.data_binding import (
+     make_stim_data,
+ )
+ 
++# A forked PyMC chain inherits HDF5's lock on any fit file open at the time,
++# so the writer's reopen fails. Fit files are write-once; no lock needed.
++# HDF5 reads this when h5py is first imported.
++if "h5py" in sys.modules:
++    raise RuntimeError("import src.models.pymc_inference before h5py")
++os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
++
+ 
+ # Errors that mean the *harness* (or the environment) is broken rather than
+ # "this model cannot be fit to this data". Reporting them through a
+@@ -1063,10 +1070,13 @@ def write_fit_file(idata: Any, nc_path: Path) -> None:
+     The fit is written to a temporary file beside ``nc_path`` and renamed into
+     place, so a process killed mid-write (an out-of-memory kill, a time limit)
+     leaves no ``.nc`` at all rather than a truncated one that every later run
+-    would find in the cache. The temporary name does not end in ``.nc``.
++    would find in the cache. The temporary name does not end in ``.nc`` and
++    is unique per thread.
+     """
+     nc_path = Path(nc_path)
+-    partial = nc_path.with_name(f".{nc_path.name}.{os.getpid()}.partial")
++    partial = nc_path.with_name(
++        f".{nc_path.name}.{os.getpid()}.{threading.get_native_id()}.partial"
++    )
+     try:
+         idata.to_netcdf(str(partial))
+         os.replace(partial, nc_path)
+diff --git a/src/runtime/usage_limits.py b/src/runtime/usage_limits.py
+index 73fbe56e..15d674e6 100644
+--- a/src/runtime/usage_limits.py
++++ b/src/runtime/usage_limits.py
+@@ -6,8 +6,8 @@ from an agent that wrote nothing:
+ 
+ - Claude, subscription login: the terminal ``result`` event (``subtype
+   "success"``) carries ``You've hit your session limit · resets 2:20pm
+-  (America/Los_Angeles)`` as its text, also after the agent had worked for a
+-  while. Older CLIs wrote ``Claude AI usage limit reached|<unix time>``.
++  (America/Los_Angeles)`` (newer CLIs: ``You've hit your 5-hour limit``) as
++  its text, also after the agent had worked for a while. Older CLIs wrote ``Claude AI usage limit reached|<unix time>``.
+ - Claude, API key: after its own retries the CLI ends with ``API Error: 429
+   {... "rate_limit_error" ...}``, ``API Error: 529 {... "overloaded_error"
+   ...}`` or ``API Error: Repeated 529 Overloaded errors``.
+@@ -41,10 +41,11 @@ from datetime import datetime, timedelta, timezone
+ from typing import Iterable, Optional
+ from zoneinfo import ZoneInfo
+ 
+-# Claude: "You've hit your session limit · resets 12am (America/Los_Angeles)";
+-# other CLIs phrase it as a usage/rate/weekly limit.
++# Claude: "You've hit your session limit · resets 12am (America/Los_Angeles)"
++# or "You've hit your 5-hour limit · resets 4am (...)"; other CLIs phrase it
++# as a usage/rate/weekly limit.
+ LIMIT_RE = re.compile(
+-    r"(?:(?:hit|reached|exceeded) (?:your |the )?(?:session |usage |weekly |rate |plan )?limit"
++    r"(?:(?:hit|reached|exceeded) (?:your |the )?(?:session |usage |weekly |rate |plan |\d+-hour )?limit"
+     r"|(?:usage|rate|session|weekly|plan) limit (?:reached|exceeded|hit)"
+     r"|usage_limit)",
+     re.IGNORECASE,

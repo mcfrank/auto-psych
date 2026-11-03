@@ -1,0 +1,99 @@
+models:
+- name: heading_direction_range_extrapolation
+  rationale: People read the examples as a sequence and take the direction of the
+    last step (whether the final example went up or down from the one before it) as
+    the direction the program is heading, so the numeric ranges that come to mind
+    as candidate concepts extend further past the examples in that direction and less
+    in the other; otherwise they do Bayesian concept learning over the same arithmetic,
+    digit and digit-sum rules and ranges as the best model. This predicts more "yes"
+    answers to numbers far beyond the examples on the side the sequence was last moving
+    toward (e.g. above 60 after 40, 20, 60) and fewer on the side it moved away from,
+    while rule-based generalization and sets of a single example are unchanged.
+- name: digit_sum_open_ended_range_discount
+  rationale: 'Refinement of `digit_sum_concepts` (the incumbent): people do Bayesian
+    concept learning over the same arithmetic and digit rules, the 18 "digits add
+    up to s" concepts and every numeric range of 1-100, reading the examples as distinct
+    draws with some strays, sometimes guessing, and favouring narrow ranges. The one
+    change, the component taken from `open_ended_range_discount`, is that a range
+    running to an end of the number line ("anything up to 30", "anything from 70 on")
+    is a threshold rule rather than a bounded stretch, and people hold such open-ended
+    ranges at their own prior weight relative to bounded ones (inferred; the data
+    suggest lower). This predicts fewer "yes" answers to numbers far below small examples
+    or far above large ones, all the way to 1 or 100, while digit-sum and rule generalization
+    and "yes" to numbers just beyond the examples'' span are kept.'
+- name: probe_as_weak_example
+  rationale: 'People do Bayesian concept learning over the same arithmetic and digit
+    rules, digit-sum concepts and numeric ranges as the best model (distinct examples
+    with some strays, narrow-favouring and open-ended-discounted ranges, occasional
+    guessing), but with one mis-weighting of evidence: they treat the question itself
+    as a hint, reading the number they are asked about as if it were a further, partially
+    trusted example the program produced (with an inferred strength, which could also
+    be negative if probes are read as tricks). Because a probe counts most for small
+    concepts that contain it, this predicts extra "yes" to asked-about numbers that
+    fit a narrow rule or a short range alongside the examples (e.g. 32 after 16, 8,
+    64), and the reverse if people discount probes.'
+- name: open_ended_ranges_heading_direction
+  rationale: 'Refinement of the incumbent `digit_sum_open_ended_range_discount`: people
+    do Bayesian concept learning over the same arithmetic and digit rules, the 18
+    "digits add up to s" concepts and every numeric range of 1-100. They read the
+    examples as distinct draws with some strays, sometimes guess, favour narrow ranges,
+    and hold open-ended threshold ranges ("up to 30", "from 70 on") at their own,
+    lower prior weight. The one change, the component taken from `heading_direction_range_extrapolation`,
+    is that they also read the examples as a sequence and take the direction of the
+    last step (up or down from the example before) as where the program is heading,
+    so the ranges they entertain reach further past the examples on that side and
+    less on the other. This predicts more "yes" to numbers beyond the examples in
+    the last-step direction (e.g. above 60 after 40, 20, 60) and fewer on the opposite
+    side, on top of the incumbent''s overall discount of ranges running to 1 or 100;
+    single-example sets and rule generalization are unchanged.'
+- name: margin_beyond_examples_range_prior
+  rationale: 'Refinement of `digit_sum_open_ended_range_discount` (the incumbent):
+    people do Bayesian concept learning over the same arithmetic and digit rules,
+    the 18 digit-sum concepts and every numeric range of 1-100, reading the examples
+    as distinct draws with some strays, sometimes guessing, favouring narrow ranges
+    and discounting open-ended ranges that run to 1 or 100. The one change is a margin
+    expectation: people do not expect the few numbers they were shown to sit right
+    at the edges of the program''s range, so they credit a candidate range by how
+    far it reaches past the examples on either side (strength inferred; the data suggest
+    more credit for ranges with room beyond the examples). This predicts more "yes"
+    to numbers a little beyond either end of a cluster (e.g. 57 or 67 after 60, 62,
+    64) than the incumbent gives, symmetrically on both sides and regardless of the
+    order the examples were shown in, while rule and digit-sum generalization are
+    unchanged.'
+- name: first_example_marks_range_edge
+  rationale: 'People read the examples in order and take the first number they are
+    shown as marking an edge of the program''s range whenever it is the smallest or
+    the largest of the set: they expect the program''s range to reach beyond the other
+    examples (as in the best model, crediting ranges by how far they extend past the
+    examples) but not past that first-shown end. This predicts that "yes" stops at
+    the first example''s side of a cluster but spreads beyond its other side (e.g.
+    66 is accepted after 60, 62, 64 but 58 is not, and the reverse after 64, 62, 60),
+    while single examples, rules and digit-sum generalization are unchanged.'
+- name: margin_and_heading_range_prior
+  rationale: 'Refinement of the incumbent `margin_beyond_examples_range_prior`: people
+    do Bayesian concept learning over the same arithmetic and digit rules, the 18
+    digit-sum concepts and every numeric range of 1-100. They read the examples as
+    distinct draws with some strays, sometimes guess, favour narrow ranges, discount
+    open-ended ranges that run to 1 or 100, and credit a range by how far it reaches
+    past the examples on both sides. The one change, the component taken from `open_ended_ranges_heading_direction`,
+    is that people also read the examples as a sequence and take the direction of
+    the last step (up or down from the example before) as where the program is heading,
+    so the room they expect beyond the examples is shifted toward that side and away
+    from the other (strength inferred). This predicts the incumbent''s extra "yes"
+    just beyond both ends of a cluster, but tilted: more beyond the end the sequence
+    last moved toward (e.g. above 64 after 60, 62, 64) than beyond the end it moved
+    away from (e.g. below 60), and the reverse for the same numbers shown in falling
+    order. Single-example sets and rule and digit-sum generalization are unchanged.'
+- name: probe_with_margin_range_prior
+  rationale: 'Refinement of `probe_as_weak_example`: people do Bayesian concept learning
+    over the same arithmetic and digit rules, digit-sum concepts and numeric ranges
+    (distinct examples with some strays, narrow-favouring and open-ended-discounted
+    ranges, occasional guessing), and they read the number they are asked about as
+    a further, partially trusted example of the program, with an inferred strength.
+    The one change, the component taken from `margin_beyond_examples_range_prior`,
+    is that people also expect the shown examples not to sit right at the edges of
+    the program''s range, so they credit a candidate range by how far it reaches past
+    the examples on either side. This predicts that the probe''s pull toward small
+    concepts that contain it is joined by more "yes" to numbers a little beyond either
+    end of a cluster (e.g. 57 or 67 after 60, 62, 64), both effects together, while
+    rule and digit-sum generalization remain as in the probe model.'

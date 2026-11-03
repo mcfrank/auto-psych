@@ -1,0 +1,222 @@
+# Tried before
+
+36 hypotheses proposed earlier in this project are no longer in the model set. Read them before you propose:
+
+- A *pruned* entry entered the set and later lost to the best model by the stated margin, on the data available then. Its mechanism may be partly right: a model that changes it substantively is welcome, but do not re-propose it unchanged or merely re-parameterised, under any name. Pruned models stay readable under `models/pruned/`.
+- A *rejected* entry never entered the set. If it was a near-duplicate of a model still in the set, that region is already covered: do not re-propose it. If it failed on its code or its fit (see its outcome), the idea itself was never tested and a correct implementation may be worth trying.
+
+### exemplar_featural_similarity_gcm — pruned (experiment1 end of experiment)
+
+**Outcome:** 400.3 nats behind gamma_width_parity_range_concepts (14.7× dse)
+
+**Hypothesis:** People do not infer a rule at all: they judge the target by its exemplar similarity to the examples shown, as in a generalized context model. Each example is compared with the target on a few perceptual dimensions of the number — its magnitude, its final digit, its tens digit and its parity — with attention shared among these dimensions, similarity decays exponentially with attention-weighted mismatch, and the more similar the target is on average to the examples, the more likely they say yes.
+
+### weak_sampling_concept_learning — pruned (experiment1 end of experiment)
+
+**Outcome:** 213.0 nats behind gamma_width_parity_range_concepts (10.2× dse)
+
+**Hypothesis:** People entertain the same kinds of number concepts (arithmetic rules and magnitude ranges) but treat the examples only as consistent with the hidden concept rather than as random samples drawn from it (weak sampling, no size principle), so every concept that contains the examples stays plausible in proportion to its prior regardless of how many other numbers it includes. The sharpest disagreement with the size-principle best model lives in sets that fit a small rule nested in a larger one (e.g. 16,32,2,8 or 20,32,92): this model predicts broad "yes" to targets that only the larger concept contains (other even numbers, numbers anywhere in a wide range), whereas the best model confines "yes" to the smallest fitting concept.
+
+### residue_class_progression — pruned (experiment1 end of experiment)
+
+**Outcome:** 457.7 nats behind gamma_width_parity_range_concepts (12.1× dse)
+
+**Hypothesis:** People assume the hidden program produces an arithmetic progression: all numbers in 1-100 that leave the same remainder when divided by some step size (step 1 = every number, step 2 = all odds or all evens, step 10 = a shared final digit, step 12 = every twelfth number, and so on). They consider every step size whose residue class contains all the examples, favour smaller steps a priori but larger (tighter) steps when several examples all fit them (the size principle), and say "yes" with the posterior probability that the target lies in the same progression as the examples.
+
+### inferred_sampling_noise_concept_learning — rejected (experiment1 round 0 candidate 3 refine incumbent bigelow_piantadosi_independent)
+
+**Outcome:** predicts like existing model 'bigelow_piantadosi_independent' (p_yes RMSE 0.00165 < 0.002 on the 512-stimulus novelty pool) — a near-duplicate of bigelow_piantadosi_independent, not a new hypothesis.
+
+**Hypothesis:** A refinement of bigelow_piantadosi_independent: people do Bayesian concept learning over the same 45 rules and all intervals of 1-100, with a prior weight for each rule and a share lambda_0 for rules, and answer "yes" with the posterior probability that the concept contains the target. The one change is that how far people trust the examples to have come from the concept (the strength of the size principle, versus examples being random numbers from 1-100) is inferred from their judgments rather than fixed at 90%, so the data decide how strongly small concepts are favoured and how readily a concept is kept despite an example it does not contain.
+
+### inferred_outlier_rate_concept_learning — rejected (experiment1 round 0 candidate 4 refine incumbent bigelow_piantadosi_independent)
+
+**Outcome:** predicts like existing model 'bigelow_piantadosi_independent' (p_yes RMSE 0.00130 < 0.002 on the 512-stimulus novelty pool) — a near-duplicate of bigelow_piantadosi_independent, not a new hypothesis.
+
+**Hypothesis:** A refinement of `bigelow_piantadosi_independent`: people do Bayesian concept learning over the same 45 rules and all intervals of 1-100 with independently weighted rules and the size principle, but how far they trust each example to come from the concept is not fixed at 90%. Instead the rate at which examples are believed to be random noise drawn uniformly from 1-100 is a free parameter inferred from the data, so that sets containing an "odd one out" (e.g. 8, 24, 48, 63) are explained by a rule plus an outlier to the degree people actually tolerate outliers.
+
+### rule_family_prior_concepts — pruned (experiment1 end of experiment)
+
+**Outcome:** 12.6 nats behind gamma_width_parity_range_concepts (2.6× dse)
+
+**Hypothesis:** Refinement of `bigelow_piantadosi_mixture`: people do Bayesian concept learning over the same 45 rules and all intervals (size principle, 10% of examples random), but their prior over rules is organised by kind of rule rather than flat: they first favour a family of rule (parity, primes, squares/cubes, powers, multiples, last digit, contained digit), each with its own inferred plausibility, and rules within a family are equally likely. The one change is replacing the mixture's uniform rule prior with this inferred family-level prior, so whole kinds of rule (e.g. "contains the digit d") can be a priori implausible while others (multiples, last digit) dominate generalization.
+
+### erlang_interval_size_concept_learning — pruned (experiment1 end of experiment)
+
+**Outcome:** 92.2 nats behind gamma_width_parity_range_concepts (7.4× dse)
+
+**Hypothesis:** A refinement of bigelow_piantadosi_independent: people do Bayesian concept learning over the same 45 rules and all intervals of 1-100 (prior weight per rule, share lambda_0 for rules, size-principle sampling with 10% random examples, "yes" = posterior probability the concept contains the target). The one change is the prior over intervals: instead of every interval being equally likely (which makes wide ranges a priori far more numerous), people expect a range of a characteristic width, with an Erlang prior over interval size whose scale is inferred from the data (as in Tenenbaum's number game), so moderately narrow ranges are preferred a priori and very wide or single-number ranges are penalised.
+
+### interval_size_erlang_prior — rejected (experiment1 round 0 candidate 4 refine incumbent bigelow_piantadosi_independent repair 1)
+
+**Outcome:** predicts like existing model 'erlang_interval_size_concept_learning' (p_yes RMSE 0.00000 < 0.002 on the 512-stimulus novelty pool) — a near-duplicate of erlang_interval_size_concept_learning, not a new hypothesis.
+
+**Hypothesis:** A refinement of `bigelow_piantadosi_independent`: people do Bayesian concept learning over the same 45 independently weighted rules and all intervals of 1-100 with the size principle (10% of examples treated as noise), but their prior over magnitude ranges is not flat over endpoint pairs. Instead people expect a range of a characteristic size: the prior on an interval's width follows an Erlang distribution (as in Tenenbaum's number game) whose scale is inferred from the data, so ranges much narrower or much wider than that typical size are judged implausible a priori, changing how far "yes" extends around examples that suggest a magnitude range.
+
+### serial_position_weighted_evidence — pruned (experiment1 end of experiment)
+
+**Outcome:** 14.2 nats behind gamma_width_parity_range_concepts (2.9× dse)
+
+**Hypothesis:** People do Bayesian concept learning over the same rules (with a family-organised rule prior) and magnitude ranges as the best model, but they update sequentially as the examples are read and do not weigh every example equally: each example's evidence is weighted by its position in the sequence, decaying (or growing) geometrically with how far it lies before the last example shown, at an inferred rate. A recency rate means earlier examples are partly forgotten, so longer sets narrow generalisation less than the size principle predicts; a primacy rate means early examples are overcounted, so longer sets narrow it more.
+
+### evidence_overweighting_concept_learning — pruned (experiment1 end of experiment)
+
+**Outcome:** 14.9 nats behind gamma_width_parity_range_concepts (3.1× dse)
+
+**Hypothesis:** People do Bayesian concept learning over the same rules (with a family-organised rule prior) and magnitude intervals as the best model, using the size principle, but they mis-weight the evidence: each example's likelihood is raised to an inferred power, so the examples count for more (or less) than a normative learner would let them. If people over-weight evidence, their generalisation collapses onto the smallest fitting concept faster as examples accumulate than the size principle predicts, which would explain why their yes-rate drops more from two- to four-example sets than the best model expects.
+
+### posterior_sharpened_concept_selection — rejected (experiment1 round 1 candidate 2 lens 5)
+
+**Outcome:** predicts like existing model 'evidence_overweighting_concept_learning' (p_yes RMSE 0.00121 < 0.002 on the 512-stimulus novelty pool) — a near-duplicate of evidence_overweighting_concept_learning, not a new hypothesis.
+
+**Hypothesis:** People do not average their predictions over every number concept consistent with the examples; they commit to (approximately) the single most plausible concept and generalize only from it. Concretely, given the same rules and magnitude ranges, family-organised rule prior and size-principle likelihood as the current best model, the concept a person generalizes from is chosen with probability proportional to its posterior raised to an inferred decisiveness exponent (above 1 = near-MAP hypothesis selection, so generalization collapses onto the smallest well-fitting concept more sharply as examples accumulate), and "yes" means the chosen concept contains the target.
+
+### iter1_candidate3 — rejected (experiment1 round 1 candidate 3 refine incumbent rule_family_prior_concepts)
+
+**Outcome:** predicts like existing model 'rule_family_prior_concepts' (p_yes RMSE 0.00180 < 0.002 on the 512-stimulus novelty pool) — a near-duplicate of rule_family_prior_concepts, not a new hypothesis.
+
+**Hypothesis:** Refinement of `rule_family_prior_concepts`: people do the same Bayesian concept learning over the 45 rules (with the inferred family-level rule prior) and all intervals, with "yes" the posterior probability that the concept contains the target. The one change is how strongly people believe the examples were sampled from the concept: instead of a fixed 90% (10% of examples random noise), the share of examples they treat as genuine samples from the concept is a free parameter inferred from the data, so the strength of the size principle — how sharply generalization narrows as consistent examples accumulate, and how readily an inconsistent example is dismissed as noise — is estimated rather than assumed.
+
+### inferred_sampling_reliability_concepts — rejected (experiment1 round 1 candidate 4 refine incumbent rule_family_prior_concepts)
+
+**Outcome:** predicts like existing model 'evidence_overweighting_concept_learning' (p_yes RMSE 0.00000 < 0.002 on the 512-stimulus novelty pool) — a near-duplicate of evidence_overweighting_concept_learning, not a new hypothesis.
+
+**Hypothesis:** Refinement of `rule_family_prior_concepts`: people do the same Bayesian concept learning over the 45 rules (with the family-organised rule prior) and all intervals of 1-100, with size-principle sampling, but how strongly they treat the examples as drawn from the concept is not fixed at 90% — the share of examples they believe are genuine samples of the concept (versus random numbers from 1-100) is a free quantity inferred from their judgments. The one change is replacing the fixed 10% noise rate with this inferred sampling reliability, which sets how sharply each extra example narrows generalization to the smallest concept that fits (the critique shows people narrow with more examples differently from what the fixed rate predicts) and how readily a concept that misses one example is still entertained.
+
+### erlang_interval_family_prior_concepts — pruned (experiment1 end of experiment)
+
+**Outcome:** 11.0 nats behind gamma_width_parity_range_concepts (2.4× dse)
+
+**Hypothesis:** Refinement of `erlang_interval_size_concept_learning` (the narrowest-losing live model): people do Bayesian concept learning over the same 45 rules and magnitude ranges, with the size principle and an Erlang prior that favours ranges of a characteristic, inferred width over very wide or single-number ones. The one change is how prior belief is shared among the rules: instead of an independent weight for each of the 45 rules, people first favour a kind of rule (parity, primes, squares/cubes, powers, multiples, last digit, contained digit), each kind with its own inferred plausibility, and treat rules of the same kind as equally likely. So whole kinds of rule (e.g. "contains the digit d") can be implausible a priori, while magnitude generalisation follows ranges of a preferred size.
+
+### membership_criterion_threshold — pruned (experiment1 end of experiment)
+
+**Outcome:** 34.2 nats behind gamma_width_parity_range_concepts (4.6× dse)
+
+**Hypothesis:** People infer how likely the target is to belong to the hidden concept exactly as the current best model's Bayesian concept learner does (same rules and magnitude ranges, family-organised rule prior, size principle), but they do not report that probability directly: they answer "yes" only when the inferred membership probability exceeds an internal decision criterion, and this criterion varies noisily from judgment to judgment. So targets with middling membership probability are mostly rejected (or mostly accepted, depending on where the criterion sits), and answers are more all-or-none than probability matching predicts.
+
+### family_prior_erlang_interval_concepts — rejected (experiment1 round 1 candidate 3 refine incumbent rule_family_prior_concepts repair 1)
+
+**Outcome:** predicts like existing model 'erlang_interval_family_prior_concepts' (p_yes RMSE 0.00176 < 0.002 on the 512-stimulus novelty pool) — a near-duplicate of erlang_interval_family_prior_concepts, not a new hypothesis.
+
+**Hypothesis:** Refinement of `rule_family_prior_concepts`: people do the same Bayesian concept learning over the 45 rules, with the inferred family-level rule prior, and over intervals of 1-100, using the size principle (10% of examples random), with "yes" the posterior probability that the concept contains the target. The one change, taken from `erlang_interval_size_concept_learning`, is the prior over intervals: instead of every interval being equally likely, which makes wide ranges far more numerous a priori, people expect a range of a characteristic width (an Erlang prior over interval size with an inferred scale). Narrow, magnitude-based generalisation is then favoured from the first few examples, so adding examples narrows the range less than the flat-interval model predicts.
+
+### log_number_line_range_concepts — pruned (experiment1 end of experiment)
+
+**Outcome:** 23.7 nats behind gamma_width_parity_range_concepts (4.1× dse)
+
+**Hypothesis:** Refinement of `rule_family_prior_concepts`: people do the same Bayesian concept learning over the 45 rules (with the family-organised rule prior) and magnitude ranges of 1-100, with size-principle sampling, but they picture the ranges on a compressed, roughly logarithmic mental number line rather than a linear one. The one change is the prior over ranges: a range's endpoints are equally likely to fall anywhere on that mental line, with the degree of compression inferred, so ranges among small numbers (where numbers are spread out on the mental line) are a priori more plausible than equally long ranges among large numbers (where they are crowded together). As a result, examples among large numbers are explained by a range less readily and by a rule more often than the incumbent predicts.
+
+### win_stay_lose_shift_concept_testing — pruned (experiment1 end of experiment)
+
+**Outcome:** 49.0 nats behind gamma_width_parity_range_concepts (5.0× dse)
+
+**Hypothesis:** People learn the concept by sequential hypothesis testing ("win-stay, lose-shift") rather than by weighing all examples at once: on reading the first example they pick one concept (a rule or a magnitude range, with the same family-organised rule prior and preferred-width range prior as the best model) in proportion to how well it explains that example, keep it as long as each new example fits it, and only when an example contradicts it do they pick a fresh concept in proportion to how well it explains all examples seen so far. They answer "yes" if the concept they end up holding contains the target, so the first example shapes generalisation most and later examples that fit a broad initial guess do not narrow it.
+
+### spread_scaled_distance_gradient — pruned (experiment1 end of experiment)
+
+**Outcome:** 459.8 nats behind gamma_width_parity_range_concepts (16.0× dse)
+
+**Hypothesis:** People judge the target purely by its numerical closeness to the nearest example on the 1-100 number line, with a Shepard-style exponential generalization gradient whose width is set by how spread out the examples are: they say "yes" with a probability that falls off exponentially with the target's distance from the nearest example, and widely spaced examples (large average gap between neighbouring examples) license a proportionally broader gradient than tightly clustered ones.
+
+### lapse_guess_concept_learning — pruned (experiment1 end of experiment)
+
+**Outcome:** 14.4 nats behind gamma_width_parity_range_concepts (3.0× dse)
+
+**Hypothesis:** People infer how likely the target is to belong to the hidden concept by Bayesian concept learning over rules (with a family-organised rule prior) and magnitude ranges, using the size principle, and normally answer with that probability; but on some fraction of judgments they lapse (inattention, a slip, not engaging with the examples) and answer by a fixed guessing tendency instead, saying "yes" with an inferred guessing rate regardless of the examples. So even targets the concept clearly excludes get a floor of "yes" answers, and targets it clearly includes get a ceiling below certainty, both set by one lapse rate and one guessing bias.
+
+### iter2_candidate3 — pruned (experiment1 end of experiment)
+
+**Outcome:** 12.7 nats behind gamma_width_parity_range_concepts (2.8× dse)
+
+**Hypothesis:** Refinement of the incumbent `erlang_interval_family_prior_concepts`: people do the same Bayesian concept learning (45 rules with a family-organised prior, magnitude ranges with an Erlang width prior, size principle), but on some judgments they do not consult the inferred concept at all and simply guess, answering "yes" with their own guessing bias. The one change is this attentional lapse: on an inferred share of trials the answer is a biased guess, so targets the learner is certain about are still sometimes answered the other way — "yes" to numbers outside every plausible concept and "no" to numbers inside it — rather than with near-zero or near-one probability.
+
+### gamma_width_family_prior_concepts — pruned (experiment1 end of experiment)
+
+**Outcome:** 10.1 nats behind gamma_width_parity_range_concepts (2.2× dse)
+
+**Hypothesis:** Refinement of `erlang_interval_family_prior_concepts` (the incumbent): people do the same Bayesian concept learning over the 45 rules (with the family-organised rule prior) and magnitude ranges of 1-100, with the size principle. The one change is the shape of their prior expectation about how wide a range is: instead of a fixed Erlang form (whose preference for a typical width is always of the same, fairly loose shape), the width prior is a gamma distribution whose shape is inferred along with its typical width, so people may hold a sharp expectation that ranges have one characteristic width (strongly disfavouring both narrow and very wide ranges) or, at the other extreme, a monotone preference for the narrowest range that fits the examples.
+
+### arbitrary_exception_rule_prior — pruned (experiment1 end of experiment)
+
+**Outcome:** 3.8 nats behind gamma_width_parity_range_concepts; retired to keep the live set at 8 models: ELPD-LOO rank 9 of 10
+
+**Hypothesis:** Refinement of `erlang_interval_family_prior_concepts`: people do the same Bayesian concept learning over rules and magnitude ranges (size principle, Erlang prior over range width, prior shared by kind of rule), but a rule with an arbitrary exception ("powers of 2 except 32", "powers of 2 plus 37") is not just another power rule to them — it belongs to its own kind, with its own inferred, presumably very low, plausibility. The one change is giving these exception-laden rules their own family in the rule prior, so after seeing powers of 2 people firmly reject 37 (and accept 32), instead of giving 37 the roughly one-in-three "yes" that the incumbent predicts.
+
+### offset_progression_concepts — pruned (experiment1 end of experiment)
+
+**Outcome:** 14.9 nats behind gamma_width_parity_range_concepts (2.3× dse)
+
+**Hypothesis:** Refinement of `arbitrary_exception_rule_prior`: people do the same Bayesian concept learning over rules and magnitude ranges (size principle, Erlang prior over range width, prior shared by kind of rule), but their space of rules also contains arithmetic progressions that do not start at zero — "every third number starting from 1", "odd multiples of 3" (3, 9, 15, ...), "every fourth number starting from 2" — i.e. all numbers leaving the same nonzero remainder under a small step of 3 to 6. These offset progressions form their own kind of rule with its own inferred, presumably low, plausibility, so after examples such as 69, 9, 39, 21 people can generalise only to the odd multiples of 3 and reject other odd numbers such as 19.
+
+### property_matching_exemplar_similarity — pruned (experiment1 end of experiment)
+
+**Outcome:** 404.0 nats behind gamma_width_parity_range_concepts (14.8× dse)
+
+**Hypothesis:** People do not infer a hidden concept: they store the shown examples as exemplars and judge the target by how similar it is to them, where two numbers are similar to the extent that they share familiar mathematical properties (parity, primality, being a square or cube, being a power of some base, being a multiple of some number, final digit, digits contained) and are close in magnitude. Each kind of property receives its own attention weight, similarity decays exponentially with the attention-weighted count of properties on which target and example differ, and people say "yes" with a Luce-choice probability that grows with the target's average similarity to the stored examples relative to a fixed response criterion.
+
+### generative_next_output_judgment — dropped (experiment1 round 3)
+
+**Outcome:** MCMC fit failed on CV fold 1 (RuntimeError: warm-start NUTS: the Hessian at the posterior mode is not positive definite (some parameter direction is pinned down by neither the data nor the prior))
+
+**Hypothesis:** People read the question "would the program produce this number?" generatively: instead of asking whether the target belongs to the hidden concept, they judge how likely the program is to produce that particular number as its next output (averaging over the concepts that explain the examples, each of which spreads its output thinly when it contains many numbers), and say "yes" in proportion to how that likelihood compares with the most likely next output, with an inferred sensitivity. So targets that only a large concept contains (any even number, anywhere in a wide range) get far fewer "yes" answers than their membership probability implies, while targets of a small, well-fitting concept are accepted.
+
+### decade_concept_family_prior — pruned (experiment1 end of experiment)
+
+**Outcome:** 4.3 nats behind gamma_width_parity_range_concepts; retired to keep the live set at 8 models: ELPD-LOO rank 10 of 10
+
+**Hypothesis:** Refinement of `arbitrary_exception_rule_prior` (the incumbent): people do the same Bayesian concept learning over rules and magnitude ranges (size principle, Erlang prior over range width, rule prior shared by kind of rule, exception-laden rules as their own kind), but they also hold a ready-made kind of concept that the incumbent lacks: the decade, "numbers in the 60s" (same tens digit), as a distinct kind of rule with its own inferred plausibility. The one change is adding the ten decade concepts as a new family in the rule prior, so when the examples share a tens digit (e.g. 61, 64, 67) people confine "yes" sharply to that decade, more firmly than an arbitrary range of the same width.
+
+### gamma_width_parity_range_concepts_2 — rejected (experiment1 round 4 candidate 5 refine chosen)
+
+**Outcome:** predicts like existing model 'gamma_width_parity_range_concepts' (p_yes RMSE 0.00000 < 0.002 on the 512-stimulus novelty pool) — a near-duplicate of gamma_width_parity_range_concepts, not a new hypothesis.
+
+**Hypothesis:** Refinement of `gamma_width_exception_family_concepts`: people do the same Bayesian concept learning over rules and magnitude ranges (size principle, family-organised rule prior with exception-laden rules as their own kind, and a gamma prior over range width whose sharpness is inferred along with its typical width). The one change, taken from `parity_within_range_concepts`, is that people can also entertain a conjunctive kind of concept, "odd (or even) numbers within a range" (e.g. "even numbers above 60"), with its own inferred plausibility and the same sharply characteristic width preference as plain ranges. So after 4, 66, 78, 96 people say yes to large even numbers but no to small ones, and the ranges they generalise over — plain or parity-restricted — are of one characteristic width rather than extending loosely beyond the examples.
+
+### bigelow_piantadosi_mixture — pruned (experiment1 end of experiment)
+
+**Outcome:** 264.6 nats behind gamma_width_parity_range_concepts (9.4× dse)
+
+**Hypothesis:** Bayesian concept learning over 45 rules (odd, even, primes, squares, cubes, powers of 2-10, powers of 2 without 32 or with 37, multiples of 3-9, 11 and 12, ending in 0-9, containing the digit 0-9) and every interval of 1-100. A rule is chosen with probability lambda_0, and the rules are equally likely; each interval has prior (1 - lambda_0) / 100^2. Examples are sampled from the concept (the size principle), 10% of them uniformly from 1-100, and "yes" is the posterior probability that the concept contains the target.
+
+### bigelow_piantadosi_independent — pruned (experiment1 end of experiment)
+
+**Outcome:** 95.2 nats behind gamma_width_parity_range_concepts (7.8× dse)
+
+**Hypothesis:** Bayesian concept learning over 45 rules (odd, even, primes, squares, cubes, powers of 2-10, powers of 2 without 32 or with 37, multiples of 3-9, 11 and 12, ending in 0-9, containing the digit 0-9) and every interval of 1-100, with a prior weight inferred for each rule separately and a share lambda_0 for the rules as a group; each interval has prior (1 - lambda_0) / 100^2. Examples are sampled from the concept (the size principle), 10% of them uniformly from 1-100, and "yes" is the posterior probability that the concept contains the target.
+
+### prior_leaking_beta_share_concepts — rejected (experiment2 round 1 candidate 4 refine incumbent beta_share_width_exception_concepts)
+
+**Outcome:** predicts like existing model 'beta_share_width_prior_leaking_judgment' (p_yes RMSE 0.00034 < 0.002 on the 512-stimulus novelty pool) — a near-duplicate of beta_share_width_prior_leaking_judgment, not a new hypothesis.
+
+**Hypothesis:** Refinement of `beta_share_width_exception_concepts`: people infer the hidden concept by the same Bayesian concept learning (family-organised rule prior with exception rules as their own kind, magnitude ranges with a beta prior over the share of the 1–100 line a range covers, the size principle). The one change, taken from `prior_leaking_membership_judgment`, is in how they turn that inference into a yes/no answer: the log-odds of saying yes is the posterior log-odds that the concept contains the target, shifted by an inferred share of how plausible the target was as a member before any example was seen. So a priori typical numbers (mid-range, even, multiples) get more "yes" than the examples alone warrant (or less, if the share is negative), now measured against the bounded-share range prior rather than the unbounded gamma one.
+
+### beta_share_prior_leaking_judgment — rejected (experiment2 round 1 candidate 5 refine chosen)
+
+**Outcome:** predicts like existing model 'beta_share_width_prior_leaking_judgment' (p_yes RMSE 0.00034 < 0.002 on the 512-stimulus novelty pool) — a near-duplicate of beta_share_width_prior_leaking_judgment, not a new hypothesis.
+
+**Hypothesis:** Refinement of `prior_leaking_membership_judgment`: people infer the hidden concept by Bayesian concept learning (rules with a family-organised prior, exception rules as their own kind, magnitude ranges, the size principle), and their yes/no judgment is shifted by an inferred share of how plausible the target was before any examples were seen. The one change, taken from `beta_share_width_exception_concepts`, is their expectation about how wide a range is: a beta prior over the share of the bounded 1–100 line a range covers, in place of an unbounded gamma prior over raw width. Near-total ranges are then implausible both when people infer the concept and in the prior plausibility that leaks into the judgment, so the leakage favours mid-range targets differently from the gamma version and widely spread examples point to a rule.
+
+### beta_share_parity_range_concepts_2 — rejected (experiment2 round 1 candidate 5 refine chosen repair 1)
+
+**Outcome:** predicts like existing model 'beta_share_parity_range_concepts' (p_yes RMSE 0.00000 < 0.002 on the 512-stimulus novelty pool) — a near-duplicate of beta_share_parity_range_concepts, not a new hypothesis.
+
+**Hypothesis:** Refinement of `gamma_width_parity_range_concepts`: people do Bayesian concept learning over rules (family-organised prior, exception rules as their own kind), magnitude ranges and "odd (or even) numbers within a range", with the size principle. The one change, taken from `beta_share_width_exception_concepts`, is how they expect a range (plain or parity-restricted) to be wide: as a typical share of the bounded 1–100 line (a beta prior over that share, mean and sharpness inferred) rather than an unbounded gamma expectation over raw width, so near-total ranges are implausible and widely spread same-parity examples (e.g. 4, 66, 78, 96) point to "even numbers in the upper part of the line" rather than to all even numbers or almost any number.
+
+### size_weighted_within_kind_rules — rejected (experiment2 round 2 candidate 3 refine incumbent beta_share_width_exception_concepts)
+
+**Outcome:** predicts like existing model 'specificity_biased_rule_prior' (p_yes RMSE 0.00015 < 0.002 on the 512-stimulus novelty pool) — a near-duplicate of specificity_biased_rule_prior, not a new hypothesis.
+
+**Hypothesis:** Refinement of `beta_share_width_exception_concepts`: people do the same Bayesian concept learning over rules (family-organised prior, exception rules as their own kind) and magnitude ranges judged as a typical share of the 1–100 line, with the size principle. The one change is how prior belief is shared among the rules of one kind: not equally, but in proportion to a power of how many numbers each rule contains, with the exponent inferred — so if specific rules ("multiples of 9", "powers of 4") are a priori more natural to people than broad ones of the same kind ("multiples of 3", "powers of 2"), then after 36, 45, 54, 81 they say "yes" to other multiples of 9 and "no" to multiples of 3 that are not multiples of 9 more firmly than the size principle alone predicts (or, with the opposite sign, generalise to the broader rule more).
+
+### specificity_tilted_rule_prior — rejected (experiment2 round 2 candidate 4 refine incumbent beta_share_width_exception_concepts)
+
+**Outcome:** predicts like existing model 'specificity_biased_rule_prior' (p_yes RMSE 0.00000 < 0.002 on the 512-stimulus novelty pool) — a near-duplicate of specificity_biased_rule_prior, not a new hypothesis.
+
+**Hypothesis:** Refinement of `beta_share_width_exception_concepts`: people do the same Bayesian concept learning over rules (family-organised prior, exception rules as their own kind) and magnitude ranges judged as a typical share of the 1–100 line, with the size principle. The one change is how prior belief is shared among the rules of one kind: instead of treating every rule of a kind as equally likely a priori, people find the more specific rules of a kind (those picking out fewer numbers, e.g. "multiples of 9" over "multiples of 3", "powers of 4" over "powers of 2") more (or, if the inferred tilt is negative, less) plausible, with the strength of this preference inferred. So after 36, 45, 54, 81 people say "yes" to other multiples of 9 and "no" to multiples of 3 that are not multiples of 9 more sharply than the size principle alone predicts.
+
+### multiple_base_specificity_concepts — rejected (experiment2 round 2 candidate 5 refine chosen)
+
+**Outcome:** predicts like existing model 'beta_share_parity_range_concepts' (p_yes RMSE 0.00059 < 0.002 on the 512-stimulus novelty pool) — a near-duplicate of beta_share_parity_range_concepts, not a new hypothesis.
+
+**Hypothesis:** Refinement of `beta_share_parity_range_concepts`: people do the same Bayesian concept learning over rules (family-organised prior, exception rules as their own kind), magnitude ranges and odd/even-within-a-range concepts judged as a typical share of the 1–100 line, with the size principle. The one change is that, within the "multiples of m" kind, the rules are no longer equally plausible a priori: people's prior belief in a multiples rule grows (or shrinks) as a power of its base m, with that exponent inferred, so a rule picking out a more specific, larger-base set (multiples of 9, of 12) is favoured over the coarser rule nested in it (multiples of 3, of 4). As a result, after examples such as 36, 45, 54, 81 people say "yes" to other multiples of 9 much more readily than to multiples of 3 that are not multiples of 9 — a stronger preference for the most specific multiplicative rule than the size principle alone gives.

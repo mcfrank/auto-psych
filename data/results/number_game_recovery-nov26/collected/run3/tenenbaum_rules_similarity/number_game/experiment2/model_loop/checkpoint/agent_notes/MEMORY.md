@@ -1,0 +1,48 @@
+- [Powers-of-2 / 37 misfit](powers-of-2-37-misfit.md) — exception-rule family fix, plus ideas that failed at MAP
+- [Concept-space additions at MAP](concept-space-additions-map.md) — new rule families and a set-size-dependent rule share gain ≈0 nats
+- [Incumbent residual diagnostics](incumbent-residual-diagnostics.md) — round-3 tests: parity-within-range +3 lppd; ALPHA/gap/pooling/round ranges failed
+- [Round-4 null refinements](round4-null-refinements.md) — sampling shape, k-prior, fuzzy edges fail; 5 hidden participants; avoid find_MAP
+- [Example-recall subset mixture](example-recall-subset-mixture.md) — round-4 memory-limit candidate; speed notes for 15-subset layout
+- [Multiples within range](multiples-within-range.md) — round-4 repair: multiples∩range kind, weight 0.04, no ll gain
+- [Experiment2 data structure](experiment2-data-structure.md) — 10 participants×450, row order kept in PPC, shown-example targets only 62% yes
+- [Prior-leaking judgment](prior-leaking-judgment.md) — exp2 r0: prior-membership logit contrast c≈-0.15, +1.3 LOO; iter_0 PPC all null
+- [Exp2 round-0 readout & sampling](experiment2-round0-readout-and-sampling.md) — log-odds distortion null; without-replacement −4.4 ll; graph_replace for p_yes comparisons
+- [Serial-position reliability](serial-position-reliability.md) — exp2: first/last-example trust ≈0.9, no order effect; hard anchoring −600 nats
+- [Exp2 incumbent null refinements](experiment2-incumbent-null-refinements.md) — alpha, Weber width, round endpoints null; beta-share width prior +5 LOO
+- [Noise-model variants exp2](noise-model-variants-exp2.md) — inferred stray rate=0.89 (no gain), one-sided ranges 0, at-most-one-stray -300
+- [Experiment2 null refinements](experiment2-null-refinements.md) — lapse/recall/evidence-exponent all collapse to base on exp2; chain+gamma submitted
+- [Exp2 iter_1 critique stats](experiment2-iter1-critique-stats.md) — 8 PPC stats on beta-share incumbent + observed values
+- [Beta-share + prior leaking](beta-share-prior-leaking.md) — exp2 iter_1 c5: combo of the two small gains, smoke OK
+- [Off-by-one power concepts](off-by-one-power-concepts.md) — exp2 iter_1 cand_2 near-miss (power±1) family on beta-share incumbent
+- [Prior leak on beta-share](prior-leak-on-beta-share.md) — exp2 iter_1: graft gives contrast≈-0.08, LOO +0 vs beta-share incumbent
+- [Graded neighbourhood magnitude](graded-neighbourhood-magnitude.md) — similarity neighbourhoods instead of ranges: −120 nats; ranges need flat plateau
+- [Beta-share + prior-leak graft](beta-share-prior-leak-graft.md) — exp2 iter_1: leak≈0.08, LOO −0.4; the two gains don't stack
+- [Exp2 decision-rule nulls](experiment2-decision-rule-nulls.md) — power/Prelec/lapse/drift/entropy-criterion all ≈identity on beta_share
+- [Beta-share + parity range](beta-share-parity-range.md) — exp2 iter_1 c4 repair: parity kind weight≈0.003, RMSE vs incumbent 0.006
+- [Beta-share + parity range](beta-share-parity-range.md) — exp2 cand5 repair: parity kind weight 0.003, LOO −1.4; check novelty vs all live models
+- [Exp2 iter_2 critique stats](experiment2-iter2-critique-stats.md) — 8 new PPC stats (decade, primes, nested multiples, exceptions, lapse floor) + observed values
+- [Specificity-biased rule prior](specificity-biased-rule-prior.md) — exp2 iter_2 c2: rule prior ∝ size^-s, s≈0.1±0.1, no clear gain
+- [Specificity-tilted rule prior](specificity-tilted-rule-prior.md) — exp2 iter_2 c4: within-family size tilt ≈0.09, LOO +0.25, null
+- [Multiple-base specificity](multiple-base-specificity.md) — exp2 iter_2 c5: multiples prior ∝ m^k, k≈0, null
+- [Size-weighted within-kind rules](size-weighted-within-kind-rules.md) — exp2 iter_2 c3: within-kind prior ∝ size^γ, γ≈-0.1, LOO −0.8 (null)
+- [Exemplar concept-similarity pooling](exemplar-concept-similarity-pooling.md) — exp2 iter_2 exemplar brief: mean one-shot similarity loses ~730 nats at smoke
+- [Pedagogical teacher sampling](pedagogical-teacher-sampling.md) — exp2 iter_2: beta≈1, LOO −6.5 vs incumbent; 2-D prefix-sum rectangle trick for position-dependent interval weights
+- [Times-table familiarity](times-table-familiarity.md) — exp2 iter_2 c3 repair: per-table Dirichlet on multiples, smoke OK; size-exponent version was a novelty dup
+- [Dominated-rule discount](dominated-rule-discount.md) — exp2 iter_2 c4 repair: narrower-fitting-rule discount −0.29±0.34, LOO −0.8, null
+- [Beta-share without replacement](beta-share-without-replacement.md) — exp2 iter_2 c5 repair: stray-rate graft collapses at gate; fixed structural change passes novelty
+- [Exp2 iter_3 critique stats](experiment2-iter3-critique-stats.md) — 8 new PPC stats (parity/prime exceptions, odd×mult3, round numbers, set SD, set-size sharpening) + observed values
+- [Range-size misperception](range-size-misperception.md) — exp2 iter_3 c2: interval likelihood 1/L**rho, smoke OK; novelty risk if rho≈1
+- [Boundary examples anchor ranges](boundary-examples-anchor-ranges.md) — exp2 iter_3 c1: interior-example weight w on range likelihood; matches incumbent exactly at w=1
+- [Hundred-chart block concepts](hundred-chart-block-concepts.md) — exp2 iter_3 c0: chart-rectangle kind weight 0.003, RMSE vs incumbent 0.0057
+- [Mixed strong/weak sampling](mixed-strong-weak-sampling.md) — exp2 iter_3 c4: θ≈0.90, LOO +0.1 vs beta_share, RMSE 0.0056 (null)
+- [Range placement prior](range-placement-prior.md) — exp2 iter_3 c3: beta prior on range centre; per-interval layout too slow
+- [Individual rule-vs-range tendency](individual-rule-vs-range-tendency.md) — exp2 iter_3 c5: per-person rule odds sd≈0.08, null; incumbent calibrated per participant
+- [Exp2 iter_4 critique stats](experiment2-iter4-critique-stats.md) — 8 new PPC stats (order, repeat exposure, reversals, endpoints, local agreement) + observed values
+- [Tversky prototype similarity](tversky-prototype-similarity.md) — exp2 iter_4 c2: ratio-model feature similarity, smoke ll -2746, expect ~-450
+- [Generative next-output likelihood](generative-next-output-likelihood.md) — exp2 iter_4 c0: predictive-probability readout loses ~240 nats at smoke
+- [Decade kind on beta-share](decade-kind-beta-share.md) — exp2 iter_4 c5: decade family weight 0.013, LOO −0.4 (null); few same-decade sets
+- [Directional range momentum](directional-range-momentum.md) — exp2 iter_4 c1: range placement tilted along example order; segment+prefix-sum trick makes per-placement priors fast
+- [Set-level strong/weak sampling](set-level-strong-weak-sampling.md) — exp2 iter_4 c4: whole-set sampling mixture, theta≈0.86, LOO tied, RMSE 0.0055
+- [Inferred sampling regime](inferred-sampling-regime.md) — exp2 iter_4 c3: set-level strong/weak mixture θ≈0.72, LOO −0.2, RMSE 0.006; kind-specific θ dup
+- [Arbitrary opening example](arbitrary-opening-example.md) — exp2 iter_4 c1 repair: first example weak-sampled, no param; inferred order params collapse to null
+- [Mixed sampling + prior leak](mixed-sampling-prior-leak.md) — exp2 iter_4 c4 repair: leak≈0.06, pool RMSE 0.004 vs incumbent; local novelty-pool check script

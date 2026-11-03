@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  digit_rule_discount_sticky_guess: 0.125
+  first_guess_win_stay_concepts: 0.125
+  fuzzy_trace_example_memory: 0.125
+  magnitude_compressed_sampling_concepts: 0.125
+  power_law_endpoints_erlang_width: 0.125
+  round_endpoint_interval_concepts: 0.125
+  sticky_guess_last_digit_rule_prior: 0.125
+  sticky_guess_power_law_ranges: 0.125

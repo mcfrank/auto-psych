@@ -1,0 +1,18 @@
+- [Interval tempering speed trick](interval-tempering-speed-trick.md) — exact, fast param-dependent interval likelihoods via (n,m,k) value counts
+- [Warm-start saddle fix](warm-start-saddle-priors.md) — "Hessian not PD" may be L-BFGS-B stuck at a saddle; centre priors near the true mode
+- [Anything-goes hypothesis outcome](anything-goes-hypothesis-outcome.md) — uniform-generator add-on: omega→0, no gain
+- [WSLS exact recursion](wsls-exact-recursion.md) — order-dependent running-guess model, exact and fast
+- [Number-game refinement findings](number-game-refinement-findings.md) — what helped/failed refining the incumbent; pooling rule weights helps LOO
+- [PPC null statistics](ppc-null-statistics.md) — test-stat ideas already tried that were non-significant
+- [Concept additions collapse](concept-additions-collapse.md) — new concept families get share→0; use a stated prior for novelty
+- [Grid-tabulated range evidence](grid-tabulated-range-evidence.md) — scalar param inside interval tables: tabulate on grid in prepare_observed, use Gaussian (not linear) interpolation
+- [Complement-stray refinement](complement-stray-refinement.md) — strays from concept complement: +0.6 MAP, distinct; width prior near-dup; check sibling candidates
+- [Pedagogical teacher sampling](pedagogical-teacher-sampling.md) — helpful-teacher model: tau≈0.42, fast via fixed-Z0 + tau grid
+- [Family-pooled + reliability graft](family-pooled-reliability-graft.md) — smoke OK, slow (290 s/200 iters) from the tau funnel
+- [Check sibling candidates first](check-sibling-candidates-first.md) — the obvious top-2 graft is often already taken in the same iter
+- [Predictive readout outcome](predictive-readout-outcome.md) — target-as-next-output readout loses ~38 nats vs membership
+- [Digit-slip stray refinement](digit-slip-stray-refinement.md) — strays as miswritten members: +0.4..1 MAP, distinct; magnitude near-miss no gain
+- [Without-replacement & small-number bias](without-replacement-and-small-number-bias.md) — y^-gamma frequency collapses; (s-j)!/s! sampling distinct, parameter-free
+- [Compressed number line ranges](compressed-number-line-ranges.md) — log/power number line for intervals: c≈0.94, log ruled out by 18 nats
+- [Stray generator variants](stray-generator-variants.md) — rule-generated strays tie MAP, distinct; spike/round-interval near-dups
+- [WSLS + uncertain reliability](wsls-uncertain-reliability-graft.md) — running-guess model with Beta-marginalised strays; count-table layout; gammaln precision gotcha

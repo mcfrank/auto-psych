@@ -1,0 +1,92 @@
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how it stands on the current data by ELPD-LOO (best first). `elpd_diff ± dse` is a model's deficit against the best and the standard error of that difference (with the responses to each stimulus pair counted together, as they are correlated): within about 2·dse the two are statistically tied on this data; beyond it the model has lost. "PSIS-LOO unreliable" means the estimate itself is untrustworthy (too many high-Pareto-k trials), not that the model is bad. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## uncertain_reliability_noise_concepts  — rank 0, the best model on this data, ELPD-LOO -835.7
+
+Refinement of `inferred_example_noise_concepts`: people do the same Bayesian concept learning over the 45 rules (each with its own inferred prior weight) and all intervals of 1-100 with the size principle, allowing that some examples are stray draws from 1-100 — but they do not know the program's reliability, so instead of assuming one fixed stray rate they hold a belief over how reliable the program is and average over it for each example set. The one change is this uncertainty about the noise rate, which makes strays exchangeable but correlated within a set: one example that breaks a tight rule makes people suspect the program is unreliable on that set, so they discount the remaining examples too and generalise more broadly, while a set fully consistent with a tight rule is taken as strong evidence for it.
+
+## family_pooled_rule_prior  — rank 1, 1.1 ± 3.9 nats behind the best (0.3× dse: statistically tied with the best), ELPD-LOO -836.8
+
+Refinement of `inferred_example_noise_concepts`: people do the same Bayesian concept learning over the 45 rules and all intervals of 1-100 (size principle, an inferred rate at which examples are stray draws), but their prior over rules is organised by kind of rule rather than set rule by rule: each rule's plausibility is drawn around a shared level for its family (parity, primes, squares and cubes, powers, multiples, final digit, contained digit), with an inferred spread, so rules of the same kind (e.g. "contains a 3" and "contains a 7") are about equally plausible unless the evidence says otherwise. The one change is this family-structured, partially pooled rule prior, which replaces the incumbent's independent weight for every rule and predicts more uniform generalisation across rules within a family.
+
+## inferred_example_noise_concepts  — rank 2, 3.9 ± 2.2 nats behind the best (1.8× dse: statistically tied with the best), ELPD-LOO -839.6
+
+Refinement of `bigelow_piantadosi_independent`: people do the same Bayesian concept learning over its 45 rules (each with its own inferred prior weight) and all intervals of 1-100 with the size principle, but how much they trust the examples to come from the concept is a free parameter rather than fixed at 90%. The one change is this inferred example-noise rate: the more people believe some examples are stray draws from 1-100, the more readily they keep a tight rule or range that misses one example, rather than retreating to a broad concept that covers all of them.
+
+## bigelow_piantadosi_independent  — rank 3, 4.6 ± 2.5 nats behind the best (1.8× dse: statistically tied with the best), ELPD-LOO -840.3
+
+Bayesian concept learning over 45 rules (odd, even, primes, squares,
+cubes, powers of 2-10, powers of 2 without 32 or with 37, multiples of
+3-9, 11 and 12, ending in 0-9, containing the digit 0-9) and every
+interval of 1-100, with a prior weight inferred for each rule separately
+and a share lambda_0 for the rules as a group; each interval has prior
+(1 - lambda_0) / 100^2. Examples are sampled from the concept (the size
+principle), 10% of them uniformly from 1-100, and "yes" is the posterior
+probability that the concept contains the target.
+
+## win_stay_lose_sample_concepts  — rank 4, 4.7 ± 2.9 nats behind the best (1.7× dse: statistically tied with the best), ELPD-LOO -840.4
+
+People learn the concept one example at a time, holding a single working guess rather than the full posterior: after the first example they pick a rule or magnitude range by Bayesian concept learning (size principle, a prior weight per rule), and as each later example arrives they keep their current guess with some probability if it still contains that example (win-stay), and otherwise re-pick a guess from the Bayesian posterior given all examples seen so far (lose-sample). The one free mechanism is this stickiness of the running guess, which makes judgments depend on the order of the examples: a broad concept that fits the first example (e.g. "even" after 16) survives later examples it happens to contain (8, 64) instead of being displaced by a tighter rule (powers of 2), so early examples shape generalization more than later ones.
+
+## interval_width_prior_concepts  — rank 5, 4.9 ± 2.7 nats behind the best (1.8× dse: statistically tied with the best), ELPD-LOO -840.6
+
+Refinement of `bigelow_piantadosi_independent`: the same Bayesian concept learner over its 45 rules (each with its own inferred prior weight) and all intervals of 1-100, with the size principle, but people's prior over magnitude intervals depends on the interval's width — each interval's prior is proportional to its width raised to an inferred exponent (0 recovers the incumbent's uniform interval prior; negative values mean narrow ranges like "numbers in the 60s" are a priori more plausible than wide ones). The single change is this width-dependent interval prior, which governs how readily people generalise to nearby versus distant magnitudes when no rule explains the examples.
+
+## any_number_generator_concepts  — rank 6, 5.0 ± 2.6 nats behind the best (1.9× dse: statistically tied with the best), ELPD-LOO -840.7
+
+Refinement of `bigelow_piantadosi_independent`: people do the same Bayesian concept learning over its 45 rules (each with its own inferred prior weight) and all intervals of 1-100 with the size principle, but they also seriously entertain the possibility that the program has no structure at all and simply produces any number from 1 to 100, giving this "anything goes" hypothesis its own inferred prior weight. The one change is this unstructured-generator hypothesis: because it explains each example only as well as chance, the size principle makes it lose to any fitting rule or range as examples accumulate, so it predicts stray "yes" answers to unrelated targets that are common after one or two examples (or when nothing fits) and vanish after four consistent ones — unlike a constant response lapse.
+
+## log_odds_compressed_concept_posterior  — rank 7, 5.5 ± 2.6 nats behind the best (2.1× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -841.2
+
+Refinement of `bigelow_piantadosi_independent`: people do the same Bayesian concept learning over the 45 rules and all intervals of 1-100 (size principle, a prior weight inferred per rule), but they do not report the posterior probability that the target belongs faithfully — their subjective sense of that probability is distorted linearly in log-odds, so confident beliefs are pulled toward (or pushed away from) even odds, as in classic probability-weighting. The one change is this single probability-distortion slope, which predicts that near-certain "yes" and near-certain "no" cases are both answered less extremely, with the compression strongest for the most confident judgments, unlike a fixed random-response lapse that adds the same floor everywhere.
+
+## bayesian_rules_with_response_lapse  — rank 8, 5.5 ± 2.6 nats behind the best (2.1× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -841.2
+
+Refinement of bigelow_piantadosi_independent: people do the same Bayesian concept learning over the 45 rules and all intervals (size principle, a prior weight inferred per rule), but on a fixed fraction of trials they do not consult that posterior at all and answer yes or no at random. The one change is this response-lapse rate, which lets the model explain "no" answers to targets that are themselves examples and stray "yes" answers to targets that no plausible concept contains.
+
+## leaky_example_memory_concepts  — rank 9, 5.7 ± 2.8 nats behind the best (2.1× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -841.3
+
+People generalize by Bayesian concept learning over mathematical rules and magnitude intervals (the size principle, a prior weight per rule), but their working memory is leaky: each example shown is independently retained with some probability and the forgotten ones play no part in the inference. So a judgment is the rule-and-interval posterior computed from whichever examples survive, which predicts weaker rule-based tightening and broader generalization for larger example sets than full Bayesian learning, and occasional "no" answers to targets that were themselves examples.
+
+## tenenbaum_digit_rule_inventory  — rank 10, 6.5 ± 5.1 nats behind the best (1.3× dse: statistically tied with the best), ELPD-LOO -842.2
+
+Refinement of `tenenbaum_rules_similarity`: people do Tenenbaum's Bayesian concept learning (rules share one prior fraction equally, intervals are weighted by an Erlang density on their size, examples are sampled from the concept), but the rules they entertain are the richer inventory of the Bigelow-Piantadosi grammar — notably "contains the digit d" and "ends in 0", plus the two near-miss powers-of-2 sets — instead of Tenenbaum's 33. The one change is the hypothesis space; the claim is that what the people consider, not a separately learned weight for every rule, is what separates the two models, so equal rule weights with two free parameters should suffice.
+
+## inferred_outlier_rate_rule_inventory  — rank 11, 7.5 ± 5.2 nats behind the best (1.5× dse: statistically tied with the best), ELPD-LOO -843.2
+
+Refinement of `tenenbaum_digit_rule_inventory`: people do the same Bayesian concept learning over the 45 Bigelow-Piantadosi rules (one equal, shared prior weight) and all magnitude intervals (Erlang prior on size), with examples sampled from the concept, but how strongly they believe an example may be a random stray rather than a draw from the concept is a property of the learner, inferred from the data instead of fixed at 10%. The one change is this inferred outlier rate: a high rate means people tolerate examples that break a rule and weaken the size principle (generalising more broadly), while a low rate means a single inconsistent example rules a concept out and tight concepts dominate.
+
+## response_bias_concept_learner  — rank 12, 9.3 ± 5.8 nats behind the best (1.6× dse: statistically tied with the best), ELPD-LOO -845.0
+
+People infer the hidden concept by simple Bayesian concept learning (rules from the Bigelow-Piantadosi inventory sharing one equal prior weight, magnitude intervals weighted by their size, examples sampled from the concept), but they answer with a response bias: a constant shift in the log-odds of their belief toward "yes" (liberal criterion) or toward "no" (conservative criterion), the same on every trial. The single change from the simplest Bayesian model is this criterion shift at the decision stage, which predicts that uncertain targets (near 50% belief) move most while near-certain ones barely move, and that both the endorsement of example-consistent targets and the rejection of implausible ones shift in the same direction.
+
+## shared_property_contrast_similarity  — rank 13, 120.6 ± 17.4 nats behind the best (6.9× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -956.3
+
+People do not infer a single hidden concept; they judge a target by its feature-based similarity to the examples as a group. Each number is represented by its mathematical properties (parity, primality, being a square, cube or power, multiples, final digit, digits it contains) and by the magnitude bands it falls in, and a target is endorsed to the extent that it possesses the properties the examples have in common, with each property's weight growing with how many of the examples share it and with how distinctive (rare among 1-100) it is. Endorsement therefore falls off gradedly as the target lacks more of the salient shared properties, with no posterior averaging over concepts and no all-or-none membership.
+
+## map_single_concept_commitment  — rank 14, 244.6 ± 26.0 nats behind the best (9.4× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -1080.3
+
+People do not average over all the concepts consistent with the examples; they commit to the single concept that best explains them — the most probable rule or magnitude interval under a size-principle Bayesian evaluation with a flat prior (rules as a group as likely as intervals as a group) — and answer "yes" exactly when the target belongs to that one concept, apart from occasional response errors. This predicts all-or-none generalization: no graded falloff near the examples' range and no partial endorsement of targets that only some plausible concepts contain (e.g. 32 after "16,8,64" is rejected if the smaller "powers of 2 without 32" wins).
+
+## tenenbaum_rules_similarity  — rank 15, 316.2 ± 48.0 nats behind the best (6.6× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -1151.9
+
+Bayesian concept learning over 33 mathematical rules (odd, even, squares,
+cubes, primes, multiples of 3-12, powers of 2-10, ending in 1-9) and every
+interval of 1-100. The rules share a prior fraction lambda equally; the
+intervals share the rest by an Erlang density on their size (scale sigma).
+Examples are sampled from the concept (the size principle), 10% of them
+uniformly from 1-100, and "yes" is the posterior probability that the
+concept contains the target.
+
+## digit_exemplar_similarity  — rank 16, 353.5 ± 33.5 nats behind the best (10.5× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -1189.2
+
+People do not induce a rule at all; they judge a target by its summed similarity to the remembered examples, where numbers are represented by their two decimal digits: a target feels like it "belongs" to the extent that its tens digit is close to an example's tens digit and its ones digit matches an example's ones digit. Attention is split between the tens (magnitude) and ones (final-digit) dimensions, similarity decays exponentially with this digit-wise distance, and the probability of saying yes rises with the average similarity of the target to the examples.
+
+## digit_overlap_exemplar_similarity  — rank 17, 389.6 ± 33.1 nats behind the best (11.8× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -1225.2
+
+People do not induce mathematical rules or magnitude intervals at all; they judge a target by its surface resemblance to the examples, treating each number as the set of decimal digits it is written with, and say "yes" in proportion to the average digit-overlap similarity between the target and the examples (an exemplar-similarity process over written digits). This disagrees most sharply with the rule-based Bayesian model on targets that share a digit with some examples but fit no rule or interval consistent with all of them (e.g. 12 after "31,19,49,100"), and on rule-consistent targets written with entirely different digits (e.g. 2 after "16,8,64"), where it predicts low endorsement.
+
+## spread_scaled_range_generalization  — rank 18, 421.2 ± 33.5 nats behind the best (12.6× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -1256.9
+
+People do not search over mathematical rules; they treat the examples as a sample from a band of magnitudes and generalize by how far the target falls outside the span the examples cover, with a tolerance that grows with how spread out the examples are. A target inside the span of the examples is endorsed at a constant high rate, and endorsement decays smoothly with the target's distance beyond the nearest edge, more slowly for widely spaced examples than for tightly clustered ones (or a single example).

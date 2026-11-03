@@ -1,0 +1,3602 @@
+[
+  {
+    "number_set": "15,17,21,5",
+    "target": "16",
+    "eig": 0.016975,
+    "selection_rank": 1,
+    "joint_eig_bits": 0.065043,
+    "source": "eig"
+  },
+  {
+    "number_set": "16,32,2,8",
+    "target": "16",
+    "eig": 0.009939,
+    "selection_rank": 2,
+    "joint_eig_bits": 0.107145,
+    "source": "eig"
+  },
+  {
+    "number_set": "15,17,21,5",
+    "target": "18",
+    "eig": 0.015931,
+    "selection_rank": 3,
+    "joint_eig_bits": 0.157283,
+    "source": "eig"
+  },
+  {
+    "number_set": "16,32,2,8",
+    "target": "8",
+    "eig": 0.009938,
+    "selection_rank": 4,
+    "joint_eig_bits": 0.186097,
+    "source": "eig"
+  },
+  {
+    "number_set": "80,70,90,100",
+    "target": "80",
+    "eig": 0.009938,
+    "selection_rank": 5,
+    "joint_eig_bits": 0.211292,
+    "source": "eig"
+  },
+  {
+    "number_set": "15,17,21,5",
+    "target": "20",
+    "eig": 0.012064,
+    "selection_rank": 6,
+    "joint_eig_bits": 0.238968,
+    "source": "eig"
+  },
+  {
+    "number_set": "48,78,38,98",
+    "target": "48",
+    "eig": 0.009932,
+    "selection_rank": 7,
+    "joint_eig_bits": 0.265367,
+    "source": "eig"
+  },
+  {
+    "number_set": "54,14,94,34",
+    "target": "34",
+    "eig": 0.009932,
+    "selection_rank": 8,
+    "joint_eig_bits": 0.298909,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,15",
+    "target": "100",
+    "eig": 0.004144,
+    "selection_rank": 9,
+    "joint_eig_bits": 0.322005,
+    "source": "eig"
+  },
+  {
+    "number_set": "10",
+    "target": "100",
+    "eig": 0.004531,
+    "selection_rank": 10,
+    "joint_eig_bits": 0.345938,
+    "source": "eig"
+  },
+  {
+    "number_set": "15,17,21,5",
+    "target": "14",
+    "eig": 0.010828,
+    "selection_rank": 11,
+    "joint_eig_bits": 0.361078,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,15",
+    "target": "95",
+    "eig": 0.003629,
+    "selection_rank": 12,
+    "joint_eig_bits": 0.3811,
+    "source": "eig"
+  },
+  {
+    "number_set": "59,49,99,69",
+    "target": "59",
+    "eig": 0.009929,
+    "selection_rank": 13,
+    "joint_eig_bits": 0.399562,
+    "source": "eig"
+  },
+  {
+    "number_set": "25",
+    "target": "5",
+    "eig": 0.004106,
+    "selection_rank": 14,
+    "joint_eig_bits": 0.417262,
+    "source": "eig"
+  },
+  {
+    "number_set": "55,15,75,45",
+    "target": "45",
+    "eig": 0.009925,
+    "selection_rank": 15,
+    "joint_eig_bits": 0.43014,
+    "source": "eig"
+  },
+  {
+    "number_set": "10,50,100",
+    "target": "50",
+    "eig": 0.004062,
+    "selection_rank": 16,
+    "joint_eig_bits": 0.444134,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,64",
+    "target": "16",
+    "eig": 0.003306,
+    "selection_rank": 17,
+    "joint_eig_bits": 0.456813,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "1",
+    "eig": 0.003007,
+    "selection_rank": 18,
+    "joint_eig_bits": 0.469655,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,15",
+    "target": "5",
+    "eig": 0.003198,
+    "selection_rank": 19,
+    "joint_eig_bits": 0.474908,
+    "source": "eig"
+  },
+  {
+    "number_set": "54,14,94,34",
+    "target": "54",
+    "eig": 0.009922,
+    "selection_rank": 20,
+    "joint_eig_bits": 0.491464,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "85",
+    "eig": 0.002854,
+    "selection_rank": 21,
+    "joint_eig_bits": 0.502726,
+    "source": "eig"
+  },
+  {
+    "number_set": "90,45",
+    "target": "100",
+    "eig": 0.003239,
+    "selection_rank": 22,
+    "joint_eig_bits": 0.517836,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,64",
+    "target": "4",
+    "eig": 0.002958,
+    "selection_rank": 23,
+    "joint_eig_bits": 0.528611,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "5",
+    "eig": 0.002872,
+    "selection_rank": 24,
+    "joint_eig_bits": 0.542336,
+    "source": "eig"
+  },
+  {
+    "number_set": "97,77,87,47",
+    "target": "77",
+    "eig": 0.009921,
+    "selection_rank": 25,
+    "joint_eig_bits": 0.556156,
+    "source": "eig"
+  },
+  {
+    "number_set": "25",
+    "target": "26",
+    "eig": 0.003623,
+    "selection_rank": 26,
+    "joint_eig_bits": 0.568001,
+    "source": "eig"
+  },
+  {
+    "number_set": "33,17,5,9",
+    "target": "10",
+    "eig": 0.007556,
+    "selection_rank": 27,
+    "joint_eig_bits": 0.586532,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "7",
+    "eig": 0.00279,
+    "selection_rank": 28,
+    "joint_eig_bits": 0.598173,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,64",
+    "target": "2",
+    "eig": 0.002815,
+    "selection_rank": 29,
+    "joint_eig_bits": 0.609306,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "33",
+    "eig": 0.00221,
+    "selection_rank": 30,
+    "joint_eig_bits": 0.617102,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "34",
+    "eig": 0.002204,
+    "selection_rank": 31,
+    "joint_eig_bits": 0.62346,
+    "source": "eig"
+  },
+  {
+    "number_set": "81,9",
+    "target": "27",
+    "eig": 0.002771,
+    "selection_rank": 32,
+    "joint_eig_bits": 0.634228,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "87",
+    "eig": 0.002789,
+    "selection_rank": 33,
+    "joint_eig_bits": 0.64461,
+    "source": "eig"
+  },
+  {
+    "number_set": "49",
+    "target": "7",
+    "eig": 0.002848,
+    "selection_rank": 34,
+    "joint_eig_bits": 0.656387,
+    "source": "eig"
+  },
+  {
+    "number_set": "72,92,82,42",
+    "target": "72",
+    "eig": 0.00992,
+    "selection_rank": 35,
+    "joint_eig_bits": 0.664987,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "26",
+    "eig": 0.002193,
+    "selection_rank": 36,
+    "joint_eig_bits": 0.681302,
+    "source": "eig"
+  },
+  {
+    "number_set": "100",
+    "target": "10",
+    "eig": 0.002897,
+    "selection_rank": 37,
+    "joint_eig_bits": 0.696037,
+    "source": "eig"
+  },
+  {
+    "number_set": "33,17,5,9",
+    "target": "12",
+    "eig": 0.007513,
+    "selection_rank": 38,
+    "joint_eig_bits": 0.712024,
+    "source": "eig"
+  },
+  {
+    "number_set": "97,77,87,47",
+    "target": "87",
+    "eig": 0.009918,
+    "selection_rank": 39,
+    "joint_eig_bits": 0.720501,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "36",
+    "eig": 0.002179,
+    "selection_rank": 40,
+    "joint_eig_bits": 0.731667,
+    "source": "eig"
+  },
+  {
+    "number_set": "10",
+    "target": "12",
+    "eig": 0.003342,
+    "selection_rank": 41,
+    "joint_eig_bits": 0.742951,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "24",
+    "eig": 0.002176,
+    "selection_rank": 42,
+    "joint_eig_bits": 0.749831,
+    "source": "eig"
+  },
+  {
+    "number_set": "81,9",
+    "target": "3",
+    "eig": 0.002238,
+    "selection_rank": 43,
+    "joint_eig_bits": 0.757804,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "97",
+    "eig": 0.002766,
+    "selection_rank": 44,
+    "joint_eig_bits": 0.76658,
+    "source": "eig"
+  },
+  {
+    "number_set": "80,70,90,100",
+    "target": "90",
+    "eig": 0.009918,
+    "selection_rank": 45,
+    "joint_eig_bits": 0.774003,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "28",
+    "eig": 0.002168,
+    "selection_rank": 46,
+    "joint_eig_bits": 0.781348,
+    "source": "eig"
+  },
+  {
+    "number_set": "25",
+    "target": "24",
+    "eig": 0.003528,
+    "selection_rank": 47,
+    "joint_eig_bits": 0.79081,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "95",
+    "eig": 0.002759,
+    "selection_rank": 48,
+    "joint_eig_bits": 0.799242,
+    "source": "eig"
+  },
+  {
+    "number_set": "7",
+    "target": "49",
+    "eig": 0.002614,
+    "selection_rank": 49,
+    "joint_eig_bits": 0.805741,
+    "source": "eig"
+  },
+  {
+    "number_set": "15,17,21,5",
+    "target": "12",
+    "eig": 0.007296,
+    "selection_rank": 50,
+    "joint_eig_bits": 0.813936,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "39",
+    "eig": 0.002146,
+    "selection_rank": 51,
+    "joint_eig_bits": 0.823882,
+    "source": "eig"
+  },
+  {
+    "number_set": "4,64,25,81",
+    "target": "64",
+    "eig": 0.009916,
+    "selection_rank": 52,
+    "joint_eig_bits": 0.835229,
+    "source": "eig"
+  },
+  {
+    "number_set": "10,50,100",
+    "target": "40",
+    "eig": 0.001649,
+    "selection_rank": 53,
+    "joint_eig_bits": 0.84094,
+    "source": "eig"
+  },
+  {
+    "number_set": "10",
+    "target": "11",
+    "eig": 0.003398,
+    "selection_rank": 54,
+    "joint_eig_bits": 0.84812,
+    "source": "eig"
+  },
+  {
+    "number_set": "33,17,5,9",
+    "target": "16",
+    "eig": 0.007485,
+    "selection_rank": 55,
+    "joint_eig_bits": 0.856567,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "91",
+    "eig": 0.002703,
+    "selection_rank": 56,
+    "joint_eig_bits": 0.865177,
+    "source": "eig"
+  },
+  {
+    "number_set": "81",
+    "target": "9",
+    "eig": 0.002772,
+    "selection_rank": 57,
+    "joint_eig_bits": 0.871976,
+    "source": "eig"
+  },
+  {
+    "number_set": "10,50,100",
+    "target": "30",
+    "eig": 0.001647,
+    "selection_rank": 58,
+    "joint_eig_bits": 0.880207,
+    "source": "eig"
+  },
+  {
+    "number_set": "90,45",
+    "target": "5",
+    "eig": 0.003172,
+    "selection_rank": 59,
+    "joint_eig_bits": 0.884787,
+    "source": "eig"
+  },
+  {
+    "number_set": "25",
+    "target": "27",
+    "eig": 0.003401,
+    "selection_rank": 60,
+    "joint_eig_bits": 0.890044,
+    "source": "eig"
+  },
+  {
+    "number_set": "10,50,100",
+    "target": "20",
+    "eig": 0.001647,
+    "selection_rank": 61,
+    "joint_eig_bits": 0.896704,
+    "source": "eig"
+  },
+  {
+    "number_set": "90,45",
+    "target": "10",
+    "eig": 0.002952,
+    "selection_rank": 62,
+    "joint_eig_bits": 0.897136,
+    "source": "eig"
+  },
+  {
+    "number_set": "90,45",
+    "target": "54",
+    "eig": 0.002365,
+    "selection_rank": 63,
+    "joint_eig_bits": 0.904226,
+    "source": "eig"
+  },
+  {
+    "number_set": "93,43,83,53",
+    "target": "53",
+    "eig": 0.009913,
+    "selection_rank": 64,
+    "joint_eig_bits": 0.906529,
+    "source": "eig"
+  },
+  {
+    "number_set": "33,17,5,9",
+    "target": "14",
+    "eig": 0.007464,
+    "selection_rank": 65,
+    "joint_eig_bits": 0.916893,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,88,7,22",
+    "target": "39",
+    "eig": 0.002176,
+    "selection_rank": 66,
+    "joint_eig_bits": 0.920451,
+    "source": "eig"
+  },
+  {
+    "number_set": "80,70,90,100",
+    "target": "70",
+    "eig": 0.00991,
+    "selection_rank": 67,
+    "joint_eig_bits": 0.928761,
+    "source": "eig"
+  },
+  {
+    "number_set": "10,50,100",
+    "target": "60",
+    "eig": 0.001644,
+    "selection_rank": 68,
+    "joint_eig_bits": 0.933734,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "17",
+    "eig": 0.002662,
+    "selection_rank": 69,
+    "joint_eig_bits": 0.938258,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "15",
+    "eig": 0.002662,
+    "selection_rank": 70,
+    "joint_eig_bits": 0.942801,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "32",
+    "eig": 0.002134,
+    "selection_rank": 71,
+    "joint_eig_bits": 0.947708,
+    "source": "eig"
+  },
+  {
+    "number_set": "10,50,100",
+    "target": "70",
+    "eig": 0.001639,
+    "selection_rank": 72,
+    "joint_eig_bits": 0.951186,
+    "source": "eig"
+  },
+  {
+    "number_set": "59,49,99,69",
+    "target": "69",
+    "eig": 0.0099,
+    "selection_rank": 73,
+    "joint_eig_bits": 0.960062,
+    "source": "eig"
+  },
+  {
+    "number_set": "10,50,100",
+    "target": "80",
+    "eig": 0.001636,
+    "selection_rank": 74,
+    "joint_eig_bits": 0.967653,
+    "source": "eig"
+  },
+  {
+    "number_set": "5",
+    "target": "25",
+    "eig": 0.002762,
+    "selection_rank": 75,
+    "joint_eig_bits": 0.972661,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "38",
+    "eig": 0.002139,
+    "selection_rank": 76,
+    "joint_eig_bits": 0.976416,
+    "source": "eig"
+  },
+  {
+    "number_set": "55,15,75,45",
+    "target": "50",
+    "eig": 0.001986,
+    "selection_rank": 77,
+    "joint_eig_bits": 0.983753,
+    "source": "eig"
+  },
+  {
+    "number_set": "33,17,5,9",
+    "target": "8",
+    "eig": 0.0071,
+    "selection_rank": 78,
+    "joint_eig_bits": 0.992594,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,64",
+    "target": "32",
+    "eig": 0.001803,
+    "selection_rank": 79,
+    "joint_eig_bits": 0.996904,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,15",
+    "target": "90",
+    "eig": 0.002976,
+    "selection_rank": 80,
+    "joint_eig_bits": 1.008616,
+    "source": "eig"
+  },
+  {
+    "number_set": "72,92,82,42",
+    "target": "82",
+    "eig": 0.009899,
+    "selection_rank": 81,
+    "joint_eig_bits": 1.013103,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "21",
+    "eig": 0.002134,
+    "selection_rank": 82,
+    "joint_eig_bits": 1.018797,
+    "source": "eig"
+  },
+  {
+    "number_set": "9",
+    "target": "81",
+    "eig": 0.002371,
+    "selection_rank": 83,
+    "joint_eig_bits": 1.022669,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "27",
+    "eig": 0.002121,
+    "selection_rank": 84,
+    "joint_eig_bits": 1.026432,
+    "source": "eig"
+  },
+  {
+    "number_set": "10,50,100",
+    "target": "90",
+    "eig": 0.001633,
+    "selection_rank": 85,
+    "joint_eig_bits": 1.032218,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "75",
+    "eig": 0.002612,
+    "selection_rank": 86,
+    "joint_eig_bits": 1.037761,
+    "source": "eig"
+  },
+  {
+    "number_set": "48,78,38,98",
+    "target": "38",
+    "eig": 0.009896,
+    "selection_rank": 87,
+    "joint_eig_bits": 1.04524,
+    "source": "eig"
+  },
+  {
+    "number_set": "33,17,5,9",
+    "target": "6",
+    "eig": 0.00637,
+    "selection_rank": 88,
+    "joint_eig_bits": 1.05321,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "22",
+    "eig": 0.002112,
+    "selection_rank": 89,
+    "joint_eig_bits": 1.056087,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "21",
+    "eig": 0.002607,
+    "selection_rank": 90,
+    "joint_eig_bits": 1.063341,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "65",
+    "eig": 0.002636,
+    "selection_rank": 91,
+    "joint_eig_bits": 1.068476,
+    "source": "eig"
+  },
+  {
+    "number_set": "25",
+    "target": "23",
+    "eig": 0.003156,
+    "selection_rank": 92,
+    "joint_eig_bits": 1.073636,
+    "source": "eig"
+  },
+  {
+    "number_set": "1,8,27",
+    "target": "8",
+    "eig": 0.009897,
+    "selection_rank": 93,
+    "joint_eig_bits": 1.080087,
+    "source": "eig"
+  },
+  {
+    "number_set": "15,17,21,5",
+    "target": "10",
+    "eig": 0.006129,
+    "selection_rank": 94,
+    "joint_eig_bits": 1.083259,
+    "source": "eig"
+  },
+  {
+    "number_set": "16,32,2,8",
+    "target": "37",
+    "eig": 0.001589,
+    "selection_rank": 95,
+    "joint_eig_bits": 1.088557,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "44",
+    "eig": 0.002072,
+    "selection_rank": 96,
+    "joint_eig_bits": 1.093577,
+    "source": "eig"
+  },
+  {
+    "number_set": "33,17,5,9",
+    "target": "18",
+    "eig": 0.006465,
+    "selection_rank": 97,
+    "joint_eig_bits": 1.099369,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "57",
+    "eig": 0.002598,
+    "selection_rank": 98,
+    "joint_eig_bits": 1.10317,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "61",
+    "eig": 0.002629,
+    "selection_rank": 99,
+    "joint_eig_bits": 1.107042,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,88,7,22",
+    "target": "41",
+    "eig": 0.00216,
+    "selection_rank": 100,
+    "joint_eig_bits": 1.110051,
+    "source": "eig"
+  },
+  {
+    "number_set": "59,49,99,69",
+    "target": "49",
+    "eig": 0.009894,
+    "selection_rank": 101,
+    "joint_eig_bits": 1.112623,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "92",
+    "eig": 0.002221,
+    "selection_rank": 102,
+    "joint_eig_bits": 1.118732,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,88,7,22",
+    "target": "43",
+    "eig": 0.002158,
+    "selection_rank": 103,
+    "joint_eig_bits": 1.12462,
+    "source": "eig"
+  },
+  {
+    "number_set": "54,14,94,34",
+    "target": "14",
+    "eig": 0.009884,
+    "selection_rank": 104,
+    "joint_eig_bits": 1.130441,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "67",
+    "eig": 0.002615,
+    "selection_rank": 105,
+    "joint_eig_bits": 1.134386,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "51",
+    "eig": 0.002591,
+    "selection_rank": 106,
+    "joint_eig_bits": 1.137626,
+    "source": "eig"
+  },
+  {
+    "number_set": "15,17,21,5",
+    "target": "8",
+    "eig": 0.005276,
+    "selection_rank": 107,
+    "joint_eig_bits": 1.136536,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "18",
+    "eig": 0.002056,
+    "selection_rank": 108,
+    "joint_eig_bits": 1.138728,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "42",
+    "eig": 0.002031,
+    "selection_rank": 109,
+    "joint_eig_bits": 1.142264,
+    "source": "eig"
+  },
+  {
+    "number_set": "10",
+    "target": "14",
+    "eig": 0.002933,
+    "selection_rank": 110,
+    "joint_eig_bits": 1.145795,
+    "source": "eig"
+  },
+  {
+    "number_set": "5,9",
+    "target": "6",
+    "eig": 0.003031,
+    "selection_rank": 111,
+    "joint_eig_bits": 1.148692,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "1",
+    "eig": 0.000886,
+    "selection_rank": 112,
+    "joint_eig_bits": 1.15533,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "64",
+    "eig": 0.001574,
+    "selection_rank": 113,
+    "joint_eig_bits": 1.157044,
+    "source": "eig"
+  },
+  {
+    "number_set": "5",
+    "target": "7",
+    "eig": 0.002775,
+    "selection_rank": 114,
+    "joint_eig_bits": 1.161901,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "71",
+    "eig": 0.002602,
+    "selection_rank": 115,
+    "joint_eig_bits": 1.16652,
+    "source": "eig"
+  },
+  {
+    "number_set": "5,9",
+    "target": "8",
+    "eig": 0.003035,
+    "selection_rank": 116,
+    "joint_eig_bits": 1.172399,
+    "source": "eig"
+  },
+  {
+    "number_set": "32,4,16",
+    "target": "16",
+    "eig": 0.009881,
+    "selection_rank": 117,
+    "joint_eig_bits": 1.179174,
+    "source": "eig"
+  },
+  {
+    "number_set": "15,17,21,5",
+    "target": "6",
+    "eig": 0.005056,
+    "selection_rank": 118,
+    "joint_eig_bits": 1.183162,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "46",
+    "eig": 0.002031,
+    "selection_rank": 119,
+    "joint_eig_bits": 1.184954,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "72",
+    "eig": 0.001573,
+    "selection_rank": 120,
+    "joint_eig_bits": 1.189026,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "69",
+    "eig": 0.000745,
+    "selection_rank": 121,
+    "joint_eig_bits": 1.195352,
+    "source": "eig"
+  },
+  {
+    "number_set": "10",
+    "target": "15",
+    "eig": 0.002772,
+    "selection_rank": 122,
+    "joint_eig_bits": 1.195943,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "56",
+    "eig": 0.001564,
+    "selection_rank": 123,
+    "joint_eig_bits": 1.19945,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "48",
+    "eig": 0.001563,
+    "selection_rank": 124,
+    "joint_eig_bits": 1.205362,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "16",
+    "eig": 0.002012,
+    "selection_rank": 125,
+    "joint_eig_bits": 1.21,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "67",
+    "eig": 0.000743,
+    "selection_rank": 126,
+    "joint_eig_bits": 1.211614,
+    "source": "eig"
+  },
+  {
+    "number_set": "5,9",
+    "target": "7",
+    "eig": 0.002261,
+    "selection_rank": 127,
+    "joint_eig_bits": 1.213384,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "47",
+    "eig": 0.002573,
+    "selection_rank": 128,
+    "joint_eig_bits": 1.214616,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "65",
+    "eig": 0.000748,
+    "selection_rank": 129,
+    "joint_eig_bits": 1.218547,
+    "source": "eig"
+  },
+  {
+    "number_set": "25",
+    "target": "28",
+    "eig": 0.003132,
+    "selection_rank": 130,
+    "joint_eig_bits": 1.221405,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,88,7,22",
+    "target": "45",
+    "eig": 0.00215,
+    "selection_rank": 131,
+    "joint_eig_bits": 1.222546,
+    "source": "eig"
+  },
+  {
+    "number_set": "33,17,5,9",
+    "target": "20",
+    "eig": 0.005299,
+    "selection_rank": 132,
+    "joint_eig_bits": 1.22897,
+    "source": "eig"
+  },
+  {
+    "number_set": "25",
+    "target": "29",
+    "eig": 0.002984,
+    "selection_rank": 133,
+    "joint_eig_bits": 1.233451,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,88,7,22",
+    "target": "51",
+    "eig": 0.002134,
+    "selection_rank": 134,
+    "joint_eig_bits": 1.235595,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "25",
+    "eig": 0.002561,
+    "selection_rank": 135,
+    "joint_eig_bits": 1.236468,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "68",
+    "eig": 0.001525,
+    "selection_rank": 136,
+    "joint_eig_bits": 1.239739,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "63",
+    "eig": 0.000748,
+    "selection_rank": 137,
+    "joint_eig_bits": 1.242336,
+    "source": "eig"
+  },
+  {
+    "number_set": "49",
+    "target": "48",
+    "eig": 0.002272,
+    "selection_rank": 138,
+    "joint_eig_bits": 1.246172,
+    "source": "eig"
+  },
+  {
+    "number_set": "54,14,94,34",
+    "target": "44",
+    "eig": 0.000731,
+    "selection_rank": 139,
+    "joint_eig_bits": 1.248841,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "88",
+    "eig": 0.001508,
+    "selection_rank": 140,
+    "joint_eig_bits": 1.254324,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "41",
+    "eig": 0.00254,
+    "selection_rank": 141,
+    "joint_eig_bits": 1.25722,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "73",
+    "eig": 0.000742,
+    "selection_rank": 142,
+    "joint_eig_bits": 1.257168,
+    "source": "eig"
+  },
+  {
+    "number_set": "81,71,21,31",
+    "target": "31",
+    "eig": 0.009879,
+    "selection_rank": 143,
+    "joint_eig_bits": 1.262013,
+    "source": "eig"
+  },
+  {
+    "number_set": "48,78,38,98",
+    "target": "78",
+    "eig": 0.009879,
+    "selection_rank": 144,
+    "joint_eig_bits": 1.266493,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "75",
+    "eig": 0.000744,
+    "selection_rank": 145,
+    "joint_eig_bits": 1.270073,
+    "source": "eig"
+  },
+  {
+    "number_set": "10",
+    "target": "13",
+    "eig": 0.002938,
+    "selection_rank": 146,
+    "joint_eig_bits": 1.273702,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,64",
+    "target": "27",
+    "eig": 0.001214,
+    "selection_rank": 147,
+    "joint_eig_bits": 1.27525,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "9",
+    "eig": 0.001998,
+    "selection_rank": 148,
+    "joint_eig_bits": 1.277583,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "6",
+    "eig": 0.001997,
+    "selection_rank": 149,
+    "joint_eig_bits": 1.279358,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,88,7,22",
+    "target": "31",
+    "eig": 0.002106,
+    "selection_rank": 150,
+    "joint_eig_bits": 1.28207,
+    "source": "eig"
+  },
+  {
+    "number_set": "93,43,83,53",
+    "target": "83",
+    "eig": 0.009878,
+    "selection_rank": 151,
+    "joint_eig_bits": 1.285478,
+    "source": "eig"
+  },
+  {
+    "number_set": "67,99,15",
+    "target": "1",
+    "eig": 0.001745,
+    "selection_rank": 152,
+    "joint_eig_bits": 1.287461,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,88,7,22",
+    "target": "53",
+    "eig": 0.002097,
+    "selection_rank": 153,
+    "joint_eig_bits": 1.291641,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "29",
+    "eig": 0.001218,
+    "selection_rank": 154,
+    "joint_eig_bits": 1.292851,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,64",
+    "target": "1",
+    "eig": 0.00118,
+    "selection_rank": 155,
+    "joint_eig_bits": 1.296597,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "11",
+    "eig": 0.000666,
+    "selection_rank": 156,
+    "joint_eig_bits": 1.300931,
+    "source": "eig"
+  },
+  {
+    "number_set": "81,71,21,31",
+    "target": "71",
+    "eig": 0.009878,
+    "selection_rank": 157,
+    "joint_eig_bits": 1.30487,
+    "source": "eig"
+  },
+  {
+    "number_set": "10,3",
+    "target": "4",
+    "eig": 0.002718,
+    "selection_rank": 158,
+    "joint_eig_bits": 1.308149,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "77",
+    "eig": 0.000743,
+    "selection_rank": 159,
+    "joint_eig_bits": 1.309658,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "84",
+    "eig": 0.002065,
+    "selection_rank": 160,
+    "joint_eig_bits": 1.311251,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "68",
+    "eig": 0.000621,
+    "selection_rank": 161,
+    "joint_eig_bits": 1.314758,
+    "source": "eig"
+  },
+  {
+    "number_set": "10",
+    "target": "16",
+    "eig": 0.002696,
+    "selection_rank": 162,
+    "joint_eig_bits": 1.31582,
+    "source": "eig"
+  },
+  {
+    "number_set": "4,16,12",
+    "target": "12",
+    "eig": 0.002027,
+    "selection_rank": 163,
+    "joint_eig_bits": 1.319593,
+    "source": "eig"
+  },
+  {
+    "number_set": "49",
+    "target": "50",
+    "eig": 0.002109,
+    "selection_rank": 164,
+    "joint_eig_bits": 1.322279,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "70",
+    "eig": 0.000624,
+    "selection_rank": 165,
+    "joint_eig_bits": 1.326478,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "20",
+    "eig": 0.002037,
+    "selection_rank": 166,
+    "joint_eig_bits": 1.328315,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,9,3,31",
+    "target": "4",
+    "eig": 0.003284,
+    "selection_rank": 167,
+    "joint_eig_bits": 1.331211,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "66",
+    "eig": 0.000623,
+    "selection_rank": 168,
+    "joint_eig_bits": 1.333699,
+    "source": "eig"
+  },
+  {
+    "number_set": "49",
+    "target": "47",
+    "eig": 0.00196,
+    "selection_rank": 169,
+    "joint_eig_bits": 1.334358,
+    "source": "eig"
+  },
+  {
+    "number_set": "93,43,83,53",
+    "target": "43",
+    "eig": 0.009872,
+    "selection_rank": 170,
+    "joint_eig_bits": 1.333436,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "66",
+    "eig": 0.001506,
+    "selection_rank": 171,
+    "joint_eig_bits": 1.336609,
+    "source": "eig"
+  },
+  {
+    "number_set": "1,8,27",
+    "target": "27",
+    "eig": 0.009869,
+    "selection_rank": 172,
+    "joint_eig_bits": 1.340912,
+    "source": "eig"
+  },
+  {
+    "number_set": "54,14,94,34",
+    "target": "24",
+    "eig": 0.000726,
+    "selection_rank": 173,
+    "joint_eig_bits": 1.343327,
+    "source": "eig"
+  },
+  {
+    "number_set": "10,3",
+    "target": "6",
+    "eig": 0.002726,
+    "selection_rank": 174,
+    "joint_eig_bits": 1.345319,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "8",
+    "eig": 0.001953,
+    "selection_rank": 175,
+    "joint_eig_bits": 1.34734,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,88,7,22",
+    "target": "29",
+    "eig": 0.002057,
+    "selection_rank": 176,
+    "joint_eig_bits": 1.348998,
+    "source": "eig"
+  },
+  {
+    "number_set": "81",
+    "target": "80",
+    "eig": 0.002014,
+    "selection_rank": 177,
+    "joint_eig_bits": 1.350463,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "59",
+    "eig": 0.000727,
+    "selection_rank": 178,
+    "joint_eig_bits": 1.35292,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "14",
+    "eig": 0.001974,
+    "selection_rank": 179,
+    "joint_eig_bits": 1.355368,
+    "source": "eig"
+  },
+  {
+    "number_set": "64",
+    "target": "63",
+    "eig": 0.001936,
+    "selection_rank": 180,
+    "joint_eig_bits": 1.357496,
+    "source": "eig"
+  },
+  {
+    "number_set": "6,34,82",
+    "target": "100",
+    "eig": 0.001504,
+    "selection_rank": 181,
+    "joint_eig_bits": 1.360743,
+    "source": "eig"
+  },
+  {
+    "number_set": "36",
+    "target": "6",
+    "eig": 0.001925,
+    "selection_rank": 182,
+    "joint_eig_bits": 1.363848,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "76",
+    "eig": 0.00204,
+    "selection_rank": 183,
+    "joint_eig_bits": 1.366019,
+    "source": "eig"
+  },
+  {
+    "number_set": "81,87,27",
+    "target": "87",
+    "eig": 0.001784,
+    "selection_rank": 184,
+    "joint_eig_bits": 1.369398,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "79",
+    "eig": 0.000737,
+    "selection_rank": 185,
+    "joint_eig_bits": 1.37281,
+    "source": "eig"
+  },
+  {
+    "number_set": "5",
+    "target": "15",
+    "eig": 0.002099,
+    "selection_rank": 186,
+    "joint_eig_bits": 1.378738,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "44",
+    "eig": 0.001505,
+    "selection_rank": 187,
+    "joint_eig_bits": 1.383147,
+    "source": "eig"
+  },
+  {
+    "number_set": "55,15,75,45",
+    "target": "55",
+    "eig": 0.00986,
+    "selection_rank": 188,
+    "joint_eig_bits": 1.385204,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "64",
+    "eig": 0.000624,
+    "selection_rank": 189,
+    "joint_eig_bits": 1.386355,
+    "source": "eig"
+  },
+  {
+    "number_set": "10,3",
+    "target": "7",
+    "eig": 0.002729,
+    "selection_rank": 190,
+    "joint_eig_bits": 1.389386,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "62",
+    "eig": 0.000625,
+    "selection_rank": 191,
+    "joint_eig_bits": 1.387632,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "52",
+    "eig": 0.001503,
+    "selection_rank": 192,
+    "joint_eig_bits": 1.387701,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "62",
+    "eig": 0.001498,
+    "selection_rank": 193,
+    "joint_eig_bits": 1.390316,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "72",
+    "eig": 0.000621,
+    "selection_rank": 194,
+    "joint_eig_bits": 1.394241,
+    "source": "eig"
+  },
+  {
+    "number_set": "10,3",
+    "target": "8",
+    "eig": 0.002716,
+    "selection_rank": 195,
+    "joint_eig_bits": 1.39409,
+    "source": "eig"
+  },
+  {
+    "number_set": "64",
+    "target": "65",
+    "eig": 0.001902,
+    "selection_rank": 196,
+    "joint_eig_bits": 1.397176,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "58",
+    "eig": 0.001495,
+    "selection_rank": 197,
+    "joint_eig_bits": 1.399372,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "42",
+    "eig": 0.001492,
+    "selection_rank": 198,
+    "joint_eig_bits": 1.400714,
+    "source": "eig"
+  },
+  {
+    "number_set": "10,3",
+    "target": "5",
+    "eig": 0.002647,
+    "selection_rank": 199,
+    "joint_eig_bits": 1.402821,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "54",
+    "eig": 0.001491,
+    "selection_rank": 200,
+    "joint_eig_bits": 1.405785,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "48",
+    "eig": 0.001952,
+    "selection_rank": 201,
+    "joint_eig_bits": 1.408759,
+    "source": "eig"
+  },
+  {
+    "number_set": "6",
+    "target": "12",
+    "eig": 0.001792,
+    "selection_rank": 202,
+    "joint_eig_bits": 1.408751,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "29",
+    "eig": 0.001939,
+    "selection_rank": 203,
+    "joint_eig_bits": 1.411005,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "44",
+    "eig": 0.002001,
+    "selection_rank": 204,
+    "joint_eig_bits": 1.41239,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "31",
+    "eig": 0.001934,
+    "selection_rank": 205,
+    "joint_eig_bits": 1.414416,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "60",
+    "eig": 0.001998,
+    "selection_rank": 206,
+    "joint_eig_bits": 1.416741,
+    "source": "eig"
+  },
+  {
+    "number_set": "33,17,5,9",
+    "target": "22",
+    "eig": 0.004705,
+    "selection_rank": 207,
+    "joint_eig_bits": 1.423204,
+    "source": "eig"
+  },
+  {
+    "number_set": "96,86,36,66",
+    "target": "66",
+    "eig": 0.009844,
+    "selection_rank": 208,
+    "joint_eig_bits": 1.424245,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "31",
+    "eig": 0.000849,
+    "selection_rank": 209,
+    "joint_eig_bits": 1.427304,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "23",
+    "eig": 0.001928,
+    "selection_rank": 210,
+    "joint_eig_bits": 1.429797,
+    "source": "eig"
+  },
+  {
+    "number_set": "49",
+    "target": "51",
+    "eig": 0.001832,
+    "selection_rank": 211,
+    "joint_eig_bits": 1.431904,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "49",
+    "eig": 0.001934,
+    "selection_rank": 212,
+    "joint_eig_bits": 1.433552,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "60",
+    "eig": 0.000624,
+    "selection_rank": 213,
+    "joint_eig_bits": 1.436984,
+    "source": "eig"
+  },
+  {
+    "number_set": "64",
+    "target": "62",
+    "eig": 0.001752,
+    "selection_rank": 214,
+    "joint_eig_bits": 1.43958,
+    "source": "eig"
+  },
+  {
+    "number_set": "96,86,36,66",
+    "target": "96",
+    "eig": 0.00984,
+    "selection_rank": 215,
+    "joint_eig_bits": 1.441596,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "74",
+    "eig": 0.000622,
+    "selection_rank": 216,
+    "joint_eig_bits": 1.444562,
+    "source": "eig"
+  },
+  {
+    "number_set": "34,86,30,94",
+    "target": "72",
+    "eig": 0.001906,
+    "selection_rank": 217,
+    "joint_eig_bits": 1.448406,
+    "source": "eig"
+  },
+  {
+    "number_set": "48,78,38,98",
+    "target": "58",
+    "eig": 0.00072,
+    "selection_rank": 218,
+    "joint_eig_bits": 1.451444,
+    "source": "eig"
+  },
+  {
+    "number_set": "81",
+    "target": "78",
+    "eig": 0.001894,
+    "selection_rank": 219,
+    "joint_eig_bits": 1.456138,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "76",
+    "eig": 0.000614,
+    "selection_rank": 220,
+    "joint_eig_bits": 1.458806,
+    "source": "eig"
+  },
+  {
+    "number_set": "34,86,30,94",
+    "target": "68",
+    "eig": 0.001897,
+    "selection_rank": 221,
+    "joint_eig_bits": 1.462705,
+    "source": "eig"
+  },
+  {
+    "number_set": "55,15,75,45",
+    "target": "51",
+    "eig": 0.001433,
+    "selection_rank": 222,
+    "joint_eig_bits": 1.46398,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "46",
+    "eig": 0.00149,
+    "selection_rank": 223,
+    "joint_eig_bits": 1.465189,
+    "source": "eig"
+  },
+  {
+    "number_set": "55,15,75,45",
+    "target": "57",
+    "eig": 0.00143,
+    "selection_rank": 224,
+    "joint_eig_bits": 1.468797,
+    "source": "eig"
+  },
+  {
+    "number_set": "93,43,83,53",
+    "target": "73",
+    "eig": 0.000718,
+    "selection_rank": 225,
+    "joint_eig_bits": 1.467923,
+    "source": "eig"
+  },
+  {
+    "number_set": "55,15,75,45",
+    "target": "53",
+    "eig": 0.001422,
+    "selection_rank": 226,
+    "joint_eig_bits": 1.471448,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "36",
+    "eig": 0.001989,
+    "selection_rank": 227,
+    "joint_eig_bits": 1.473172,
+    "source": "eig"
+  },
+  {
+    "number_set": "4,16,12",
+    "target": "8",
+    "eig": 0.001107,
+    "selection_rank": 228,
+    "joint_eig_bits": 1.474068,
+    "source": "eig"
+  },
+  {
+    "number_set": "81",
+    "target": "82",
+    "eig": 0.001921,
+    "selection_rank": 229,
+    "joint_eig_bits": 1.473986,
+    "source": "eig"
+  },
+  {
+    "number_set": "48,78,38,98",
+    "target": "68",
+    "eig": 0.000717,
+    "selection_rank": 230,
+    "joint_eig_bits": 1.475389,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "57",
+    "eig": 0.000712,
+    "selection_rank": 231,
+    "joint_eig_bits": 1.478071,
+    "source": "eig"
+  },
+  {
+    "number_set": "16,32,2,8",
+    "target": "64",
+    "eig": 0.000716,
+    "selection_rank": 232,
+    "joint_eig_bits": 1.47984,
+    "source": "eig"
+  },
+  {
+    "number_set": "10",
+    "target": "9",
+    "eig": 0.002664,
+    "selection_rank": 233,
+    "joint_eig_bits": 1.48187,
+    "source": "eig"
+  },
+  {
+    "number_set": "67,99,15",
+    "target": "3",
+    "eig": 0.001456,
+    "selection_rank": 234,
+    "joint_eig_bits": 1.484215,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "23",
+    "eig": 0.000833,
+    "selection_rank": 235,
+    "joint_eig_bits": 1.485176,
+    "source": "eig"
+  },
+  {
+    "number_set": "64",
+    "target": "66",
+    "eig": 0.001709,
+    "selection_rank": 236,
+    "joint_eig_bits": 1.486246,
+    "source": "eig"
+  },
+  {
+    "number_set": "25",
+    "target": "22",
+    "eig": 0.002771,
+    "selection_rank": 237,
+    "joint_eig_bits": 1.487248,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "78",
+    "eig": 0.00062,
+    "selection_rank": 238,
+    "joint_eig_bits": 1.489784,
+    "source": "eig"
+  },
+  {
+    "number_set": "6,25",
+    "target": "24",
+    "eig": 0.002908,
+    "selection_rank": 239,
+    "joint_eig_bits": 1.490998,
+    "source": "eig"
+  },
+  {
+    "number_set": "55,15,75,45",
+    "target": "59",
+    "eig": 0.001416,
+    "selection_rank": 240,
+    "joint_eig_bits": 1.49285,
+    "source": "eig"
+  },
+  {
+    "number_set": "3,7",
+    "target": "4",
+    "eig": 0.002079,
+    "selection_rank": 241,
+    "joint_eig_bits": 1.495234,
+    "source": "eig"
+  },
+  {
+    "number_set": "64",
+    "target": "60",
+    "eig": 0.001676,
+    "selection_rank": 242,
+    "joint_eig_bits": 1.497843,
+    "source": "eig"
+  },
+  {
+    "number_set": "55,15,75,45",
+    "target": "54",
+    "eig": 0.001372,
+    "selection_rank": 243,
+    "joint_eig_bits": 1.500155,
+    "source": "eig"
+  },
+  {
+    "number_set": "34,86,30,94",
+    "target": "76",
+    "eig": 0.001886,
+    "selection_rank": 244,
+    "joint_eig_bits": 1.503946,
+    "source": "eig"
+  },
+  {
+    "number_set": "10",
+    "target": "18",
+    "eig": 0.002512,
+    "selection_rank": 245,
+    "joint_eig_bits": 1.505524,
+    "source": "eig"
+  },
+  {
+    "number_set": "42,35,21,84",
+    "target": "42",
+    "eig": 0.009834,
+    "selection_rank": 246,
+    "joint_eig_bits": 1.504891,
+    "source": "eig"
+  },
+  {
+    "number_set": "34,86,30,94",
+    "target": "70",
+    "eig": 0.001879,
+    "selection_rank": 247,
+    "joint_eig_bits": 1.506872,
+    "source": "eig"
+  },
+  {
+    "number_set": "64,4",
+    "target": "8",
+    "eig": 0.000894,
+    "selection_rank": 248,
+    "joint_eig_bits": 1.508599,
+    "source": "eig"
+  },
+  {
+    "number_set": "81",
+    "target": "79",
+    "eig": 0.001704,
+    "selection_rank": 249,
+    "joint_eig_bits": 1.510364,
+    "source": "eig"
+  },
+  {
+    "number_set": "3,7",
+    "target": "6",
+    "eig": 0.002031,
+    "selection_rank": 250,
+    "joint_eig_bits": 1.511455,
+    "source": "eig"
+  },
+  {
+    "number_set": "55,15,75,45",
+    "target": "52",
+    "eig": 0.00136,
+    "selection_rank": 251,
+    "joint_eig_bits": 1.511758,
+    "source": "eig"
+  },
+  {
+    "number_set": "81,71,21,31",
+    "target": "81",
+    "eig": 0.009834,
+    "selection_rank": 252,
+    "joint_eig_bits": 1.512214,
+    "source": "eig"
+  },
+  {
+    "number_set": "81,71,21,31",
+    "target": "21",
+    "eig": 0.009831,
+    "selection_rank": 253,
+    "joint_eig_bits": 1.513426,
+    "source": "eig"
+  },
+  {
+    "number_set": "33,17,5,9",
+    "target": "24",
+    "eig": 0.004368,
+    "selection_rank": 254,
+    "joint_eig_bits": 1.514797,
+    "source": "eig"
+  },
+  {
+    "number_set": "96,86,36,66",
+    "target": "36",
+    "eig": 0.009819,
+    "selection_rank": 255,
+    "joint_eig_bits": 1.517822,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "80",
+    "eig": 0.001973,
+    "selection_rank": 256,
+    "joint_eig_bits": 1.519783,
+    "source": "eig"
+  },
+  {
+    "number_set": "49",
+    "target": "46",
+    "eig": 0.00188,
+    "selection_rank": 257,
+    "joint_eig_bits": 1.522656,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "19",
+    "eig": 0.000824,
+    "selection_rank": 258,
+    "joint_eig_bits": 1.523188,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "33",
+    "eig": 0.000854,
+    "selection_rank": 259,
+    "joint_eig_bits": 1.525947,
+    "source": "eig"
+  },
+  {
+    "number_set": "55,15,75,45",
+    "target": "56",
+    "eig": 0.001359,
+    "selection_rank": 260,
+    "joint_eig_bits": 1.526898,
+    "source": "eig"
+  },
+  {
+    "number_set": "55,15,75,45",
+    "target": "58",
+    "eig": 0.001356,
+    "selection_rank": 261,
+    "joint_eig_bits": 1.529191,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "12",
+    "eig": 0.001877,
+    "selection_rank": 262,
+    "joint_eig_bits": 1.53135,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "100",
+    "eig": 0.00183,
+    "selection_rank": 263,
+    "joint_eig_bits": 1.533123,
+    "source": "eig"
+  },
+  {
+    "number_set": "25",
+    "target": "30",
+    "eig": 0.002572,
+    "selection_rank": 264,
+    "joint_eig_bits": 1.533336,
+    "source": "eig"
+  },
+  {
+    "number_set": "34,86,30,94",
+    "target": "2",
+    "eig": 0.001394,
+    "selection_rank": 265,
+    "joint_eig_bits": 1.533918,
+    "source": "eig"
+  },
+  {
+    "number_set": "69,9,39,21",
+    "target": "21",
+    "eig": 0.001388,
+    "selection_rank": 266,
+    "joint_eig_bits": 1.534118,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "58",
+    "eig": 0.000629,
+    "selection_rank": 267,
+    "joint_eig_bits": 1.536574,
+    "source": "eig"
+  },
+  {
+    "number_set": "33,17,5,9",
+    "target": "26",
+    "eig": 0.004145,
+    "selection_rank": 268,
+    "joint_eig_bits": 1.534424,
+    "source": "eig"
+  },
+  {
+    "number_set": "81,71,21,31",
+    "target": "41",
+    "eig": 0.000714,
+    "selection_rank": 269,
+    "joint_eig_bits": 1.536115,
+    "source": "eig"
+  },
+  {
+    "number_set": "34,86,30,94",
+    "target": "78",
+    "eig": 0.001872,
+    "selection_rank": 270,
+    "joint_eig_bits": 1.538719,
+    "source": "eig"
+  },
+  {
+    "number_set": "34,86,30,94",
+    "target": "66",
+    "eig": 0.00186,
+    "selection_rank": 271,
+    "joint_eig_bits": 1.541074,
+    "source": "eig"
+  },
+  {
+    "number_set": "31,3,1",
+    "target": "31",
+    "eig": 0.002469,
+    "selection_rank": 272,
+    "joint_eig_bits": 1.542218,
+    "source": "eig"
+  },
+  {
+    "number_set": "36,45,54,81",
+    "target": "45",
+    "eig": 0.009813,
+    "selection_rank": 273,
+    "joint_eig_bits": 1.544422,
+    "source": "eig"
+  },
+  {
+    "number_set": "81,71,21,31",
+    "target": "61",
+    "eig": 0.000714,
+    "selection_rank": 274,
+    "joint_eig_bits": 1.548038,
+    "source": "eig"
+  },
+  {
+    "number_set": "25",
+    "target": "21",
+    "eig": 0.002571,
+    "selection_rank": 275,
+    "joint_eig_bits": 1.548462,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "80",
+    "eig": 0.000621,
+    "selection_rank": 276,
+    "joint_eig_bits": 1.549415,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "35",
+    "eig": 0.000855,
+    "selection_rank": 277,
+    "joint_eig_bits": 1.55025,
+    "source": "eig"
+  },
+  {
+    "number_set": "64",
+    "target": "61",
+    "eig": 0.001698,
+    "selection_rank": 278,
+    "joint_eig_bits": 1.552457,
+    "source": "eig"
+  },
+  {
+    "number_set": "33,17,5,9",
+    "target": "28",
+    "eig": 0.003999,
+    "selection_rank": 279,
+    "joint_eig_bits": 1.553397,
+    "source": "eig"
+  },
+  {
+    "number_set": "6,25",
+    "target": "23",
+    "eig": 0.002774,
+    "selection_rank": 280,
+    "joint_eig_bits": 1.554956,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "55",
+    "eig": 0.000698,
+    "selection_rank": 281,
+    "joint_eig_bits": 1.557631,
+    "source": "eig"
+  },
+  {
+    "number_set": "54,14,94,34",
+    "target": "64",
+    "eig": 0.000716,
+    "selection_rank": 282,
+    "joint_eig_bits": 1.559655,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,9,3,31",
+    "target": "6",
+    "eig": 0.003258,
+    "selection_rank": 283,
+    "joint_eig_bits": 1.561464,
+    "source": "eig"
+  },
+  {
+    "number_set": "34,86,30,94",
+    "target": "62",
+    "eig": 0.001864,
+    "selection_rank": 284,
+    "joint_eig_bits": 1.564578,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "41",
+    "eig": 0.000807,
+    "selection_rank": 285,
+    "joint_eig_bits": 1.564592,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,88,7,22",
+    "target": "59",
+    "eig": 0.002015,
+    "selection_rank": 286,
+    "joint_eig_bits": 1.565312,
+    "source": "eig"
+  },
+  {
+    "number_set": "81,71,21,31",
+    "target": "51",
+    "eig": 0.000712,
+    "selection_rank": 287,
+    "joint_eig_bits": 1.565784,
+    "source": "eig"
+  },
+  {
+    "number_set": "81",
+    "target": "83",
+    "eig": 0.001683,
+    "selection_rank": 288,
+    "joint_eig_bits": 1.567442,
+    "source": "eig"
+  },
+  {
+    "number_set": "54,14,94,34",
+    "target": "74",
+    "eig": 0.000707,
+    "selection_rank": 289,
+    "joint_eig_bits": 1.568536,
+    "source": "eig"
+  },
+  {
+    "number_set": "4,64,25,81",
+    "target": "4",
+    "eig": 0.009815,
+    "selection_rank": 290,
+    "joint_eig_bits": 1.571315,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "97",
+    "eig": 0.000831,
+    "selection_rank": 291,
+    "joint_eig_bits": 1.571967,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "56",
+    "eig": 0.000619,
+    "selection_rank": 292,
+    "joint_eig_bits": 1.573379,
+    "source": "eig"
+  },
+  {
+    "number_set": "6,25",
+    "target": "22",
+    "eig": 0.002762,
+    "selection_rank": 293,
+    "joint_eig_bits": 1.572542,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "25",
+    "eig": 0.00085,
+    "selection_rank": 294,
+    "joint_eig_bits": 1.574779,
+    "source": "eig"
+  },
+  {
+    "number_set": "6,25",
+    "target": "21",
+    "eig": 0.00272,
+    "selection_rank": 295,
+    "joint_eig_bits": 1.57483,
+    "source": "eig"
+  },
+  {
+    "number_set": "33,17,5,9",
+    "target": "30",
+    "eig": 0.003897,
+    "selection_rank": 296,
+    "joint_eig_bits": 1.577188,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "37",
+    "eig": 0.002263,
+    "selection_rank": 297,
+    "joint_eig_bits": 1.578054,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "24",
+    "eig": 0.001944,
+    "selection_rank": 298,
+    "joint_eig_bits": 1.579992,
+    "source": "eig"
+  },
+  {
+    "number_set": "97,77,87,47",
+    "target": "67",
+    "eig": 0.000707,
+    "selection_rank": 299,
+    "joint_eig_bits": 1.583691,
+    "source": "eig"
+  },
+  {
+    "number_set": "6,25",
+    "target": "20",
+    "eig": 0.002658,
+    "selection_rank": 300,
+    "joint_eig_bits": 1.58501,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "31",
+    "eig": 0.002254,
+    "selection_rank": 301,
+    "joint_eig_bits": 1.586628,
+    "source": "eig"
+  },
+  {
+    "number_set": "55,15,75,45",
+    "target": "75",
+    "eig": 0.009808,
+    "selection_rank": 302,
+    "joint_eig_bits": 1.589044,
+    "source": "eig"
+  },
+  {
+    "number_set": "5",
+    "target": "11",
+    "eig": 0.002325,
+    "selection_rank": 303,
+    "joint_eig_bits": 1.591381,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "43",
+    "eig": 0.00079,
+    "selection_rank": 304,
+    "joint_eig_bits": 1.59345,
+    "source": "eig"
+  },
+  {
+    "number_set": "9,33,73,99",
+    "target": "35",
+    "eig": 0.002254,
+    "selection_rank": 305,
+    "joint_eig_bits": 1.593782,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,9,3,31",
+    "target": "8",
+    "eig": 0.003308,
+    "selection_rank": 306,
+    "joint_eig_bits": 1.596442,
+    "source": "eig"
+  },
+  {
+    "number_set": "6,34,82",
+    "target": "98",
+    "eig": 0.001387,
+    "selection_rank": 307,
+    "joint_eig_bits": 1.599313,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "39",
+    "eig": 0.00084,
+    "selection_rank": 308,
+    "joint_eig_bits": 1.601558,
+    "source": "eig"
+  },
+  {
+    "number_set": "6",
+    "target": "36",
+    "eig": 0.001661,
+    "selection_rank": 309,
+    "joint_eig_bits": 1.602645,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "12",
+    "eig": 0.001969,
+    "selection_rank": 310,
+    "joint_eig_bits": 1.604088,
+    "source": "eig"
+  },
+  {
+    "number_set": "81,9",
+    "target": "36",
+    "eig": 0.000718,
+    "selection_rank": 311,
+    "joint_eig_bits": 1.606092,
+    "source": "eig"
+  },
+  {
+    "number_set": "64",
+    "target": "68",
+    "eig": 0.001583,
+    "selection_rank": 312,
+    "joint_eig_bits": 1.606705,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "53",
+    "eig": 0.000678,
+    "selection_rank": 313,
+    "joint_eig_bits": 1.608614,
+    "source": "eig"
+  },
+  {
+    "number_set": "36,45,54,81",
+    "target": "54",
+    "eig": 0.009801,
+    "selection_rank": 314,
+    "joint_eig_bits": 1.609869,
+    "source": "eig"
+  },
+  {
+    "number_set": "25",
+    "target": "31",
+    "eig": 0.002434,
+    "selection_rank": 315,
+    "joint_eig_bits": 1.610592,
+    "source": "eig"
+  },
+  {
+    "number_set": "49",
+    "target": "45",
+    "eig": 0.001679,
+    "selection_rank": 316,
+    "joint_eig_bits": 1.613042,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "19",
+    "eig": 0.001884,
+    "selection_rank": 317,
+    "joint_eig_bits": 1.614069,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "37",
+    "eig": 0.001844,
+    "selection_rank": 318,
+    "joint_eig_bits": 1.615557,
+    "source": "eig"
+  },
+  {
+    "number_set": "6,25",
+    "target": "19",
+    "eig": 0.002644,
+    "selection_rank": 319,
+    "joint_eig_bits": 1.617036,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "21",
+    "eig": 0.000846,
+    "selection_rank": 320,
+    "joint_eig_bits": 1.617593,
+    "source": "eig"
+  },
+  {
+    "number_set": "6,25",
+    "target": "18",
+    "eig": 0.002641,
+    "selection_rank": 321,
+    "joint_eig_bits": 1.620815,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,9,3,31",
+    "target": "15",
+    "eig": 0.002254,
+    "selection_rank": 322,
+    "joint_eig_bits": 1.622627,
+    "source": "eig"
+  },
+  {
+    "number_set": "34,86,30,94",
+    "target": "82",
+    "eig": 0.001831,
+    "selection_rank": 323,
+    "joint_eig_bits": 1.624765,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "54",
+    "eig": 0.000627,
+    "selection_rank": 324,
+    "joint_eig_bits": 1.625645,
+    "source": "eig"
+  },
+  {
+    "number_set": "34,86,30,94",
+    "target": "80",
+    "eig": 0.001822,
+    "selection_rank": 325,
+    "joint_eig_bits": 1.628754,
+    "source": "eig"
+  },
+  {
+    "number_set": "7",
+    "target": "11",
+    "eig": 0.001686,
+    "selection_rank": 326,
+    "joint_eig_bits": 1.627283,
+    "source": "eig"
+  },
+  {
+    "number_set": "97,77,87,47",
+    "target": "97",
+    "eig": 0.009791,
+    "selection_rank": 327,
+    "joint_eig_bits": 1.62861,
+    "source": "eig"
+  },
+  {
+    "number_set": "16,32,2,8",
+    "target": "4",
+    "eig": 0.000699,
+    "selection_rank": 328,
+    "joint_eig_bits": 1.630648,
+    "source": "eig"
+  },
+  {
+    "number_set": "49",
+    "target": "52",
+    "eig": 0.001776,
+    "selection_rank": 329,
+    "joint_eig_bits": 1.631257,
+    "source": "eig"
+  },
+  {
+    "number_set": "3,7",
+    "target": "5",
+    "eig": 0.00147,
+    "selection_rank": 330,
+    "joint_eig_bits": 1.632544,
+    "source": "eig"
+  },
+  {
+    "number_set": "4,64,25,81",
+    "target": "16",
+    "eig": 0.000697,
+    "selection_rank": 331,
+    "joint_eig_bits": 1.633179,
+    "source": "eig"
+  },
+  {
+    "number_set": "64",
+    "target": "67",
+    "eig": 0.00163,
+    "selection_rank": 332,
+    "joint_eig_bits": 1.634224,
+    "source": "eig"
+  },
+  {
+    "number_set": "54,14,94,34",
+    "target": "84",
+    "eig": 0.000701,
+    "selection_rank": 333,
+    "joint_eig_bits": 1.635471,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "56",
+    "eig": 0.00192,
+    "selection_rank": 334,
+    "joint_eig_bits": 1.636443,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "40",
+    "eig": 0.00192,
+    "selection_rank": 335,
+    "joint_eig_bits": 1.638704,
+    "source": "eig"
+  },
+  {
+    "number_set": "36",
+    "target": "37",
+    "eig": 0.001743,
+    "selection_rank": 336,
+    "joint_eig_bits": 1.639876,
+    "source": "eig"
+  },
+  {
+    "number_set": "55,15,75,45",
+    "target": "65",
+    "eig": 0.000696,
+    "selection_rank": 337,
+    "joint_eig_bits": 1.641434,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,88,7,22",
+    "target": "61",
+    "eig": 0.001978,
+    "selection_rank": 338,
+    "joint_eig_bits": 1.642852,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,88,7,22",
+    "target": "9",
+    "eig": 0.001958,
+    "selection_rank": 339,
+    "joint_eig_bits": 1.644934,
+    "source": "eig"
+  },
+  {
+    "number_set": "64,4",
+    "target": "2",
+    "eig": 0.000784,
+    "selection_rank": 340,
+    "joint_eig_bits": 1.648536,
+    "source": "eig"
+  },
+  {
+    "number_set": "36",
+    "target": "35",
+    "eig": 0.00171,
+    "selection_rank": 341,
+    "joint_eig_bits": 1.649449,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "28",
+    "eig": 0.001893,
+    "selection_rank": 342,
+    "joint_eig_bits": 1.652404,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "41",
+    "eig": 0.001843,
+    "selection_rank": 343,
+    "joint_eig_bits": 1.652392,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,88,7,22",
+    "target": "25",
+    "eig": 0.001977,
+    "selection_rank": 344,
+    "joint_eig_bits": 1.654002,
+    "source": "eig"
+  },
+  {
+    "number_set": "48,78,38,98",
+    "target": "88",
+    "eig": 0.000694,
+    "selection_rank": 345,
+    "joint_eig_bits": 1.654202,
+    "source": "eig"
+  },
+  {
+    "number_set": "97,77,87,47",
+    "target": "57",
+    "eig": 0.000695,
+    "selection_rank": 346,
+    "joint_eig_bits": 1.655028,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "74",
+    "eig": 0.001485,
+    "selection_rank": 347,
+    "joint_eig_bits": 1.65611,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "76",
+    "eig": 0.001484,
+    "selection_rank": 348,
+    "joint_eig_bits": 1.658223,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "32",
+    "eig": 0.001466,
+    "selection_rank": 349,
+    "joint_eig_bits": 1.65972,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "38",
+    "eig": 0.001467,
+    "selection_rank": 350,
+    "joint_eig_bits": 1.660481,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "78",
+    "eig": 0.00146,
+    "selection_rank": 351,
+    "joint_eig_bits": 1.662398,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "36",
+    "eig": 0.001454,
+    "selection_rank": 352,
+    "joint_eig_bits": 1.663593,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "84",
+    "eig": 0.001441,
+    "selection_rank": 353,
+    "joint_eig_bits": 1.662722,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "82",
+    "eig": 0.001436,
+    "selection_rank": 354,
+    "joint_eig_bits": 1.663389,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "34",
+    "eig": 0.001419,
+    "selection_rank": 355,
+    "joint_eig_bits": 1.665309,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "86",
+    "eig": 0.001418,
+    "selection_rank": 356,
+    "joint_eig_bits": 1.668339,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "24",
+    "eig": 0.0014,
+    "selection_rank": 357,
+    "joint_eig_bits": 1.671908,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "28",
+    "eig": 0.001378,
+    "selection_rank": 358,
+    "joint_eig_bits": 1.674277,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "16",
+    "eig": 0.001353,
+    "selection_rank": 359,
+    "joint_eig_bits": 1.675251,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "26",
+    "eig": 0.001349,
+    "selection_rank": 360,
+    "joint_eig_bits": 1.677136,
+    "source": "eig"
+  },
+  {
+    "number_set": "69,9,39,21",
+    "target": "27",
+    "eig": 0.000942,
+    "selection_rank": 361,
+    "joint_eig_bits": 1.677509,
+    "source": "eig"
+  },
+  {
+    "number_set": "69,9,39,21",
+    "target": "33",
+    "eig": 0.000945,
+    "selection_rank": 362,
+    "joint_eig_bits": 1.679273,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "22",
+    "eig": 0.001323,
+    "selection_rank": 363,
+    "joint_eig_bits": 1.679733,
+    "source": "eig"
+  },
+  {
+    "number_set": "59,34,14,89",
+    "target": "87",
+    "eig": 0.002012,
+    "selection_rank": 364,
+    "joint_eig_bits": 1.681611,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "18",
+    "eig": 0.001302,
+    "selection_rank": 365,
+    "joint_eig_bits": 1.681537,
+    "source": "eig"
+  },
+  {
+    "number_set": "1,8,27",
+    "target": "1",
+    "eig": 0.009802,
+    "selection_rank": 366,
+    "joint_eig_bits": 1.683095,
+    "source": "eig"
+  },
+  {
+    "number_set": "72,92,82,42",
+    "target": "92",
+    "eig": 0.009777,
+    "selection_rank": 367,
+    "joint_eig_bits": 1.684054,
+    "source": "eig"
+  },
+  {
+    "number_set": "54,14,94,34",
+    "target": "94",
+    "eig": 0.009768,
+    "selection_rank": 368,
+    "joint_eig_bits": 1.684686,
+    "source": "eig"
+  },
+  {
+    "number_set": "33,17,5,9",
+    "target": "32",
+    "eig": 0.00382,
+    "selection_rank": 369,
+    "joint_eig_bits": 1.685989,
+    "source": "eig"
+  },
+  {
+    "number_set": "15,17,21,5",
+    "target": "22",
+    "eig": 0.004041,
+    "selection_rank": 370,
+    "joint_eig_bits": 1.685782,
+    "source": "eig"
+  },
+  {
+    "number_set": "96,90,6,42",
+    "target": "96",
+    "eig": 0.009752,
+    "selection_rank": 371,
+    "joint_eig_bits": 1.685556,
+    "source": "eig"
+  },
+  {
+    "number_set": "16,32,2,8",
+    "target": "2",
+    "eig": 0.009767,
+    "selection_rank": 372,
+    "joint_eig_bits": 1.686751,
+    "source": "eig"
+  },
+  {
+    "number_set": "91,25,61,31",
+    "target": "25",
+    "eig": 0.00087,
+    "selection_rank": 373,
+    "joint_eig_bits": 1.687965,
+    "source": "eig"
+  },
+  {
+    "number_set": "69,9,39,21",
+    "target": "45",
+    "eig": 0.000949,
+    "selection_rank": 374,
+    "joint_eig_bits": 1.688204,
+    "source": "eig"
+  },
+  {
+    "number_set": "69,9,39,21",
+    "target": "15",
+    "eig": 0.000953,
+    "selection_rank": 375,
+    "joint_eig_bits": 1.688888,
+    "source": "eig"
+  },
+  {
+    "number_set": "97,77,87,47",
+    "target": "47",
+    "eig": 0.009734,
+    "selection_rank": 376,
+    "joint_eig_bits": 1.69025,
+    "source": "eig"
+  },
+  {
+    "number_set": "31,3,1,15",
+    "target": "91",
+    "eig": 0.001634,
+    "selection_rank": 377,
+    "joint_eig_bits": 1.69189,
+    "source": "eig"
+  },
+  {
+    "number_set": "36,45,54,81",
+    "target": "36",
+    "eig": 0.009714,
+    "selection_rank": 378,
+    "joint_eig_bits": 1.692978,
+    "source": "eig"
+  },
+  {
+    "number_set": "10,50,100",
+    "target": "10",
+    "eig": 0.009713,
+    "selection_rank": 379,
+    "joint_eig_bits": 1.693514,
+    "source": "eig"
+  },
+  {
+    "number_set": "80,70,90,100",
+    "target": "100",
+    "eig": 0.009721,
+    "selection_rank": 380,
+    "joint_eig_bits": 1.693759,
+    "source": "eig"
+  },
+  {
+    "number_set": "48,78,38,98",
+    "target": "28",
+    "eig": 0.000692,
+    "selection_rank": 381,
+    "joint_eig_bits": 1.694638,
+    "source": "eig"
+  },
+  {
+    "number_set": "75,95",
+    "target": "77",
+    "eig": 0.002033,
+    "selection_rank": 382,
+    "joint_eig_bits": 1.695479,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "52",
+    "eig": 0.000627,
+    "selection_rank": 383,
+    "joint_eig_bits": 1.697108,
+    "source": "eig"
+  },
+  {
+    "number_set": "6,25",
+    "target": "17",
+    "eig": 0.002611,
+    "selection_rank": 384,
+    "joint_eig_bits": 1.699259,
+    "source": "eig"
+  },
+  {
+    "number_set": "96,86,36,66",
+    "target": "60",
+    "eig": 0.000655,
+    "selection_rank": 385,
+    "joint_eig_bits": 1.699542,
+    "source": "eig"
+  },
+  {
+    "number_set": "69,9,39,21",
+    "target": "51",
+    "eig": 0.000954,
+    "selection_rank": 386,
+    "joint_eig_bits": 1.700349,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,9,3,31",
+    "target": "10",
+    "eig": 0.003346,
+    "selection_rank": 387,
+    "joint_eig_bits": 1.702036,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "49",
+    "eig": 0.000666,
+    "selection_rank": 388,
+    "joint_eig_bits": 1.703705,
+    "source": "eig"
+  },
+  {
+    "number_set": "6,25",
+    "target": "14",
+    "eig": 0.002587,
+    "selection_rank": 389,
+    "joint_eig_bits": 1.704394,
+    "source": "eig"
+  },
+  {
+    "number_set": "6,25",
+    "target": "13",
+    "eig": 0.002573,
+    "selection_rank": 390,
+    "joint_eig_bits": 1.706947,
+    "source": "eig"
+  },
+  {
+    "number_set": "69,9,39,21",
+    "target": "57",
+    "eig": 0.000961,
+    "selection_rank": 391,
+    "joint_eig_bits": 1.707636,
+    "source": "eig"
+  },
+  {
+    "number_set": "31,3,1,15",
+    "target": "81",
+    "eig": 0.001642,
+    "selection_rank": 392,
+    "joint_eig_bits": 1.706133,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,9,3,31",
+    "target": "14",
+    "eig": 0.003329,
+    "selection_rank": 393,
+    "joint_eig_bits": 1.705655,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,9,3,31",
+    "target": "12",
+    "eig": 0.003319,
+    "selection_rank": 394,
+    "joint_eig_bits": 1.706303,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,9,3,31",
+    "target": "16",
+    "eig": 0.00331,
+    "selection_rank": 395,
+    "joint_eig_bits": 1.706516,
+    "source": "eig"
+  },
+  {
+    "number_set": "17,50,5,82",
+    "target": "43",
+    "eig": 0.001836,
+    "selection_rank": 396,
+    "joint_eig_bits": 1.707443,
+    "source": "eig"
+  },
+  {
+    "number_set": "10",
+    "target": "17",
+    "eig": 0.002414,
+    "selection_rank": 397,
+    "joint_eig_bits": 1.708221,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "45",
+    "eig": 0.000807,
+    "selection_rank": 398,
+    "joint_eig_bits": 1.707786,
+    "source": "eig"
+  },
+  {
+    "number_set": "91,25,61,31",
+    "target": "29",
+    "eig": 0.000657,
+    "selection_rank": 399,
+    "joint_eig_bits": 1.708845,
+    "source": "eig"
+  },
+  {
+    "number_set": "75,95",
+    "target": "5",
+    "eig": 0.002004,
+    "selection_rank": 400,
+    "joint_eig_bits": 1.710102,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "82",
+    "eig": 0.000558,
+    "selection_rank": 401,
+    "joint_eig_bits": 1.70908,
+    "source": "eig"
+  },
+  {
+    "number_set": "91,25,61,31",
+    "target": "33",
+    "eig": 0.000669,
+    "selection_rank": 402,
+    "joint_eig_bits": 1.709702,
+    "source": "eig"
+  },
+  {
+    "number_set": "25",
+    "target": "32",
+    "eig": 0.002509,
+    "selection_rank": 403,
+    "joint_eig_bits": 1.711389,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "71",
+    "eig": 0.000628,
+    "selection_rank": 404,
+    "joint_eig_bits": 1.713828,
+    "source": "eig"
+  },
+  {
+    "number_set": "31,3,1,15",
+    "target": "71",
+    "eig": 0.001559,
+    "selection_rank": 405,
+    "joint_eig_bits": 1.715741,
+    "source": "eig"
+  },
+  {
+    "number_set": "6,25",
+    "target": "11",
+    "eig": 0.002562,
+    "selection_rank": 406,
+    "joint_eig_bits": 1.717688,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,88,7,22",
+    "target": "46",
+    "eig": 0.002157,
+    "selection_rank": 407,
+    "joint_eig_bits": 1.718854,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "47",
+    "eig": 0.000652,
+    "selection_rank": 408,
+    "joint_eig_bits": 1.721126,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "50",
+    "eig": 0.000628,
+    "selection_rank": 409,
+    "joint_eig_bits": 1.721468,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "12",
+    "eig": 0.001285,
+    "selection_rank": 410,
+    "joint_eig_bits": 1.722599,
+    "source": "eig"
+  },
+  {
+    "number_set": "91,25,61,31",
+    "target": "35",
+    "eig": 0.000672,
+    "selection_rank": 411,
+    "joint_eig_bits": 1.723982,
+    "source": "eig"
+  },
+  {
+    "number_set": "59,34,14,89",
+    "target": "88",
+    "eig": 0.002012,
+    "selection_rank": 412,
+    "joint_eig_bits": 1.724563,
+    "source": "eig"
+  },
+  {
+    "number_set": "5",
+    "target": "6",
+    "eig": 0.002289,
+    "selection_rank": 413,
+    "joint_eig_bits": 1.726931,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,9,3,31",
+    "target": "18",
+    "eig": 0.003277,
+    "selection_rank": 414,
+    "joint_eig_bits": 1.728092,
+    "source": "eig"
+  },
+  {
+    "number_set": "48,78,38,98",
+    "target": "98",
+    "eig": 0.009698,
+    "selection_rank": 415,
+    "joint_eig_bits": 1.727741,
+    "source": "eig"
+  },
+  {
+    "number_set": "64,96,24,56",
+    "target": "64",
+    "eig": 0.009648,
+    "selection_rank": 416,
+    "joint_eig_bits": 1.728827,
+    "source": "eig"
+  },
+  {
+    "number_set": "8",
+    "target": "64",
+    "eig": 0.001701,
+    "selection_rank": 417,
+    "joint_eig_bits": 1.728821,
+    "source": "eig"
+  },
+  {
+    "number_set": "64,96,24,56",
+    "target": "56",
+    "eig": 0.009613,
+    "selection_rank": 418,
+    "joint_eig_bits": 1.730334,
+    "source": "eig"
+  },
+  {
+    "number_set": "10,3",
+    "target": "100",
+    "eig": 0.003001,
+    "selection_rank": 419,
+    "joint_eig_bits": 1.731354,
+    "source": "eig"
+  },
+  {
+    "number_set": "55,15,75,45",
+    "target": "15",
+    "eig": 0.009643,
+    "selection_rank": 420,
+    "joint_eig_bits": 1.731951,
+    "source": "eig"
+  },
+  {
+    "number_set": "59,89,79",
+    "target": "79",
+    "eig": 0.009572,
+    "selection_rank": 421,
+    "joint_eig_bits": 1.733211,
+    "source": "eig"
+  },
+  {
+    "number_set": "15,85,45",
+    "target": "45",
+    "eig": 0.009582,
+    "selection_rank": 422,
+    "joint_eig_bits": 1.733371,
+    "source": "eig"
+  },
+  {
+    "number_set": "54,14,94,34",
+    "target": "4",
+    "eig": 0.000689,
+    "selection_rank": 423,
+    "joint_eig_bits": 1.733489,
+    "source": "eig"
+  },
+  {
+    "number_set": "83,38,58,68",
+    "target": "58",
+    "eig": 0.009556,
+    "selection_rank": 424,
+    "joint_eig_bits": 1.735657,
+    "source": "eig"
+  },
+  {
+    "number_set": "34,86,30,94",
+    "target": "86",
+    "eig": 0.002533,
+    "selection_rank": 425,
+    "joint_eig_bits": 1.738021,
+    "source": "eig"
+  },
+  {
+    "number_set": "5",
+    "target": "13",
+    "eig": 0.002207,
+    "selection_rank": 426,
+    "joint_eig_bits": 1.738378,
+    "source": "eig"
+  },
+  {
+    "number_set": "10",
+    "target": "8",
+    "eig": 0.002299,
+    "selection_rank": 427,
+    "joint_eig_bits": 1.740636,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "83",
+    "eig": 0.000589,
+    "selection_rank": 428,
+    "joint_eig_bits": 1.7412,
+    "source": "eig"
+  },
+  {
+    "number_set": "91,25,61,31",
+    "target": "37",
+    "eig": 0.000674,
+    "selection_rank": 429,
+    "joint_eig_bits": 1.742778,
+    "source": "eig"
+  },
+  {
+    "number_set": "31,3,1,15",
+    "target": "61",
+    "eig": 0.001408,
+    "selection_rank": 430,
+    "joint_eig_bits": 1.743928,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "88",
+    "eig": 0.001932,
+    "selection_rank": 431,
+    "joint_eig_bits": 1.746124,
+    "source": "eig"
+  },
+  {
+    "number_set": "91,25,61,31",
+    "target": "27",
+    "eig": 0.000657,
+    "selection_rank": 432,
+    "joint_eig_bits": 1.747127,
+    "source": "eig"
+  },
+  {
+    "number_set": "93,43,83,53",
+    "target": "93",
+    "eig": 0.009601,
+    "selection_rank": 433,
+    "joint_eig_bits": 1.749972,
+    "source": "eig"
+  },
+  {
+    "number_set": "70,10,88,40",
+    "target": "14",
+    "eig": 0.001282,
+    "selection_rank": 434,
+    "joint_eig_bits": 1.750599,
+    "source": "eig"
+  },
+  {
+    "number_set": "75,95",
+    "target": "79",
+    "eig": 0.002,
+    "selection_rank": 435,
+    "joint_eig_bits": 1.751461,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "53",
+    "eig": 0.000732,
+    "selection_rank": 436,
+    "joint_eig_bits": 1.752153,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "91",
+    "eig": 0.000531,
+    "selection_rank": 437,
+    "joint_eig_bits": 1.753295,
+    "source": "eig"
+  },
+  {
+    "number_set": "29,77,37,17",
+    "target": "73",
+    "eig": 0.000623,
+    "selection_rank": 438,
+    "joint_eig_bits": 1.753748,
+    "source": "eig"
+  },
+  {
+    "number_set": "7",
+    "target": "9",
+    "eig": 0.001608,
+    "selection_rank": 439,
+    "joint_eig_bits": 1.754655,
+    "source": "eig"
+  },
+  {
+    "number_set": "91,25,61,31",
+    "target": "39",
+    "eig": 0.00068,
+    "selection_rank": 440,
+    "joint_eig_bits": 1.754938,
+    "source": "eig"
+  },
+  {
+    "number_set": "91,25,61,31",
+    "target": "43",
+    "eig": 0.00068,
+    "selection_rank": 441,
+    "joint_eig_bits": 1.75592,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "96",
+    "eig": 0.001864,
+    "selection_rank": 442,
+    "joint_eig_bits": 1.757911,
+    "source": "eig"
+  },
+  {
+    "number_set": "91,25,61,31",
+    "target": "1",
+    "eig": 0.000612,
+    "selection_rank": 443,
+    "joint_eig_bits": 1.760116,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "68",
+    "eig": 0.001891,
+    "selection_rank": 444,
+    "joint_eig_bits": 1.760069,
+    "source": "eig"
+  },
+  {
+    "number_set": "49",
+    "target": "53",
+    "eig": 0.001572,
+    "selection_rank": 445,
+    "joint_eig_bits": 1.761549,
+    "source": "eig"
+  },
+  {
+    "number_set": "71,61,26,81",
+    "target": "48",
+    "eig": 0.000628,
+    "selection_rank": 446,
+    "joint_eig_bits": 1.762366,
+    "source": "eig"
+  },
+  {
+    "number_set": "6,25",
+    "target": "7",
+    "eig": 0.002557,
+    "selection_rank": 447,
+    "joint_eig_bits": 1.761951,
+    "source": "eig"
+  },
+  {
+    "number_set": "6,25",
+    "target": "8",
+    "eig": 0.002532,
+    "selection_rank": 448,
+    "joint_eig_bits": 1.763054,
+    "source": "eig"
+  },
+  {
+    "number_set": "8,92",
+    "target": "52",
+    "eig": 0.001872,
+    "selection_rank": 449,
+    "joint_eig_bits": 1.76446,
+    "source": "eig"
+  },
+  {
+    "number_set": "46,76,66",
+    "target": "66",
+    "eig": 0.009551,
+    "selection_rank": 450,
+    "joint_eig_bits": 1.765609,
+    "source": "eig"
+  }
+]

@@ -1,0 +1,1 @@
+erlang_width_compressed_intervals

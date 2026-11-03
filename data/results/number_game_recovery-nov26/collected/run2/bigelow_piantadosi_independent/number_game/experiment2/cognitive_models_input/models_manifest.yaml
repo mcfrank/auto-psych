@@ -1,0 +1,78 @@
+models:
+- name: learned_rule_prior_mixture
+  rationale: "Refinement of bigelow_piantadosi_mixture: people learn concepts by the\
+    \ same Bayesian inference over 45 mathematical rules and all intervals of 1-100\
+    \ with the size principle, but they do not hold the rules as equally likely a\
+    \ priori \u2014 each rule (e.g. odd, even, ends in a digit) carries its own prior\
+    \ plausibility, inferred from the data. The single change is replacing the uniform\
+    \ prior over rules with a learned, non-uniform one (the core idea of Bigelow &\
+    \ Piantadosi's prior inference), so favoured rules such as parity and shared final\
+    \ digits can dominate interval-based similarity when the examples support them."
+- name: tempered_learned_rule_prior
+  rationale: "Refinement of `learned_rule_prior_mixture`: people learn concepts by\
+    \ the same Bayesian inference over 45 mathematical rules (each with its own learned\
+    \ prior plausibility) and all intervals of 1-100, but they apply the size principle\
+    \ only partially \u2014 they discount the evidence that the examples were sampled\
+    \ from a small concept, so the likelihood of the examples is tempered by a free\
+    \ sampling-strength exponent (1 = full strong sampling, 0 = weak sampling). The\
+    \ single change is grafting this tempered size principle (from `tempered_size_principle_mixture`)\
+    \ onto the learned-rule-prior model, predicting that broad favoured rules and\
+    \ wide intervals keep more posterior weight after a few examples than an ideal\
+    \ strong-sampling learner allows."
+- name: response_sharpened_tempered_rule_prior
+  rationale: "Refinement of `tempered_learned_rule_prior`: people do the same Bayesian\
+    \ concept learning over 45 rules (each with its own learned prior plausibility)\
+    \ and all intervals of 1-100 with a tempered size principle, but they turn their\
+    \ belief that the target is in the concept into a yes/no answer more decisively\
+    \ than probability matching \u2014 their answer follows the belief's log-odds\
+    \ scaled by a free decisiveness exponent, so targets the learner thinks are probably\
+    \ in (or probably out of) the concept are answered yes (or no) more consistently\
+    \ than the belief itself. The single change is this sharpened belief-to-response\
+    \ mapping (a one-parameter log-odds scaling, from `llo_distorted_concept_posterior`)\
+    \ grafted onto `tempered_learned_rule_prior`, motivated by the critique that people's\
+    \ repeated answers to the same set and target are more unanimous than the graded\
+    \ posterior predicts."
+- name: familiarity_relaxed_size_principle
+  rationale: 'People do the same recency-weighted Bayesian concept learning over rules
+    and numerical ranges as the best model, but how strongly they apply the size principle
+    depends on how familiar the example set is: the first time a participant meets
+    a set they read its examples as tightly sampled from a small concept, and each
+    further time they are asked about that same set (having already been probed with
+    other targets for it) they discount that sampling evidence more, so their generalization
+    broadens. This predicts fewer yeses on a set''s first encounter than on its repeats,
+    concentrated on targets outside the tightest range or rule covering the examples.'
+- name: exposure_weakened_size_principle
+  rationale: "Refinement of `even_odd_split_family_prior`: people do the same Bayesian\
+    \ concept learning over the same 45 rules (separate prior plausibilities for even,\
+    \ odd and the other kinds of rule) and all intervals of 1-100 with a tempered\
+    \ size principle, but the strength with which they apply the size principle is\
+    \ not fixed \u2014 each further question about the same set of examples within\
+    \ a session weakens it (a fitted power-law decay with the number of earlier trials\
+    \ on that set), so the learner who is repeatedly probed about one set comes to\
+    \ treat its examples as less diagnostic of a small concept and generalizes more\
+    \ broadly. The single change is making the sampling strength depend on the set's\
+    \ exposure history, motivated by the critique that first encounters of a set are\
+    \ judged less generously than later ones, which an exposure-blind learner cannot\
+    \ produce."
+- name: capacity_limited_evidence_integration
+  rationale: 'People infer the hidden concept by Bayesian learning over mathematical
+    rules (with separate prior plausibilities for even, odd and the other kinds of
+    rule) and numerical intervals, but they have a limited capacity for integrating
+    examples: the examples of a set compete for the same limited working memory, so
+    each additional example adds less evidence than the one before, and the total
+    evidence grows more slowly than the number of examples. This predicts that larger
+    sets are generalized more broadly (broad rules and wide ranges keep more weight)
+    than an ideal learner, which counts every example fully, would allow, while single-example
+    sets are judged as the ideal learner does.'
+- name: recency_family_prior_sharpened_response
+  rationale: "Refinement of `recency_weighted_even_odd_family_prior`: people do the\
+    \ same recency-weighted Bayesian concept learning over the same 45 rules (separate\
+    \ prior plausibilities for even, odd and the other kinds of rule) and all intervals\
+    \ of 1-100 with a tempered size principle, but they do not answer by probability\
+    \ matching to their belief that the target is in the concept \u2014 they turn\
+    \ that belief into a yes/no answer more (or less) decisively, following the belief's\
+    \ log-odds scaled by a free decisiveness exponent. The single change is grafting\
+    \ this sharpened belief-to-response mapping (from `response_sharpened_tempered_rule_prior`)\
+    \ onto the incumbent, predicting that targets the learner judges probably in (or\
+    \ probably out of) the concept are answered yes (or no) more consistently across\
+    \ people than the graded posterior itself implies."

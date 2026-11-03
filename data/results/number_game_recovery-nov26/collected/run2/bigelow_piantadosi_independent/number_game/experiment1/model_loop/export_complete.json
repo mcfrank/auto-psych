@@ -1,0 +1,12 @@
+{
+  "models": [
+    "learned_rule_prior_mixture",
+    "tempered_learned_rule_prior",
+    "response_sharpened_tempered_rule_prior",
+    "familiarity_relaxed_size_principle",
+    "exposure_weakened_size_principle",
+    "capacity_limited_evidence_integration",
+    "recency_family_prior_sharpened_response"
+  ],
+  "ledger_sha256": "fd63a1487679af8ddaa840d784c1049145e7f94bdcc63d6247142956287c329b"
+}

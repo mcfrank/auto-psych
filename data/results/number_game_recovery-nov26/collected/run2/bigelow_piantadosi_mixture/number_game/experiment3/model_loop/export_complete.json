@@ -1,0 +1,13 @@
+{
+  "models": [
+    "heading_weber_with_upward_counting",
+    "rule_breadth_heading_upward_counting",
+    "heading_weber_upward_with_replacement",
+    "position_decaying_example_evidence",
+    "set_size_scaled_evidence_weight",
+    "offset_progression_concepts",
+    "span_filling_example_evidence",
+    "position_decay_upward_room"
+  ],
+  "ledger_sha256": "fd98f6e5ee53be6d42b3a768839df1d9701b318024a8cf2b13b0eea58dc4cf61"
+}

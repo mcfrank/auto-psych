@@ -1,0 +1,102 @@
+{
+  "posteriors": {
+    "prime_salient_hundred_chart": 4e-06,
+    "prime_over_odd_reading": 0.130676,
+    "prime_salient_marked_odd": 0.004402,
+    "hidden_divisibility_by_three": 0.000622,
+    "irregular_threes_times_table": 0.856973,
+    "repdigit_pattern_chart_concepts": 0.007322
+  },
+  "elpd_loo": {
+    "prime_salient_hundred_chart": -2210.8882,
+    "prime_over_odd_reading": -2200.5355,
+    "prime_salient_marked_odd": -2203.9261,
+    "hidden_divisibility_by_three": -2205.8826,
+    "irregular_threes_times_table": -2198.6548,
+    "repdigit_pattern_chart_concepts": -2203.4174
+  },
+  "n_trials": 4500,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "irregular_threes_times_table": {
+      "rank": 0,
+      "elpd_loo": -2198.654844056858,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.8569733646542017,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "prime_over_odd_reading": {
+      "rank": 1,
+      "elpd_loo": -2200.5355285189053,
+      "elpd_diff": 1.8806844620471566,
+      "dse": 5.1981350409094285,
+      "dse_clustered": 5.836562101240193,
+      "weight": 0.13067618283868088,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "repdigit_pattern_chart_concepts": {
+      "rank": 2,
+      "elpd_loo": -2203.4174217494838,
+      "elpd_diff": 4.762577692625655,
+      "dse": 5.562826612890057,
+      "dse_clustered": 6.674649747336203,
+      "weight": 0.0073216019213041455,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "prime_salient_marked_odd": {
+      "rank": 3,
+      "elpd_loo": -2203.9261012792967,
+      "elpd_diff": 5.271257222438635,
+      "dse": 5.564440454761536,
+      "dse_clustered": 6.271533184065906,
+      "weight": 0.004402398983761949,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "hidden_divisibility_by_three": {
+      "rank": 4,
+      "elpd_loo": -2205.882612709582,
+      "elpd_diff": 7.22776865272408,
+      "dse": 3.167042713126188,
+      "dse_clustered": 3.6958175892339185,
+      "weight": 0.0006222820612460965,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    },
+    "prime_salient_hundred_chart": {
+      "rank": 5,
+      "elpd_loo": -2210.8882002631053,
+      "elpd_diff": 12.233356206247208,
+      "dse": 7.932477256918752,
+      "dse_clustered": 9.16511265935456,
+      "weight": 4.169540805239758e-06,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 4500,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "irregular_threes_times_table"
+}

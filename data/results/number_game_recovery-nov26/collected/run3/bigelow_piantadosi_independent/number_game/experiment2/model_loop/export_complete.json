@@ -1,0 +1,11 @@
+{
+  "models": [
+    "prime_salient_hundred_chart",
+    "prime_over_odd_reading",
+    "prime_salient_marked_odd",
+    "hidden_divisibility_by_three",
+    "irregular_threes_times_table",
+    "repdigit_pattern_chart_concepts"
+  ],
+  "ledger_sha256": "c9ff8dab1a59cf2f04f06c34798783394411f2ea40e5ac27c7df40be09b927f5"
+}

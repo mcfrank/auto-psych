@@ -1,0 +1,6 @@
+- [Powers-of-2 / 37 misfit](powers-of-2-37-misfit.md) — exception-rule family fix, plus ideas that failed at MAP
+- [Concept-space additions at MAP](concept-space-additions-map.md) — new rule families and a set-size-dependent rule share gain ≈0 nats
+- [Incumbent residual diagnostics](incumbent-residual-diagnostics.md) — round-3 tests: parity-within-range +3 lppd; ALPHA/gap/pooling/round ranges failed
+- [Round-4 null refinements](round4-null-refinements.md) — sampling shape, k-prior, fuzzy edges fail; 5 hidden participants; avoid find_MAP
+- [Example-recall subset mixture](example-recall-subset-mixture.md) — round-4 memory-limit candidate; speed notes for 15-subset layout
+- [Multiples within range](multiples-within-range.md) — round-4 repair: multiples∩range kind, weight 0.04, no ll gain

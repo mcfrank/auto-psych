@@ -1,0 +1,1610 @@
+{
+  "project_id": "number_game",
+  "data_source": "simulation",
+  "seed_models_dir": "/scr/wurgaft/auto-psych/number_game_recovery-nov26b-c1/harness_repo/src/pipelines/outer_loop/projects/number_game/seed_models",
+  "n_experiments": 3,
+  "n_participants": 5,
+  "hide_participant_id": true,
+  "inner_loop": {
+    "max_iterations": 5,
+    "candidate_count": 6,
+    "novelty_rmse_threshold": 0.002,
+    "n_critique_proposals": 8,
+    "selection": {
+      "criterion": "grouped_cv",
+      "cv_group": [
+        "number_set"
+      ],
+      "cv_folds": 4,
+      "cv_seed": 0
+    },
+    "starting_models_prunable": true
+  },
+  "fit_kwargs": {
+    "method": "warm_start_nuts",
+    "tune": 200,
+    "draws": 500,
+    "chains": 4
+  },
+  "seed": 1,
+  "eval_pool": {
+    "n_pairs": 500,
+    "lengths": [
+      6,
+      8
+    ],
+    "seed": 11,
+    "min_remaining": 100,
+    "exhaustive": true,
+    "predict_max_draws": 500
+  },
+  "seed_params": {
+    "tenenbaum_rules_similarity": {
+      "lambda_rules": 0.456141,
+      "sigma": 111.590091
+    },
+    "bigelow_piantadosi_mixture": {
+      "lambda_0": 0.19238
+    },
+    "bigelow_piantadosi_independent": {
+      "lambda_0": 0.310239,
+      "set_weights": [
+        0.069975,
+        0.01473,
+        1e-05,
+        7e-06,
+        0.001296,
+        2.5e-05,
+        0.163617,
+        0.003756,
+        0.009198,
+        0.083532,
+        0.002627,
+        0.000257,
+        0.001904,
+        0.000607,
+        0.130781,
+        0.015654,
+        1.5e-05,
+        0.00029,
+        0.000155,
+        0.001694,
+        0.003126,
+        0.004489,
+        0.000494,
+        0.00011,
+        0.005874,
+        0.040912,
+        0.016566,
+        0.027939,
+        0.015025,
+        0.025137,
+        0.017073,
+        0.018735,
+        0.019998,
+        0.033598,
+        0.028487,
+        0.001565,
+        0.003277,
+        0.041268,
+        0.022184,
+        0.034088,
+        0.03622,
+        0.023488,
+        0.012783,
+        0.067436
+      ],
+      "zero_split": 0.500481
+    }
+  },
+  "metrics_version": 2,
+  "gt_runs": [
+    {
+      "gt_model": "tenenbaum_rules_similarity",
+      "params": {
+        "lambda_rules": 0.456141,
+        "sigma": 111.590091
+      },
+      "run_root": "/scr/wurgaft/auto-psych/agent_trees/043c9ecd8d452a7b/repo/_runs/cell_1",
+      "n_eval_stimuli": 24274,
+      "n_eval_dropped": 1226,
+      "trajectory": [
+        {
+          "experiment": 1,
+          "step": 0,
+          "iteration": null,
+          "global_step": 0,
+          "best_model": "bigelow_piantadosi_mixture",
+          "pearson_r": 0.9687065484318783,
+          "rmse": 0.07478586901363396,
+          "kl_regret": 0.015534332704574492,
+          "bias": -0.020123746295615235,
+          "calib_slope": 0.9185876983438078,
+          "calib_intercept": 0.00486787351792356,
+          "pearson_r_bma": 0.9687065484318783,
+          "rmse_bma": 0.07478586901363396,
+          "kl_regret_bma": 0.015534332704574492,
+          "bias_bma": -0.020123746295615235,
+          "calib_slope_bma": 0.9185876983438078,
+          "calib_intercept_bma": 0.00486787351792356,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": false
+        },
+        {
+          "experiment": 1,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 1,
+          "best_model": "family_weighted_concept_prior",
+          "pearson_r": 0.9911314163597803,
+          "rmse": 0.050957576265285146,
+          "kl_regret": 0.007017513781063808,
+          "bias": -0.032381439126762356,
+          "calib_slope": 0.953440616912085,
+          "calib_intercept": -0.018088827602278146,
+          "pearson_r_bma": 0.9911314163597803,
+          "rmse_bma": 0.050957576265285146,
+          "kl_regret_bma": 0.007017513781063808,
+          "bias_bma": -0.032381439126762356,
+          "calib_slope_bma": 0.953440616912085,
+          "calib_intercept_bma": -0.018088827602278146,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 2,
+          "best_model": "size_principle_strength_family_prior",
+          "pearson_r": 0.9904051474357534,
+          "rmse": 0.05140432105650228,
+          "kl_regret": 0.007468373000920517,
+          "bias": -0.03207028825728851,
+          "calib_slope": 0.9669789013273157,
+          "calib_intercept": -0.021933604647259297,
+          "pearson_r_bma": 0.9908862778640541,
+          "rmse_bma": 0.05096902010081654,
+          "kl_regret_bma": 0.007164814378910099,
+          "bias_bma": -0.032241568226194325,
+          "calib_slope_bma": 0.9600017472220504,
+          "calib_intercept_bma": -0.01996306600605341,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 3,
+          "best_model": "exception_rule_family_prior_2",
+          "pearson_r": 0.9923634550273074,
+          "rmse": 0.05089061820367248,
+          "kl_regret": 0.006953054660556885,
+          "bias": -0.035091103241992105,
+          "calib_slope": 0.952988492623105,
+          "calib_intercept": -0.020659700427877348,
+          "pearson_r_bma": 0.9922579502347756,
+          "rmse_bma": 0.05081872389561722,
+          "kl_regret_bma": 0.006997821644213097,
+          "bias_bma": -0.03496712865339772,
+          "calib_slope_bma": 0.9559258269811185,
+          "calib_intercept_bma": -0.021437416886549043,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 4,
+          "best_model": "exception_rule_family_prior_2",
+          "pearson_r": 0.9923634550273074,
+          "rmse": 0.05089061820367248,
+          "kl_regret": 0.006953054660556885,
+          "bias": -0.035091103241992105,
+          "calib_slope": 0.952988492623105,
+          "calib_intercept": -0.020659700427877348,
+          "pearson_r_bma": 0.9960287685329,
+          "rmse_bma": 0.03770987966349476,
+          "kl_regret_bma": 0.0038965211780593967,
+          "bias_bma": -0.026758802019343123,
+          "calib_slope_bma": 0.9694909876715693,
+          "calib_intercept_bma": -0.01739326853745421,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 5,
+          "best_model": "powers_own_family_erlang_interval",
+          "pearson_r": 0.9967881366640619,
+          "rmse": 0.033044351667489556,
+          "kl_regret": 0.003219669961074985,
+          "bias": -0.023191859504993736,
+          "calib_slope": 0.9791130757807808,
+          "calib_intercept": -0.01678007579980695,
+          "pearson_r_bma": 0.9953546896978281,
+          "rmse_bma": 0.04220860678282015,
+          "kl_regret_bma": 0.004855029088519174,
+          "bias_bma": -0.030707242695805298,
+          "calib_slope_bma": 0.9633384352855253,
+          "calib_intercept_bma": -0.0194530235117944,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 0,
+          "iteration": null,
+          "global_step": 6,
+          "best_model": "erlang_interval_size_family_prior",
+          "pearson_r": 0.9986360896830195,
+          "rmse": 0.02261116204577755,
+          "kl_regret": 0.0014539409196828194,
+          "bias": -0.016579286661487103,
+          "calib_slope": 0.9872744348137382,
+          "calib_intercept": -0.012672844016117346,
+          "pearson_r_bma": 0.9986150795799095,
+          "rmse_bma": 0.022711658563494403,
+          "kl_regret_bma": 0.0014677931122010252,
+          "bias_bma": -0.016615129043777013,
+          "calib_slope_bma": 0.9873193927196978,
+          "calib_intercept_bma": -0.012722487394945803,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 7,
+          "best_model": "threshold_concepts_erlang_interval",
+          "pearson_r": 0.9987564919271616,
+          "rmse": 0.022100136105661874,
+          "kl_regret": 0.0014330846568827917,
+          "bias": -0.016537562450945856,
+          "calib_slope": 0.9883550518268616,
+          "calib_intercept": -0.01296284325530811,
+          "pearson_r_bma": 0.99875757361662,
+          "rmse_bma": 0.02206422940909033,
+          "kl_regret_bma": 0.0014116258305212237,
+          "bias_bma": -0.01648448243947139,
+          "calib_slope_bma": 0.9881335486711166,
+          "calib_intercept_bma": -0.01284176709898499,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 8,
+          "best_model": "threshold_concepts_erlang_interval",
+          "pearson_r": 0.9987564919271616,
+          "rmse": 0.022100136105661874,
+          "kl_regret": 0.0014330846568827917,
+          "bias": -0.016537562450945856,
+          "calib_slope": 0.9883550518268616,
+          "calib_intercept": -0.01296284325530811,
+          "pearson_r_bma": 0.9987948005659059,
+          "rmse_bma": 0.021176839882540228,
+          "kl_regret_bma": 0.0013172125443014437,
+          "bias_bma": -0.015562532170058527,
+          "calib_slope_bma": 0.9900433448133239,
+          "calib_intercept_bma": -0.01250607834210088,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 9,
+          "best_model": "without_replacement_size_principle",
+          "pearson_r": 0.9989089075615224,
+          "rmse": 0.01894336336137883,
+          "kl_regret": 0.0012578724067714346,
+          "bias": -0.0132788936463538,
+          "calib_slope": 0.9989041467416822,
+          "calib_intercept": -0.012942493035559555,
+          "pearson_r_bma": 0.998930153788296,
+          "rmse_bma": 0.019375780170838994,
+          "kl_regret_bma": 0.0012116168807943524,
+          "bias_bma": -0.014002841208787682,
+          "calib_slope_bma": 0.9954977263632414,
+          "calib_intercept_bma": -0.012620751417228127,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 10,
+          "best_model": "round_number_range_boundaries",
+          "pearson_r": 0.9988343047217042,
+          "rmse": 0.019566824364180346,
+          "kl_regret": 0.0013215903433439042,
+          "bias": -0.013709696381898001,
+          "calib_slope": 0.9981031390429932,
+          "calib_intercept": -0.013127405660320612,
+          "pearson_r_bma": 0.9989029168075856,
+          "rmse_bma": 0.019356160685004963,
+          "kl_regret_bma": 0.0012448067232258024,
+          "bias_bma": -0.013824648846226932,
+          "calib_slope_bma": 0.9966322802104991,
+          "calib_intercept_bma": -0.012790839816073596,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 0,
+          "iteration": null,
+          "global_step": 11,
+          "best_model": "centre_weighted_range_sampling",
+          "pearson_r": 0.9990282207936204,
+          "rmse": 0.01828869344802568,
+          "kl_regret": 0.000967744027344381,
+          "bias": -0.01295834914387435,
+          "calib_slope": 0.9910860616119666,
+          "calib_intercept": -0.01022198431075827,
+          "pearson_r_bma": 0.9989461922297632,
+          "rmse_bma": 0.019120749992107437,
+          "kl_regret_bma": 0.0010369250403981334,
+          "bias_bma": -0.013519844624495405,
+          "calib_slope_bma": 0.9890037161717066,
+          "calib_intercept_bma": -0.010144249791677273,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 12,
+          "best_model": "centre_weighted_range_sampling",
+          "pearson_r": 0.9990282207936204,
+          "rmse": 0.01828869344802568,
+          "kl_regret": 0.000967744027344381,
+          "bias": -0.01295834914387435,
+          "calib_slope": 0.9910860616119666,
+          "calib_intercept": -0.01022198431075827,
+          "pearson_r_bma": 0.9989269154929593,
+          "rmse_bma": 0.01905615425782397,
+          "kl_regret_bma": 0.001006039285821248,
+          "bias_bma": -0.013111307653963138,
+          "calib_slope_bma": 0.9859818396857178,
+          "calib_intercept_bma": -0.008808069372612692,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 13,
+          "best_model": "centre_weighted_ranges_odds_criterion",
+          "pearson_r": 0.9988438308184324,
+          "rmse": 0.017958947040270106,
+          "kl_regret": 0.0008467944612875082,
+          "bias": -0.00963557547702702,
+          "calib_slope": 0.9768571195733675,
+          "calib_intercept": -0.0025312674394640244,
+          "pearson_r_bma": 0.9989580373648614,
+          "rmse_bma": 0.018219334822946492,
+          "kl_regret_bma": 0.0008989569394424596,
+          "bias_bma": -0.011947601254138764,
+          "calib_slope_bma": 0.984545935345684,
+          "calib_intercept_bma": -0.007203574853244854,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 14,
+          "best_model": "query_as_weak_evidence",
+          "pearson_r": 0.9988262387234912,
+          "rmse": 0.018859827253993298,
+          "kl_regret": 0.0009256910217745729,
+          "bias": -0.010999283447497005,
+          "calib_slope": 0.9762323761566585,
+          "calib_intercept": -0.003703194197097859,
+          "pearson_r_bma": 0.9989160190390524,
+          "rmse_bma": 0.018234822647445855,
+          "kl_regret_bma": 0.0008754471767161967,
+          "bias_bma": -0.011126016147703314,
+          "calib_slope_bma": 0.9797252948078324,
+          "calib_intercept_bma": -0.0049021689687592795,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 15,
+          "best_model": "query_weak_evidence_digit_parity",
+          "pearson_r": 0.9987539838766463,
+          "rmse": 0.01898483145162215,
+          "kl_regret": 0.0009544767611822348,
+          "bias": -0.01081853781348719,
+          "calib_slope": 0.9770574821348911,
+          "calib_intercept": -0.00377573626647415,
+          "pearson_r_bma": 0.9988542152006539,
+          "rmse_bma": 0.018632993392181142,
+          "kl_regret_bma": 0.0009157377622862646,
+          "bias_bma": -0.011095202742006016,
+          "calib_slope_bma": 0.9780135469993421,
+          "calib_intercept_bma": -0.004345890128770347,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 16,
+          "best_model": "query_weak_evidence_digit_parity",
+          "pearson_r": 0.9987539838766463,
+          "rmse": 0.01898483145162215,
+          "kl_regret": 0.0009544767611822348,
+          "bias": -0.01081853781348719,
+          "calib_slope": 0.9770574821348911,
+          "calib_intercept": -0.00377573626647415,
+          "pearson_r_bma": 0.9988091206136708,
+          "rmse_bma": 0.01891710320962799,
+          "kl_regret_bma": 0.0009449960051289025,
+          "bias_bma": -0.011176233821323668,
+          "calib_slope_bma": 0.9775260105502037,
+          "calib_intercept_bma": -0.00427725923644201,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        }
+      ],
+      "incumbent": {
+        "starting_models": [
+          "bigelow_piantadosi_mixture"
+        ],
+        "n_steps": 17,
+        "n_incumbent_changes": 12,
+        "n_steps_discovered_incumbent": 16,
+        "final_incumbent": "query_weak_evidence_digit_parity",
+        "changes": [
+          {
+            "global_step": 1,
+            "experiment": 1,
+            "step": 1,
+            "from": "bigelow_piantadosi_mixture",
+            "to": "family_weighted_concept_prior"
+          },
+          {
+            "global_step": 2,
+            "experiment": 1,
+            "step": 2,
+            "from": "family_weighted_concept_prior",
+            "to": "size_principle_strength_family_prior"
+          },
+          {
+            "global_step": 3,
+            "experiment": 1,
+            "step": 3,
+            "from": "size_principle_strength_family_prior",
+            "to": "exception_rule_family_prior_2"
+          },
+          {
+            "global_step": 5,
+            "experiment": 1,
+            "step": 5,
+            "from": "exception_rule_family_prior_2",
+            "to": "powers_own_family_erlang_interval"
+          },
+          {
+            "global_step": 6,
+            "experiment": 2,
+            "step": 0,
+            "from": "powers_own_family_erlang_interval",
+            "to": "erlang_interval_size_family_prior"
+          },
+          {
+            "global_step": 7,
+            "experiment": 2,
+            "step": 1,
+            "from": "erlang_interval_size_family_prior",
+            "to": "threshold_concepts_erlang_interval"
+          },
+          {
+            "global_step": 9,
+            "experiment": 2,
+            "step": 3,
+            "from": "threshold_concepts_erlang_interval",
+            "to": "without_replacement_size_principle"
+          },
+          {
+            "global_step": 10,
+            "experiment": 2,
+            "step": 4,
+            "from": "without_replacement_size_principle",
+            "to": "round_number_range_boundaries"
+          },
+          {
+            "global_step": 11,
+            "experiment": 3,
+            "step": 0,
+            "from": "round_number_range_boundaries",
+            "to": "centre_weighted_range_sampling"
+          },
+          {
+            "global_step": 13,
+            "experiment": 3,
+            "step": 2,
+            "from": "centre_weighted_range_sampling",
+            "to": "centre_weighted_ranges_odds_criterion"
+          },
+          {
+            "global_step": 14,
+            "experiment": 3,
+            "step": 3,
+            "from": "centre_weighted_ranges_odds_criterion",
+            "to": "query_as_weak_evidence"
+          },
+          {
+            "global_step": 15,
+            "experiment": 3,
+            "step": 4,
+            "from": "query_as_weak_evidence",
+            "to": "query_weak_evidence_digit_parity"
+          }
+        ]
+      },
+      "starting_models_prunable": true,
+      "baseline": {
+        "mean_r": 0.9004147903361546,
+        "per_model": {
+          "bigelow_piantadosi_mixture": 0.9713667467416335,
+          "bigelow_piantadosi_independent": 0.8294628339306758
+        }
+      },
+      "fitted_baseline": {
+        "mean_r_models": [
+          "bigelow_piantadosi_independent",
+          "bigelow_piantadosi_mixture"
+        ],
+        "mean_rmse_models": [
+          "bigelow_piantadosi_independent",
+          "bigelow_piantadosi_mixture"
+        ],
+        "per_model": {
+          "bigelow_piantadosi_independent": {
+            "pearson_r": 0.9874425653426526,
+            "rmse": 0.06098940516996486,
+            "elpd_loo": -3602.28015439689,
+            "trusted": true,
+            "n_eval_excluded": 0
+          },
+          "bigelow_piantadosi_mixture": {
+            "pearson_r": 0.9735655151061602,
+            "rmse": 0.07477619813909031,
+            "elpd_loo": -4146.857774817504,
+            "trusted": true,
+            "n_eval_excluded": 0
+          }
+        },
+        "criterion": "grouped_cv",
+        "elpd_best_model": "bigelow_piantadosi_independent",
+        "elpd_best_r": 0.9874425653426526,
+        "elpd_best_rmse": 0.06098940516996486,
+        "elpd_best_reason": null,
+        "mean_r": 0.9805040402244064,
+        "mean_rmse": 0.06788280165452759,
+        "n_responses": 6750
+      },
+      "fitted_baseline_by_experiment": [
+        {
+          "experiment": 1,
+          "mean_r_models": [
+            "bigelow_piantadosi_independent",
+            "bigelow_piantadosi_mixture"
+          ],
+          "mean_rmse_models": [
+            "bigelow_piantadosi_independent",
+            "bigelow_piantadosi_mixture"
+          ],
+          "per_model": {
+            "bigelow_piantadosi_independent": {
+              "pearson_r": 0.9855378498643401,
+              "rmse": 0.06510330999707473,
+              "elpd_loo": -955.5856328876034,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "bigelow_piantadosi_mixture": {
+              "pearson_r": 0.9687065484318783,
+              "rmse": 0.07478586901363396,
+              "elpd_loo": -1258.3345268295866,
+              "trusted": true,
+              "n_eval_excluded": 0
+            }
+          },
+          "criterion": "grouped_cv",
+          "elpd_best_model": "bigelow_piantadosi_independent",
+          "elpd_best_r": 0.9855378498643401,
+          "elpd_best_rmse": 0.06510330999707473,
+          "elpd_best_reason": null,
+          "mean_r": 0.9771221991481092,
+          "mean_rmse": 0.06994458950535434,
+          "n_responses": 2250
+        },
+        {
+          "experiment": 2,
+          "mean_r_models": [
+            "bigelow_piantadosi_independent",
+            "bigelow_piantadosi_mixture"
+          ],
+          "mean_rmse_models": [
+            "bigelow_piantadosi_independent",
+            "bigelow_piantadosi_mixture"
+          ],
+          "per_model": {
+            "bigelow_piantadosi_independent": {
+              "pearson_r": 0.9870038348438085,
+              "rmse": 0.06184309684464437,
+              "elpd_loo": -2321.0050765293063,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "bigelow_piantadosi_mixture": {
+              "pearson_r": 0.9724113051604136,
+              "rmse": 0.07973124372380054,
+              "elpd_loo": -2748.079015449088,
+              "trusted": true,
+              "n_eval_excluded": 0
+            }
+          },
+          "criterion": "grouped_cv",
+          "elpd_best_model": "bigelow_piantadosi_independent",
+          "elpd_best_r": 0.9870038348438085,
+          "elpd_best_rmse": 0.06184309684464437,
+          "elpd_best_reason": null,
+          "mean_r": 0.9797075700021111,
+          "mean_rmse": 0.07078717028422246,
+          "n_responses": 4500
+        },
+        {
+          "experiment": 3,
+          "mean_r_models": [
+            "bigelow_piantadosi_independent",
+            "bigelow_piantadosi_mixture"
+          ],
+          "mean_rmse_models": [
+            "bigelow_piantadosi_independent",
+            "bigelow_piantadosi_mixture"
+          ],
+          "per_model": {
+            "bigelow_piantadosi_independent": {
+              "pearson_r": 0.9874425653426526,
+              "rmse": 0.06098940516996486,
+              "elpd_loo": -3602.28015439689,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "bigelow_piantadosi_mixture": {
+              "pearson_r": 0.9735655151061602,
+              "rmse": 0.07477619813909031,
+              "elpd_loo": -4146.857774817504,
+              "trusted": true,
+              "n_eval_excluded": 0
+            }
+          },
+          "criterion": "grouped_cv",
+          "elpd_best_model": "bigelow_piantadosi_independent",
+          "elpd_best_r": 0.9874425653426526,
+          "elpd_best_rmse": 0.06098940516996486,
+          "elpd_best_reason": null,
+          "mean_r": 0.9805040402244064,
+          "mean_rmse": 0.06788280165452759,
+          "n_responses": 6750
+        }
+      ],
+      "leakage": {
+        "files": [
+          {
+            "path": "experiment1/cognitive_models/erlang_interval_size_exception_prior.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "set_log_lik"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/cognitive_models/erlang_interval_size_family_prior.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/cognitive_models/erlang_interval_size_family_prior_2.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_set",
+              "row_target",
+              "rule_log_lik",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/cognitive_models/exception_rule_family_prior.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "set_log_lik"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/cognitive_models/exception_rule_family_prior_2.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/cognitive_models/parity_bounded_range_concepts.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "parity_range_in_concept",
+              "parity_range_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment1/cognitive_models/power_base_family_prior.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/cognitive_models/powers_own_family_erlang_interval.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/model_loop/models/bigelow_piantadosi_independent.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/model_loop/models/erlang_interval_size_exception_prior.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "set_log_lik"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/model_loop/models/erlang_interval_size_family_prior.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/model_loop/models/erlang_interval_size_family_prior_2.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_set",
+              "row_target",
+              "rule_log_lik",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/model_loop/models/exception_rule_family_prior.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "set_log_lik"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment1/model_loop/models/exception_rule_family_prior_2.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/model_loop/models/parity_bounded_range_concepts.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "parity_range_in_concept",
+              "parity_range_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment1/model_loop/models/power_base_family_prior.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_in_concept",
+              "interval_log_evidence",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/model_loop/models/powers_own_family_erlang_interval.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment2/cognitive_models/centre_weighted_range_sampling.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment2/cognitive_models/centre_weighted_ranges_with_thresholds.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment2/cognitive_models/range_size_principle_strength.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_member",
+              "group_log_count",
+              "n_examples",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/cognitive_models/round_number_range_boundaries.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "threshold_in_concept",
+              "threshold_log_evidence",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/cognitive_models/set_size_amplified_size_principle.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "log_n_examples",
+              "rating",
+              "row_cell",
+              "set_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment2/cognitive_models/threshold_concepts_erlang_interval.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "threshold_in_concept",
+              "threshold_log_evidence",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/cognitive_models/without_replacement_primes_family.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "threshold_in_concept",
+              "threshold_log_evidence",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/cognitive_models/without_replacement_size_principle.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "threshold_in_concept",
+              "threshold_log_evidence",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/model_loop/models/centre_weighted_range_sampling.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment2/model_loop/models/centre_weighted_ranges_with_thresholds.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment2/model_loop/models/erlang_interval_size_family_prior_2.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_set",
+              "row_target",
+              "rule_log_lik",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/model_loop/models/range_size_principle_strength.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "cell_member",
+              "group_log_count",
+              "n_examples",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/model_loop/models/round_number_range_boundaries.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "threshold_in_concept",
+              "threshold_log_evidence",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/model_loop/models/set_size_amplified_size_principle.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "log_n_examples",
+              "rating",
+              "row_cell",
+              "set_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment2/model_loop/models/threshold_concepts_erlang_interval.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "threshold_in_concept",
+              "threshold_log_evidence",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/model_loop/models/without_replacement_primes_family.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "threshold_in_concept",
+              "threshold_log_evidence",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/model_loop/models/without_replacement_size_principle.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "rating",
+              "row_cell",
+              "rule_log_lik",
+              "threshold_in_concept",
+              "threshold_log_evidence",
+              "width_in_concept",
+              "width_log_evidence"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment3/cognitive_models/centre_odds_criterion_digit_parity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/cognitive_models/named_number_sequence_concepts.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/cognitive_models/query_as_weak_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/cognitive_models/query_evidence_digit_sum_concepts.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/cognitive_models/query_evidence_primes_plausibility.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/cognitive_models/query_parity_digit_sum_spellings.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/cognitive_models/query_parity_primes_family.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/cognitive_models/query_weak_evidence_digit_parity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/model_loop/models/centre_digit_sums_odds_criterion.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/model_loop/models/centre_odds_criterion_digit_parity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/model_loop/models/centre_odds_primes_family.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/model_loop/models/named_number_sequence_concepts.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/model_loop/models/query_as_weak_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/model_loop/models/query_evidence_digit_sum_concepts.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/model_loop/models/query_evidence_primes_plausibility.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/model_loop/models/query_parity_digit_sum_spellings.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/model_loop/models/query_parity_primes_family.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/model_loop/models/query_weak_evidence_digit_parity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment3/model_loop/models/range_only_magnitude_learner.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "rating",
+              "row_cell"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/model_loop/models/serial_averaging_belief_revision.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "interval_cheb",
+              "prefix_average",
+              "rating",
+              "row_cell",
+              "rule_log_lik"
+            ],
+            "n_data_cols": 5
+          }
+        ],
+        "any_identical": false,
+        "any_mention": false,
+        "any_value_mention": false,
+        "any_gt_named": false,
+        "csv_generating_model_files": [],
+        "any_csv_generating_model": false,
+        "manifest_gt_named_files": [],
+        "any_manifest_gt_named": false,
+        "max_data_cols": 7
+      },
+      "experiments": [
+        {
+          "experiment": 1,
+          "manifest_models": [
+            "exception_rule_family_prior",
+            "exception_rule_family_prior_2",
+            "erlang_interval_size_family_prior",
+            "erlang_interval_size_family_prior_2",
+            "erlang_interval_size_exception_prior",
+            "power_base_family_prior",
+            "powers_own_family_erlang_interval",
+            "parity_bounded_range_concepts"
+          ]
+        },
+        {
+          "experiment": 2,
+          "manifest_models": [
+            "threshold_concepts_erlang_interval",
+            "set_size_amplified_size_principle",
+            "centre_weighted_range_sampling",
+            "range_size_principle_strength",
+            "centre_weighted_ranges_with_thresholds",
+            "without_replacement_size_principle",
+            "round_number_range_boundaries",
+            "without_replacement_primes_family"
+          ]
+        },
+        {
+          "experiment": 3,
+          "manifest_models": [
+            "centre_odds_criterion_digit_parity",
+            "query_as_weak_evidence",
+            "query_weak_evidence_digit_parity",
+            "query_evidence_digit_sum_concepts",
+            "named_number_sequence_concepts",
+            "query_parity_digit_sum_spellings",
+            "query_parity_primes_family",
+            "query_evidence_primes_plausibility"
+          ]
+        }
+      ]
+    }
+  ],
+  "agent": {
+    "backend": "claude",
+    "model": "claude-opus-5-5",
+    "claude_auth": "subscription"
+  }
+}

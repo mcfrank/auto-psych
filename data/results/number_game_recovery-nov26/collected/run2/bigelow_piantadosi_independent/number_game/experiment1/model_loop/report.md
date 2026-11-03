@@ -1,0 +1,43 @@
+# Inner Model Loop Report
+
+Each model below is ONE distinct cognitive hypothesis. The posterior mass shows which single hypothesis best explains the data — it is **not** a recipe to combine the top models into a blend.
+
+- Best model: **familiarity_relaxed_size_principle** (posterior=0.570, elpd_loo=-868.53)
+- Trials: 2250
+- Models compared: 7
+
+## Posterior over models (ELPD-LOO)
+
+| model | posterior | elpd_loo |
+| --- | --- | --- |
+| familiarity_relaxed_size_principle | 0.5697 | -868.53 |
+| capacity_limited_evidence_integration | 0.3087 | -869.14 |
+| exposure_weakened_size_principle | 0.1173 | -870.11 |
+| recency_family_prior_sharpened_response | 0.0043 | -873.42 |
+| learned_rule_prior_mixture | 0.0000 | -922.32 |
+| tempered_learned_rule_prior | 0.0000 | -903.03 |
+| response_sharpened_tempered_rule_prior | 0.0000 | -901.51 |
+
+## Hypotheses
+
+- **familiarity_relaxed_size_principle**: People do the same recency-weighted Bayesian concept learning over rules and numerical ranges as the best model, but how strongly they apply the size principle depends on how familiar the example set is: the first time a participant meets a set they read its examples as tightly sampled from a small concept, and each further time they are asked about that same set (having already been probed with other targets for it) they discount that sampling evidence more, so their generalization broadens. This predicts fewer yeses on a set's first encounter than on its repeats, concentrated on targets outside the tightest range or rule covering the examples.
+- **capacity_limited_evidence_integration**: People infer the hidden concept by Bayesian learning over mathematical rules (with separate prior plausibilities for even, odd and the other kinds of rule) and numerical intervals, but they have a limited capacity for integrating examples: the examples of a set compete for the same limited working memory, so each additional example adds less evidence than the one before, and the total evidence grows more slowly than the number of examples. This predicts that larger sets are generalized more broadly (broad rules and wide ranges keep more weight) than an ideal learner, which counts every example fully, would allow, while single-example sets are judged as the ideal learner does.
+- **exposure_weakened_size_principle**: Refinement of `even_odd_split_family_prior`: people do the same Bayesian concept learning over the same 45 rules (separate prior plausibilities for even, odd and the other kinds of rule) and all intervals of 1-100 with a tempered size principle, but the strength with which they apply the size principle is not fixed — each further question about the same set of examples within a session weakens it (a fitted power-law decay with the number of earlier trials on that set), so the learner who is repeatedly probed about one set comes to treat its examples as less diagnostic of a small concept and generalizes more broadly. The single change is making the sampling strength depend on the set's exposure history, motivated by the critique that first encounters of a set are judged less generously than later ones, which an exposure-blind learner cannot produce.
+- **recency_family_prior_sharpened_response**: Refinement of `recency_weighted_even_odd_family_prior`: people do the same recency-weighted Bayesian concept learning over the same 45 rules (separate prior plausibilities for even, odd and the other kinds of rule) and all intervals of 1-100 with a tempered size principle, but they do not answer by probability matching to their belief that the target is in the concept — they turn that belief into a yes/no answer more (or less) decisively, following the belief's log-odds scaled by a free decisiveness exponent. The single change is grafting this sharpened belief-to-response mapping (from `response_sharpened_tempered_rule_prior`) onto the incumbent, predicting that targets the learner judges probably in (or probably out of) the concept are answered yes (or no) more consistently across people than the graded posterior itself implies.
+- **learned_rule_prior_mixture**: Refinement of bigelow_piantadosi_mixture: people learn concepts by the same Bayesian inference over 45 mathematical rules and all intervals of 1-100 with the size principle, but they do not hold the rules as equally likely a priori — each rule (e.g. odd, even, ends in a digit) carries its own prior plausibility, inferred from the data. The single change is replacing the uniform prior over rules with a learned, non-uniform one (the core idea of Bigelow & Piantadosi's prior inference), so favoured rules such as parity and shared final digits can dominate interval-based similarity when the examples support them.
+- **tempered_learned_rule_prior**: Refinement of `learned_rule_prior_mixture`: people learn concepts by the same Bayesian inference over 45 mathematical rules (each with its own learned prior plausibility) and all intervals of 1-100, but they apply the size principle only partially — they discount the evidence that the examples were sampled from a small concept, so the likelihood of the examples is tempered by a free sampling-strength exponent (1 = full strong sampling, 0 = weak sampling). The single change is grafting this tempered size principle (from `tempered_size_principle_mixture`) onto the learned-rule-prior model, predicting that broad favoured rules and wide intervals keep more posterior weight after a few examples than an ideal strong-sampling learner allows.
+- **response_sharpened_tempered_rule_prior**: Refinement of `tempered_learned_rule_prior`: people do the same Bayesian concept learning over 45 rules (each with its own learned prior plausibility) and all intervals of 1-100 with a tempered size principle, but they turn their belief that the target is in the concept into a yes/no answer more decisively than probability matching — their answer follows the belief's log-odds scaled by a free decisiveness exponent, so targets the learner thinks are probably in (or probably out of) the concept are answered yes (or no) more consistently than the belief itself. The single change is this sharpened belief-to-response mapping (a one-parameter log-odds scaling, from `llo_distorted_concept_posterior`) grafted onto `tempered_learned_rule_prior`, motivated by the critique that people's repeated answers to the same set and target are more unanimous than the graded posterior predicts.
+
+## Distinguishability (arviz.compare, PSIS-LOO)
+
+`elpd_diff` and `dse` are relative to the best model. A model is only clearly worse than the best when `elpd_diff > 2 * dse`; models within ~2·dse of the top are statistically indistinguishable. `LOO reliable` is False when PSIS-LOO flagged this model's estimate as untrustworthy (many high Pareto-k points) — its row should be read with caution.
+
+| model | elpd_diff | dse | distinguishable from best | weight | LOO reliable |
+| --- | --- | --- | --- | --- | --- |
+| familiarity_relaxed_size_principle ←selected | 0.00 | 0.00 | — (best) | 0.570 | yes |
+| capacity_limited_evidence_integration | 0.61 | 3.39 | no (within ~2·dse) | 0.309 | yes |
+| exposure_weakened_size_principle | 1.58 | 1.46 | no (within ~2·dse) | 0.117 | yes |
+| recency_family_prior_sharpened_response | 4.89 | 2.69 | no (within ~2·dse) | 0.004 | yes |
+| response_sharpened_tempered_rule_prior | 32.98 | 13.39 | yes | 0.000 | yes |
+| tempered_learned_rule_prior | 34.50 | 13.30 | yes | 0.000 | yes |
+| learned_rule_prior_mixture | 53.80 | 19.19 | yes | 0.000 | yes |

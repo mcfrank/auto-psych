@@ -1,0 +1,42 @@
+{
+  "posteriors": {
+    "salient_decade_place_value_rules": 0.999934,
+    "individual_rule_vs_range_style": 6.6e-05
+  },
+  "elpd_loo": {
+    "salient_decade_place_value_rules": -2585.837,
+    "individual_rule_vs_range_style": -2595.4656
+  },
+  "n_trials": 6750,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "salient_decade_place_value_rules": {
+      "rank": 0,
+      "elpd_loo": -2585.8369887926237,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.9999341854676089,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 6750,
+      "not_converged": false
+    },
+    "individual_rule_vs_range_style": {
+      "rank": 1,
+      "elpd_loo": -2595.465592862936,
+      "elpd_diff": 9.628604070312122,
+      "dse": 6.882810193246833,
+      "dse_clustered": 7.3562282706367,
+      "weight": 6.581453239112227e-05,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 6750,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "salient_decade_place_value_rules"
+}

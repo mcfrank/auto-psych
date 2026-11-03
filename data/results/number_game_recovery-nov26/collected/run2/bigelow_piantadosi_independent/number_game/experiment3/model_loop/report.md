@@ -1,0 +1,40 @@
+# Inner Model Loop Report
+
+Each model below is ONE distinct cognitive hypothesis. The posterior mass shows which single hypothesis best explains the data — it is **not** a recipe to combine the top models into a blend.
+
+- Best model: **final_digit_glance_effortful_search** (posterior=0.880, elpd_loo=-3482.51)
+- Trials: 6750
+- Models compared: 6
+
+## Posterior over models (ELPD-LOO)
+
+| model | posterior | elpd_loo |
+| --- | --- | --- |
+| final_digit_glance_effortful_search | 0.8802 | -3482.51 |
+| retrieval_vs_checking_rule_search | 0.1198 | -3484.51 |
+| individual_range_sampling_looseness | 0.0000 | -3512.17 |
+| effortful_computed_rule_search | 0.0000 | -3499.56 |
+| shifted_sequence_near_miss_rules | 0.0000 | -3499.79 |
+| target_cued_rule_retrieval | 0.0000 | -3501.93 |
+
+## Hypotheses
+
+- **final_digit_glance_effortful_search**: Refinement of `effortful_computed_rule_search`: people consider effortful rules only on some of their judgments, and otherwise generalize from what can be seen at a glance, weighing whatever concepts they considered by the same Bayesian logic. The single change is what counts as seen at a glance: only a number's magnitude (stretches of the number line) and what its final digit shows (odd or even, ending in a given digit, multiples of 5). "Contains the digit d" rules require inspecting the whole number, tens place included, so like primes, squares and cubes, powers and other multiples they are considered only when people make the effortful search. This predicts that sets sharing a digit somewhere other than the final place (e.g. 31, 13, 35) are extended to other numbers containing that digit less often than the incumbent predicts, and more often by range, while sets sharing a final digit keep their digit-based generalization on every judgment.
+- **retrieval_vs_checking_rule_search**: Refinement of `effortful_computed_rule_search`: people consider effortful rules only on a fixed share of their judgments and otherwise generalize from the explanations available at once, weighing whichever concepts they considered by the same Bayesian logic. The single change is what makes a rule effortful: not being arithmetic as such, but having to be checked number by number. Famous sequences (primes, squares and cubes, powers) are memorized lists that are recognized at once, like odd or even, final digits and multiples of 5, whereas testing divisibility by 3, 4, 6, 7, 8, 9, 11 or 12, and scanning every digit for a shared "contains the digit d", need deliberate work. This predicts that sets fitting a sequence (e.g. 16, 8, 64 or 9, 49, 81) are extended to its distant members on every judgment, while sets fitting a non-decimal multiple or a shared inner digit (e.g. 42, 21, 84 or 31, 13, 35) get a share of range-based answers: fewer yeses to distant members and more to in-span non-members than the incumbent predicts.
+- **individual_range_sampling_looseness**: Refinement of `loose_range_sampling_sparse_rules`: people do the same capacity-limited Bayesian learning over arithmetic rules (kind plausibilities, sparse familiarities within kinds) and numerical ranges, reading the examples with one sampling strength for rules and a separate, looser one for stretches of the number line. The single change is that how loosely the examples are read as evidence for a tight range is a stable trait of each participant rather than a population constant (each person's range sampling strength is scaled by a personal factor with a fixed spread around the population, inferred from their answers; the rule strength stays shared). Because the examples' range evidence grows with every example, this predicts individual differences that grow with set size: some participants keep to the examples' span and reject far rule members, others favour the fitting rule, consistently across every set each person sees, while for single examples people barely differ.
+- **effortful_computed_rule_search**: Considering arithmetic rules that have to be computed (primes, squares and cubes, powers, multiples other than 5) takes deliberate mental effort, so people only search for them on some of their judgments. On the others they generalize from the explanations that are visible at a glance: stretches of the number line, odd or even, shared final or contained digits, and multiples of 5. On every judgment they weigh whichever concepts they have considered by the same Bayesian logic. This predicts that even when examples fit a computed rule well (e.g. 16, 8, 64 as powers of 2), a fixed share of answers follow the examples' range or digit pattern instead, giving fewer yeses to distant rule members and more yeses to non-members inside the span than a learner who always considers every rule.
+- **shifted_sequence_near_miss_rules**: People's space of candidate concepts also contains near-misses of the sparse computed sequences: "one more than" or "one less than" a square, a cube, a power, or a prime (e.g. 3, 8, 15, 24, 35 as squares minus one; 3, 5, 9, 17, 33, 65 as powers of 2 plus one). These form their own kind of rule, held a priori with a plausibility inferred from the data, with the near-misses sharing it equally. Like the other computed rules, people only consider them on the share of judgments where they make the effort to search for computed rules, and they weigh them against ranges and the other rules by the same Bayesian logic. This predicts that sets which sit just off a famous sequence (e.g. 8, 15, 24) get yeses for distant members of the shifted sequence (35, 48, 63) and fewer yeses for in-span numbers that are not in it, where a learner without these concepts falls back on the examples' range.
+- **target_cued_rule_retrieval**: The number being asked about acts as a retrieval cue: even on judgments where people do not search through the arithmetic rules that have to be computed (primes, squares and cubes, powers, multiples other than 5), the target brings to mind the computed rules it itself belongs to (asked about 32, "a power of 2" comes to mind), and people weigh those cued rules against the explanations visible at a glance (ranges, odd or even, digits, multiples of 5) by the same Bayesian logic. Because only rules the target belongs to are cued, this predicts an asymmetry the search account cannot produce: distant members of a computed rule that fits the examples (e.g. 32 or 2 after 16, 8, 64) are endorsed almost as if the rule had been searched for, while in-span non-members (e.g. 40) cue no such rule and keep their range-based yeses.
+
+## Distinguishability (arviz.compare, PSIS-LOO)
+
+`elpd_diff` and `dse` are relative to the best model. A model is only clearly worse than the best when `elpd_diff > 2 * dse`; models within ~2·dse of the top are statistically indistinguishable. `LOO reliable` is False when PSIS-LOO flagged this model's estimate as untrustworthy (many high Pareto-k points) — its row should be read with caution.
+
+| model | elpd_diff | dse | distinguishable from best | weight | LOO reliable |
+| --- | --- | --- | --- | --- | --- |
+| final_digit_glance_effortful_search ←selected | 0.00 | 0.00 | — (best) | 0.880 | yes |
+| retrieval_vs_checking_rule_search | 1.99 | 9.58 | no (within ~2·dse) | 0.120 | yes |
+| effortful_computed_rule_search | 17.05 | 8.58 | no (within ~2·dse) | 0.000 | yes |
+| shifted_sequence_near_miss_rules | 17.28 | 8.53 | yes | 0.000 | yes |
+| target_cued_rule_retrieval | 19.42 | 12.13 | no (within ~2·dse) | 0.000 | yes |
+| individual_range_sampling_looseness | 29.66 | 14.31 | yes | 0.000 | yes |

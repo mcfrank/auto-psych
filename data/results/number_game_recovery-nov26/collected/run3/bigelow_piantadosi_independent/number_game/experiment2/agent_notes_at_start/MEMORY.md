@@ -1,0 +1,13 @@
+- [Exponent concept cost finding](exponent-concept-cost-finding.md) — powers/squares cost extra; MAP-screen tips
+- [Incumbent null changes round 3](incumbent-null-changes-round3.md) — which refinements fit to ~0; digit-notation discount gained 21
+- [Final-digit salience finding](final-digit-salience-finding.md) — ends-in-d bonus +38 nats; noise/gamma/shape/decade tweaks gave nothing
+- [Data coverage quirks](data-coverage-quirks.md) — no power targets in power sets; shared-last-digit yes 0.96
+- [Contains-digit cost finding](contains-digit-cost-finding.md) — contains-d extra cost +16 nats on exponent-cost base; tens-digit rules -43
+- [Incumbent digit screens round 4](incumbent-digit-screens-round4.md) — ends-in bonus on incumbent +26 nats MAP; contains cost redundant
+- [Ends bonus + exponent cost](ends-bonus-plus-exponent-cost.md) — combined MAP -799.5, ~27 nats over incumbent
+- [Contains-digit cost on incumbent](contains-digit-cost-on-incumbent.md) — +16 nats on multiplicative incumbent; null-on-old-base tweaks can revive
+- [Contains-digit cost finding](contains-digit-cost-finding.md) — contains-d extra cost +17 nats on the multiplicative base
+- [Ending bonus on incumbent](ending-bonus-on-incumbent.md) — ends-in-d bonus on multiplicative model +26 nats MAP; contains cost adds <1
+- [Disjunctive contains finding](disjunctive-contains-finding.md) — contains-d as 3-primitive disjunction +15 nats, no new param; log-width intervals -2
+- [Squares cost split](squares-cost-split-finding.md) — separate squares cost +4 nats on final-digit model; parity ranges/upward bias null
+- [Forward-counting tilt](forward-counting-tilt-finding.md) — upward interval tilt g≈0.46, only +2.8 log-post; sparse trick for speed

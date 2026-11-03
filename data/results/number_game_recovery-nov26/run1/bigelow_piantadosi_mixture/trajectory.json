@@ -1,0 +1,1754 @@
+{
+  "gt_model": "bigelow_piantadosi_mixture",
+  "params": {
+    "lambda_0": 0.19238
+  },
+  "run_root": "/scr/wurgaft/auto-psych/agent_trees/470f328d08510460/repo/_runs/cell_1",
+  "n_eval_stimuli": 24203,
+  "n_eval_dropped": 1297,
+  "trajectory": [
+    {
+      "experiment": 1,
+      "step": 0,
+      "iteration": null,
+      "global_step": 0,
+      "best_model": "bigelow_piantadosi_independent",
+      "pearson_r": 0.9963617323076029,
+      "rmse": 0.023422615185350472,
+      "kl_regret": 0.001691624031166726,
+      "bias": -0.0004603351005082772,
+      "calib_slope": 0.9853211371148196,
+      "calib_intercept": 0.003717589614654959,
+      "pearson_r_bma": 0.9963617323076029,
+      "rmse_bma": 0.023422615185350472,
+      "kl_regret_bma": 0.001691624031166726,
+      "bias_bma": -0.0004603351005082772,
+      "calib_slope_bma": 0.9853211371148196,
+      "calib_intercept_bma": 0.003717589614654959,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": false,
+      "incumbent_is_discovered": false
+    },
+    {
+      "experiment": 1,
+      "step": 1,
+      "iteration": 0,
+      "global_step": 1,
+      "best_model": "bigelow_piantadosi_independent",
+      "pearson_r": 0.9963617323076029,
+      "rmse": 0.023422615185350472,
+      "kl_regret": 0.001691624031166726,
+      "bias": -0.0004603351005082772,
+      "calib_slope": 0.9853211371148196,
+      "calib_intercept": 0.003717589614654959,
+      "pearson_r_bma": 0.9962394834223377,
+      "rmse_bma": 0.024003963788504598,
+      "kl_regret_bma": 0.0017431723003224076,
+      "bias_bma": 0.0027243407330146655,
+      "calib_slope_bma": 1.0015981039214805,
+      "calib_intercept_bma": 0.0022694854814069854,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": false,
+      "incumbent_is_discovered": false
+    },
+    {
+      "experiment": 1,
+      "step": 2,
+      "iteration": 1,
+      "global_step": 2,
+      "best_model": "erlang_interval_prior_concepts",
+      "pearson_r": 0.9929834794492617,
+      "rmse": 0.040855288046869546,
+      "kl_regret": 0.004681060489205536,
+      "bias": 0.024236357969735854,
+      "calib_slope": 1.0071409798105515,
+      "calib_intercept": 0.022203879277458816,
+      "pearson_r_bma": 0.9951355857728507,
+      "rmse_bma": 0.032491565722752705,
+      "kl_regret_bma": 0.0031154181609987295,
+      "bias_bma": 0.017832977028820963,
+      "calib_slope_bma": 1.0020497858660835,
+      "calib_intercept_bma": 0.01724956323868676,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 3,
+      "iteration": 2,
+      "global_step": 3,
+      "best_model": "first_guess_win_stay_concepts",
+      "pearson_r": 0.9976009802655036,
+      "rmse": 0.023638192205363076,
+      "kl_regret": 0.0017546184350302934,
+      "bias": 0.013565978095309891,
+      "calib_slope": 1.0096161468835358,
+      "calib_intercept": 0.010829012838285357,
+      "pearson_r_bma": 0.9973416904747827,
+      "rmse_bma": 0.025246154722899723,
+      "kl_regret_bma": 0.0019540642352700137,
+      "bias_bma": 0.015049704400301614,
+      "calib_slope_bma": 1.0078357217705023,
+      "calib_intercept_bma": 0.012819486984811224,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 4,
+      "iteration": 3,
+      "global_step": 4,
+      "best_model": "sticky_guess_power_law_ranges",
+      "pearson_r": 0.9951547151288485,
+      "rmse": 0.02828059532910584,
+      "kl_regret": 0.0025527182116092608,
+      "bias": 0.008321019507435391,
+      "calib_slope": 0.9993663321387192,
+      "calib_intercept": 0.008501375209342132,
+      "pearson_r_bma": 0.996544886264748,
+      "rmse_bma": 0.025524468418809173,
+      "kl_regret_bma": 0.002073229119485289,
+      "bias_bma": 0.011296243849655533,
+      "calib_slope_bma": 1.0027253791000594,
+      "calib_intercept_bma": 0.010520541481604695,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 5,
+      "iteration": 4,
+      "global_step": 5,
+      "best_model": "sticky_guess_power_law_ranges",
+      "pearson_r": 0.9951547151288485,
+      "rmse": 0.02828059532910584,
+      "kl_regret": 0.0025527182116092608,
+      "bias": 0.008321019507435391,
+      "calib_slope": 0.9993663321387192,
+      "calib_intercept": 0.008501375209342132,
+      "pearson_r_bma": 0.9965840609684862,
+      "rmse_bma": 0.025091709755688963,
+      "kl_regret_bma": 0.001977041754075287,
+      "bias_bma": 0.010612280699127553,
+      "calib_slope_bma": 1.002037011681009,
+      "calib_intercept_bma": 0.010032502720837666,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": false,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 0,
+      "iteration": null,
+      "global_step": 6,
+      "best_model": "digit_rule_discount_sticky_guess",
+      "pearson_r": 0.9976155591318998,
+      "rmse": 0.020966584509728773,
+      "kl_regret": 0.00115399346090269,
+      "bias": 0.008001252044088565,
+      "calib_slope": 1.0109796794253625,
+      "calib_intercept": 0.004876195669176575,
+      "pearson_r_bma": 0.9977569402412307,
+      "rmse_bma": 0.020664818087142822,
+      "kl_regret_bma": 0.0010971983937855384,
+      "bias_bma": 0.0084532109323596,
+      "calib_slope_bma": 1.0117375718847046,
+      "calib_intercept_bma": 0.005112441823968916,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 1,
+      "iteration": 0,
+      "global_step": 7,
+      "best_model": "sticky_guess_fitted_sampling_trust",
+      "pearson_r": 0.9974850521152727,
+      "rmse": 0.023819646314344262,
+      "kl_regret": 0.0016033658358378413,
+      "bias": 0.008664626340567515,
+      "calib_slope": 1.0342011837857965,
+      "calib_intercept": -0.0010697769401376012,
+      "pearson_r_bma": 0.9977650496944024,
+      "rmse_bma": 0.021365207835844308,
+      "kl_regret_bma": 0.0011911452963827881,
+      "bias_bma": 0.00890447981989286,
+      "calib_slope_bma": 1.0193298629342555,
+      "calib_intercept_bma": 0.00340277899160335,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 2,
+      "iteration": 1,
+      "global_step": 8,
+      "best_model": "digit_coincidence_noticing_guess",
+      "pearson_r": 0.9936099260192317,
+      "rmse": 0.03853288798207862,
+      "kl_regret": 0.0038677296554740477,
+      "bias": 0.015771343107080817,
+      "calib_slope": 1.0481568884120895,
+      "calib_intercept": 0.002064841733234346,
+      "pearson_r_bma": 0.9950680224141818,
+      "rmse_bma": 0.03378299096432833,
+      "kl_regret_bma": 0.0029485680877881465,
+      "bias_bma": 0.014099048692773463,
+      "calib_slope_bma": 1.0422326974096476,
+      "calib_intercept_bma": 0.0020787013623330686,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 3,
+      "iteration": 2,
+      "global_step": 9,
+      "best_model": "digit_coincidence_noticing_guess",
+      "pearson_r": 0.9936099260192317,
+      "rmse": 0.03853288798207862,
+      "kl_regret": 0.0038677296554740477,
+      "bias": 0.015771343107080817,
+      "calib_slope": 1.0481568884120895,
+      "calib_intercept": 0.002064841733234346,
+      "pearson_r_bma": 0.9946760033394876,
+      "rmse_bma": 0.035258354711887235,
+      "kl_regret_bma": 0.0032079080861626484,
+      "bias_bma": 0.01509582648886233,
+      "calib_slope_bma": 1.0432167525551974,
+      "calib_intercept_bma": 0.0027953955888814774,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": false,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 4,
+      "iteration": 3,
+      "global_step": 10,
+      "best_model": "coincidence_triggered_guess_rethink",
+      "pearson_r": 0.9934117968013437,
+      "rmse": 0.039061741843239094,
+      "kl_regret": 0.004004005977214626,
+      "bias": 0.015607144000457984,
+      "calib_slope": 1.0495300630970967,
+      "calib_intercept": 0.0015098071443535588,
+      "pearson_r_bma": 0.9939326231040555,
+      "rmse_bma": 0.037667370030076815,
+      "kl_regret_bma": 0.003695336872244243,
+      "bias_bma": 0.015618574165357665,
+      "calib_slope_bma": 1.0473838146624845,
+      "calib_intercept_bma": 0.0021321064515013033,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 5,
+      "iteration": 4,
+      "global_step": 11,
+      "best_model": "coincidence_triggered_guess_rethink",
+      "pearson_r": 0.9934117968013437,
+      "rmse": 0.039061741843239094,
+      "kl_regret": 0.004004005977214626,
+      "bias": 0.015607144000457984,
+      "calib_slope": 1.0495300630970967,
+      "calib_intercept": 0.0015098071443535588,
+      "pearson_r_bma": 0.9937460791082848,
+      "rmse_bma": 0.03816373242685895,
+      "kl_regret_bma": 0.003791973612852839,
+      "bias_bma": 0.015548919657670945,
+      "calib_slope_bma": 1.0483198243474585,
+      "calib_intercept_bma": 0.0017960431608540217,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": false,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 0,
+      "iteration": null,
+      "global_step": 12,
+      "best_model": "misfit_tolerant_coincidence_rethink",
+      "pearson_r": 0.9976978886272445,
+      "rmse": 0.021596257916705035,
+      "kl_regret": 0.001240372512166558,
+      "bias": 0.0067718600769340635,
+      "calib_slope": 1.0271607987192115,
+      "calib_intercept": -0.0009586959709143583,
+      "pearson_r_bma": 0.9977197385522252,
+      "rmse_bma": 0.02148450753395905,
+      "kl_regret_bma": 0.0012333366836253658,
+      "bias_bma": 0.006663091637622402,
+      "calib_slope_bma": 1.0271871110680741,
+      "calib_intercept_bma": -0.0010749534789288862,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 1,
+      "iteration": 0,
+      "global_step": 13,
+      "best_model": "evidence_graded_misfit_tolerance",
+      "pearson_r": 0.9976740767746076,
+      "rmse": 0.021546932289787837,
+      "kl_regret": 0.0012238097806498709,
+      "bias": 0.0067099669133440796,
+      "calib_slope": 1.0260806731423373,
+      "calib_intercept": -0.0007131618236559945,
+      "pearson_r_bma": 0.9977018634577243,
+      "rmse_bma": 0.02148906560527067,
+      "kl_regret_bma": 0.0012219196626044938,
+      "bias_bma": 0.006690009615611078,
+      "calib_slope_bma": 1.0265517228766377,
+      "calib_intercept_bma": -0.0008671901555282191,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 2,
+      "iteration": 1,
+      "global_step": 14,
+      "best_model": "gamma_width_range_prior_guess",
+      "pearson_r": 0.9991852636861939,
+      "rmse": 0.012409390057114857,
+      "kl_regret": 0.000451464368339495,
+      "bias": 0.002238952925389653,
+      "calib_slope": 1.0173131793266192,
+      "calib_intercept": -0.0026887557379131066,
+      "pearson_r_bma": 0.9986371302108055,
+      "rmse_bma": 0.016233857148111257,
+      "kl_regret_bma": 0.0007519550354152843,
+      "bias_bma": 0.0035543145636558696,
+      "calib_slope_bma": 1.0222327791334183,
+      "calib_intercept_bma": -0.0027736195654960993,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 3,
+      "iteration": 2,
+      "global_step": 15,
+      "best_model": "gamma_width_distance_hesitant_guess",
+      "pearson_r": 0.9989883878429502,
+      "rmse": 0.013749130704651663,
+      "kl_regret": 0.0006118656565743535,
+      "bias": 0.0010807102740472672,
+      "calib_slope": 1.0199782706545029,
+      "calib_intercept": -0.0046055415416800805,
+      "pearson_r_bma": 0.9987738887313033,
+      "rmse_bma": 0.015258496282438824,
+      "kl_regret_bma": 0.0006990040006431083,
+      "bias_bma": 0.0024815535127800468,
+      "calib_slope_bma": 1.0214821462860852,
+      "calib_intercept_bma": -0.0036327341268981295,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 4,
+      "iteration": 3,
+      "global_step": 16,
+      "best_model": "span_extrapolation_hesitant_guess_2",
+      "pearson_r": 0.9992752642275186,
+      "rmse": 0.011413611903174515,
+      "kl_regret": 0.00047596265340200483,
+      "bias": -0.0006009011079989888,
+      "calib_slope": 1.0154131462834537,
+      "calib_intercept": -0.00498781890263833,
+      "pearson_r_bma": 0.9991856730160109,
+      "rmse_bma": 0.012189125136746868,
+      "kl_regret_bma": 0.0005222508126613586,
+      "bias_bma": -8.02060129717716e-06,
+      "calib_slope_bma": 1.0171926152078952,
+      "calib_intercept_bma": -0.004901414085330347,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 5,
+      "iteration": 4,
+      "global_step": 17,
+      "best_model": "range_reestimating_span_hesitant_guess",
+      "pearson_r": 0.9991369026062731,
+      "rmse": 0.012694460862794731,
+      "kl_regret": 0.0005995288051659467,
+      "bias": -0.0002124599916674785,
+      "calib_slope": 1.018861242087186,
+      "calib_intercept": -0.005580781100129439,
+      "pearson_r_bma": 0.9991816327038602,
+      "rmse_bma": 0.012316728902514965,
+      "kl_regret_bma": 0.0005464378057664408,
+      "bias_bma": -0.00021716613574121848,
+      "calib_slope_bma": 1.0180410090390895,
+      "calib_intercept_bma": -0.005352031018701131,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    }
+  ],
+  "incumbent": {
+    "starting_models": [
+      "bigelow_piantadosi_independent"
+    ],
+    "n_steps": 18,
+    "n_incumbent_changes": 13,
+    "n_steps_discovered_incumbent": 16,
+    "final_incumbent": "range_reestimating_span_hesitant_guess",
+    "changes": [
+      {
+        "global_step": 2,
+        "experiment": 1,
+        "step": 2,
+        "from": "bigelow_piantadosi_independent",
+        "to": "erlang_interval_prior_concepts"
+      },
+      {
+        "global_step": 3,
+        "experiment": 1,
+        "step": 3,
+        "from": "erlang_interval_prior_concepts",
+        "to": "first_guess_win_stay_concepts"
+      },
+      {
+        "global_step": 4,
+        "experiment": 1,
+        "step": 4,
+        "from": "first_guess_win_stay_concepts",
+        "to": "sticky_guess_power_law_ranges"
+      },
+      {
+        "global_step": 6,
+        "experiment": 2,
+        "step": 0,
+        "from": "sticky_guess_power_law_ranges",
+        "to": "digit_rule_discount_sticky_guess"
+      },
+      {
+        "global_step": 7,
+        "experiment": 2,
+        "step": 1,
+        "from": "digit_rule_discount_sticky_guess",
+        "to": "sticky_guess_fitted_sampling_trust"
+      },
+      {
+        "global_step": 8,
+        "experiment": 2,
+        "step": 2,
+        "from": "sticky_guess_fitted_sampling_trust",
+        "to": "digit_coincidence_noticing_guess"
+      },
+      {
+        "global_step": 10,
+        "experiment": 2,
+        "step": 4,
+        "from": "digit_coincidence_noticing_guess",
+        "to": "coincidence_triggered_guess_rethink"
+      },
+      {
+        "global_step": 12,
+        "experiment": 3,
+        "step": 0,
+        "from": "coincidence_triggered_guess_rethink",
+        "to": "misfit_tolerant_coincidence_rethink"
+      },
+      {
+        "global_step": 13,
+        "experiment": 3,
+        "step": 1,
+        "from": "misfit_tolerant_coincidence_rethink",
+        "to": "evidence_graded_misfit_tolerance"
+      },
+      {
+        "global_step": 14,
+        "experiment": 3,
+        "step": 2,
+        "from": "evidence_graded_misfit_tolerance",
+        "to": "gamma_width_range_prior_guess"
+      },
+      {
+        "global_step": 15,
+        "experiment": 3,
+        "step": 3,
+        "from": "gamma_width_range_prior_guess",
+        "to": "gamma_width_distance_hesitant_guess"
+      },
+      {
+        "global_step": 16,
+        "experiment": 3,
+        "step": 4,
+        "from": "gamma_width_distance_hesitant_guess",
+        "to": "span_extrapolation_hesitant_guess_2"
+      },
+      {
+        "global_step": 17,
+        "experiment": 3,
+        "step": 5,
+        "from": "span_extrapolation_hesitant_guess_2",
+        "to": "range_reestimating_span_hesitant_guess"
+      }
+    ]
+  },
+  "starting_models_prunable": true,
+  "baseline": {
+    "mean_r": 0.8965756855833928,
+    "per_model": {
+      "tenenbaum_rules_similarity": 0.9669488205499553,
+      "bigelow_piantadosi_independent": 0.8262025506168303
+    }
+  },
+  "fitted_baseline": {
+    "mean_r_models": [
+      "bigelow_piantadosi_independent",
+      "tenenbaum_rules_similarity"
+    ],
+    "mean_rmse_models": [
+      "bigelow_piantadosi_independent",
+      "tenenbaum_rules_similarity"
+    ],
+    "per_model": {
+      "bigelow_piantadosi_independent": {
+        "pearson_r": 0.9983888464044862,
+        "rmse": 0.015596194203644076,
+        "elpd_loo": -3135.976079661612,
+        "trusted": true,
+        "n_eval_excluded": 0
+      },
+      "tenenbaum_rules_similarity": {
+        "pearson_r": 0.9748777761035735,
+        "rmse": 0.07604693715810734,
+        "elpd_loo": -3469.3757233143992,
+        "trusted": true,
+        "n_eval_excluded": 0
+      }
+    },
+    "criterion": "grouped_cv",
+    "elpd_best_model": "bigelow_piantadosi_independent",
+    "elpd_best_r": 0.9983888464044862,
+    "elpd_best_rmse": 0.015596194203644076,
+    "elpd_best_reason": null,
+    "mean_r": 0.9866333112540299,
+    "mean_rmse": 0.04582156568087571,
+    "n_responses": 6750
+  },
+  "fitted_baseline_by_experiment": [
+    {
+      "experiment": 1,
+      "mean_r_models": [
+        "bigelow_piantadosi_independent",
+        "tenenbaum_rules_similarity"
+      ],
+      "mean_rmse_models": [
+        "bigelow_piantadosi_independent",
+        "tenenbaum_rules_similarity"
+      ],
+      "per_model": {
+        "bigelow_piantadosi_independent": {
+          "pearson_r": 0.9963617323076029,
+          "rmse": 0.023422615185350472,
+          "elpd_loo": -872.7945783455625,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "tenenbaum_rules_similarity": {
+          "pearson_r": 0.8866141552307104,
+          "rmse": 0.1662702126854381,
+          "elpd_loo": -967.4165632166702,
+          "trusted": true,
+          "n_eval_excluded": 0
+        }
+      },
+      "criterion": "grouped_cv",
+      "elpd_best_model": "bigelow_piantadosi_independent",
+      "elpd_best_r": 0.9963617323076029,
+      "elpd_best_rmse": 0.023422615185350472,
+      "elpd_best_reason": null,
+      "mean_r": 0.9414879437691567,
+      "mean_rmse": 0.09484641393539428,
+      "n_responses": 2250
+    },
+    {
+      "experiment": 2,
+      "mean_r_models": [
+        "bigelow_piantadosi_independent",
+        "tenenbaum_rules_similarity"
+      ],
+      "mean_rmse_models": [
+        "bigelow_piantadosi_independent",
+        "tenenbaum_rules_similarity"
+      ],
+      "per_model": {
+        "bigelow_piantadosi_independent": {
+          "pearson_r": 0.9982037062547746,
+          "rmse": 0.016418954499393228,
+          "elpd_loo": -2132.914121204297,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "tenenbaum_rules_similarity": {
+          "pearson_r": 0.9641415758996194,
+          "rmse": 0.09667226339873274,
+          "elpd_loo": -2373.0215321978117,
+          "trusted": true,
+          "n_eval_excluded": 0
+        }
+      },
+      "criterion": "grouped_cv",
+      "elpd_best_model": "bigelow_piantadosi_independent",
+      "elpd_best_r": 0.9982037062547746,
+      "elpd_best_rmse": 0.016418954499393228,
+      "elpd_best_reason": null,
+      "mean_r": 0.981172641077197,
+      "mean_rmse": 0.05654560894906298,
+      "n_responses": 4500
+    },
+    {
+      "experiment": 3,
+      "mean_r_models": [
+        "bigelow_piantadosi_independent",
+        "tenenbaum_rules_similarity"
+      ],
+      "mean_rmse_models": [
+        "bigelow_piantadosi_independent",
+        "tenenbaum_rules_similarity"
+      ],
+      "per_model": {
+        "bigelow_piantadosi_independent": {
+          "pearson_r": 0.9983888464044862,
+          "rmse": 0.015596194203644076,
+          "elpd_loo": -3135.976079661612,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "tenenbaum_rules_similarity": {
+          "pearson_r": 0.9748777761035735,
+          "rmse": 0.07604693715810734,
+          "elpd_loo": -3469.3757233143992,
+          "trusted": true,
+          "n_eval_excluded": 0
+        }
+      },
+      "criterion": "grouped_cv",
+      "elpd_best_model": "bigelow_piantadosi_independent",
+      "elpd_best_r": 0.9983888464044862,
+      "elpd_best_rmse": 0.015596194203644076,
+      "elpd_best_reason": null,
+      "mean_r": 0.9866333112540299,
+      "mean_rmse": 0.04582156568087571,
+      "n_responses": 6750
+    }
+  ],
+  "leakage": {
+    "files": [
+      {
+        "path": "experiment1/cognitive_models/digit_rule_discount_sticky_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "prefix_log_lik",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 9
+      },
+      {
+        "path": "experiment1/cognitive_models/first_guess_win_stay_concepts.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "cell_member",
+          "cell_set",
+          "contains",
+          "group_log_count",
+          "group_size",
+          "prefix_log_lik",
+          "rating",
+          "row_cell",
+          "step_mask"
+        ],
+        "n_data_cols": 9
+      },
+      {
+        "path": "experiment1/cognitive_models/fuzzy_trace_example_memory.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "exact_lik",
+          "gist_lik",
+          "rating",
+          "row_set",
+          "row_target"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment1/cognitive_models/magnitude_compressed_sampling_concepts.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "ex_log_x",
+          "ex_mask",
+          "ex_rule_in",
+          "int_cheb",
+          "int_log_scale",
+          "rating",
+          "row_cell"
+        ],
+        "n_data_cols": 7
+      },
+      {
+        "path": "experiment1/cognitive_models/power_law_endpoints_erlang_width.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "interval_ev",
+          "interval_log_scale",
+          "rating",
+          "row_cell",
+          "rule_log_lik"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment1/cognitive_models/round_endpoint_interval_concepts.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "cell_group_share",
+          "cell_rule_member",
+          "cell_set",
+          "group_log_count",
+          "group_log_lik",
+          "group_round",
+          "group_size",
+          "rating",
+          "row_cell",
+          "rule_log_lik"
+        ],
+        "n_data_cols": 10
+      },
+      {
+        "path": "experiment1/cognitive_models/sticky_guess_last_digit_rule_prior.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "prefix_log_lik",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 9
+      },
+      {
+        "path": "experiment1/cognitive_models/sticky_guess_power_law_ranges.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "prefix_log_lik",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 9
+      },
+      {
+        "path": "experiment1/model_loop/models/digit_rule_discount_sticky_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "prefix_log_lik",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 9
+      },
+      {
+        "path": "experiment1/model_loop/models/first_guess_win_stay_concepts.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "cell_member",
+          "cell_set",
+          "contains",
+          "group_log_count",
+          "group_size",
+          "prefix_log_lik",
+          "rating",
+          "row_cell",
+          "step_mask"
+        ],
+        "n_data_cols": 9
+      },
+      {
+        "path": "experiment1/model_loop/models/fuzzy_trace_example_memory.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "exact_lik",
+          "gist_lik",
+          "rating",
+          "row_set",
+          "row_target"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment1/model_loop/models/magnitude_compressed_sampling_concepts.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "ex_log_x",
+          "ex_mask",
+          "ex_rule_in",
+          "int_cheb",
+          "int_log_scale",
+          "rating",
+          "row_cell"
+        ],
+        "n_data_cols": 7
+      },
+      {
+        "path": "experiment1/model_loop/models/power_law_endpoints_erlang_width.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "interval_ev",
+          "interval_log_scale",
+          "rating",
+          "row_cell",
+          "rule_log_lik"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment1/model_loop/models/round_endpoint_interval_concepts.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "cell_group_share",
+          "cell_rule_member",
+          "cell_set",
+          "group_log_count",
+          "group_log_lik",
+          "group_round",
+          "group_size",
+          "rating",
+          "row_cell",
+          "rule_log_lik"
+        ],
+        "n_data_cols": 10
+      },
+      {
+        "path": "experiment1/model_loop/models/sticky_guess_last_digit_rule_prior.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "prefix_log_lik",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 9
+      },
+      {
+        "path": "experiment1/model_loop/models/sticky_guess_power_law_ranges.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "prefix_log_lik",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 9
+      },
+      {
+        "path": "experiment1/model_loop/models/tenenbaum_rules_similarity.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "interval_log_count",
+          "n_examples",
+          "rating",
+          "row_cell",
+          "rule_hits",
+          "target_membership"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/cognitive_models/coincidence_gated_all_rules_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment2/cognitive_models/coincidence_noticing_guess_vote.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment2/cognitive_models/coincidence_salience_guess_revision.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment2/cognitive_models/coincidence_triggered_guess_rethink.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "new_coinc",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 9
+      },
+      {
+        "path": "experiment2/cognitive_models/compressed_concept_size_sticky_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment2/cognitive_models/digit_coincidence_noticing_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment2/cognitive_models/graded_digit_salience_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment2/cognitive_models/misfit_tolerant_coincidence_rethink.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "new_coinc",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 9
+      },
+      {
+        "path": "experiment2/model_loop/models/coincidence_gated_all_rules_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment2/model_loop/models/coincidence_noticing_guess_vote.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment2/model_loop/models/coincidence_salience_guess_revision.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment2/model_loop/models/coincidence_triggered_guess_rethink.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "new_coinc",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 9
+      },
+      {
+        "path": "experiment2/model_loop/models/compressed_concept_size_sticky_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment2/model_loop/models/digit_coincidence_noticing_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment2/model_loop/models/fuzzy_trace_sticky_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "cell_dummy",
+          "exact_fit",
+          "exact_lik",
+          "gist_fit",
+          "gist_lik",
+          "inst_is_rule",
+          "inst_log_count",
+          "inst_set",
+          "inst_size",
+          "nz_cell",
+          "nz_inst",
+          "nz_share",
+          "rating",
+          "row_cell",
+          "set_ptr",
+          "step_mask"
+        ],
+        "n_data_cols": 16
+      },
+      {
+        "path": "experiment2/model_loop/models/graded_digit_salience_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment2/model_loop/models/misfit_tolerant_coincidence_rethink.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "new_coinc",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 9
+      },
+      {
+        "path": "experiment3/cognitive_models/distance_hesitant_concept_extension.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_dist",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 13
+      },
+      {
+        "path": "experiment3/cognitive_models/evidence_graded_misfit_tolerance.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 12
+      },
+      {
+        "path": "experiment3/cognitive_models/gamma_width_range_prior_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 12
+      },
+      {
+        "path": "experiment3/cognitive_models/range_reestimating_span_hesitant_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_dist",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 13
+      },
+      {
+        "path": "experiment3/cognitive_models/rule_only_distance_hesitation.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_dist",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 13
+      },
+      {
+        "path": "experiment3/cognitive_models/rule_only_span_extrapolation_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_dist",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 13
+      },
+      {
+        "path": "experiment3/cognitive_models/span_extrapolation_hesitant_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_dist",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 13
+      },
+      {
+        "path": "experiment3/cognitive_models/span_extrapolation_hesitant_guess_2.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_dist",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 13
+      },
+      {
+        "path": "experiment3/model_loop/models/digit_coincidence_noticing_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_present",
+          "group_size",
+          "interval_group",
+          "rating",
+          "row_set",
+          "row_target",
+          "step_mask"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment3/model_loop/models/distance_hesitant_concept_extension.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_dist",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 13
+      },
+      {
+        "path": "experiment3/model_loop/models/evidence_graded_misfit_tolerance.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 12
+      },
+      {
+        "path": "experiment3/model_loop/models/gamma_width_range_prior_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 12
+      },
+      {
+        "path": "experiment3/model_loop/models/partial_recall_guess_resampling.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 12
+      },
+      {
+        "path": "experiment3/model_loop/models/range_reestimating_span_hesitant_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_dist",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 13
+      },
+      {
+        "path": "experiment3/model_loop/models/rule_only_distance_hesitation.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_dist",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 13
+      },
+      {
+        "path": "experiment3/model_loop/models/rule_only_span_extrapolation_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_dist",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 13
+      },
+      {
+        "path": "experiment3/model_loop/models/span_extrapolation_hesitant_guess.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_dist",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 13
+      },
+      {
+        "path": "experiment3/model_loop/models/span_extrapolation_hesitant_guess_2.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "contains",
+          "group_count",
+          "group_present",
+          "group_size",
+          "n_explained",
+          "new_coinc",
+          "pair_dist",
+          "pair_in_group",
+          "pair_set",
+          "pair_target",
+          "rating",
+          "row_pair",
+          "step_mask"
+        ],
+        "n_data_cols": 13
+      }
+    ],
+    "any_identical": false,
+    "any_mention": false,
+    "any_value_mention": false,
+    "any_gt_named": false,
+    "csv_generating_model_files": [],
+    "any_csv_generating_model": false,
+    "manifest_gt_named_files": [],
+    "any_manifest_gt_named": false,
+    "max_data_cols": 16
+  },
+  "experiments": [
+    {
+      "experiment": 1,
+      "manifest_models": [
+        "round_endpoint_interval_concepts",
+        "power_law_endpoints_erlang_width",
+        "first_guess_win_stay_concepts",
+        "sticky_guess_power_law_ranges",
+        "magnitude_compressed_sampling_concepts",
+        "fuzzy_trace_example_memory",
+        "digit_rule_discount_sticky_guess",
+        "sticky_guess_last_digit_rule_prior"
+      ]
+    },
+    {
+      "experiment": 2,
+      "manifest_models": [
+        "digit_coincidence_noticing_guess",
+        "coincidence_gated_all_rules_guess",
+        "compressed_concept_size_sticky_guess",
+        "coincidence_triggered_guess_rethink",
+        "graded_digit_salience_guess",
+        "coincidence_salience_guess_revision",
+        "misfit_tolerant_coincidence_rethink",
+        "coincidence_noticing_guess_vote"
+      ]
+    },
+    {
+      "experiment": 3,
+      "manifest_models": [
+        "evidence_graded_misfit_tolerance",
+        "distance_hesitant_concept_extension",
+        "gamma_width_range_prior_guess",
+        "rule_only_distance_hesitation",
+        "span_extrapolation_hesitant_guess",
+        "span_extrapolation_hesitant_guess_2",
+        "range_reestimating_span_hesitant_guess",
+        "rule_only_span_extrapolation_guess"
+      ]
+    }
+  ]
+}

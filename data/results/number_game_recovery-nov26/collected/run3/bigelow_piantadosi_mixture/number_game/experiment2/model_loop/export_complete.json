@@ -1,0 +1,10 @@
+{
+  "models": [
+    "familiar_strays_equal_rule_prior",
+    "two_source_program_concepts",
+    "rule_count_familiar_strays",
+    "prior_matched_familiar_strays",
+    "graded_exemplar_equal_rule_prior"
+  ],
+  "ledger_sha256": "f8cb13b3202e30c7adfb006aa530c6e2b737c6c9516cd1461407875f2f99e340"
+}

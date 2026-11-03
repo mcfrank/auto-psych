@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  breadth_prior_concepts_free_outlier_rate: 0.125
+  concepts_sampled_without_replacement: 0.125
+  counting_by_twos_run_concepts: 0.125
+  round_number_salient_sampling: 0.125
+  rule_breadth_prior_concepts: 0.125
+  shown_examples_not_repeated: 0.125
+  without_replacement_free_outlier_rate: 0.125
+  without_replacement_size_principle: 0.125

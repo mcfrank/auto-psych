@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  erlang_interval_size_exception_prior: 0.125
+  erlang_interval_size_family_prior: 0.125
+  erlang_interval_size_family_prior_2: 0.125
+  exception_rule_family_prior: 0.125
+  exception_rule_family_prior_2: 0.125
+  parity_bounded_range_concepts: 0.125
+  power_base_family_prior: 0.125
+  powers_own_family_erlang_interval: 0.125

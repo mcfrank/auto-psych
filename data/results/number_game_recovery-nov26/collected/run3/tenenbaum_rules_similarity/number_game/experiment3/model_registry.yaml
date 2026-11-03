@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  first_impression_kind_anchoring: 0.125
+  kind_uncertainty_shifted_criterion: 0.125
+  mixed_sampling_rule_family_doubt: 0.125
+  representative_coverage_family_doubt: 0.125
+  representative_coverage_sampling: 0.125
+  rule_family_doubt_criterion: 0.125
+  two_cluster_rule_family_doubt: 0.125
+  uncertainty_shifted_criterion: 0.125

@@ -1,0 +1,83 @@
+- [Interval tempering speed trick](interval-tempering-speed-trick.md) — exact, fast param-dependent interval likelihoods via (n,m,k) value counts
+- [Warm-start saddle fix](warm-start-saddle-priors.md) — "Hessian not PD" may be L-BFGS-B stuck at a saddle; centre priors near the true mode
+- [Anything-goes hypothesis outcome](anything-goes-hypothesis-outcome.md) — uniform-generator add-on: omega→0, no gain
+- [WSLS exact recursion](wsls-exact-recursion.md) — order-dependent running-guess model, exact and fast
+- [Number-game refinement findings](number-game-refinement-findings.md) — what helped/failed refining the incumbent; pooling rule weights helps LOO
+- [PPC null statistics](ppc-null-statistics.md) — test-stat ideas already tried (exp1 all null; exp2 iter_0 list)
+- [Concept additions collapse](concept-additions-collapse.md) — new concept families get share→0; use a stated prior for novelty
+- [Grid-tabulated range evidence](grid-tabulated-range-evidence.md) — scalar param inside interval tables: tabulate on grid in prepare_observed, use Gaussian (not linear) interpolation
+- [Complement-stray refinement](complement-stray-refinement.md) — strays from concept complement: +0.6 MAP, distinct; width prior near-dup; check sibling candidates
+- [Pedagogical teacher sampling](pedagogical-teacher-sampling.md) — helpful-teacher model: tau≈0.42, fast via fixed-Z0 + tau grid
+- [Family-pooled + reliability graft](family-pooled-reliability-graft.md) — smoke OK, slow (290 s/200 iters) from the tau funnel
+- [Check sibling candidates first](check-sibling-candidates-first.md) — the obvious top-2 graft is often already taken in the same iter
+- [Predictive readout outcome](predictive-readout-outcome.md) — target-as-next-output readout loses ~38 nats vs membership
+- [Digit-slip stray refinement](digit-slip-stray-refinement.md) — strays as miswritten members: +0.4..1 MAP, distinct; magnitude near-miss no gain
+- [Without-replacement & small-number bias](without-replacement-and-small-number-bias.md) — y^-gamma frequency collapses; (s-j)!/s! sampling distinct, parameter-free
+- [Compressed number line ranges](compressed-number-line-ranges.md) — log/power number line for intervals: c≈0.94, log ruled out by 18 nats
+- [Stray generator variants](stray-generator-variants.md) — rule-generated strays tie MAP, distinct; spike/round-interval near-dups
+- [WSLS + uncertain reliability](wsls-uncertain-reliability-graft.md) — running-guess model with Beta-marginalised strays; count-table layout; gammaln precision gotcha
+- [FP reliability WSLS](fp-reliability-wsls.md) — exp2 triple graft: family prior + reliability + WSLS stickiness
+- [Kind-specific reliability](kind-specific-reliability.md) — exp2: rule vs range reliability +1.5 MAP; tau LogNormal + dense-dot interval evidence = 6x faster fit
+- [Exp2 incumbent refinement scan](exp2-incumbent-refinement-scan.md) — exp2 one-change variants of family_pooled_uncertain_reliability all tie at MAP
+- [Exp2 incumbent refinements](exp2-incumbent-refinements.md) — exp2 iter_0: lapse/readout/prior tweaks collapse; uniform+rule-generated stray mix +1.3 ll
+- [First-example anchored reliability](first-example-anchored-reliability.md) — exp2 order model: separate trust for example 1; repair dropped tau funnel for speed
+- [Weak-sampling speed repair](weak-sampling-speed-repair.md) — family-only weights + pt.dot over size axis made a timed-out interval model 5x faster
+- [Tau funnel speed fix](tau-funnel-speed-fix.md) — fix tau=1.6 in family-pooled models: 521→31 NUTS steps/iter; equal-rule stray generator
+- [Fast incumbent sampling](fast-incumbent-sampling.md) — exp2 incumbent refinements time out at 0.99; fixed spread + sparse dots fix (2.3 ms/grad, 31 steps)
+- [Consistency-attention similarity](consistency-attention-similarity.md) — exp2 similarity slot: fast, ll ~-2523, far behind concept models
+- [Familiar strays + family-only prior](familiar-strays-family-level.md) — fixed-tau rule_dev models lose >100 ELPD; family-only weights win via parsimony
+- [Anchored + rule deviations](anchored-rule-deviations.md) — exp2 iter_1: per-rule weights back on the anchored model: +20.8 MAP; anchor itself ~+1.6
+- [Noisy criterion decision rule](noisy-criterion-decision-rule.md) — exp2: Beta criterion → probability matching; incumbent already calibrated
+- [Rule devs on anchored incumbent](rule-devs-on-anchored-incumbent.md) — exp2 iter_1: per-rule deviations (fixed sd 0.6) +17 MAP ll over the family-only incumbent
+- [Range-restricted rules](range-restricted-rules.md) — rule∩interval concepts: share→0.014, +0.2 MAP; m-in-column CSR gives 4 ms/grad
+- [Random-looking strays](random-looking-strays.md) — exp2 iter_2: strays ∝ 1/familiarity, opposite of familiar strays; smoke OK
+- [Familiar strays + anchor](familiar-strays-anchor.md) — exp2 iter_2: anchor grafted on familiar-strays incumbent; compile_fn point_fn+ignore gotcha
+- [Anchored without-replacement](anchored-without-replacement.md) — exp2: WOR on anchored model −7 ll, distinct; rule-size prior exponent→0; find_MAP saddles, use NUTS
+- [Exp2 iter_2 incumbent saturation](exp2-iter2-incumbent-saturation.md) — familiar_strays one-change variants all tie MAP; power-law familiarity strays submitted
+- [Random-looking strays & residue classes](random-looking-strays-and-residue-classes.md) — anti-familiar strays gamma→0; residue classes −70; subset-tensordot speed trick
+- [Graded exemplar + uncertain reliability](graded-exemplar-uncertain-reliability.md) — exp2 exemplar slot: exact e_j marginal with graded weights; r≈0.015; distance-count speed trick
+- [Graded exemplar + familiar strays](graded-exemplar-familiar-strays.md) — exp2 iter_3: familiar strays on exemplar incumbent via 16-subset range tables
+- [Membership verification errors](membership-verification-errors.md) — per-family target-check error on graded exemplar: no smoke gain
+- [Equal rule prior parsimony](equal-rule-prior-parsimony.md) — exp2: family levels ≈0; equal-rule familiar strays 4 params; novelty RMSE threshold 0.002; trial/participant null
+- [Fuzzy & centre-weighted ranges](fuzzy-and-centre-weighted-ranges.md) — non-uniform within-range generation/graded readout all lose; subset pre-sum speed trick
+- [Graded exemplar refinements](graded-exemplar-refinements.md) — exp2 iter_3: separate endorsement gradient collapses; familiar strays +1.3 MAP (sibling took it); anchor +0.06
+- [Normative distortions collapse](normative-distortions-collapse.md) — exp2: n^-gamma/size/width exponents →normative; final-digit binding eps≈.04 submitted; one-hot dot speedup
+- [Recency-anchored strays](recency-anchored-strays.md) — exp2: last-example anchor on equal-rule incumbent −1.4 MAP ll, distinct; position anchors exhausted
+- [Two-source program concepts](two-source-program-concepts.md) — exp2 iter_4: strays from a 2nd rule that is generalised from; ties MAP, distinct; E/Y table trick
+- [Prior-matched familiar strays](prior-matched-familiar-strays.md) — exp2 iter_4: mix=lambda_0 ties MAP with 1 fewer param; count-familiarity/binding tie
+- [Graded exemplar equal rule prior](graded-exemplar-equal-rule-prior.md) — exp2 iter_4: family levels ≈0 on exemplar model too; equal prior −0.86 MAP, −6 params
+- [Digit-position exemplar retrieval](digit-position-exemplar-retrieval.md) — exp2: Hamming-digit metric on exemplar retrieval collapses r→0.002 (crisp)
+- [Equal-rule incumbent scan](equal-rule-incumbent-scan.md) — exp2 iter_4: binding/Erlang/slip/familiarity variants all tie; rule-count familiarity submitted
+- [Concept-gated exemplar similarity](concept-gated-exemplar-similarity.md) — exp3: membership × exp(-dist to nearest example/w): w→∞, −1.9 MAP; hull critique not closed by proximity
+- [Two-source shared program prior](two-source-shared-program-prior.md) — exp3: 2nd source may be a range, 0 params, ties MAP; no binding signal in exp3
+- [Range-restricted familiar strays](range-restricted-familiar-strays.md) — exp3: rule member-runs on incumbent, rho≈.06, +0.66 MAP, distinct (RMSE .16)
+- [Bounded arithmetic progressions](bounded-arithmetic-progressions.md) — exp3: AP concepts eta→0, −5 ll at 1%; find_MAP p_yes gotcha
+- [Exp3 decision rules collapse](exp3-decision-rules-collapse.md) — exp3: free lapse/bias/slope/consensus/hull-scrutiny → identity, near-dup; stated-prior lapse (Beta(20,980)) passes RMSE
+- [Range-limited rules + familiar strays](range-limited-rule-familiar-strays.md) — exp3: rule∩range on incumbent, rho .095 +1 MAP; p_yes-at-MAP eval gotcha
+- [Two-source familiar glitches](two-source-familiar-glitches.md) — exp3 c5 repair: familiar glitches on two_source +0.43 MAP, pool RMSE .0025; exact novelty-pool RMSE recipe
+- [Erlang range prior](erlang-range-prior.md) — exp3: Erlang size prior on ranges −4.1 MAP ll vs incumbent; span-contrast critique not closed this way
+- [Typical-width magnitude bands](typical-width-magnitude-bands.md) — exp3: Erlang/exponential range-width priors lose 5–9 MAP ll; narrow-span fill-in gap not from widths
+- [One-sided threshold ranges](one-sided-threshold-ranges.md) — exp3: interval-prior variants (power, Erlang, decade, one-sided) all ≈tie; one-sided tau .03 +0.4 submitted
+- [Cluster-cued range salience](cluster-cued-range-salience.md) — exp3: span-tightness boost to range prior +1.8 MAP; Erlang/width priors fail narrow-span critique
+- [Two-source + range-limited rules](two-source-range-limited-rules.md) — exp3 iter_1 c5: graft +1.1 MAP, RMSE .0075 vs incumbent; width priors collapse again
+- [Variable rule-range expectation](variable-rule-range-expectation.md) — exp3 iter_1: per-judgement logit-normal lambda +1.55 MAP; width/Erlang/parity/kind-reliability collapse
+- [Cluster-cued variable lambda](cluster-cued-variable-lambda.md) — exp3 iter_2: tightness on the variable-lambda mean, +1.6 MAP, RMSE .010
+- [Tightness-cued rule/range expectation](tightness-cued-rule-range-expectation.md) — exp3 iter_2: cluster cue on variable-lambda incumbent +1.6 MAP, distinct; reusable mapeval.py
+- [Representative-sample rules](representative-sample-rules.md) — exp3 iter_2: span-tightness penalty on whole-line rules, beta .15, +0.96 MAP; gap barely moves
+- [Min-max bounded range](min-max-bounded-range.md) — exp3 iter_2: boost on exact hull range +1.7 MAP, distinct; narrow fill-in gap still ~.15
+- [Two-source cluster-cued ranges](two-source-cluster-cued-ranges.md) — exp3 iter_2 c5: cluster cue on two_source +2.0 MAP, ties incumbent; incumbent+cluster taken by siblings
+- [Gist memory examples](gist-memory-examples.md) — exp3: verbatim-or-magnitude-gist examples, +1.1 MAP, g≈.97; sparse one-hot gather speedup
+- [Two-source + variable lambda](two-source-variable-rule-expectation.md) — exp3 iter_2 c4 repair: −0.9 MAP vs incumbent, pool RMSE .0028; narrow fill-in hints (2^k−1, shared digit)
+- [Variable min-max range](variable-min-max-bounded-range.md) — exp3 iter_3: variable lambda on min_max +1.35 MAP vs incumbent, RMSE .008; dense-only restricted rules lose
+- [Ratio-scale exemplar retrieval](ratio-scale-exemplar-retrieval.md) — exp3 iter_3 similarity slot: Weber metric on graded exemplar: smoke ll −3457, ~130 nats worse, ratio metric ruled out
+- [Thurstonian decision noise](thurstonian-decision-noise.md) — exp3: majority-vote −140 ll; log-odds noise sigma .3 ~free, needs stated prior for novelty
+- [WSLS on variable rule/range](wsls-variable-rule-range.md) — exp3 iter_3: WSLS stay .076 ties MAP, distinct; serial weighting of kind belief pinned at w=1
+- [Variable expectation + threshold ranges](variable-expectation-threshold-ranges.md) — exp3 iter_3: set-size critique is item noise; n-dependent lambda/rho-var/WOR collapse; one-sided graft +0.16
+- [Variable-lambda incumbent saturation](variable-lambda-incumbent-saturation.md) — exp3 iter_3: one-change scan on variable_rule_range_expectation collapses; one-sided graft +0.16 submitted; set-level RE is item effect
+- [Variable expectation + decision noise](variable-expectation-decision-noise.md) — exp3 iter_3 c4 repair: mix=lambda dup; stated-prior log-odds noise on incumbent −1.3 MAP, RMSE .005
+- [MINERVA echo concept traces](minerva-echo-concept-traces.md) — exp3 iter_4 exemplar slot: cosine^p echo over concept traces −960 nats; no size-principle tightening
+- [Approximate near-miss rules](approximate-near-miss-rules.md) — exp3 iter_4: sparse-rule ±1 concepts on incumbent, +0.84 MAP, RMSE .033 distinct
+- [Previous-set concept intrusion](previous-set-concept-intrusion.md) — exp3: inter-trial carryover w→0; 2% costs 5 ll; sequence families ruled out
+- [Tightness-cued min-max range](tightness-cued-min-max-range.md) — exp3 iter_4: cluster cue on variable_min_max incumbent +1.05 MAP, RMSE .007; decade hull dup
+- [Example-count scaled hull](example-count-scaled-hull.md) — exp3 iter_4: hull boost ×(n−1) +0.18 MAP, 0 params; hull-bounded rules/tightness-on-boost dup
+- [Gist memory + min-max range](gist-memory-min-max-range.md) — exp3 iter_4 c5: hull boost on gist model −3318.27 MAP (−0.4 vs incumbent), pool RMSE .0052

@@ -1,0 +1,101 @@
+models:
+- name: digit_coincidence_noticing_guess
+  rationale: "Refinement of the incumbent sticky_guess_fitted_sampling_trust (a single\
+    \ working concept guess \u2014 a rule or a numerical range \u2014 formed from\
+    \ the first example by Bayesian concept learning, kept with fitted stickiness\
+    \ while later examples fit it, digit rules discounted, fitted trust in the examples).\
+    \ The one change: a rule defined only by how numbers are written (\"ends in 6\"\
+    , \"contains the digit 3\") becomes a salient candidate only once people notice\
+    \ that digit as a coincidence shared by at least two of the examples seen so far;\
+    \ until then \u2014 always after a single example, and for a digit only one example\
+    \ has \u2014 its plausibility is reduced by a fitted availability factor. So a\
+    \ lone 46 does not readily lead people to say yes to 96, whereas 46 and 86 together\
+    \ do."
+- name: coincidence_gated_all_rules_guess
+  rationale: "Refinement of digit_coincidence_noticing_guess (a single working concept\
+    \ guess \u2014 a rule or a numerical range \u2014 formed from the first example\
+    \ by Bayesian concept learning and kept with fitted stickiness while later examples\
+    \ fit it, digit rules discounted, fitted trust in the examples, and digit rules\
+    \ made salient only once a digit is noticed as shared by at least two examples).\
+    \ The one change: the same coincidence-noticing gate applies to arithmetic rules\
+    \ too \u2014 \"even\", \"multiples of 7\" or \"squares\" becomes a salient candidate\
+    \ only once at least two of the examples seen so far share that property, and\
+    \ until then (always after a single example) its plausibility is reduced by its\
+    \ own fitted availability factor. So a lone example suggests a range of nearby\
+    \ numbers rather than a broad rule, people generalise less to far-away numbers\
+    \ from one example, and the first working guess is range-like until a shared property\
+    \ is noticed."
+- name: compressed_concept_size_sticky_guess
+  rationale: "People learn the concept as in the current best model (a single sticky\
+    \ working guess \u2014 a rule or a numerical range \u2014 formed from the first\
+    \ example by Bayesian concept learning, with the size principle favouring small\
+    \ concepts), but with one distortion: they misjudge how many numbers a candidate\
+    \ concept contains, perceiving concept size on a compressed, numerosity-like scale\
+    \ relative to the whole range 1-100 (with the compression fitted). So they feel\
+    \ \"powers of 2\" or a narrow range is less small, and \"even numbers\" less large,\
+    \ than it really is, which weakens (or, if expanded, strengthens) the size principle's\
+    \ preference for specific concepts without changing how strongly a non-fitting\
+    \ example counts against a guess."
+- name: coincidence_triggered_guess_rethink
+  rationale: "Refinement of the incumbent digit_coincidence_noticing_guess (a single\
+    \ working concept guess \u2014 a rule or a numerical range \u2014 formed from\
+    \ the first example by Bayesian concept learning, kept with fitted stickiness\
+    \ while later examples fit it, digit rules discounted and made salient only once\
+    \ a digit is noticed as shared by at least two examples, fitted trust in the examples).\
+    \ The one change: noticing a coincidence is itself a trigger to rethink. When\
+    \ a new example makes people notice a digit it shares with an earlier example,\
+    \ they drop their current guess with a fitted probability and reconsider the concept\
+    \ from all the examples, even if that guess still fits. So after 46 then 86, a\
+    \ range guess formed from 46 that happens to contain 86 is often given up in favour\
+    \ of \"ends in 6\", and far numbers like 96 are endorsed more than the purely\
+    \ sticky learner predicts."
+- name: graded_digit_salience_guess
+  rationale: "Refinement of digit_coincidence_noticing_guess (a single working concept\
+    \ guess \u2014 a rule or a numerical range \u2014 formed from the first example\
+    \ by Bayesian concept learning, kept with fitted stickiness while later examples\
+    \ fit it, digit rules discounted, fitted trust in the examples, and rules about\
+    \ how numbers are written made salient only by a noticed shared digit). The one\
+    \ change: noticing a shared digit is not all-or-none at two examples but grows\
+    \ with every example that carries it \u2014 the reduced plausibility of a written-form\
+    \ rule (\"ends in 6\", \"contains a 3\") is divided among the examples that have\
+    \ its digit, so it is fully reduced with one such example, half as reduced with\
+    \ two, a third with three \u2014 making \"ends in 6\" a gradually more salient\
+    \ guess as more examples repeat the digit, rather than fully salient as soon as\
+    \ two do."
+- name: coincidence_salience_guess_revision
+  rationale: "Refinement of coincidence_gated_all_rules_guess (a single sticky working\
+    \ guess \u2014 a rule or a numerical range \u2014 formed from the first example\
+    \ by Bayesian concept learning, with rules made salient only once two examples\
+    \ share them). The one change: noticing a coincidence is itself a trigger for\
+    \ rethinking \u2014 when a new example makes a rule shared by two examples for\
+    \ the first time, people abandon their current guess and reconsider the concept\
+    \ from all examples (even if the guess still fits) with a probability equal to\
+    \ how compelling the newly noticed rule is given the examples so far, with no\
+    \ extra free parameter. So a striking pattern revealed by later examples overrides\
+    \ a guess formed from an unrepresentative first example, while a weak coincidence\
+    \ barely unsettles it, and order effects are weaker than pure stickiness predicts."
+- name: misfit_tolerant_coincidence_rethink
+  rationale: "Refinement of the incumbent coincidence_triggered_guess_rethink (a single\
+    \ working concept guess \u2014 a rule or a numerical range \u2014 formed from\
+    \ the first example by Bayesian concept learning, kept with fitted stickiness\
+    \ while later examples fit it, digit rules discounted and made salient only once\
+    \ a digit is shared by two examples, a newly noticed coincidence triggering a\
+    \ rethink, fitted trust in the examples). The one change: a guess is not automatically\
+    \ abandoned when a new example contradicts it \u2014 people sometimes write the\
+    \ misfitting example off as a stray number and keep their guess, with a fitted\
+    \ tolerance. So after 77 and 17 a guess of \"ends in 7\" often survives the outlier\
+    \ 8, and targets fitting the early examples' concept are still endorsed despite\
+    \ a later example that breaks it."
+- name: coincidence_noticing_guess_vote
+  rationale: "Refinement of digit_coincidence_noticing_guess (a single sticky working\
+    \ concept guess \u2014 a rule or a numerical range \u2014 formed from the first\
+    \ example by Bayesian concept learning, digit rules discounted and made salient\
+    \ only once a digit is noticed as shared by two examples, fitted trust in the\
+    \ examples). The one change, the component taken from sampled_guess_vote_threshold:\
+    \ people do not answer by consulting a single guess, but call to mind several\
+    \ guesses generated by this learner and say \"yes\" only if a sufficient share\
+    \ of them contain the target, with the effective number of guesses and the share\
+    \ required fitted. So the same belief maps onto a sharpened or softened, more\
+    \ liberal or more conservative yes rate \u2014 e.g. targets that only some plausible\
+    \ guesses contain (96 after 46 and 86) can be endorsed less, and near-certain\
+    \ members more, than probability matching predicts."

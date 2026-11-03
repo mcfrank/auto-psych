@@ -1,0 +1,471 @@
+models:
+- name: rule_breadth_prior_concepts
+  rationale: "Refinement of `equal_prior_concepts_with_guess_lapse`: people do Bayesian\
+    \ concept learning over the same 45 arithmetic and digit rules and every interval\
+    \ of 1-100 (size principle, 10% of examples random), with occasional guessing\
+    \ at their own yes rate \u2014 but before seeing any examples they already prefer\
+    \ rules by their breadth, giving each rule a prior weight that rises or falls\
+    \ as a power of how many numbers it contains (a preference for specific, \"interesting\"\
+    \ rules over broad ones, or the reverse). The one change is replacing the flat\
+    \ prior across rules with this single size-graded rule prior, which predicts that\
+    \ broad rules such as \"odd\" or \"even\" win less (or more) of the posterior\
+    \ than an equal-prior learner gives them, e.g. fewer \"yes\" answers to arbitrary\
+    \ odd numbers after 85, 19, 91."
+- name: counting_by_twos_run_concepts
+  rationale: 'Refinement of `rule_breadth_prior_concepts`: people do Bayesian concept
+    learning over the same arithmetic and digit rules (with their size-graded rule
+    prior) and every interval of 1-100, with the size principle, 10% of examples random
+    and occasional guessing. They also entertain one more kind of concept, "counting
+    by twos" runs: a bounded stretch of every other number, such as 60, 62, 64, 66
+    or 31, 33, 35, i.e. the even or the odd numbers within a limited range. All such
+    runs are equally likely a priori, and the family as a whole takes an inferred
+    share of prior belief relative to the rules. This predicts that examples spaced
+    by two (e.g. 60, 62, 64) draw "yes" to nearby same-parity numbers but not to same-parity
+    numbers far away, a pattern that neither "even numbers" nor a numeric range gives.'
+- name: breadth_prior_concepts_free_outlier_rate
+  rationale: "Refinement of `rule_breadth_prior_concepts`: people do Bayesian concept\
+    \ learning over the same 45 arithmetic and digit rules (with the same breadth-graded\
+    \ rule prior) and every interval of 1-100, with the size principle and occasional\
+    \ guessing at their own yes rate \u2014 but how often they believe the program\
+    \ emits a stray random example is a property of the learner, inferred from their\
+    \ answers, rather than fixed at one in ten. The one change is freeing this outlier\
+    \ rate (the component taken from `digit_concepts_inferred_outlier_rate`), which\
+    \ claims that part of what the lapse now absorbs is really people discounting\
+    \ a misfitting example as a stray, so tight rules survive an odd-one-out example\
+    \ (e.g. 85, 19, 91 or 14, 47) instead of being abandoned for broad ones."
+- name: concepts_sampled_without_replacement
+  rationale: 'Refinement of `rule_breadth_prior_concepts`: people do Bayesian concept
+    learning over the same 45 arithmetic and digit rules and every interval of 1-100,
+    with a size-graded rule prior, 10% of examples random and occasional guessing
+    at their own yes rate. They also take it that the program shows distinct numbers,
+    so each further example is a draw from the concept''s members not yet shown (strong
+    sampling without replacement). The one change is this sampling assumption. It
+    sharpens the size principle most for small concepts that are nearly used up by
+    the examples (e.g. 8, 64 or 16, 8, 64 strongly favour "powers of 2", or 1, 8,
+    27 "cubes"), so people say "yes" less often to members of broader rules and wide
+    ranges than a with-replacement learner predicts.'
+- name: without_replacement_size_principle
+  rationale: 'Refinement of `equal_prior_concepts_with_guess_lapse`: people do Bayesian
+    concept learning over the same 45 arithmetic and digit rules and every interval
+    of 1-100 (equal rule prior, 10% of examples random, occasional guessing at their
+    own yes rate), but they understand that the program shows distinct examples, so
+    each further example is read as a draw from the concept''s members not yet shown
+    (sampling without replacement) rather than from all its members again. The one
+    change is this without-replacement size principle, which adds no free parameter
+    and predicts that several examples sharpen generalization toward small concepts
+    more than the standard model does: a few examples that nearly exhaust a small
+    rule (e.g. 16, 8, 64 for powers of 2) or a short range make that concept far more
+    credible than broader alternatives.'
+- name: round_number_salient_sampling
+  rationale: 'People do Bayesian concept learning over the same arithmetic and digit
+    rules (with a size-graded rule prior) and every interval of 1-100, with occasional
+    guessing, treating the examples as distinct draws from the hidden concept (strong
+    sampling without replacement, with some stray random examples). The one new claim
+    is about how they believe the program picks numbers: not uniformly, but with round
+    numbers (multiples of 5 and 10) more or less likely to be produced than other
+    numbers, with the strength and direction of this round-number bias inferred from
+    their answers. Because a concept''s members are then weighted by how readily the
+    program would emit them, this predicts that concepts made mostly of round numbers
+    (e.g. "multiples of 10", "ends in 0" or "ends in 5") gain or lose credibility
+    relative to other rules and ranges. It also predicts that a round example says
+    less about the concept than a non-round one does, or more.'
+- name: without_replacement_free_outlier_rate
+  rationale: "Refinement of `concepts_sampled_without_replacement`: people do Bayesian\
+    \ concept learning over the same 45 arithmetic and digit rules (with the size-graded\
+    \ rule prior) and every interval of 1-100, reading each further example as a draw\
+    \ from the concept's members not yet shown (strong sampling without replacement),\
+    \ with occasional guessing at their own yes rate. The one change (the component\
+    \ taken from `breadth_prior_concepts_free_outlier_rate`) is that how often they\
+    \ believe the program shows a stray random number is a property of the learner,\
+    \ inferred from their answers, rather than fixed at one in ten \u2014 so a misfitting\
+    \ example (e.g. 14, 47 or 85, 19, 91) is discounted as a stray at the learner's\
+    \ own rate, letting tight, nearly exhausted concepts survive it instead of yielding\
+    \ to broad rules and wide ranges."
+- name: shown_examples_not_repeated
+  rationale: 'Refinement of `concepts_sampled_without_replacement` (the incumbent):
+    people do Bayesian concept learning over the same 45 arithmetic and digit rules
+    and every interval of 1-100, with the size-graded rule prior, 10% of examples
+    random, occasional guessing at their own yes rate, and the belief that the program
+    shows distinct numbers, so each further example is a draw from the concept''s
+    members not yet shown. The one change follows from that same belief: when the
+    number asked about is one of the examples already shown, people sometimes (at
+    a rate inferred from their answers) read "would the program also produce it?"
+    as asking whether it would come up again as a new example, and since the program
+    does not repeat itself they answer "no". This predicts fewer "yes" answers to
+    targets that are themselves examples than the concept''s membership implies (about
+    two-thirds rather than three-quarters), while leaving every other judgment governed
+    by the incumbent''s concept learning and making the guessing lapse smaller.'
+- name: narrow_range_specificity_bias
+  rationale: 'People infer the hidden concept by Bayesian inference over arithmetic
+    and digit rules and numeric ranges. They read the examples as distinct numbers
+    drawn from the concept, allow that some are stray, and sometimes guess. The one
+    distortion is a specificity bias in how they think about ranges: before seeing
+    any examples, they already judge a narrow stretch of numbers a likelier program
+    than a wide one, so a range''s prior plausibility falls (or rises) as a power
+    of its width. The rules themselves keep an equal prior. This predicts tighter
+    "yes" gradients around clustered examples (e.g. 60, 62, 64) and fewer "yes" answers
+    far beyond the examples'' span than an unbiased learner gives, while generalization
+    by rules (e.g. powers of 2 after 16, 8, 64) is left unchanged.'
+- name: pure_rule_induction_no_ranges
+  rationale: 'People treat the task purely as rule induction: they weigh only the
+    arithmetic and digit rules (odd, even, primes, squares, powers, multiples, "ends
+    in d", "contains d") by how well each explains the distinct examples shown (the
+    size principle, sampling without replacement), and when no rule fits they fall
+    back on "the program produces any number at all", with occasional guessing. They
+    never entertain numeric ranges, so this predicts no graded magnitude generalization:
+    a target near the examples (e.g. 61 after 60, 62, 64) is no more likely to get
+    a "yes" than a distant number that fits the same rules.'
+- name: position_graded_example_trust
+  rationale: 'People do Bayesian concept learning over the same arithmetic and digit
+    rules and numeric ranges as the best model (equal rule prior, distinct examples
+    drawn without replacement, occasional guessing), but they read the examples in
+    order and their trust in each one shifts steadily along the sequence: the chance
+    they put on an example being a stray random number rises or falls by a fixed step
+    with each later position (recency or primacy of trust), with the average stray
+    rate unchanged. This predicts that the same misfitting example is discounted more
+    readily when it comes at the distrusted end of the sequence (e.g. 47 after 14
+    versus 14 after 47), so tight rules survive an odd-one-out example in one position
+    but give way to broad concepts in the other.'
+- name: final_digit_rule_discount
+  rationale: 'Refinement of `without_replacement_size_principle` (the incumbent):
+    people do Bayesian concept learning over the same 45 arithmetic and digit rules
+    and every interval of 1-100, reading each further example as a draw from the concept''s
+    members not yet shown (sampling without replacement), with 10% of examples random
+    and occasional guessing at their own yes rate. The one change is that the final-digit
+    rules ("ends in 3", "ends in 7", ...) are not as plausible a program as the other
+    rules: before seeing examples, people hold the "ends in d" rules at a different
+    prior weight (inferred from their answers; lower if a shared last digit reads
+    as a coincidence of notation rather than a rule), while all other rules keep an
+    equal prior. This predicts fewer (or more) "yes" answers to numbers that share
+    only the examples'' final digit (e.g. 53 after 13, 73) than the incumbent gives,
+    while range-based and arithmetic generalization are left as they are.'
+- name: relative_width_range_prior
+  rationale: 'Refinement of `without_replacement_size_principle` (the incumbent):
+    people do Bayesian concept learning over the same 45 arithmetic and digit rules
+    and every numeric range of 1-100, reading the examples as distinct draws (sampling
+    without replacement), with 10% stray examples and occasional guessing at their
+    own yes rate. The one change is a Weber-like sense of how narrow a range is: before
+    seeing examples, people judge a range more (or less) plausible as a power of its
+    width *relative to its magnitude* (width divided by the range''s midpoint), so
+    "60 to 64" counts as a tight, specific range while "2 to 6", equally wide in absolute
+    terms, counts as a broad one. This predicts sharper, more local "yes" gradients
+    around clustered large examples (e.g. 60, 62, 64 or 83, 77) than around clustered
+    small ones (e.g. 3, 7 or 5, 9), a magnitude dependence that neither the flat range
+    prior nor an absolute-width prior produces.'
+- name: separate_rule_and_range_specificity
+  rationale: 'Refinement of `narrow_range_specificity_bias`: people do Bayesian concept
+    learning over arithmetic and digit rules and every numeric range, reading the
+    examples as distinct draws from the concept (with some strays) and sometimes guessing,
+    and they already judge a narrow range a likelier program than a wide one, as a
+    power of its width. The one change, the component taken from `rule_breadth_prior_concepts`,
+    is that the rules no longer share an equal prior: a second, separate breadth bias
+    makes a rule''s prior rise or fall as a power of how many numbers it contains.
+    The claim is that people bring two distinct specificity habits, one about stretches
+    of the number line and one about arithmetic rules, each with its own strength
+    and direction (the data suggest a narrow-range preference alongside a slight preference
+    for broad rules). This predicts that broad rules such as "odd numbers" (after
+    85, 19, 91) or "even numbers" win a different share of "yes" than the range-only
+    bias allows, while the tight "yes" gradients around clustered examples (e.g. 60,
+    62, 64) are kept.'
+- name: sampled_concept_majority_vote
+  rationale: 'People infer the hidden concept exactly as the simplest current model
+    does (Bayesian concept learning over arithmetic and digit rules and numeric ranges,
+    distinct examples, some strays, occasional guessing), but they do not answer by
+    consulting their whole belief: they call to mind a small number of candidate concepts,
+    each drawn in proportion to its posterior plausibility, and answer "yes" when
+    most of those sampled concepts contain the target (a majority vote over a few
+    posterior samples). How many concepts they sample is inferred from their answers;
+    sampling one is pure probability matching, while sampling more pushes moderately
+    likely targets toward a firm "yes" or "no", so "yes" rates should be more extreme
+    than the posterior on items the posterior calls fairly likely or fairly unlikely.'
+- name: digit_sum_concepts
+  rationale: 'People do Bayesian concept learning over the same arithmetic and digit
+    rules and numeric ranges as the best model: distinct examples drawn without replacement,
+    some strays, occasional guessing, and a prior that favours narrow ranges. They
+    also read the numbers as written numerals and entertain one more kind of concept,
+    "numbers whose digits add up to s" (for example 18, 27, 36, 45 or 13, 22, 31,
+    40). All 18 such digit-sum concepts are equally likely a priori, and the family
+    as a whole takes an inferred share of the prior belief given to rules. This predicts
+    that examples sharing a digit sum (e.g. 36, 45, 54, 81) lead to "yes" for other
+    numbers with the same digit sum, such as 63, 72, 90 or 27, beyond what "multiples
+    of 9" or a range gives, and to fewer "yes" answers for other members of those
+    broader concepts.'
+- name: heterogeneous_range_specificity_bias
+  rationale: 'Refinement of `narrow_range_specificity_bias` (the incumbent): people
+    do Bayesian concept learning over the same 45 arithmetic and digit rules (equal
+    prior) and every numeric range of 1-100, reading the examples as distinct draws
+    with some strays and sometimes guessing, and each person''s prior over ranges
+    rises or falls as a power of the range''s width. The one change is that the strength
+    of this specificity bias differs from person to person: the population holds a
+    spread of width biases, with some people strongly preferring narrow ranges and
+    others preferring wide ones, and the spread is inferred from the answers, where
+    the incumbent assumes a single shared bias. This predicts the extra disagreement
+    between respondents on items of moderate confidence, such as targets just beyond
+    a cluster like 60, 62, 64, where narrow-range people say "no" and wide-range people
+    say "yes". It also predicts a population "yes" gradient that is sharp near the
+    examples but has longer tails than any single shared bias gives, while generalization
+    by rules is left unchanged.'
+- name: range_location_gradient_prior
+  rationale: 'Refinement of `narrow_range_specificity_bias` (the incumbent): people
+    do Bayesian concept learning over the same 45 arithmetic and digit rules (equal
+    prior) and every numeric range of 1-100. As in the incumbent, they read the examples
+    as distinct draws from the concept (sampling without replacement), allow 10% stray
+    examples, sometimes guess, and bias the range prior by width. The one change is
+    that the range prior also depends on where the range sits on the number line.
+    Before seeing examples, people find a stretch that starts higher up (e.g. "70
+    to 80") more (or less) plausible than an equally wide one that starts low (e.g.
+    "5 to 15"), and a range''s prior plausibility rises or falls steadily with its
+    lower bound. This predicts that generalization from a cluster of examples is not
+    symmetric about it: "yes" answers spread further on one side of the examples than
+    on the other (upward or downward, set by the bias), which a width-only prior cannot
+    produce.'
+- name: open_ended_range_discount
+  rationale: 'Refinement of `relative_width_range_prior`: people do Bayesian concept
+    learning over the same 45 arithmetic and digit rules and every numeric range of
+    1-100, reading the examples as distinct draws (sampling without replacement) with
+    10% strays, occasional guessing, and the same Weber-like prior that favours ranges
+    narrow relative to their magnitude. The one change is that a range running to
+    an end of the number line ("anything up to 30", "anything from 70 on") is a threshold
+    rule rather than a bounded stretch, and people hold these open-ended ranges at
+    a different prior weight from bounded ones (inferred from their answers; the data
+    suggest lower). This predicts fewer "yes" answers to numbers far below small examples,
+    or far above large ones, all the way to 1 or 100, while generalization to nearby
+    numbers on both sides of the examples'' span is kept.'
+- name: set_common_feature_contrast
+  rationale: "People judge the target by its feature-contrast similarity to the example\
+    \ set as a whole: they notice the properties every example shares (parity, final\
+    \ digit, a contained digit, being a square, power or multiple of something), and\
+    \ the target counts as similar to the extent it keeps those shared properties\
+    \ and dissimilar to the extent it lacks them, with rarer, more distinctive shared\
+    \ properties (e.g. \"power of 2\") weighing far more than common ones (e.g. \"\
+    even\"); on magnitude, similarity falls off steadily with how far the target lies\
+    \ outside the stretch the examples span. The more similar on this metric, the\
+    \ more likely a \"yes\" \u2014 there is no weighing of alternative hypotheses,\
+    \ only matching against the set's common features."
+- name: multiplicative_exemplar_resemblance
+  rationale: 'People do not infer one concept for the whole set; they store each example
+    and compare the target to every stored example in turn, judging each pairwise
+    resemblance as how likely the two numbers are to share an arithmetic or digit
+    rule (e.g. "powers of 2", "contains a 3") or a numeric range, so sharing a narrow
+    property counts for more than sharing a broad one. These resemblances combine
+    multiplicatively, as a geometric mean over the examples (a conjunctive exemplar
+    rule: the target must resemble every example, and one poor match drags the whole
+    judgment down), and the greater this overall resemblance, the more likely a "yes".
+    A target that matches only some of the examples (e.g. 17 after 16, 8, 64) is therefore
+    strongly rejected, unlike in an additive exemplar model.'
+- name: heading_direction_range_extrapolation
+  rationale: People read the examples as a sequence and take the direction of the
+    last step (whether the final example went up or down from the one before it) as
+    the direction the program is heading, so the numeric ranges that come to mind
+    as candidate concepts extend further past the examples in that direction and less
+    in the other; otherwise they do Bayesian concept learning over the same arithmetic,
+    digit and digit-sum rules and ranges as the best model. This predicts more "yes"
+    answers to numbers far beyond the examples on the side the sequence was last moving
+    toward (e.g. above 60 after 40, 20, 60) and fewer on the side it moved away from,
+    while rule-based generalization and sets of a single example are unchanged.
+- name: sequence_direction_range_extrapolation
+  rationale: 'People do Bayesian concept learning over the same arithmetic and digit
+    rules, digit-sum concepts and narrow-favouring numeric ranges as the best model,
+    but they read the order of the examples as a direction of travel (rising if the
+    last example is above the first, falling if below) and take it as evidence that
+    the program''s range runs on in that direction, crediting ranges by how far they
+    extend ahead of the sequence rather than behind it (with an inferred strength).
+    The disagreement with the best model lives just outside the examples'' span: this
+    predicts more "yes" to numbers beyond the last-shown end of a set than beyond
+    the first-shown end (e.g. 70 after 52, 60, 66 but less so after 66, 60, 52), whereas
+    the best model ignores order for ranges and generalizes symmetrically.'
+- name: digit_sum_open_ended_range_discount
+  rationale: 'Refinement of `digit_sum_concepts` (the incumbent): people do Bayesian
+    concept learning over the same arithmetic and digit rules, the 18 "digits add
+    up to s" concepts and every numeric range of 1-100, reading the examples as distinct
+    draws with some strays, sometimes guessing, and favouring narrow ranges. The one
+    change, the component taken from `open_ended_range_discount`, is that a range
+    running to an end of the number line ("anything up to 30", "anything from 70 on")
+    is a threshold rule rather than a bounded stretch, and people hold such open-ended
+    ranges at their own prior weight relative to bounded ones (inferred; the data
+    suggest lower). This predicts fewer "yes" answers to numbers far below small examples
+    or far above large ones, all the way to 1 or 100, while digit-sum and rule generalization
+    and "yes" to numbers just beyond the examples'' span are kept.'
+- name: open_ended_ranges_with_digit_sums
+  rationale: 'Refinement of `open_ended_range_discount`: people do Bayesian concept
+    learning over the same 45 arithmetic and digit rules and every numeric range of
+    1-100. They read the examples as distinct draws with 10% strays and sometimes
+    guess. They keep the Weber-like prior that favours ranges narrow relative to their
+    magnitude, and they hold open-ended threshold ranges ("up to 30", "from 70 on")
+    at a lower prior than bounded ones. The one change, the component taken from `digit_sum_concepts`,
+    is that they also read the numbers as written numerals and entertain "numbers
+    whose digits add up to s" as candidate concepts, all 18 equally likely, with the
+    family taking an inferred share of the prior given to rules. This predicts that
+    examples sharing a digit sum (e.g. 36, 45, 54, 81) draw "yes" to other numbers
+    with that digit sum (63, 72, 27), together with fewer "yes" answers far out toward
+    1 or 100 beyond small or large examples than a bounded-range-only learner gives;
+    the digit-sum concepts and the open-ended discount act on separate parts of the
+    hypothesis space.'
+- name: digit_sum_range_location_prior
+  rationale: 'Refinement of `digit_sum_concepts` (the incumbent): people do Bayesian
+    concept learning over the same arithmetic and digit rules, the 18 "digits add
+    up to s" concepts and every numeric range of 1-100, reading the examples as distinct
+    draws with some strays, sometimes guessing, and favouring narrow ranges. The one
+    change, the component taken from `range_location_gradient_prior`, is that the
+    range prior also depends on where a range sits on the number line: before seeing
+    examples, people find a stretch that starts higher up (e.g. "70 to 80") more (or
+    less) plausible than an equally wide one that starts low (e.g. "5 to 15"), with
+    prior plausibility rising or falling steadily with the range''s lower bound (strength
+    and direction inferred). This predicts that "yes" answers spread further on one
+    side of a cluster of examples than on the other, while digit-sum and rule generalization
+    are kept as in the incumbent.'
+- name: spread_coverage_expectation
+  rationale: People expect the program's examples to be spread out across the whole
+    concept rather than bunched in one corner of it, so when they weigh candidate
+    concepts (the same arithmetic, digit and digit-sum rules and numeric ranges as
+    the best model, with distinct examples, some strays, occasional guessing, a narrow-range
+    preference and a discount on open-ended ranges) they credit a concept more when
+    the examples reach across most of its members and less when the examples cover
+    only a small stretch of it, with the strength of this coverage expectation inferred.
+    This predicts that several examples spanning a wide stretch (e.g. 10, 50, 100)
+    favour concepts that end near the outermost examples, so "yes" falls off faster
+    just beyond them, and that examples bunched within a small part of a large rule
+    (e.g. 2, 4 for "even numbers") count against that rule more than the size principle
+    alone implies; a single example is unaffected.
+- name: limited_concept_consideration_set
+  rationale: 'People do not weigh every conceivable concept: they bring to mind a
+    limited sample of candidate concepts (arithmetic and digit rules, digit-sum concepts,
+    numeric ranges), each coming to mind in proportion to how plausible it seems before
+    any examples, and then judge the target only by those candidates that came to
+    mind, weighted by how well they explain the examples, as in the best model. Because
+    a simple, a priori plausible rule is almost always among the candidates however
+    plausible it is, the advantage of plausible concepts saturates, so relative to
+    full Bayesian weighing this predicts somewhat more "yes" by low-prior concepts
+    such as a particular narrow range or a digit-sum family and less by broad rules,
+    with the size of the consideration set inferred from the answers.'
+- name: probe_as_weak_example
+  rationale: 'People do Bayesian concept learning over the same arithmetic and digit
+    rules, digit-sum concepts and numeric ranges as the best model (distinct examples
+    with some strays, narrow-favouring and open-ended-discounted ranges, occasional
+    guessing), but with one mis-weighting of evidence: they treat the question itself
+    as a hint, reading the number they are asked about as if it were a further, partially
+    trusted example the program produced (with an inferred strength, which could also
+    be negative if probes are read as tricks). Because a probe counts most for small
+    concepts that contain it, this predicts extra "yes" to asked-about numbers that
+    fit a narrow rule or a short range alongside the examples (e.g. 32 after 16, 8,
+    64), and the reverse if people discount probes.'
+- name: open_ended_ranges_heading_direction
+  rationale: 'Refinement of the incumbent `digit_sum_open_ended_range_discount`: people
+    do Bayesian concept learning over the same arithmetic and digit rules, the 18
+    "digits add up to s" concepts and every numeric range of 1-100. They read the
+    examples as distinct draws with some strays, sometimes guess, favour narrow ranges,
+    and hold open-ended threshold ranges ("up to 30", "from 70 on") at their own,
+    lower prior weight. The one change, the component taken from `heading_direction_range_extrapolation`,
+    is that they also read the examples as a sequence and take the direction of the
+    last step (up or down from the example before) as where the program is heading,
+    so the ranges they entertain reach further past the examples on that side and
+    less on the other. This predicts more "yes" to numbers beyond the examples in
+    the last-step direction (e.g. above 60 after 40, 20, 60) and fewer on the opposite
+    side, on top of the incumbent''s overall discount of ranges running to 1 or 100;
+    single-example sets and rule generalization are unchanged.'
+- name: margin_beyond_examples_range_prior
+  rationale: 'Refinement of `digit_sum_open_ended_range_discount` (the incumbent):
+    people do Bayesian concept learning over the same arithmetic and digit rules,
+    the 18 digit-sum concepts and every numeric range of 1-100, reading the examples
+    as distinct draws with some strays, sometimes guessing, favouring narrow ranges
+    and discounting open-ended ranges that run to 1 or 100. The one change is a margin
+    expectation: people do not expect the few numbers they were shown to sit right
+    at the edges of the program''s range, so they credit a candidate range by how
+    far it reaches past the examples on either side (strength inferred; the data suggest
+    more credit for ranges with room beyond the examples). This predicts more "yes"
+    to numbers a little beyond either end of a cluster (e.g. 57 or 67 after 60, 62,
+    64) than the incumbent gives, symmetrically on both sides and regardless of the
+    order the examples were shown in, while rule and digit-sum generalization are
+    unchanged.'
+- name: heading_extrapolation_location_prior
+  rationale: 'Refinement of `heading_direction_range_extrapolation`: people do Bayesian
+    concept learning over the same arithmetic, digit and digit-sum rules and every
+    numeric range of 1-100. They read the examples as distinct draws with some strays,
+    sometimes guess, weigh ranges by their width, and let the direction of the last
+    step (up or down from the example before) stretch the ranges they consider further
+    in the direction the sequence is heading. The one change, the component taken
+    from `range_location_gradient_prior`, is that before seeing any examples people
+    also find a range more (or less) plausible according to where it starts on the
+    number line, with prior plausibility rising or falling steadily with its lower
+    bound (inferred; the data suggest ranges higher up are favoured). This predicts
+    that, on top of the push toward where the sequence is heading, "yes" spreads further
+    above a cluster of examples than below it even for a single example or a set whose
+    last step points down, an order-independent asymmetry that the heading model cannot
+    produce.'
+- name: first_example_marks_range_edge
+  rationale: 'People read the examples in order and take the first number they are
+    shown as marking an edge of the program''s range whenever it is the smallest or
+    the largest of the set: they expect the program''s range to reach beyond the other
+    examples (as in the best model, crediting ranges by how far they extend past the
+    examples) but not past that first-shown end. This predicts that "yes" stops at
+    the first example''s side of a cluster but spreads beyond its other side (e.g.
+    66 is accepted after 60, 62, 64 but 58 is not, and the reverse after 64, 62, 60),
+    while single examples, rules and digit-sum generalization are unchanged.'
+- name: prototype_feature_ratio_similarity
+  rationale: People judge the target by its similarity to the example set's feature
+    prototype, where the features are number properties (arithmetic and digit properties,
+    digit sums, and lying within a given stretch of the number line), each feature
+    counts by the share of examples that have it, and rarer properties count as more
+    distinctive. Similarity is the proportion of the prototype's distinctive feature
+    mass that the target shares, and the more similar the target, the more likely
+    a "yes" (with occasional guessing). Because feature salience is fixed and there
+    is no inference over hidden programs, adding examples does not sharpen generalization
+    beyond the properties they share, so after 16, 8, 64 people should say "yes" to
+    members of broad shared properties (e.g. even or small numbers) more often than
+    a size-principle learner predicts.
+- name: centred_examples_range_prior
+  rationale: 'Refinement of the incumbent `margin_beyond_examples_range_prior`: people
+    do Bayesian concept learning over the same arithmetic and digit rules, the 18
+    digit-sum concepts and every numeric range of 1-100. They read the examples as
+    distinct draws with some strays, sometimes guess, favour narrow ranges, discount
+    open-ended ranges that run to 1 or 100, and credit a range by how far it reaches
+    past the examples. The one change is a centring expectation: people expect the
+    examples they were shown to sit in the middle of the program''s range rather than
+    off to one side of it, so a candidate range that leaves much more room on one
+    side of the examples than on the other is held less plausible, in proportion to
+    how lopsided that room is (the strength is inferred; the data suggest a penalty
+    for lopsided ranges). This predicts that "yes" spreads evenly around a cluster.
+    Numbers just beyond one end get "yes" mainly through ranges that also reach past
+    the other end, so the far reaches on one side only (e.g. 75 after 60, 62, 64)
+    get fewer "yes" than the incumbent gives, while numbers a little beyond either
+    end keep their credit. The effect does not depend on the order the examples were
+    shown in, and rule and digit-sum generalization are unchanged.'
+- name: margin_and_heading_range_prior
+  rationale: 'Refinement of the incumbent `margin_beyond_examples_range_prior`: people
+    do Bayesian concept learning over the same arithmetic and digit rules, the 18
+    digit-sum concepts and every numeric range of 1-100. They read the examples as
+    distinct draws with some strays, sometimes guess, favour narrow ranges, discount
+    open-ended ranges that run to 1 or 100, and credit a range by how far it reaches
+    past the examples on both sides. The one change, the component taken from `open_ended_ranges_heading_direction`,
+    is that people also read the examples as a sequence and take the direction of
+    the last step (up or down from the example before) as where the program is heading,
+    so the room they expect beyond the examples is shifted toward that side and away
+    from the other (strength inferred). This predicts the incumbent''s extra "yes"
+    just beyond both ends of a cluster, but tilted: more beyond the end the sequence
+    last moved toward (e.g. above 64 after 60, 62, 64) than beyond the end it moved
+    away from (e.g. below 60), and the reverse for the same numbers shown in falling
+    order. Single-example sets and rule and digit-sum generalization are unchanged.'
+- name: probe_with_margin_range_prior
+  rationale: 'Refinement of `probe_as_weak_example`: people do Bayesian concept learning
+    over the same arithmetic and digit rules, digit-sum concepts and numeric ranges
+    (distinct examples with some strays, narrow-favouring and open-ended-discounted
+    ranges, occasional guessing), and they read the number they are asked about as
+    a further, partially trusted example of the program, with an inferred strength.
+    The one change, the component taken from `margin_beyond_examples_range_prior`,
+    is that people also expect the shown examples not to sit right at the edges of
+    the program''s range, so they credit a candidate range by how far it reaches past
+    the examples on either side. This predicts that the probe''s pull toward small
+    concepts that contain it is joined by more "yes" to numbers a little beyond either
+    end of a cluster (e.g. 57 or 67 after 60, 62, 64), both effects together, while
+    rule and digit-sum generalization remain as in the probe model.'
+- name: size_principle_for_rules_only
+  rationale: 'People apply the size principle only to symbolic rules: for arithmetic,
+    digit and digit-sum rules a small rule that fits every example is a suspicious
+    coincidence, but for stretches of the number line an example is just a number
+    the range happens to contain, so every range covering the examples stays credible
+    in proportion to its prior plausibility alone (the best model''s narrow-favouring,
+    open-ended-discounted, margin-credited range prior), however wide it is and however
+    many examples are shown. This predicts that magnitude-based generalization does
+    not tighten as more examples fall in a cluster (about as much "yes" to 70 after
+    60, 62, 64 as after 60 alone), whereas rule-based generalization sharpens with
+    each example as before.'

@@ -1,0 +1,434 @@
+models:
+- name: uncertain_reliability_noise_concepts
+  rationale: "Refinement of `inferred_example_noise_concepts`: people do the same\
+    \ Bayesian concept learning over the 45 rules (each with its own inferred prior\
+    \ weight) and all intervals of 1-100 with the size principle, allowing that some\
+    \ examples are stray draws from 1-100 \u2014 but they do not know the program's\
+    \ reliability, so instead of assuming one fixed stray rate they hold a belief\
+    \ over how reliable the program is and average over it for each example set. The\
+    \ one change is this uncertainty about the noise rate, which makes strays exchangeable\
+    \ but correlated within a set: one example that breaks a tight rule makes people\
+    \ suspect the program is unreliable on that set, so they discount the remaining\
+    \ examples too and generalise more broadly, while a set fully consistent with\
+    \ a tight rule is taken as strong evidence for it."
+- name: family_pooled_rule_prior
+  rationale: 'Refinement of `inferred_example_noise_concepts`: people do the same
+    Bayesian concept learning over the 45 rules and all intervals of 1-100 (size principle,
+    an inferred rate at which examples are stray draws), but their prior over rules
+    is organised by kind of rule rather than set rule by rule: each rule''s plausibility
+    is drawn around a shared level for its family (parity, primes, squares and cubes,
+    powers, multiples, final digit, contained digit), with an inferred spread, so
+    rules of the same kind (e.g. "contains a 3" and "contains a 7") are about equally
+    plausible unless the evidence says otherwise. The one change is this family-structured,
+    partially pooled rule prior, which replaces the incumbent''s independent weight
+    for every rule and predicts more uniform generalisation across rules within a
+    family.'
+- name: digit_sum_concepts
+  rationale: "Refinement of `uncertain_reliability_noise_concepts`: people do the\
+    \ same Bayesian concept learning over the 45 rules and all intervals of 1-100\
+    \ (size principle, uncertain belief in how often examples are stray draws), but\
+    \ they also entertain digit-arithmetic concepts \u2014 \"numbers whose digits\
+    \ add up to s\", one concept for each digit sum from 1 to 18 \u2014 which together\
+    \ hold a small a-priori share of the rule prior (about 4%, inferred around that\
+    \ value) split equally among them. The one change is this enlarged concept space,\
+    \ which predicts that sets whose examples share a digit sum (e.g. 23, 41, 50,\
+    \ 14) draw \"yes\" for other numbers with that digit sum (32, 5, 68) even though\
+    \ no arithmetic rule, final digit or magnitude range explains them."
+- name: family_pooled_uncertain_reliability
+  rationale: "Refinement of `uncertain_reliability_noise_concepts`: people do the\
+    \ same Bayesian concept learning over the 45 rules and all intervals of 1-100\
+    \ with the size principle, holding an uncertain belief about how reliable the\
+    \ program is (how often an example is a stray draw from 1-100) and averaging over\
+    \ it for each example set \u2014 but their prior over rules is organised by kind\
+    \ of rule rather than set rule by rule. The one change, taken from `family_pooled_rule_prior`,\
+    \ is this family-structured, partially pooled rule prior: each rule's plausibility\
+    \ is drawn around a shared level for its family (parity, primes, squares and cubes,\
+    \ powers, multiples, final digit, contained digit) with an inferred spread, so\
+    \ rules of the same kind (e.g. \"contains a 3\" and \"contains a 7\") are about\
+    \ equally plausible unless the evidence says otherwise, which predicts more uniform\
+    \ generalisation across rules within a family than the incumbent's independent\
+    \ rule weights."
+- name: complement_stray_reliability_concepts
+  rationale: "Refinement of `uncertain_reliability_noise_concepts`: people do the\
+    \ same Bayesian concept learning over the 45 rules (each with its own inferred\
+    \ prior weight) and all intervals of 1-100 with the size principle, and they are\
+    \ just as unsure how reliable the program is on each set \u2014 but they think\
+    \ of a stray example as a mistake, a number that does *not* belong to the concept,\
+    \ rather than a draw that could land anywhere in 1-100. The one change is this\
+    \ stray distribution, drawn from the concept's complement: an example that a broad\
+    \ concept (e.g. \"even\", \"contains a 3\") misses is better explained as a stray\
+    \ than under a uniform stray generator, whereas a tight concept gains nothing.\
+    \ So people keep broad rules that miss one example more readily, and examples\
+    \ that a concept already contains are always taken as genuine evidence for it."
+- name: family_pooled_win_stay_lose_sample
+  rationale: "Refinement of `win_stay_lose_sample_concepts`: people learn the concept\
+    \ one example at a time, holding a single working guess (a rule or magnitude range\
+    \ picked by size-principle Bayesian concept learning) that they keep with some\
+    \ probability while it still contains each new example and otherwise re-pick from\
+    \ the posterior given all examples so far \u2014 so early examples shape generalisation\
+    \ more than later ones. The one change, taken from `family_pooled_rule_prior`,\
+    \ is the prior from which guesses are picked: rules are a priori plausible by\
+    \ kind (parity, primes, squares and cubes, powers, multiples, final digit, contained\
+    \ digit), each rule's weight drawn around a shared family level with an inferred\
+    \ spread, rather than an independently learned weight for every rule, so rules\
+    \ of the same kind (e.g. \"contains a 3\" and \"contains a 7\") are about equally\
+    \ likely to be adopted as the working guess."
+- name: compressed_number_line_ranges
+  rationale: People do Bayesian concept learning over mathematical rules and magnitude
+    ranges of 1-100 (size principle, a prior weight per rule, an uncertain belief
+    in how often an example is a stray draw), but they represent magnitude ranges
+    on a compressed mental number line, on which small numbers take up more room than
+    large ones, and they treat a range's examples as spread evenly along that line,
+    not evenly over the integers. So ranges among small numbers feel mentally wide
+    and give weak evidence, which makes generalisation broad, while equally wide ranges
+    among large numbers feel narrow and tighten quickly. Within a range, its lower
+    members are more typical than its upper ones, so people extend a range further
+    upward than downward. How compressed the line is gets inferred, from logarithmic
+    to linear.
+- name: inner_loop_model
+  rationale: 'Refinement of `win_stay_lose_sample_concepts`: people learn the concept
+    one example at a time, holding a single working guess (a rule or magnitude range)
+    that they keep with some probability while it still contains each new example
+    and otherwise re-pick from the Bayesian posterior given the examples so far, so
+    early examples shape generalisation more than later ones. The one change, taken
+    from `uncertain_reliability_noise_concepts`, is the posterior people re-pick from:
+    they are unsure how reliable the program is and average over that uncertainty,
+    so strays are correlated within a set. One example that breaks a tight rule makes
+    the remaining ones suspect too and pushes re-picked guesses toward broader concepts,
+    while a fully consistent prefix strongly favours the tight rule. This predicts
+    order effects (from the sticky guess) that interact with how consistent the early
+    examples are.'
+- name: kind_specific_reliability_concepts
+  rationale: 'People do Bayesian concept learning over mathematical rules and magnitude
+    ranges of 1-100 (size principle, a family-organised prior over rules, an uncertain
+    belief about how often an example is a stray draw from 1-100). But their belief
+    about how reliable the program is depends on what kind of program they suppose
+    it is: they expect a program running a mathematical rule to produce strays at
+    a different rate from one producing numbers in a magnitude range, rather than
+    holding one reliability belief whichever kind of concept is true. So a single
+    off-pattern example counts differently against a rule than against a range, which
+    shifts how readily people give up a tight rule for a broad range (or the reverse)
+    when a set contains an outlier.'
+- name: weak_sampling_concepts
+  rationale: "People treat the examples only as numbers the program is allowed to\
+    \ produce, not as random samples drawn from its concept (weak sampling): a candidate\
+    \ rule or magnitude range gains plausibility merely by containing the examples\
+    \ (and loses it for each example it misses, which they may write off as a stray),\
+    \ but not for being small, so a concept's plausibility rests on its prior \u2014\
+    \ one plausibility per kind of rule (parity, primes, squares and cubes, powers,\
+    \ multiples, final digit, contained digit) shared by the rules of that kind, and\
+    \ a preference for narrower ranges \u2014 and does not tighten as more consistent\
+    \ examples arrive. This predicts that adding examples consistent with both a broad\
+    \ and a tight concept (e.g. 16, 8, 64 under \"even\" and \"powers of 2\") leaves\
+    \ generalisation about as broad as after the first example, unlike the size principle."
+- name: first_example_anchored_reliability
+  rationale: 'People do Bayesian concept learning over mathematical rules and magnitude
+    ranges of 1-100 (size principle, a prior over rules set by kind of rule, an uncertain
+    belief about how often an example is a stray draw from 1-100), but they treat
+    the first example differently from the rest: the first number shown anchors the
+    concept and is trusted to come from it at its own, inferred reliability, while
+    only the later examples are pooled into the uncertain judgement of how reliable
+    the program is on that set. So a stray-looking number shown first constrains the
+    concept far more (or less) than the same number shown later, and the same set
+    in a different order generalises differently.'
+- name: strong_weak_sampling_mixture
+  rationale: 'Refinement of `family_pooled_uncertain_reliability`: people do the same
+    Bayesian concept learning over the 45 rules (plausibility organised by rule family)
+    and all intervals of 1-100, with an uncertain belief in how often examples are
+    stray draws. The one change is the sampling assumption: people are unsure whether
+    the examples were sampled at random from the concept (so a small concept that
+    fits gains strongly, the size principle) or were just numbers the program happened
+    to produce that are consistent with it (so a concept''s size carries no evidence),
+    and they weigh both possibilities, with how much they trust random sampling inferred.
+    This predicts broader, less size-sensitive generalisation than the incumbent,
+    except where the examples fit a tight concept so well that the random-sampling
+    explanation dominates.'
+- name: familiar_number_strays
+  rationale: 'Refinement of `family_pooled_uncertain_reliability`: people do the same
+    Bayesian concept learning over the 45 rules (with the family-structured, partially
+    pooled rule prior) and all intervals of 1-100, with the size principle and an
+    uncertain belief about how reliable the program is on each set. The one change
+    is what people think a stray example is: some strays are random numbers from 1-100,
+    but a share of them (how large is inferred) are "familiar" numbers, i.e. a member
+    of some well-known rule picked at random, so how likely a number is to turn up
+    as a stray depends on how many small, familiar rules produce it, whichever rules
+    the learner currently favours. Thus examples that many small rules produce (1,
+    2, 4, 8, 16, 64, 81, 100) are easily written off as strays and constrain the concept
+    less, while unremarkable examples that few rules produce (e.g. 58, 87, 94) are
+    hard to dismiss and the concept has to cover them.'
+- name: consistency_attention_similarity
+  rationale: People do not infer a hidden rule; they judge a target by its similarity
+    to the examples, comparing numbers along a few dimensions (magnitude on the number
+    line, parity, final digit, shared written digits, and sharing a common factor),
+    and they focus their attention on whichever dimensions the examples agree on with
+    one another. So a target is endorsed to the extent that it matches the examples
+    on the dimensions along which the examples are mutually similar (e.g. same final
+    digit after 83, 38, 58, 68; close magnitude after 61, 64, 67), with similarity
+    on magnitude falling off exponentially with numerical distance and the sharpness
+    of attention shift inferred.
+- name: noisy_criterion_concept_judgment
+  rationale: 'People form a graded belief that the target belongs to the hidden concept
+    by simple Bayesian concept learning (rules and magnitude ranges, size principle,
+    a fixed chance that an example is a stray), but they do not report that belief
+    directly: they answer "yes" only when the belief clears a decision criterion,
+    and that criterion varies from trial to trial. How strict the criterion is on
+    average, and how much it varies, are inferred; a criterion that is equally likely
+    to sit anywhere corresponds to probability matching, while a tight criterion produces
+    near all-or-none answers around a fixed level of confidence.'
+- name: range_restricted_rule_concepts
+  rationale: 'People do the same Bayesian concept learning as `first_example_anchored_reliability`:
+    a family-organised prior over mathematical rules, magnitude ranges of 1-100, the
+    size principle, their own trust in the first example, and uncertain reliability
+    for the later ones. On top of that, they also consider *range-restricted rules*,
+    meaning a rule''s members inside a magnitude range ("multiples of 4 between 52
+    and 88", "even numbers below 30"). A priori these restricted rules take a small,
+    stated share of belief (about 5%). The one change is this larger concept space.
+    It predicts that when examples fit a rule and also cluster in magnitude (e.g.
+    92, 56), people say "yes" to rule members near the examples but not to members
+    far from them, and say "no" to non-members inside the range.'
+- name: anchored_rules_individual_plausibility
+  rationale: 'Refinement of `first_example_anchored_reliability`: people do the same
+    Bayesian concept learning over the 45 rules and all magnitude ranges of 1-100
+    (size principle, the first example anchoring the concept at its own inferred trust,
+    the later examples pooled into an uncertain belief about how often the program
+    produces strays), but their prior over rules is not flat within a kind of rule.
+    The one change, taken from `family_pooled_uncertain_reliability`, is that each
+    rule has its own plausibility, drawn around its family''s level with a stated
+    spread, so that particular rules (e.g. "even" over "odd", "powers of 2" over "powers
+    of 7", "ends in 0" over "ends in 7") can be favoured or disfavoured beyond what
+    their kind implies, which changes which rule an anchored first example points
+    to.'
+- name: rule_specific_anchored_reliability
+  rationale: 'Refinement of `first_example_anchored_reliability`. People do the same
+    Bayesian concept learning over mathematical rules and magnitude ranges of 1-100:
+    the size principle, a prior over rules organised by kind of rule, the first example
+    trusted with its own reliability, and the later examples pooled into an uncertain
+    belief about how often the program produces a stray. The one change is that each
+    rule also has its own plausibility. It is drawn close to the shared level of its
+    family (a small fixed spread, taken from the partially pooled prior of `family_pooled_uncertain_reliability`),
+    so particular rules such as "powers of 5" or "ends in 5" can be adopted somewhat
+    more or less readily than other rules of their kind, instead of all rules in a
+    family being exactly equally plausible.'
+- name: familiar_strays_family_level_prior
+  rationale: "Refinement of `familiar_number_strays`: people do Bayesian concept learning\
+    \ over mathematical rules and magnitude ranges of 1-100 (size principle, an uncertain\
+    \ belief about how often an example is a stray), and they think of a stray as\
+    \ sometimes a \"familiar\" number (a member of some well-known rule) rather than\
+    \ always a random number, so examples that many small rules produce (1, 2, 4,\
+    \ 8, 16, 64, 100) are easily written off while unremarkable ones (58, 87, 94)\
+    \ must be covered by the concept. The one change, taken from `first_example_anchored_reliability`,\
+    \ is the rule prior: people judge a rule's plausibility only by its kind (parity,\
+    \ primes, squares and cubes, powers, multiples, final digit, contained digit),\
+    \ so all rules of a kind are equally plausible, with no rule-specific preferences\
+    \ \u2014 predicting the same generalisation for, e.g., \"contains a 3\" and \"\
+    contains a 7\" whenever the examples fit them equally."
+- name: graded_exemplar_concept_retrieval
+  rationale: People do not check whether a number literally belongs to a concept;
+    they hold familiar number concepts (parity, primes, squares and cubes, powers,
+    multiples, final digit, contained digit, and magnitude ranges of 1-100) in memory
+    as stored lists of member numbers, and compare numbers to those stored members
+    by closeness on the number line. A stored concept is retrieved to the extent that
+    each example resembles its members on average (so small concepts whose members
+    sit right at the examples win, and an example just next to a concept still partly
+    supports it), with rules judged plausible only by their kind and an uncertain
+    belief about how often an example is an unrelated stray; a target is then endorsed
+    by how close it is to the nearest stored member of the retrieved concepts, so
+    endorsement falls off gradedly just outside a concept instead of dropping to zero.
+- name: random_looking_strays
+  rationale: "People do Bayesian concept learning over mathematical rules and magnitude\
+    \ ranges of 1-100 (size principle, a rule prior set by kind of rule, their own\
+    \ trust in the first example and an uncertain belief about how often the later\
+    \ examples are strays), but their idea of what a stray looks like follows subjective\
+    \ randomness (representativeness): a glitch or random draw should look random,\
+    \ so they expect strays to be unremarkable numbers (58, 87, 94) and not familiar,\
+    \ patterned ones (1, 2, 16, 64, 100), with how strong this expectation is inferred.\
+    \ So an unremarkable off-pattern example is easily written off and the majority\
+    \ rule survives, while a familiar off-pattern example is hard to dismiss as noise\
+    \ and counts as genuine evidence against tight rules \u2014 the opposite of the\
+    \ familiar-stray account."
+- name: random_looking_strays_2
+  rationale: 'People do Bayesian concept learning over mathematical rules and magnitude
+    ranges of 1-100 (size principle, a prior over rules set by kind of rule, an uncertain
+    belief about how often an example is a stray), but their idea of what a stray
+    looks like follows their intuition about randomness: a stray is a "random-looking",
+    unremarkable number (58, 87, 94), not a special one, so examples that many familiar
+    rules produce (1, 4, 8, 16, 64, 100) are hard to write off as strays and must
+    be covered by the concept, while unremarkable outliers are easily excused. This
+    disagrees most sharply with the best model (which treats familiar numbers as the
+    easiest strays) on sets where all but one example fit a tight rule: when the lone
+    outlier is a familiar number, people should abandon the majority rule for a concept
+    that covers it and endorse the majority rule''s other members less than when the
+    outlier is unremarkable.'
+- name: graded_familiarity_strays
+  rationale: 'Refinement of `familiar_strays_family_level_prior`: people do the same
+    Bayesian concept learning over mathematical rules (plausibility set only by kind
+    of rule) and magnitude ranges of 1-100, with the size principle and an uncertain
+    belief about how often an example is a stray. The one change is how they judge
+    which numbers are likely strays. The incumbent mixes random numbers with members
+    of familiar rules, so every number has a fixed floor chance of being a stray.
+    Here the chance is a graded function of how familiar the number is (how readily
+    small, well-known rules produce it), sharpened or flattened to an inferred degree
+    that could even reverse it so that strays are expected to look random. So the
+    ease of writing off an off-pattern example changes smoothly along the whole familiarity
+    scale (64 > 36 > 50 > 58), not in two tiers.'
+- name: familiar_strays_first_example_anchor
+  rationale: 'Refinement of `familiar_strays_family_level_prior`: people do the same
+    Bayesian concept learning over mathematical rules (plausible by kind of rule only)
+    and magnitude ranges of 1-100, with the size principle and strays that are sometimes
+    "familiar" numbers from well-known rules rather than random ones. The one change,
+    taken from `first_example_anchored_reliability`, is that the first example shown
+    anchors the concept: it is trusted to come from the concept at its own, inferred
+    reliability, and only the later examples go into the uncertain judgement of how
+    often the program produces strays. So whether a familiar or unremarkable outlier
+    is written off depends on where it appears: shown first, it constrains the concept
+    at the anchor''s own trust, and the same set in another order generalises differently.'
+- name: without_replacement_anchored_concepts
+  rationale: 'Refinement of `first_example_anchored_reliability`: people do the same
+    Bayesian concept learning over mathematical rules and magnitude ranges of 1-100
+    (rule plausibility set by kind of rule, the first example trusted at its own inferred
+    reliability, the later examples pooled into an uncertain belief about how often
+    the program produces a stray). The one change is the sampling assumption behind
+    the size principle: people know the program never repeats a number within a set,
+    so they treat the genuine examples as drawn from the concept without replacement,
+    and each genuine example after the first must be one of the concept''s remaining
+    members. This adds no free parameter. It makes sets that nearly exhaust a tiny
+    concept (cubes, powers of 3, 5 or 10, a range only a few numbers wide) much stronger
+    evidence for that concept, while leaving large concepts unchanged, so people commit
+    more sharply to tiny concepts and generalise less beyond them.'
+- name: centre_weighted_range_sampling
+  rationale: People do Bayesian concept learning over familiar mathematical rules
+    (plausibility set by kind of rule) and magnitude ranges of 1-100 (size principle,
+    an uncertain belief about how often an example is a stray, strays sometimes familiar
+    numbers), but they believe a program that produces numbers from a magnitude range
+    produces numbers near the middle of its range more often than numbers near its
+    edges. So examples bunched together are taken as the centre of a wider range rather
+    than as filling a narrow one, examples sitting at the extremes of a range count
+    as weak evidence for it, and generalisation from clustered examples extends further
+    beyond them than if people assumed every number in the range were equally likely.
+- name: membership_verification_errors
+  rationale: 'People retrieve number concepts as in `graded_exemplar_concept_retrieval`
+    (stored member lists compared by number-line closeness, rules plausible only by
+    kind, an uncertain belief in how often an example is a stray), but when they answer
+    they must check whether the target belongs to the retrieved rule, and that check
+    is effortful and error-prone at a rate that depends on how hard the kind of rule
+    is to compute. Easy checks (parity, final digit, contained digit) are nearly error-free,
+    while hard ones (primes, multiples of 7 or 11, powers, squares and cubes) sometimes
+    misfire: people reject true members and accept non-members far from any member,
+    so endorsement under hard rules is diluted toward the middle independently of
+    number-line distance.'
+- name: final_digit_binding_errors
+  rationale: 'People infer the hidden concept by ordinary Bayesian concept learning
+    over mathematical rules (plausibility set by kind of rule) and magnitude ranges
+    of 1-100, with the size principle and an uncertain belief about how often an example
+    is a stray, but when they check a target against a final-digit rule they make
+    feature-binding errors: they register that the target contains the rule''s digit
+    and sometimes lose track of its position. So after examples that all end in the
+    same digit (16, 26, 96), a target that has that digit only in the tens place (67,
+    34 after 63, 23, 43) is sometimes accepted as if it fitted the rule, with how
+    often this happens inferred, while all other rules and ranges are checked exactly.'
+- name: graded_exemplar_familiar_strays
+  rationale: 'Refinement of `graded_exemplar_concept_retrieval`: people hold familiar
+    number concepts (rules by kind, and magnitude ranges of 1-100) as stored member
+    lists, retrieve a concept to the extent that each example resembles its members
+    on the number line, allow for an uncertain rate of unrelated stray examples, and
+    endorse a target by its closeness to the nearest stored member of the retrieved
+    concepts. The one change, taken from `familiar_strays_family_level_prior`, is
+    what a stray looks like: a stray is sometimes a "familiar" number (a member of
+    some well-known rule) rather than always a random number from 1-100, with how
+    often inferred, so examples that many small rules produce (1, 2, 4, 8, 16, 64,
+    100) are easily written off as strays and constrain retrieval less, while unremarkable
+    examples (58, 87, 94) must be resembled by the retrieved concept.'
+- name: graded_exemplar_first_example_anchor
+  rationale: 'Refinement of `graded_exemplar_concept_retrieval`: people retrieve stored
+    number concepts (rules judged plausible by kind, magnitude ranges of 1-100) by
+    how closely the examples resemble each concept''s members on the number line,
+    allowing for stray examples, and endorse a target by its closeness to the nearest
+    member of the retrieved concepts. The one change, taken from `first_example_anchored_reliability`,
+    is that the first example shown anchors retrieval: it is trusted to come from
+    the concept at its own, inferred level of trust, while only the later examples
+    are pooled into the uncertain judgement of how often the program produces strays.
+    So an off-pattern number shown first constrains which concept is retrieved differently
+    from the same number shown later, and the same set in a different order generalises
+    differently.'
+- name: familiar_strays_equal_rule_prior
+  rationale: "Refinement of `familiar_strays_family_level_prior`: people do the same\
+    \ Bayesian concept learning over mathematical rules and magnitude ranges of 1-100,\
+    \ with the size principle, an uncertain belief about how often an example is a\
+    \ stray, and strays that are sometimes \"familiar\" numbers (a member of some\
+    \ well-known rule) rather than random ones. The one change is the rule prior:\
+    \ people have no preference among kinds of rule at all \u2014 parity, primes,\
+    \ squares, cubes, powers, multiples, final digit and contained digit rules are\
+    \ all equally plausible a priori \u2014 so which rule they adopt is decided only\
+    \ by how many examples it explains and how small it is (the size principle), and\
+    \ the rules they would generate a familiar stray from are the same equally weighted\
+    \ rules."
+- name: two_source_program_concepts
+  rationale: 'People think the hidden program may run two sources at once: a main
+    concept (a mathematical rule or a magnitude range of 1-100, learned with the size
+    principle and an uncertain belief about how many examples come from it) and a
+    secondary source that produced the off-pattern examples, which is either random
+    glitches or a second familiar rule. Examples that break the main concept are therefore
+    not just written off: if they fit a small familiar rule (e.g. 64 among 13, 23,
+    43), people infer the program also uses that rule and say "yes" to its other members
+    (32, 8), whereas off-pattern examples that fit no small rule are treated as glitches
+    that license no further generalisation.'
+- name: recency_anchored_familiar_strays
+  rationale: 'People learn the hidden concept by Bayesian inference over familiar
+    mathematical rules (all equally plausible) and magnitude ranges, with the size
+    principle and strays that are sometimes familiar numbers, but the most recent
+    example anchors the concept: the last number shown is still vivid and is trusted
+    to come from the concept at its own level of trust, while the earlier, fading
+    examples are only pooled into an uncertain judgement of how often the program
+    produces strays. So an off-pattern number shown last constrains the concept differently
+    from the same number shown earlier, and the same set in a different order generalises
+    differently.'
+- name: digit_position_exemplar_retrieval
+  rationale: 'People hold familiar number concepts (parity, primes, squares and cubes,
+    powers, multiples, final digit, contained digit, and magnitude ranges of 1-100)
+    as stored lists of member numbers, but they compare numbers to those members by
+    their written form, not by their place on the number line: two numbers are similar
+    to the extent that they have the same digit in the same position (tens, ones),
+    with similarity falling off by a constant inferred factor for each digit position
+    that differs. A concept is retrieved to the extent that each example resembles
+    its members in this digit-wise way (allowing for an uncertain rate of unrelated
+    stray examples, rules plausible only by kind), and a target is endorsed by its
+    digit-wise similarity to the nearest member of the retrieved concepts, so a non-member
+    that differs from a member by one digit (84 or 65 under "powers of 2" via 64)
+    is partly endorsed while one that is numerically close but differs in both digits
+    (59 next to 60) is not.'
+- name: rule_count_familiar_strays
+  rationale: 'Refinement of `familiar_strays_equal_rule_prior`: people do the same
+    Bayesian concept learning over equally plausible mathematical rules and magnitude
+    ranges of 1-100, with the size principle, an uncertain belief about how often
+    an example is a stray, and strays that are sometimes "familiar" numbers rather
+    than random ones. The one change is what makes a number familiar. It is not how
+    readily a random member of a random rule lands on it, which favours members of
+    tiny rules such as 27, 64 and 81. It is how many well-known rules the number belongs
+    to, its breadth of mathematical associations. So richly connected numbers (12,
+    24, 36, 60, 100) are the easiest examples to write off as strays, while a lone
+    member of a tiny rule is no more excusable than other numbers with as many associations.
+    This adds no free parameter.'
+- name: prior_matched_familiar_strays
+  rationale: 'Refinement of `familiar_strays_equal_rule_prior`: people do the same
+    Bayesian concept learning over equally plausible mathematical rules and magnitude
+    ranges of 1-100, with the size principle, an uncertain belief about how often
+    an example is a stray, and strays that are sometimes "familiar" numbers (a member
+    of some well-known rule). The one change is where their idea of a stray comes
+    from. A stray is simply the output of some other program drawn from their own
+    prior over programs: with the same probability they give a rule-based program
+    a priori, it is a member of a randomly chosen rule, and otherwise it is any number
+    at all. So how often strays are familiar numbers is not a separate free belief.
+    It is fixed by how strongly people expect rule-based programs to begin with, and
+    someone who favours rules more also writes off familiar-looking outliers more
+    readily.'
+- name: graded_exemplar_equal_rule_prior
+  rationale: 'Refinement of `graded_exemplar_familiar_strays`: people hold familiar
+    number concepts (mathematical rules and magnitude ranges of 1-100) as stored member
+    lists, retrieve a concept to the extent that the examples resemble its members
+    on the number line, allow for an uncertain rate of stray examples that are sometimes
+    familiar numbers, and endorse a target by its closeness to the nearest stored
+    member of the retrieved concepts. The one change, taken from `familiar_strays_equal_rule_prior`,
+    is the rule prior: people have no preference among kinds of rule at all (parity,
+    primes, squares, cubes, powers, multiples, final digit, contained digit are equally
+    plausible a priori), so which rule is retrieved is decided only by how closely
+    and how tightly its members match the examples.'

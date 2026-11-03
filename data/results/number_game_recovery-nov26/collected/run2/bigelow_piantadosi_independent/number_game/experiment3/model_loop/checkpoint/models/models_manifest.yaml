@@ -1,0 +1,369 @@
+models:
+- name: sparse_rule_familiarity_within_kinds
+  rationale: 'Refinement of `rule_familiarity_within_kinds`: people do the same capacity-limited
+    Bayesian learning over rules and numerical ranges, with a prior plausibility for
+    each kind of rule and rule-specific familiarities within each kind, but familiarity
+    is sparse: most rules of a kind are about as familiar as one another and simply
+    share the kind''s plausibility, while only a few stand out as exceptionally familiar
+    (e.g. multiples of 11, powers of 10) or exceptionally unfamiliar (e.g. multiples
+    of 7, "contains the digit 1"). The single change is replacing the incumbent''s
+    evenly spread (normal) familiarities with heavy-tailed ones, which predicts that
+    rules with no standout familiarity are generalized exactly as their kind''s other
+    rules are, instead of each being nudged up or down by a moderate amount, while
+    the few exceptional rules keep their large deviations.'
+- name: rule_or_range_kind_commitment
+  rationale: 'People learn the hidden concept from the examples by the same capacity-limited
+    Bayesian weighing of arithmetic rules and numerical ranges as the best model,
+    but they do not blend the two kinds of explanation when they answer: they first
+    commit to whether the program follows an arithmetic rule or produces a stretch
+    of the number line, by comparing how well each kind as a whole explains the examples
+    more decisively than an ideal learner would, and then judge the target only by
+    the concepts of the kind they chose. This predicts that when rules and ranges
+    both explain the examples moderately well, answers follow whichever kind is ahead
+    more sharply than the blend implies, e.g. fewer yeses to far rule-members when
+    ranges are slightly favored, and fewer yeses to in-span rule-violators when a
+    rule is slightly favored.'
+- name: parity_veto_sparse_familiar_rules
+  rationale: 'Refinement of `parity_conflict_decision_veto`: people infer the hidden
+    concept by capacity-limited Bayesian learning over rules (multiples of 5 as its
+    own base-ten kind) and numerical ranges, and a target whose parity matches none
+    of the examples triggers an automatic parity conflict that, on a fixed fraction
+    of such trials, overrides the inferred concept with a "no". The single change
+    is grafting sparse rule familiarity (from `sparse_rule_familiarity_within_kinds`)
+    onto the concept-learning stage: most rules share their kind''s plausibility,
+    and only a few stand out as exceptionally familiar (multiples of 11, powers of
+    10) or unfamiliar (multiples of 7, "contains the digit 1"). The claim is that
+    the decision-stage parity veto survives once rule priors are calibrated this way:
+    opposite-parity targets in all-odd or all-even sets (e.g. odd numbers inside the
+    span of 20, 32, 92) get fewer yeses than the inferred concept implies, while same-parity
+    targets are unaffected.'
+- name: criterion_gated_concept_belief
+  rationale: 'People infer the hidden concept by the same capacity-limited Bayesian
+    learning over rules (with kind plausibilities and a few exceptionally familiar
+    or unfamiliar rules) and numerical ranges as the simplest current model, but they
+    do not answer by probability matching to their belief. They say "yes" only when
+    their belief that the target belongs to the concept clears an internal criterion
+    of how sure they must be, and this comparison is noisy from trial to trial. This
+    predicts that yes-rates are a steep S-shaped function of belief around the criterion,
+    not a one-for-one copy of it: moderately supported targets on either side of the
+    criterion are answered more unanimously than their belief implies.'
+- name: triangular_number_concept
+  rationale: 'People infer the hidden concept by the same capacity-limited Bayesian
+    learning over arithmetic rules (each kind of rule with its own plausibility, a
+    few rules standing out as especially familiar or unfamiliar) and numerical ranges
+    as the best model, with the same parity-conflict veto at the answer, but their
+    space of candidate concepts also contains the triangular numbers (1, 3, 6, 10,
+    15, 21, 28, 36, 45, 55, 66, 78, 91): a well-known figurate sequence, built by
+    adding successive whole numbers, that no multiples, parity, power or digit rule
+    covers. It is its own kind of rule, held a priori with a plausibility inferred
+    from the data. This predicts that sets made of triangular numbers (e.g. 15, 21,
+    45 or 10, 55, 28) get yeses to distant triangular targets such as 66, 78 or 91,
+    and fewer yeses to non-triangular numbers between the examples, than a learner
+    without this concept would give.'
+- name: conjunctive_category_exemplar_similarity
+  rationale: 'People do not infer a hidden concept; they compare the target with each
+    remembered example, judging two numbers similar to the extent that they belong
+    together to the number categories stored in memory (odd, even, primes, squares,
+    powers, multiples, final or contained digit, and stretches of the number line),
+    with small, distinctive shared categories counting more than broad ones. Because
+    the target has to resemble every example, these comparisons combine conjunctively:
+    the more uniformly similar the target is to all the examples (one weak match pulls
+    it down sharply), the more likely people are to say yes.'
+- name: individual_rule_range_leaning
+  rationale: "Refinement of `parity_veto_sparse_familiar_rules`: people learn the\
+    \ hidden concept by the same capacity-limited Bayesian weighing of arithmetic\
+    \ rules (sparse rule familiarities within kinds) against numerical ranges, with\
+    \ the same parity-conflict veto, but they differ from one another in how readily\
+    \ they reach for a rule rather than a range \u2014 each participant has a stable\
+    \ personal leaning that raises or lowers the prior odds of every rule against\
+    \ the ranges. The single change is this participant-level rule-versus-range leaning\
+    \ (people differ by a fixed spread around the population, each person's leaning\
+    \ inferred from the data), predicting that the same set is generalized by its\
+    \ rule (yeses to distant rule members) by some participants and by proximity (yeses\
+    \ to nearby non-members) by others, consistently across all the sets each person\
+    \ sees."
+- name: loose_range_sampling_sparse_rules
+  rationale: 'Refinement of `sparse_rule_familiarity_within_kinds`: people do the
+    same capacity-limited Bayesian learning over rules (with sparse familiarity within
+    each kind) and numerical ranges. The single change is that people do not apply
+    the size principle equally to both kinds of explanation: they read the examples
+    with one sampling strength when weighing arithmetic rules and with a separate,
+    looser one when weighing stretches of the number line, so the examples count for
+    less as evidence that a range is tight. This predicts that sets no rule fits are
+    generalized somewhat beyond the examples'' span, and that as examples accumulate,
+    a fitting rule overtakes the tightest covering range faster than a single shared
+    sampling strength allows.'
+- name: pedagogical_example_selection
+  rationale: 'People infer the hidden concept by the same capacity-limited Bayesian
+    weighing of arithmetic rules (sparse rule familiarities within kinds) and numerical
+    ranges as the best model, but they do not assume the examples are a random draw
+    from the concept: they assume a helpful teacher picked them, favouring numbers
+    that by themselves would single that concept out (e.g. numbers few other concepts
+    contain, such as 64 for powers of 2 or the numbers near the ends of a range).
+    The examples are therefore read as pointing to the concept that makes them the
+    most telling choices, not just to the smallest concept that contains them. The
+    sharpest disagreement with the best model is in sets made of "telling" numbers,
+    which this account generalizes along the concept those numbers single out, and
+    in sets of numbers that many concepts contain, which it treats as weak evidence
+    and generalizes more broadly than the size principle does.'
+- name: without_replacement_example_sampling
+  rationale: People learn the hidden concept by the same capacity-limited Bayesian
+    weighing of arithmetic rules (each kind with its own plausibility, a few rules
+    standing out as especially familiar or unfamiliar) and stretches of the number
+    line as the best model, but they understand that the examples shown are different
+    numbers drawn from the program one after another without repeats, so each example
+    is judged against the members of a concept not yet shown. This makes a small concept
+    that the examples nearly use up (e.g. 1, 8, 27 as the cubes, or a range only a
+    little wider than the examples) a far more striking explanation than independent
+    draws would make it, so such sets are generalized more narrowly to just the concept's
+    few remaining members, while sets fitting large concepts are judged as before.
+- name: individual_leaning_loose_ranges
+  rationale: 'Refinement of `loose_range_sampling_sparse_rules`: people do the same
+    capacity-limited Bayesian learning over arithmetic rules (sparse familiarities
+    within kinds) and numerical ranges, and they read the examples as more loosely
+    sampled when weighing ranges than when weighing rules. The single change is a
+    component taken from `individual_rule_range_leaning`: participants differ in how
+    readily they reach for a rule rather than a range. Each person has a stable leaning
+    that shifts the prior odds of every rule against the ranges, drawn from a fixed
+    population spread, and an unidentified person is treated as the population average
+    over that spread. The model predicts that the same set is generalized by its rule
+    (yeses to distant rule members) by some participants and by loose proximity (yeses
+    to nearby non-members, even somewhat beyond the examples'' span) by others, consistently
+    across every set each person sees.'
+- name: individual_range_sampling_looseness
+  rationale: 'Refinement of `loose_range_sampling_sparse_rules`: people do the same
+    capacity-limited Bayesian learning over arithmetic rules (kind plausibilities,
+    sparse familiarities within kinds) and numerical ranges, reading the examples
+    with one sampling strength for rules and a separate, looser one for stretches
+    of the number line. The single change is that how loosely the examples are read
+    as evidence for a tight range is a stable trait of each participant rather than
+    a population constant (each person''s range sampling strength is scaled by a personal
+    factor with a fixed spread around the population, inferred from their answers;
+    the rule strength stays shared). Because the examples'' range evidence grows with
+    every example, this predicts individual differences that grow with set size: some
+    participants keep to the examples'' span and reject far rule members, others favour
+    the fitting rule, consistently across every set each person sees, while for single
+    examples people barely differ.'
+- name: loose_range_individual_rule_leaning
+  rationale: 'Refinement of `individual_rule_range_leaning`. People learn the hidden
+    concept by the same capacity-limited Bayesian weighing of arithmetic rules (sparse
+    rule familiarities within kinds) against numerical ranges, with the same parity-conflict
+    veto, and each participant has a stable personal leaning that raises or lowers
+    the prior odds of every rule against the ranges. The single change, grafted from
+    `loose_range_sampling_sparse_rules`, is that people do not read the examples with
+    one sampling strength for both kinds of explanation: they weigh the evidence that
+    a range is tight on its own, looser scale. So the personal leaning decides between
+    a rule and a less literally sampled range. Participants who lean toward ranges
+    then generalize somewhat beyond the examples'' span, instead of stopping sharply
+    at its edges, and as examples accumulate a fitting rule overtakes the tightest
+    covering range faster for everyone.'
+- name: effortful_computed_rule_search
+  rationale: 'Considering arithmetic rules that have to be computed (primes, squares
+    and cubes, powers, multiples other than 5) takes deliberate mental effort, so
+    people only search for them on some of their judgments. On the others they generalize
+    from the explanations that are visible at a glance: stretches of the number line,
+    odd or even, shared final or contained digits, and multiples of 5. On every judgment
+    they weigh whichever concepts they have considered by the same Bayesian logic.
+    This predicts that even when examples fit a computed rule well (e.g. 16, 8, 64
+    as powers of 2), a fixed share of answers follow the examples'' range or digit
+    pattern instead, giving fewer yeses to distant rule members and more yeses to
+    non-members inside the span than a learner who always considers every rule.'
+- name: individual_working_memory_capacity
+  rationale: People learn the hidden concept by the same Bayesian weighing of arithmetic
+    rules (kind plausibilities, sparse familiarities within kinds) and stretches of
+    the number line as the best model, with a looser reading of the examples as evidence
+    for a tight range, but they are limited in how much of the examples' evidence
+    they can hold and integrate at once, and this working-memory capacity is a stable
+    trait that differs between people. A participant with a tighter capacity limit
+    draws less extra evidence from each additional example, so for that person larger
+    sets are generalized more broadly (broad rules and wide ranges keep more belief),
+    while people barely differ on single examples, and each person's breadth holds
+    consistently across every set they see.
+- name: individual_yes_response_bias
+  rationale: 'People all learn the hidden concept the same way (the capacity-limited
+    Bayesian weighing of arithmetic rules and loosely sampled numerical ranges of
+    the current models), but they differ stably in how readily they say "yes" given
+    the same belief: each participant has a personal yes-proneness at the decision
+    stage that shifts the odds of answering yes on every trial. This predicts individual
+    differences concentrated on uncertain targets (near the span edges, far rule members,
+    small sets) and pointing the same way for a person across all sets, rather than
+    differences that depend on whether a rule or a range explains the set.'
+- name: individual_rule_leaning_range_looseness
+  rationale: 'Refinement of `individual_range_sampling_looseness`: people do the same
+    capacity-limited Bayesian learning over arithmetic rules (kind plausibilities,
+    sparse familiarities within kinds) and numerical ranges, reading the examples
+    more loosely for ranges than for rules, with each participant''s range looseness
+    a stable personal trait. The single change, a component taken from `loose_range_individual_rule_leaning`,
+    is that participants also differ in how readily they reach for a rule rather than
+    a range before seeing any example (a personal shift of the prior odds of every
+    rule against the ranges, with a fixed spread around the population). Because this
+    leaning does not grow with the evidence, it predicts individual differences in
+    rule-versus-range generalization that are already present for small sets, and
+    that trade off yeses to in-span non-members against yeses to distant rule members,
+    whereas range looseness alone makes people differ only as examples accumulate.'
+- name: magnitude_structure_attention_tradeoff
+  rationale: 'Refinement of `individual_range_sampling_looseness`: people do the same
+    capacity-limited Bayesian learning over arithmetic rules (kind plausibilities,
+    sparse familiarities within kinds) and numerical ranges, reading the examples
+    with one sampling strength for rules and a looser one for ranges, and each participant
+    has a stable personal trait. The single change is what that trait is: instead
+    of setting only how literally a person reads the examples as evidence for a tight
+    range, it sets how the person divides attention between the examples'' magnitudes
+    and their arithmetic structure, so the same personal factor that strengthens their
+    range evidence weakens their rule evidence by the same proportion (and the reverse).
+    This predicts a within-person trade-off, consistent across every set a person
+    sees: people who confine their yeses to the examples'' span also extend fitting
+    rules beyond it less, and people who extend rules fill in the span less, with
+    the split growing as examples accumulate.'
+- name: individual_yes_criterion_rule_leaning
+  rationale: 'Refinement of `loose_range_individual_rule_leaning`. People learn the
+    hidden concept as that model says: capacity-limited Bayesian weighing of arithmetic
+    rules (sparse familiarities within kinds) against numerical ranges, with looser
+    sampling for ranges, a parity-conflict veto, and a personal leaning toward rules
+    or ranges. The single change is at the answer stage: each participant also has
+    a stable response criterion, a personal readiness to say "yes" at a given strength
+    of belief that the target is in the concept. It shifts the log-odds of every answer
+    by the same personal amount (people differ by a fixed spread; an unidentified
+    person is averaged over it). So participants differ consistently in their overall
+    yes-rate across every set and target, most visibly for targets the concept leaves
+    uncertain and least for near-certain members and non-members, independently of
+    whether they lean toward rules or ranges.'
+- name: first_example_hypothesis_generation
+  rationale: 'People read the examples in order and use the first one to call up candidate
+    explanations (the arithmetic rules and the stretches of the number line that contain
+    it), so the first example is partly spent on proposing candidates and counts less
+    than later examples as evidence about whether a rule or a range is behind the
+    program, although it still tells apart candidates of the same kind. As a result,
+    the same examples shown in a different order are generalized differently: a set
+    that opens with a number many rules contain (such as 64) is extended by rule less,
+    and one that opens with a number few rules contain is extended by rule more, than
+    an order-blind learner predicts.'
+- name: specific_shared_category_distance
+  rationale: 'People judge a target by its similarity to the examples on a category-distance
+    metric: they find the most specific familiar number category that holds all the
+    examples (an arithmetic rule or the stretch of the number line they span) and
+    the most specific one that still holds the examples together with the target,
+    and the distance is how much larger the second category must be than the first,
+    with each kind of category (parity, primes, powers, multiples, digit patterns)
+    costing its own amount to call to mind. The willingness to say yes falls off smoothly
+    with this distance, more steeply the more examples there are, so targets that
+    fit the examples'' tightest shared category are accepted however far away they
+    lie, and targets that force a much broader category are rejected even when numerically
+    close.'
+- name: loose_ranges_effortful_rule_search
+  rationale: 'Refinement of `individual_range_sampling_looseness`: people do the same
+    capacity-limited Bayesian learning over arithmetic rules (kind plausibilities,
+    sparse familiarities within kinds) and numerical ranges. They read the examples
+    more loosely for ranges than for rules, and how loosely they read them as range
+    evidence is a stable trait of each participant. The single change, a component
+    taken from `effortful_computed_rule_search`: considering rules that have to be
+    computed (primes, squares and cubes, powers, multiples other than 5) takes deliberate
+    effort, so people search for them only on a fixed share of judgments. On the rest
+    they weigh only the explanations visible at a glance (stretches of the number
+    line, odd or even, final or contained digits, multiples of 5). So even sets that
+    fit a computed rule well (e.g. 16, 8, 64) get a share of range-based answers,
+    and on those answers each person''s own range looseness decides how far beyond
+    the examples'' span their yeses reach.'
+- name: individual_response_decisiveness
+  rationale: 'People infer the hidden concept by the same capacity-limited Bayesian
+    learning over arithmetic rules (kind plausibilities, a few exceptionally familiar
+    or unfamiliar rules) and numerical ranges as the simplest current model, but they
+    differ stably in how decisively they turn that belief into a yes/no answer: some
+    participants answer more categorically than their belief (near-unanimous yes to
+    well-supported targets and no to poorly supported ones), others more hesitantly,
+    closer to a coin flip. Unlike a yes-bias, this personal decisiveness leaves a
+    50/50 belief untouched and pushes answers away from or toward chance symmetrically,
+    so a participant''s distinctiveness shows up on confidently judged targets (examples,
+    far non-members) and points the same way across every set they see.'
+- name: individual_leaning_effortful_rule_search
+  rationale: 'Refinement of `effortful_computed_rule_search`: people search for arithmetic
+    rules that have to be computed (primes, squares and cubes, powers, multiples other
+    than 5) only on a fixed share of judgments, and otherwise weigh only the explanations
+    visible at a glance (ranges, odd or even, digits, multiples of 5) by the same
+    Bayesian logic. The single change, a component taken from `loose_range_individual_rule_leaning`,
+    is that participants also differ stably in how readily they reach for any rule
+    rather than a stretch of the number line: each person''s leaning shifts the prior
+    odds of every rule (computed or glance) against the ranges, with a fixed spread
+    around the population. This predicts individual differences that appear even for
+    sets no computed rule fits (e.g. all-even or shared-final-digit sets), where range-leaning
+    people still give yeses to in-span non-members and rule-leaning people to distant
+    same-parity or same-digit targets, consistently across every set each person sees.'
+- name: shifted_sequence_near_miss_rules
+  rationale: 'People''s space of candidate concepts also contains near-misses of the
+    sparse computed sequences: "one more than" or "one less than" a square, a cube,
+    a power, or a prime (e.g. 3, 8, 15, 24, 35 as squares minus one; 3, 5, 9, 17,
+    33, 65 as powers of 2 plus one). These form their own kind of rule, held a priori
+    with a plausibility inferred from the data, with the near-misses sharing it equally.
+    Like the other computed rules, people only consider them on the share of judgments
+    where they make the effort to search for computed rules, and they weigh them against
+    ranges and the other rules by the same Bayesian logic. This predicts that sets
+    which sit just off a famous sequence (e.g. 8, 15, 24) get yeses for distant members
+    of the shifted sequence (35, 48, 63) and fewer yeses for in-span numbers that
+    are not in it, where a learner without these concepts falls back on the examples''
+    range.'
+- name: stored_category_retrieval_by_match
+  rationale: People do not infer the concept behind the examples; they hold familiar
+    number categories in memory (odd, even, primes, squares and cubes, powers, multiples,
+    final or contained digit, multiples of 5, and stretches of the number line) and
+    the example set retrieves them as a memory probe does, each category coming to
+    mind in proportion to how large a share of the examples it contains, with small,
+    specific categories retrieved more readily than broad ones. The target is then
+    judged "yes" to the extent that the retrieved categories contain it. Because retrieval
+    depends on the share of matching examples rather than on how improbable the examples
+    would be under each category, adding further examples that fit a category does
+    not sharpen generalization onto it, and a category that misses one example is
+    still retrieved fairly often.
+- name: final_digit_glance_effortful_search
+  rationale: 'Refinement of `effortful_computed_rule_search`: people consider effortful
+    rules only on some of their judgments, and otherwise generalize from what can
+    be seen at a glance, weighing whatever concepts they considered by the same Bayesian
+    logic. The single change is what counts as seen at a glance: only a number''s
+    magnitude (stretches of the number line) and what its final digit shows (odd or
+    even, ending in a given digit, multiples of 5). "Contains the digit d" rules require
+    inspecting the whole number, tens place included, so like primes, squares and
+    cubes, powers and other multiples they are considered only when people make the
+    effortful search. This predicts that sets sharing a digit somewhere other than
+    the final place (e.g. 31, 13, 35) are extended to other numbers containing that
+    digit less often than the incumbent predicts, and more often by range, while sets
+    sharing a final digit keep their digit-based generalization on every judgment.'
+- name: retrieval_vs_checking_rule_search
+  rationale: 'Refinement of `effortful_computed_rule_search`: people consider effortful
+    rules only on a fixed share of their judgments and otherwise generalize from the
+    explanations available at once, weighing whichever concepts they considered by
+    the same Bayesian logic. The single change is what makes a rule effortful: not
+    being arithmetic as such, but having to be checked number by number. Famous sequences
+    (primes, squares and cubes, powers) are memorized lists that are recognized at
+    once, like odd or even, final digits and multiples of 5, whereas testing divisibility
+    by 3, 4, 6, 7, 8, 9, 11 or 12, and scanning every digit for a shared "contains
+    the digit d", need deliberate work. This predicts that sets fitting a sequence
+    (e.g. 16, 8, 64 or 9, 49, 81) are extended to its distant members on every judgment,
+    while sets fitting a non-decimal multiple or a shared inner digit (e.g. 42, 21,
+    84 or 31, 13, 35) get a share of range-based answers: fewer yeses to distant members
+    and more to in-span non-members than the incumbent predicts.'
+- name: without_replacement_effortful_search
+  rationale: 'Refinement of `without_replacement_example_sampling`: people understand
+    that the examples are distinct numbers the program produced one after another
+    without repeats, so each example is judged against the members of a concept not
+    yet shown, which makes a small concept that the examples nearly use up (the cubes
+    after 1, 8, 27; a range barely wider than the examples) an especially striking
+    explanation. The single change, a component taken from `effortful_computed_rule_search`,
+    is that rules that have to be computed (primes, squares and cubes, powers, multiples
+    other than 5) are only searched for on a fixed share of judgments; on the rest
+    people weigh, by the same without-replacement logic, only the explanations visible
+    at a glance (stretches of the number line, odd or even, final or contained digits,
+    multiples of 5). This predicts that nearly exhausted ranges and glance rules are
+    generalized narrowly to their few remaining members even when a computed rule
+    fits, while nearly exhausted computed rules (e.g. 1, 8, 27) win out only on the
+    judgments where people search for them.'
+- name: target_cued_rule_retrieval
+  rationale: 'The number being asked about acts as a retrieval cue: even on judgments
+    where people do not search through the arithmetic rules that have to be computed
+    (primes, squares and cubes, powers, multiples other than 5), the target brings
+    to mind the computed rules it itself belongs to (asked about 32, "a power of 2"
+    comes to mind), and people weigh those cued rules against the explanations visible
+    at a glance (ranges, odd or even, digits, multiples of 5) by the same Bayesian
+    logic. Because only rules the target belongs to are cued, this predicts an asymmetry
+    the search account cannot produce: distant members of a computed rule that fits
+    the examples (e.g. 32 or 2 after 16, 8, 64) are endorsed almost as if the rule
+    had been searched for, while in-span non-members (e.g. 40) cue no such rule and
+    keep their range-based yeses.'

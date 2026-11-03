@@ -1,0 +1,1 @@
+rule_stretch_shared_size_prior

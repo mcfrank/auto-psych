@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  digit_reversal_pair_concepts: 0.125
+  equal_prior_familiar_rules_digit_sums: 0.125
+  equal_prior_rules_round_edge_ranges: 0.125
+  evidence_quantity_decisiveness: 0.125
+  graded_final_digit_equal_rule_prior: 0.125
+  last_example_recency_weight: 0.125
+  set_size_dependent_example_trust: 0.125
+  set_size_response_decisiveness: 0.125

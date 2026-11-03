@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  decade_and_parity_range_concepts: 0.125
+  doubling_chain_concepts: 0.125
+  example_recall_limited_concepts: 0.125
+  gamma_width_exception_family_concepts: 0.125
+  gamma_width_parity_range_concepts: 0.125
+  multiples_within_range_concepts: 0.125
+  parity_within_range_concepts: 0.125
+  rule_noticing_grows_with_examples: 0.125

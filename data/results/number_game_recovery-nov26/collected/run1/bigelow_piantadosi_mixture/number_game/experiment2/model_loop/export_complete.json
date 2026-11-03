@@ -1,0 +1,13 @@
+{
+  "models": [
+    "digit_coincidence_noticing_guess",
+    "coincidence_gated_all_rules_guess",
+    "compressed_concept_size_sticky_guess",
+    "coincidence_triggered_guess_rethink",
+    "graded_digit_salience_guess",
+    "coincidence_salience_guess_revision",
+    "misfit_tolerant_coincidence_rethink",
+    "coincidence_noticing_guess_vote"
+  ],
+  "ledger_sha256": "8f40bbdc5100a35dc81ba479769435760b4bdcde4518104cf491b7f825570fa4"
+}

@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  directional_edge_bias_criterion: 0.125
+  evidence_sufficiency_commitment: 0.125
+  example_retention_limited_memory: 0.125
+  extrapolated_step_ceiling: 0.125
+  graded_ratio_ceiling_criterion: 0.125
+  new_set_criterion_ratio_ceiling: 0.125
+  new_set_criterion_tank_ceiling: 0.125
+  sample_count_scaled_ceiling: 0.125

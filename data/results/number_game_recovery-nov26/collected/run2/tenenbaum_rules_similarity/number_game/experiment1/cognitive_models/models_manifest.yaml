@@ -1,0 +1,13 @@
+models:
+- name: without_replacement_example_sampling
+  rationale: 'People do the same Bayesian concept learning as the current best model
+    (45 independently weighted rules, ranges of 1-100 with a preferred typical width,
+    an inferred share of random examples), but they assume the program never produces
+    the same number twice, so they treat the examples as drawn from the concept without
+    replacement: each further example that fits a concept is taken as one of that
+    concept''s members not yet shown. This makes several examples far stronger evidence
+    for a concept that has barely more members than were shown (cubes, powers of 3
+    or 4, squares, a tight range) than the best model''s with-replacement size principle
+    allows, so the sharpest disagreement lives on three- and four-example sets that
+    nearly exhaust a small rule or range, where this model predicts fewer "yes" answers
+    to targets outside that small concept.'

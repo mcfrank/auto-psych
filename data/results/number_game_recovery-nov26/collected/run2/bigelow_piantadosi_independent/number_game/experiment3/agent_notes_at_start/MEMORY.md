@@ -1,0 +1,1 @@
+- [Number-game misfit diagnostics](number-game-misfit-diagnostics.md) — MAP screening of base_ten / familiarity refinements: per-rule deviations +50, parity gate +5, query-as-evidence +1.3; incumbent now near noise floor; per-cell speed trick; incumbent rule_familiarity is at the noise ceiling (iter_4); order effects ~absent; StudentT familiarity prior fixes mixing

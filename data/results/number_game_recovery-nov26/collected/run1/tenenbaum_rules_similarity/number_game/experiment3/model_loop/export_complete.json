@@ -1,0 +1,13 @@
+{
+  "models": [
+    "equal_prior_familiar_rules_digit_sums",
+    "last_example_recency_weight",
+    "equal_prior_rules_round_edge_ranges",
+    "graded_final_digit_equal_rule_prior",
+    "digit_reversal_pair_concepts",
+    "evidence_quantity_decisiveness",
+    "set_size_dependent_example_trust",
+    "set_size_response_decisiveness"
+  ],
+  "ledger_sha256": "958123a592cf3a5eae354e7a126722a3cda5ced47309840bf452f028ebb755e7"
+}
