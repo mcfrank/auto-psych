@@ -21,6 +21,10 @@
 # next, which resumes it; one that stops (finished, awaiting review, a test deploy, a failure)
 # writes the cell's STOP, and the ladder's later jobs exit at once. A stopped chain is relaunched
 # only with CLEAR_STOP=1 (its STOP is kept as STOP.<time>).
+#
+# Slurm mails the submitter when a job stops for a person or fails (open_live.sbatch's exit codes);
+# MAIL_USER sends it elsewhere, MAIL_TYPE=NONE turns it off. `python -m src.rsa_open.status` shows
+# every chain at once.
 set -euo pipefail
 REPO="${REPO:-$HOME/auto-psych}"
 CONFIG="${CONFIG:-$REPO/scripts/rsa/live/open_live.yaml}"
@@ -79,6 +83,7 @@ for chain in "${CHAIN_LIST[@]}"; do
           ARM="$ARM" CHAIN="$chain" N_EXPERIMENTS="$N_EXPERIMENTS" \
           ${PARTICIPANTS:+PARTICIPANTS="$PARTICIPANTS"} ${SMOKE_FROM:+SMOKE_FROM="$SMOKE_FROM"} \
           sbatch --parsable --chdir="$REPO" --partition="$PARTITION" --time="$TIME" ${SIZE[@]+"${SIZE[@]}"} \
+            ${MAIL_TYPE:+--mail-type="$MAIL_TYPE"} ${MAIL_USER:+--mail-user="$MAIL_USER"} \
             --job-name="rsa_open_${ARM}_c$chain$SMOKE" ${dep[@]+"${dep[@]}"} \
             -o "$WORK_ROOT/logs/%x_%j.out" scripts/rsa/slurm/open_live.sbatch)"
     echo "[launch] ${ARM}_chain_$chain$SMOKE: job $link of $LINKS: $id" >&2

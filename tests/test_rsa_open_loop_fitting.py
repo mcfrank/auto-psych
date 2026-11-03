@@ -226,3 +226,61 @@ def test_a_peak_recorded_by_the_inflating_measure_is_ignored(theory_path, corpus
     meta.write_text(json.dumps({**json.loads(meta.read_text()), "peak_rss_mb": 15799}))
     fit_cached(theory_path, "old_record", path, QUICK, tmp_path)
     assert scheduler().estimate("old_record") == DEFAULT_FIT_BYTES
+
+
+# --------------------------------------------------------------------------- where fits run (DISTRIBUTED_DESIGN.md v2)
+
+def test_every_fit_records_the_machine_it_ran_on(tmp_path, monkeypatch):
+    import arviz as az
+
+    from src.rsa_open.corpus import CorpusFit
+    from src.rsa_open.loop.fitting import _write, machine
+
+    monkeypatch.setenv("SLURM_JOB_ID", "123")
+    monkeypatch.setenv("SLURM_JOB_PARTITION", "owners")
+    m = machine()
+    assert m["slurm_job"] == "123" and m["partition"] == "owners" and m["host"] and m["cpu"]
+    fitted = CorpusFit("t", ["E"], az.from_dict(posterior={"a": np.zeros((1, 2))}), ["a"], [])
+    _write(fitted, tmp_path / "t.nc", tmp_path / "t.json")
+    assert json.loads((tmp_path / "t.json").read_text())["machine"] == m
+
+
+def test_the_fit_backend_is_local_unless_named_and_never_falls_back(monkeypatch):
+    from src.rsa_open.loop.fitting import FIT_BACKEND_ENV, LocalBackend, fit_backend
+
+    monkeypatch.delenv(FIT_BACKEND_ENV, raising=False)
+    assert isinstance(fit_backend(), LocalBackend)
+    monkeypatch.setenv(FIT_BACKEND_ENV, "slurm")
+    with pytest.raises(NotImplementedError, match="planned, not built"):
+        fit_backend()
+    monkeypatch.setenv(FIT_BACKEND_ENV, "elsewhere")
+    with pytest.raises(ValueError, match="not a fit backend"):
+        fit_backend()
+
+
+def test_a_killed_attempt_is_retried_once_with_twice_the_room_through_any_backend(tmp_path, monkeypatch):
+    import src.rsa_open.loop.fitting as fitting
+    from src.rsa.fit import FitSettings
+    from src.rsa_open.loop.fitting import FitBackend, ModelFailure, _fit_in_child, _Killed
+
+    class Flaky(FitBackend):
+        def __init__(self, kills):
+            self.kills, self.calls = kills, []
+
+        def attempt(self, job, at_least=0.0):
+            self.calls.append(at_least)
+            if len(self.calls) <= self.kills:
+                raise _Killed(-9, 4 * 2**30, reserved=10 * 2**30)
+            return ("model", "ValueError: the theory's own", "tb")
+
+    args = (tmp_path / "t.py", "flaky_theory", tmp_path / "c.json", FitSettings(), tmp_path / "f.nc",
+            tmp_path / "f.json", 60.0)
+    once = Flaky(1)
+    monkeypatch.setattr(fitting, "fit_backend", lambda: once)
+    with pytest.raises(ModelFailure, match="the theory's own"):
+        _fit_in_child(*args)
+    assert once.calls == [0.0, 20 * 2**30]  # max(2 x 10 GB reserved, 1.25 x the 4 GB peak)
+    twice = Flaky(2)
+    monkeypatch.setattr(fitting, "fit_backend", lambda: twice)
+    with pytest.raises(RuntimeError, match="killed .* twice .* 10 GB reserved"):
+        _fit_in_child(*args)

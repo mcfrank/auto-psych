@@ -5,6 +5,7 @@
 #SBATCH --mem=96GB
 #SBATCH --time=48:00:00
 #SBATCH --output=%x_%j.out
+#SBATCH --mail-type=FAIL,TIME_LIMIT
 #
 # One chain of the open campaign with real participants (docs/auto_open/PLAN.md Phase 3b, items 6
 # and 7; PREREG_DRAFT.md): ARM (open | fixed) and CHAIN (0-3) pick the chain; each experiment is
@@ -29,6 +30,12 @@
 # are skipped, a recorded study is never deployed or published again (main's guard), a design
 # that stopped part way starts again (its attempt kept as design.abandoned_<i>), and a loop resumes
 # from its last scored round (Addendum B).
+#
+# **Mail when a person is needed** (DISTRIBUTED_DESIGN.md v2): Slurm mails the submitting user when a
+# job fails or hits its time limit. A job that writes STOP therefore exits nonzero, so that STOP
+# reaches the PI in minutes: 10 the chain finished, 13 awaiting the PI's review, 14 a test deploy is
+# up, and a failure its own code. These are not failures of the job. A job that pauses for the
+# next of its ladder exits 0 (no mail), and so does a later job of the ladder that finds the STOP.
 #
 # Studies recruit in parallel, up to the config's max_concurrent_studies (slot locks in
 # $WORK_ROOT/private/campaign); each blocks only its own chain's earlier studies (once per chain,
@@ -215,9 +222,9 @@ if [[ -d "$RUN_DIR" ]]; then
     echo "[open live] WARNING: copying the outputs failed (the run itself is in $RUN_DIR)"
 fi
 case "$rc" in
-  0) date -Is > "$CELL_DIR/DONE"; stop "finished" ;;
-  3) stop "awaiting the PI's review of experiment 1's paradigm: python -m src.rsa_open.review --frozen $RUN_DIR/experiment1/design/frozen --by <name>; then relaunch with CLEAR_STOP=1" ;;
-  4) stop "test deploy done: the page and a Prolific draft are up (see the log); relaunch live with CLEAR_STOP=1" ;;
+  0) date -Is > "$CELL_DIR/DONE"; stop "finished"; exit 10 ;;
+  3) stop "awaiting the PI's review of experiment 1's paradigm: python -m src.rsa_open.review --frozen $RUN_DIR/experiment1/design/frozen --by <name>; then relaunch with CLEAR_STOP=1"; exit 13 ;;
+  4) stop "test deploy done: the page and a Prolific draft are up (see the log); relaunch live with CLEAR_STOP=1"; exit 14 ;;
   5) echo "[open live] $CELL: paused for the next job of its ladder (too little of this job left for the next stage)" ;;
   *) stop "failed (exit $rc, job ${SLURM_JOB_ID:-local}): a person looks before it resumes (PREREG_DRAFT.md §4a)"; exit "$rc" ;;
 esac

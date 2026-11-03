@@ -776,3 +776,18 @@ def test_a_dry_run_can_fit_the_pragmods_trials_alone():
     assert 'pragmods) EXISTING="$REPO/src/pipelines/outer_loop/projects/rsa_reference/data/pragmods_trials.csv"' in text
     assert (REPO / "src/pipelines/outer_loop/projects/rsa_reference/data/pragmods_trials.csv").is_file()
     assert '--cv-folds "$CV_FOLDS"' in text and "must be all or pragmods" in text
+
+
+def test_a_live_chain_mails_when_it_needs_a_person():
+    """DISTRIBUTED_DESIGN.md v2: Slurm mails on a failed job, so every STOP exits nonzero, and a pause
+    for the ladder's next job exits 0 (no mail)."""
+    text = (SLURM / "open_live.sbatch").read_text()
+    assert "#SBATCH --mail-type=FAIL,TIME_LIMIT" in text
+    case = text[text.index('case "$rc" in'):]
+    for rc, code in (("0)", "exit 10"), ("3)", "exit 13"), ("4)", "exit 14"), ("*)", 'exit "$rc"')):
+        line = next(x for x in case.splitlines() if x.strip().startswith(rc))
+        assert "stop " in line and code in line, line
+    pause = next(x for x in case.splitlines() if x.strip().startswith("5)"))
+    assert "stop " not in pause and "exit" not in pause
+    launch = (SLURM.parent / "live" / "open_launch.sh").read_text()
+    assert '${MAIL_TYPE:+--mail-type="$MAIL_TYPE"}' in launch and '${MAIL_USER:+--mail-user="$MAIL_USER"}' in launch

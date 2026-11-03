@@ -20,9 +20,24 @@ answer, v2 builds only what no answer can rule out.
 | Fit jobs' environment | not addressed | **a clean environment**: no `.secrets` keys, only what a fit needs (a fit runs agent-written code; Slurm passes the submitter's environment by default) | no |
 | A round, a chain | 3.5 h; 3 days | **about 5-6 h** (every round so far had a retry or a repair, which is sequential); a loop 27-32 h; a chain about 4 days; stage 2 about 5-7 days with the reviews. The gain is chains at once, not shorter rounds | no |
 
-**Built first, whatever SRCC says:** the status command, failure mail on every job, the fits'
-node and CPU in their sidecars, and the backend seam in `_fit_in_child` with the local backend
-unchanged. Then the backend SRCC allows, a two-chain rehearsal, and the amendment.
+**Built first, whatever SRCC says (done 2026-11-03, on `auto-psych-open`, not on chain 1's tag):**
+- *The status command:* `python -m src.rsa_open.status --work-root <root> [--squeue] [--json]`:
+  every chain's state, current stage, experiments (design, study, data, loop rounds and leader),
+  STOP reasons, studies recruiting, agent and participant spend; a chain whose files haven't
+  changed for 2 h (`--quiet-hours`) shows QUIET. Files only; `--squeue` adds one `squeue` call.
+- *Failure mail:* `open_live.sbatch` has `--mail-type=FAIL,TIME_LIMIT`, and every STOP now exits
+  nonzero so that Slurm mails it (10 finished, 13 awaiting review, 14 test deploy up, a failure its
+  own code); a pause for the ladder's next job, and a later job that finds the STOP, exit 0.
+  `MAIL_USER` and `MAIL_TYPE` (e.g. `NONE`) pass through the launcher. In `sacct` those three
+  stops show as FAILED: they aren't failures of the job.
+- *Where each fit ran:* every fit's sidecar records `machine`: host, CPU model, Slurm job and
+  partition (`fitting.machine`).
+- *The backend seam:* a time-limited fit's run is one `FitBackend.attempt` (`fitting.py`);
+  `RSA_OPEN_FIT_BACKEND` chooses it, `local` (the default) is today's child process under the
+  memory scheduler, and `slurm` or `queue` raise "planned, not built" rather than fall back. The
+  out-of-memory retry with twice the room now works through any backend.
+
+Then the backend SRCC allows, a two-chain rehearsal, and the amendment.
 
 The sections below are v1's text where the table doesn't override it.
 

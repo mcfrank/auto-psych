@@ -25,6 +25,16 @@ the scoring step ran 20 fold fits at once, with nothing bounding their memory (P
 A loaded fit may leave out its per-trial log-likelihood (``log_likelihood=False``): the loop and
 the design never read it, and on a whole corpus it is about 0.9 GB a fit (4 chains x 1,000
 draws x 58,069 trials in float32), held in the loop's own process for every live theory.
+
+**Where a fit ran** (`machine`): every fit's sidecar records its host, CPU model, and Slurm job
+and partition. Time limits decide admission, so a fit's speed must be comparable across chains;
+the record shows which hardware each fit had (`DISTRIBUTED_DESIGN.md` v2, §0).
+
+**Backends** (`fit_backend`): a time-limited fit's run is one attempt of a backend, chosen by
+``RSA_OPEN_FIT_BACKEND``. ``local`` (the default, and the only one built) fits in a child of this
+job, as above. A cluster backend (Slurm jobs, or a worker queue) plugs in at `FitBackend.attempt`
+once SRCC has said which is allowed; everything around it (the cache, time limits, the
+out-of-memory retry, failure classification) stays as it is.
 """
 
 from __future__ import annotations
@@ -42,7 +52,7 @@ import threading
 import time
 import traceback
 from contextlib import contextmanager
-from dataclasses import asdict, fields
+from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence
 
@@ -262,6 +272,26 @@ def _is_model_failure(exc: BaseException, theory_path: Path) -> bool:
     return isinstance(exc, _model_failure_types()) or is_model_failure(exc, theory_path)
 
 
+def _cpu_model() -> str:
+    try:
+        for line in Path("/proc/cpuinfo").read_text().splitlines():
+            if line.startswith("model name"):
+                return line.split(":", 1)[1].strip()
+    except OSError:
+        pass
+    import platform
+
+    return platform.processor() or platform.machine() or "unknown"
+
+
+def machine() -> Dict[str, Optional[str]]:
+    """Where this process runs: host, CPU model, Slurm job and partition (None outside Slurm)."""
+    import socket
+
+    return {"host": socket.gethostname(), "cpu": _cpu_model(), "slurm_job": os.environ.get("SLURM_JOB_ID"),
+            "partition": os.environ.get("SLURM_JOB_PARTITION")}
+
+
 def _write(fitted: CorpusFit, nc_path: Path, meta_path: Path, record_peak: bool = False) -> None:
     nc_path.parent.mkdir(parents=True, exist_ok=True)
     tmp = nc_path.with_suffix(f".tmp{os.getpid()}.nc")
@@ -269,7 +299,7 @@ def _write(fitted: CorpusFit, nc_path: Path, meta_path: Path, record_peak: bool 
     os.replace(tmp, nc_path)
     meta = dict(theory_name=fitted.theory_name, blocks=fitted.blocks, param_names=fitted.param_names,
                 convergence_problems=fitted.convergence_problems,
-                offsets={k: list(v) for k, v in fitted.offsets.items()}, timing=fitted.timing)
+                offsets={k: list(v) for k, v in fitted.offsets.items()}, timing=fitted.timing, machine=machine())
     if record_peak:  # a fit child's peak memory, its write included (an in-process fit's would be the loop's)
         meta["peak_hwm_mb"] = round(_own_peak() / 2**20)
     tmp_meta = meta_path.with_suffix(f".tmp{os.getpid()}.json")
@@ -386,9 +416,9 @@ def fit_cached(theory_path: Path, name: str, corpus_path: Path, settings: FitSet
 class _Killed(Exception):
     """A fit child ended by a signal without reporting (the job's out-of-memory killer, as a rule)."""
 
-    def __init__(self, exitcode: Optional[int], peak: int) -> None:
+    def __init__(self, exitcode: Optional[int], peak: int, reserved: float = 0.0) -> None:
         super().__init__(exitcode)
-        self.exitcode, self.peak = exitcode, peak
+        self.exitcode, self.peak, self.reserved = exitcode, peak, reserved
 
 
 def _run_child(proc, queue, name: str, nc_path: Path, time_limit_sec: float) -> tuple:
@@ -418,29 +448,85 @@ def _run_child(proc, queue, name: str, nc_path: Path, time_limit_sec: float) -> 
         CORES.give_back(core)
 
 
-def _fit_in_child(theory_path, name, corpus_path, settings, nc_path, meta_path, time_limit_sec,
-                  init=None, log_likelihood: bool = True) -> CorpusFit:
-    sched, at_least = scheduler(), 0.0
-    for attempt in (1, 2):
+@dataclass(frozen=True)
+class FitJob:
+    """One time-limited fit, as a backend runs it: everything the fit's child needs."""
+    theory_path: Path
+    name: str
+    corpus_path: Path
+    settings: FitSettings
+    nc_path: Path
+    meta_path: Path
+    time_limit_sec: float
+    init: Optional[Dict[str, float]] = None
+
+
+class FitBackend:
+    """Runs one attempt of a fit and returns its child's report, ``(kind, message, traceback)``
+    with ``kind`` "ok" (the fit is in the cache), "model" or "infrastructure"; raises `_Killed`
+    when the attempt was killed without reporting (out of memory, as a rule), with the room it had."""
+
+    name = "abstract"
+
+    def attempt(self, job: FitJob, at_least: float = 0.0) -> tuple:
+        raise NotImplementedError
+
+
+class LocalBackend(FitBackend):
+    """A spawned child of this job, on a core of its own, started when the job's memory holds it
+    (`FitScheduler`) and killed at the fit's time limit."""
+
+    name = "local"
+
+    def attempt(self, job: FitJob, at_least: float = 0.0) -> tuple:
         ctx = mp.get_context("spawn")
         queue = ctx.Queue()
-        proc = ctx.Process(target=_child, args=(str(theory_path), name, str(corpus_path), settings, str(nc_path),
-                                                str(meta_path), queue, init))
-        with sched.room(name, at_least) as reserved:
+        proc = ctx.Process(target=_child, args=(str(job.theory_path), job.name, str(job.corpus_path), job.settings,
+                                                str(job.nc_path), str(job.meta_path), queue, job.init))
+        with scheduler().room(job.name, at_least) as reserved:
             try:
-                kind, message, tb = _run_child(proc, queue, name, nc_path, time_limit_sec)
-                break
+                return _run_child(proc, queue, job.name, job.nc_path, job.time_limit_sec)
             except _Killed as killed:
-                sched.observe(name, killed.peak)
-                if attempt == 2:
-                    raise RuntimeError(
-                        f"{name}: the fit process was killed (exit code {killed.exitcode}) twice without reporting, "
-                        f"the second time with {reserved / 2**30:.0f} GB reserved for it (out of memory?): an "
-                        f"infrastructure failure, not the theory's") from None
-                at_least = max(2 * reserved, PEAK_MARGIN * killed.peak)
-                print(f"[fit] {name}: the fit process was killed at {killed.peak / 2**30:.1f} GB (out of memory?) "
-                      f"with {reserved / 2**30:.0f} GB reserved; fitting it again with "
-                      f"{at_least / 2**30:.0f} GB", flush=True)
+                killed.reserved = reserved
+                raise
+
+
+FIT_BACKEND_ENV = "RSA_OPEN_FIT_BACKEND"
+PLANNED_BACKENDS = ("slurm", "queue")
+
+
+def fit_backend() -> FitBackend:
+    """The backend ``RSA_OPEN_FIT_BACKEND`` names (default ``local``). A planned one that isn't
+    built yet, or an unknown name, raises: a run never falls back to another backend silently."""
+    name = os.environ.get(FIT_BACKEND_ENV, "local") or "local"
+    if name == "local":
+        return LocalBackend()
+    if name in PLANNED_BACKENDS:
+        raise NotImplementedError(f"{FIT_BACKEND_ENV}={name}: that backend is planned, not built "
+                                  "(docs/auto_open/DISTRIBUTED_DESIGN.md); unset it to fit locally")
+    raise ValueError(f"{FIT_BACKEND_ENV}={name!r}: not a fit backend (local; planned: {', '.join(PLANNED_BACKENDS)})")
+
+
+def _fit_in_child(theory_path, name, corpus_path, settings, nc_path, meta_path, time_limit_sec,
+                  init=None, log_likelihood: bool = True) -> CorpusFit:
+    backend, at_least = fit_backend(), 0.0
+    job = FitJob(Path(theory_path), name, Path(corpus_path), settings, Path(nc_path), Path(meta_path),
+                 time_limit_sec, init)
+    for attempt in (1, 2):
+        try:
+            kind, message, tb = backend.attempt(job, at_least)
+            break
+        except _Killed as killed:
+            scheduler().observe(name, killed.peak)
+            if attempt == 2:
+                raise RuntimeError(
+                    f"{name}: the fit process was killed (exit code {killed.exitcode}) twice without reporting, "
+                    f"the second time with {killed.reserved / 2**30:.0f} GB reserved for it (out of memory?): an "
+                    f"infrastructure failure, not the theory's") from None
+            at_least = max(2 * killed.reserved, PEAK_MARGIN * killed.peak)
+            print(f"[fit] {name}: the fit process was killed at {killed.peak / 2**30:.1f} GB (out of memory?) "
+                  f"with {killed.reserved / 2**30:.0f} GB reserved; fitting it again with "
+                  f"{at_least / 2**30:.0f} GB", flush=True)
     if kind == "ok":
         return _read(nc_path, meta_path, log_likelihood)
     if kind == "model":
