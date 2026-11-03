@@ -1,7 +1,19 @@
 # Review of `DISTRIBUTED_DESIGN.md` v3 (2026-11-03)
 
-Written by Claude Opus 5.5 (the Sherlock session) from chain 1's round 4-5 logs, the code, Sherlock's rules and `sbatch
---test-only`; not reviewed by a person. I've read only v3's summary of SRCC's reply, not the reply itself.
+Written by Claude Opus 5.5 (the Sherlock session) from chain 1's round 4-5 logs, the code, Sherlock's rules, `sbatch
+--test-only` and the test jobs of 2026-11-03 (§10); not reviewed by a person. I've read only v3's summary of SRCC's reply, not
+the reply itself.
+
+**Update after the tests (§10).** Three results change the plan, and each corrects something I wrote below:
+
+1. **Most of a fit's memory is compilation.** With compiled code loaded from the cache, a fit peaks at about 5.5 GB rather
+   than about 15 GB, with an identical posterior. A compile step of its own could lift the memory limit (A5).
+2. **Folds that reuse the full fit's adaptation took about a third of the time or less** (3 times faster on one theory, 9 on
+   the other), with no convergence problems. It's the largest compute saving found, about half of all fitting if it holds. It
+   needs a registered amendment and one more test first (B1, §10).
+3. **Parallel chains gave little, not the 4 times I estimated** (B2). `normal` is usable, against my advice in §4.
+
+Saving CV scores to disk would remove nearly all of a restart's cost, which is what made §2's steps expensive (A1).
 
 **Bottom line: arrays of fits and no orchestrator are the right direction, but don't start building step mode yet.** Two
 things need settling first: a written Sherlock rule that covers follow-up jobs starting agents (§1), and the cost of
@@ -43,12 +55,16 @@ goes through today's resume path, which rebuilds every live theory (`resume`, `o
 | the loop's memory after a resume, 21 theories | **19.3 GB**, about 0.9 GB per theory; about 31 GB at 34 by extrapolation |
 
 At 6-8 steps a round that's **about 3.5-6 h a round on top of 5-6 h, not 30 min**, and each step holds 20-30 GB, so it isn't
-small. I haven't profiled which part dominates: the `.nc` loads, `pool_predictions`, or re-reading fold results.
+small.
+
+**Profiled since (job 50929501, 27 live theories, one core): 74 min, 24.9 GB.** Recomputing held-out scores takes 64.8 min (420
+calls), pool predictions 8.9 min, loading fits 9.8 min. So at 27 theories it's about twice the real resume I measured at 21
+(35 min). I can't fully explain that gap; the theory count alone doesn't account for it.
 
 **So step mode needs more than checkpoints.** It needs a `Live` that doesn't hold fits or recompute predictions: pool
-predictions and fold scores saved to disk, and fits loaded only where needed (the critique's incumbent, say). That's in the
-registered `orchestrator.py`, and I'd expect it to take the "3-4 days" past what v3 allows. The estimate needs redoing once
-it's profiled.
+predictions and fold scores saved to disk, and fits loaded only where needed (the critique's incumbent, say). The profile
+makes this look smaller than I'd feared: nearly all the time is in two results that can simply be saved. It's still in the
+registered `orchestrator.py`, and the memory (24.9 GB) depends on not holding fits, which I haven't tested.
 
 ## 3. Use fewer, longer steps, with agents inside them
 
@@ -76,12 +92,16 @@ depends on §1.
 - **`DEFAULT_FIT_BYTES` (10 GiB) would now be a hard limit.** Today it's only a reservation, and a fit may exceed it. Under a
   job's memory limit a new theory's first fit, at a median peak of 11.9 GB, would be killed at 10 GiB, possibly late in a
   60-80 minute fit (I haven't measured when the peak comes). New theories are every candidate, so this would be routine.
-- **Drop `normal` for fits.** It has 8 GB per core, so an 18-GB fit is charged 3 CPUs. `-C CPU_GEN:SIE` leaves it 35 nodes
-  (249 on `owners`). `--test-only` today: **about 32 h** on `normal`, 3.3 h on `owners`; those estimates can run high (one
-  predicted 3 h for a job that waited 3 min). Its limit of 512 CPUs a user would nearly be reached at `%24` x 7 chains x 3.
+- **Keep `normal` for fits (corrected; I first said to drop it, from a `--test-only` estimate of about 32 h).** Real waits were
+  under 4 min and 8-11 min for the reference fits, and no job there was preempted. The costs stand: an 18-GB fit is charged 3
+  CPUs, its limit of 512 CPUs a user would nearly be reached at `%24` x 7 chains x 3, and `-C CPU_GEN:SIE` leaves it 35 nodes (249
+  on `owners`). This is one day's sample. `--partition=normal,owners` is worth trying.
 - **Consider `--partition=mcfrank,owners`.** The lab node is the same CPU type, and isn't preempted.
-- **All fits are then preemptible and uncheckpointed.** A preemption costs up to 80 min of that fit. I still have only one
-  preemption event on record, so the rate is a real unknown (§7).
+- **On `owners`, fits are preemptible and uncheckpointed.** Measured on one morning: 7 of 24 fits preempted, 6 of them within 8
+  min of starting and all 6 on three neighbouring nodes (`sh04-17n24`, `n26`, `n27`), one after 42 min. About 71 min lost of about
+  29 fit-hours (4%). All were requeued and finished. A non-requeuing job on `owners` lost everything (my thinning test).
+- **Node speed varies.** Same fit, same steps: 69-73 min on most `owners` nodes, 71-74 on `normal`, 77 on the lab node with 8-9
+  fits running, but 98 min on `sh04-13n25`. Since admission depends on a time limit, that 40% matters (§6).
 - **`normal`'s limit is 48 h, not 7 days.** The partition allows 7 days, but the QoS caps at 2 days, as `CLAUDE.md` says. The
   status report, my review and v2 all had it wrong. It now matters only for collection jobs, which fit.
 
@@ -103,8 +123,9 @@ depends on §1.
 - **v3's rehearsal has no pass criterion.** "Unchanged" should be tested: feed the same recorded agent outputs and cached fits
   through local and step code, and require identical ledger, history, standings and export. Add a kill between each pair of
   state-changing actions. Addendum-style "infrastructure only" depends on this.
-- **Time limits now run on other people's nodes.** Admission depends on them, so compare one reference fit on the lab node and
-  on `owners` SIE nodes under load; the limit is derived from starting fits within a chain, which helps but doesn't settle it.
+- **Time limits now run on other people's nodes.** Admission depends on them. Measured: most nodes are 5-10% faster than the
+  busy lab node, and one was about 40% slower than the rest (§4). The limit is 2 x the median starting fit, so this one
+  straggler would have passed, but a slow candidate on a slow node might not.
 - **A chain stays about 4 days, as now.** All the gain is chains at once, and v3 says so. A round can't go much below its
   agents plus its slowest fits: round 4 ran 8-9 fits at once and took 7.3 h against round 3's 6.7 h with 7, so a2 shows no
   visible gain on one comparison. One fit was alone at 07:11 and 07:26, and the step wasn't scored until 08:29. The critique
@@ -117,11 +138,9 @@ depends on §1.
 ## 7. Before building (about a day, mostly waiting)
 
 1. The rule 10 question (§1). PI.
-2. Profile a resume on chain 1's data: `.nc` loads vs. predictions vs. fold results. Sherlock session; a small job.
-3. One array of about 24 real reference fits at 18 GB, `-C CPU_GEN:SIE`, on `owners`: gives queue wait, preemptions and speed
-   against the lab node in one test. Each lasts over 20 min, as Mark asks. Sherlock session, if the PI agrees; about 24 x 80 min
-   of compute, no agents, no Prolific.
-4. Re-estimate the build and the round's overhead from 2 and 3, then decide on step count.
+2. ~~Profile a resume on chain 1's data.~~ Done (§2).
+3. ~~One array of about 24 reference fits on `owners`.~~ Done (§4, §10).
+4. Re-estimate the build and the round's overhead, then decide on step count. Driver.
 
 ## 8. The note itself
 
@@ -152,27 +171,29 @@ Most of the size estimates below are **estimates, not measurements**, and I'd te
 
 | | change | evidence | gain |
 |---|---|---|---|
-| A1 | Save CV scores and pool predictions to disk, so a restart needn't rebuild them | a resume costs about 35 min; `standing()` re-reads 5 fold fits per theory (job 50929501 will split this) | most of §2's 3.5-6 h a round |
-| A2 | Stop computing and storing the per-trial log-likelihood, keeping only the zero-probability check | a fold computes it for 2,000 draws, then the score recomputes held-out values separately from 400; the loop loads fits without it. I found no reader in the loop, but this needs a full check, the oracle and gate included | `.nc` files from 57-145 MB to a few MB; less memory and time, size unknown |
-| A3 | Find what makes up a fit's 12-14 GB (compilation, sampling, log-likelihood, the write) | a mid-run fit already sits at 10-13 GB, so A2 alone may not fix it | each GB off adds fits to a node |
-| A4 | A persistent JAX compilation cache, if compile time turns out large | the reference fits' wall time less their sampler time will show it | unknown |
+| A1 | Save CV scores and pool predictions to disk, so a restart needn't rebuild them | **measured:** nearly all of a restart's 74 min at 27 theories is these two and the fit loads they need (§2) | nearly all of §2's 3.5-6 h a round |
+| A2 | Stop computing and storing the per-trial log-likelihood, keeping only the zero-probability check | a fold computes it for 2,000 draws, then the score recomputes held-out values separately from 400; the loop loads fits without it. I found no reader in the loop, but this needs a full check, the oracle and gate included. **Measured:** 2.7 min of a 77-min fit | `.nc` files from 57-145 MB to a few MB; about 3.5% of a fit's time; little memory |
+| A3 | Find what makes up a fit's 12-14 GB | **done:** compilation. Memory reaches about 12.7 GB within 8 min and stays there through sampling; with a cache hit the whole fit peaks at 4.9 GB (`VmHWM`; 5.5 GB by Slurm) | see A5 |
+| A4 | ~~A persistent JAX compilation cache~~ | **withdrawn, my error:** `_env.sh` has had one since 2026-10-09 (the chain's is 16 GB). It doesn't help a first compile, and each fit's appears to be a first compile | none |
+| A5 | **New: compile in a short process of its own, then sample in a fresh one that loads from the cache** | cached and compiled fits have **identical posteriors (largest difference 0.0 over 12 parameters)** and identical step counts, and the cached ones took 60 min against 70-74. Not built; numpyro compiles its warmup and sampling loops separately, so the way to compile without sampling needs a prototype | **sampling at about 5.5 GB instead of 15:** about 24 fits on a 24-CPU node rather than 8-9, and 1 CPU rather than 3 charged on `normal` for that part. Only for theories that compile like this one; the other theory tested peaks at 3.6-4.4 GB anyway |
+| A6 | **New: one compile for a theory's folds**, if the data can be passed as arguments rather than compiled in | compile looks like most of a B1 fold: 13.7-18.8 min at warmup 50 and 100 alike, so warmup isn't what's left. My estimate: 5-10 min a compile. Not tested, and the folds' differing sizes need handling | possibly half of a B1 fold again |
 
 ### B. Draws change, scores shouldn't: needs testing and a registered amendment
 
 | | change | evidence | gain |
 |---|---|---|---|
-| B1 | **Folds reuse the full fit's adapted mass matrix and step size**, with a short warmup | fold warmup is 54% of fitting. A mass matrix affects efficiency, not the target posterior, and the convergence gate still applies. Needs the full fit to save its adaptation, which it doesn't now | **perhaps 30-45% of all fit compute**, shorter stragglers |
-| B2 | **Parallel chains: 4 CPUs a fit, not 4 chains vectorized on one** | `chain_method="vectorized"` on one core today. Steps per iteration are the slowest chain's: 15.4 against a mean of 8.7 in one fit's warmup; in sampling 3.2-4.0 of 4 chains are active | **wall time per fit about 4 times shorter** (68 to about 20 min, 47 to about 15), so the largest gain in round time; core-hours same or lower |
-| B3 | Fewer fold draws, say 250 a chain | folds draw 2,000 and score 400 (`MAX_HELDOUT_DRAWS`). The extra draws serve only the convergence gate. **Testable with no new fits** by thinning saved folds and recomputing standings | about 10% of fit compute |
+| B1 | **Folds reuse the full fit's adapted mass matrix and step size**, with a short warmup | **measured (§10):** 45-50 to 14-19 min on one theory, 64-73 to 6-9 min on another, 15 of 15 with no convergence problems. A mass matrix affects efficiency, not the target posterior. Needs the full fit to save its adaptation, which it doesn't now | **about half of all fit compute** if the two theories are typical; shorter stragglers |
+| B2 | ~~Parallel chains: 4 CPUs a fit~~ **Sequential chains on 1 CPU instead** | **measured:** parallel took 51-52 min on 4 CPUs with only 1.7-1.8 busy on average, against 59-63 min for sequential on 1 CPU and 77 for today's vectorized. **My estimate of 4 times shorter was wrong.** The single-thread XLA flags may be limiting the parallel test; I haven't checked. Sequential saves warmup only (33-35 min against 50) | **sequential: about 20% of a full fit**, on one theory, different random numbers; less under B1, untested |
+| B3 | Fewer fold draws, 250 a chain | folds draw 2,000 and score 400 (`MAX_HELDOUT_DRAWS`). **Measured by thinning one step's saved folds:** at 250, same winner and top 5, largest score change 0.69 (median 0.15). At 125, one theory fails the convergence gate, so 250 is the floor | about 10% of fit compute (half of fold sampling; estimated) |
 | B4 | Warm-start carried theories from the previous experiment's fit | starting fits' median rose to 125 min. **Interlock:** the admission limit is 2 x the median starting fit, so warm starts would collapse it unless it's set another way | 2 h or more off each loop's start |
 
-**Together (rough):** B1-B3 could halve fit compute, and with B2 a round might go from 6-7 h to about 3.5-4 h: critique, 60 min of
-theorists, fits, then a repair's agents and fits. That would put a chain nearer 3 days than 4. Agents would then be the
-largest part of a round.
+**Together (rough):** A5, B1 and B3 could more than halve fit compute and lift the memory limit. I withdraw my figure of a round
+at 3.5-4 h, which relied on B2. A round's length will still have a floor set by the critique, the 60-minute theorists and the
+repair cycle, and I haven't re-estimated it. **My order: A1, A5 prototype, then B1 with its extra test.**
 
 **Two cautions:**
-- B2 multiplies CPUs per task, so the array throttle and the rule about threads matching the allocation have to follow it; the
-  XLA device count must be set before JAX starts.
+- B1's compare is on all held-out trials of two theories. The winner's margin at this step was 3.16 nats (SE 1.53), and B1 moved
+  one theory's total by 1.6, so B1 isn't safe to adopt until it's tested on the leaders against a noise baseline (§10).
 - If chain 1 counts with stage 2's chains in any analysis, B changes make them differ in sampler settings. That's a question for the
   PI and driver before the amendment, even if scores agree.
 
@@ -186,12 +207,56 @@ largest part of a round.
   falls short.
 - **Single precision:** I found no x64 setting in the fit code, so fits should already run in float32.
 
-## 10. Tests for §9 (small, no agents, no Prolific; not yet submitted)
+## 10. Test results (2026-11-03; no agents, no Prolific; all on copies of chain 1's fits)
 
-1. **Thin saved folds** on a copy of chain 1's fits, recompute R-hat, ESS and standings at 250 and 125 draws a chain: B3, no fits.
-2. **The reference full fit three ways:** vectorized (running now), `parallel` on 4 CPUs, `sequential` on 1: wall time, memory, and how far posterior means
-   differ: B2.
-3. **One theory's five folds** with and without the full fit's adaptation: sampler time, convergence, held-out scores: B1. Needs a small patch on a test copy only.
-4. **Memory by stage** in one fit: A2, A3.
+All on `-C CPU_GEN:SIE`, the same CPU as the lab node. About 60 job attempts: 51 completed, 8 preempted (all on `owners`), 1 failed
+(my script, below). One theory for the fit tests, two for folds, one loop step for thinning, one day of queues. Treat these as
+strong leads, not settled rates.
 
-About 15-20 core-hours in all. Tests 1 and 3 need chain 1's fits copied, as the resume profile does.
+**Queue and preemption (24 reference fits on `owners`, 18 GB; 4 on `normal`).** Waits: `owners` 4-11 min; `normal` under 4 min, and
+8-11 min on the earlier failed attempt. Preemption and speed: §4. Fits with a compile peaked at 13.1-14.6 GB (`VmHWM`), about 15.5 GB
+by Slurm's `MaxRSS`, so 18 GB holds; no convergence problems in any.
+
+**Memory and compilation (A3, A5).** Six of seven requeued fits happened to find the cache written by earlier fits, and peaked at
+4.9 GB. I predicted the result before testing it with two fresh fits: 4.92 and 4.93 GB (5.5 GB by Slurm), 60 min, posterior
+identical to a compiled fit's. Two fits that started just as the cache filled (tasks 1 and 24, about 13-13.4 GB) got a partial hit;
+that's my reading, not a measurement.
+
+**A fit's stages (one theory, vectorized, 77 min):** 49.6 min warmup, 24.5 sampling, 2.7 log-likelihood, 0.2 writing. A 145-MB `.nc`.
+
+**Chain method (B2), 2 fits each:**
+
+| method | CPUs | minutes | warmup | sampling | largest mean difference from the lab fit |
+|---|---:|---:|---:|---:|---:|
+| vectorized (today) | 1 | 77 | 50 | 24 | 0.0 SD (same draws) |
+| sequential | 1 | 59-63 | 33-35 | 23-25 | 0.014 SD |
+| parallel | 4 (1.7-1.8 busy) | 51-52 | 26-30 | 20-22 | 0.014 SD |
+
+**Fold reuse of adaptation (B1), all 5 folds of 2 theories, on `normal`.** "Score change" is the sum over the folds' held-out trials,
+new less chain's, for about 58,000 trials:
+
+| theory | warmup | fold minutes (chain's) | peak GB | R-hat at most | score change |
+|---|---:|---:|---:|---:|---:|
+| `structural_alignment_pragmatic_tom` | 100 | 13.7-18.3 (45-50) | 10.9-13.6 | 1.006 | +0.16 |
+| same | 50 | 13.7-18.8 (45-50) | 11.0-13.7 | 1.012 | +0.51 |
+| `rsa_l2_singleton_feat_color_valence_l0` | 100 | 6.0-9.3 (64-73) | 3.4-3.6 | 1.007 | +1.60 |
+
+No divergences; smallest bulk ESS 868. Chain times are from the lab node under load, so the true ratio is about 10% smaller.
+Warmup 50 saves nothing over 100, so compile must take much of what's left. The second theory is slow in warmup, not on a slow node:
+its full fit took 40,228 warmup steps on the chain and took about the same time here (124 min), so this is where B1 gains most.
+
+**Thinning (B3), step 4's folds, 27 theories.** At 500 draws the code reproduces all 27 recorded scores exactly, which validates
+the test. At 250: same winner and top 5, largest change 0.69, median 0.15, one swap at positions 15-16. At 125: same winner, but
+`minimal_exemplar_diagnostic_mixture_l2` no longer passes convergence.
+
+**Mistakes along the way:** my first reference array had no `__main__` guard and failed at once; my thinning job had `--no-requeue`
+and was preempted, so I reran it on `normal`; my capture script crashed after finishing, on a field old fits lack, which cancelled
+the fold tests by dependency, so I resubmitted them. None affects the numbers above.
+
+**Not tested, and needed before B1:**
+
+1. **A noise baseline:** the same fold refit with another seed. Without it I can't say whether +1.6 is noise or bias.
+2. **B1 on the leaders:** the top 3-4 theories at a step, asking whether the winner and survivors change. About 20 fold fits, a few
+   core-hours once adaptations are captured (about 1.3 h each).
+3. **A5's prototype:** compiling without sampling, then a fresh process's peak.
+4. **Whether the parallel test was limited by XLA's single-thread flags**, only if anyone wants B2 back.
