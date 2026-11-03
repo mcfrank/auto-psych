@@ -68,11 +68,15 @@ Chain 1 already has this problem in small form: its job 1 ran on `owners` and th
 
 ## 4. Seven drivers and their agents won't fit on the lab node
 
-- **Agents don't mostly wait.** Sampled tonight: one repair agent's self-check at 99% CPU and 4.6 GB (it may run 15 min).
-  That's one moment and one agent, and I'll sample a whole agent phase at round 4. But 6 agents per round across 7 chains
-  is 42 sessions on 24 CPUs, and at that size up to about 190 GB.
-- **24 GB per driver looks tight.** The loop process is at 16.8 GB with 15 live theories. Live theories reach up to 34 by round
-  5 and the corpus grows each experiment. I'll have a better number from rounds 4 and 5.
+- **Agents mostly wait; their self-checks don't.** (Corrected 2026-11-03: this said agents don't mostly wait, from one
+  sample.) A whole agent phase at round 4: six sessions took 3.7-4.7 GB and 3-7% of a core in most samples, with 1-3
+  self-checks at a time, a core and 3.2-3.9 GB each. So 42 sessions across 7 chains would take about 30 GB, plus up to
+  about 7-21 self-checks at 3.2-3.9 GB each, or about 25-80 GB, if all 7 chains were in their agent phase at once.
+- **24 GB per driver is too small late in a loop.** Measured: the loop process is at 19.3 GB with 21 live theories, about
+  0.9 GB per theory. Live theories reach up to 34 by round 5, which extrapolates to about 31 GB, and the corpus grows each
+  experiment.
+- **A fit's memory.** Fits peak at 11.9 GB (median) to 14.2 GB (`VmHWM`, 31 fits), not the 7-10.5 GB I gave you earlier,
+  which came from spot readings. Size workers from these.
 - **The design's EIG search** uses all of its job's CPUs. At 3 CPUs it would be about 8 times slower; I haven't measured how
   much of the 2-3 h design that is.
 

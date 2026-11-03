@@ -10,6 +10,25 @@ For the PI's strategy discussion with the driver. Experiment 1's report is
 (12051f8): jobs 50889911 → 50889915 → 50889917 → 50889919, lab node, 24 CPUs, 184 GB. The log confirms it resumed after
 step 3; about 6 minutes of round 4's critique were abandoned (`round_4_abandoned_1`). The text below is as of 22:00.
 
+**Measured on round 4, 2026-11-03 (a2, 21 live theories; samples every 10-15 min, 01:11-07:26).** These correct the 22:00
+text:
+
+- **Fits at once: 8-9, not the 12-15 I predicted** (7 on a1). The saving is less than the "about 2 h per round" below; I
+  haven't measured it yet.
+- **A fit peaks at 11.9 GB (median), 13.1 GB (90th percentile), 14.2 GB (largest)** of 31 fits by `VmHWM`, not 7-10.5 GB;
+  those were spot readings. Fold fits come close to full fits: 11.6-13.7 GB was the largest fit seen at each busy sample.
+- **The job's memory stayed at or below 125.5 GB of 184**, with at least 62 GB available on the node at every sample. So
+  the scheduler now holds back about a third of the job: its 1.25 margin and 90% limit assume every fit peaks at once. A
+  margin of 1 would allow about 11 fits. Chain 1 keeps its tag; the driver may want this for stage 2.
+- **The loop's own process: 19.3 GB at 21 live theories**, about 0.9 GB per theory, with log-likelihoods left out. At 34
+  theories that extrapolates to about 31 GB.
+- **Theorist agents are nearly idle:** six sessions took 3.7-4.7 GB and 3-7% of a core in most samples (82% at one). The
+  CPU is in their self-checks, 1-3 at a time, 3.2-3.9 GB each, at a core each.
+- **The round ends on stragglers:** at 07:11 and 07:26 one fit was running and 23 CPUs were idle (one fold, 70+ min of CPU
+  at 07:26). Fits began at 03:13.
+- **A resume costs about 35 min on one core** before the critique agent starts (round 3 and round 4 both), beside re-staging
+  when there is any. I haven't measured the same stretch in a round that wasn't resumed.
+
 ## The short version
 
 - **The chain is running and healthy** on tag `rsa-open-prereg-a1` (Addendum B, posted on OSF by the PI): experiment
