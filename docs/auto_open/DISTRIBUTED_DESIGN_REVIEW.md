@@ -61,8 +61,9 @@ admission: 27% of experiment 1's candidates were rejected as too slow, and a fol
 lands on would help decide which theories survive, and the limit (2 x the median starting fit) is itself set by wherever
 those fits ran. It can differ between chains and arms.
 
-**Recommendation:** restrict workers to a narrow set with `-C` (e.g. `CPU_GEN:RME|CPU_GEN:MLN`: about 670 nodes by `sinfo`),
-measure a reference fit's speed across that set before building on it, and record each fit's node and CPU in its sidecar.
+**Recommendation:** restrict workers to a narrow set with `-C`, starting from the lab node's own type (`CPU_GEN:SIE`, about
+250 nodes by `sinfo`, so the same CPU as most of chain 1) and adding types only if a reference fit runs at about the same
+speed on them. Record each fit's node and CPU in its sidecar.
 Chain 1 already has this problem in small form: its job 1 ran on `owners` and the rest on the lab node.
 
 ## 4. Seven drivers and their agents won't fit on the lab node
@@ -97,7 +98,7 @@ at once, not from shorter rounds. The first version should be judged that way.
 |---|---|
 | `AGENTS.md` | §5 is in question (above); the pool's workers are fine; polling a filesystem is in question if the queue stays |
 | Queue waits | under 10 min for small jobs in this small sample; peak load not measured |
-| How often `owners` preempts | 2 of my last 16 `owners` jobs over 14 days. Over a 48-h driver that matters; over a 1-h fit it hardly does |
+| How often `owners` preempts | not measurable yet: of 16 `owners` jobs in 14 days, 2 were preempted, but both in one event, under 2 min after starting. Chain 1's job 1 ran 48 h there without one. It would matter for a 48-h driver, and hardly for a 1-h fit |
 | Gemini's limits | 0 limit hits in 1,405 recorded calls, but at no more than about 7 sessions, so it says little about 40. The rehearsal's 2 chains won't reach 40 either; ramp up, and check the account's quota |
 | The lab node at 7 drivers | doesn't fit (above) |
 
