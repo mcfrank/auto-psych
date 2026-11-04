@@ -1,0 +1,183 @@
+models:
+- name: minimal_exemplar_diagnostic_mixture_l2
+  rationale: 'Refining `heterogeneous_listener_type_mixture` by grounding universal-word
+    literal simplicity relative to the scene''s minimal-feature exemplar (`min_fc
+    = jnp.min(ctx.feature_count)` normalized by minimal-exemplar multiplicity `n_min`),
+    distinguishing partially informative three-referent category filters (`heard_ext
+    < n_obj`) from scene-universal utterances (`heard_ext == n_obj`) under fixed listener-type
+    population shares (removing `w_literal` from `PARAMS`), and incorporating graded
+    diagnostic lexical competition (`diag_w = 0.12` on broad features) plus invariant-background
+    figure contrast (`has_univ * jnp.maximum(var_fc - 2.0, 0.0)`), color salience,
+    and familiarization salience in the topic prior. Because a two-feature object
+    is a minimal exemplar in `[2, 2, 3, 3]` scenes (`min_fc = 2`) but carries excess
+    features relative to the unique one-feature exemplar in `[1, 2, 3, 3]` scenes
+    (`min_fc = 1, n_min = 1`), because three-referent words in four-object displays
+    actively exclude a foil and therefore recruit a stronger category-filtering literal
+    share (`0.36`) than three-referent words in three-object displays (`0.16`) without
+    trading off against `temperature@exp1` through a free `w_literal` parameter, and
+    because sharing a universal background feature across all objects sharpens prior
+    salience on the maximal referent possessing all three varying features, this closes
+    `three_referent_simple_matching_points`, `prior_universal_feature_contrast_shift`,
+    and `universal_word_graded_two_feature_points` while improving fit and sampling
+    speed across both `exp1` and `E`. Every difference from `heterogeneous_listener_type_mixture`:
+    recursion depth (`L2` calling `L1` calling `L0`) and `alpha`, `w_salience` in
+    `PARAMS` are unchanged while `w_literal` is removed from `PARAMS`; in `listener`,
+    `feat_ext = jnp.sum(real_lex, axis=1, keepdims=True)` is moved before `salience`,
+    `has_univ = jnp.any((feat_ext == n_obj) * real_mask)`, `var_mask = (feat_ext <
+    n_obj) * real_mask`, and `var_fc = jnp.sum(real_lex * var_mask, axis=0)` are added
+    so `salience` becomes `contrast + (0.22 + 0.50 * ctx.valence) * ctx.feature_count
+    + 0.32 * has_univ * jnp.maximum(var_fc - 2.0, 0.0) + 0.30 * (1.0 - ctx.grayscale)
+    + 0.60 * ctx.familiarization`; `diag_w` changes from `jnp.where(feat_ext <= 2.0,
+    1.0, 0.0) * real_mask` to `jnp.where(feat_ext <= 2.0, 1.0, 0.12) * real_mask`;
+    in shallow literal grounding, `is_overext = jnp.clip(overext, 0.0, 1.0)`, `min_fc
+    = jnp.min(ctx.feature_count)`, `n_min = jnp.maximum(jnp.sum(ctx.feature_count
+    == min_fc), 1.0)`, and `rel_fc = jnp.clip(ctx.feature_count - min_fc, 0.0, 1.0)
+    / n_min` are added so `lit_excess` changes to `0.5 * jnp.maximum(diag_fc[0] -
+    0.8, 0.0) + 1.8 * rel_fc` and `lit_w` changes to `heard_row / (1.0 + 0.65 * univ_crowd
+    * lit_excess)`; and `ret_l0` and `ret_prior` change from `0.48 * params["w_literal"]
+    * overext` and `0.008 * params["w_literal"] * overext` to `(0.16 + 0.20 * jnp.clip(n_obj
+    - heard_ext, 0.0, 1.0)) * is_overext + 0.34 * univ_crowd` and `0.0028 * overext`.'
+- name: prototype_boundary_listener_mixture
+  rationale: "Listeners and speakers in reference games communicate across a heterogeneous\
+    \ population of listener types\u2014combining recursive pragmatic listeners who\
+    \ invert a diagnostic-competition speaker over individuated visual types with\
+    \ shallow prototype-boundary literal listeners and topic-anchored salience listeners\
+    \ whose population shares scale with referential over-extension. Before hearing\
+    \ a word, pre-utterance attention polarizes strongly toward negative-space blank\
+    \ oddballs and complete multi-feature figures over intermediate bundles, while\
+    \ two-referent pragmatic inference enforces strict diagnostic competition against\
+    \ multi-feature competitors whenever a single-feature prototype anchors the candidate\
+    \ pair. When an expression is over-extended across three or four objects, shallow\
+    \ prototype-boundary listeners ground reference on minimal prototypes and complexity-unique\
+    \ exemplars while leaking boundary support onto the lone excluded referent across\
+    \ both clone-bearing and clone-free sub-universal displays."
+- name: topic_worthiness_boundary_tom
+  rationale: "Before hearing a word, listeners form a communicative topic-worthiness\
+    \ prior over display objects that anchors expectations on polar figure-ground\
+    \ extremes\u2014complete multi-feature figures and negative-space blank oddballs\
+    \ over intermediate feature bundles\u2014and on perceptually individuated singletons\
+    \ that stand apart from identical clones or feature-overlapping distractors. During\
+    \ communicative interpretation, speakers and listeners apply this topic prior\
+    \ inside recursive pragmatic reasoning while discounting redundant comparisons\
+    \ against blank ground foils and enforcing sole-label necessity when a single-feature\
+    \ anchor competes on a narrow expression. When an expression is over-extended\
+    \ across three or more objects, listeners combine recursive inference with topic-anchored\
+    \ prototype grounding that shadows unanchored intermediate distractors and retains\
+    \ topic-boundary support on lone excluded low-complexity foils across both clone-bearing\
+    \ and clone-free displays."
+- name: attentional_buffer_anchor_sampling
+  rationale: "Listeners and speakers process multi-object displays under a resource-limited\
+    \ two-slot attentional buffer that anchors pre-utterance display scanning on polar\
+    \ figure-ground extremes\u2014complete multi-feature figures, negative-space blank\
+    \ oddballs, and unique singletons\u2014while compressing unanchored intermediate\
+    \ feature bundles and discounting redundant contrasts against blank ground foils.\
+    \ When a word's extension fits within the two-item buffer, listeners track both\
+    \ candidate referents with recursive pragmatic inference\u2014shielding complex\
+    \ singleton figures on non-minimal pairs while preserving sole-label priority\
+    \ for single-feature targets\u2014whereas when an expression overflows the buffer\
+    \ across three or more objects, inference falls back on approximate anchor sampling\
+    \ over minimal prototypes and singleton exemplars while suppressing unanchored\
+    \ same-tier distractors. Because a three-referent expression in a four-object\
+    \ scene overflows the two-item focal buffer while leaving one referent outside\
+    \ it, incomplete attentional inhibition leaks boundary support onto low-complexity\
+    \ excluded foils across both clone-bearing and clone-free displays."
+- name: bipolar_prototype_tier_contrast_tom
+  rationale: "Refining `bipolar_boundary_spillover_topic_tom_2` by strengthening two-referent\
+    \ prototype-competitor contrast across sub-maximal and clone-grounded displays\
+    \ while moderating singleton-less universal bipolar-trough and singleton-peer\
+    \ penalties and incorporating complete-figure polar contrast on four-object scenes\
+    \ with paired minimal anchors. Because speakers dilute unanchored multi-feature\
+    \ competitors on two-referent expressions opposing a minimal prototype\u2014both\
+    \ when the competitor is sub-maximal (`0.38`) or scene-maximal (`0.20`) in clone-free\
+    \ sub-maximal scenes and when a complete figure opposes a second-tier prototype\
+    \ above cloned minima (`0.50`)\u2014while moderating scene-maximal singleton-figure\
+    \ shielding on two-feature minimal pairs (`0.42`), and because over-extended category\
+    \ grounding relaxes universal bipolar-trough suppression when no singleton feature\
+    \ anchors the display (`1.0 - 0.55 * univ_crowd * (1.0 - any_sing_feat)`), extends\
+    \ sole-prototype grounding to four-referent and multi-minimal sub-maximal displays\
+    \ while moderating singleton-peer elevation and second-tier non-clone shadowing,\
+    \ this closes `two_ref_complete_fig_vs_submax_min_target_choice_diff` and `clonefree_overext_nonmin_vs_clone_univ_rating_diff`\
+    \ while improving fit across `exp2`, `exp1`, and `E`. Every difference from `bipolar_boundary_spillover_topic_tom_2`:\
+    \ recursion depth (`L2` calling `L1` calling `L0` in `listener`, `L1` and `L0`\
+    \ in `speaker`) and `PARAMS` (`alpha`, `w_salience`) are unchanged; in `_scene_components`,\
+    \ `is_paired_min_polar_scene` (`is_four * (1.0 - has_clones) * (1.0 - has_univ)\
+    \ * jnp.where((min_fc == 1.0) & (n_scene_min == 2.0) & (max_fc == 4.0), 1.0, 0.0)`)\
+    \ is added to `polar_extreme_boost` (`-0.25` on `fc == 1.0` and `+0.22` on `fc\
+    \ == 4.0`), `submax_sing_fig_u` weights `min_fc_u == 1.0` at `0.72` and `min_fc_u\
+    \ >= 2.0` at `0.42`, `unanchored_submax_comp_u` changes `jnp.where(max_fc_u <\
+    \ max_fc, -0.15, 0.12)` to `jnp.where(max_fc_u < max_fc, 0.38, 0.20)`, and `clone_above_min_two_ref_u`\
+    \ (`0.50 * has_clones * has_uniq_max * jnp.where((feat_ext == 2.0) & (min_fc_u\
+    \ > min_fc) & (max_fc_u == n_real_utt) & (fc[None, :] == max_fc_u), 1.0, 0.0)`)\
+    \ is added to `fc_excess`; in `listener`, `is_bipolar_mid` scales by `(1.0 - 0.55\
+    \ * univ_crowd * (1.0 - any_sing_feat))` and adds `0.65 * is_three`, `unique_sole_proto`\
+    \ replaces `(n_obj == 4) & ... & (max_match_fc != 3.0)` with `((n_obj == 4) |\
+    \ ((is_three > 0.0) & (max_match_fc == n_real_utt))) & (min_match_fc <= 2.0) &\
+    \ ((n_obj == 3) | (min_match_fc == 1.0)) & (n_min_match == 1.0) & (has_clones\
+    \ == 0.0) & (1.0 - is_sub_univ * jnp.where((n_scene_min == 1.0) & (max_match_fc\
+    \ == 3.0), 1.0, 0.0)) * (1.0 - 0.55 * univ_crowd * (1.0 - any_sing_feat))`, `sing_peer_anchor`\
+    \ in `rel_shield` changes from `-0.35` to `-0.20` and in `oddball_anchor` from\
+    \ `0.35` to `0.12`, `shadowed_second_tier_nonclone` uses `jnp.where(same_match_fc\
+    \ == 1.0, 1.45, 0.55)` instead of `0.65`, `multi_clone_min` in `overext_scale`\
+    \ changes from `1.15` to `1.32`, `sub_univ_foil` changes `0.19` on `fc < min_match_fc`\
+    \ to `0.215`, and `ret_prior` changes from `0.0018 * overext` to `0.0009 * overext`."
+- name: singleton_anchored_polar_boundary_tom
+  rationale: 'Refining `bipolar_boundary_spillover_topic_tom_2` by conditioning figure-pole
+    shielding and intermediate-bundle suppression on singleton-feature individuation
+    while strengthening sub-maximal prototype dilution and cloned-minima category
+    grounding. Before an utterance, pre-utterance figure-ground attention elevates
+    3-object minimal and negative-space anchors as well as non-singleton minimal exemplars
+    in 4-object clone displays while damping pairwise contrast accumulation on lone
+    poles opposed by a triple clone; during communicative inference, two-referent
+    diagnostic competition dilutes unanchored sub-maximal competitors across both
+    maximal and sub-maximal tiers, and over-extended grounding suppresses unanchored
+    maximal bundles on sub-universal expressions while relaxing universal-word intermediate
+    suppression when no singleton feature anchors the figure pole and recruiting elevated
+    literal prototype grounding when cloned non-minimal prototypes oppose an excluded
+    scene minimum. Every difference from `bipolar_boundary_spillover_topic_tom_2`:
+    recursion depth (`L2` calling `L1` calling `L0` in `listener`, `L1` and `L0` in
+    `speaker`), `PARAMS` (`alpha`, `w_salience`), and `ret_prior` (`0.0018 * overext`)
+    are unchanged; in `_scene_components`, `crowded_pole_damp` (`is_four * has_clones
+    * (0.12 * ((min_fc == 1.0) & (max_fc == 2.0) & (fc == 1.0) & (has_singleton_feat
+    == 0.0)) - 0.16 * ((clone_mult == 1.0) & (jnp.max(clone_mult) >= 3.0)))`) is added
+    to `polar_extreme_boost`, `is_bipolar_three` changes from `0.22` and `-0.08` to
+    `0.30` and `-0.02`, `is_three_sole_min_scene` changes from `0.34` and `-0.18`
+    to `0.48` and `-0.22`, `unanchored_submax_comp_u` changes `jnp.where(max_fc_u
+    < max_fc, -0.15, 0.12)` to `jnp.where(max_fc_u < max_fc, 0.02, 0.32)`, and `is_bipolar_mid_u`
+    multiplies by `jnp.where((any_sing_feat > 0.0) | (feat_ext == n_obj), 1.0, 0.0)`;
+    in `listener`, `is_bipolar_mid` scales by `(1.0 - 0.55 * univ_crowd * (1.0 - any_sing_feat))`,
+    `unanchored_sub_univ_max = is_sub_univ * (1.0 - has_clones) * (1.0 - any_sing_feat)
+    * jnp.where(fc == n_real_utt, 1.0, 0.0)` is added with weight `1.65` in `lit_excess`,
+    `sub_univ_foil` changes `0.19` to `0.19 - 0.06 * multi_clone_min` and `0.085`
+    to `jnp.where(fc == min_match_fc, 0.085, 0.065)`, and `ret_l0` changes `0.16 *
+    is_sub_univ * is_scene_sole_proto` to `0.16 * is_sub_univ * (is_scene_sole_proto
+    + multi_clone_min)`.'
+- name: bipolar_clone_boundary_spill_tom
+  rationale: 'Refining `polar_grounding_boundary_spill_tom` by extending polar figure-ground
+    prior anchoring across three- and four-object displays and generalizing sub-universal
+    category-boundary spillover to low-complexity excluded foils across both clone-bearing
+    and clone-free four-object scenes alongside second-tier non-clone distractor shadowing.
+    Every difference from `polar_grounding_boundary_spill_tom`: recursion depth (`L2`
+    calling `L1` calling `L0` in `listener`, `L1` and `L0` in `speaker`), `PARAMS`
+    (`alpha`, `w_salience`), and `ret_prior` (`0.0018 * overext`) are unchanged; in
+    `_scene_components`, `is_three`, `is_bipolar_three`, `is_three_sole_min_scene`,
+    and `subfour_blank_pen` are added to `polar_extreme_boost`, `has_bg_anchor` uses
+    `jnp.where(n_scene_min <= 2.0, 1.60, 1.12)` when `min_fc == 1.0`, and `unanchored_submax_comp_u`
+    replaces `submax_mid_comp_u` in `fc_excess`; in `listener`, `peer_tier_after_clone_min`
+    (`0.55`) and `shadowed_second_tier_nonclone` (`0.65`) are added to `lit_excess`,
+    `overext_scale` uses `0.58 * is_sub_univ * is_scene_sole_proto` and `1.15 * multi_clone_min`,
+    `sub_univ_foil` extends low-complexity foil spillover (`fc <= 2.0`) across clone-bearing
+    (`0.145`) and clone-free (`0.085`) displays with `0.19` for `fc < min_match_fc`,
+    and `ret_l0` uses `0.16 * is_sub_univ * is_scene_sole_proto`.'
+- name: lexical_blocking_fallback_cost_tom_2
+  rationale: "Speakers in reference games select expressions under lexical blocking\
+    \ and fallback production costs: narrow alternative features on a target object\
+    \ block broader expressions in proportion to their diagnostic specificity\u2014\
+    diluting unanchored multi-feature competitors and unanchored same-tier intermediate\
+    \ distractors while shielding singleton-individuated complete figures\u2014and\
+    \ duplicate visual types share baseline availability. Listeners invert this lexical-blocking\
+    \ speaker across two levels of recursive reasoning over a polar figure-ground\
+    \ topic prior\u2014anchoring pre-utterance attention on negative-space blank oddballs\
+    \ and complete multi-feature figures\u2014while integrating shallow fallback-lexical\
+    \ grounding on over-extended utterances that favors minimal prototypes and singleton\
+    \ exemplars and retains soft category-boundary support on low-complexity excluded\
+    \ foils across both clone-free and clone-bearing four-object displays."

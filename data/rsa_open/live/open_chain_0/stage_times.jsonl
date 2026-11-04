@@ -6,3 +6,12 @@
 {"experiment": 1, "stage": "loop", "event": "started", "at": 1793341009.0769541, "job": "50237391"}
 {"experiment": 1, "stage": "loop", "event": "finished", "at": 1793477984.5167592, "job": "50237391"}
 {"experiment": 2, "stage": "design", "event": "started", "at": 1793478893.7353733, "job": "50237409"}
+{"experiment": 2, "stage": "design", "event": "finished", "at": 1793490514.0774395, "job": "50237409"}
+{"experiment": 2, "stage": "collect", "event": "started", "at": 1793490514.079913, "job": "50237409"}
+{"experiment": 2, "stage": "collect", "event": "finished", "at": 1793495253.1866226, "job": "50237409"}
+{"experiment": 2, "stage": "loop", "event": "started", "at": 1793495253.1957605, "job": "50237409"}
+{"experiment": 2, "stage": "loop", "event": "started", "at": 1793569378.8421903, "job": "50692295"}
+{"experiment": 2, "stage": "loop", "event": "started", "at": 1793671592.0766022, "job": "50852526"}
+{"experiment": 2, "stage": "loop", "event": "started", "at": 1793696328.3559494, "job": "50889911"}
+{"experiment": 2, "stage": "loop", "event": "finished", "at": 1793755439.4433584, "job": "50889911"}
+{"experiment": 3, "stage": "design", "event": "started", "at": 1793755439.4484928, "job": "50889911"}

@@ -1,0 +1,97 @@
+{
+ "collection": "live",
+ "prolific_mode": "live",
+ "study_id": "6ae67e7a786c10561f49ae66",
+ "target": 163,
+ "smoke_test": false,
+ "other_study": 0,
+ "second_submissions": 0,
+ "recruited": 163,
+ "responses": 163,
+ "readable": 163,
+ "kept": 151,
+ "excluded": 12,
+ "exclusion_rate": 0.0736196319018405,
+ "exclusion_reasons": {
+  "missed a catch trial": 6,
+  "failed the comprehension checks on the second reading": 6
+ },
+ "comprehension_final": 0.9631901840490797,
+ "catch_pass": 0.9815950920245399,
+ "same_answer": {
+  "n": 0,
+  "share": 0.0,
+  "people": {}
+ },
+ "fast": {
+  "n": 0,
+  "people": {}
+ },
+ "minutes": {
+  "median": 6.146916666666667,
+  "p10": 3.99955,
+  "p90": 11.191966666666668
+ },
+ "enjoyment": {
+  "mean": 3.705521472392638,
+  "n": 163,
+  "counts": {
+   "1": 7,
+   "2": 17,
+   "3": 41,
+   "4": 50,
+   "5": 48
+  }
+ },
+ "hourly_usd_at_median": 11.90840936512886,
+ "returning": {
+  "all": {
+   "n": 0,
+   "share": 0.0,
+   "earlier_studies": {}
+  },
+  "kept": {
+   "n": 0,
+   "share": 0.0,
+   "earlier_studies": {}
+  }
+ },
+ "excluded_people": {
+  "p141": [
+   "missed a catch trial"
+  ],
+  "p144": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p171": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p187": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p206": [
+   "missed a catch trial"
+  ],
+  "p229": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p263": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p279": [
+   "missed a catch trial"
+  ],
+  "p284": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p287": [
+   "missed a catch trial"
+  ],
+  "p296": [
+   "missed a catch trial"
+  ],
+  "p297": [
+   "missed a catch trial"
+  ]
+ }
+}

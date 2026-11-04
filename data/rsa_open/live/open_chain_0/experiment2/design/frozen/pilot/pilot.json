@@ -1,0 +1,199 @@
+{
+  "paradigm_sha256": "e1308d30e0cd140b20c17cef6427840c1b78583ac17370a8d78b0cbc9b90a13f",
+  "design_sha256": "062d7ef8a7ecbcd43e23b229971705f7f378029400baeed847673ca52768cbca",
+  "n_participants": 12,
+  "comprehension_first": 1.0,
+  "comprehension_final": 1.0,
+  "catch_pass": 1.0,
+  "practice_pass": 1.0,
+  "readable": 1.0,
+  "unreadable_examples": [],
+  "declared_minutes": 7.1,
+  "estimated_minutes": 7.164720734613959,
+  "time_model_minutes": 12.900858895705522,
+  "time_calibration": 0.5553677311360233,
+  "time_calibration_basis": "3 experiment(s) of other response types on this campaign's page (none of choice+rating yet)",
+  "legibility": {
+    "items": 21,
+    "legibility": 1.0,
+    "illegible": [],
+    "unrecognised_bases": [],
+    "by_item": [
+      {
+        "item": "robots: the base",
+        "kind": "name",
+        "right": 3,
+        "of": 3,
+        "answer": "robots",
+        "wrong_answers": []
+      },
+      {
+        "item": "robots: crown",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "crown",
+        "wrong_answers": []
+      },
+      {
+        "item": "robots: heart",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "heart",
+        "wrong_answers": []
+      },
+      {
+        "item": "robots: flag",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "flag",
+        "wrong_answers": []
+      },
+      {
+        "item": "robots: balloon",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "balloon",
+        "wrong_answers": []
+      },
+      {
+        "item": "houses: the base",
+        "kind": "name",
+        "right": 3,
+        "of": 3,
+        "answer": "houses",
+        "wrong_answers": []
+      },
+      {
+        "item": "houses: chimney",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "chimney",
+        "wrong_answers": []
+      },
+      {
+        "item": "houses: sun",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "sun",
+        "wrong_answers": []
+      },
+      {
+        "item": "houses: tree",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "tree",
+        "wrong_answers": []
+      },
+      {
+        "item": "houses: fence",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "fence",
+        "wrong_answers": []
+      },
+      {
+        "item": "snowmen: the base",
+        "kind": "name",
+        "right": 3,
+        "of": 3,
+        "answer": "snowmen",
+        "wrong_answers": []
+      },
+      {
+        "item": "snowmen: hat",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "hat",
+        "wrong_answers": []
+      },
+      {
+        "item": "snowmen: scarf",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "scarf",
+        "wrong_answers": []
+      },
+      {
+        "item": "snowmen: buttons",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "buttons",
+        "wrong_answers": []
+      },
+      {
+        "item": "snowmen: broom",
+        "kind": "choice",
+        "right": 3,
+        "of": 3,
+        "answer": "broom",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 1 (robots): flag",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "2",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 2 (robots): balloon",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "1, 4",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 3 (houses): sun",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "4",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 4 (robots): crown",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "2, 4",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 5 (snowmen): buttons",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "4",
+        "wrong_answers": []
+      },
+      {
+        "item": "trial 6 (houses): sun",
+        "kind": "truth",
+        "right": 3,
+        "of": 3,
+        "answer": "1, 3, 4",
+        "wrong_answers": []
+      }
+    ]
+  },
+  "data_parse": "ok",
+  "time_ratio": 1.0091155964245013,
+  "hourly_usd": 10.216727589445128,
+  "problems": [],
+  "warnings": [],
+  "passed": true,
+  "participant_model": "gemini-3.8-flash"
+}

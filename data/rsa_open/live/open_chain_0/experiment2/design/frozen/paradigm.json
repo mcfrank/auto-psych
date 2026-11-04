@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "name": "pragmatic_choice_and_probed_rating",
+  "summary": "Two-step listener reference paradigm combining forced-choice referent selection with a 7-point likelihood rating of a strategically probed candidate referent across multi-object scenes with prior queries and up to 4 features.",
+  "charter": {
+    "question": "When listeners make a discrete forced-choice referent selection and rate the graded likelihood of a strategically probed competitor or minimal exemplar on the same scene, do their joint responses generalize speaker alternative-necessity Theory of Mind, scene-minimal exemplar simplicity mixtures, uniform two-feature simplicity mixtures, or depth-2 perceptual salience RSA?"
+  },
+  "instructions": {
+    "welcome": "Welcome! In this study, you will look at sets of everyday pictures (robots, houses, and snowmen) and figure out which picture a speaker is referring to.",
+    "task": "On each screen, you will see 3 or 4 pictures. A speaker sees the same pictures and says a single word that names a part of the picture they mean (or on some screens, you will predict which picture the speaker will choose before they speak). You will answer two quick questions on each screen: First, click the one picture you think the speaker is most likely referring to (when the speaker says a word, only pick a picture that has that part). Second, one picture will be highlighted: rate from 1 (Impossible) to 7 (Certain) how likely it is that the speaker means that highlighted picture (rate 1 if it does not have the part the speaker named, and higher numbers when it is more likely).",
+    "comprehension_checks": [
+      {
+        "question": "What are the two steps you complete on each screen?",
+        "options": [
+          "First click the single picture the speaker is most likely referring to, then rate from 1 (Impossible) to 7 (Certain) how likely the speaker means the highlighted picture.",
+          "First click a picture that does NOT have the part named, then rate every picture 7.",
+          "Type a new word for every picture on the screen."
+        ],
+        "correct": 0
+      },
+      {
+        "question": "Does the speaker see the same set of pictures on the screen as you do?",
+        "options": [
+          "Yes, the speaker sees all the pictures on the screen when choosing their word.",
+          "No, the speaker can only see one picture.",
+          "No, the speaker cannot see any of the pictures."
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "robots",
+        "base": "<rect x=\"35\" y=\"80\" width=\"10\" height=\"14\" rx=\"3\" fill=\"#546e7a\" stroke=\"#263238\" stroke-width=\"1.5\"/><rect x=\"55\" y=\"80\" width=\"10\" height=\"14\" rx=\"3\" fill=\"#546e7a\" stroke=\"#263238\" stroke-width=\"1.5\"/><rect x=\"28\" y=\"52\" width=\"44\" height=\"30\" rx=\"6\" fill=\"#90a4ae\" stroke=\"#263238\" stroke-width=\"2\"/><rect x=\"45\" y=\"46\" width=\"10\" height=\"7\" fill=\"#78909c\" stroke=\"#263238\" stroke-width=\"1.5\"/><rect x=\"29\" y=\"31\" width=\"3\" height=\"7\" rx=\"1\" fill=\"#78909c\" stroke=\"#263238\" stroke-width=\"1.2\"/><rect x=\"68\" y=\"31\" width=\"3\" height=\"7\" rx=\"1\" fill=\"#78909c\" stroke=\"#263238\" stroke-width=\"1.2\"/><rect x=\"32\" y=\"22\" width=\"36\" height=\"25\" rx=\"5\" fill=\"#b0bec5\" stroke=\"#263238\" stroke-width=\"2\"/><circle cx=\"42\" cy=\"32\" r=\"4\" fill=\"#e0f7fa\" stroke=\"#263238\" stroke-width=\"1.2\"/><circle cx=\"42\" cy=\"32\" r=\"1.8\" fill=\"#006064\"/><circle cx=\"58\" cy=\"32\" r=\"4\" fill=\"#e0f7fa\" stroke=\"#263238\" stroke-width=\"1.2\"/><circle cx=\"58\" cy=\"32\" r=\"1.8\" fill=\"#006064\"/><rect x=\"40\" y=\"39\" width=\"20\" height=\"4\" rx=\"1.5\" fill=\"#ffffff\" stroke=\"#263238\" stroke-width=\"1.2\"/><line x1=\"45\" y1=\"39\" x2=\"45\" y2=\"43\" stroke=\"#263238\" stroke-width=\"1\"/><line x1=\"50\" y1=\"39\" x2=\"50\" y2=\"43\" stroke=\"#263238\" stroke-width=\"1\"/><line x1=\"55\" y1=\"39\" x2=\"55\" y2=\"43\" stroke=\"#263238\" stroke-width=\"1\"/><rect x=\"23\" y=\"56\" width=\"5\" height=\"18\" rx=\"2\" fill=\"#78909c\" stroke=\"#263238\" stroke-width=\"1.5\"/><rect x=\"72\" y=\"56\" width=\"5\" height=\"18\" rx=\"2\" fill=\"#78909c\" stroke=\"#263238\" stroke-width=\"1.5\"/>",
+        "features": [
+          {
+            "word": "crown",
+            "svg": "<polygon points=\"36,22 36,9 43,15 50,6 57,15 64,9 64,22\" fill=\"#ffd600\" stroke=\"#b26a00\" stroke-width=\"1.5\"/><circle cx=\"50\" cy=\"17\" r=\"2\" fill=\"#d50000\"/>",
+            "phrase": null
+          },
+          {
+            "word": "heart",
+            "svg": "<path d=\"M 50 76 C 43 70, 39 64, 43 60 C 46 57, 50 61, 50 63 C 50 61, 54 57, 57 60 C 61 64, 57 70, 50 76 Z\" fill=\"#ff1744\" stroke=\"#880e4f\" stroke-width=\"1.5\"/>",
+            "phrase": null
+          },
+          {
+            "word": "flag",
+            "svg": "<line x1=\"18\" y1=\"24\" x2=\"18\" y2=\"78\" stroke=\"#5d4037\" stroke-width=\"2.8\"/><polygon points=\"18,25 3,32 18,39\" fill=\"#00e676\" stroke=\"#1b5e20\" stroke-width=\"1.5\"/>",
+            "phrase": null
+          },
+          {
+            "word": "balloon",
+            "svg": "<line x1=\"88\" y1=\"38\" x2=\"77\" y2=\"62\" stroke=\"#455a64\" stroke-width=\"1.5\"/><ellipse cx=\"88\" cy=\"26\" rx=\"8\" ry=\"10\" fill=\"#d500f9\" stroke=\"#4a148c\" stroke-width=\"1.5\"/><polygon points=\"88,36 86,39 90,39\" fill=\"#d500f9\" stroke=\"#4a148c\" stroke-width=\"1\"/>",
+            "phrase": null
+          }
+        ],
+        "variants": [
+          "<rect x=\"35\" y=\"80\" width=\"10\" height=\"14\" rx=\"3\" fill=\"#5c6bc0\" stroke=\"#1a237e\" stroke-width=\"1.5\"/><rect x=\"55\" y=\"80\" width=\"10\" height=\"14\" rx=\"3\" fill=\"#5c6bc0\" stroke=\"#1a237e\" stroke-width=\"1.5\"/><rect x=\"28\" y=\"52\" width=\"44\" height=\"30\" rx=\"6\" fill=\"#9fa8da\" stroke=\"#1a237e\" stroke-width=\"2\"/><rect x=\"45\" y=\"46\" width=\"10\" height=\"7\" fill=\"#7986cb\" stroke=\"#1a237e\" stroke-width=\"1.5\"/><rect x=\"29\" y=\"31\" width=\"3\" height=\"7\" rx=\"1\" fill=\"#7986cb\" stroke=\"#1a237e\" stroke-width=\"1.2\"/><rect x=\"68\" y=\"31\" width=\"3\" height=\"7\" rx=\"1\" fill=\"#7986cb\" stroke=\"#1a237e\" stroke-width=\"1.2\"/><rect x=\"32\" y=\"22\" width=\"36\" height=\"25\" rx=\"5\" fill=\"#c5cae9\" stroke=\"#1a237e\" stroke-width=\"2\"/><circle cx=\"42\" cy=\"32\" r=\"4\" fill=\"#e0f7fa\" stroke=\"#1a237e\" stroke-width=\"1.2\"/><circle cx=\"42\" cy=\"32\" r=\"1.8\" fill=\"#1a237e\"/><circle cx=\"58\" cy=\"32\" r=\"4\" fill=\"#e0f7fa\" stroke=\"#1a237e\" stroke-width=\"1.2\"/><circle cx=\"58\" cy=\"32\" r=\"1.8\" fill=\"#1a237e\"/><rect x=\"40\" y=\"39\" width=\"20\" height=\"4\" rx=\"1.5\" fill=\"#ffffff\" stroke=\"#1a237e\" stroke-width=\"1.2\"/><line x1=\"45\" y1=\"39\" x2=\"45\" y2=\"43\" stroke=\"#1a237e\" stroke-width=\"1\"/><line x1=\"50\" y1=\"39\" x2=\"50\" y2=\"43\" stroke=\"#1a237e\" stroke-width=\"1\"/><line x1=\"55\" y1=\"39\" x2=\"55\" y2=\"43\" stroke=\"#1a237e\" stroke-width=\"1\"/><rect x=\"23\" y=\"56\" width=\"5\" height=\"18\" rx=\"2\" fill=\"#7986cb\" stroke=\"#1a237e\" stroke-width=\"1.5\"/><rect x=\"72\" y=\"56\" width=\"5\" height=\"18\" rx=\"2\" fill=\"#7986cb\" stroke=\"#1a237e\" stroke-width=\"1.5\"/>",
+          "<rect x=\"35\" y=\"80\" width=\"10\" height=\"14\" rx=\"3\" fill=\"#00897b\" stroke=\"#004d40\" stroke-width=\"1.5\"/><rect x=\"55\" y=\"80\" width=\"10\" height=\"14\" rx=\"3\" fill=\"#00897b\" stroke=\"#004d40\" stroke-width=\"1.5\"/><rect x=\"28\" y=\"52\" width=\"44\" height=\"30\" rx=\"6\" fill=\"#80cbc4\" stroke=\"#004d40\" stroke-width=\"2\"/><rect x=\"45\" y=\"46\" width=\"10\" height=\"7\" fill=\"#4db6ac\" stroke=\"#004d40\" stroke-width=\"1.5\"/><rect x=\"29\" y=\"31\" width=\"3\" height=\"7\" rx=\"1\" fill=\"#4db6ac\" stroke=\"#004d40\" stroke-width=\"1.2\"/><rect x=\"68\" y=\"31\" width=\"3\" height=\"7\" rx=\"1\" fill=\"#4db6ac\" stroke=\"#004d40\" stroke-width=\"1.2\"/><rect x=\"32\" y=\"22\" width=\"36\" height=\"25\" rx=\"5\" fill=\"#b2dfdb\" stroke=\"#004d40\" stroke-width=\"2\"/><circle cx=\"42\" cy=\"32\" r=\"4\" fill=\"#ffffff\" stroke=\"#004d40\" stroke-width=\"1.2\"/><circle cx=\"42\" cy=\"32\" r=\"1.8\" fill=\"#004d40\"/><circle cx=\"58\" cy=\"32\" r=\"4\" fill=\"#ffffff\" stroke=\"#004d40\" stroke-width=\"1.2\"/><circle cx=\"58\" cy=\"32\" r=\"1.8\" fill=\"#004d40\"/><rect x=\"40\" y=\"39\" width=\"20\" height=\"4\" rx=\"1.5\" fill=\"#ffffff\" stroke=\"#004d40\" stroke-width=\"1.2\"/><line x1=\"45\" y1=\"39\" x2=\"45\" y2=\"43\" stroke=\"#004d40\" stroke-width=\"1\"/><line x1=\"50\" y1=\"39\" x2=\"50\" y2=\"43\" stroke=\"#004d40\" stroke-width=\"1\"/><line x1=\"55\" y1=\"39\" x2=\"55\" y2=\"43\" stroke=\"#004d40\" stroke-width=\"1\"/><rect x=\"23\" y=\"56\" width=\"5\" height=\"18\" rx=\"2\" fill=\"#4db6ac\" stroke=\"#004d40\" stroke-width=\"1.5\"/><rect x=\"72\" y=\"56\" width=\"5\" height=\"18\" rx=\"2\" fill=\"#4db6ac\" stroke=\"#004d40\" stroke-width=\"1.5\"/>"
+        ]
+      },
+      {
+        "name": "houses",
+        "base": "<rect x=\"26\" y=\"46\" width=\"48\" height=\"42\" fill=\"#fff8e1\" stroke=\"#4e342e\" stroke-width=\"2\"/><polygon points=\"21,46 50,20 79,46\" fill=\"#d84315\" stroke=\"#4e342e\" stroke-width=\"2\"/><rect x=\"45\" y=\"64\" width=\"10\" height=\"24\" fill=\"#6d4c41\" stroke=\"#3e2723\" stroke-width=\"1.5\"/><circle cx=\"53\" cy=\"76\" r=\"1.2\" fill=\"#ffd54f\"/><rect x=\"31\" y=\"53\" width=\"10\" height=\"10\" fill=\"#81d4fa\" stroke=\"#4e342e\" stroke-width=\"1.5\"/><rect x=\"59\" y=\"53\" width=\"10\" height=\"10\" fill=\"#81d4fa\" stroke=\"#4e342e\" stroke-width=\"1.5\"/>",
+        "features": [
+          {
+            "word": "chimney",
+            "svg": "<rect x=\"62\" y=\"18\" width=\"9\" height=\"19\" fill=\"#8d6e63\" stroke=\"#3e2723\" stroke-width=\"1.6\"/><circle cx=\"67\" cy=\"12\" r=\"3.5\" fill=\"#cfd8dc\" stroke=\"#90a4ae\" stroke-width=\"1\"/><circle cx=\"72\" cy=\"7\" r=\"4.5\" fill=\"#eceff1\" stroke=\"#90a4ae\" stroke-width=\"1\"/>",
+            "phrase": null
+          },
+          {
+            "word": "sun",
+            "svg": "<circle cx=\"15\" cy=\"15\" r=\"7\" fill=\"#ffd600\" stroke=\"#ff6f00\" stroke-width=\"1.5\"/><line x1=\"15\" y1=\"4\" x2=\"15\" y2=\"1\" stroke=\"#ff8f00\" stroke-width=\"2\"/><line x1=\"15\" y1=\"26\" x2=\"15\" y2=\"29\" stroke=\"#ff8f00\" stroke-width=\"2\"/><line x1=\"4\" y1=\"15\" x2=\"1\" y2=\"15\" stroke=\"#ff8f00\" stroke-width=\"2\"/><line x1=\"26\" y1=\"15\" x2=\"29\" y2=\"15\" stroke=\"#ff8f00\" stroke-width=\"2\"/>",
+            "phrase": null
+          },
+          {
+            "word": "tree",
+            "svg": "<rect x=\"10\" y=\"68\" width=\"5\" height=\"20\" fill=\"#6d4c41\" stroke=\"#3e2723\" stroke-width=\"1.2\"/><circle cx=\"12.5\" cy=\"59\" r=\"9\" fill=\"#43a047\" stroke=\"#1b5e20\" stroke-width=\"1.5\"/><circle cx=\"12.5\" cy=\"48\" r=\"6.5\" fill=\"#66bb6a\" stroke=\"#1b5e20\" stroke-width=\"1.5\"/>",
+            "phrase": null
+          },
+          {
+            "word": "fence",
+            "svg": "<rect x=\"76\" y=\"74\" width=\"21\" height=\"3\" fill=\"#ffb74d\" stroke=\"#e65100\" stroke-width=\"1\"/><rect x=\"76\" y=\"82\" width=\"21\" height=\"3\" fill=\"#ffb74d\" stroke=\"#e65100\" stroke-width=\"1\"/><polygon points=\"78,88 78,69 80.5,66 83,69 83,88\" fill=\"#ffe0b2\" stroke=\"#e65100\" stroke-width=\"1.2\"/><polygon points=\"85,88 85,69 87.5,66 90,69 90,88\" fill=\"#ffe0b2\" stroke=\"#e65100\" stroke-width=\"1.2\"/><polygon points=\"92,88 92,69 94.5,66 97,69 97,88\" fill=\"#ffe0b2\" stroke=\"#e65100\" stroke-width=\"1.2\"/>",
+            "phrase": null
+          }
+        ],
+        "variants": [
+          "<rect x=\"26\" y=\"46\" width=\"48\" height=\"42\" fill=\"#fce4ec\" stroke=\"#4e342e\" stroke-width=\"2\"/><polygon points=\"21,46 50,20 79,46\" fill=\"#ad1457\" stroke=\"#4e342e\" stroke-width=\"2\"/><rect x=\"45\" y=\"64\" width=\"10\" height=\"24\" fill=\"#5d4037\" stroke=\"#3e2723\" stroke-width=\"1.5\"/><circle cx=\"53\" cy=\"76\" r=\"1.2\" fill=\"#ffd54f\"/><rect x=\"31\" y=\"53\" width=\"10\" height=\"10\" fill=\"#b3e5fc\" stroke=\"#4e342e\" stroke-width=\"1.5\"/><rect x=\"59\" y=\"53\" width=\"10\" height=\"10\" fill=\"#b3e5fc\" stroke=\"#4e342e\" stroke-width=\"1.5\"/>",
+          "<rect x=\"26\" y=\"46\" width=\"48\" height=\"42\" fill=\"#e8eaf6\" stroke=\"#283593\" stroke-width=\"2\"/><polygon points=\"21,46 50,20 79,46\" fill=\"#3949ab\" stroke=\"#1a237e\" stroke-width=\"2\"/><rect x=\"45\" y=\"64\" width=\"10\" height=\"24\" fill=\"#6d4c41\" stroke=\"#3e2723\" stroke-width=\"1.5\"/><circle cx=\"53\" cy=\"76\" r=\"1.2\" fill=\"#ffd54f\"/><rect x=\"31\" y=\"53\" width=\"10\" height=\"10\" fill=\"#fff9c4\" stroke=\"#283593\" stroke-width=\"1.5\"/><rect x=\"59\" y=\"53\" width=\"10\" height=\"10\" fill=\"#fff9c4\" stroke=\"#283593\" stroke-width=\"1.5\"/>"
+        ]
+      },
+      {
+        "name": "snowmen",
+        "base": "<circle cx=\"50\" cy=\"76\" r=\"17\" fill=\"#ffffff\" stroke=\"#37474f\" stroke-width=\"2\"/><circle cx=\"50\" cy=\"52\" r=\"13\" fill=\"#ffffff\" stroke=\"#37474f\" stroke-width=\"2\"/><circle cx=\"50\" cy=\"31\" r=\"10.5\" fill=\"#ffffff\" stroke=\"#37474f\" stroke-width=\"2\"/><circle cx=\"46.5\" cy=\"28.5\" r=\"1.6\" fill=\"#263238\"/><circle cx=\"53.5\" cy=\"28.5\" r=\"1.6\" fill=\"#263238\"/><polygon points=\"50,30.5 58,32.5 50,34\" fill=\"#ff6d00\" stroke=\"#e65100\" stroke-width=\"1\"/><path d=\"M 46 36 Q 50 38.5 54 36\" fill=\"none\" stroke=\"#263238\" stroke-width=\"1.4\"/>",
+        "features": [
+          {
+            "word": "hat",
+            "svg": "<rect x=\"37\" y=\"18\" width=\"26\" height=\"4\" rx=\"1.5\" fill=\"#263238\" stroke=\"#000000\" stroke-width=\"1.2\"/><rect x=\"41\" y=\"6\" width=\"18\" height=\"13\" rx=\"1.5\" fill=\"#37474f\" stroke=\"#000000\" stroke-width=\"1.2\"/><rect x=\"41\" y=\"15\" width=\"18\" height=\"3\" fill=\"#d50000\"/>",
+            "phrase": null
+          },
+          {
+            "word": "scarf",
+            "svg": "<rect x=\"39\" y=\"39\" width=\"22\" height=\"5\" rx=\"2\" fill=\"#e53935\" stroke=\"#8e0000\" stroke-width=\"1.2\"/><rect x=\"56\" y=\"42\" width=\"6\" height=\"10\" rx=\"1.5\" fill=\"#e53935\" stroke=\"#8e0000\" stroke-width=\"1.2\"/>",
+            "phrase": null
+          },
+          {
+            "word": "buttons",
+            "svg": "<circle cx=\"50\" cy=\"54\" r=\"2.8\" fill=\"#212121\"/><circle cx=\"50\" cy=\"65\" r=\"2.8\" fill=\"#212121\"/><circle cx=\"50\" cy=\"77\" r=\"2.8\" fill=\"#212121\"/>",
+            "phrase": null
+          },
+          {
+            "word": "broom",
+            "svg": "<line x1=\"18\" y1=\"34\" x2=\"26\" y2=\"88\" stroke=\"#6d4c41\" stroke-width=\"2.8\"/><polygon points=\"11,20 25,18 22,35 14,36\" fill=\"#fbc02d\" stroke=\"#f57f17\" stroke-width=\"1.5\"/>",
+            "phrase": null
+          }
+        ],
+        "variants": [
+          "<circle cx=\"50\" cy=\"76\" r=\"17\" fill=\"#f0f8ff\" stroke=\"#2c3e50\" stroke-width=\"2\"/><circle cx=\"50\" cy=\"52\" r=\"13\" fill=\"#f0f8ff\" stroke=\"#2c3e50\" stroke-width=\"2\"/><circle cx=\"50\" cy=\"31\" r=\"10.5\" fill=\"#f0f8ff\" stroke=\"#2c3e50\" stroke-width=\"2\"/><circle cx=\"46.5\" cy=\"28.5\" r=\"1.6\" fill=\"#2c3e50\"/><circle cx=\"53.5\" cy=\"28.5\" r=\"1.6\" fill=\"#2c3e50\"/><polygon points=\"50,30.5 58,32.5 50,34\" fill=\"#ff6d00\" stroke=\"#e65100\" stroke-width=\"1\"/><path d=\"M 46 36 Q 50 38.5 54 36\" fill=\"none\" stroke=\"#2c3e50\" stroke-width=\"1.4\"/>",
+          "<circle cx=\"50\" cy=\"76\" r=\"17\" fill=\"#f3e5f5\" stroke=\"#4a148c\" stroke-width=\"2\"/><circle cx=\"50\" cy=\"52\" r=\"13\" fill=\"#f3e5f5\" stroke=\"#4a148c\" stroke-width=\"2\"/><circle cx=\"50\" cy=\"31\" r=\"10.5\" fill=\"#f3e5f5\" stroke=\"#4a148c\" stroke-width=\"2\"/><circle cx=\"46.5\" cy=\"28.5\" r=\"1.6\" fill=\"#311b92\"/><circle cx=\"53.5\" cy=\"28.5\" r=\"1.6\" fill=\"#311b92\"/><polygon points=\"50,30.5 58,32.5 50,34\" fill=\"#ff6d00\" stroke=\"#e65100\" stroke-width=\"1\"/><path d=\"M 46 36 Q 50 38.5 54 36\" fill=\"none\" stroke=\"#311b92\" stroke-width=\"1.4\"/>"
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [
+        3,
+        3
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        4,
+        4
+      ]
+    ],
+    "prior_queries": true,
+    "synonyms": false
+  },
+  "response": {
+    "type": "choice",
+    "link": "choice",
+    "prompt": "The speaker says {message}. Click the picture the speaker is most likely referring to.",
+    "prior_prompt": "Before the speaker says anything, click the picture the speaker is most likely to choose.",
+    "scale_labels": null,
+    "scale_points": null,
+    "total_points": null
+  },
+  "second_response": {
+    "type": "rating",
+    "link": "rating",
+    "prompt": "When the speaker says {message}, how likely is it that they mean the highlighted picture?",
+    "prior_prompt": "Before the speaker says anything, how likely is it that they will choose the highlighted picture?",
+    "scale_labels": [
+      "1 - Impossible",
+      "7 - Certain"
+    ],
+    "scale_points": 7,
+    "total_points": null
+  },
+  "design": {
+    "n_participants": 163,
+    "trials_per_participant": 30,
+    "distinct_trials": 30,
+    "catch_trials": 2,
+    "minutes": 7.1,
+    "pay_usd": 1.22
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}
