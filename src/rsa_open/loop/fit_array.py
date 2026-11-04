@@ -190,3 +190,16 @@ def run_task(manifest: Path, index: int) -> Dict[str, Any]:
             record = {"kind": "infrastructure", "message": f"{type(exc).__name__}: {exc}",
                       "traceback": "".join(traceback.format_exception(exc))[-4000:]}
     return _write_result(job, gb, record)
+
+
+if __name__ == "__main__":  # one array task: scripts/rsa/slurm/fit_array.sbatch
+    import argparse
+    import sys
+
+    ap = argparse.ArgumentParser(description="Run one fit of a step's array and write its result.")
+    ap.add_argument("--manifest", type=Path, required=True)
+    ap.add_argument("--index", type=int, required=True)
+    a = ap.parse_args()
+    out = run_task(a.manifest, a.index)
+    print(f"[fit task] {a.index}: {out['kind']}" + (f": {out.get('message')}" if out.get("message") else ""), flush=True)
+    sys.exit(1 if out["kind"] == "infrastructure" else 0)  # a theory's failure is a result, not a failed task
