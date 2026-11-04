@@ -31,10 +31,10 @@ and partition. Time limits decide admission, so a fit's speed must be comparable
 the record shows which hardware each fit had (`DISTRIBUTED_DESIGN.md` v2, §0).
 
 **Backends** (`fit_backend`): a time-limited fit's run is one attempt of a backend, chosen by
-``RSA_OPEN_FIT_BACKEND``. ``local`` (the default, and the only one built) fits in a child of this
-job, as above. A cluster backend (Slurm jobs, or a worker queue) plugs in at `FitBackend.attempt`
-once SRCC has said which is allowed; everything around it (the cache, time limits, the
-out-of-memory retry, failure classification) stays as it is.
+``RSA_OPEN_FIT_BACKEND``. ``local`` (the default) fits in a child of this job, as above; ``slurm``
+(step mode, `src.rsa_open.loop.fit_array`) runs each fit as a Slurm array task and reads its result
+back. Everything around an attempt (the cache, time limits, the out-of-memory retry, failure
+classification) stays as it is.
 """
 
 from __future__ import annotations
@@ -492,7 +492,7 @@ class LocalBackend(FitBackend):
 
 
 FIT_BACKEND_ENV = "RSA_OPEN_FIT_BACKEND"
-PLANNED_BACKENDS = ("slurm", "queue")
+PLANNED_BACKENDS = ("queue",)
 
 
 def fit_backend() -> FitBackend:
@@ -501,6 +501,10 @@ def fit_backend() -> FitBackend:
     name = os.environ.get(FIT_BACKEND_ENV, "local") or "local"
     if name == "local":
         return LocalBackend()
+    if name == "slurm":  # step mode: a fit not done is pending, for an array task (src.rsa_open.loop.fit_array)
+        from src.rsa_open.loop.fit_array import ArrayBackend
+
+        return ArrayBackend()
     if name in PLANNED_BACKENDS:
         raise NotImplementedError(f"{FIT_BACKEND_ENV}={name}: that backend is planned, not built "
                                   "(docs/auto_open/DISTRIBUTED_DESIGN.md); unset it to fit locally")

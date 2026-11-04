@@ -250,7 +250,7 @@ def test_the_fit_backend_is_local_unless_named_and_never_falls_back(monkeypatch)
 
     monkeypatch.delenv(FIT_BACKEND_ENV, raising=False)
     assert isinstance(fit_backend(), LocalBackend)
-    monkeypatch.setenv(FIT_BACKEND_ENV, "slurm")
+    monkeypatch.setenv(FIT_BACKEND_ENV, "queue")
     with pytest.raises(NotImplementedError, match="planned, not built"):
         fit_backend()
     monkeypatch.setenv(FIT_BACKEND_ENV, "elsewhere")
