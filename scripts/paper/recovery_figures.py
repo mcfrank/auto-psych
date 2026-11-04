@@ -20,6 +20,12 @@ and the reference games' own.
   model's pool RMSE to the ground truth, against the starting model that was
   best at step 0, all refitted by ``rsa_recovery_trajectory.py``
   (``data/paper/rsa_recovery_trajectory.json``).
+- Alien ground truths (``fig_recovery_alien``): subjective randomness's four
+  implausible rules (``data/results/final_recovery/impossible/run1/``, one
+  repeat; the loop starts from all four seeds). The RMSE to the ground truth
+  of the loop's best model at every scoring step, against the ELPD-best seed
+  among those with reliable PSIS-LOO fitted to all of the cell's data (the
+  cell's recorded ``elpd_best_rmse``, as in the subjective-randomness summary).
 
 Usage:
     uv run python -m scripts.paper.recovery_figures
@@ -73,6 +79,12 @@ SR_GT_NAMES = {  # as in the paper (paper/methods_changes.md)
     "local_representativeness": "local representativeness",
     "motif_stack": "regularity detection",
 }
+ALIEN_GT_NAMES = {
+    "fewer_heads_more_random": "fewer heads more random",
+    "longer_runs_more_random": "longer runs more random",
+    "more_heads_more_random": "more heads more random",
+    "more_imbalance_more_random": "more imbalance more random",
+}
 COMBINED_NG_NAMES = {gt: name.removeprefix("Ground truth: ") for gt, name in NG_GT_NAMES.items()}
 SERIES = {"best": "best model", "fitted_baseline": "best other seed model"}
 STEPS_PER_EXPERIMENT = 6
@@ -86,6 +98,8 @@ class Args:
     """The number-game recovery sweep (``run<r>/<ground truth>/holdout.{json,csv}``)."""
     rsa_trajectory: Path = here() / "data/paper/rsa_recovery_trajectory.json"
     """Each recovery cell's step-best models' distances (``rsa_recovery_trajectory.py``)."""
+    alien_root: Path = here() / "data/results/final_recovery/impossible"
+    """The alien recovery cells (``run1/<ground truth>/holdout.{json,csv}``)."""
     out_dir: Path = here() / "data/paper/figures"
 
 
@@ -178,6 +192,46 @@ def rsa_plot(df: pd.DataFrame) -> ggplot:
     )
 
 
+def alien_frame(root: Path) -> pd.DataFrame:
+    """One row per (alien cell, scoring step) for the best model and the best seed."""
+    rows = []
+    for gt, name in ALIEN_GT_NAMES.items():
+        cell = root / "run1" / gt
+        baseline = json.loads((cell / "holdout.json").read_text())["gt_runs"][0]["fitted_baseline"]
+        if baseline["elpd_best_rmse"] is None:
+            raise RuntimeError(f"{cell}: no ELPD-best seed ({baseline['elpd_best_reason']})")
+        trajectory = pd.read_csv(cell / "holdout.csv")
+        for step, rmse in zip(trajectory["global_step"], trajectory["rmse"]):
+            rows.append(dict(gt=name, step=step, rmse=rmse, series="best model"))
+            rows.append(dict(gt=name, step=step, rmse=baseline["elpd_best_rmse"], series="best seed model"))
+    out = pd.DataFrame(rows)
+    out["gt"] = pd.Categorical(out["gt"], categories=list(ALIEN_GT_NAMES.values()))
+    return out
+
+
+def alien_plot(df: pd.DataFrame) -> ggplot:
+    best = df[df["series"] == "best model"]
+    seed = df[df["series"] == "best seed model"]
+    return (
+        ggplot(df, aes("step", "rmse", color="series", linetype="series"))
+        + geom_vline(xintercept=[STEPS_PER_EXPERIMENT - 0.5, 2 * STEPS_PER_EXPERIMENT - 0.5],
+                     linetype="dotted", color="grey", size=0.6)
+        + geom_line(data=seed, size=0.8)
+        + geom_line(data=best, size=0.8)
+        + geom_point(data=best, size=1.4)
+        + facet_wrap("gt", nrow=1)
+        + scale_color_manual(values={"best model": BEST_COLOR, "best seed model": SEED_COLOR},
+                             breaks=["best model", "best seed model"])
+        + scale_linetype_manual(values={"best model": "solid", "best seed model": "dotted"},
+                                breaks=["best model", "best seed model"])
+        + scale_y_continuous(limits=(0, None))
+        + labs(x="inner loop iteration", y="RMSE vs. ground truth", color="", linetype="")
+        + theme_minimal()
+        + theme(legend_position="bottom", panel_grid_minor=element_blank(),
+                strip_text=element_text(size=9), figure_size=(10, 3))
+    )
+
+
 DOMAINS = ("Subjective randomness", "Number game", "Reference games")
 
 
@@ -258,6 +312,7 @@ def main(args: Args) -> None:
         ("fig_recovery", combined_plot(combined_frame(args.sr_csv, args.ng_root, args.rsa_trajectory))),
         ("fig_recovery_number_game", number_game_plot(number_game_frame(args.ng_root))),
         ("fig_recovery_rsa", rsa_plot(rsa_frame(args.rsa_trajectory))),
+        ("fig_recovery_alien", alien_plot(alien_frame(args.alien_root))),
     ]:
         for ext in ("pdf", "png"):
             path = args.out_dir / f"{name}.{ext}"

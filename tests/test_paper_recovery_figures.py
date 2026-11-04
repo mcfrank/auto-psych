@@ -59,3 +59,28 @@ def test_the_number_games_own_figure_has_every_repeat_of_every_ground_truth():
         "Ground truth: Tenenbaum (2000)": 3, "Ground truth: Bigelow & Piantadosi, mixture": 3,
         "Ground truth: Bigelow & Piantadosi, independent": 3}
     assert not math.isnan(best["rmse"].iloc[0])
+
+
+def test_the_alien_figure_is_one_panel_per_alien_rule_over_every_scoring_step():
+    df = rf.alien_frame(rf.Args().alien_root)
+    assert list(df["gt"].cat.categories) == [
+        "fewer heads more random", "longer runs more random",
+        "more heads more random", "more imbalance more random"]
+    best = df[df["series"] == "best model"]
+    assert best.groupby("gt", observed=True)["step"].apply(list).to_dict() == {
+        gt: list(range(18)) for gt in df["gt"].cat.categories}
+    cell = rf.Args().alien_root / "run1" / "fewer_heads_more_random" / "holdout.csv"
+    final = best[best["gt"] == "fewer heads more random"]["rmse"].iloc[-1]
+    assert final == pytest.approx(pd.read_csv(cell)["rmse"].iloc[-1])
+
+
+def test_the_alien_baseline_is_the_recorded_elpd_best_seed_among_trusted_fits():
+    df = rf.alien_frame(rf.Args().alien_root)
+    seed = df[(df["series"] == "best seed model") & (df["gt"] == "longer runs more random")]
+    # motif_stack has the higher ELPD there, but its PSIS-LOO is not trusted.
+    assert len(seed) == 18 and seed["rmse"].nunique() == 1
+    assert seed["rmse"].iloc[0] == pytest.approx(0.2118, abs=1e-4)
+
+
+def test_the_alien_figure_draws():
+    rf.alien_plot(rf.alien_frame(rf.Args().alien_root)).draw()
