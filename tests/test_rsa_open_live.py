@@ -591,6 +591,7 @@ def test_the_live_job_is_double_gated_stops_on_record_and_resumes_after_a_time_l
         assert f"  {rc}" in text
     five = text.split("  5)")[1].split(";;")[0]
     assert "stop " not in five  # out of job time: no STOP, the next job resumes
+    assert "  6|7)" in text and 'source "$SLURM_DIR/_step_mode.sh"' in text  # step mode's hand-over and refusal
     from src.rsa_open.run_chain import EXIT_AWAITING_REVIEW, EXIT_DRAFT_ONLY, EXIT_OUT_OF_JOB_TIME
 
     assert (EXIT_AWAITING_REVIEW, EXIT_DRAFT_ONLY, EXIT_OUT_OF_JOB_TIME) == (3, 4, 5)

@@ -249,12 +249,12 @@ case "$rc" in
   0) date -Is > "$CELL_DIR/DONE"; stop "finished"; exit 10 ;;
   3) stop "awaiting the PI's review of experiment 1's paradigm: python -m src.rsa_open.review --frozen $RUN_DIR/experiment1/design/frozen --by <name>; then relaunch with CLEAR_STOP=1"; exit 13 ;;
   4) stop "test deploy done: the page and a Prolific draft are up (see the log); relaunch live with CLEAR_STOP=1"; exit 14 ;;
-  5|6|7) if [[ "$STEP_MODE" == 1 ]]; then
-           rsa_step_exit "$rc" || exit $?
-         elif [[ "$rc" == 5 ]]; then
-           echo "[open live] $CELL: paused for the next job of its ladder (too little of this job left for the next stage)"
-         else
-           stop "failed (exit $rc outside step mode, job ${SLURM_JOB_ID:-local})"; exit "$rc"
-         fi ;;
+  5) if [[ "$STEP_MODE" == 1 ]]; then
+       rsa_step_exit "$rc" || exit $?  # a step paused for time submits its own continuation
+     else
+       echo "[open live] $CELL: paused for the next job of its ladder (too little of this job left for the next stage)"
+     fi ;;
+  6|7) [[ "$STEP_MODE" == 1 ]] || { stop "failed (exit $rc outside step mode, job ${SLURM_JOB_ID:-local})"; exit "$rc"; }
+       rsa_step_exit "$rc" || exit $? ;;  # 6: handed over (exit 0); 7: refused, its STOP written (mail)
   *) stop "failed (exit $rc, job ${SLURM_JOB_ID:-local}): a person looks before it resumes (PREREG_DRAFT.md §4a)"; exit "$rc" ;;
 esac
