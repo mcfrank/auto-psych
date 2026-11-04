@@ -75,7 +75,9 @@ from src.rsa_open.fit import TheoryModel
 from src.rsa_open.loop import brief as briefs
 from src.rsa_open.loop import critique as critique_mod
 from src.rsa_open.loop.critique import CRITIQUE_N_PROPOSALS, CRITIQUE_PPC_REPLICATES, CRITIQUE_SIGNIFICANCE_ALPHA
-from src.rsa_open.loop.fitting import FitSummary, loop_fit, loop_fit_summary, read_corpus, write_corpus
+from src.rsa_open.loop import slurm as step
+from src.rsa_open.loop.fit_array import FitPending, FitsPending, collect_pending
+from src.rsa_open.loop.fitting import FitSummary, fit_backend, loop_fit, loop_fit_summary, read_corpus, write_corpus
 from src.rsa_open.loop.gates import MAX_POOL_DRAWS, GateConfig, admit, pool_predictions
 from src.rsa_open.loop.scores import ScoreStore
 
@@ -213,6 +215,64 @@ class OpenLoop:
         self._cv_jobs: Dict[str, Future] = {}
         self._cv_pool: Optional[ThreadPoolExecutor] = None
         self._parent_jax = threading.Lock()
+        # Step mode's round journal (`_memo`): None in a local run, which keeps no journal.
+        self._jpath: Optional[Path] = None
+        self._jmemo: Dict[str, object] = {}
+        self._jlock = threading.Lock()
+
+    # ---------- step mode ----------
+    def _step_mode(self) -> bool:
+        """Whether this process is a step (`src.rsa_open.loop.slurm`): fits are pending, not fitted here."""
+        if step.active() is None:
+            return False
+        if fit_backend().name != "slurm":
+            raise RuntimeError("step mode needs RSA_OPEN_FIT_BACKEND=slurm: a step never fits in its own job")
+        return True
+
+    def _open_journal(self, rdir: Path) -> None:
+        """Step mode: the round's journal, which a continuation replays from (`_memo`)."""
+        if not self._step_mode():
+            self._jpath, self._jmemo = None, {}
+            return
+        self._jpath = rdir / "journal.json"
+        self._jmemo = json.loads(self._jpath.read_text()) if self._jpath.exists() else {}
+
+    def _memo(self, key: str, fn: Callable[[], object], dump=lambda x: x, load=lambda x: x):
+        """``fn()`` once per round in step mode: its result is journaled the moment it is known, and a
+        continuation replaying the round reads it back instead of calling ``fn`` again (an agent
+        session, a name, an admission, a ledger line). A local run calls ``fn`` as before."""
+        if self._jpath is None:
+            return fn()
+        with self._jlock:
+            if key in self._jmemo:
+                return load(self._jmemo[key])
+        out = fn()
+        with self._jlock:
+            self._jmemo[key] = dump(out)
+            self._jpath.parent.mkdir(parents=True, exist_ok=True)
+            _write_atomic(self._jpath, json.dumps(self._jmemo, default=lambda o: o.item() if hasattr(o, "item") else float(o)))
+        return out
+
+    def _fit_early(self, items, reason: str) -> None:
+        """Step mode: submit fits a later phase needs now, so they run while agents work."""
+        stepper = step.active()
+        if stepper is None or not items:
+            return
+        try:
+            self._prefit(items)
+        except FitsPending as ps:
+            stepper.submit_early(ps, reason)
+
+    def _cv_early(self, names, reason: str) -> None:
+        """Step mode: submit admitted theories' fold fits now (local runs start them in threads)."""
+        stepper = step.active()
+        if stepper is None:
+            return
+        todo = [n for n in names if n in self.live and n not in self.cv]
+        try:
+            collect_pending([lambda n=n: self._cv_one(n) for n in todo])
+        except FitsPending as ps:
+            stepper.submit_early(ps, reason)
 
     # ---------- setup ----------
     def _prepare(self) -> None:
@@ -261,7 +321,16 @@ class OpenLoop:
         entries = read_manifest_entries(self.cfg.seed_models_dir)
         for e in entries:
             shutil.copyfile(Path(self.cfg.seed_models_dir) / f"{e['name']}.py", self.models_dir / f"{e['name']}.py")
-        self._prefit([(self.models_dir / f"{e['name']}.py", e["name"]) for e in entries], self.live_cfg)
+        seeds = [(self.models_dir / f"{e['name']}.py", e["name"]) for e in entries]
+        if self._step_mode():  # one array: the seeds' fits and the chance theory's
+            def chance() -> None:
+                try:
+                    self._chance_fit()
+                except ModelFailure:
+                    pass  # score_chance records it
+
+            collect_pending([lambda: self._prefit(seeds, self.live_cfg), chance])
+        self._prefit(seeds, self.live_cfg)
         for e in entries:
             name, hypothesis = e["name"], e.get("rationale", "")
             path = self.models_dir / f"{name}.py"
@@ -317,12 +386,17 @@ class OpenLoop:
                 self._fit(path, name, cfg)
             except ModelFailure:
                 pass  # remembered; admission reports it
+            except (FitPending, FitsPending):
+                raise  # step mode: not done yet, which is nobody's failure
             except Exception:
                 if path.name == "candidate.py":
                     return  # a file the gates will refuse (not a theory, a memo error): admission says why
                 raise
 
         if not items:
+            return
+        if self._step_mode():  # every pending fit at once, for one array
+            collect_pending([lambda item=item: one(item) for item in items])
             return
         workers = 1 if cfg.time_limit_sec is None else min(len(items), self.cfg.fit_workers or default_fit_workers())
         with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -389,8 +463,11 @@ class OpenLoop:
 
         workers = self.cfg.cv_folds if self.live_cfg.time_limit_sec is not None else 1
         try:
-            with ThreadPoolExecutor(max_workers=workers) as pool:
-                fits = list(pool.map(fold_fit, range(self.cfg.cv_folds)))
+            if self._step_mode():
+                fits = collect_pending([lambda f=f: fold_fit(f) for f in range(self.cfg.cv_folds)])
+            else:
+                with ThreadPoolExecutor(max_workers=workers) as pool:
+                    fits = list(pool.map(fold_fit, range(self.cfg.cv_folds)))
         except ModelFailure as exc:
             self.cv_problems[name] = f"{CV_FOLD_FAILED}: {exc}"
             return None
@@ -414,18 +491,26 @@ class OpenLoop:
     def score_chance(self) -> Optional[CorpusCV]:
         """The chance theory's out-of-fold lpd, as every theory's is computed (``.chance/``, outside
         what the theorists read). A failure is recorded, never raised: the gate reports it."""
-        path = self.dir / ".chance" / f"{CHANCE_NAME}.py"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(CHANCE_THEORY)
+        path = self._chance_path()
         try:
-            fitted = loop_fit(path, CHANCE_NAME, self.corpus, self.cfg.settings, self.dir / ".fit_cache",
-                              time_limit_sec=self.live_cfg.time_limit_sec, log_likelihood=False)
+            fitted = self._chance_fit()
         except ModelFailure as exc:
             self.cv_problems[CHANCE_NAME] = f"its fit failed: {exc}"
             return None
         limit = None if self.live_cfg.time_limit_sec is None else self.cfg.in_play_fit_limit_sec
         self.chance_cv = self._cv_file(CHANCE_NAME, path, TheoryModel(path, name=CHANCE_NAME), lambda: fitted, limit)
         return self.chance_cv
+
+    def _chance_path(self) -> Path:
+        path = self.dir / ".chance" / f"{CHANCE_NAME}.py"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if not path.exists() or path.read_text() != CHANCE_THEORY:
+            path.write_text(CHANCE_THEORY)
+        return path
+
+    def _chance_fit(self):
+        return loop_fit(self._chance_path(), CHANCE_NAME, self.corpus, self.cfg.settings, self.dir / ".fit_cache",
+                        time_limit_sec=self.live_cfg.time_limit_sec, log_likelihood=False)
 
     def write_newest_cv(self) -> Path:
         """``newest_block_cv.json``: the newest block's units and every scored theory's out-of-fold lpd
@@ -445,7 +530,7 @@ class OpenLoop:
     def _start_cv(self, name: str) -> None:
         """Start ``name``'s CV folds in the background (time-limited fits only: in-process fits run
         one at a time, in `standing`)."""
-        if self.live_cfg.time_limit_sec is None or name in self.cv or name in self._cv_jobs:
+        if self.live_cfg.time_limit_sec is None or name in self.cv or name in self._cv_jobs or self._step_mode():
             return
         if self._cv_pool is None:
             self._cv_pool = ThreadPoolExecutor(max_workers=CV_THEORIES_AT_ONCE, thread_name_prefix="cv")
@@ -458,9 +543,12 @@ class OpenLoop:
 
     def standing(self) -> Dict[str, dict]:
         todo = [n for n in self.live if n not in self.cv]
+        if self._step_mode():
+            for name, cv in zip(todo, collect_pending([lambda n=n: self._cv_one(n) for n in todo])):
+                self.cv[name] = cv
         for name in todo:
             self._start_cv(name)
-        for name in todo:
+        for name in [n for n in todo if n not in self.cv]:
             job = self._cv_jobs.pop(name, None)
             self.cv[name] = job.result() if job is not None else self._cv_one(name)
         # Only converged cross-validation is compared (PI 2026-10-28): run C′'s one unconverged fold
@@ -569,7 +657,7 @@ class OpenLoop:
         if not jobs:
             return []
         with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
-            return list(pool.map(lambda j: self.spawn(*j), jobs))
+            return list(pool.map(lambda j: self._memo(f"spawn:{j[0]}", lambda: bool(self.spawn(*j))), jobs))
 
     def _same_hypothesis(self, hypothesis: str) -> Optional[str]:
         key = collapse_whitespace(hypothesis).strip().lower()
@@ -580,6 +668,11 @@ class OpenLoop:
         return next((n for n, t in texts if key in collapse_whitespace(t).strip().lower()), None)
 
     def _try_admit(self, cdir: Path, name: str, context: str) -> tuple[bool, str]:
+        r = self._memo(f"admit:{cdir}", lambda: dict(zip(("ok", "reason"), self._admit_now(cdir, name, context)),
+                                                       name=name, context=context))
+        return r["ok"], r["reason"]
+
+    def _admit_now(self, cdir: Path, name: str, context: str) -> tuple[bool, str]:
         hypothesis = _read(cdir / "hypothesis.md")
         same = self._same_hypothesis(hypothesis)
         if same is not None:
@@ -607,7 +700,8 @@ class OpenLoop:
         named = []
         for s in slots:
             if (s[key] / "candidate.py").exists():
-                s[key + "_name"] = self._name_for(s[key], f"r{round_index + 1}_c{s['i'] + 1}", frozenset(taken))
+                s[key + "_name"] = self._memo(f"name:{s[key]}", lambda s=s: self._name_for(
+                    s[key], f"r{round_index + 1}_c{s['i'] + 1}", frozenset(taken)))
                 taken.add(s[key + "_name"])
                 named.append(s)
         return named
@@ -632,12 +726,18 @@ class OpenLoop:
         return self._admit_named(slots, key, context_suffix)
 
     def run_round(self, round_index: int) -> dict:
-        s = self.standing()
+        rdir = self.dir / f"round_{round_index + 1}"
+        self._open_journal(rdir)
+        # The round's starting point: a continuation replays from these, not from a standing that
+        # already holds the round's own admissions (step mode).
+        start = self._memo("start", lambda: {"standing": self.standing()})
+        s = start["standing"]
         incumbent = self.incumbent(s)
         roles = slot_roles(self.cfg.candidate_count)
         per_round = exploratory_slots_per_round(self.cfg.candidate_count)
-        rdir = self.dir / f"round_{round_index + 1}"
-        crit = self._critique(rdir, incumbent)
+        crit = self._memo("critique", lambda: self._critique(rdir, incumbent),
+                          dump=lambda c: {"md": c.critiques_md, "status": c.status},
+                          load=lambda d: critique_mod.CritiqueOutcome(d["md"], d["status"]))
         critiques = crit.critiques_md
         slots, explore_i = [], 0
         for i, role in enumerate(roles):
@@ -661,8 +761,14 @@ class OpenLoop:
                 retry.append((sl["dir"], self._docs_for(sl["dir"], sl["role"], sl["lens"], round_index, s, incumbent,
                                                         briefs.retry_note(), critiques)))
         # The first attempts are fitted while the retries' agents work (in-process fits, untimed, run
-        # one at a time); admission waits for both.
-        with ThreadPoolExecutor(max_workers=1, thread_name_prefix="prefit") as background:
+        # one at a time); admission waits for both. A step submits them early, and yields for both.
+        if self._step_mode():
+            self._fit_early(self._fit_items(first, "dir"), f"round {round_index + 1}: first candidates")
+            self._spawn_all(retry)
+            self._prefit(self._fit_items(first, "dir") + self._fit_items(
+                self._name_slots(retried, "dir", round_index, taken), "dir"))
+        else:
+          with ThreadPoolExecutor(max_workers=1, thread_name_prefix="prefit") as background:
             fitting = (background.submit(self._prefit, self._fit_items(first, "dir"))
                        if self.gate_cfg.time_limit_sec is not None else None)
             if fitting is None:
@@ -674,7 +780,8 @@ class OpenLoop:
         events = []
         for sl in slots:
             if not (sl["dir"] / "candidate.py").exists():
-                self._ledger(f"slot_{sl['i'] + 1}", "rejected", "the agent wrote no candidate.py", "", sl["context"])
+                self._memo(f"ledger:no file:{sl['dir']}", lambda sl=sl: self._ledger(
+                    f"slot_{sl['i'] + 1}", "rejected", "the agent wrote no candidate.py", "", sl["context"]))
                 events.append(dict(slot=sl["i"] + 1, role=sl["role"], name=None, outcome="no file", reason=""))
         repairs = []
         for sl, ok, reason in self._admit_named(slots, "dir"):
@@ -683,14 +790,19 @@ class OpenLoop:
                                hypothesis=_read(sl["dir"] / "hypothesis.md")))
             if not ok:
                 repairs.append((sl, reason))
+        # A step submits the admitted theories' folds now; they run while the repair agents work.
+        self._cv_early([sl["dir_name"] for sl in slots if sl.get("dir_name") in self.live],
+                       f"round {round_index + 1}: admitted theories' folds")
         jobs = []
         for sl, reason in repairs:
             rd = sl["dir"].with_name(sl["dir"].name + "_repair_1")
+            sl["repair"] = rd
+            if self._jpath is not None and f"spawn:{rd}" in self._jmemo:
+                continue  # a continuation: the repair session ran; its files are the agent's, not copies
             rd.mkdir(parents=True, exist_ok=True)
             for f in ("candidate.py", "hypothesis.md", "model_name.txt"):
                 if (sl["dir"] / f).exists():
                     shutil.copyfile(sl["dir"] / f, rd / f)
-            sl["repair"] = rd
             jobs.append((rd, self._docs_for(rd, sl["role"], sl["lens"], round_index, s, incumbent,
                                             briefs.repair_note(reason), critiques)))
         self._spawn_all(jobs)
@@ -701,8 +813,9 @@ class OpenLoop:
                 # Run C′: a repair session spent its hour on fits of its own and left the file as it was;
                 # refitting the same file can only fail the same way.
                 why = "the repair left candidate.py unchanged, so the rejection stands: " + reason
-                self._ledger(sl["dir_name"] + "_repair", "rejected", why, _read(sl["repair"] / "hypothesis.md"),
-                             sl["context"] + " repair 1")
+                self._memo(f"ledger:unchanged:{sl['repair']}", lambda sl=sl, why=why: self._ledger(
+                    sl["dir_name"] + "_repair", "rejected", why, _read(sl["repair"] / "hypothesis.md"),
+                    sl["context"] + " repair 1"))
                 events.append(dict(slot=sl["i"] + 1, role=sl["role"], name=None, outcome="rejected", reason=why,
                                    repair=True))
             else:
@@ -806,7 +919,11 @@ class OpenLoop:
         ``ledger_tail.jsonl``), theories it admitted leave the set (their files stay in the round's
         directory), a theory the end had pruned is put back, and the round's directory becomes
         ``round_<k>_abandoned_<i>``, so the round runs again from its agents. Fits come back from
-        the cache; the admission limit is the one recorded."""
+        the cache; the admission limit is the one recorded.
+
+        A step's continuation is the exception: a round with a journal (``round_<k>/journal.json``,
+        step mode only) is continued, not abandoned. Its ledger lines stay, the theories it admitted
+        stay live, and `run_round` replays it from the journal (`_memo`)."""
         hist_path = self.dir / "history.json"
         if not hist_path.exists():
             raise FileNotFoundError(f"{hist_path} not found: the loop stopped before its seeds were scored")
@@ -821,7 +938,9 @@ class OpenLoop:
         next_round = last["round"] + 1
         partial = self.dir / f"round_{next_round + 1}"
         aside = None
-        if partial.exists():
+        journal = partial / "journal.json"
+        cont = json.loads(journal.read_text()) if self._step_mode() and journal.exists() else None
+        if partial.exists() and cont is None:
             k = 1
             while (self.dir / f"round_{next_round + 1}_abandoned_{k}").exists():
                 k += 1
@@ -832,15 +951,20 @@ class OpenLoop:
         if len(lines) < last["ledger_entries"]:
             raise ValueError(f"{ledger_path} has {len(lines)} entries, fewer than the "
                              f"{last['ledger_entries']} recorded at step {last['step']}")
-        tail = lines[last["ledger_entries"]:]
+        tail = [] if cont is not None else lines[last["ledger_entries"]:]
         if tail:
             where = aside or self.dir
             _write_atomic(where / ("ledger_tail.jsonl" if aside else f"ledger_tail_step_{last['step']}.jsonl"),
                           "".join(ln + "\n" for ln in tail))
-        _write_atomic(ledger_path, "".join(ln + "\n" for ln in lines[:last["ledger_entries"]]))
+        if cont is None:
+            _write_atomic(ledger_path, "".join(ln + "\n" for ln in lines[:last["ledger_entries"]]))
         self.ledger = HypothesisLedger(ledger_path)
         self.ledger.entries()  # parses, or raises
         live = {e["name"]: e for e in last["live"]}
+        for key, r in (cont or {}).items():  # the continued round's admissions, in the order it made them
+            if key.startswith("admit:") and r["ok"]:
+                live[r["name"]] = {"name": r["name"], "source": r["context"],
+                                   "hypothesis": _read(Path(key[len("admit:"):]) / "hypothesis.md")}
         pruned_dir = self.models_dir / "pruned"
         for name in live:
             if not (self.models_dir / f"{name}.py").exists() and (pruned_dir / f"{name}.py").exists():
@@ -877,7 +1001,8 @@ class OpenLoop:
         self.step = last["step"] + 1
         print(f"[open loop] resumed after step {last['step']} (round {last['round'] + 1} of {self.cfg.max_iterations}"
               f" scored; {len(self.live)} live theories)" + (f"; the unfinished round is kept as {aside.name}"
-                                                             if aside else ""), flush=True)
+                                                             if aside else "")
+              + (f"; continuing round {next_round + 1} from its journal" if cont is not None else ""), flush=True)
         return next_round
 
     def _time_for_round(self, r: int) -> None:
@@ -887,6 +1012,13 @@ class OpenLoop:
         if left < self.cfg.round_min_hours:
             raise LoopOutOfTime(f"round {r + 1} of {self.cfg.max_iterations}: {left:.1f} h of the job left, under the "
                                 f"{self.cfg.round_min_hours:g} h a round needs; the next job resumes the loop")
+
+    def _score_chance_and_standing(self) -> None:
+        """The chance theory's folds; in step mode together with the live theories' (one array)."""
+        if self._step_mode():
+            collect_pending([self.score_chance, self.standing])
+        else:
+            self.score_chance()
 
     def run(self, resume: bool = False) -> dict:
         try:
@@ -901,10 +1033,10 @@ class OpenLoop:
                 last = self.history[-1]
                 stopped = next((e["reason"] for e in last["events"] if e.get("outcome") == "stopped"), None)
                 return self._export(last, stopped)
-            self.score_chance()
+            self._score_chance_and_standing()
         else:
             self.setup()
-            self.score_chance()
+            self._score_chance_and_standing()
             self.score(-1, [dict(outcome="seeded", name=n) for n in self.live])
             first = 0
         patience = self.cfg.stop_after_stale_rounds

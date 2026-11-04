@@ -323,8 +323,15 @@ class Chain:
             take = np.unique(np.linspace(0, total - 1, min(total, DESIGN_DRAWS)).round().astype(int))
             return name, (path, {k: flat[k][take] for k in TheoryModel(path, name=name).params}), source
 
-        with ThreadPoolExecutor(max_workers=max(1, min(len(items), default_fit_workers()))) as pool:
-            results = list(pool.map(one, items))
+        from src.rsa_open.loop import slurm as step
+
+        if step.active() is not None:  # a step: every design fit not done goes in one array
+            from src.rsa_open.loop.fit_array import collect_pending
+
+            results = collect_pending([lambda item=item: one(item) for item in items])
+        else:
+            with ThreadPoolExecutor(max_workers=max(1, min(len(items), default_fit_workers()))) as pool:
+                results = list(pool.map(one, items))
         screened = [{"theory": name, "reason": why} for name, ctx, why in results if ctx is None]
         sources = {name: why for name, ctx, why in results if ctx is not None}
         (self.exp(n)).mkdir(parents=True, exist_ok=True)
@@ -481,7 +488,7 @@ class Chain:
             return json.loads((loop_dir / "export.json").read_text())
         resume = (loop_dir / "history.json").exists()  # a scored step: resume from it
         if not resume:
-            set_aside(loop_dir, keep=(".fit_cache",))
+            set_aside(loop_dir, keep=(".fit_cache", ".scores"))
         corpus = fresh_corpus(self.exp(n) / "corpus.json", self.blocks_before(n + 1))
         notes = {}
         for k in range(1, n + 1):

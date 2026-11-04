@@ -142,6 +142,50 @@ rehearsal from small to large; then one amendment (infrastructure, plus B1 if it
   checks the ledger, history and export of a crashed-and-resumed loop against an uninterrupted one,
   with the restore made to fail if it recomputes any score or loads any fit.
 
+**The Sherlock session's last tests** (review §10, 2026-11-04): B1 (folds reuse the full fit's
+adaptation) kept the winner, the order and the prunes on chain 1's leading theories, with
+differences the size of a different seed's, and saved about 45% of fold compute on one partition
+(9.7 to 4.4-5.7 fit-hours for 25 folds). Folds on the loaded lab node ran 2-3 times slower than on
+`normal` (unexplained; perhaps memory bandwidth), which the arrays' throttle and `owners` overflow
+absorb. A5 is not yet prototyped. B1 stays a PI decision for the amendment.
+
+**Step mode as built** (2026-11-04; off unless `STEP_MODE=1`, so local runs are unchanged):
+- *Fits* (`src/rsa_open/loop/fit_array.py`, `scripts/rsa/slurm/fit_array.sbatch`). With
+  `RSA_OPEN_FIT_BACKEND=slurm` a fit that isn't done raises `FitPending`; the loop collects a
+  phase's pending fits (`collect_pending`) and raises `FitsPending`. An array task runs the local
+  backend's own child (time limit, peak memory) and writes `<fit>.mem<GB>.result.json`; the next
+  step reads it as the local backend's outcome (ok, the theory's failure, timeout, killed: retried
+  at 36 GB). A fit submitted twice with no result is an infrastructure failure. Tasks get
+  `--export=NONE` and three paths, never `.secrets`.
+- *Submission* (`src/rsa_open/loop/slurm.py`). One held array per memory size on `mcfrank,owners`,
+  `-C CPU_GEN:SIE`, throttled at 24; then the continuation (`afterany` on every array the step
+  submitted, early ones included, and `singleton` on the chain's job name); then release; one line
+  in `<cell>/steps.jsonl`. It refuses, writing STOP (and so mail), when the cell is stopped, after
+  80 steps, or with over 1,500 jobs queued; a failed call cancels what was submitted and STOPs.
+- *Rounds as phases* (`orchestrator.py`). In step mode a round keeps a journal,
+  `round_<k>/journal.json`: the round's starting standing and critique, every agent session, name,
+  admission and ledger rejection, each written the moment it is known. Each step replays the round
+  from the journal (no agent runs twice, no ledger line is written twice) up to the next phase whose
+  fits aren't done: the first candidates (submitted while the retry agents work), the retries, the
+  admitted theories' folds (submitted before the repair agents start), the repairs, and the scoring.
+  A resume continues a journaled round instead of setting it aside. Setup puts the chance theory's
+  fit in the seeds' array. The design's fits (`chain.design_context`) are one array too.
+- *The step job* (`open_live.sbatch`, `open_rehearsal.sbatch`, `_step_mode.sh`). Each step writes
+  `<cell>/continuation.sh` (submits the same script as from a login shell, `--no-requeue`, on
+  `mcfrank`, 8 cores, 32 GB, 2 days) and `<cell>/step_settings.sh` (the chain's settings, sourced
+  by the next step: `sbatch --export` cannot carry `mcfrank,owners`). `run_chain` exits 6 when it
+  handed over (the job exits 0), 7 when it refused (STOP written, mail), and 5 when paused for time
+  (the step submits its own continuation). A step that dies leaves no continuation: Slurm's FAIL or
+  TIME_LIMIT mail, and `python -m src.rsa_open.status` shows the chain idle; relaunching resumes it.
+  `open_launch.sh` takes `STEP_MODE=1` (one job per chain, no ladder).
+- *Tests.* Fast: `test_rsa_open_fit_array.py`, `test_rsa_open_step_submit.py`,
+  `test_rsa_open_step_journal.py`, `test_rsa_open_step_chain.py` (exit codes, the mode's guards,
+  and a live chain re-run from its start by every step deploying and publishing once),
+  `test_rsa_open_step_scripts.py` (the continuation against a stand-in sbatch). Slow, on Sherlock:
+  `test_rsa_open_step_equivalence.py`, a two-round loop run as steps (arrays run locally between
+  them, a fresh loop object each step, the local backend made to fail if called) against the same
+  loop run straight through: the same ledger, history and export, and each agent called once.
+
 ## Appendix: v2 and v1, kept for the record (superseded where §0a-§0b say otherwise)
 
 ## 0. What changed in v2, and what waits for SRCC

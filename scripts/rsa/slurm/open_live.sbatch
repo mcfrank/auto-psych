@@ -42,10 +42,22 @@
 # PI 2026-10-29). Participant ids are the campaign's; the raw responses (Prolific ids) stay in
 # $CELL_DIR/private and the campaign directory, on Sherlock.
 #
+# **Step mode** (STEP_MODE=1; DISTRIBUTED_DESIGN.md v3 §0b): the job is one *step* of the chain.
+# It never fits: when a phase needs fits it submits them as held arrays of single-core jobs
+# (fit_array.sbatch, on $STEP_FIT_PARTITION), then this chain's next step after them through
+# $CELL_DIR/continuation.sh (written below; afterany on the arrays, singleton on the chain's job
+# name), releases the arrays and exits 0 (run_chain's exit 6). A step that refuses to submit (the
+# cell stopped, its step budget spent, the queue full) has written STOP and exits 7, which mails.
+# A step paused for time (exit 5) submits its own continuation. Steps are not requeued, and a step
+# that dies leaves no continuation: Slurm's FAIL / TIME_LIMIT mail reaches the PI, and the
+# status command shows the chain idle (relaunch it with the launcher; it resumes).
+#
 # Overrides: CONFIG (scripts/rsa/live/open_live.yaml), N_EXPERIMENTS (4), MAX_ITERATIONS (5),
 # CANDIDATES (6), CV_FOLDS (5), PILOT_PARTICIPANTS (12), THEORIST_TIMEOUT_SEC (3600), SEED (0),
 # RUN2_ROOT (E's source), CODE_TAG (the frozen tag the staged code must be).
 set -euo pipefail
+# A step's continuation (step mode, _step_mode.sh): the chain's settings, as the first step had them.
+if [[ -n "${STEP_SETTINGS:-}" ]]; then source "$STEP_SETTINGS"; fi
 export REPO="${REPO:-${SLURM_SUBMIT_DIR:-$HOME/auto-psych}}"
 export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/rsa_open_live}"
 source "$REPO/scripts/rsa/slurm/_env.sh"
@@ -71,6 +83,9 @@ if [[ -n "${PARTICIPANTS:-}" ]]; then
   [[ -n "${SMOKE_FROM:-}" ]] || { echo "FATAL: a smoke test (PARTICIPANTS) needs SMOKE_FROM, a frozen design to field" >&2; exit 1; }
   SMOKE=_smoke
 fi
+STEP_MODE="${STEP_MODE:-0}"
+[[ "$STEP_MODE" == 0 || "$STEP_MODE" == 1 ]] || { echo "FATAL: STEP_MODE must be 0 or 1, not $STEP_MODE" >&2; exit 1; }
+[[ "$STEP_MODE" == 1 && -n "$SMOKE" ]] && { echo "FATAL: a smoke test fits nothing; run it without STEP_MODE" >&2; exit 1; }
 CELL="${ARM}_chain_$CHAIN$SMOKE"
 CELL_DIR="$CELLS_ROOT/$CELL"
 if [[ -f "$CELL_DIR/STOP" ]]; then
@@ -190,6 +205,15 @@ if [[ -n "${SLURM_JOB_ID:-}" ]]; then
   if [[ -n "$end" && "$end" != "N/A" ]]; then DEADLINE_FLAG=(--job-deadline "$(date -d "$end" +%s)"); fi
 fi
 
+# --- step mode: this chain's next step, and where its fits go --------------------------------
+STEP_ENV=()
+if [[ "$STEP_MODE" == 1 ]]; then
+  source "$SLURM_DIR/_step_mode.sh"
+  rsa_step_mode "$REPO/scripts/rsa/slurm/open_live.sbatch" PROLIFIC_MODE CONFIG ARM CHAIN N_EXPERIMENTS MAX_ITERATIONS \
+    CANDIDATES CV_FOLDS PILOT_PARTICIPANTS THEORIST_TIMEOUT_SEC SEED RUN2_ROOT CODE_TAG CONFIRM_LIVE_RECRUITMENT
+  DEADLINE_FLAG=()  # a step ends when its fits are submitted; a stage paused for time continues as a step
+fi
+
 # --- the chain ----------------------------------------------------------------------------
 WITHHELD=()
 for name in $(compgen -e); do
@@ -203,7 +227,7 @@ for name in ${WITHHELD[@]+"${WITHHELD[@]}"}; do UNSET_ARGS+=(-u "$name"); done
 echo "[open live] $CELL: $PROLIFIC_MODE, $N_EXPERIMENTS experiments, site $AUTO_PSYCH_HOSTING_SITE, code $(cat "$WORK_ROOT/code_commit")${CODE_TAG:+ ($CODE_TAG)} -> $RUN_DIR"
 cd "$HARNESS_REPO"
 set +e
-env ${UNSET_ARGS[@]+"${UNSET_ARGS[@]}"} PATH="$RUN_REPO/.agent_bin:$PATH" \
+env ${UNSET_ARGS[@]+"${UNSET_ARGS[@]}"} PATH="$RUN_REPO/.agent_bin:$PATH" ${STEP_ENV[@]+"${STEP_ENV[@]}"} \
   "$AGENT_PY" -m src.rsa_open.run_chain --chain "$CHAIN" --arm "$ARM" --run-dir "$RUN_DIR" \
     --private-dir "$CELL_DIR/private" --campaign-dir "$CAMPAIGN_DIR" --agent-root "$RUN_REPO" \
     --literature "$EXISTING" --seeds "$WORK_ROOT/open_seeds" --collection live --prolific-mode "$PROLIFIC_MODE" \
@@ -225,6 +249,12 @@ case "$rc" in
   0) date -Is > "$CELL_DIR/DONE"; stop "finished"; exit 10 ;;
   3) stop "awaiting the PI's review of experiment 1's paradigm: python -m src.rsa_open.review --frozen $RUN_DIR/experiment1/design/frozen --by <name>; then relaunch with CLEAR_STOP=1"; exit 13 ;;
   4) stop "test deploy done: the page and a Prolific draft are up (see the log); relaunch live with CLEAR_STOP=1"; exit 14 ;;
-  5) echo "[open live] $CELL: paused for the next job of its ladder (too little of this job left for the next stage)" ;;
+  5|6|7) if [[ "$STEP_MODE" == 1 ]]; then
+           rsa_step_exit "$rc" || exit $?
+         elif [[ "$rc" == 5 ]]; then
+           echo "[open live] $CELL: paused for the next job of its ladder (too little of this job left for the next stage)"
+         else
+           stop "failed (exit $rc outside step mode, job ${SLURM_JOB_ID:-local})"; exit "$rc"
+         fi ;;
   *) stop "failed (exit $rc, job ${SLURM_JOB_ID:-local}): a person looks before it resumes (PREREG_DRAFT.md §4a)"; exit "$rc" ;;
 esac

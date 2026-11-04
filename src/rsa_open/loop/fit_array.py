@@ -127,7 +127,10 @@ def job_record(p: FitPending) -> Dict[str, Any]:
     j = p.job
     return {"theory_path": str(j.theory_path), "name": j.name, "corpus_path": str(j.corpus_path),
             "settings": asdict(j.settings), "nc_path": str(j.nc_path), "meta_path": str(j.meta_path),
-            "time_limit_sec": j.time_limit_sec, "init": j.init, "mem_gb": p.mem_gb}
+            "time_limit_sec": j.time_limit_sec, "mem_gb": p.mem_gb,
+            # a fold's warm start (numpy scalars from the full fit's draws); float() is exact, so the
+            # task starts where the local child would have, under the same fingerprint
+            "init": None if j.init is None else {k: float(v) for k, v in j.init.items()}}
 
 
 def job_from_record(r: Mapping[str, Any]) -> FitJob:

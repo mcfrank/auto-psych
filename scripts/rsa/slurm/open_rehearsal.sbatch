@@ -44,6 +44,8 @@
 # the same data, PI 2026-10-24). Copy that rehearsal's private/ground_truth into this WORK_ROOT
 # first: the replayed data were simulated from it.
 set -euo pipefail
+# A step's continuation (step mode, _step_mode.sh): the chain's settings, as the first step had them.
+if [[ -n "${STEP_SETTINGS:-}" ]]; then source "$STEP_SETTINGS"; fi
 export REPO="${REPO:-${SLURM_SUBMIT_DIR:-$HOME/auto-psych}}"
 export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/rsa_open_rehearsal}"
 source "$REPO/scripts/rsa/slurm/_env.sh"
@@ -57,9 +59,19 @@ command -v flock >/dev/null || { echo "FATAL: no flock" >&2; exit 1; }
   echo "FATAL: the venv cannot run the open campaign; on a login node: source scripts/rsa/slurm/_env.sh &&" \
        "source scripts/_venv.sh && build_shared_venv" >&2; exit 1; }
 
-TASK="${SLURM_ARRAY_TASK_ID:?run as an array task}"
-read -r -a CHAIN_LIST <<< "${CHAINS:-0}"
-CHAIN="${CHAIN_LIST[$TASK]:?array task $TASK has no chain in CHAINS=${CHAINS:-0}}"
+STEP_MODE="${STEP_MODE:-0}"
+if [[ "$STEP_MODE" == 1 ]]; then
+  # Step mode (DISTRIBUTED_DESIGN.md v3 §0b; _step_mode.sh): one plain job per chain, named for it
+  # (steps of a chain are singletons by name), e.g.
+  #   STEP_MODE=1 CHAIN=0 sbatch --job-name=rsa_open_reh_c0 --partition=mcfrank --cpus-per-task=8 --mem=32G \
+  #     --time=2-00:00:00 --no-requeue scripts/rsa/slurm/open_rehearsal.sbatch
+  [[ -z "${SLURM_ARRAY_TASK_ID:-}" ]] || { echo "ERROR: step mode runs one plain job per chain, not an array" >&2; exit 1; }
+  CHAIN="${CHAIN:?step mode needs CHAIN}"
+else
+  TASK="${SLURM_ARRAY_TASK_ID:?run as an array task}"
+  read -r -a CHAIN_LIST <<< "${CHAINS:-0}"
+  CHAIN="${CHAIN_LIST[$TASK]:?array task $TASK has no chain in CHAINS=${CHAINS:-0}}"
+fi
 N_EXPERIMENTS="${N_EXPERIMENTS:-4}"
 MAX_ITERATIONS="${MAX_ITERATIONS:-5}"
 CANDIDATES="${CANDIDATES:-6}"
@@ -160,6 +172,14 @@ if [[ -n "${REPLAY_FROM:-}" ]]; then
 fi
 
 # --- the chain ----------------------------------------------------------------------
+STEP_ENV=()
+if [[ "$STEP_MODE" == 1 ]]; then
+  [[ ! -f "$CELL_DIR/STOP" ]] || { echo "[open rehearsal] $CELL is stopped: $(cat "$CELL_DIR/STOP")"; exit 0; }
+  source "$SLURM_DIR/_step_mode.sh"
+  rsa_step_mode "$REPO/scripts/rsa/slurm/open_rehearsal.sbatch" ARM CHAIN FIXED_SPEC LITERATURE N_EXPERIMENTS \
+    MAX_ITERATIONS CANDIDATES CV_FOLDS PILOT_PARTICIPANTS THEORIST_TIMEOUT_SEC SEED RUN2_ROOT
+fi
+
 WITHHELD=()
 for name in $(compgen -e); do
   value="${!name}"
@@ -173,16 +193,26 @@ echo "[open rehearsal] withheld from the agents' environment: ${WITHHELD[*]:-}"
 echo "[open rehearsal] $ARM arm, chain $CHAIN, $N_EXPERIMENTS experiments, $MAX_ITERATIONS rounds of $CANDIDATES theorists," \
      "$CV_FOLDS folds, literature ${LITERATURE:-all} ($EXISTING) -> $RUN_DIR"
 cd "$HARNESS_REPO"
-env ${UNSET_ARGS[@]+"${UNSET_ARGS[@]}"} PATH="$RUN_REPO/.agent_bin:$PATH" \
+set +e
+env ${UNSET_ARGS[@]+"${UNSET_ARGS[@]}"} PATH="$RUN_REPO/.agent_bin:$PATH" ${STEP_ENV[@]+"${STEP_ENV[@]}"} \
   "$AGENT_PY" -m src.rsa_open.run_chain --chain "$CHAIN" --arm "$ARM" --run-dir "$RUN_DIR" --private-dir "$GT_DIR" \
     --agent-root "$RUN_REPO" --literature "$EXISTING" --seeds "$WORK_ROOT/open_seeds" \
     --n-experiments "$N_EXPERIMENTS" --max-iterations "$MAX_ITERATIONS" --candidate-count "$CANDIDATES" \
     --pilot-participants "$PILOT_PARTICIPANTS" --cv-folds "$CV_FOLDS" --theorist-timeout-sec "$THEORIST_TIMEOUT_SEC" --seed "$SEED" \
     ${SPEC_FLAG[@]+"${SPEC_FLAG[@]}"} \
     --code-commit "$(cat "$WORK_ROOT/code_commit")"
+rc=$?
+set -e
 
 # --- outputs: the run without fit caches; where agents' files name the truth ----------
 rsync -a --delete --exclude '.fit_cache/' --exclude '.home/' --exclude '.agent_shell/' "$RUN_DIR"/ "$CELL_DIR/outputs"/
+if [[ "$rc" != 0 ]]; then
+  if [[ "$STEP_MODE" == 1 ]]; then
+    rsa_step_exit "$rc" || exit $?
+    exit 0
+  fi
+  exit "$rc"
+fi
 grep -rIlw -- "$GT" "$RUN_DIR"/experiment*/loop/round_* "$RUN_DIR"/experiment*/design/cycle_*/work \
   > "$CELL_DIR/gt_name_mentions.txt" 2>/dev/null || true
 date -Is > "$CELL_DIR/DONE"

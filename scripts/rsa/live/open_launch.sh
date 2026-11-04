@@ -22,6 +22,11 @@
 # writes the cell's STOP, and the ladder's later jobs exit at once. A stopped chain is relaunched
 # only with CLEAR_STOP=1 (its STOP is kept as STOP.<time>).
 #
+# STEP_MODE=1 runs the chain as steps instead (DISTRIBUTED_DESIGN.md v3 §0b; open_live.sbatch):
+# one job per chain on $STEP_PARTITION (mcfrank), 8 cores and 32 GB, never requeued; it fits nothing
+# itself, submits its fits as arrays of single-core jobs (STEP_FIT_PARTITION, mcfrank,owners) and
+# the chain's next step after them, so there is no ladder (LINKS is ignored).
+#
 # Slurm mails the submitter when a job stops for a person or fails (open_live.sbatch's exit codes);
 # MAIL_USER sends it elsewhere, MAIL_TYPE=NONE turns it off. `python -m src.rsa_open.status` shows
 # every chain at once.
@@ -40,13 +45,21 @@ source "$REPO/scripts/rsa/slurm/_env.sh"
 cd "$REPO"
 SMOKE=""
 SIZE=()
+STEP_MODE="${STEP_MODE:-0}"
+if [[ "$STEP_MODE" == 1 ]]; then
+  [[ -z "${PARTICIPANTS:-}" ]] || { echo "not launched: a smoke test fits nothing; run it without STEP_MODE" >&2; exit 1; }
+  PARTITION="${STEP_PARTITION:-mcfrank}" TIME="${STEP_TIME:-2-00:00:00}" LINKS=1
+  SIZE=(--cpus-per-task="${STEP_CPUS:-8}" --mem="${STEP_MEM:-32G}" --no-requeue)
+elif [[ "$STEP_MODE" != 0 ]]; then
+  echo "not launched: STEP_MODE must be 0 or 1" >&2; exit 1
+fi
 if [[ -n "${PARTICIPANTS:-}" ]]; then
   SMOKE=_smoke
   SIZE=(--cpus-per-task=4 --mem=16G)  # a smoke test deploys and collects: no fits (run C′'s report)
 fi
 "$VENV_PY" -m src.rsa_open.live --config "$CONFIG" --check --arm "$ARM" --chains "${CHAIN_LIST[@]}" \
   --n-experiments "$([[ -n "$SMOKE" ]] && echo 1 || echo "$N_EXPERIMENTS")" ${PARTICIPANTS:+--participants "$PARTICIPANTS"}
-echo "mode: $PROLIFIC_MODE${SMOKE:+ (smoke test: $PARTICIPANTS people, never modelled)}; $LINKS job(s) of $TIME on $PARTITION per chain" >&2
+echo "mode: $PROLIFIC_MODE${SMOKE:+ (smoke test: $PARTICIPANTS people, never modelled)}; $LINKS job(s) of $TIME on $PARTITION per chain$([[ "$STEP_MODE" == 1 ]] && echo ", as steps (fits as arrays on ${STEP_FIT_PARTITION:-mcfrank,owners})")" >&2
 
 EXTRA_ENV=()
 if [[ "$PROLIFIC_MODE" == "live" ]]; then
@@ -80,7 +93,7 @@ for chain in "${CHAIN_LIST[@]}"; do
   dep=()
   for ((link = 1; link <= LINKS; link++)); do
     id="$(env ${EXTRA_ENV[@]+"${EXTRA_ENV[@]}"} PROLIFIC_MODE="$PROLIFIC_MODE" CONFIG="$CONFIG" WORK_ROOT="$WORK_ROOT" \
-          ARM="$ARM" CHAIN="$chain" N_EXPERIMENTS="$N_EXPERIMENTS" \
+          ARM="$ARM" CHAIN="$chain" N_EXPERIMENTS="$N_EXPERIMENTS" STEP_MODE="$STEP_MODE" \
           ${PARTICIPANTS:+PARTICIPANTS="$PARTICIPANTS"} ${SMOKE_FROM:+SMOKE_FROM="$SMOKE_FROM"} \
           sbatch --parsable --chdir="$REPO" --partition="$PARTITION" --time="$TIME" ${SIZE[@]+"${SIZE[@]}"} \
             ${MAIL_TYPE:+--mail-type="$MAIL_TYPE"} ${MAIL_USER:+--mail-user="$MAIL_USER"} \

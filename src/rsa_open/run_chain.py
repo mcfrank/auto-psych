@@ -40,6 +40,8 @@ THEORIST_MODEL = DESIGNER_MODEL  # Gemini 4 for every agent, theorists and criti
 EXIT_AWAITING_REVIEW = 3
 EXIT_DRAFT_ONLY = 4
 EXIT_OUT_OF_JOB_TIME = 5
+STEP_MODE_ENV = "RSA_OPEN_STEP_MODE"
+"""``1``: this job is one step of the chain (`src.rsa_open.loop.slurm`; open_live.sbatch STEP_MODE=1)."""
 
 
 
@@ -146,6 +148,26 @@ def build(args: Args) -> Chain:
     return Chain(cfg, designer_spawn=designer, theorist_spawn=theorists)
 
 
+def step_from_env():
+    """This job's `Stepper` in step mode (activated for the loop), else None. Step mode needs the
+    slurm fit backend, and the slurm backend needs step mode: a run never mixes them."""
+    import os
+
+    from src.rsa_open.loop import slurm as step
+    from src.rsa_open.loop.fitting import FIT_BACKEND_ENV
+
+    on = os.environ.get(STEP_MODE_ENV, "") == "1"
+    backend = os.environ.get(FIT_BACKEND_ENV, "local") or "local"
+    if on != (backend == "slurm"):
+        raise RuntimeError(f"{STEP_MODE_ENV}={os.environ.get(STEP_MODE_ENV, '')!r} with {FIT_BACKEND_ENV}={backend!r}: "
+                           "step mode and the slurm fit backend go together (scripts/rsa/slurm/open_live.sbatch)")
+    if not on:
+        return None
+    stepper = step.Stepper(step.StepConfig.from_env())
+    step.activate(stepper)
+    return stepper
+
+
 def main(args: Args) -> list:
     from src.runtime.token_usage import read_usage_log, start_usage_log, write_usage_report
 
@@ -155,10 +177,27 @@ def main(args: Args) -> list:
     from src.rsa.live.collect import DraftOnly
     from src.rsa_open.live import AwaitingReview
 
+    from src.rsa_open.loop import slurm as step
+    from src.rsa_open.loop.fit_array import FitsPending
+
+    stepper = step_from_env()
     usage_log = Path(args.run_dir) / "token_usage.jsonl"
     marker = start_usage_log(usage_log)
     try:
         exports = build(args).run()
+    except FitsPending as pending:
+        if stepper is None:  # only a step's fit backend leaves fits pending
+            raise RuntimeError("fits are pending outside step mode (RSA_OPEN_FIT_BACKEND=slurm without "
+                               f"{STEP_MODE_ENV}=1)") from pending
+        try:
+            stepper.yield_step(pending, reason=f"{len(pending.pending)} fit(s)")
+        except step.StepYield as y:
+            print(f"[chain] STEP: {len(pending.pending)} fit(s) pending; continues in job {y.record['continuation']} "
+                  f"after arrays {y.record['arrays'] + y.record['after_early']}", flush=True)
+            raise SystemExit(step.EXIT_YIELD)
+        except step.StepRefused as refused:
+            print(f"[chain] STOPPED, the step did not submit: {refused}", flush=True)
+            raise SystemExit(step.EXIT_REFUSED)
     except AwaitingReview as stop:
         print(f"[chain] STOPPED, awaiting the PI's review: {stop}", flush=True)
         raise SystemExit(EXIT_AWAITING_REVIEW)
@@ -168,7 +207,11 @@ def main(args: Args) -> list:
     except OutOfJobTime as stop:
         print(f"[chain] PAUSED: {stop}", flush=True)
         raise SystemExit(EXIT_OUT_OF_JOB_TIME)
+    except step.StepRefused as refused:  # an early submission refused (its STOP is written)
+        print(f"[chain] STOPPED, the step did not submit: {refused}", flush=True)
+        raise SystemExit(step.EXIT_REFUSED)
     finally:
+        step.activate(None)
         records = read_usage_log(usage_log) if usage_log.exists() else []
         write_usage_report(Path(args.run_dir), marker, heading="RSA open chain", records=records)
         from src.rsa_open.spend import write_estimates
