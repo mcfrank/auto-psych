@@ -4,14 +4,21 @@ Written by Claude Opus 5.5 (the Sherlock session) from chain 1's round 4-5 logs,
 --test-only` and the test jobs of 2026-11-03 (§10); not reviewed by a person. I've read only v3's summary of SRCC's reply, not
 the reply itself.
 
-**Update after the tests (§10).** Three results change the plan, and each corrects something I wrote below:
+**Update after the tests (§10).** Five results change the plan, and each corrects something I wrote below or earlier:
 
 1. **Most of a fit's memory is compilation.** With compiled code loaded from the cache, a fit peaks at about 5.5 GB rather
    than about 15 GB, with an identical posterior. A compile step of its own could lift the memory limit (A5).
-2. **Folds that reuse the full fit's adaptation took about a third of the time or less** (3 times faster on one theory, 9 on
-   the other), with no convergence problems. It's the largest compute saving found, about half of all fitting if it holds. It
-   needs a registered amendment and one more test first (B1, §10).
+2. **Folds that reuse the full fit's adaptation took about 40-47% less time than the same folds at the chain's settings on the same
+   partition**, on 5 theories with no convergence problems, which is about a third of all fitting. I first said "a third of
+   the time or less" and "about half of all fitting", from comparing with the chain's own times; that overstated it (B1, §10).
+   Scores moved no more than a new seed moves them, and the winner and order held, so the extra test B1 needed has passed. It
+   still needs a registered amendment.
 3. **Parallel chains gave little, not the 4 times I estimated** (B2). `normal` is usable, against my advice in §4.
+4. **Compilation is also most of a B1 fold:** about 9 of 15 min and 10 of 13.5 GB, on the one theory where I could separate it.
+   That makes A5 and A6 the next-largest saving.
+5. **The chain's folds ran about 2-3 times slower than the same folds on `normal`,** at about the same number of steps. I don't
+   know why (§10). If it's load on the lab node, running folds as separate jobs gains about that much with no change to the
+   sampler.
 
 Saving CV scores to disk would remove nearly all of a restart's cost, which is what made §2's steps expensive (A1).
 
@@ -176,24 +183,24 @@ Most of the size estimates below are **estimates, not measurements**, and I'd te
 | A3 | Find what makes up a fit's 12-14 GB | **done:** compilation. Memory reaches about 12.7 GB within 8 min and stays there through sampling; with a cache hit the whole fit peaks at 4.9 GB (`VmHWM`; 5.5 GB by Slurm) | see A5 |
 | A4 | ~~A persistent JAX compilation cache~~ | **withdrawn, my error:** `_env.sh` has had one since 2026-10-09 (the chain's is 16 GB). It doesn't help a first compile, and each fit's appears to be a first compile | none |
 | A5 | **New: compile in a short process of its own, then sample in a fresh one that loads from the cache** | cached and compiled fits have **identical posteriors (largest difference 0.0 over 12 parameters)** and identical step counts, and the cached ones took 60 min against 70-74. Not built; numpyro compiles its warmup and sampling loops separately, so the way to compile without sampling needs a prototype | **sampling at about 5.5 GB instead of 15:** about 24 fits on a 24-CPU node rather than 8-9, and 1 CPU rather than 3 charged on `normal` for that part. Only for theories that compile like this one; the other theory tested peaks at 3.6-4.4 GB anyway |
-| A6 | **New: one compile for a theory's folds**, if the data can be passed as arguments rather than compiled in | compile looks like most of a B1 fold: 13.7-18.8 min at warmup 50 and 100 alike, so warmup isn't what's left. My estimate: 5-10 min a compile. Not tested, and the folds' differing sizes need handling | possibly half of a B1 fold again |
+| A6 | **New: one compile for a theory's folds**, if the data can be passed as arguments rather than compiled in | **measured on one theory:** rerunning 5 B1 folds with a cache hit took 5.4-7.3 min at 3.7-3.9 GB, against 14.9-15.7 min at 10.9-13.5 GB with a compile. So a compile is about 9 min and 10 GB of such a fold. One compile across folds isn't tested, and the folds' differing sizes need handling. The seed appears to be part of the compiled program: a new seed missed the cache | possibly half of a B1 fold again, and the memory limit with it |
 
 ### B. Draws change, scores shouldn't: needs testing and a registered amendment
 
 | | change | evidence | gain |
 |---|---|---|---|
-| B1 | **Folds reuse the full fit's adapted mass matrix and step size**, with a short warmup | **measured (§10):** 45-50 to 14-19 min on one theory, 64-73 to 6-9 min on another, 15 of 15 with no convergence problems. A mass matrix affects efficiency, not the target posterior. Needs the full fit to save its adaptation, which it doesn't now | **about half of all fit compute** if the two theories are typical; shorter stragglers |
+| B1 | **Folds reuse the full fit's adapted mass matrix and step size**, with a short warmup | **measured (§10), against the same folds at chain settings on `normal`:** 22-25 to 13-17 min on three theories, 24 to 7-8 min on a fourth; 9.7 fit-hours to 5.7 over 25 folds of 5 theories (seed 1; seed 0's 4.4 includes a cache hit, about 5.2 without it), 65 of 65 with no convergence problems. Scores moved within seed noise; winner and order unchanged. A mass matrix affects efficiency, not the target posterior. Needs the full fit to save its adaptation, which it doesn't now | **about a third of fit compute** (about 40-47% of the folds, which are 77% of it); shorter stragglers |
 | B2 | ~~Parallel chains: 4 CPUs a fit~~ **Sequential chains on 1 CPU instead** | **measured:** parallel took 51-52 min on 4 CPUs with only 1.7-1.8 busy on average, against 59-63 min for sequential on 1 CPU and 77 for today's vectorized. **My estimate of 4 times shorter was wrong.** The single-thread XLA flags may be limiting the parallel test; I haven't checked. Sequential saves warmup only (33-35 min against 50) | **sequential: about 20% of a full fit**, on one theory, different random numbers; less under B1, untested |
 | B3 | Fewer fold draws, 250 a chain | folds draw 2,000 and score 400 (`MAX_HELDOUT_DRAWS`). **Measured by thinning one step's saved folds:** at 250, same winner and top 5, largest score change 0.69 (median 0.15). At 125, one theory fails the convergence gate, so 250 is the floor | about 10% of fit compute (half of fold sampling; estimated) |
 | B4 | Warm-start carried theories from the previous experiment's fit | starting fits' median rose to 125 min. **Interlock:** the admission limit is 2 x the median starting fit, so warm starts would collapse it unless it's set another way | 2 h or more off each loop's start |
 
-**Together (rough):** A5, B1 and B3 could more than halve fit compute and lift the memory limit. I withdraw my figure of a round
+**Together (rough):** A5, B1 and B3 could about halve fit compute and lift the memory limit; A6 would take more if it works. I withdraw my figure of a round
 at 3.5-4 h, which relied on B2. A round's length will still have a floor set by the critique, the 60-minute theorists and the
-repair cycle, and I haven't re-estimated it. **My order: A1, A5 prototype, then B1 with its extra test.**
+repair cycle, and I haven't re-estimated it. **My order: A1, A5 prototype, then B1, whose extra test has passed.**
 
 **Two cautions:**
-- B1's compare is on all held-out trials of two theories. The winner's margin at this step was 3.16 nats (SE 1.53), and B1 moved
-  one theory's total by 1.6, so B1 isn't safe to adopt until it's tested on the leaders against a noise baseline (§10).
+- ~~B1 isn't safe to adopt until it's tested on the leaders against a noise baseline.~~ **Done (§10).** My comparison here was also
+  wrong: the 1.6 was over all blocks, while the 3.16 margin is on the newest block only, where the change was 0.36.
 - If chain 1 counts with stage 2's chains in any analysis, B changes make them differ in sampler settings. That's a question for the
   PI and driver before the amendment, even if scores agree.
 
@@ -235,13 +242,14 @@ that's my reading, not a measurement.
 **Fold reuse of adaptation (B1), all 5 folds of 2 theories, on `normal`.** "Score change" is the sum over the folds' held-out trials,
 new less chain's, for about 58,000 trials:
 
-| theory | warmup | fold minutes (chain's) | peak GB | R-hat at most | score change |
+| theory | warmup | fold minutes (chain's; see the correction below) | peak GB | R-hat at most | score change, all blocks |
 |---|---:|---:|---:|---:|---:|
 | `structural_alignment_pragmatic_tom` | 100 | 13.7-18.3 (45-50) | 10.9-13.6 | 1.006 | +0.16 |
 | same | 50 | 13.7-18.8 (45-50) | 11.0-13.7 | 1.012 | +0.51 |
 | `rsa_l2_singleton_feat_color_valence_l0` | 100 | 6.0-9.3 (64-73) | 3.4-3.6 | 1.007 | +1.60 |
 
-No divergences; smallest bulk ESS 868. Chain times are from the lab node under load, so the true ratio is about 10% smaller.
+No divergences; smallest bulk ESS 868. ~~Chain times are from the lab node under load, so the true ratio is about 10% smaller.~~
+**Wrong:** the same-partition baseline below shows the ratio was far smaller than this table suggests.
 Warmup 50 saves nothing over 100, so compile must take much of what's left. The second theory is slow in warmup, not on a slow node:
 its full fit took 40,228 warmup steps on the chain and took about the same time here (124 min), so this is where B1 gains most.
 
@@ -253,10 +261,61 @@ the test. At 250: same winner and top 5, largest change 0.69, median 0.15, one s
 and was preempted, so I reran it on `normal`; my capture script crashed after finishing, on a field old fits lack, which cancelled
 the fold tests by dependency, so I resubmitted them. None affects the numbers above.
 
-**Not tested, and needed before B1:**
+**Noise baseline and B1 on the leaders (2026-11-03, later).** Round 4's top 4 theories and `rsa_l2_singleton_feat_color_valence_l0`,
+all 5 folds each, on `normal`: the chain's own folds (seed 0), a refit at chain settings with seed 1, and B1 (reuse, warmup 100) with
+seeds 0 and 1. The script applies the loop's `standing()` among these five. **Validation:** "chain seed 0" reproduces all 5 recorded
+scores to 0.01, and reuse seed 0 reproduces the earlier run's changes (+0.21 and +0.36 on exp2).
 
-1. **A noise baseline:** the same fold refit with another seed. Without it I can't say whether +1.6 is noise or bias.
-2. **B1 on the leaders:** the top 3-4 theories at a step, asking whether the winner and survivors change. About 20 fold fits, a few
-   core-hours once adaptations are captured (about 1.3 h each).
-3. **A5's prototype:** compiling without sampling, then a fresh process's peak.
-4. **Whether the parallel test was limited by XLA's single-thread flags**, only if anyone wants B2 back.
+Score on exp2, the block that selects, and the prune test (`diff > 2 × dse`):
+
+| theory | chain, seed 0 | chain, seed 1 | reuse, seed 0 | reuse, seed 1 |
+|---|---:|---:|---:|---:|
+| `bipolar_boundary_spillover_topic_tom_2` | -12204.62 | -12204.79 | -12204.92 | -12204.82 |
+| `polar_grounding_boundary_spill_tom` | -12207.79 | -12207.62 | -12207.73 | -12207.97 |
+| `aspect_qud_boundary_tier_shadowing_tom` | -12210.19 | -12210.15 | -12210.23 | -12210.39 |
+| `structural_alignment_pragmatic_tom` | -12212.03 | -12212.08 | -12211.82 | -12211.78 |
+| `rsa_l2_singleton_feat_color_valence_l0` | -12336.35 | -12336.60 | -12335.99 | -12337.12 |
+| second place: behind, 2 × dse | 3.16, 3.06 **pruned** | 2.83, 2.90 kept | 2.81, 3.14 kept | 3.15, 3.16 kept |
+
+- **Winner and order: the same in all four.** Every other prune decision is the same too.
+- **The one flip is seed noise, not B1:** second place was pruned only in the chain's own run, by 0.10 nats, and a new seed at the
+  chain's settings keeps it. So that call was chance, as I flagged. Round 5 later pruned this theory anyway, by a wide margin.
+- **Size of the noise:** on the four leaders, a new seed at chain settings moved an exp2 score by at most 0.17, and B1 by at most 0.30.
+  The gap to the leader moved by at most 0.34 and 0.66. Averaged over seeds, B1 less chain is -0.17 to +0.26 by theory.
+  `rsa_l2` is noisier under B1 (its two seeds differ by 1.13, against 0.25 at chain settings), but it's 131 nats behind.
+- **The +1.6 I was worried about is resolved:** on E, a new seed at chain settings moved `rsa_l2` by +1.61, and B1 by +1.71 and +1.91.
+  So the chain's own seed 0 was the unusual draw.
+- **What this can't show:** with 5 theories and 2 seeds a method, a bias of a few tenths of a nat can't be ruled out, and `structural`
+  moved up about 0.25 under both B1 seeds. It isn't a test of round 5's calls, whose theories aren't included. Those margins were 0.5
+  (previous leader pruned), 1.0 and 1.6 (kept), the same order as this noise. Any 2-SE rule is arbitrary that close to its line.
+
+Time, the same 25 folds on the same partition (mean minutes a fold; "steps" are warmup + sampling):
+
+| theory | chain's record, lab node | chain settings, seed 1 | reuse, seed 0 | reuse, seed 1 |
+|---|---:|---:|---:|---:|
+| `aspect_qud_boundary_tier_shadowing_tom` | 44 (10,400 + 4,700) | 23 (11,000 + 4,500) | 13 | 15 |
+| `bipolar_boundary_spillover_topic_tom_2` | 49 (10,400 + 5,200) | 25 (11,100 + 4,700) | 14 | 17 |
+| `polar_grounding_boundary_spill_tom` | 47 (10,700 + 4,600) | 23 (10,800 + 5,100) | 13 | 14 |
+| `structural_alignment_pragmatic_tom` | 47 (10,300 + 4,900) | 22 (11,200 + 4,500) | 6 (cache hit) | 15 |
+| `rsa_l2_singleton_feat_color_valence_l0` | 68 (20,000 + 7,100) | 24 (21,700 + 7,300) | 7 | 8 |
+| fit-hours, all 25 | 21.2 | 9.7 | 4.4 (about 5.2 without the cache hit) | 5.7 |
+
+Convergence problems: 0 of 75. Peaks are unchanged by reuse, apart from the cache hit (3.8 GB).
+
+**Unexplained: the chain's folds took about 2-3 times as long for about the same steps.** The lab node under load is the obvious
+candidate: `rsa_l2`'s folds ran under the old code at up to 20 fits at once, and it shows the biggest gap, the others at 7-9. But a
+full fit on the chain took only about 7% longer than on `normal` (77 min against 71-74), which doesn't fit that story, and these are
+different times with different seeds. I haven't resolved this. It's worth a test, since memory bandwidth on a full node would change how
+many fits to put on one node. The chain's fold records against how many fits were running at the time would be a cheap first look.
+
+Cost: 91.7 core-hours charged, not the "about 36" I told the PI: each 24 GB task is allocated 4 CPUs, of which it uses 1. Waits were
+long: `normal` was full at about 17:00-20:00 and the last folds ran about 5 h after the first, against minutes earlier today. So my
+§10 queue figures, from one afternoon, are optimistic for an evening.
+
+**Not tested:**
+
+1. **A5's prototype:** compiling without sampling, then a fresh process's peak.
+2. **A6:** one compile across a theory's folds.
+3. **Why the chain's folds were slower** (above).
+4. **B1 with B3 together,** and B1 on more than these 5 theories at more than one step.
+5. **Whether the parallel test was limited by XLA's single-thread flags**, only if anyone wants B2 back.
