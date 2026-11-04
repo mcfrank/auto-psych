@@ -1,0 +1,2 @@
+fit structural_alignment_pragmatic_tom sequential
+fit structural_alignment_pragmatic_tom sequential

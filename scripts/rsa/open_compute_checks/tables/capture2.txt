@@ -1,0 +1,3 @@
+fit bipolar_boundary_spillover_topic_tom_2 vectorized
+fit polar_grounding_boundary_spill_tom vectorized
+fit aspect_qud_boundary_tier_shadowing_tom vectorized
