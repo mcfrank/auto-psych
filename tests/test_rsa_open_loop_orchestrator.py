@@ -213,3 +213,58 @@ def test_an_interrupted_loop_resumes_from_its_last_scored_round(tmp_path):
     export = json.loads((d / "export.json").read_text())
     assert export["best_model"] == final["best_model"]
     assert sorted(f.stem for f in (d / "models").glob("*.py")) == export["live"]
+
+
+@pytest.mark.slow  # two loops of two rounds; the second from the first's fit cache
+def test_a_resumed_loop_recomputes_nothing_it_saved_and_decides_exactly_as_an_uninterrupted_one(tmp_path):
+    """The review's A1, and the equivalence that an infrastructure amendment rests on: the same
+    agent outputs and fits, run straight through and run with a crash and a resume, give the same
+    ledger, history and export; the resume rebuilds no out-of-fold score or pool prediction."""
+    import shutil
+
+    import src.rsa_open.loop.orchestrator as orch
+    from src.rsa_open.loop.orchestrator import OpenLoop, OpenLoopConfig
+
+    def config(root):
+        seeds, corpus = _inputs(root)
+        return OpenLoopConfig(corpus_path=corpus, seed_models_dir=seeds, results_dir=root / "loop", max_iterations=2,
+                              candidate_count=3, settings=SETTINGS, fit_time_limit_sec=None)
+
+    (tmp_path / "a").mkdir()
+    (tmp_path / "b").mkdir()
+    straight = config(tmp_path / "a")
+    OpenLoop(straight, FakeTheorist()).run()
+    resumed = config(tmp_path / "b")
+    (tmp_path / "b" / "loop").mkdir()
+    shutil.copytree(tmp_path / "a" / "loop" / ".fit_cache", tmp_path / "b" / "loop" / ".fit_cache")
+    with pytest.raises(Crash):
+        OpenLoop(resumed, CrashingTheorist()).run()
+
+    def must_not_run(*a, **k):
+        raise AssertionError("a saved result was recomputed on resume")
+
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(orch, "heldout_lpd", must_not_run)
+        mp.setattr(orch, "pool_predictions", must_not_run)
+        mp.setattr(OpenLoop, "_fit", must_not_run)  # no live theory's draws are loaded to restore it
+        restored = OpenLoop(resumed, FakeTheorist())
+        restored.resume()
+        restored.score_chance()
+        before = restored.standing()  # every live theory's scores, from disk
+    assert before and all(d["trusted"] is not None for d in before.values())
+    OpenLoop(resumed, FakeTheorist()).run(resume=True)
+
+    def ledger(root):
+        return (root / "loop" / "attempted_hypotheses.jsonl").read_text().splitlines()
+
+    def steps(root):
+        out = []
+        for h in json.loads((root / "loop" / "history.json").read_text()):
+            out.append((h["round"], h["best_model"], [(e.get("name"), e.get("outcome")) for e in h["events"]],
+                        {n: (round(d["sel_elpd"], 6), d["trusted"], d["eligible"]) for n, d in h["standing"].items()}))
+        return out
+
+    assert ledger(tmp_path / "a") == ledger(tmp_path / "b")
+    assert steps(tmp_path / "a") == steps(tmp_path / "b")
+    assert (json.loads((tmp_path / "a" / "loop" / "export.json").read_text())
+            == json.loads((tmp_path / "b" / "loop" / "export.json").read_text()))

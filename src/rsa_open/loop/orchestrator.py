@@ -75,8 +75,9 @@ from src.rsa_open.fit import TheoryModel
 from src.rsa_open.loop import brief as briefs
 from src.rsa_open.loop import critique as critique_mod
 from src.rsa_open.loop.critique import CRITIQUE_N_PROPOSALS, CRITIQUE_PPC_REPLICATES, CRITIQUE_SIGNIFICANCE_ALPHA
-from src.rsa_open.loop.fitting import loop_fit, read_corpus, write_corpus
-from src.rsa_open.loop.gates import GateConfig, admit, pool_predictions
+from src.rsa_open.loop.fitting import FitSummary, loop_fit, loop_fit_summary, read_corpus, write_corpus
+from src.rsa_open.loop.gates import MAX_POOL_DRAWS, GateConfig, admit, pool_predictions
+from src.rsa_open.loop.scores import ScoreStore
 
 SpawnFn = Callable[[Path, str], bool]
 DEFAULT_PRUNE_DSE_MULTIPLIER = 2.0
@@ -163,12 +164,20 @@ class OpenLoopConfig:
 
 @dataclass
 class Live:
+    """A theory in play. Its fit stays in the cache: `fit` loads it when a step needs its draws (its
+    folds' starting point, the critique), and `summary` answers the rest. A live set used to hold
+    every fit, about 0.9 GB each (19.3 GB at 21 theories after a resume on chain 1; A1)."""
     name: str
     hypothesis: str
     theory: TheoryModel
-    fit: CorpusFit
+    summary: FitSummary
     pool_preds: np.ndarray
     source: str
+    loader: Callable[[], CorpusFit]
+
+    @property
+    def fit(self) -> CorpusFit:
+        return self.loader()
 
 
 CHANCE_NAME = "chance"
@@ -226,6 +235,22 @@ class OpenLoop:
         # Theories in play (seeds, carried, admitted) are limited by the loop's ceiling only.
         self.live_cfg = replace(self.gate_cfg, time_limit_sec=None if self.cfg.fit_time_limit_sec is None
                                 else self.cfg.in_play_fit_limit_sec)
+        # Out-of-fold scores and pool predictions, saved as they are computed: a resume reads them back
+        # instead of recomputing them (74 min of a 27-theory resume on chain 1, 2026-11-03).
+        self.scores = ScoreStore(self.dir / ".scores", self.corpus, self.folds, self.cfg.settings,
+                                 self._fold_settings(), len(self.pool), MAX_POOL_DRAWS)
+
+    def _fold_settings(self) -> FitSettings:
+        return replace(self.cfg.settings, num_warmup=self.cfg.cv_warmup, num_samples=self.cfg.cv_samples)
+
+    def _pool_preds(self, name: str, path: Path, theory: TheoryModel, fitted: CorpusFit) -> np.ndarray:
+        """``name``'s pool predictions: saved ones, or computed and saved."""
+        saved = self.scores.load_preds(name, path)
+        if saved is not None:
+            return saved
+        preds = pool_predictions(theory, fitted, self.pool)
+        self.scores.save_preds(name, path, preds)
+        return preds
 
     def setup(self) -> None:
         self._prepare()
@@ -248,7 +273,8 @@ class OpenLoop:
                 print(f"[open loop] dropped {name}: its fit failed: {exc}", flush=True)
                 self._ledger(name, "dropped", f"seed failed to fit: {exc}", hypothesis, "seed")
                 continue
-            self.live[name] = Live(name, hypothesis, theory, fitted, pool_predictions(theory, fitted, self.pool), "seed")
+            self.live[name] = Live(name, hypothesis, theory, FitSummary.of(fitted),
+                                   self._pool_preds(name, path, theory, fitted), "seed", self._loader(path, name))
         if not self.live:
             raise RuntimeError("no seed theory could be fitted; nothing to compare")
         self._set_admission_limit()
@@ -258,8 +284,8 @@ class OpenLoop:
         """`ADMISSION_FACTOR` x the median full-fit time of the starting theories (None: unlimited)."""
         if self.cfg.fit_time_limit_sec is None:
             return
-        timed = {n: m.fit.timing["warmup_sec"] + m.fit.timing["sampling_sec"] for n, m in self.live.items()
-                 if m.fit.timing}
+        timed = {n: m.summary.timing["warmup_sec"] + m.summary.timing["sampling_sec"] for n, m in self.live.items()
+                 if m.summary.timing}
         if not timed:
             raise RuntimeError("no starting theory's fit records its time (fits cached by code before "
                                "2026-10-23?), so the admission limit cannot be set; start in a fresh work root")
@@ -268,6 +294,10 @@ class OpenLoop:
         self.gate_cfg = replace(self.gate_cfg, time_limit_sec=self.admission_limit_sec)
         print(f"[open loop] admission limit {self.admission_limit_sec / 60:.0f} min: {ADMISSION_FACTOR:g} x the median "
               f"of the starting fits ({', '.join(f'{n} {t / 60:.0f}' for n, t in sorted(timed.items()))} min)", flush=True)
+
+    def _loader(self, path: Path, name: str) -> Callable[[], CorpusFit]:
+        """Loads a theory in play's fit from the cache when a step needs it."""
+        return lambda: self._fit(path, name, self.live_cfg)
 
     def _fit(self, path: Path, name: str, cfg: GateConfig) -> CorpusFit:
         return loop_fit(path, name, cfg.corpus_path, cfg.settings, cfg.cache_dir, time_limit_sec=cfg.time_limit_sec,
@@ -325,19 +355,33 @@ class OpenLoop:
         """The bound on each of ``name``'s fold fits (`FOLD_TIME_FACTOR`); None when nothing is limited."""
         if self.live_cfg.time_limit_sec is None:
             return None
-        t = self.live[name].fit.timing
+        t = self.live[name].summary.timing
         full = t["warmup_sec"] + t["sampling_sec"] if t else self.cfg.fit_time_limit_sec
         return min(self.cfg.in_play_fit_limit_sec, max(FOLD_MIN_SEC, FOLD_TIME_FACTOR * full))
 
     def _cv_one(self, name: str) -> Optional[CorpusCV]:
-        return self._cv_file(name, self.models_dir / f"{name}.py", self.live[name].theory, self.live[name].fit,
-                             self.fold_time_limit(name))
+        m = self.live[name]
+        return self._cv_file(name, self.models_dir / f"{name}.py", m.theory, m.loader, self.fold_time_limit(name))
 
-    def _cv_file(self, name: str, path: Path, theory: TheoryModel, fit: CorpusFit,
+    def _cv_file(self, name: str, path: Path, theory: TheoryModel, fit: Callable[[], CorpusFit],
                  limit: Optional[float]) -> Optional[CorpusCV]:
+        """``name``'s out-of-fold scores (None: a fold failed), saved ones or computed and saved."""
+        saved = self.scores.load_cv(name, path, limit)
+        if saved is not None:
+            cv, problem = saved
+            if problem:
+                self.cv_problems[name] = problem
+            return cv
+        self.cv_problems.pop(name, None)
+        cv = self._compute_cv(name, path, theory, fit(), limit)  # the fit's draws only when computing
+        self.scores.save_cv(name, path, limit, cv, self.cv_problems.get(name))
+        return cv
+
+    def _compute_cv(self, name: str, path: Path, theory: TheoryModel, fit: CorpusFit,
+                    limit: Optional[float]) -> Optional[CorpusCV]:
         full = fit.flat()
         start = {k: float(np.median(v)) for k, v in full.items()}
-        fold_settings = replace(self.cfg.settings, num_warmup=self.cfg.cv_warmup, num_samples=self.cfg.cv_samples)
+        fold_settings = self._fold_settings()
 
         def fold_fit(f: int) -> CorpusFit:
             return loop_fit(path, name, self.fold_paths[f], fold_settings, self.dir / ".fit_cache",
@@ -380,7 +424,7 @@ class OpenLoop:
             self.cv_problems[CHANCE_NAME] = f"its fit failed: {exc}"
             return None
         limit = None if self.live_cfg.time_limit_sec is None else self.cfg.in_play_fit_limit_sec
-        self.chance_cv = self._cv_file(CHANCE_NAME, path, TheoryModel(path, name=CHANCE_NAME), fitted, limit)
+        self.chance_cv = self._cv_file(CHANCE_NAME, path, TheoryModel(path, name=CHANCE_NAME), lambda: fitted, limit)
         return self.chance_cv
 
     def write_newest_cv(self) -> Path:
@@ -427,7 +471,7 @@ class OpenLoop:
             if n not in out:  # a fold failed, or did not converge: unscored, never selected
                 out[n] = dict(sel_elpd=-math.inf, sel_diff=math.inf, sel_dse=0.0, eligible=False, guard_failures=[],
                               by_block={}, cv_converged=False)
-            out[n]["trusted"] = bool(self.live[n].fit.converged and out[n]["cv_converged"])
+            out[n]["trusted"] = bool(self.live[n].summary.converged and out[n]["cv_converged"])
             if n in self.cv_problems:
                 out[n]["cv_problem"] = self.cv_problems[n]
         return out
@@ -548,7 +592,9 @@ class OpenLoop:
         if out.admitted:
             dst = self.models_dir / f"{name}.py"
             shutil.copyfile(cdir / "candidate.py", dst)
-            self.live[name] = Live(name, hypothesis, TheoryModel(dst, name=name), out.fit, out.pool_preds, context)
+            self.live[name] = Live(name, hypothesis, TheoryModel(dst, name=name), FitSummary.of(out.fit), out.pool_preds,
+                                   context, self._loader(dst, name))
+            self.scores.save_preds(name, dst, out.pool_preds)
             self._write_manifest()
             self._ledger(name, "admitted", "admitted", hypothesis, context)
             self._start_cv(name)  # its folds run while the round goes on
@@ -700,7 +746,7 @@ class OpenLoop:
         lead = self.incumbent(s)
         for n in [n for n in s if not s[n]["trusted"] and n != lead]:
             why = s[n].get("cv_problem") or ("its fit did not converge: "
-                                             + "; ".join(self.live[n].fit.convergence_problems or ["untrusted"]))
+                                             + "; ".join(self.live[n].summary.convergence_problems or ["untrusted"]))
             self._retire(n, "pruned", f"untrusted, not carried: {why}")
             events.append(dict(name=n, outcome="pruned", reason="untrusted, not carried"))
         s = self.standing()  # re-ranked among the rest: a dropped theory is no block's reference
@@ -807,13 +853,21 @@ class OpenLoop:
         self.admission_limit_sec = last["admission_limit_sec"]
         if self.admission_limit_sec is not None:
             self.gate_cfg = replace(self.gate_cfg, time_limit_sec=self.admission_limit_sec)
-        self._prefit([(self.models_dir / f"{n}.py", n) for n in live], self.live_cfg)
+        def summary(name: str) -> Optional[FitSummary]:
+            return loop_fit_summary(self.models_dir / f"{name}.py", name, self.corpus, self.cfg.settings,
+                                    self.dir / ".fit_cache")
+
+        # A theory in play was fitted before: its summary comes from the cache's sidecars, and its draws
+        # are loaded only if its pool predictions weren't saved (A1). One whose fit is gone is fitted.
+        self._prefit([(self.models_dir / f"{n}.py", n) for n in live if summary(n) is None], self.live_cfg)
         for name, e in live.items():
             path = self.models_dir / f"{name}.py"
             theory = TheoryModel(path, name=name)
-            fitted = self._fit(path, name, self.live_cfg)  # a theory in play fitted before: from the cache
-            self.live[name] = Live(name, e["hypothesis"], theory, fitted, pool_predictions(theory, fitted, self.pool),
-                                   e["source"])
+            preds = self.scores.load_preds(name, path)
+            if preds is None:
+                preds = self._pool_preds(name, path, theory, self._fit(path, name, self.live_cfg))
+            self.live[name] = Live(name, e["hypothesis"], theory, summary(name), preds, e["source"],
+                                   self._loader(path, name))
         for name, d in last.get("standing", {}).items():
             # A failed fold is remembered only in its process: keep the step's verdict rather than
             # refitting the fold (for up to FOLD_TIME_FACTOR x its full fit) to perhaps another one.

@@ -80,6 +80,70 @@ v1/v2's automatic resume (Slurm requeues failed nodes' jobs; a step's continuati
 Still in force: v2's CPU restriction and machine record, clean environments for fit tasks (no
 `.secrets`), and the status command and mail.
 
+## 0b. The plan after the v3 review (PI, 2026-11-03)
+
+The Sherlock session's review of v3 (`DISTRIBUTED_DESIGN_REVIEW_V3.md`) measured what v3 had
+estimated. What it changes, and what the PI decided:
+
+- **SRCC's answer stands.** The PI is comfortable going forward on Mark Yoder's reply (ticket
+  #106983), which answered the question as asked: whether a chain's next job may "resume it and start
+  more agent sessions when no one is watching". No further check is planned.
+- **Agents run inside steps, not as arrays.** Theorist sessions use 3-7% of a core; arrays of them
+  would be the under-use SRCC warned of. **3-4 coarse steps a round** (review §3): an agent step
+  (critique, theorists, retries; it submits the first candidates' fit array), an admission step
+  (admits, submits folds, runs repair agents while they fit), and one or two to admit repairs, score
+  and prune. Each lasts long enough for rule 10's minimum, and nothing waits idle.
+- **A restart must be cheap first (A1, built 2026-11-03, below):** a restart cost 74 min and 25 GB at
+  27 theories, nearly all of it recomputing held-out scores and pool predictions.
+- **Partitions and fairshare.** Heavy use of `normal` lowers the group's fairshare, so its short
+  queues won't last (PI). **Fits run on `mcfrank,owners`** (the lab node first: same CPU, never
+  preempted; then idle owners nodes, preempted fits requeued, 4% of fit time lost in the review's
+  sample), with `-C CPU_GEN:SIE`. **Steps and collection jobs on `mcfrank`.** `normal` only as a
+  deliberate overflow, never in the default list (Slurm takes whichever listed partition starts a job
+  first). How `owners` use counts toward fairshare is to be checked (`sshare` before and after a test
+  day). A5 and B1 below also cut what is charged, wherever it runs.
+- **Array sizing:** one memory size per array, 18 GB, and 36 GB for out-of-memory retries (peaks
+  11.9 GB median, 14.2 GB largest). `DEFAULT_FIT_BYTES` becomes a hard limit inside a job, so it
+  rises to match.
+- **The step design's own failure modes** (review §5) are requirements: arrays submitted held and
+  released after their continuation; steps `--no-requeue`, one at a time per chain
+  (`--dependency=...,singleton` on a per-chain name); a guard's refusal writes STOP and exits nonzero;
+  a theory's own failure exits 0 from its fit task; no mail per array task; and a dedicated test that
+  two continuations at the design/collection boundary can't publish a second study.
+- **Equivalence is tested, not asserted** (review §6): the same agent outputs and cached fits, run
+  straight through and run with interruptions, must give the same ledger, history and export. The
+  first such test is built (below); step mode adds one with a kill between each pair of
+  state-changing actions.
+
+**Optimizations, by what they need** (review §9-10):
+- *No result changes (infrastructure amendment):* **A1** saved scores (built); **A5** compile in a
+  short process, then sample at about 5.5 GB instead of 15 (identical posterior; prototype by the
+  Sherlock session); A2 no per-trial log-likelihood in fits.
+- *Draws change, scores shouldn't (a registered amendment, after tests):* **B1** folds reuse the full
+  fit's adaptation, 3-9 times faster folds, about half of all fit compute; it waits for a noise
+  baseline (the same fold, another seed) and a test on the leading theories. B3 fewer fold draws
+  (250 a chain). Whether chain 1, fitted without B1, is analysed with stage 2's chains is part of that
+  decision.
+
+**Order:** A1 and its equivalence test (driver, done); the Sherlock session's B1 tests and A5
+prototype; then the fit arrays and the coarse step mode with the safeguards above (driver); a
+rehearsal from small to large; then one amendment (infrastructure, plus B1 if it passes).
+
+**A1 as built** (`src/rsa_open/loop/scores.py`; the loop in `orchestrator.py`):
+- Each theory's out-of-fold scores (or its failed fold's reason) and pool predictions are saved as
+  computed, in `<loop>/.scores/`, keyed by everything they depend on (the theory file, the corpus,
+  the fold assignment, the full fit's and the folds' settings, the folds' time limit; for
+  predictions, the pool). A resume reads them back; the chance theory's scores too.
+- A live theory no longer holds its fit. It keeps a summary (converged, problems, timing) and loads
+  its draws from the cache only when a step needs them: the critique's incumbent, or new out-of-fold
+  scores. A resume reads summaries from the cache's sidecars (a cached refit of a near miss is the
+  one used, as `loop_fit` decides) and loads no fit for a theory whose predictions are saved.
+- Results are unchanged: both are deterministic given the cached fits, and the equivalence test
+  checks the ledger, history and export of a crashed-and-resumed loop against an uninterrupted one,
+  with the restore made to fail if it recomputes any score or loads any fit.
+
+## Appendix: v2 and v1, kept for the record (superseded where §0a-§0b say otherwise)
+
 ## 0. What changed in v2, and what waits for SRCC
 
 The PI has asked SRCC (2026-11-03) about the three questions in the review's draft. Until the

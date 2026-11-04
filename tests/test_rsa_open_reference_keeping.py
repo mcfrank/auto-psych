@@ -35,7 +35,7 @@ def _loop(tmp_path):
     for name in pointwise:
         (loop.models_dir / f"{name}.py").write_text("# theory\n")
         loop.live[name] = SimpleNamespace(name=name, hypothesis=name, source="seed",
-                                          fit=SimpleNamespace(converged=True, timing={}))
+                                          summary=SimpleNamespace(converged=True, timing={}))
     loop.ledger = HypothesisLedger.create(tmp_path / "attempted_hypotheses.jsonl", inherit_from=None)
     loop.history, loop.step = [], 0
     loop._write_manifest = lambda: None
@@ -65,7 +65,7 @@ def test_the_cap_never_retires_a_reference(tmp_path):
 def test_an_untrusted_theory_is_not_carried_even_as_a_reference_and_the_rest_are_re_ranked(tmp_path):
     """PI 2026-10-28: run C carried three untrusted theories and refitted each for 8 h and more."""
     loop = _loop(tmp_path)
-    loop.live["e_best"].fit = SimpleNamespace(converged=False, timing={}, convergence_problems=["R-hat 1.57"])
+    loop.live["e_best"].summary = SimpleNamespace(converged=False, timing={}, convergence_problems=["R-hat 1.57"])
     loop.cfg.prune_dse_multiplier = 1e9
     loop.cfg.guard_k = 1e9
     entry = loop.end()
@@ -79,7 +79,7 @@ def test_an_untrusted_theory_is_not_carried_even_as_a_reference_and_the_rest_are
 def test_an_untrusted_incumbent_stays_when_no_theory_is_trusted(tmp_path):
     loop = _loop(tmp_path)
     for m in loop.live.values():
-        m.fit = SimpleNamespace(converged=False, timing={}, convergence_problems=["ESS 3"])
+        m.summary = SimpleNamespace(converged=False, timing={}, convergence_problems=["ESS 3"])
     loop.cfg.prune_dse_multiplier = 1e9
     loop.cfg.guard_k = 1e9
     entry = loop.end()
@@ -92,7 +92,7 @@ def test_every_fit_has_the_ceiling_and_no_limit_exceeds_it(tmp_path):
     loop = _loop(tmp_path)
     loop.live_cfg = SimpleNamespace(time_limit_sec=IN_PLAY_FIT_LIMIT_SEC)
     assert IN_PLAY_FIT_LIMIT_SEC == 4 * 3600
-    loop.live["incumbent"].fit = SimpleNamespace(converged=True, timing={"warmup_sec": 3 * 3600, "sampling_sec": 0})
+    loop.live["incumbent"].summary = SimpleNamespace(converged=True, timing={"warmup_sec": 3 * 3600, "sampling_sec": 0})
     assert loop.fold_time_limit("incumbent") == IN_PLAY_FIT_LIMIT_SEC  # 3x a 3-h fit, capped
     loop.cfg.fit_time_limit_sec = 1800
     loop.gate_cfg = SimpleNamespace()
@@ -100,6 +100,6 @@ def test_every_fit_has_the_ceiling_and_no_limit_exceeds_it(tmp_path):
 
     loop.gate_cfg = dataclasses.make_dataclass("G", [("time_limit_sec", float)])(0.0)
     for m in loop.live.values():
-        m.fit = SimpleNamespace(converged=True, timing={"warmup_sec": 3 * 3600, "sampling_sec": 0})
+        m.summary = SimpleNamespace(converged=True, timing={"warmup_sec": 3 * 3600, "sampling_sec": 0})
     loop._set_admission_limit()
     assert loop.admission_limit_sec == IN_PLAY_FIT_LIMIT_SEC  # 2 x a 3-h median, capped

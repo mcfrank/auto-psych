@@ -171,7 +171,10 @@ def _loop(tmp_path, timing):
     loop.cfg = OpenLoopConfig(corpus_path=tmp_path, seed_models_dir=tmp_path, results_dir=tmp_path, cv_folds=2)
     loop.live_cfg = SimpleNamespace(time_limit_sec=float("inf"))
     fit = SimpleNamespace(timing=timing, flat=lambda: {"alpha": np.ones(10)}, converged=True)
-    loop.live = {"slow": SimpleNamespace(theory=None, fit=fit)}
+    loop.live = {"slow": SimpleNamespace(theory=None, summary=SimpleNamespace(timing=timing, converged=True),
+                                         loader=lambda: fit)}
+    # nothing saved yet: every out-of-fold score is computed
+    loop.scores = SimpleNamespace(load_cv=lambda *a: None, save_cv=lambda *a: None)
     loop.models_dir, loop.dir, loop.fold_paths = tmp_path, tmp_path, [tmp_path / "f0", tmp_path / "f1"]
     loop.cv, loop.cv_problems, loop.admission_limit_sec = {}, {}, None
     loop.blocks = [SimpleNamespace(name="E")]
@@ -257,7 +260,7 @@ def _limit_loop(tmp_path, minutes):
     from src.rsa_open.loop.gates import GateConfig
 
     loop = _loop(tmp_path, {})
-    loop.live = {f"t{i}": SimpleNamespace(fit=SimpleNamespace(timing=dict(warmup_sec=60.0 * m * 0.6,
+    loop.live = {f"t{i}": SimpleNamespace(summary=SimpleNamespace(timing=dict(warmup_sec=60.0 * m * 0.6,
                                                                           sampling_sec=60.0 * m * 0.4) if m else {}))
                  for i, m in enumerate(minutes)}
     loop.gate_cfg = GateConfig(tmp_path, tmp_path, FitSettings(), 0.002, loop.cfg.fit_time_limit_sec)

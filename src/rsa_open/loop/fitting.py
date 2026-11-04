@@ -560,6 +560,34 @@ def cached_loop_fit(theory_path: Path, name: str, corpus_path: Path, settings: F
     return _read(nc, meta, log_likelihood) if nc.exists() and meta.exists() else None
 
 
+@dataclass(frozen=True)
+class FitSummary:
+    """What the loop needs of a fit besides its draws: whether it converged, why not, and its time."""
+    converged: bool
+    convergence_problems: List[str]
+    timing: Dict[str, float]
+
+    @classmethod
+    def of(cls, fitted: CorpusFit) -> "FitSummary":
+        return cls(fitted.converged, list(fitted.convergence_problems), dict(fitted.timing or {}))
+
+
+def loop_fit_summary(theory_path: Path, name: str, corpus_path: Path, settings: FitSettings,
+                     cache_dir: Path) -> Optional[FitSummary]:
+    """The summary of the fit `loop_fit` would return, read from the cache's sidecars without
+    loading any draws; None when that fit isn't cached. A refit is cached only when the first fit was
+    a near miss, so a cached refit beside an unconverged first fit is the one `loop_fit` returns."""
+    _, meta_path = cache_paths(cache_dir, name, fingerprint(theory_path, corpus_path, settings))
+    if not meta_path.exists():
+        return None
+    meta = json.loads(meta_path.read_text())
+    if meta["convergence_problems"]:
+        _, refit_meta = cache_paths(cache_dir, name, fingerprint(theory_path, corpus_path, refit_settings(settings)))
+        if refit_meta.exists():
+            meta = json.loads(refit_meta.read_text())
+    return FitSummary(not meta["convergence_problems"], list(meta["convergence_problems"]), dict(meta.get("timing") or {}))
+
+
 def loop_fit(theory_path: Path, name: str, corpus_path: Path, settings: FitSettings, cache_dir: Path, *,
              time_limit_sec: Optional[float] = None, init: Optional[Dict[str, float]] = None,
              log_likelihood: bool = True) -> CorpusFit:

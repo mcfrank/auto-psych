@@ -61,7 +61,7 @@ def _loop(tmp_path, pointwise, converged):
     loop.cv = {k: CorpusCV({"E": e, "exp1": x}, converged[k]) for k, (e, x) in pointwise.items()}
     loop.cv_problems = {}
     loop.live_cfg = SimpleNamespace(time_limit_sec=None)
-    loop.live = {k: SimpleNamespace(fit=SimpleNamespace(converged=True)) for k in pointwise}
+    loop.live = {k: SimpleNamespace(summary=SimpleNamespace(converged=True)) for k in pointwise}
     return loop
 
 

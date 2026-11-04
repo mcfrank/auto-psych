@@ -284,3 +284,28 @@ def test_a_killed_attempt_is_retried_once_with_twice_the_room_through_any_backen
     monkeypatch.setattr(fitting, "fit_backend", lambda: twice)
     with pytest.raises(RuntimeError, match="killed .* twice .* 10 GB reserved"):
         _fit_in_child(*args)
+
+
+def test_a_fit_s_summary_comes_from_its_sidecar_and_a_cached_refit_is_the_one_used(tmp_path):
+    """A1: a resumed loop reads each live theory's summary without loading its draws."""
+    from src.rsa.loop.fitting import cache_paths, refit_settings
+    from src.rsa_open.loop.fitting import FitSummary, fingerprint, loop_fit_summary
+
+    theory, corpus, cache = tmp_path / "t.py", tmp_path / "c.json", tmp_path / "cache"
+    theory.write_text("# t\n")
+    corpus.write_text("{}")
+    cache.mkdir()
+    settings = FitSettings(dense_mass=True)
+    assert loop_fit_summary(theory, "t", corpus, settings, cache) is None  # not fitted
+
+    def sidecar(s, problems, warmup):
+        _, meta = cache_paths(cache, "t", fingerprint(theory, corpus, s))
+        meta.write_text(json.dumps({"convergence_problems": problems,
+                                    "timing": {"warmup_sec": warmup, "sampling_sec": 1.0}}))
+
+    sidecar(settings, ["R-hat 1.08"], 10.0)
+    assert loop_fit_summary(theory, "t", corpus, settings, cache) == FitSummary(False, ["R-hat 1.08"],
+                                                                                {"warmup_sec": 10.0, "sampling_sec": 1.0})
+    sidecar(refit_settings(settings), [], 20.0)  # the near miss was refitted, and converged
+    assert loop_fit_summary(theory, "t", corpus, settings, cache) == FitSummary(True, [],
+                                                                                {"warmup_sec": 20.0, "sampling_sec": 1.0})
