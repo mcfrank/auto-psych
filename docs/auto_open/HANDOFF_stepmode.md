@@ -58,9 +58,13 @@ It reads results afterwards, with no polling loops.
 1. Fast tests: `uv run pytest -q tests/test_rsa_open_step_*.py tests/test_rsa_open_fit_array.py`.
    Slow: `tests/test_rsa_open_step_equivalence.py` (its limit is now set; expect it to pass as your
    corrected copy did, in fewer steps since the seeds' folds follow their fits).
-2. Replay, to check the new pieces without agents: `replay_step.sbatch` as before (it now records a
-   launch and stops after its one experiment, exit 8, so expect a STOP saying "launch the next").
-   Report steps per round and how many steps ran under 10 minutes, against §11's 3 of 10.
+2. **The smoke-size replay only** (§11's smoke: 1 starting theory plus the chance model, 1 round of
+   2; about 6.5 h, mostly queue waits), as a mechanics check before agents are spent: a fold array
+   held until its full fits end, then released and run; `launch.json` written by the first step and
+   read by the rest; DONE at the end (the replay is one experiment, so it ends the chain rather than
+   stopping for the next launch). Not the full or second-chain replays, and no step-timing analysis:
+   without agents every step is short, so their durations say little about live ones (PI, 11-05).
+   Report only whether those mechanics worked, with the job ids of anything that didn't.
 3. The real-agent segment, launched by the PI: one open chain, simulated participants, one
    experiment of two (`STEP_MODE=1 CHAIN=0 ARM=open N_EXPERIMENTS=2 MAX_ITERATIONS=2 CANDIDATES=3` with
    `open_rehearsal.sbatch`, as in §2). Report: steps and their durations, step MaxRSS with agents,
