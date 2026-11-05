@@ -328,7 +328,7 @@ Written by Claude Opus 5.5 (the Sherlock session); not reviewed by a person.
 
 **Bottom line: step mode's Slurm side works and reproduces the live chain's decisions, but real agents have never run in it,
 and rule 10 still blocks that.** On replayed agents it matched chain 1's experiment 2 through three rounds, and it recovered from
-33 lost fit attempts, a cancelled fit and a killed step. SRCC has since said staff can't waive rule 10 (ticket #106983), so I
+37 lost fit attempts, a cancelled fit and a killed step. SRCC has since said staff can't waive rule 10 (ticket #106983), so I
 didn't run §2's rehearsal with real agents, which would mean jobs that submit their successor and start agents. The arrays, the
 journal and the 18 GB/36 GB sizing would all carry over to the design in "What this means for the design" below, which
 needs no self-resubmitting job.
@@ -351,7 +351,7 @@ lab node. For the same reason every fit ran on `owners`, with `CPU_GEN:SIE`.
 
 | run | what it does | outcome |
 |---|---|---|
-| smoke | 2 starting theories, 1 round of 2 | DONE, about 6.5 h, 5 steps |
+| smoke | 1 starting theory plus the chance model, 1 round of 2 | DONE, about 6.5 h, 5 steps |
 | second chain | same as smoke, with a fit cancelled and a step killed | DONE, 8.5 h (about 1 h of that lost to the cancel test), 7 step jobs, no STOP |
 | full | 4 starting theories, 3 rounds of 6 | DONE, 17.6 h, 10 step jobs, 133 fit tasks, no STOP |
 
@@ -373,8 +373,8 @@ lab node. For the same reason every fit ran on `owners`, with `CPU_GEN:SIE`.
 - **Cancelled fit** (`scancel` on one task): the next step exited 6 and resubmitted only that fit. No STOP.
 - **Killed step** (`scancel` of a running step at 186 s): no STOP, and nothing was left queued, so a killed step ends the chain
   until someone relaunches it. On relaunch it finished with the same results, but `round_1/critique` ran twice (see finding 1).
-- **Natural preemption:** all 33 lost attempts across the two chains (`owners`: 32 preempted, 1 node failure; 3 further `REQUEUED`
-  records in the full run) came back by themselves.
+- **Natural preemption:** all 37 lost attempts across the two chains (`owners`: 33 preempted, 1 node failure, 3 `REQUEUED`
+  records) came back by themselves.
 
 ### What the handoff asked for
 
@@ -435,4 +435,4 @@ agents, sending fits out as arrays and blocking with `sbatch --wait`**, with no 
 what this rehearsal showed works: an out-of-memory fit kills one task, and slow fits stop tying up 24 CPUs. The journal and
 `ArrayBackend` should mostly carry over, waiting in-process instead of yielding, but I haven't built it; that's the driver's
 call. Costs: the job's 8 CPUs and 32 GB sit idle during waits, a person launches each job, and a dead job waits for a person. The
-PI has asked SRCC about it; no answer yet.
+PI wrote to SRCC again on 11-04; I haven't seen an answer.
