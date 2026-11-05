@@ -4,6 +4,8 @@ Written by Claude Opus 5.5 (the Sherlock session) from chain 1's round 4-5 logs,
 --test-only` and the test jobs of 2026-11-03 (§10); not reviewed by a person. I've read only v3's summary of SRCC's reply, not
 the reply itself.
 
+**Update 2026-11-04 (§11).** Step mode was built after this review. On replayed agents it reproduced chain 1's decisions; real agents remain blocked by rule 10.
+
 **Update after the tests (§10).** Five results change the plan, and each corrects something I wrote below or earlier:
 
 1. **Most of a fit's memory is compilation.** With compiled code loaded from the cache, a fit peaks at about 5.5 GB rather
@@ -319,3 +321,118 @@ long: `normal` was full at about 17:00-20:00 and the last folds ran about 5 h af
 3. **Why the chain's folds were slower** (above).
 4. **B1 with B3 together,** and B1 on more than these 5 theories at more than one step.
 5. **Whether the parallel test was limited by XLA's single-thread flags**, only if anyone wants B2 back.
+
+## 11. Step-mode results (`HANDOFF_stepmode.md`, 2026-11-03/04, code at 9762aa8c)
+
+Written by Claude Opus 5.5 (the Sherlock session); not reviewed by a person.
+
+**Bottom line: step mode's Slurm side works and reproduces the live chain's decisions, but real agents have never run in it,
+and rule 10 still blocks that.** On replayed agents it matched chain 1's experiment 2 through three rounds, and it recovered from
+33 lost fit attempts, a cancelled fit and a killed step. SRCC has since said staff can't waive rule 10 (ticket #106983), so I
+didn't run §2's rehearsal with real agents, which would mean jobs that submit their successor and start agents. The arrays, the
+journal and the 18 GB/36 GB sizing would all carry over to the design in "What this means for the design" below, which
+needs no self-resubmitting job.
+
+### Tests (handoff §1)
+
+- **Fast step tests:** 21 passed (job 51022228).
+- **Slow step tests:** 12 passed, 1 failed in 1:36:30. The failure is `tests/test_rsa_open_step_equivalence.py`, and it's a test
+  bug: line 92's `fit_time_limit_sec=None` sends every fit in-process (`fitting.py:397`), so the "stepped" loop never steps and
+  `assert steps >= 4` fails.
+- **Corrected copy** (that line set to 1800, outside the clone; job 51065065): **passed**. Same ledger, history and export; each
+  session once; no fit inside a step. I didn't edit the test. It's the small synthetic loop.
+
+### The stand-in rehearsal
+
+`scripts/rsa/open_compute_checks/replay_step.{py,sbatch}`: the real `run_chain.main`, step exits, arrays, continuations and
+journals, with each "agent session" copying what that session's agent wrote in chain 1's experiment 2. No model is called and
+no agent starts. Steps ran on `owners,normal` with `STEP_TIME=12:00:00`, not the defaults' `mcfrank`, because chain 1 holds the
+lab node. For the same reason every fit ran on `owners`, with `CPU_GEN:SIE`.
+
+| run | what it does | outcome |
+|---|---|---|
+| smoke | 2 starting theories, 1 round of 2 | DONE, about 6.5 h, 5 steps |
+| second chain | same as smoke, with a fit cancelled and a step killed | DONE, 8.5 h (about 1 h of that lost to the cancel test), 7 step jobs, no STOP |
+| full | 4 starting theories, 3 rounds of 6 | DONE, 17.6 h, 10 step jobs, 133 fit tasks, no STOP |
+
+**Equivalence with the live chain (full run):**
+
+- After the starting fits and each of rounds 1-3: same leader, same live set, ELPD within 0.0008 nats on every block.
+- Every line the replay added to the ledger (33, no duplicates) is in the chain's. The 6 chain lines it lacks for those rounds are
+  later prunes of models that survived the replay's end, from the chain's two further rounds.
+- The admission limit differed (7,052 s against 7,512 s), since it's measured from each run's own starting fits. No decision
+  changed, but one could: it's the one input here that depends on hardware.
+- The replay's last history step and its export are its own end-of-experiment prune after 3 rounds, so they aren't comparable
+  with the chain's fifth-round end.
+
+**Second chain against smoke:** ledger identical in order (67 lines), export identical, CV scores within 5e-7, and only
+`rsa_l2_singleton_feat_color_valence_l0` differed. That's about float32 rounding, but I haven't established the cause.
+
+**Failure tests:**
+
+- **Cancelled fit** (`scancel` on one task): the next step exited 6 and resubmitted only that fit. No STOP.
+- **Killed step** (`scancel` of a running step at 186 s): no STOP, and nothing was left queued, so a killed step ends the chain
+  until someone relaunches it. On relaunch it finished with the same results, but `round_1/critique` ran twice (see finding 1).
+- **Natural preemption:** all 33 lost attempts across the two chains (`owners`: 32 preempted, 1 node failure; 3 further `REQUEUED`
+  records in the full run) came back by themselves.
+
+### What the handoff asked for
+
+| item | result |
+|---|---|
+| Steps per round | 2 (round 3: 3, for a repair's fits), plus 2 for the starting fits and 1 to finish. Below the 3-4 I suggested in §3 |
+| Arrays per step | 1-2 (an early array for first candidates or folds, then the rest) |
+| Tasks per array | 1-30; 133 in the full run |
+| Fit array start | About 5 min after submission, later for the last tasks of large arrays |
+| Last fit to next step starting | Usually 4-12 min; once 31 and 69 min, both steps starting at 14:15 on 11-04 |
+| Fit exits | All `COMPLETED` 0:0 apart from preemption and my cancel. None needed the 36 GB retry |
+| Step exits | All 0:0 apart from my kill; no step was preempted (17 step jobs, 0 preempted, including 10 on `owners`) |
+| `step_settings.sh`, `continuation.sh` | Written as designed; the commands they carried worked |
+| `journal.json` | Holds the sessions, names and admissions; round 3 of the full run has 23 keys |
+| Agent dir written twice | Never in the full run (26 sessions); once after the deliberate kill |
+| Duplicate ledger lines | None |
+| Step MaxRSS | 0.9-9.8 GB of 32 GB, **without agents** |
+| Fit MaxRSS | Mean 6.7, max 12.5 GB of 18 GB in the full run |
+| Time lost to preemption | 7.8 h of about 106 h of fit attempts in the full run (7%); median 11 min per lost attempt |
+| Step durations | 37 s to 49.5 min in the full run (3 of 10 under rule 10's 10-minute line); all under it in the second chain. Replayed sessions take no time, so real steps would be longer. I didn't pad them |
+
+**Is 32 GB right for steps, 18 GB for fits?** Without agents, 32 GB is plenty. For fits, 18 GB holds for everything in this
+rehearsal, but **chain 1's experiment 3 had two folds of `bipolar_prototype_tier_contrast_tom` at 28 and 32 GB RSS (`ps`, 11-04
+19:56)**, against 14.2 GB as the highest I'd measured before. Those would hit the 18 GB limit and retry at 36 GB, which leaves
+little room. Experiment 3's job peaked at 176 of its 184 GB too. I'll look at this in the experiment 3 report.
+
+**Does `owners` count toward fairshare? Not settled.** `RawUsage` rose 4,413,892 between about 05:45 and 23:28 on 11-04. In that
+window billing-seconds were 4,449,410 on `mcfrank`, 2,454,316 on `owners` and 59,504 on `normal`. That fits `mcfrank` alone with
+no decay, and it also fits all three with a decay half-life of about a week. I don't know the half-life, and reading the
+scheduler's configuration falls under rule 9. `owners`, `owner` and `normal` all have `UsageFactor` 1.0. FairShare also moved from
+0.298 to 0.900 in that time, which I can't explain. A clean test needs a stretch with nothing on `mcfrank`.
+
+### Findings for the driver
+
+1. **A kill mid-session repeats the session.** `_memo` (`orchestrator.py:240`) writes the journal only after `fn` returns, and
+   `critique`'s `fn` is the session plus the PPC. With real agents that's a paid session again, and a candidate session could
+   restart in a directory holding a killed session's partial files, which replay can't test. Consider saving the session's result
+   before the PPC, and clearing the directory on restart.
+2. **Fix the equivalence test's line 92,** and make `fit_cached` with `time_limit_sec=None` raise in step mode, so an in-process fit
+   can't pass unnoticed.
+3. **The design fit limit** (`cfg.design_fit_limit_sec`, `chain.py:292`): I didn't confirm it's always set. The same in-process
+   path would apply.
+4. **Steps before the first `history.json` set the loop aside each time:** `loop.abandoned_1` to `_3`, 149 MB each. Harmless, but
+   each is another corpus copy.
+5. **A killed or preempted step ends the chain without a STOP.** `--no-requeue` is right for agents, but nothing tells anyone.
+   No step was preempted here, in 17 tries.
+
+### Not tested (replay can't)
+
+Real agent sessions across steps and how long they take; a step's memory with agents running; agent directories under real
+agents; the design-stage array (`chain.design_context`); the collection boundary. Handoff §3's A5 prototype wasn't run either.
+
+### What this means for the design
+
+Rule 10 bars a job that resubmits itself to run the agent again, and scheduling an agent session to run on its own later. The
+compliant version of this work looks to me like **one job per experiment or chain, started by a person, holding the driver and
+agents, sending fits out as arrays and blocking with `sbatch --wait`**, with no job submitting a job that runs agents. It keeps
+what this rehearsal showed works: an out-of-memory fit kills one task, and slow fits stop tying up 24 CPUs. The journal and
+`ArrayBackend` should mostly carry over, waiting in-process instead of yielding, but I haven't built it; that's the driver's
+call. Costs: the job's 8 CPUs and 32 GB sit idle during waits, a person launches each job, and a dead job waits for a person. The
+PI has asked SRCC about it; no answer yet.

@@ -52,3 +52,10 @@ directory and `PYTHONPATH=$B/clone` (`pyprojroot` finds the root from the workin
 **Fragile by design:** the paths name chain 1's run tree, and everything assumes the code at tag a2. On later code, A1 and other
 changes may break the imports. The fits' caches share `$B/jax_cache`, so a rerun of an identical task hits the cache and looks about
 9 minutes faster for a theory that compiles slowly (§10's "cache hit").
+
+## Step-mode rehearsal (§11, 2026-11-04)
+
+`replay_step.py` and `replay_step.sbatch` ran one step of the no-agent rehearsal of `HANDOFF_stepmode.md` §2, at 9762aa8c: the real
+step machinery, with each "agent session" copying what that session's agent wrote in chain 1's experiment 2. They expect
+`$WORK_ROOT/replay_step.{py,sbatch}` and `REPLAY_INPUT` holding `corpus.json`, `models_input/` and `attempted_hypotheses.jsonl`; the
+sbatch file's header gives the submission. `corpus.json` holds trial-level data and is never committed.
