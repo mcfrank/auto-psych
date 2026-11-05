@@ -8,7 +8,9 @@ from __future__ import annotations
 import json
 import shutil
 import sys
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 from types import SimpleNamespace
 
 import yaml
@@ -16,7 +18,7 @@ import yaml
 from src.rsa.cpus import pin_main_thread
 from src.rsa.fit import FitSettings
 from src.rsa_open import run_chain
-from src.rsa_open.chain import set_aside
+from src.rsa_open.chain import clear_stage
 from src.rsa_open.loop.orchestrator import OpenLoop, OpenLoopConfig
 
 
@@ -45,17 +47,29 @@ class ReplayTheorist:
         return True
 
 
+@dataclass
+class ReplayChainConfig:
+    """What `run_chain.main` reads of a chain's config in step mode (its launch: one experiment)."""
+    chain: str = "replay"
+    n_experiments: int = 1
+    stop_after_experiment: Optional[int] = None
+
+
 class ReplayChain:
     """`Chain.model_loop`'s one loop, on the source's corpus, starting set and inherited ledger."""
 
     def __init__(self, a) -> None:
         self.a = a
+        self.cfg = ReplayChainConfig()
+
+    def first_unfinished(self) -> int:
+        return 2 if (Path(self.a.run_dir) / "loop" / "export.json").exists() else 1
 
     def run(self) -> list:
         loop = Path(self.a.run_dir) / "loop"
         resume = (loop / "history.json").exists()
         if not resume:
-            set_aside(loop, keep=(".fit_cache", ".scores"))
+            clear_stage(loop, keep=(".fit_cache", ".scores"))  # as chain.model_loop does in a step
         cfg = OpenLoopConfig(corpus_path=Path(self.a.corpus), seed_models_dir=Path(self.a.seeds), results_dir=loop,
                              max_iterations=self.a.rounds, candidate_count=self.a.candidates, cv_folds=5,
                              settings=FitSettings(dense_mass=True), inherit_ledger=Path(self.a.ledger))

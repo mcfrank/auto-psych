@@ -12,10 +12,21 @@ continuation's `ArrayBackend.attempt` reads that result and returns exactly what
 backend would have, so admission, the out-of-memory retry with twice the room, the time limits and
 failure classification are unchanged.
 
-Memory is one size per array (`FIT_GB`, 18 GB: peaks on chain 1 were 11.9 GB median and 14.2 GB at
-most), and `RETRY_GB` (36) for a fit killed out of memory. A fit submitted `MAX_SUBMISSIONS` times
-without a result (a task that died with its wrapper) is an infrastructure failure, so a step can
-never resubmit forever.
+Memory is one size per array, one of `MEM_TIERS` (18, 36, 72 GB). A theory fitted before starts at
+the tier that holds its recorded peak with margin (its folds after its full fit: two of chain 1's
+experiment-3 folds reached 28-32 GB, review V3 §11), any other at 18 GB (peaks on chain 1 were
+11.9 GB median); a fit killed out of memory is retried at the next tier. A fit submitted
+`MAX_SUBMISSIONS` times without a result (a task that died with its wrapper) is an infrastructure
+failure, so a step can never resubmit forever.
+
+**Folds after their full fit** (`FoldAfter`): a theory whose out-of-fold scores will certainly be
+needed (a starting theory) or are needed if it is admitted (a repair) has its cross-validation folds
+submitted with its full fit, as an array that starts when the full fits' arrays end (``afterany``).
+Each such task reads the full fit from the cache, starts every fold where the loop would (the full
+fit's posterior medians, the same time limit) and fits it as the loop would, near-miss refit
+included. It saves a step that would only submit folds (rule 10's 10-minute minimum; review V3
+§11). A task whose full fit is missing, failed, or (for a repair) did not converge, fits nothing, and
+a fold that fails is left to the next step: it can only save work, never change a result.
 """
 
 from __future__ import annotations
@@ -24,7 +35,7 @@ import json
 import os
 import threading
 import traceback
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
@@ -32,8 +43,8 @@ from src.rsa.fit import FitSettings
 from src.rsa.loop.fitting import FitTimeLimitExceeded
 from src.rsa_open.loop.fitting import FitBackend, FitJob, _Killed, machine
 
-FIT_GB = 18
-RETRY_GB = 36
+MEM_TIERS = (18, 36, 72)
+FIT_GB, RETRY_GB = MEM_TIERS[0], MEM_TIERS[1]
 MAX_SUBMISSIONS = 2
 GiB = 2**30
 
@@ -46,24 +57,57 @@ class FitPending(Exception):
         self.job, self.mem_gb = job, mem_gb
 
 
-class FitsPending(Exception):
-    """Every fit a phase needs that isn't done: the step submits them and exits."""
+@dataclass(frozen=True)
+class FoldAfter:
+    """One cross-validation fold to fit as soon as its theory's full fit is in the cache."""
+    theory_path: Path
+    name: str
+    full_corpus: Path
+    full_settings: FitSettings
+    cache_dir: Path
+    fold_corpus: Path
+    fold_settings: FitSettings
+    limit: Dict[str, Any]
+    """`fold_limit`'s rule: {"fixed": seconds or None} or {"in_play", "fallback", "min", "factor"}."""
+    only_if_converged: bool
+    mem_gb: int
 
-    def __init__(self, pending: Sequence[FitPending]) -> None:
+    @property
+    def key(self) -> str:
+        return f"after|{self.cache_dir}|{self.name}|{self.fold_corpus}"
+
+
+def fold_limit(rule: Mapping[str, Any], timing: Optional[Mapping[str, float]]) -> Optional[float]:
+    """A fold's time limit from its full fit's timing (the loop's `OpenLoop.fold_time_limit`)."""
+    if "fixed" in rule:
+        return rule["fixed"]
+    full = timing["warmup_sec"] + timing["sampling_sec"] if timing else rule["fallback"]
+    return min(rule["in_play"], max(rule["min"], rule["factor"] * full))
+
+
+class FitsPending(Exception):
+    """Every fit a phase needs that isn't done: the step submits them and exits. ``after``: folds
+    to fit once these fits are done (`FoldAfter`)."""
+
+    def __init__(self, pending: Sequence[FitPending], after: Sequence[FoldAfter] = ()) -> None:
         unique: Dict[str, FitPending] = {}
         for p in pending:
             unique.setdefault(f"{p.job.nc_path}|{p.mem_gb}", p)
         self.pending = list(unique.values())
-        super().__init__(f"{len(self.pending)} fit(s) pending")
+        later: Dict[str, FoldAfter] = {}
+        for a in after:
+            later.setdefault(a.key, a)
+        self.after = list(later.values())
+        super().__init__(f"{len(self.pending)} fit(s) pending" + (f", {len(self.after)} fold(s) after them"
+                                                                   if self.after else ""))
 
 
 def mem_gb_for(at_least: float) -> int:
-    """The memory size of an attempt that needs ``at_least`` bytes (0: a first attempt)."""
-    if at_least <= FIT_GB * GiB:
-        return FIT_GB
-    if at_least <= RETRY_GB * GiB:
-        return RETRY_GB
-    raise RuntimeError(f"a fit needs {at_least / GiB:.0f} GB, more than the {RETRY_GB} GB a retry gets: an "
+    """The memory tier of an attempt that needs ``at_least`` bytes (0: nothing known)."""
+    for gb in MEM_TIERS:
+        if at_least <= gb * GiB:
+            return gb
+    raise RuntimeError(f"a fit needs {at_least / GiB:.0f} GB, more than the largest tier ({MEM_TIERS[-1]} GB): an "
                        "infrastructure failure, not the theory's")
 
 
@@ -81,7 +125,16 @@ class ArrayBackend(FitBackend):
     name = "slurm"
 
     def attempt(self, job: FitJob, at_least: float = 0.0) -> tuple:
-        gb = mem_gb_for(at_least)
+        from src.rsa_open.loop.fitting import scheduler
+
+        gb = mem_gb_for(max(at_least, scheduler().known(job.name) or 0.0))
+        # A result at a lower tier stands unless the fit was killed there (what is known of a theory's
+        # peak can grow between steps, which raises the tier asked for).
+        for tier in [t for t in MEM_TIERS if t < gb]:
+            low = result_path(job, tier)
+            if low.exists() and json.loads(low.read_text())["kind"] != "killed":
+                gb = tier
+                break
         result = result_path(job, gb)
         if result.exists():
             r = json.loads(result.read_text())
@@ -106,6 +159,7 @@ def collect_pending(calls) -> List[Any]:
     """Run each zero-argument call; gather `FitPending`/`FitsPending` instead of stopping at the first.
     Returns the calls' results (None for a pending one) and raises `FitsPending` with all of them."""
     pending: List[FitPending] = []
+    after: List[FoldAfter] = []
     results = []
     for call in calls:
         try:
@@ -115,9 +169,10 @@ def collect_pending(calls) -> List[Any]:
             results.append(None)
         except FitsPending as ps:
             pending.extend(ps.pending)
+            after.extend(ps.after)
             results.append(None)
-    if pending:
-        raise FitsPending(pending)
+    if pending or after:
+        raise FitsPending(pending, after)
     return results
 
 
@@ -131,6 +186,49 @@ def job_record(p: FitPending) -> Dict[str, Any]:
             # a fold's warm start (numpy scalars from the full fit's draws); float() is exact, so the
             # task starts where the local child would have, under the same fingerprint
             "init": None if j.init is None else {k: float(v) for k, v in j.init.items()}}
+
+
+def after_record(a: FoldAfter) -> Dict[str, Any]:
+    return {"kind": "fold_after", "theory_path": str(a.theory_path), "name": a.name, "full_corpus": str(a.full_corpus),
+            "full_settings": asdict(a.full_settings), "cache_dir": str(a.cache_dir), "fold_corpus": str(a.fold_corpus),
+            "fold_settings": asdict(a.fold_settings), "limit": dict(a.limit), "only_if_converged": a.only_if_converged,
+            "mem_gb": a.mem_gb}
+
+
+def write_after_manifest(path: Path, after: Sequence[FoldAfter]) -> Path:
+    """An array of `FoldAfter` tasks, all of one memory size (no submission counts: such a task can
+    only save work, and the fold is counted when the loop asks for it)."""
+    sizes = {a.mem_gb for a in after}
+    if len(sizes) != 1:
+        raise ValueError(f"one memory size per array, not {sorted(sizes)}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.tmp{os.getpid()}")
+    tmp.write_text(json.dumps({"mem_gb": sizes.pop(), "tasks": [after_record(a) for a in after]}, indent=1))
+    os.replace(tmp, path)
+    return path
+
+
+def run_fold_after(r: Mapping[str, Any]) -> Dict[str, Any]:
+    """A `FoldAfter` task: the fold as the loop would fit it, if its full fit is there to start from."""
+    import numpy as np
+
+    from src.rsa.loop.fitting import ModelFailure
+    from src.rsa_open.loop.fitting import cached_loop_fit, loop_fit
+
+    theory, name, cache = Path(r["theory_path"]), r["name"], Path(r["cache_dir"])
+    full = cached_loop_fit(theory, name, Path(r["full_corpus"]), FitSettings(**r["full_settings"]), cache,
+                           log_likelihood=False)
+    if full is None:
+        return {"kind": "skipped", "message": "its full fit is not in the cache (it failed or was killed)"}
+    if r["only_if_converged"] and not full.converged:
+        return {"kind": "skipped", "message": "its full fit did not converge, so it is not admitted"}
+    start = {k: float(np.median(v)) for k, v in full.flat().items()}
+    try:
+        loop_fit(theory, name, Path(r["fold_corpus"]), FitSettings(**r["fold_settings"]), cache,
+                 time_limit_sec=fold_limit(r["limit"], full.timing), init=start, log_likelihood=False)
+    except ModelFailure as exc:
+        return {"kind": "skipped", "message": f"the fold failed ({exc}); the loop fits it again when it needs it"}
+    return {"kind": "ok", "message": None}
 
 
 def job_from_record(r: Mapping[str, Any]) -> FitJob:
@@ -174,6 +272,12 @@ def run_task(manifest: Path, index: int) -> Dict[str, Any]:
     from src.rsa_open.loop.fitting import _child, _run_child
 
     spec = json.loads(Path(manifest).read_text())
+    if spec["tasks"][index].get("kind") == "fold_after":
+        try:
+            return {**run_fold_after(spec["tasks"][index]), "machine": machine()}
+        except Exception as exc:  # the task's own trouble; the loop fits the fold when it needs it
+            return {"kind": "infrastructure", "message": f"{type(exc).__name__}: {exc}",
+                    "traceback": "".join(traceback.format_exception(exc))[-4000:]}
     job, gb = job_from_record(spec["tasks"][index]), int(spec["mem_gb"])
     if result_path(job, gb).exists():  # a requeued task whose result is in: nothing to do
         return json.loads(result_path(job, gb).read_text())

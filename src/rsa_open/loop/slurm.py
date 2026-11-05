@@ -1,18 +1,25 @@
 """Submitting a step's fits and its continuation (`DISTRIBUTED_DESIGN.md` v3, §0a-§0b).
 
 When a step's phase has fits pending (`src.rsa_open.loop.fit_array.FitsPending`), `submit_step`:
-1. refuses, writing STOP so that it mails, if the cell is stopped, the step budget is spent, or
-   the user already has too many jobs queued (one ``squeue`` count, never a polling loop);
+1. refuses, writing STOP so that it mails, if the cell is stopped, this launch's step budget is
+   spent, or the user already has too many jobs queued (one ``squeue`` count, never a polling loop);
 2. writes one manifest per memory size and submits each as a **held** array of single-core fits
    (`scripts/rsa/slurm/fit_array.sbatch`), throttled, on the fit partitions and CPU type, with a
    clean environment (``--export=NONE`` and only what a fit needs: never ``.secrets``, since a fit
    runs agent-written code);
+   then the folds to fit after them (`FoldAfter`), held too, starting when those arrays end;
 3. submits the chain's continuation (`continuation.sh`, which the step's own job writes) after
    all of them (``afterany``) and after the step itself (``singleton`` on the chain's job name, so
    one step per chain runs at a time);
 4. releases the arrays, and records the step in ``steps.jsonl``.
 If any call fails, whatever was submitted is cancelled and the cell gets a STOP: a step never
 leaves a chain with fits but no continuation, or the reverse.
+
+**A launch** is what a person starts (SRCC ticket #106983, 2026-11-05: a person starts one job per
+experiment, and the job's successors run that experiment's phases, with a low, discrete cap). Its
+first step records `launch.json` (`begin_launch`): the experiment it runs and the steps before it.
+The step budget, `MAX_STEPS`, is per launch; the chain stops after that experiment
+(`src.rsa_open.chain.ExperimentDone`), and a person launches the next.
 """
 
 from __future__ import annotations
@@ -27,10 +34,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, List, Mapping, Optional, Sequence
 
-from src.rsa_open.loop.fit_array import FitsPending, write_manifest
+from src.rsa_open.loop.fit_array import FitsPending, write_after_manifest, write_manifest
 
-MAX_STEPS = 80
-"""Steps per chain before a person is asked (about 4 a round, 5 rounds, 3-4 experiments, and room)."""
+MAX_STEPS = 40
+"""Steps per launch (one experiment) before a person is asked: the Sherlock rehearsal took 2-3 a
+round and 3 more for the starting fits and the end, about 18 for 5 rounds (review V3 §11)."""
 MAX_QUEUED = 1500
 """The user's queued and running jobs (array tasks counted) above which no step submits more."""
 THROTTLE = 24
@@ -107,6 +115,28 @@ def write_stop(cell_dir: Path, reason: str) -> None:
     (Path(cell_dir) / "STOP").write_text(f"{time.strftime('%Y-%m-%dT%H:%M:%S%z')}\t{reason}\n")
 
 
+def launch_path(cfg: StepConfig) -> Path:
+    return cfg.cell_dir / "launch.json"
+
+
+def begin_launch(cfg: StepConfig, experiment: int, max_steps: Optional[int] = None) -> dict:
+    """Record a person's launch: the experiment it runs and the steps before it (its budget counts from here)."""
+    record = {"experiment": int(experiment), "steps_before": len(_steps(cfg)),
+              "max_steps": int(max_steps if max_steps is not None else cfg.max_steps), "at": time.time(),
+              "job": os.environ.get("SLURM_JOB_ID")}
+    tmp = launch_path(cfg).with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(record, indent=1))
+    os.replace(tmp, launch_path(cfg))
+    with (cfg.cell_dir / "launches.jsonl").open("a") as f:
+        f.write(json.dumps(record) + "\n")
+    return record
+
+
+def current_launch(cfg: StepConfig) -> Optional[dict]:
+    path = launch_path(cfg)
+    return json.loads(path.read_text()) if path.exists() else None
+
+
 def _steps(cfg: StepConfig) -> List[dict]:
     """The chain's steps that submitted a continuation (an early array alone isn't a step)."""
     if not cfg.steps_log.exists():
@@ -131,8 +161,12 @@ def _check(cfg: StepConfig, tasks: int, runner: Runner, *, step: bool) -> int:
     if (cfg.cell_dir / "STOP").exists():
         raise StepRefused(f"{cfg.cell_dir.name} is stopped: no step submitted")
     done = _steps(cfg)
-    if step and len(done) >= cfg.max_steps:
-        why = f"step budget spent: {len(done)} steps submitted (at most {cfg.max_steps}); a person looks"
+    launch = current_launch(cfg)
+    used = len(done) - (launch["steps_before"] if launch else 0)
+    cap = launch["max_steps"] if launch else cfg.max_steps
+    if step and used >= cap:
+        why = (f"step budget spent: {used} steps submitted " + (f"in experiment {launch['experiment']}'s launch "
+               if launch else "") + f"(at most {cap}); a person looks")
         write_stop(cfg.cell_dir, why)
         raise StepRefused(why)
     queued = queued_jobs(runner)
@@ -155,6 +189,28 @@ def _arrays(cfg: StepConfig, pending: Sequence, runner: Runner, stamp: str, *, h
         cmd = ["sbatch", "--parsable"] + (["--hold"] if hold else []) + [
                f"--array=0-{len(group) - 1}%{cfg.throttle}", f"--mem={gb}G",
                "--cpus-per-task=1", f"--time={_time_arg([p.job.time_limit_sec for p in group])}",
+               f"--partition={cfg.fit_partition}", f"--job-name={cfg.chain_job}_fits",
+               f"--output={cfg.logs_dir}/%x_%A_%a.out", f"--export={export}"]
+        if cfg.fit_constraint:
+            cmd.append(f"--constraint={cfg.fit_constraint}")
+        ids.append(runner(cmd + [str(cfg.fit_script), str(manifest)]).strip().split(";")[0])
+    return ids
+
+
+def _after_arrays(cfg: StepConfig, after: Sequence, runner: Runner, stamp: str, *, hold: bool,
+                  depend: Sequence[str]) -> List[str]:
+    """Submit folds to fit after their full fits (one array per memory size), after ``depend``."""
+    by_size: Dict[int, list] = defaultdict(list)
+    for a in after:
+        by_size[a.mem_gb].append(a)
+    export = "NONE," + ",".join(f"{k}={v}" for k, v in cfg.fit_env.items())
+    ids: List[str] = []
+    for gb, group in sorted(by_size.items()):
+        manifest = write_after_manifest(cfg.arrays_dir / f"{stamp}.after.mem{gb}.json", group)
+        cmd = ["sbatch", "--parsable"] + (["--hold"] if hold else []) + (
+               [f"--dependency=afterany:{':'.join(depend)}"] if depend else []) + [
+               f"--array=0-{len(group) - 1}%{cfg.throttle}", f"--mem={gb}G",
+               "--cpus-per-task=1", f"--time={NO_LIMIT_TIME}",
                f"--partition={cfg.fit_partition}", f"--job-name={cfg.chain_job}_fits",
                f"--output={cfg.logs_dir}/%x_%A_%a.out", f"--export={export}"]
         if cfg.fit_constraint:
@@ -187,18 +243,21 @@ def _cancel_and_stop(cfg: StepConfig, runner: Runner, ids: Sequence[str], exc: B
 
 
 def submit_early(cfg: StepConfig, pending: FitsPending, *, runner: Runner = run_command,
-                 reason: str = "") -> List[str]:
+                 reason: str = "", depend_on: Sequence[str] = ()) -> List[str]:
     """Submit fits a later step will need, now, without a continuation (an admission's folds, while
     the repair agents work); the step that yields depends on them. Returns the array ids."""
     stamp = time.strftime("%Y%m%dT%H%M%S") + "_early"
-    _check(cfg, len(pending.pending), runner, step=False)
+    _check(cfg, len(pending.pending) + len(pending.after), runner, step=False)
     ids: List[str] = []
     try:
         ids = _arrays(cfg, pending.pending, runner, stamp, hold=False)
+        if pending.after:
+            ids += _after_arrays(cfg, pending.after, runner, stamp, hold=False, depend=list(ids) + list(depend_on))
     except Exception as exc:
         _cancel_and_stop(cfg, runner, ids, exc)
         raise RuntimeError(f"submitting early fits failed: {exc}") from exc
-    _log(cfg, {"at": time.time(), "reason": reason, "early": True, "arrays": ids, "tasks": _sizes(pending.pending)})
+    _log(cfg, {"at": time.time(), "reason": reason, "early": True, "arrays": ids, "tasks": _sizes(pending.pending),
+               "folds_after": len(pending.after)})
     return ids
 
 
@@ -208,14 +267,18 @@ def submit_step(cfg: StepConfig, pending: Optional[FitsPending], *, runner: Runn
     submitted early by this step), then release them; returns the step's record. Raises `StepRefused`
     (STOP written) or, on a failed call, RuntimeError (STOP written, anything submitted cancelled)."""
     items = list(pending.pending) if pending is not None else []
-    if not items and not depend_on:
+    after = list(pending.after) if pending is not None else []
+    if not items and not after and not depend_on:
         raise ValueError("a step yields only to wait for fits")
-    done = _check(cfg, len(items), runner, step=True)
+    done = _check(cfg, len(items) + len(after), runner, step=True)
     stamp = time.strftime("%Y%m%dT%H%M%S") + f"_{done + 1}"
     arrays: List[str] = []
     continuation = None
     try:
         arrays = _arrays(cfg, items, runner, stamp, hold=True)
+        if after:
+            arrays += _after_arrays(cfg, after, runner, stamp, hold=True,
+                                    depend=list(arrays) + [d for d in depend_on if d not in arrays])
         after = list(arrays) + [d for d in depend_on if d not in arrays]
         continuation = runner(["bash", str(cfg.continuation), f"afterany:{':'.join(after)},singleton"]).strip()
         if not continuation:
@@ -226,7 +289,7 @@ def submit_step(cfg: StepConfig, pending: Optional[FitsPending], *, runner: Runn
         _cancel_and_stop(cfg, runner, arrays + ([continuation] if continuation else []), exc)
         raise RuntimeError(f"submitting the step failed: {exc}") from exc
     record = {"at": time.time(), "reason": reason, "arrays": arrays, "after_early": list(depend_on),
-              "continuation": continuation, "tasks": _sizes(items)}
+              "continuation": continuation, "tasks": _sizes(items), "folds_after": len(after)}
     _log(cfg, record)
     return record
 
@@ -244,21 +307,28 @@ class Stepper:
 
     def submit_early(self, pending: FitsPending, reason: str = "") -> None:
         new = [p for p in pending.pending if self._key(p) not in self.inflight]
-        if not new:
+        later = [a for a in pending.after if a.key not in self.inflight]
+        if not new and not later:
             return
-        ids = submit_early(self.cfg, FitsPending(new), runner=self.runner, reason=reason)
-        by_size = {gb: jid for gb, jid in zip(sorted({p.mem_gb for p in new}), ids)}
+        ids = submit_early(self.cfg, FitsPending(new, later), runner=self.runner, reason=reason,
+                           depend_on=sorted(set(self.inflight.values())) if later else ())
+        sizes = sorted({p.mem_gb for p in new})
+        by_size = {gb: jid for gb, jid in zip(sizes, ids)}
         for p in new:
             self.inflight[self._key(p)] = by_size[p.mem_gb]
+        later_ids = ids[len(sizes):]
+        for a in later:
+            self.inflight[a.key] = dict(zip(sorted({x.mem_gb for x in later}), later_ids))[a.mem_gb]
 
     def yield_step(self, pending: FitsPending, reason: str = "") -> None:
         """Submit what isn't already running, the continuation after everything, and end the step."""
         new = [p for p in pending.pending if self._key(p) not in self.inflight]
+        later = [a for a in pending.after if a.key not in self.inflight]
         # Every array this step submitted early, needed now or not: a continuation that started while
         # one ran would find its fits pending and submit them a second time.
         early = sorted(set(self.inflight.values()))
-        record = submit_step(self.cfg, FitsPending(new) if new else None, runner=self.runner, reason=reason,
-                             depend_on=early)
+        record = submit_step(self.cfg, FitsPending(new, later) if new or later else None, runner=self.runner,
+                             reason=reason, depend_on=early)
         raise StepYield(record)
 
 

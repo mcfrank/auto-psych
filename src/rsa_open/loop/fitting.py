@@ -145,6 +145,12 @@ class FitScheduler:
         self._peaks: Dict[str, float] = {}
         self._next = 0
 
+    def known(self, name: str) -> Optional[float]:
+        """The room for a theory fitted before (its recorded peak times `PEAK_MARGIN`); None if never."""
+        with self._cond:
+            peak = self._peaks.get(name)
+        return None if peak is None else PEAK_MARGIN * peak
+
     def estimate(self, name: str) -> float:
         with self._cond:
             peak = self._peaks.get(name)
@@ -394,6 +400,10 @@ def fit_cached(theory_path: Path, name: str, corpus_path: Path, settings: FitSet
     try:
         if nc_path.exists() and meta_path.exists():
             return _read(nc_path, meta_path, log_likelihood)
+        if time_limit_sec is None and fit_backend().name == "slurm":
+            # step mode never fits in its own job: an unlimited fit is an array task with no limit
+            # (Sherlock review V3 §11: an unlimited fit ran in-process inside a step, unnoticed)
+            time_limit_sec = math.inf
         if time_limit_sec is None:
             try:
                 fitted = _fit_now(theory_path, name, corpus_path, settings, init)

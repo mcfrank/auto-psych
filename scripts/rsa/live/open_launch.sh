@@ -25,7 +25,9 @@
 # STEP_MODE=1 runs the chain as steps instead (DISTRIBUTED_DESIGN.md v3 §0b; open_live.sbatch):
 # one job per chain on $STEP_PARTITION (mcfrank), 8 cores and 32 GB, never requeued; it fits nothing
 # itself, submits its fits as arrays of single-core jobs (STEP_FIT_PARTITION, mcfrank,owners) and
-# the chain's next step after them, so there is no ladder (LINKS is ignored).
+# the chain's next step after them, so there is no ladder (LINKS is ignored). A launch runs one
+# experiment (at most 40 steps) and stops with a mail; launch the next with CLEAR_STOP=1 STEP_MODE=1
+# (SRCC ticket #106983: a person starts one job per experiment).
 #
 # Slurm mails the submitter when a job stops for a person or fails (open_live.sbatch's exit codes);
 # MAIL_USER sends it elsewhere, MAIL_TYPE=NONE turns it off. `python -m src.rsa_open.status` shows

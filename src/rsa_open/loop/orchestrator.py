@@ -76,7 +76,7 @@ from src.rsa_open.loop import brief as briefs
 from src.rsa_open.loop import critique as critique_mod
 from src.rsa_open.loop.critique import CRITIQUE_N_PROPOSALS, CRITIQUE_PPC_REPLICATES, CRITIQUE_SIGNIFICANCE_ALPHA
 from src.rsa_open.loop import slurm as step
-from src.rsa_open.loop.fit_array import FitPending, FitsPending, collect_pending
+from src.rsa_open.loop.fit_array import FitPending, FitsPending, FoldAfter, collect_pending
 from src.rsa_open.loop.fitting import FitSummary, fit_backend, loop_fit, loop_fit_summary, read_corpus, write_corpus
 from src.rsa_open.loop.gates import MAX_POOL_DRAWS, GateConfig, admit, pool_predictions
 from src.rsa_open.loop.scores import ScoreStore
@@ -198,6 +198,11 @@ def listener(params, ctx):
 '''
 
 
+def _journal_default(o):
+    """numpy scalars in a journal entry, as Python values."""
+    return o.item() if hasattr(o, "item") else float(o)
+
+
 class OpenLoop:
     def __init__(self, cfg: OpenLoopConfig, spawn: SpawnFn) -> None:
         self.cfg = cfg
@@ -250,8 +255,15 @@ class OpenLoop:
         with self._jlock:
             self._jmemo[key] = dump(out)
             self._jpath.parent.mkdir(parents=True, exist_ok=True)
-            _write_atomic(self._jpath, json.dumps(self._jmemo, default=lambda o: o.item() if hasattr(o, "item") else float(o)))
+            _write_atomic(self._jpath, json.dumps(self._jmemo, default=_journal_default))
         return out
+
+    def _journal_put(self, key: str, value) -> None:
+        """Record ``value`` under ``key`` in the round's journal now (step mode)."""
+        with self._jlock:
+            self._jmemo[key] = value
+            self._jpath.parent.mkdir(parents=True, exist_ok=True)
+            _write_atomic(self._jpath, json.dumps(self._jmemo, default=_journal_default))
 
     def _fit_early(self, items, reason: str) -> None:
         """Step mode: submit fits a later phase needs now, so they run while agents work."""
@@ -328,8 +340,11 @@ class OpenLoop:
                     self._chance_fit()
                 except ModelFailure:
                     pass  # score_chance records it
+                except FitPending as p:
+                    rule = {"fixed": None if self.live_cfg.time_limit_sec is None else self.cfg.in_play_fit_limit_sec}
+                    raise FitsPending([p], self._folds_after(self._chance_path(), CHANCE_NAME, p.mem_gb, rule)) from None
 
-            collect_pending([lambda: self._prefit(seeds, self.live_cfg), chance])
+            collect_pending([lambda: self._prefit(seeds, self.live_cfg, folds_after=True), chance])
         self._prefit(seeds, self.live_cfg)
         for e in entries:
             name, hypothesis = e["name"], e.get("rationale", "")
@@ -372,8 +387,11 @@ class OpenLoop:
         return loop_fit(path, name, cfg.corpus_path, cfg.settings, cfg.cache_dir, time_limit_sec=cfg.time_limit_sec,
                         log_likelihood=False)
 
-    def _prefit(self, items, cfg: Optional[GateConfig] = None) -> None:
-        """Fit concurrently (cached, failures remembered) so sequential admission reads finished fits."""
+    def _prefit(self, items, cfg: Optional[GateConfig] = None, folds_after: bool = False,
+                only_if_converged: bool = False) -> None:
+        """Fit concurrently (cached, failures remembered) so sequential admission reads finished fits.
+        Step mode, ``folds_after``: a theory whose full fit is pending has its folds submitted to follow
+        it (`fit_array.FoldAfter`), so no step is spent only submitting them."""
         cfg = cfg or self.gate_cfg
 
         def one(item) -> None:
@@ -396,7 +414,15 @@ class OpenLoop:
         if not items:
             return
         if self._step_mode():  # every pending fit at once, for one array
-            collect_pending([lambda item=item: one(item) for item in items])
+            try:
+                collect_pending([lambda item=item: one(item) for item in items])
+            except FitsPending as ps:
+                if not folds_after:
+                    raise
+                gb = {p.job.name: p.mem_gb for p in ps.pending}
+                after = [a for path, name in items if name in gb
+                         for a in self._folds_after(path, name, gb[name], only_if_converged=only_if_converged)]
+                raise FitsPending(ps.pending, list(ps.after) + after) from None
             return
         workers = 1 if cfg.time_limit_sec is None else min(len(items), self.cfg.fit_workers or default_fit_workers())
         with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -427,11 +453,24 @@ class OpenLoop:
     # ---------- scoring ----------
     def fold_time_limit(self, name: str) -> Optional[float]:
         """The bound on each of ``name``'s fold fits (`FOLD_TIME_FACTOR`); None when nothing is limited."""
+        from src.rsa_open.loop.fit_array import fold_limit
+
+        return fold_limit(self._fold_rule(), self.live[name].summary.timing)
+
+    def _fold_rule(self) -> dict:
+        """`fit_array.fold_limit`'s rule for a theory in play (shared with the folds-after tasks)."""
         if self.live_cfg.time_limit_sec is None:
-            return None
-        t = self.live[name].summary.timing
-        full = t["warmup_sec"] + t["sampling_sec"] if t else self.cfg.fit_time_limit_sec
-        return min(self.cfg.in_play_fit_limit_sec, max(FOLD_MIN_SEC, FOLD_TIME_FACTOR * full))
+            return {"fixed": None}
+        return {"in_play": self.cfg.in_play_fit_limit_sec, "fallback": self.cfg.fit_time_limit_sec,
+                "min": FOLD_MIN_SEC, "factor": FOLD_TIME_FACTOR}
+
+    def _folds_after(self, path: Path, name: str, mem_gb: int, rule: Optional[dict] = None,
+                     only_if_converged: bool = False) -> List[FoldAfter]:
+        """``name``'s folds, to fit as soon as its full fit (at ``live_cfg``) is in the cache."""
+        cfg = self.live_cfg
+        return [FoldAfter(Path(path), name, Path(cfg.corpus_path), cfg.settings, Path(cfg.cache_dir), Path(fp),
+                          self._fold_settings(), rule or self._fold_rule(), only_if_converged, mem_gb)
+                for fp in self.fold_paths]
 
     def _cv_one(self, name: str) -> Optional[CorpusCV]:
         m = self.live[name]
@@ -640,7 +679,7 @@ class OpenLoop:
         m, newest = self.live[incumbent], self.blocks[-1]
         try:
             return critique_mod.run_critique(
-                rdir, spawn=self.spawn, incumbent=incumbent, theory=m.theory, fitted=m.fit, hypothesis=m.hypothesis,
+                rdir, spawn=self._spawn_once, incumbent=incumbent, theory=m.theory, fitted=m.fit, hypothesis=m.hypothesis,
                 incumbent_file=self.models_dir / f"{incumbent}.py", block=newest,
                 paradigm_note=self.cfg.paradigm_notes.get(newest.name, ""), data_path=self.data_paths[newest.name],
                 n_proposals=self.cfg.n_critique_proposals, alpha=self.cfg.critique_alpha,
@@ -657,7 +696,37 @@ class OpenLoop:
         if not jobs:
             return []
         with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
-            return list(pool.map(lambda j: self._memo(f"spawn:{j[0]}", lambda: bool(self.spawn(*j))), jobs))
+            return list(pool.map(lambda j: self._spawn_once(*j), jobs))
+
+    def _spawn_once(self, cdir: Path, prompt: str) -> bool:
+        """An agent session, once per round in step mode (`_memo`). The files in ``cdir`` when it starts
+        (its brief, a repair's copies) are journaled first; a session whose step was killed before it
+        ended (review V3 §11) is set aside as ``.killed_<dir>_<i>`` and run again from those files
+        alone, not from the killed session's partial ones."""
+        cdir = Path(cdir)
+        if self._jpath is None:
+            return bool(self.spawn(cdir, prompt))
+        key, started = f"spawn:{cdir}", f"started:{cdir}"
+        with self._jlock:
+            if key in self._jmemo:
+                return self._jmemo[key]
+            brief = self._jmemo.get(started)
+        if brief is not None and cdir.exists():
+            k = 1
+            while (cdir.parent / f".killed_{cdir.name}_{k}").exists():
+                k += 1
+            aside = cdir.parent / f".killed_{cdir.name}_{k}"
+            cdir.rename(aside)
+            cdir.mkdir()
+            for rel in brief:
+                if (aside / rel).is_file():
+                    (cdir / rel).parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(aside / rel, cdir / rel)
+            print(f"[open loop] {cdir.name}: its session was killed with its step; set aside as {aside.name}, "
+                  "run again", flush=True)
+        files = sorted(str(f.relative_to(cdir)) for f in cdir.rglob("*") if f.is_file()) if cdir.exists() else []
+        self._journal_put(started, files)
+        return self._memo(key, lambda: bool(self.spawn(cdir, prompt)))
 
     def _same_hypothesis(self, hypothesis: str) -> Optional[str]:
         key = collapse_whitespace(hypothesis).strip().lower()
@@ -721,8 +790,10 @@ class OpenLoop:
         return results
 
     def _admit_all(self, slots, key: str, round_index: int, context_suffix: str = "") -> List[tuple]:
-        """Name every slot with a candidate in ``slots[key]``, fit them at once, admit one by one."""
-        self._prefit(self._fit_items(self._name_slots(slots, key, round_index, set()), key))
+        """Name every slot with a candidate in ``slots[key]``, fit them at once, admit one by one. In
+        step mode a converged repair's folds follow its fit, so no step only submits them."""
+        self._prefit(self._fit_items(self._name_slots(slots, key, round_index, set()), key),
+                     folds_after=True, only_if_converged=True)
         return self._admit_named(slots, key, context_suffix)
 
     def run_round(self, round_index: int) -> dict:

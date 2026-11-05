@@ -13,8 +13,10 @@ from tests.test_rsa_open_step_submit import FakeSlurm, _cfg, _pending
 def _main_with(monkeypatch, tmp_path, run_fn, stepper):
     import src.rsa_open.run_chain as rc
 
-    monkeypatch.setattr(rc, "build", lambda args: types.SimpleNamespace(run=run_fn))
+    monkeypatch.setattr(rc, "build", lambda args: types.SimpleNamespace(run=run_fn, cfg=None))
     monkeypatch.setattr(rc, "step_from_env", lambda: stepper)
+    monkeypatch.setattr(rc, "this_launch", lambda cfg, chain: {"experiment": 1})
+    monkeypatch.setattr(rc, "replace", lambda cfg, **kw: cfg)
     return rc.main(types.SimpleNamespace(run_dir=tmp_path / "run"))
 
 

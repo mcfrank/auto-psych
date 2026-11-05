@@ -44,3 +44,25 @@ round from its journal without rerunning finished agents.
 ## 3. Still open from §10
 - A5 (compile separately, then sample at ~5.5 GB): a prototype if time allows.
 - Whether `owners` time counts toward fairshare (the `sshare` readings above).
+
+## 4. Next: one experiment of a real-agent chain (added 2026-11-05)
+
+SRCC's latest reply (ticket #106983, 11-05) is in `DISTRIBUTED_DESIGN.md` §0b ("After SRCC's
+reply"): not a ruling, "try to run some segments", report any rejection's exact message, and avoid
+`sbatch --wait`. Code: `auto-psych-open` after this handoff's commit (one experiment per launch, 40
+steps a launch, folds after their full fits, 18/36/72 GB tiers, the §11 findings fixed).
+
+**The PI submits the launch by hand**; this session doesn't submit agent-running jobs (rule 10).
+It reads results afterwards, with no polling loops.
+
+1. Fast tests: `uv run pytest -q tests/test_rsa_open_step_*.py tests/test_rsa_open_fit_array.py`.
+   Slow: `tests/test_rsa_open_step_equivalence.py` (its limit is now set; expect it to pass as your
+   corrected copy did, in fewer steps since the seeds' folds follow their fits).
+2. Replay, to check the new pieces without agents: `replay_step.sbatch` as before (it now records a
+   launch and stops after its one experiment, exit 8, so expect a STOP saying "launch the next").
+   Report steps per round and how many steps ran under 10 minutes, against §11's 3 of 10.
+3. The real-agent segment, launched by the PI: one open chain, simulated participants, one
+   experiment of two (`STEP_MODE=1 CHAIN=0 ARM=open N_EXPERIMENTS=2 MAX_ITERATIONS=2 CANDIDATES=3` with
+   `open_rehearsal.sbatch`, as in §2). Report: steps and their durations, step MaxRSS with agents,
+   whether any session ran twice, any message from Slurm, the agent or SRCC, and that it stopped
+   after the experiment with a mail.

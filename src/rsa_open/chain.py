@@ -95,6 +95,14 @@ class FixedDesignFailed(RuntimeError):
     """The fixed arm's paradigm failed the harness's checks (a broken spec or harness, not a design)."""
 
 
+class ExperimentDone(Exception):
+    """This launch's experiment is finished; a person launches the next (step mode)."""
+
+    def __init__(self, n: int, of: int) -> None:
+        super().__init__(f"experiment {n} of {of} is done; launch experiment {n + 1}")
+        self.n, self.of = n, of
+
+
 class OutOfJobTime(RuntimeError):
     """Too little of the job is left to finish the next stage: the next job of the chain starts it
     (a design killed part way starts again from scratch, so starting one late wastes it; a loop
@@ -138,6 +146,9 @@ class ChainConfig:
     live: Optional[Any] = None
     """`src.rsa_open.live.LiveConfig`: real people instead of ``ground_truth``."""
     stop_after_collect: bool = False
+    stop_after_experiment: Optional[int] = None
+    """Step mode: the experiment this launch runs; the chain stops after its loop (`ExperimentDone`)
+    and a person launches the next (SRCC ticket #106983)."""
     """Stop once experiment 1's data are in (a live smoke test: its data are never modelled)."""
     deadline: Optional[float] = None
     """When the job ends (epoch seconds): a stage is started only with ``stage_min_hours`` left."""
@@ -146,6 +157,22 @@ class ChainConfig:
 
 def _hypotheses(models_dir: Path) -> Dict[str, str]:
     return {e["name"]: e.get("rationale", "") for e in read_manifest_entries(models_dir)}
+
+
+def clear_stage(stage_dir: Path, keep: Sequence[str] = ()) -> None:
+    """Empty an unfinished stage's directory but for the entries in ``keep`` (step mode: a loop before
+    its first scored step holds nothing an agent wrote, and each step would otherwise set aside
+    another copy of its corpus; review V3 §11)."""
+    stage_dir = Path(stage_dir)
+    if not stage_dir.exists():
+        return
+    for child in stage_dir.iterdir():
+        if child.name in keep:
+            continue
+        if child.is_dir() and not child.is_symlink():
+            shutil.rmtree(child)
+        else:
+            child.unlink()
 
 
 def set_aside(stage_dir: Path, keep: Sequence[str] = ()) -> Optional[Path]:
@@ -488,7 +515,12 @@ class Chain:
             return json.loads((loop_dir / "export.json").read_text())
         resume = (loop_dir / "history.json").exists()  # a scored step: resume from it
         if not resume:
-            set_aside(loop_dir, keep=(".fit_cache", ".scores"))
+            from src.rsa_open.loop import slurm as step
+
+            if step.active() is not None:
+                clear_stage(loop_dir, keep=(".fit_cache", ".scores"))
+            else:
+                set_aside(loop_dir, keep=(".fit_cache", ".scores"))
         corpus = fresh_corpus(self.exp(n) / "corpus.json", self.blocks_before(n + 1))
         notes = {}
         for k in range(1, n + 1):
@@ -531,6 +563,13 @@ class Chain:
         mark("finished")
         return out
 
+    def first_unfinished(self) -> int:
+        """The first experiment whose loop has not exported (``n_experiments + 1`` when all have)."""
+        for n in range(1, self.cfg.n_experiments + 1):
+            if not (self.exp(n) / "loop" / "export.json").exists():
+                return n
+        return self.cfg.n_experiments + 1
+
     def run(self) -> List[dict]:
         exports = []
         for n in range(1, self.cfg.n_experiments + 1):
@@ -545,4 +584,6 @@ class Chain:
             if not (self.exp(n) / "loop" / "export.json").exists():
                 self._time_for("loop", n)
             exports.append(self._stage("loop", n, self.exp(n) / "loop" / "export.json", lambda: self.model_loop(n)))
+            if self.cfg.stop_after_experiment == n and n < self.cfg.n_experiments:
+                raise ExperimentDone(n, self.cfg.n_experiments)
         return exports

@@ -64,7 +64,7 @@ def test_a_cell_path_with_a_comma_is_refused(tmp_path):
 
 
 def test_exit_codes_yield_refuse_and_pause(tmp_path):
-    for rc, want in ((6, 0), (7, 7), (3, 3)):
+    for rc, want in ((6, 0), (7, 7), (3, 3), (8, 15)):
         out, cell, _ = _setup(tmp_path / str(rc), f"rsa_step_exit {rc}")
         assert out.returncode == want, (rc, out.stdout, out.stderr)
     out, cell, env = _setup(tmp_path / "5")
@@ -73,3 +73,29 @@ def test_exit_codes_yield_refuse_and_pause(tmp_path):
                          env={**env, "PATH": f"{fake}:{os.environ['PATH']}"}, capture_output=True, text=True)
     assert run.returncode == 0 and "continues in job 777" in run.stdout, run.stderr
     assert "--dependency=singleton" in (tmp_path / "5" / "sbatch_args").read_text()
+
+
+def test_a_finished_experiment_stops_the_chain_for_a_person_and_mails(tmp_path):
+    out, cell, _ = _setup(tmp_path, "rsa_step_exit 8")
+    assert out.returncode == 15, out.stderr
+    assert "launch the next: CLEAR_STOP=1 STEP_MODE=1" in (cell / "STOP").read_text()
+
+
+def test_a_person_s_launch_refuses_while_another_step_of_the_chain_is_queued(tmp_path):
+    fake = tmp_path / "squeue_bin"
+    fake.mkdir()
+    (fake / "squeue").write_text('#!/bin/bash\nprintf "41\\n57\\n"\n')  # itself (41) and a queued step (57)
+    (fake / "squeue").chmod(0o755)
+    cell = tmp_path / "cell"
+    cell.mkdir()
+    env = {"PATH": f"{fake}:{os.environ['PATH']}", "HOME": str(tmp_path), "CELL": "open_chain_0", "CELL_DIR": str(cell),
+           "WORK_ROOT": str(tmp_path), "REPO": "/r", "SLURM_DIR": "/h", "VENV_PY": "/v", "HARNESS_REPO": "/h",
+           "JAX_COMPILATION_CACHE_DIR": "/j", "SLURM_JOB_NAME": "rsa_open_open_c0", "SLURM_JOB_ID": "41",
+           "RSA_STEP_NEW_LAUNCH": "1"}
+    out = subprocess.run(["bash", "-c", f"source {SCRIPT}; rsa_step_mode /s"], env=env, capture_output=True, text=True)
+    assert out.returncode == 1 and "already has a step queued or running (jobs: 57)" in out.stderr
+    (fake / "squeue").write_text('#!/bin/bash\nprintf "41\\n"\n')  # only itself
+    out = subprocess.run(["bash", "-c", f"source {SCRIPT}; rsa_step_mode /s; printf '%s\\n' \"${{STEP_ENV[@]}}\""],
+                         env=env, capture_output=True, text=True)
+    assert out.returncode == 0, out.stderr
+    assert "RSA_OPEN_NEW_LAUNCH=1" in out.stdout.splitlines()

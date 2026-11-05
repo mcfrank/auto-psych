@@ -57,7 +57,7 @@ def step_config(cell: Path):
 def run_in_steps(cfg, theorist, cell: Path, max_steps: int = 60):
     """The loop as a chain of steps (what run_chain does in a step job). Returns (final, steps)."""
     import src.rsa_open.loop.slurm as step
-    from src.rsa_open.chain import set_aside
+    from src.rsa_open.chain import clear_stage
     from src.rsa_open.loop.fit_array import FitsPending
     from src.rsa_open.loop.orchestrator import OpenLoop
 
@@ -67,7 +67,7 @@ def run_in_steps(cfg, theorist, cell: Path, max_steps: int = 60):
         step.activate(stepper)
         resume = (cfg.results_dir / "history.json").exists()
         if not resume:
-            set_aside(cfg.results_dir, keep=(".fit_cache", ".scores"))
+            clear_stage(cfg.results_dir, keep=(".fit_cache", ".scores"))  # as chain.model_loop does in a step
         try:
             return OpenLoop(cfg, theorist).run(resume=resume), steps
         except FitsPending as ps:
@@ -89,7 +89,9 @@ def test_a_loop_run_as_steps_decides_exactly_as_one_run_straight_through(tmp_pat
         root.mkdir()
         seeds, corpus = _inputs(root)
         return OpenLoopConfig(corpus_path=corpus, seed_models_dir=seeds, results_dir=root / "loop", max_iterations=2,
-                              candidate_count=3, settings=SETTINGS, fit_time_limit_sec=None)
+                              candidate_count=3, settings=SETTINGS, fit_time_limit_sec=1800)
+        # A time limit, as every real loop has: unlimited fits went in-process (review V3 §11), and now
+        # go to arrays in step mode too, but the straight run's fits should be the children a real one runs.
 
     straight_theorist = FakeTheorist()
     OpenLoop(config(tmp_path / "a"), straight_theorist).run()
@@ -103,7 +105,7 @@ def test_a_loop_run_as_steps_decides_exactly_as_one_run_straight_through(tmp_pat
     monkeypatch.setenv("RSA_OPEN_FIT_BACKEND", "slurm")
     monkeypatch.setattr(LocalBackend, "attempt", never)
     _, steps = run_in_steps(stepped_cfg, stepped_theorist, tmp_path / "cell")
-    assert steps >= 4  # the seeds, their folds, and at least one yield a round
+    assert steps >= 3  # the seeds (their folds follow them), and at least one yield a round
 
     def ledger(root):
         return (root / "loop" / "attempted_hypotheses.jsonl").read_text().splitlines()

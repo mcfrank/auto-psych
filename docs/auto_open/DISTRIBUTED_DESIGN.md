@@ -186,6 +186,28 @@ absorb. A5 is not yet prototyped. B1 stays a PI decision for the amendment.
   them, a fresh loop object each step, the local backend made to fail if called) against the same
   loop run straight through: the same ledger, history and export, and each agent called once.
 
+**After SRCC's reply of 2026-11-05 and the rehearsal (review V3 §11), as built on 11-05.** Mark
+Yoder (ticket #106983) wasn't sure how the agents policy reads for this, said it would be settled by
+trial and error (with the exact message of any rejection), called the PI's plan "about right", and
+asked to avoid `sbatch --wait`, which holds resources idle. The plan: a person starts one job per
+experiment; the job runs the agents and sends out arrays of fits only; it then starts the next phase's
+job, with a low, discrete cap on stages. Step mode already never waits; what changed:
+- *One experiment per launch.* A step a person submits (no `STEP_SETTINGS`) records `launch.json`:
+  the experiment it runs and the steps before it. When that experiment's loop exports, the chain
+  writes STOP saying how to launch the next and exits 8 (the job exits 15, so Slurm mails). A launch
+  refuses to start while another step of the chain is queued or running.
+- *Step budget per launch:* 40 (the rehearsal took 2-3 a round, plus 3: about 18 for 5 rounds).
+- *Folds after their full fits* (`fit_array.FoldAfter`): a starting theory's folds, and a repair's,
+  are submitted with its full fit as an array that starts when the full fits end, so no step only
+  submits folds (rule 10's 10-minute minimum; Mark's 20). A task without its full fit, or a repair
+  whose fit did not converge, fits nothing; a failed fold is left to the loop. Results can't change.
+- *Memory tiers 18, 36 and 72 GB*, a theory fitted before starting at the tier that holds its
+  recorded peak with margin (chain 1's experiment-3 folds reached 28-32 GB).
+- *Rehearsal findings:* a step never fits in its own job, an unlimited fit included (it goes to an
+  array with no limit); a session killed with its step is set aside (`.killed_<dir>_<i>`) and run
+  again from its brief alone, its start journaled first, the critique's session too; a loop before
+  its first scored step is emptied, not set aside, each step; the equivalence test sets a fit limit.
+
 ## Appendix: v2 and v1, kept for the record (superseded where §0a-§0b say otherwise)
 
 ## 0. What changed in v2, and what waits for SRCC

@@ -6,12 +6,22 @@
 # mcfrank,owners). It sets STEP_ENV: the settings the chain's process needs
 # (src.rsa_open.loop.slurm.StepConfig.from_env). Needs CELL, CELL_DIR, WORK_ROOT, REPO, SLURM_DIR,
 # VENV_PY, HARNESS_REPO, JAX_COMPILATION_CACHE_DIR and a Slurm job (its name makes steps
-# singletons). Steps run on STEP_PARTITION (mcfrank) with STEP_CPUS / STEP_MEM / STEP_TIME; fits on
+# singletons). A step a person submitted (RSA_STEP_NEW_LAUNCH=1, set by the job script when it found no
+# STEP_SETTINGS) starts a launch: one experiment, at most 40 steps (src.rsa_open.loop.slurm), and it
+# refuses to start while another step of the chain is queued or running. Steps run on STEP_PARTITION (mcfrank) with STEP_CPUS / STEP_MEM / STEP_TIME; fits on
 # STEP_FIT_PARTITION (mcfrank,owners) with STEP_FIT_CONSTRAINT (CPU_GEN:SIE; "none" for none).
 
 rsa_step_mode() {
   local script="$1"; shift
   [[ -n "${SLURM_JOB_NAME:-}" ]] || { echo "FATAL: step mode runs as a Slurm job (its name makes steps singletons)" >&2; exit 1; }
+  if [[ "${RSA_STEP_NEW_LAUNCH:-0}" == 1 ]]; then
+    local others
+    others="$(squeue --me -h -n "$SLURM_JOB_NAME" -o %i | grep -vx "${SLURM_JOB_ID:-}" || true)"
+    if [[ -n "$others" ]]; then
+      echo "FATAL: $CELL already has a step queued or running (jobs: $(echo $others)); not launching a second" >&2
+      exit 1
+    fi
+  fi
   STEP_PARTITION="${STEP_PARTITION:-mcfrank}" STEP_TIME="${STEP_TIME:-2-00:00:00}"
   STEP_CPUS="${STEP_CPUS:-8}" STEP_MEM="${STEP_MEM:-32G}"
   STEP_FIT_PARTITION="${STEP_FIT_PARTITION:-mcfrank,owners}" STEP_FIT_CONSTRAINT="${STEP_FIT_CONSTRAINT:-CPU_GEN:SIE}"
@@ -48,7 +58,8 @@ rsa_step_mode() {
     echo 'echo "${jid%%;*}"'
   } > "$CONT.tmp" && chmod 700 "$CONT.tmp" && mv "$CONT.tmp" "$CONT"
   # For the chain's process only; never a sandbox's (agents get an allowlisted environment).
-  STEP_ENV=(RSA_OPEN_STEP_MODE=1 RSA_OPEN_FIT_BACKEND=slurm RSA_OPEN_CELL_DIR="$CELL_DIR"
+  STEP_ENV=(RSA_OPEN_STEP_MODE=1 RSA_OPEN_FIT_BACKEND=slurm RSA_OPEN_NEW_LAUNCH="${RSA_STEP_NEW_LAUNCH:-0}"
+            RSA_OPEN_CELL_DIR="$CELL_DIR"
             RSA_OPEN_CHAIN_JOB="$SLURM_JOB_NAME" RSA_OPEN_CONTINUATION="$CONT"
             RSA_OPEN_FIT_SCRIPT="$SLURM_DIR/fit_array.sbatch" RSA_OPEN_LOGS="$WORK_ROOT/logs"
             RSA_OPEN_FIT_PARTITION="$STEP_FIT_PARTITION" RSA_OPEN_FIT_CONSTRAINT="$STEP_FIT_CONSTRAINT"
@@ -57,10 +68,13 @@ rsa_step_mode() {
 
 # After the chain's process: what its exit code means for a step (prints why; returns 0 to go on).
 #   6 the fits and the next step are submitted; 7 the step refused to submit (its STOP is written);
-#   5 paused for time: the step submits its own continuation (singleton).
+#   5 paused for time: the step submits its own continuation (singleton); 8 this launch's experiment is
+#   done: STOP with how to launch the next, and 15 (Slurm mails).
 rsa_step_exit() {
   case "$1" in
     6) echo "[step] $CELL: done; its fits and the next step are submitted (steps.jsonl)" ;;
+    8) printf '%s\t%s\n' "$(date -Is)" "this launch's experiment is done; launch the next: CLEAR_STOP=1 STEP_MODE=1 (scripts/rsa/live/open_launch.sh)" > "$CELL_DIR/STOP"
+       echo "[step] $CELL: $(cat "$CELL_DIR/STOP")"; return 15 ;;
     7) echo "[step] $CELL: refused to submit: $(cat "$CELL_DIR/STOP" 2>/dev/null)"; return 7 ;;
     5) local next
        next="$(bash "$CONT" singleton)" || {

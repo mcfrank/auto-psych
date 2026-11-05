@@ -57,7 +57,8 @@
 # RUN2_ROOT (E's source), CODE_TAG (the frozen tag the staged code must be).
 set -euo pipefail
 # A step's continuation (step mode, _step_mode.sh): the chain's settings, as the first step had them.
-if [[ -n "${STEP_SETTINGS:-}" ]]; then source "$STEP_SETTINGS"; fi
+RSA_STEP_NEW_LAUNCH=1  # a person submitted this job, unless it is a step's continuation
+if [[ -n "${STEP_SETTINGS:-}" ]]; then source "$STEP_SETTINGS"; RSA_STEP_NEW_LAUNCH=0; fi
 export REPO="${REPO:-${SLURM_SUBMIT_DIR:-$HOME/auto-psych}}"
 export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/rsa_open_live}"
 source "$REPO/scripts/rsa/slurm/_env.sh"
@@ -254,7 +255,7 @@ case "$rc" in
      else
        echo "[open live] $CELL: paused for the next job of its ladder (too little of this job left for the next stage)"
      fi ;;
-  6|7) [[ "$STEP_MODE" == 1 ]] || { stop "failed (exit $rc outside step mode, job ${SLURM_JOB_ID:-local})"; exit "$rc"; }
-       rsa_step_exit "$rc" || exit $? ;;  # 6: handed over (exit 0); 7: refused, its STOP written (mail)
+  6|7|8) [[ "$STEP_MODE" == 1 ]] || { stop "failed (exit $rc outside step mode, job ${SLURM_JOB_ID:-local})"; exit "$rc"; }
+         rsa_step_exit "$rc" || exit $? ;;  # 6: handed over (exit 0); 7: refused (mail); 8: experiment done (STOP, mail)
   *) stop "failed (exit $rc, job ${SLURM_JOB_ID:-local}): a person looks before it resumes (PREREG_DRAFT.md §4a)"; exit "$rc" ;;
 esac

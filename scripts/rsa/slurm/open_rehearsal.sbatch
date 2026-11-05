@@ -45,7 +45,8 @@
 # first: the replayed data were simulated from it.
 set -euo pipefail
 # A step's continuation (step mode, _step_mode.sh): the chain's settings, as the first step had them.
-if [[ -n "${STEP_SETTINGS:-}" ]]; then source "$STEP_SETTINGS"; fi
+RSA_STEP_NEW_LAUNCH=1  # a person submitted this job, unless it is a step's continuation
+if [[ -n "${STEP_SETTINGS:-}" ]]; then source "$STEP_SETTINGS"; RSA_STEP_NEW_LAUNCH=0; fi
 export REPO="${REPO:-${SLURM_SUBMIT_DIR:-$HOME/auto-psych}}"
 export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/rsa_open_rehearsal}"
 source "$REPO/scripts/rsa/slurm/_env.sh"

@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import json
 import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Literal, Optional, Tuple
 
@@ -40,7 +40,11 @@ THEORIST_MODEL = DESIGNER_MODEL  # Gemini 4 for every agent, theorists and criti
 EXIT_AWAITING_REVIEW = 3
 EXIT_DRAFT_ONLY = 4
 EXIT_OUT_OF_JOB_TIME = 5
+EXIT_EXPERIMENT_DONE = 8
+"""Step mode: this launch's experiment is done; a person launches the next (open_live.sbatch mails)."""
 STEP_MODE_ENV = "RSA_OPEN_STEP_MODE"
+NEW_LAUNCH_ENV = "RSA_OPEN_NEW_LAUNCH"
+"""``1`` in a step a person submitted (not a continuation): it records the launch (`slurm.begin_launch`)."""
 """``1``: this job is one step of the chain (`src.rsa_open.loop.slurm`; open_live.sbatch STEP_MODE=1)."""
 
 
@@ -168,6 +172,28 @@ def step_from_env():
     return stepper
 
 
+def this_launch(cfg, chain) -> dict:
+    """The launch this step belongs to: recorded now in the step a person submitted, read back in a
+    continuation (which never starts a launch of its own)."""
+    import os
+
+    from src.rsa_open.loop import slurm as step
+
+    if os.environ.get(NEW_LAUNCH_ENV, "") == "1":
+        n = chain.first_unfinished()
+        if n > chain.cfg.n_experiments:
+            raise RuntimeError(f"{chain.cfg.chain}: every experiment is done; there is nothing to launch")
+        record = step.begin_launch(cfg, n)
+        print(f"[chain] launch: experiment {n} of {chain.cfg.n_experiments}, at most {record['max_steps']} steps",
+              flush=True)
+        return record
+    record = step.current_launch(cfg)
+    if record is None:
+        raise RuntimeError(f"a continuation with no launch record ({step.launch_path(cfg)}): a person starts a "
+                           "launch (scripts/rsa/live/open_launch.sh)")
+    return record
+
+
 def main(args: Args) -> list:
     from src.runtime.token_usage import read_usage_log, start_usage_log, write_usage_report
 
@@ -180,11 +206,20 @@ def main(args: Args) -> list:
     from src.rsa_open.loop import slurm as step
     from src.rsa_open.loop.fit_array import FitsPending
 
+    from src.rsa_open.chain import ExperimentDone
+
     stepper = step_from_env()
     usage_log = Path(args.run_dir) / "token_usage.jsonl"
     marker = start_usage_log(usage_log)
     try:
-        exports = build(args).run()
+        chain = build(args)
+        if stepper is not None:
+            launch = this_launch(stepper.cfg, chain)
+            chain.cfg = replace(chain.cfg, stop_after_experiment=launch["experiment"])
+        exports = chain.run()
+    except ExperimentDone as done:
+        print(f"[chain] STOPPED: {done}", flush=True)
+        raise SystemExit(EXIT_EXPERIMENT_DONE)
     except FitsPending as pending:
         if stepper is None:  # only a step's fit backend leaves fits pending
             raise RuntimeError("fits are pending outside step mode (RSA_OPEN_FIT_BACKEND=slurm without "

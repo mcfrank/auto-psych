@@ -6,7 +6,8 @@
 #   sbatch --job-name=<chain's name> --partition=... --cpus-per-task=8 --mem=32G --time=... --no-requeue \
 #     --chdir=$HARNESS_REPO -o $WORK_ROOT/logs/%x_%j.out $WORK_ROOT/replay_step.sbatch
 set -euo pipefail
-if [[ -n "${STEP_SETTINGS:-}" ]]; then source "$STEP_SETTINGS"; fi
+RSA_STEP_NEW_LAUNCH=1  # a person submitted this job, unless it is a step's continuation
+if [[ -n "${STEP_SETTINGS:-}" ]]; then source "$STEP_SETTINGS"; RSA_STEP_NEW_LAUNCH=0; fi
 : "${WORK_ROOT:?}" "${HARNESS_REPO:?}" "${CHAIN:?}" "${REPLAY_INPUT:?}" "${REPLAY_SOURCE:?}" "${ROUNDS:?}" "${CANDIDATES:?}"
 export REPO="$HARNESS_REPO" STEP_MODE=1
 export VENV_PY=/home/groups/mcfrank/venvs/auto-psych/bin/python
@@ -36,6 +37,6 @@ set -e
 echo "[replay] $CELL step job ${SLURM_JOB_ID} python exit $rc at $(date -Is)"
 case "$rc" in
   0) date -Is > "$CELL_DIR/DONE" ;;
-  5|6|7) rsa_step_exit "$rc" || exit $? ;;
+  5|6|7|8) rsa_step_exit "$rc" || exit $? ;;
   *) exit "$rc" ;;
 esac
