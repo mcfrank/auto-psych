@@ -1,0 +1,253 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "range_bounded_parity_concepts",
+    "argmax_model": "range_bounded_parity_concepts",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "extrapolation_verification_failure": 0.0,
+      "range_bounded_parity_concepts": 1.0
+    },
+    "elpd_loo": {
+      "extrapolation_verification_failure": -3261.6738,
+      "range_bounded_parity_concepts": -3183.9712
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "range_size_prior_concepts",
+    "argmax_model": "range_size_prior_concepts",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "extrapolation_verification_failure": 0.0,
+      "range_bounded_parity_concepts": 0.0,
+      "weak_sampling_hypothesis_elimination": 0.0,
+      "sample_size_neglect_evidence": 1e-06,
+      "range_size_prior_concepts": 0.999998,
+      "single_example_rule_reading": 1e-06
+    },
+    "elpd_loo": {
+      "extrapolation_verification_failure": -3261.6738,
+      "range_bounded_parity_concepts": -3183.9712,
+      "weak_sampling_hypothesis_elimination": -3182.4237,
+      "sample_size_neglect_evidence": -3171.774,
+      "range_size_prior_concepts": -3157.5136,
+      "single_example_rule_reading": -3171.0522
+    },
+    "critique": {
+      "status": "critiqued",
+      "incumbent": "range_bounded_parity_concepts",
+      "attempts": 1,
+      "n_statistics": 8,
+      "n_evaluated": 8,
+      "n_significant": 1,
+      "n_significant_fdr": 1
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "range_prior_sample_size_neglect",
+    "argmax_model": "range_prior_sample_size_neglect",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "extrapolation_verification_failure": 0.0,
+      "range_bounded_parity_concepts": 0.0,
+      "weak_sampling_hypothesis_elimination": 0.0,
+      "sample_size_neglect_evidence": 0.0,
+      "range_size_prior_concepts": 0.001479,
+      "single_example_rule_reading": 0.0,
+      "range_prior_sample_size_neglect": 0.998369,
+      "neglect_evidence_guessing_lapse": 0.0,
+      "normalized_attention_similarity": 0.0,
+      "open_ended_multiples_concepts": 0.000153
+    },
+    "elpd_loo": {
+      "extrapolation_verification_failure": -3261.6738,
+      "range_bounded_parity_concepts": -3183.9712,
+      "weak_sampling_hypothesis_elimination": -3182.4237,
+      "sample_size_neglect_evidence": -3171.774,
+      "range_size_prior_concepts": -3157.5136,
+      "single_example_rule_reading": -3171.0522,
+      "range_prior_sample_size_neglect": -3150.9986,
+      "neglect_evidence_guessing_lapse": -3167.7814,
+      "normalized_attention_similarity": -3287.5592,
+      "open_ended_multiples_concepts": -3159.7835
+    },
+    "critique": {
+      "status": "critiqued",
+      "incumbent": "range_size_prior_concepts",
+      "attempts": 1,
+      "n_statistics": 8,
+      "n_evaluated": 8,
+      "n_significant": 4,
+      "n_significant_fdr": 3
+    }
+  },
+  {
+    "step": 3,
+    "iteration": 2,
+    "best_model": "digit_rules_need_comparison",
+    "argmax_model": "digit_rules_need_comparison",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "extrapolation_verification_failure": 0.0,
+      "range_bounded_parity_concepts": 0.0,
+      "weak_sampling_hypothesis_elimination": 0.0,
+      "sample_size_neglect_evidence": 0.0,
+      "range_size_prior_concepts": 0.0,
+      "single_example_rule_reading": 0.0,
+      "range_prior_sample_size_neglect": 0.0,
+      "neglect_evidence_guessing_lapse": 0.0,
+      "normalized_attention_similarity": 0.0,
+      "open_ended_multiples_concepts": 0.0,
+      "arithmetic_relation_exemplar": 0.0,
+      "range_sized_bounded_rules": 0.0,
+      "digit_rules_need_comparison": 1.0,
+      "open_multiples_guessing_lapse": 0.0,
+      "pedagogical_sampling_concepts": 0.0
+    },
+    "elpd_loo": {
+      "extrapolation_verification_failure": -3261.6738,
+      "range_bounded_parity_concepts": -3183.9712,
+      "weak_sampling_hypothesis_elimination": -3182.4237,
+      "sample_size_neglect_evidence": -3171.774,
+      "range_size_prior_concepts": -3157.5136,
+      "single_example_rule_reading": -3171.0522,
+      "range_prior_sample_size_neglect": -3150.9986,
+      "neglect_evidence_guessing_lapse": -3167.7814,
+      "normalized_attention_similarity": -3287.5592,
+      "open_ended_multiples_concepts": -3159.7835,
+      "arithmetic_relation_exemplar": -3209.8904,
+      "range_sized_bounded_rules": -3149.7165,
+      "digit_rules_need_comparison": -3132.1724,
+      "open_multiples_guessing_lapse": -3158.9169,
+      "pedagogical_sampling_concepts": -3219.716
+    },
+    "critique": {
+      "status": "critiqued",
+      "incumbent": "range_prior_sample_size_neglect",
+      "attempts": 1,
+      "n_statistics": 8,
+      "n_evaluated": 8,
+      "n_significant": 3,
+      "n_significant_fdr": 2
+    }
+  },
+  {
+    "step": 4,
+    "iteration": 3,
+    "best_model": "comparison_dependent_concepts",
+    "argmax_model": "comparison_dependent_concepts",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "extrapolation_verification_failure": 0.0,
+      "range_bounded_parity_concepts": 0.0,
+      "weak_sampling_hypothesis_elimination": 0.0,
+      "sample_size_neglect_evidence": 0.0,
+      "range_size_prior_concepts": 0.0,
+      "single_example_rule_reading": 0.0,
+      "range_prior_sample_size_neglect": 0.0,
+      "neglect_evidence_guessing_lapse": 0.0,
+      "normalized_attention_similarity": 0.0,
+      "open_ended_multiples_concepts": 0.0,
+      "arithmetic_relation_exemplar": 0.0,
+      "range_sized_bounded_rules": 0.0,
+      "digit_rules_need_comparison": 0.0,
+      "open_multiples_guessing_lapse": 0.0,
+      "pedagogical_sampling_concepts": 0.0,
+      "comparison_dependent_concepts": 1.0,
+      "digit_neglect_sized_bounded_rules": 0.0
+    },
+    "elpd_loo": {
+      "extrapolation_verification_failure": -3261.6738,
+      "range_bounded_parity_concepts": -3183.9712,
+      "weak_sampling_hypothesis_elimination": -3182.4237,
+      "sample_size_neglect_evidence": -3171.774,
+      "range_size_prior_concepts": -3157.5136,
+      "single_example_rule_reading": -3171.0522,
+      "range_prior_sample_size_neglect": -3150.9986,
+      "neglect_evidence_guessing_lapse": -3167.7814,
+      "normalized_attention_similarity": -3287.5592,
+      "open_ended_multiples_concepts": -3159.7835,
+      "arithmetic_relation_exemplar": -3209.8904,
+      "range_sized_bounded_rules": -3149.7165,
+      "digit_rules_need_comparison": -3132.1724,
+      "open_multiples_guessing_lapse": -3158.9169,
+      "pedagogical_sampling_concepts": -3219.716,
+      "comparison_dependent_concepts": -3110.6944,
+      "digit_neglect_sized_bounded_rules": -3145.6699
+    },
+    "critique": {
+      "status": "critiqued",
+      "incumbent": "digit_rules_need_comparison",
+      "attempts": 1,
+      "n_statistics": 8,
+      "n_evaluated": 8,
+      "n_significant": 4,
+      "n_significant_fdr": 2
+    }
+  },
+  {
+    "step": 5,
+    "iteration": 4,
+    "best_model": "consistent_examples_bounded_rules",
+    "argmax_model": "consistent_examples_bounded_rules",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "extrapolation_verification_failure": 0.0,
+      "range_bounded_parity_concepts": 0.0,
+      "weak_sampling_hypothesis_elimination": 0.0,
+      "sample_size_neglect_evidence": 0.0,
+      "range_size_prior_concepts": 0.0,
+      "single_example_rule_reading": 0.0,
+      "range_prior_sample_size_neglect": 0.0,
+      "neglect_evidence_guessing_lapse": 0.0,
+      "normalized_attention_similarity": 0.0,
+      "open_ended_multiples_concepts": 0.0,
+      "arithmetic_relation_exemplar": 0.0,
+      "range_sized_bounded_rules": 0.0,
+      "digit_rules_need_comparison": 0.0,
+      "open_multiples_guessing_lapse": 0.0,
+      "pedagogical_sampling_concepts": 0.0,
+      "comparison_dependent_concepts": 0.0,
+      "digit_neglect_sized_bounded_rules": 0.0,
+      "coherence_relative_similarity": 0.0,
+      "consistent_examples_bounded_rules": 1.0,
+      "comparison_gated_sized_bounded_rules": 0.0
+    },
+    "elpd_loo": {
+      "extrapolation_verification_failure": -3261.6738,
+      "range_bounded_parity_concepts": -3183.9712,
+      "weak_sampling_hypothesis_elimination": -3182.4237,
+      "sample_size_neglect_evidence": -3171.774,
+      "range_size_prior_concepts": -3157.5136,
+      "single_example_rule_reading": -3171.0522,
+      "range_prior_sample_size_neglect": -3150.9986,
+      "neglect_evidence_guessing_lapse": -3167.7814,
+      "normalized_attention_similarity": -3287.5592,
+      "open_ended_multiples_concepts": -3159.7835,
+      "arithmetic_relation_exemplar": -3209.8904,
+      "range_sized_bounded_rules": -3149.7165,
+      "digit_rules_need_comparison": -3132.1724,
+      "open_multiples_guessing_lapse": -3158.9169,
+      "pedagogical_sampling_concepts": -3219.716,
+      "comparison_dependent_concepts": -3110.6944,
+      "digit_neglect_sized_bounded_rules": -3145.6699,
+      "coherence_relative_similarity": -3314.8078,
+      "consistent_examples_bounded_rules": -3088.2403,
+      "comparison_gated_sized_bounded_rules": -3127.8624
+    },
+    "critique": {
+      "status": "critiqued",
+      "incumbent": "comparison_dependent_concepts",
+      "attempts": 1,
+      "n_statistics": 8,
+      "n_evaluated": 8,
+      "n_significant": 2,
+      "n_significant_fdr": 1
+    }
+  }
+]

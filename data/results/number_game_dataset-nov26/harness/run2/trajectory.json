@@ -1,0 +1,318 @@
+{
+  "gt_model": "dataset",
+  "run_root": "/scr/wurgaft/auto-psych/agent_trees/2485af553ddb9dd3/repo/_runs/cell_1",
+  "trajectory": [
+    {
+      "experiment": 1,
+      "step": 0,
+      "global_step": 0,
+      "best_model": "bigelow_piantadosi_independent",
+      "incumbent_changed": false,
+      "incumbent_is_discovered": false
+    },
+    {
+      "experiment": 1,
+      "step": 1,
+      "global_step": 1,
+      "best_model": "rule_within_range_conjunction",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 2,
+      "global_step": 2,
+      "best_model": "family_salience_feature_overlap",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 3,
+      "global_step": 3,
+      "best_model": "decimal_multiple_salience_overlap",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 4,
+      "global_step": 4,
+      "best_model": "one_sided_magnitude_bound_overlap",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 5,
+      "global_step": 5,
+      "best_model": "seed_multiple_salience_overlap",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 0,
+      "global_step": 6,
+      "best_model": "final_digit_overshadowing_overlap",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 1,
+      "global_step": 7,
+      "best_model": "seed_overshadowing_last_digit_recency",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 2,
+      "global_step": 8,
+      "best_model": "gap_step_progression_overlap",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 3,
+      "global_step": 9,
+      "best_model": "progression_graded_magnitude_band",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 4,
+      "global_step": 10,
+      "best_model": "progression_band_first_digit_primacy",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 5,
+      "global_step": 11,
+      "best_model": "incremental_band_narrowing",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 0,
+      "global_step": 12,
+      "best_model": "span_interval_similarity",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 1,
+      "global_step": 13,
+      "best_model": "single_example_random_program_doubt",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 2,
+      "global_step": 14,
+      "best_model": "rule_ambiguity_single_doubt",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 3,
+      "global_step": 15,
+      "best_model": "parity_bounded_ambiguity_doubt",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 4,
+      "global_step": 16,
+      "best_model": "parity_doubt_three_example_memory",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 5,
+      "global_step": 17,
+      "best_model": "neighbourhood_doubt_three_example_memory",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    }
+  ],
+  "incumbent": {
+    "starting_models": [
+      "bigelow_piantadosi_independent",
+      "bigelow_piantadosi_mixture",
+      "tenenbaum_rules_similarity"
+    ],
+    "n_steps": 18,
+    "n_incumbent_changes": 17,
+    "n_steps_discovered_incumbent": 17,
+    "final_incumbent": "neighbourhood_doubt_three_example_memory",
+    "changes": [
+      {
+        "global_step": 1,
+        "experiment": 1,
+        "step": 1,
+        "from": "bigelow_piantadosi_independent",
+        "to": "rule_within_range_conjunction"
+      },
+      {
+        "global_step": 2,
+        "experiment": 1,
+        "step": 2,
+        "from": "rule_within_range_conjunction",
+        "to": "family_salience_feature_overlap"
+      },
+      {
+        "global_step": 3,
+        "experiment": 1,
+        "step": 3,
+        "from": "family_salience_feature_overlap",
+        "to": "decimal_multiple_salience_overlap"
+      },
+      {
+        "global_step": 4,
+        "experiment": 1,
+        "step": 4,
+        "from": "decimal_multiple_salience_overlap",
+        "to": "one_sided_magnitude_bound_overlap"
+      },
+      {
+        "global_step": 5,
+        "experiment": 1,
+        "step": 5,
+        "from": "one_sided_magnitude_bound_overlap",
+        "to": "seed_multiple_salience_overlap"
+      },
+      {
+        "global_step": 6,
+        "experiment": 2,
+        "step": 0,
+        "from": "seed_multiple_salience_overlap",
+        "to": "final_digit_overshadowing_overlap"
+      },
+      {
+        "global_step": 7,
+        "experiment": 2,
+        "step": 1,
+        "from": "final_digit_overshadowing_overlap",
+        "to": "seed_overshadowing_last_digit_recency"
+      },
+      {
+        "global_step": 8,
+        "experiment": 2,
+        "step": 2,
+        "from": "seed_overshadowing_last_digit_recency",
+        "to": "gap_step_progression_overlap"
+      },
+      {
+        "global_step": 9,
+        "experiment": 2,
+        "step": 3,
+        "from": "gap_step_progression_overlap",
+        "to": "progression_graded_magnitude_band"
+      },
+      {
+        "global_step": 10,
+        "experiment": 2,
+        "step": 4,
+        "from": "progression_graded_magnitude_band",
+        "to": "progression_band_first_digit_primacy"
+      },
+      {
+        "global_step": 11,
+        "experiment": 2,
+        "step": 5,
+        "from": "progression_band_first_digit_primacy",
+        "to": "incremental_band_narrowing"
+      },
+      {
+        "global_step": 12,
+        "experiment": 3,
+        "step": 0,
+        "from": "incremental_band_narrowing",
+        "to": "span_interval_similarity"
+      },
+      {
+        "global_step": 13,
+        "experiment": 3,
+        "step": 1,
+        "from": "span_interval_similarity",
+        "to": "single_example_random_program_doubt"
+      },
+      {
+        "global_step": 14,
+        "experiment": 3,
+        "step": 2,
+        "from": "single_example_random_program_doubt",
+        "to": "rule_ambiguity_single_doubt"
+      },
+      {
+        "global_step": 15,
+        "experiment": 3,
+        "step": 3,
+        "from": "rule_ambiguity_single_doubt",
+        "to": "parity_bounded_ambiguity_doubt"
+      },
+      {
+        "global_step": 16,
+        "experiment": 3,
+        "step": 4,
+        "from": "parity_bounded_ambiguity_doubt",
+        "to": "parity_doubt_three_example_memory"
+      },
+      {
+        "global_step": 17,
+        "experiment": 3,
+        "step": 5,
+        "from": "parity_doubt_three_example_memory",
+        "to": "neighbourhood_doubt_three_example_memory"
+      }
+    ]
+  },
+  "starting_models_prunable": true,
+  "experiments": [
+    {
+      "experiment": 1,
+      "manifest_models": [
+        "final_digit_overshadowing_overlap",
+        "seed_multiple_salience_overlap"
+      ]
+    },
+    {
+      "experiment": 2,
+      "manifest_models": [
+        "first_impression_anchoring",
+        "progression_band_first_digit_primacy",
+        "coincidence_gated_first_digit_primacy",
+        "incremental_band_narrowing",
+        "span_interval_similarity",
+        "range_tightened_magnitude_band",
+        "span_sharpened_magnitude_band",
+        "first_impression_span_interior"
+      ]
+    },
+    {
+      "experiment": 3,
+      "manifest_models": [
+        "parity_bounded_ambiguity_doubt",
+        "parity_doubt_three_example_memory",
+        "working_memory_ambiguity_doubt",
+        "exception_tolerant_parity_doubt",
+        "common_step_grid_concept",
+        "output_dispersion_crowding_veto",
+        "magnitude_bounded_ambiguity_doubt",
+        "neighbourhood_doubt_three_example_memory"
+      ]
+    }
+  ]
+}

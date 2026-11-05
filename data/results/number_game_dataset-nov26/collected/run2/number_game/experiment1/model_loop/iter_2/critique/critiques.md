@@ -1,0 +1,11 @@
+# Critique of `family_salience_feature_overlap`
+
+4 of 8 evaluated test statistics show a significant discrepancy (p ≤ 0.05), over 1000 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **mult5_vs_other_multiple_gap** — In sets whose examples share both a multiple-of-5/10 property and some other multiple-of-m property (m in 3..12, e.g. 90,45 share x5 and x9), yes-rate for targets that are multiples of the shared 5/10 (but not of the other shared m) minus targets that are multiples of another shared m but not of the shared 5/10; observed > null means the model's single 'multiples' salience under-differentiates base-10 multiples from other multiples (people strongly prefer x5/x10 rules). (observed 0.264 vs null mean -0.233, z=5.36, p=0.002, q=0.016) [survives FDR]
+- **parity_violation_odd_vs_even_set_asymmetry** — Yes-rate for even targets when all examples are odd minus yes-rate for odd targets when all examples are even (multi-example sets only); observed > null means people tolerate parity violations of odd sets more than of even sets beyond what the model's single shared parity salience predicts, observed < null the reverse. (observed 0.184 vs null mean 0.101, z=2.47, p=0.016, q=0.048) [survives FDR]
+- **between_set_mean_spread** — Standard deviation across sets (those asked with >=4 distinct targets) of the set-level mean yes-rate; observed > null means the model compresses set-to-set differences in overall willingness to say yes (e.g. near-zero for 84,94,34 vs high for 90,100,5), observed < null means it exaggerates them. (observed 0.234 vs null mean 0.202, z=2.30, p=0.02, q=0.048) [survives FDR]
+- **shared_final_digit_violation_rate** — Yes-rate for targets NOT ending in the final digit that all (>=2) examples share (e.g. 84,94,34 -> 40..49); observed < null means the model over-produces yes for final-digit violators (it lets parity/contained-digit/span overlap compensate where people treat the shared final digit as a hard rule), observed > null the reverse. (observed 0.109 vs null mean 0.159, z=-2.23, p=0.024, q=0.048) [survives FDR]

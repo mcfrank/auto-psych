@@ -1,0 +1,11 @@
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how it stands on the current data by ELPD-LOO (best first). `elpd_diff ± dse` is a model's deficit against the best and the standard error of that difference (with the responses to each stimulus pair counted together, as they are correlated): within about 2·dse the two are statistically tied on this data; beyond it the model has lost. "PSIS-LOO unreliable" means the estimate itself is untrustworthy (too many high-Pareto-k trials), not that the model is bad. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## final_digit_overshadowing_overlap  — rank 0, the best model on this data, ELPD-LOO -3290.6
+
+Refinement of `one_sided_magnitude_bound_overlap` by one change: a final digit that is visibly shared by all of several examples (e.g. 28, 98) overshadows every other shared property. People still say "yes" in proportion to the salience-weighted share of the examples' shared profile that the target has, but when the examples visibly share a final digit, all the other shared properties (parity, multiples, contained digits, magnitude bounds, and so on) lose an inferred fraction of their salience. This disagrees most sharply with the incumbent on shared-final-digit sets: targets that keep the digit but break the other shared properties (28, 98 -> 18, 38) are endorsed far more, and targets that fit the other properties but not the digit (28, 98 -> 14, 56) far less.
+
+## seed_multiple_salience_overlap  — rank 1, 8.4 ± 21.9 nats behind the best (0.4× dse: statistically tied with the best), ELPD-LOO -3299.0
+
+People notice a relation between the examples themselves that the property-overlap models ignore: whether the smallest example divides every other example (7 and 63, 9 and 81, 8 and 64). When it does, they read that smallest number as the program's seed and take "multiples of the seed" as a salient property of the set, with its own salience. As in the overlap account, they still say "yes" in proportion to the salience-weighted share of the examples' common properties that the target also has, so a multiple of the seed is endorsed even when it breaks other shared properties such as parity (e.g. 14 and 28 for 7, 63).

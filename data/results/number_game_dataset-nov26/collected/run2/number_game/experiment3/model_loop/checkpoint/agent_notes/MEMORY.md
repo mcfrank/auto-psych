@@ -1,0 +1,70 @@
+- [PyTensor gather speed](pytensor-gather-speed.md) — one-hot matmul beats fancy-index gather; benchmark dlogp first
+- [Overlap model tweaks](overlap-model-tweaks.md) — parity split +6 nats; salience-scaled slope +4.5; most other tweaks ~0
+- [Final-digit overshadowing](final-digit-overshadowing.md) — shared last digit discounting other saliences +7 nats; adding the seed family on exp2 gave +40 more
+- [Seed multiple property](seed-multiple-property.md) — min-divides-all seed family +10 nats; gcd/spacing/contrast ~0
+- [Seed + digit overshadowing](seed-plus-digit-overshadowing.md) — the two mechanisms stack: MAP +23 over the incumbent; seed-overshadowing weak
+- [Last-example digit recency](last-example-digit-recency.md) — last-shown example final digit as lingering property +25.6 nats MAP; order effect real; stacks with seed+overshadowing (smoke -3159.5)
+- [Leaky memory recency](leaky-memory-recency.md) — forgetting earlier examples gave ~0; order effects are a dead end
+- [Graded consensus properties](graded-consensus-properties.md) — partial-share props weighted fraction^2.5: +3 MAP on exp2 incumbent
+- [Single-example leniency](single-example-leniency.md) — yes-shift on 1-example sets +27 MAP over the exp2 incumbent
+- [Single-example leniency](single-example-leniency.md) — yes-bias on 1-example sets +27 MAP over exp2 incumbent; recency weight shrinks
+- [Single-example breadth](single-example-breadth.md) — lean-to-yes on one-example sets +17.5 MAP on seed model; bounds-off for n=1 +8.8
+- [Graded magnitude band](graded-magnitude-band.md) — Gaussian falloff outside the examples' range instead of hard bounds: +13.8 MAP on exp2 incumbent
+- [Concept-space additions](concept-space-additions.md) — upward arithmetic progression +8.6 on exp2 incumbent; repdigit +2; others ~0; find_MAP unreliable
+- [First-example digit primacy](first-example-digit-primacy.md) — first-example final digit lingers too; smoke -3150.9; single-n leniency = duplicate
+- [Guessing lapse ceiling](guessing-lapse-ceiling.md) — lapse+guess on exp2 incumbent +5 MAP (acts as yes-ceiling ~0.77); trial_index banned in models
+- [Band + primacy](band-plus-primacy.md) — graded band + first-digit primacy stacked; smoke -3137.6 (exp2 iter_2 c5)
+- [Property exemplar GCM](property-exemplar-gcm.md) — exemplar similarity over property mismatches: smoke -3313, ~160 nats worse than overlap
+- [Progression + leniency graft](progression-leniency-graft.md) — on gap_step incumbent: leniency +19.5 MAP, band +8.8, primacy +3
+- [Single-example magnitude neighborhood](single-example-magnitude-neighborhood.md) — n=1-only "about this size" property on gap_step: +16.6; closes proximity critique
+- [Coincidence-gated pattern belief](coincidence-gated-pattern-belief.md) — random-program mixture gated by coincidence strength +19.8 on gap_step incumbent; noisy-OR -59
+- [Progression + band + primacy](progression-band-primacy.md) — primacy grafted on exp2 iter_3 incumbent; smoke -3133.5
+- [Progression + band + primacy](progression-band-primacy.md) — primacy on exp2 progression-band incumbent; smoke -3133.5 (iter_3 c3)
+- [Tempered size principle overlap](tempered-size-principle-overlap.md) — specificity^alpha property weights on exp2 incumbent; smoke -3144.5
+- [Specificity-weighted overlap](specificity-weighted-overlap.md) — size-principle weight tilt on exp2 incumbent; smoke -3144.1
+- [First-impression anchoring](first-impression-anchoring.md) — all first-example props linger: +15.7 MAP on progression band incumbent (digit-only +11.7); seed dispersion likely unfixable
+- [Coincidence + primacy](coincidence-plus-primacy.md) — primacy graft on coincidence-gated +4.9 grouped LOO; band graft ~0; lone-rarity gate worse
+- [Band + leniency](band-plus-leniency.md) — n=1 leniency on progression band incumbent +8 grouped LOO; primacy grafts on incumbent all taken
+- [Critique stats: no imports](critique-stat-no-imports.md) — never write import lines in test_stats files; np/pd/math pre-injected
+- [Undiluted magnitude dimension](undiluted-magnitude-dimension.md) — band as its own logit term instead of in the share: smoke -3181, likely worse
+- [Incremental band narrowing](incremental-band-narrowing.md) — band width shrinks per extra example: +8.9 MAP on exp2 iter_4 incumbent; magnitude order effect ~0
+- [Range-tightened band](range-tightened-band.md) — multi-example band narrower than n=1 band: +9.3 grouped LOO on exp2 iter_4 incumbent
+- [First-impression + span interior](first-impression-span-interior.md) — in-range property on first_impression_anchoring +5.6 MAP; smoke -3128.3
+- [Span-sharpened band](span-sharpened-band.md) — own band width for multi-example sets +9.3 grouped LOO on exp2 iter_4 incumbent; smoke -3123.9
+- [Span interval similarity](span-interval-similarity.md) — n>=2 'between the examples' interval, exp falloff, on exp2 incumbent: +5.9 grouped LOO
+- [Exp3 data design](exp3-data-design.md) — exp3: random-looking sets, 9 reps/pair, no participant_id; vectorise via np.unique(sets)
+- [Evidence-tuned attention exemplar](evidence-tuned-attention-exemplar.md) — exp3 exemplar w/ count/(n+kappa) attention: smoke -4929, ~150 behind best
+- [Size-discounted anything concept](size-discounted-anything-concept.md) — exp3: 'any number' concept fading rho^(n-1) on span_interval_similarity; smoke -4688.4
+- [Range band + single leniency](range-band-single-leniency.md) — exp3: n=1 leniency on range_tightened band, smoke +22 over base; n=1 yes flat in distance
+- [Evidence-scaled decisiveness](evidence-scaled-decisiveness.md) — logit × n^g on exp3 incumbent: +2.3 MAP only; n=1 gap not a temperature effect
+- [Single-example random doubt](single-example-random-doubt.md) — exp3 n=1 flat mixture +37 MAP; converges only with Dirichlet masses + log-normal band/span widths
+- [Salience-scaled span decisiveness](salience-scaled-span-decisiveness.md) — exp3: slope × profile-salience^gamma on span incumbent, smoke -4709.7, ~0
+- [Exp3 n=1 data facts](exp3-n1-data-facts.md) — n=1 flat in distance, parity gap +.19; small targets less endorsed on multi sets
+- [Representativeness-gated doubt](representativeness-gated-doubt.md) — exp3 n=1 doubt gated by example conspicuousness: smoke -4683.6, ~0 vs incumbent
+- [Round example random doubt](round-example-random-doubt.md) — exp3 n=1 round (m5) examples endorsed .41 vs .60; parity gap is this confound; doubt-scaling smoke -4679.2
+- [Representativeness-discounted anything](representativeness-discounted-anything.md) — exp3: round-example discount on anything concept ~0 (smoke -4687.7); n1 parity gap confounded with round examples
+- [Parity-preserving random doubt](parity-preserving-random-doubt.md) — exp3 n=1 doubt keeps parity: smoke -4678.2 (+4 over incumbent); n=1 set variance is mostly parity
+- [Pattern-graded random doubt](pattern-graded-random-doubt.md) — exp3 n=1 doubt graded by lone example's profile salience: smoke -4678.1, converges, slope positive
+- [Rule-ambiguity single doubt](rule-ambiguity-single-doubt.md) — exp3 n=1 doubt grows with example's category count: +8 MAP; smoke -4675.4
+- [Rule ambiguity + parity-kept doubt](rule-ambiguity-parity-kept-doubt.md) — exp3 parity graft on rule_ambiguity incumbent: smoke -4674.5, ~+1; n=1 doubt tweaks exhausted
+- [Rule-ambiguous parity doubt](rule-ambiguous-parity-doubt.md) — exp3: parity-keeping doubt + richness-gated share, smoke -4674.5, ~+1 over incumbent
+- [Single-exception tolerance](single-exception-tolerance.md) — exp3: n-1-of-n props at tolerance +2.5 MAP, smoke -4673.5; incumbent near-saturated (resid ~binomial)
+- [Working-memory 3-example limit](working-memory-three-example-limit.md) — exp3: 4-example sets judged on a 3-subset w.p. ~.68: +5.9 MAP; size tilt / local doubt ~0; n1 variance mostly noise
+- [Power chain generation](power-chain-generation.md) — exp3: powers-of-base chain +1.6 MAP; own Dirichlet slot failed R-hat, LogNormal boost × power salience converges
+- [Rule-ambiguity doubt, all sizes](rule-ambiguity-all-sizes.md) — exp3: doubt by shared-category count on multi sets too: +10 MAP, smoke -4665.6; HalfNormal slopes needed
+- [Parity-bounded ambiguity doubt](parity-bounded-ambiguity-doubt.md) — exp3: parity kept in doubt mode at all sizes on all_sizes doubt; smoke -4664.8, ~+1
+- [Log number-line similarity](log-number-line-similarity.md) — exp3: log-ratio band/span gaps on incumbent, smoke -4664.8, tie; magnitude metric doesn't matter
+- [Uncertainty-gated default answer](uncertainty-gated-default-answer.md) — exp3: default answer gated by 4b(1-b) on span inference; smoke -4715.5, ~50 behind incumbent
+- [WM limit + ambiguity doubt](working-memory-plus-ambiguity-doubt.md) — exp3: all-sizes doubt grafted on WM 3-example limit, smoke -4660.0
+- [Parity doubt + 3-example memory](parity-doubt-three-example-memory.md) — exp3 iter_3 c4: WM limit grafted on parity_bounded incumbent; check OK, smoke -4658.6 (+6)
+- [Parity doubt + 3-example memory](parity-doubt-three-example-memory.md) — exp3: WM-limit graft on parity_bounded incumbent, smoke -4658.3 (+6.5)
+- [Exp3 order effects saturated](exp3-order-effects-saturated.md) — momentum/forget-first/last/profile anchoring all ~0 MAP on parity_bounded incumbent
+- [Exception-tolerant parity doubt](exception-tolerant-parity-doubt.md) — exp3: n-1-of-n tolerance on parity_bounded incumbent, smoke -4662.2; check for an already-live graft first
+- [Exp3 iter4 critique stats](exp3-iter4-critique-stats.md) — 8 new stat ideas on parity_doubt_three_example_memory; early-session yes dip .418 vs .45
+- [Conjunctive exemplar similarity](conjunctive-exemplar-similarity.md) — exp3 product-rule exemplar: smoke -4919.7, ~same as mean-sim exemplar
+- [Exception tolerance + 3-example memory](exception-tolerant-three-example-memory.md) — exp3 iter_4 c3: tolerance graft on WM incumbent, smoke -4656.6; early_session critique needs banned trial_index
+- [Output-dispersion crowding veto](output-dispersion-crowding-veto.md) — exp3: near-example targets (d<=3) endorsed less; veto graft on incumbent; sum/diff + multiple-of-example targets also lifted
+- [Common step grid concept](common-step-grid-concept.md) — exp3: gcd-of-gaps grid concept on WM incumbent, smoke -4658.9, tie; concept space saturated
+- [Exception-tolerant 3-example memory](exception-tolerant-three-example-memory.md) — exp3 iter_4 c4: tolerance graft on WM incumbent, smoke -4656.6 (~+2)
+- [Magnitude-bounded ambiguity doubt](magnitude-bounded-ambiguity-doubt.md) — exp3: multi-set doubt fallback fades outside the range, +2.7 loglik on exception_tolerant; tolerance tweaks ~0
+- [Neighbourhood doubt + 3-example memory](neighbourhood-doubt-three-example-memory.md) — exp3 iter_4 c4 repair: magnitude-faded doubt fallback on WM incumbent; tolerance graft was a duplicate

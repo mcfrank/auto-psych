@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  coincidence_gated_first_digit_primacy: 0.125
+  first_impression_anchoring: 0.125
+  first_impression_span_interior: 0.125
+  incremental_band_narrowing: 0.125
+  progression_band_first_digit_primacy: 0.125
+  range_tightened_magnitude_band: 0.125
+  span_interval_similarity: 0.125
+  span_sharpened_magnitude_band: 0.125

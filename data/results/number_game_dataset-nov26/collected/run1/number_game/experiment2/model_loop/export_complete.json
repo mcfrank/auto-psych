@@ -1,0 +1,13 @@
+{
+  "models": [
+    "round_number_kinship_exemplar",
+    "times_table_averaging_exemplar",
+    "round_target_familiarity_bias",
+    "recency_gated_arithmetic_route",
+    "weber_scaled_magnitude_exemplar",
+    "round_number_averaging_exemplar",
+    "times_table_round_kinship_exemplar",
+    "times_table_round_averaging"
+  ],
+  "ledger_sha256": "bb6b768d1114fa9d67f8a94063ca8650baace2de85914261ad840355b34c0058"
+}

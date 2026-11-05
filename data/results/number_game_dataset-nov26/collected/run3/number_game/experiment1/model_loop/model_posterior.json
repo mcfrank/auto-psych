@@ -1,0 +1,42 @@
+{
+  "posteriors": {
+    "extrapolation_verification_failure": 1.0,
+    "range_bounded_parity_concepts": 0.0
+  },
+  "elpd_loo": {
+    "extrapolation_verification_failure": -1525.4588,
+    "range_bounded_parity_concepts": -1546.8517
+  },
+  "n_trials": 2520,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "extrapolation_verification_failure": {
+      "rank": 0,
+      "elpd_loo": -1525.4587775139516,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.9999999994881137,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "range_bounded_parity_concepts": {
+      "rank": 1,
+      "elpd_loo": -1546.851696104289,
+      "elpd_diff": 21.39291859033733,
+      "dse": 8.245248307180512,
+      "dse_clustered": 10.735522774601051,
+      "weight": 5.118862974475231e-10,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "extrapolation_verification_failure"
+}

@@ -1,0 +1,11 @@
+# Critique of `round_number_averaging_exemplar`
+
+4 of 8 evaluated test statistics show a significant discrepancy (p ≤ 0.05), over 1000 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **odd_vs_even_set_parity_violation** — In parity-homogeneous sets of >=3 examples (excluding sets whose examples all end in 0 or 5), yes-rate for opposite-parity targets (>=10 away, no shared final digit) in all-odd sets minus that in all-even sets; observed > null means people treat 'odd' as a much weaker/less salient rule than 'even' (the model's parity attention is symmetric), observed < null the reverse. (observed -0.00869 vs null mean 0.116, z=-2.60, p=0.00999, q=0.0679)
+- **mixed_set_round_target_contrast** — In sets of >=2 examples where some but not all examples end in 0 or 5 (e.g. 15,11; 6,25), yes-rate for multiple-of-10 targets (>=10 away, no shared final digit) minus yes-rate for non-round unrelated targets (>=10 away, no shared digit, not multiple/divisor/gcd>=3 kin); observed < null means the model's round-number kinship route over-generalizes from a lone 5-ending example inside a mixed set, observed > null means it under-credits round targets there. (observed -0.0473 vs null mean 0.0579, z=-2.32, p=0.026, q=0.0679)
+- **near_target_set_size_contrast** — Yes-rate for near targets (1-9 from the nearest example, no shared final digit) in single-example sets minus in 3-4-example sets; observed > null means extra examples dilute near-target support more than the model's n^-kappa averaging predicts, observed < null means the model's averaging over-dilutes near support in larger sets. (observed 0.178 vs null mean 0.0738, z=2.26, p=0.034, q=0.0679)
+- **within_item_trial_drift** — Correlation between trial_index and the rating after subtracting each (set, target) cell's mean rating; observed > null means people become more liberal (more yes) later in the session, observed < null more conservative/fatigued, a time trend the stationary model cannot produce. (observed 0.0248 vs null mean -7.65e-05, z=2.13, p=0.032, q=0.0679)

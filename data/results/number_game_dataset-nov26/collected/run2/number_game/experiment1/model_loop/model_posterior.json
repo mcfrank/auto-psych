@@ -1,0 +1,42 @@
+{
+  "posteriors": {
+    "final_digit_overshadowing_overlap": 0.0,
+    "seed_multiple_salience_overlap": 1.0
+  },
+  "elpd_loo": {
+    "final_digit_overshadowing_overlap": -1490.1276,
+    "seed_multiple_salience_overlap": -1475.3961
+  },
+  "n_trials": 2520,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "seed_multiple_salience_overlap": {
+      "rank": 0,
+      "elpd_loo": -1475.3960774607049,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.9999995999039564,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    },
+    "final_digit_overshadowing_overlap": {
+      "rank": 1,
+      "elpd_loo": -1490.127638270078,
+      "elpd_diff": 14.73156080937315,
+      "dse": 6.110296683054271,
+      "dse_clustered": 9.614578489885883,
+      "weight": 4.000960436763016e-07,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 2520,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "seed_multiple_salience_overlap"
+}

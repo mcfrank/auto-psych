@@ -1,0 +1,1 @@
+power_law_magnitude_gradient

@@ -1,0 +1,1 @@
+- [Number-game data patterns](data-patterns-number-game.md) — digit-rule sharpness, weak arithmetic rules, parity conjunctions, past PPC hits, decade-sharing exemplar effect

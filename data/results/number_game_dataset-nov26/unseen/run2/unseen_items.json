@@ -1,0 +1,14 @@
+{
+  "train": "/sailhome/wurgaft/auto-psych/data/results/number_game_dataset-nov26/collected/run2/number_game/experiment3/model_loop/responses.csv",
+  "n_train_responses": 7560,
+  "n_unseen_items": 24659,
+  "n_unseen_responses": 263663,
+  "unseen_yes_rate": 0.31351763425281515,
+  "r2_ceiling": 0.7596949666272425,
+  "fit": {
+    "method": "warm_start_nuts",
+    "tune": 200,
+    "draws": 500,
+    "chains": 4
+  }
+}

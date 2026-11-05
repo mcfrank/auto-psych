@@ -1,0 +1,9 @@
+- [Number-game data patterns](data-patterns-number-game.md) — digit-rule sharpness, weak arithmetic rules, parity conjunctions, past PPC hits, decade-sharing exemplar effect
+- [Experiment2 data patterns](experiment2-data-patterns.md) — exp2 dataset (113 sets), example-target ~0.70 yes, iter_0 critique stats
+- [Experiment3 data patterns](experiment3-data-patterns.md) — exp3 dataset (204 sets), iter_0-4 critique stats + MAP tests; order effects ~null; incumbent fits ~1 s/iteration (timeout risk)
+- [Incumbent speedup](incumbent-speedup-sparse-gather.md) — sparse one-hot + softmax makes concept-learning graph 2.3x faster, identical logp
+- [Exp3 threshold concepts](experiment3-threshold-concepts.md) — one-sided range boost +29 nats (iter3); rule-specific stray rate +7 MAP (iter4); dead ends
+- [Exp3 pairwise consequential exemplar](exp3-pairwise-consequential-exemplar.md) — Shepard-similarity exemplar model, nll 4306 (best similarity model), mean > geo/max/min pooling
+- [Exp3 exception-weighted rules](experiment3-exception-weighted-rules.md) — rule-only exception cost +7.3 nats MAP on threshold incumbent; span/threshold-decay dead ends
+- [Exp3 weak-sampling ranges](experiment3-weak-sampling-ranges.md) — size-free range evidence: ~+1-6 nats MAP, critique stats unmoved; rules dominate
+- [Exp3 concept-space screens](experiment3-concept-space-screens.md) — residues/span/digit-sum/decades/divisors all ~null at MAP on threshold incumbent; leak source

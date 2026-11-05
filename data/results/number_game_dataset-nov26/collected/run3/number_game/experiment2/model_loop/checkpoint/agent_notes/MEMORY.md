@@ -1,0 +1,2 @@
+- [Number-game data patterns](data-patterns-number-game.md) — digit-rule sharpness, weak arithmetic rules, parity conjunctions, past PPC hits, decade-sharing exemplar effect
+- [Experiment2 data patterns](experiment2-data-patterns.md) — exp2 dataset (113 sets), example-target ~0.70 yes, iter_0 critique stats

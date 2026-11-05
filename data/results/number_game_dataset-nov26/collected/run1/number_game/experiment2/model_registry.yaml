@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  recency_gated_arithmetic_route: 0.125
+  round_number_averaging_exemplar: 0.125
+  round_number_kinship_exemplar: 0.125
+  round_target_familiarity_bias: 0.125
+  times_table_averaging_exemplar: 0.125
+  times_table_round_averaging: 0.125
+  times_table_round_kinship_exemplar: 0.125
+  weber_scaled_magnitude_exemplar: 0.125

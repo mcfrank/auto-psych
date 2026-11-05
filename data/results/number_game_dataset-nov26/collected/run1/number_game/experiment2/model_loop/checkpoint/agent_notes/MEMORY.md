@@ -1,0 +1,66 @@
+- [Mixture variant MLE screen](mixture-variant-mle-screen.md) — tempering ≈ memory-limit ≫ other one-change fixes; Bayesian still ~60 nats behind exemplar
+- [Exemplar attention variant screen](exemplar-attention-variant-screen.md) — final-digit-agreement attention +15 nats over exemplar base
+- [Adaptive attention exemplar screen](adaptive-attention-exemplar-screen.md) — range/digit-consistency-tuned attention +27 nats over exemplar incumbent
+- [Exemplar refinement MLE screen](exemplar-refinement-mle-screen.md) — digit-agreement attention ≫ other exemplar tweaks
+- [Exemplar variant MLE screen](exemplar-variant-mle-screen.md) — digit-consistency attention gives ~14 nats; spread scaling ~2
+- [Exemplar variant MLE screen](exemplar-variant-mle-screen.md) — parity dim (-13 nats) and lapse (-11) best on incumbent exemplar model
+- [Parity homogeneity attention](parity-homogeneity-attention.md) — iter_2 candidate aimed at the parity critique; smoke log-lik -1565.9
+- [Lapse exemplar candidate](lapse-exemplar-candidate.md) — round 2: exemplar + 50/50 lapse submitted
+- [Parity refinement screen](parity-refinement-screen.md) — adaptive parity attention no help; parity + digit-consistency attention -18 nats
+- [Parity-tuned attention screen](parity-tuned-attention-screen.md) — parity on variability-tuned incumbent +13 nats in-sample
+- [Parity attention on incumbent screen](parity-attention-incumbent-screen.md) — parity scaled by parity homogeneity +13 nats over variability_tuned incumbent
+- [Fixed parity incumbent repair](fixed-parity-incumbent-repair.md) — homog-parity was duplicate; fixed parity on incumbent submitted, lapse/abstract-floor no help
+- [iter3 critique stats](iter3-critique-stats.md) — 8 PPC stats aimed at parity-vs-rule conflicts on graded-parity incumbent
+- [Feature-distribution prototype](feature-distribution-prototype.md) — iter3 exploratory naive-Bayes category model, smoke -1598.5
+- [Cohesion-referenced exemplar](cohesion-referenced-exemplar.md) — iter_3 c1: criterion = examples' mutual similarity; smoke -1594.3
+- [Divisibility kinship screen](divisibility-kinship-screen.md) — coprime penalty on graded-parity incumbent -7.5 nats; strict all-share digit attention -5.5
+- [Set-specific criterion candidate](set-specific-criterion-candidate.md) — per-set random criterion on incumbent: in-sample -73 nats; LOO risk
+- [Shared regularity screen](shared-regularity-screen.md) — set-level shared-rule term +7 nats on graded-parity incumbent; per-example category dims ~0
+- [Shared-factor exemplar screen](shared-factor-exemplar-screen.md) — coprime penalty -7.4 nats on rank-1 model; set-size variants no gain
+- [Digit-run strict criterion](digit-run-strict-criterion.md) — >=3 same-final-digit examples → stricter criterion, -16 nats; replaces per-set random criterion
+- [iter4 critique stats](iter4-critique-stats.md) — 8 PPC stats on shared-factor incumbent: arithmetic rules, set-level strictness, set-size/drift
+- [Digit-run + shared-factor candidate](digit-run-shared-factor-candidate.md) — iter_4 c5: coprime graft on digit-run model -6.6 nats; mod-5 credit no help
+- [Digit-run sharpened exemplar](digit-run-sharpened-exemplar.md) — iter4: digit run sharpens digit attention on incumbent, -15 nats; ties criterion-shift
+- [Digit-run rule attention](digit-run-rule-attention.md) — iter_4 c3: run boosts digit attention on incumbent, -15 nats; criterion vs attention untestable on current data
+- [Coincidence-sharpened exemplar](coincidence-sharpened-exemplar.md) — iter4 c0: sharpening by shared-property coincidence -9.7 nats; log-magnitude -3.5, mod5 -1.7
+- [Common-step lattice screen](common-step-lattice-screen.md) — iter4: off-step penalty -5 nats on shared-factor incumbent; digit_run still -15 there
+- [Capacity-limited attention screen](capacity-limited-attention-screen.md) — iter4 c2: softmax attention budget +2.4 nats; sequential/memory/mod-5/skip-count variants no gain
+- [Digit-run raised criterion](digit-run-raised-criterion.md) — iter4 c4 repair: run → criterion shift on incumbent, -15 nats; novelty pool has 10 run-matching targets
+- [Exp2 iter0 critique stats](exp2-iter0-critique-stats.md) — 8 PPC stats on coincidence_sharpened_exemplar: far digit-match, flat parity, exact-example ceiling
+- [Shared-feature contrast](shared-feature-contrast.md) — exp2 iter0 c1: pure common-feature model, 3 params, smoke -2833.4
+- [Running-guess coincidence](running-guess-coincidence-exemplar.md) — exp2 iter0 c2: trailing-run coincidence sharpening; differs from incumbent on only 315 trials
+- [Common-divisor sharpened exemplar](common-divisor-sharpened-exemplar.md) — exp2 iter0 c3: set-gcd>=3 penalty replaces coprime on incumbent, +16 nats MAP
+- [Common-divisor rule exemplar](common-divisor-rule-exemplar.md) — exp2 c4: set-gcd divisibility factor dim on incumbent -9.4 nats; gcd in coincidence worse
+- [Accumulating regularity exemplar](accumulating-regularity-exemplar.md) — exp2 c5: SR rule evidence ×(n-1) -20 nats vs incumbent MLE; incumbent+reg graft -49
+- [Log-odds distorted concept learning](log-odds-distorted-concept-learning.md) — exp2 c0: Bayes + log-odds response distortion, +350 nats over pure Bayes, still behind exemplar
+- [Exp2 iter1 critique stats](exp2-iter1-critique-stats.md) — 8 PPC stats on common_divisor_sharpened_exemplar: digit-match divisor exemption, single-example factors, order, set size
+- [Divisor-family exemplar](divisor-family-exemplar.md) — exp2 iter1 c2: off-divisor iff gcd(t,set gcd)<3 incl. single examples; smoke -2711.9
+- [Shared-divisor-factor exemplar](shared-divisor-factor-exemplar.md) — exp2 iter1 c3: penalty only if gcd(t, set-gcd)<3, singles included; +6.5 nats MAP over incumbent
+- [Factor-kinship sharpened exemplar](factor-kinship-sharpened-exemplar.md) — exp2 iter1 c4: gcd(t,set-gcd)>=3 kinship incl. singles, +6.5 nats MAP over incumbent
+- [Rule-uncertainty guessing](rule-uncertainty-guessing.md) — exp2 iter1 c1: coherence-gated guessing, MAP -57 vs incumbent; no gain grafted onto incumbent
+- [Common-divisor kinship exemplar](common-divisor-kinship-exemplar.md) — exp2 iter1 c5: gcd(t,set-gcd)>=3 kinship, MLE +6.5 nats over incumbent, smoke -2711.9
+- [Multiple-route exemplar](multiple-route-exemplar.md) — exp2 iter1 c0: additive multiples-of-example similarity route, +24 nats MAP over incumbent
+- [Set-size-diluted multiple route](set-size-diluted-multiple-route.md) — exp2 iter1 c5 repair: multiples route decays with extra examples, -7 nats MLE over multiple_route
+- [Similarity-averaging exemplar](similarity-averaging-exemplar.md) — exp2 iter1 c4 repair: −kappa·log n pooling on incumbent, +10.6 nats MAP; gcd-kinship idea saturated
+- [Common-divisor membership route](common-divisor-membership-route.md) — exp2 iter1 c3 repair: additive set-gcd membership route, MAP +22; per-set random effects too slow for admission
+- [Exp2 iter2 critique stats](exp2-iter2-critique-stats.md) — 8 PPC stats on multiple_route_exemplar: multiples-route scope, divisors, factor-kin, range direction, item polarization
+- [Times-table kinship exemplar](times-table-kinship-exemplar.md) — exp2 iter2 c2: gcd>=3 kinship route decaying with shared-factor size; smoke -2706.3
+- [Times-table rule sampling](times-table-rule-sampling.md) — exp2 iter2 c1: single sampled shared-property rule vs soft region, smoke -2868 (~150 behind)
+- [Times-table multiple route](times-table-multiple-route.md) — exp2 iter2 c5: multiples route only from examples 2–10, -5 nats MLE over set_size_diluted; smoke -2683.4
+- [Times-table multiple route](times-table-multiple-route.md) — exp2 iter2 c0: multiples route only from examples 2-12, +4.5 nats MAP; gcd co-membership -10
+- [Times-table multiple route](times-table-multiple-route.md) — exp2 iter2 c4: 2-digit-example multiples route weakened, +3.5 MAP; gcd-kin route -10
+- [Factor-kin multiple route](factor-kin-multiple-route.md) — exp2 iter2 c3: gcd>=3 kin additive route on multiple_route, -8 nats MLE; one-digit-only route gate -4.5
+- [Exp2 iter3 critique stats](exp2-iter3-critique-stats.md) — 8 PPC stats on factor_kin_multiple_route: primes, decade, drift, primacy, set breadth, large multiples, set size
+- [Problem-size multiple retrieval](problem-size-multiple-retrieval.md) — exp2 iter3 c1: multiples route decays with factor sum, +5 nats MAP over factor_kin incumbent
+- [One-digit arithmetic route](one-digit-arithmetic-route.md) — exp2 iter3 c4: two-digit decay on both arithmetic routes of incumbent, -5.5 nats MLE; smoke -2683.0
+- [One-digit table factor-kin route](one-digit-table-factor-kin-route.md) — exp2 iter3 c3: 2-9-only multiples route on factor_kin incumbent, -4.8 nats MLE; smoke -2683.1
+- [Times-table averaging exemplar](times-table-averaging-exemplar.md) — exp2 iter3 c5: −kappa·log n averaging on times_table route, MAP +11 over incumbent; tt+avg+fk -2664.6
+- [Frequency-weighted multiple concepts](frequency-weighted-multiple-concepts.md) — exp2 iter3 c2: log-odds Bayes + k^-decay multiples prior, +6 nats MAP over base Bayes
+- [Round-number kinship exemplar](round-number-kinship-exemplar.md) — exp2 iter3 c0: x10 target ↔ 0/5-ending example route, +12.3 MAP; times-table product gate no help
+- [Exp2 iter4 critique stats](exp2-iter4-critique-stats.md) — 8 PPC stats on round_number_kinship_exemplar: 5-endings, round-set strictness, gcd-3, far digit-run, target 100
+- [Times-table round averaging](times-table-round-averaging.md) — exp2 iter4 c5: round route on times_table_averaging, smoke -2666.3
+- [Recency-gated arithmetic route](recency-gated-arithmetic-route.md) — exp2 iter4 c1: arithmetic routes fade with later examples on round_number incumbent; smoke -2664.8
+- [Times-table round kinship](times-table-round-kinship-exemplar.md) — exp2 iter4 c4: 2-12 gate on incumbent multiples route, +4.6 MLE; smoke -2671.1
+- [Weber-scaled magnitude exemplar](weber-scaled-magnitude-exemplar.md) — exp2 iter4 c2: Weber-compressed distance +1.3 MAP on incumbent; example-size multiples decay also +1.3
+- [Round-target familiarity bias](round-target-familiarity-bias.md) — exp2 iter4 c0: example-free x10 logit bias instead of round kinship, MAP -6 vs incumbent; digit-reversal overlap no raw effect
+- [Round-number averaging exemplar](round-number-averaging-exemplar.md) — exp2 iter4 c3: averaging on round_number incumbent +12.4 MAP; tt gate +4.5; doesn't fix multiples critique

@@ -1,0 +1,305 @@
+{
+  "gt_model": "dataset",
+  "run_root": "/scr/wurgaft/auto-psych/agent_trees/d82b8b9c1e886668/repo/_runs/cell_1",
+  "trajectory": [
+    {
+      "experiment": 1,
+      "step": 0,
+      "global_step": 0,
+      "best_model": "bigelow_piantadosi_independent",
+      "incumbent_changed": false,
+      "incumbent_is_discovered": false
+    },
+    {
+      "experiment": 1,
+      "step": 1,
+      "global_step": 1,
+      "best_model": "place_value_exemplar_similarity",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 2,
+      "global_step": 2,
+      "best_model": "variability_tuned_exemplar_attention",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 3,
+      "global_step": 3,
+      "best_model": "graded_parity_variability_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 4,
+      "global_step": 4,
+      "best_model": "shared_factor_parity_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 5,
+      "global_step": 5,
+      "best_model": "coincidence_sharpened_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 0,
+      "global_step": 6,
+      "best_model": "coincidence_sharpened_exemplar",
+      "incumbent_changed": false,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 1,
+      "global_step": 7,
+      "best_model": "common_divisor_sharpened_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 2,
+      "global_step": 8,
+      "best_model": "multiple_route_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 3,
+      "global_step": 9,
+      "best_model": "factor_kin_multiple_route",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 4,
+      "global_step": 10,
+      "best_model": "round_number_kinship_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 5,
+      "global_step": 11,
+      "best_model": "round_number_averaging_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 0,
+      "global_step": 12,
+      "best_model": "round_number_averaging_exemplar",
+      "incumbent_changed": false,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 1,
+      "global_step": 13,
+      "best_model": "whole_set_round_category",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 2,
+      "global_step": 14,
+      "best_model": "coincidence_decisive_exemplar",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 3,
+      "global_step": 15,
+      "best_model": "parity_preserving_decisive_route",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 4,
+      "global_step": 16,
+      "best_model": "coincidence_rule_violation_route",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 5,
+      "global_step": 17,
+      "best_model": "span_fallback_rule_violation",
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    }
+  ],
+  "incumbent": {
+    "starting_models": [
+      "bigelow_piantadosi_independent",
+      "bigelow_piantadosi_mixture",
+      "tenenbaum_rules_similarity"
+    ],
+    "n_steps": 18,
+    "n_incumbent_changes": 15,
+    "n_steps_discovered_incumbent": 17,
+    "final_incumbent": "span_fallback_rule_violation",
+    "changes": [
+      {
+        "global_step": 1,
+        "experiment": 1,
+        "step": 1,
+        "from": "bigelow_piantadosi_independent",
+        "to": "place_value_exemplar_similarity"
+      },
+      {
+        "global_step": 2,
+        "experiment": 1,
+        "step": 2,
+        "from": "place_value_exemplar_similarity",
+        "to": "variability_tuned_exemplar_attention"
+      },
+      {
+        "global_step": 3,
+        "experiment": 1,
+        "step": 3,
+        "from": "variability_tuned_exemplar_attention",
+        "to": "graded_parity_variability_exemplar"
+      },
+      {
+        "global_step": 4,
+        "experiment": 1,
+        "step": 4,
+        "from": "graded_parity_variability_exemplar",
+        "to": "shared_factor_parity_exemplar"
+      },
+      {
+        "global_step": 5,
+        "experiment": 1,
+        "step": 5,
+        "from": "shared_factor_parity_exemplar",
+        "to": "coincidence_sharpened_exemplar"
+      },
+      {
+        "global_step": 7,
+        "experiment": 2,
+        "step": 1,
+        "from": "coincidence_sharpened_exemplar",
+        "to": "common_divisor_sharpened_exemplar"
+      },
+      {
+        "global_step": 8,
+        "experiment": 2,
+        "step": 2,
+        "from": "common_divisor_sharpened_exemplar",
+        "to": "multiple_route_exemplar"
+      },
+      {
+        "global_step": 9,
+        "experiment": 2,
+        "step": 3,
+        "from": "multiple_route_exemplar",
+        "to": "factor_kin_multiple_route"
+      },
+      {
+        "global_step": 10,
+        "experiment": 2,
+        "step": 4,
+        "from": "factor_kin_multiple_route",
+        "to": "round_number_kinship_exemplar"
+      },
+      {
+        "global_step": 11,
+        "experiment": 2,
+        "step": 5,
+        "from": "round_number_kinship_exemplar",
+        "to": "round_number_averaging_exemplar"
+      },
+      {
+        "global_step": 13,
+        "experiment": 3,
+        "step": 1,
+        "from": "round_number_averaging_exemplar",
+        "to": "whole_set_round_category"
+      },
+      {
+        "global_step": 14,
+        "experiment": 3,
+        "step": 2,
+        "from": "whole_set_round_category",
+        "to": "coincidence_decisive_exemplar"
+      },
+      {
+        "global_step": 15,
+        "experiment": 3,
+        "step": 3,
+        "from": "coincidence_decisive_exemplar",
+        "to": "parity_preserving_decisive_route"
+      },
+      {
+        "global_step": 16,
+        "experiment": 3,
+        "step": 4,
+        "from": "parity_preserving_decisive_route",
+        "to": "coincidence_rule_violation_route"
+      },
+      {
+        "global_step": 17,
+        "experiment": 3,
+        "step": 5,
+        "from": "coincidence_rule_violation_route",
+        "to": "span_fallback_rule_violation"
+      }
+    ]
+  },
+  "starting_models_prunable": true,
+  "experiments": [
+    {
+      "experiment": 1,
+      "manifest_models": [
+        "divisibility_kinship_exemplar",
+        "shared_factor_parity_exemplar",
+        "coincidence_sharpened_exemplar",
+        "common_step_lattice_exemplar",
+        "capacity_limited_attention_exemplar",
+        "digit_run_rule_attention_exemplar",
+        "digit_run_criterion_shared_factor",
+        "digit_run_raised_criterion_exemplar"
+      ]
+    },
+    {
+      "experiment": 2,
+      "manifest_models": [
+        "round_number_kinship_exemplar",
+        "times_table_averaging_exemplar",
+        "round_target_familiarity_bias",
+        "recency_gated_arithmetic_route",
+        "weber_scaled_magnitude_exemplar",
+        "round_number_averaging_exemplar",
+        "times_table_round_kinship_exemplar",
+        "times_table_round_averaging"
+      ]
+    },
+    {
+      "experiment": 3,
+      "manifest_models": [
+        "span_fallback_rule_violation",
+        "set_kin_consensus_violation_route",
+        "five_family_multiple_route"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  common_step_grid_concept: 0.125
+  exception_tolerant_parity_doubt: 0.125
+  magnitude_bounded_ambiguity_doubt: 0.125
+  neighbourhood_doubt_three_example_memory: 0.125
+  output_dispersion_crowding_veto: 0.125
+  parity_bounded_ambiguity_doubt: 0.125
+  parity_doubt_three_example_memory: 0.125
+  working_memory_ambiguity_doubt: 0.125

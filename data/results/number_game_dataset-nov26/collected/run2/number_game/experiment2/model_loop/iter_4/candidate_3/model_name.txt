@@ -1,0 +1,1 @@
+range_tightened_magnitude_band

@@ -1,0 +1,335 @@
+{
+  "project_id": "number_game",
+  "data_source": "dataset",
+  "seed_models_dir": "/scr/wurgaft/auto-psych/number_game_dataset-nov26-tiger4/harness_repo/src/pipelines/outer_loop/projects/number_game/seed_models",
+  "n_experiments": 3,
+  "n_participants": 9,
+  "hide_participant_id": true,
+  "inner_loop": {
+    "max_iterations": 5,
+    "candidate_count": 6,
+    "novelty_rmse_threshold": 0.002,
+    "n_critique_proposals": 8,
+    "selection": {
+      "criterion": "grouped_cv",
+      "cv_group": [
+        "number_set"
+      ],
+      "cv_folds": 4,
+      "cv_seed": 0
+    },
+    "starting_models_prunable": true
+  },
+  "fit_kwargs": {
+    "method": "warm_start_nuts",
+    "tune": 200,
+    "draws": 500,
+    "chains": 4
+  },
+  "seed": 3,
+  "eval_pool": {
+    "n_pairs": 500,
+    "lengths": [
+      6,
+      8
+    ],
+    "seed": 11,
+    "min_remaining": 100,
+    "exhaustive": true,
+    "predict_max_draws": null
+  },
+  "seed_params": {
+    "dataset": {}
+  },
+  "metrics_version": 2,
+  "gt_runs": [
+    {
+      "gt_model": "dataset",
+      "run_root": "/scr/wurgaft/auto-psych/agent_trees/8a52ff3d6e8e6ef7/repo/_runs/cell_1",
+      "trajectory": [
+        {
+          "experiment": 1,
+          "step": 0,
+          "global_step": 0,
+          "best_model": "bigelow_piantadosi_mixture",
+          "incumbent_changed": false,
+          "incumbent_is_discovered": false
+        },
+        {
+          "experiment": 1,
+          "step": 1,
+          "global_step": 1,
+          "best_model": "tempered_size_principle_independent",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 2,
+          "global_step": 2,
+          "best_model": "tempered_size_principle_independent",
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 3,
+          "global_step": 3,
+          "best_model": "parity_restricted_concepts",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 4,
+          "global_step": 4,
+          "best_model": "monotone_order_range_prior_shift",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 5,
+          "global_step": 5,
+          "best_model": "extrapolation_verification_failure",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 0,
+          "global_step": 6,
+          "best_model": "range_bounded_parity_concepts",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 1,
+          "global_step": 7,
+          "best_model": "range_size_prior_concepts",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 2,
+          "global_step": 8,
+          "best_model": "range_prior_sample_size_neglect",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 3,
+          "global_step": 9,
+          "best_model": "digit_rules_need_comparison",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 4,
+          "global_step": 10,
+          "best_model": "comparison_dependent_concepts",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 5,
+          "global_step": 11,
+          "best_model": "consistent_examples_bounded_rules",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 0,
+          "global_step": 12,
+          "best_model": "consistent_examples_bounded_rules",
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 1,
+          "global_step": 13,
+          "best_model": "range_specific_evidence_strength",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 2,
+          "global_step": 14,
+          "best_model": "range_specific_evidence_strength",
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 3,
+          "global_step": 15,
+          "best_model": "iter2_candidate1",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 4,
+          "global_step": 16,
+          "best_model": "magnitude_threshold_concepts",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 5,
+          "global_step": 17,
+          "best_model": "exception_weighted_rule_rejection",
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        }
+      ],
+      "incumbent": {
+        "starting_models": [
+          "bigelow_piantadosi_independent",
+          "bigelow_piantadosi_mixture",
+          "tenenbaum_rules_similarity"
+        ],
+        "n_steps": 18,
+        "n_incumbent_changes": 14,
+        "n_steps_discovered_incumbent": 17,
+        "final_incumbent": "exception_weighted_rule_rejection",
+        "changes": [
+          {
+            "global_step": 1,
+            "experiment": 1,
+            "step": 1,
+            "from": "bigelow_piantadosi_mixture",
+            "to": "tempered_size_principle_independent"
+          },
+          {
+            "global_step": 3,
+            "experiment": 1,
+            "step": 3,
+            "from": "tempered_size_principle_independent",
+            "to": "parity_restricted_concepts"
+          },
+          {
+            "global_step": 4,
+            "experiment": 1,
+            "step": 4,
+            "from": "parity_restricted_concepts",
+            "to": "monotone_order_range_prior_shift"
+          },
+          {
+            "global_step": 5,
+            "experiment": 1,
+            "step": 5,
+            "from": "monotone_order_range_prior_shift",
+            "to": "extrapolation_verification_failure"
+          },
+          {
+            "global_step": 6,
+            "experiment": 2,
+            "step": 0,
+            "from": "extrapolation_verification_failure",
+            "to": "range_bounded_parity_concepts"
+          },
+          {
+            "global_step": 7,
+            "experiment": 2,
+            "step": 1,
+            "from": "range_bounded_parity_concepts",
+            "to": "range_size_prior_concepts"
+          },
+          {
+            "global_step": 8,
+            "experiment": 2,
+            "step": 2,
+            "from": "range_size_prior_concepts",
+            "to": "range_prior_sample_size_neglect"
+          },
+          {
+            "global_step": 9,
+            "experiment": 2,
+            "step": 3,
+            "from": "range_prior_sample_size_neglect",
+            "to": "digit_rules_need_comparison"
+          },
+          {
+            "global_step": 10,
+            "experiment": 2,
+            "step": 4,
+            "from": "digit_rules_need_comparison",
+            "to": "comparison_dependent_concepts"
+          },
+          {
+            "global_step": 11,
+            "experiment": 2,
+            "step": 5,
+            "from": "comparison_dependent_concepts",
+            "to": "consistent_examples_bounded_rules"
+          },
+          {
+            "global_step": 13,
+            "experiment": 3,
+            "step": 1,
+            "from": "consistent_examples_bounded_rules",
+            "to": "range_specific_evidence_strength"
+          },
+          {
+            "global_step": 15,
+            "experiment": 3,
+            "step": 3,
+            "from": "range_specific_evidence_strength",
+            "to": "iter2_candidate1"
+          },
+          {
+            "global_step": 16,
+            "experiment": 3,
+            "step": 4,
+            "from": "iter2_candidate1",
+            "to": "magnitude_threshold_concepts"
+          },
+          {
+            "global_step": 17,
+            "experiment": 3,
+            "step": 5,
+            "from": "magnitude_threshold_concepts",
+            "to": "exception_weighted_rule_rejection"
+          }
+        ]
+      },
+      "starting_models_prunable": true,
+      "experiments": [
+        {
+          "experiment": 1,
+          "manifest_models": [
+            "extrapolation_verification_failure",
+            "range_bounded_parity_concepts"
+          ]
+        },
+        {
+          "experiment": 2,
+          "manifest_models": [
+            "consistent_examples_bounded_rules"
+          ]
+        },
+        {
+          "experiment": 3,
+          "manifest_models": [
+            "exception_weighted_rule_rejection"
+          ]
+        }
+      ]
+    }
+  ],
+  "agent": {
+    "backend": "claude",
+    "model": "claude-opus-5-5",
+    "claude_auth": "subscription"
+  }
+}

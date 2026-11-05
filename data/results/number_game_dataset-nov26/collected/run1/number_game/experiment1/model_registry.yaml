@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  capacity_limited_attention_exemplar: 0.125
+  coincidence_sharpened_exemplar: 0.125
+  common_step_lattice_exemplar: 0.125
+  digit_run_criterion_shared_factor: 0.125
+  digit_run_raised_criterion_exemplar: 0.125
+  digit_run_rule_attention_exemplar: 0.125
+  divisibility_kinship_exemplar: 0.125
+  shared_factor_parity_exemplar: 0.125

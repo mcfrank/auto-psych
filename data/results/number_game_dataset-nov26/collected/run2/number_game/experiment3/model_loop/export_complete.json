@@ -1,0 +1,13 @@
+{
+  "models": [
+    "parity_bounded_ambiguity_doubt",
+    "parity_doubt_three_example_memory",
+    "working_memory_ambiguity_doubt",
+    "exception_tolerant_parity_doubt",
+    "common_step_grid_concept",
+    "output_dispersion_crowding_veto",
+    "magnitude_bounded_ambiguity_doubt",
+    "neighbourhood_doubt_three_example_memory"
+  ],
+  "ledger_sha256": "b6974a6109228849e5a65ceaac621113075b58cd513b301da5fd1b216354c3d8"
+}

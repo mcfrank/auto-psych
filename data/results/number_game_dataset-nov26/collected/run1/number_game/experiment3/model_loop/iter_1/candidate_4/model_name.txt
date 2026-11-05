@@ -1,0 +1,1 @@
+power_mean_pooled_exemplar

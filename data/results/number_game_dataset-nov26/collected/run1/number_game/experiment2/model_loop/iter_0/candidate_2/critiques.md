@@ -1,0 +1,12 @@
+# Critique of `coincidence_sharpened_exemplar`
+
+5 of 8 evaluated test statistics show a significant discrepancy (p ≤ 0.05), over 1000 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **set_level_yes_rate_sd** — Standard deviation across sets (with >=3 distinct targets) of each set's mean yes-rate; observed > null means overall willingness to say yes varies between sets more than the model's single bias/slope mapping from summed similarity produces (set-specific rule breadth), observed < null means less. (observed 0.221 vs null mean 0.173, z=5.59, p=0.002, q=0.00799) [survives FDR]
+- **common_divisor_nodigit_contrast** — In multi-example sets whose examples' greatest common divisor is >=3, among targets sharing no example's final digit, yes-rate for targets divisible by that gcd minus for non-divisible targets; observed > null means people infer an arithmetic 'multiples of g' rule more strongly than the model's per-example coprimality penalty captures, observed < null means less. (observed 0.225 vs null mean 0.118, z=4.43, p=0.002, q=0.00799) [survives FDR]
+- **far_digit_match_rate** — In sets of >=2 examples that all share one final digit, the yes-rate for targets that share that digit but lie >=15 from every example; observed > null means people apply the final-digit (e.g. multiples-of-10) rule beyond magnitude neighbourhood more than the model's distance-decaying similarity allows, observed < null means they generalize the digit less far. (observed 0.778 vs null mean 0.692, z=2.45, p=0.022, q=0.0586)
+- **exact_example_target_rate** — Yes-rate on trials whose target is identical to one of the set's examples; observed < null means people endorse the shown examples themselves less often than the model's maximal self-similarity predicts (i.e. a ceiling / response-noise floor the model lacks), observed > null means more. (observed 0.817 vs null mean 0.741, z=2.09, p=0.038, q=0.0759)
+- **trial_index_drift_corr** — Correlation between trial_index and the yes response across all trials; observed above/below null means people's yes-rate drifts up/down over the session, which the stationary model cannot produce. (observed 0.0361 vs null mean 0.0092, z=2.08, p=0.048, q=0.0767)

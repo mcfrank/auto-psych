@@ -1,0 +1,28 @@
+- [Mixture variant MLE screen](mixture-variant-mle-screen.md) — tempering ≈ memory-limit ≫ other one-change fixes; Bayesian still ~60 nats behind exemplar
+- [Exemplar attention variant screen](exemplar-attention-variant-screen.md) — final-digit-agreement attention +15 nats over exemplar base
+- [Adaptive attention exemplar screen](adaptive-attention-exemplar-screen.md) — range/digit-consistency-tuned attention +27 nats over exemplar incumbent
+- [Exemplar refinement MLE screen](exemplar-refinement-mle-screen.md) — digit-agreement attention ≫ other exemplar tweaks
+- [Exemplar variant MLE screen](exemplar-variant-mle-screen.md) — digit-consistency attention gives ~14 nats; spread scaling ~2
+- [Exemplar variant MLE screen](exemplar-variant-mle-screen.md) — parity dim (-13 nats) and lapse (-11) best on incumbent exemplar model
+- [Parity homogeneity attention](parity-homogeneity-attention.md) — iter_2 candidate aimed at the parity critique; smoke log-lik -1565.9
+- [Lapse exemplar candidate](lapse-exemplar-candidate.md) — round 2: exemplar + 50/50 lapse submitted
+- [Parity refinement screen](parity-refinement-screen.md) — adaptive parity attention no help; parity + digit-consistency attention -18 nats
+- [Parity-tuned attention screen](parity-tuned-attention-screen.md) — parity on variability-tuned incumbent +13 nats in-sample
+- [Parity attention on incumbent screen](parity-attention-incumbent-screen.md) — parity scaled by parity homogeneity +13 nats over variability_tuned incumbent
+- [Fixed parity incumbent repair](fixed-parity-incumbent-repair.md) — homog-parity was duplicate; fixed parity on incumbent submitted, lapse/abstract-floor no help
+- [iter3 critique stats](iter3-critique-stats.md) — 8 PPC stats aimed at parity-vs-rule conflicts on graded-parity incumbent
+- [Feature-distribution prototype](feature-distribution-prototype.md) — iter3 exploratory naive-Bayes category model, smoke -1598.5
+- [Cohesion-referenced exemplar](cohesion-referenced-exemplar.md) — iter_3 c1: criterion = examples' mutual similarity; smoke -1594.3
+- [Divisibility kinship screen](divisibility-kinship-screen.md) — coprime penalty on graded-parity incumbent -7.5 nats; strict all-share digit attention -5.5
+- [Set-specific criterion candidate](set-specific-criterion-candidate.md) — per-set random criterion on incumbent: in-sample -73 nats; LOO risk
+- [Shared regularity screen](shared-regularity-screen.md) — set-level shared-rule term +7 nats on graded-parity incumbent; per-example category dims ~0
+- [Shared-factor exemplar screen](shared-factor-exemplar-screen.md) — coprime penalty -7.4 nats on rank-1 model; set-size variants no gain
+- [Digit-run strict criterion](digit-run-strict-criterion.md) — >=3 same-final-digit examples → stricter criterion, -16 nats; replaces per-set random criterion
+- [iter4 critique stats](iter4-critique-stats.md) — 8 PPC stats on shared-factor incumbent: arithmetic rules, set-level strictness, set-size/drift
+- [Digit-run + shared-factor candidate](digit-run-shared-factor-candidate.md) — iter_4 c5: coprime graft on digit-run model -6.6 nats; mod-5 credit no help
+- [Digit-run sharpened exemplar](digit-run-sharpened-exemplar.md) — iter4: digit run sharpens digit attention on incumbent, -15 nats; ties criterion-shift
+- [Digit-run rule attention](digit-run-rule-attention.md) — iter_4 c3: run boosts digit attention on incumbent, -15 nats; criterion vs attention untestable on current data
+- [Coincidence-sharpened exemplar](coincidence-sharpened-exemplar.md) — iter4 c0: sharpening by shared-property coincidence -9.7 nats; log-magnitude -3.5, mod5 -1.7
+- [Common-step lattice screen](common-step-lattice-screen.md) — iter4: off-step penalty -5 nats on shared-factor incumbent; digit_run still -15 there
+- [Capacity-limited attention screen](capacity-limited-attention-screen.md) — iter4 c2: softmax attention budget +2.4 nats; sequential/memory/mod-5/skip-count variants no gain
+- [Digit-run raised criterion](digit-run-raised-criterion.md) — iter4 c4 repair: run → criterion shift on incumbent, -15 nats; novelty pool has 10 run-matching targets

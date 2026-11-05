@@ -1,0 +1,132 @@
+{
+  "posteriors": {
+    "parity_bounded_ambiguity_doubt": 0.001142,
+    "parity_doubt_three_example_memory": 0.247411,
+    "working_memory_ambiguity_doubt": 0.003064,
+    "exception_tolerant_parity_doubt": 0.005049,
+    "common_step_grid_concept": 0.13075,
+    "output_dispersion_crowding_veto": 0.134503,
+    "magnitude_bounded_ambiguity_doubt": 0.015033,
+    "neighbourhood_doubt_three_example_memory": 0.463049
+  },
+  "elpd_loo": {
+    "parity_bounded_ambiguity_doubt": -4727.2202,
+    "parity_doubt_three_example_memory": -4721.8416,
+    "working_memory_ambiguity_doubt": -4726.2328,
+    "exception_tolerant_parity_doubt": -4725.7335,
+    "common_step_grid_concept": -4722.4793,
+    "output_dispersion_crowding_veto": -4722.451,
+    "magnitude_bounded_ambiguity_doubt": -4724.6424,
+    "neighbourhood_doubt_three_example_memory": -4721.2148
+  },
+  "n_trials": 7560,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "neighbourhood_doubt_three_example_memory": {
+      "rank": 0,
+      "elpd_loo": -4721.214797188248,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.46304935380669904,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 7560,
+      "not_converged": false
+    },
+    "parity_doubt_three_example_memory": {
+      "rank": 1,
+      "elpd_loo": -4721.841581823153,
+      "elpd_diff": 0.6267846349055617,
+      "dse": 1.4421238781486765,
+      "dse_clustered": 1.333534404455941,
+      "weight": 0.24741052690498566,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 7560,
+      "not_converged": false
+    },
+    "output_dispersion_crowding_veto": {
+      "rank": 2,
+      "elpd_loo": -4722.451047943834,
+      "elpd_diff": 1.2362507555862976,
+      "dse": 1.7175648073139653,
+      "dse_clustered": 1.6770199508240968,
+      "weight": 0.13450251375746622,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 7560,
+      "not_converged": false
+    },
+    "common_step_grid_concept": {
+      "rank": 3,
+      "elpd_loo": -4722.479346595718,
+      "elpd_diff": 1.2645494074704402,
+      "dse": 2.1574096559694818,
+      "dse_clustered": 2.297249712307222,
+      "weight": 0.1307496252298062,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 7560,
+      "not_converged": false
+    },
+    "magnitude_bounded_ambiguity_doubt": {
+      "rank": 4,
+      "elpd_loo": -4724.642366749815,
+      "elpd_diff": 3.4275695615669974,
+      "dse": 4.4835719281568664,
+      "dse_clustered": 4.983799314059307,
+      "weight": 0.015033245008138383,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 7560,
+      "not_converged": false
+    },
+    "exception_tolerant_parity_doubt": {
+      "rank": 5,
+      "elpd_loo": -4725.733491497869,
+      "elpd_diff": 4.518694309621424,
+      "dse": 4.684536982478209,
+      "dse_clustered": 5.146322388291492,
+      "weight": 0.005048743166941665,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 7560,
+      "not_converged": false
+    },
+    "working_memory_ambiguity_doubt": {
+      "rank": 6,
+      "elpd_loo": -4726.232786431137,
+      "elpd_diff": 5.017989242889598,
+      "dse": 2.5325487742273793,
+      "dse_clustered": 3.0917635716546408,
+      "weight": 0.003064377352788719,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 7560,
+      "not_converged": false
+    },
+    "parity_bounded_ambiguity_doubt": {
+      "rank": 7,
+      "elpd_loo": -4727.220187104489,
+      "elpd_diff": 6.005389916241256,
+      "dse": 3.8834013268183454,
+      "dse_clustered": 4.254504551623299,
+      "weight": 0.0011416147731740317,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 7560,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "neighbourhood_doubt_three_example_memory"
+}

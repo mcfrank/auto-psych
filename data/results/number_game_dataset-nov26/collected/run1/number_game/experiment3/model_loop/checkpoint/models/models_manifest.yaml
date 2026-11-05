@@ -1,0 +1,447 @@
+models:
+- name: round_number_kinship_exemplar
+  rationale: 'People judge a target by its summed similarity to the examples (magnitude,
+    final digit, parity, the set''s common divisor, multiples and factor-kin of an
+    example, all sharpened when the examples share a suspicious coincidence), but
+    they also treat round numbers as a familiar class of their own: a target that
+    is a multiple of ten resembles every example ending in 0 or 5 by a fixed amount,
+    at any distance and whatever its final digit. So round targets are endorsed well
+    above what magnitude and digit similarity allow when the examples include numbers
+    ending in 0 or 5 (100 after "5", 50 after "45, 90"), while targets ending in 5,
+    and round targets after examples with no 0 or 5 ending, get no such boost (30
+    after "63, 27, 99, 33").'
+- name: times_table_averaging_exemplar
+  rationale: "Refinement of `times_table_multiple_route` (multiples route only for\
+    \ times-table examples 2-12), with one component grafted from `similarity_averaging_exemplar`:\
+    \ people pool their evidence across examples by (partly) averaging rather than\
+    \ summing it. A target's support \u2014 its similarity to each example (magnitude,\
+    \ final digit, parity, the set's common divisor, sharpened by suspicious coincidences)\
+    \ plus the times-table multiples route \u2014 is diluted as more examples are\
+    \ shown, not accumulated. So a far target is not carried by adding up several\
+    \ weak resemblances in multi-example sets like \"25, 82\" or \"50, 2\", while\
+    \ lone examples like \"7\" or \"5\" keep generalizing broadly to their times-table\
+    \ multiples (14, 49, 98; 30, 100) and multiples of large examples (94 after \"\
+    47\") get no boost."
+- name: round_target_familiarity_bias
+  rationale: 'People judge a target by its summed similarity to the examples (magnitude,
+    final digit, parity, the set''s common divisor, multiples and factor-kin of an
+    example, all sharpened when the examples share a suspicious coincidence), but
+    the extra appeal of round numbers is a property of the target itself, not a resemblance
+    to round-ish examples: multiples of ten feel like natural outputs of any number-producing
+    program, so people are more willing to say yes to them by a fixed amount whatever
+    the examples are. This disagrees with `round_number_kinship_exemplar` on round
+    targets after sets with no example ending in 0 or 5 (e.g. 30 or 60 after "63,
+    27, 99, 33" are boosted here, not there), and on round targets after 0/5 sets,
+    which here get no extra boost from having more round-ish examples.'
+- name: recency_gated_arithmetic_route
+  rationale: 'People judge a target by its summed similarity to the examples (magnitude,
+    final digit, parity, the set''s common divisor, sharpened when the examples share
+    a suspicious coincidence), but the distance-free arithmetic routes (being a multiple
+    or a factor-kin of an example, and round-number kinship) need the example to be
+    actively held in mind while the target is checked, and examples fade from working
+    memory as later ones arrive. So an example''s arithmetic support falls off steadily
+    with how many examples were shown after it: the multiples of the last-shown example
+    (21 after "3, 7", 36 after "5, 9") are endorsed much more than equally far multiples
+    of an earlier example (99 after "3, 33" is not carried by the 3), while ordinary
+    magnitude and digit similarity is unaffected by order.'
+- name: weber_scaled_magnitude_exemplar
+  rationale: 'People judge a target by its summed similarity to the examples (final
+    digit, parity, the set''s common divisor, multiples, factor-kin and round-number
+    kinship, all sharpened when the examples share a suspicious coincidence), but
+    the magnitude part of that similarity is read off a compressed mental number line
+    that obeys Weber''s law: how different two numbers feel depends on their gap relative
+    to their size, not on the raw gap. So a gap of 10 makes a target feel much less
+    like a small example (5 against 15) than like a large one (85 against 95), and
+    generalization by magnitude is narrow around small examples and broad around large
+    ones, with the degree of compression inferred from the data.'
+- name: round_number_averaging_exemplar
+  rationale: 'Refinement of the incumbent `round_number_kinship_exemplar`, with one
+    component grafted from `similarity_averaging_exemplar` (as used in `times_table_averaging_exemplar`):
+    people pool a target''s support across the examples by partly averaging rather
+    than summing it. That support is the target''s similarity to each example (magnitude,
+    final digit, parity, the set''s common divisor, sharpened by suspicious coincidences)
+    plus the distance-free routes for multiples, factor-kin and round-number kinship.
+    So each further example dilutes the support instead of adding to it. A far target
+    in a multi-example set (e.g. "25, 82", "50, 2") is not carried by several weak
+    resemblances added together, while lone examples ("7", "5") keep generalizing
+    broadly to their multiples and round kin (14, 49, 98; 30, 100).'
+- name: times_table_round_kinship_exemplar
+  rationale: 'Refinement of the incumbent `round_number_kinship_exemplar`: people
+    still judge a target by its summed similarity to the examples (magnitude, final
+    digit, parity, the set''s common divisor, sharpened by suspicious coincidences),
+    with distance-free routes for factor-kin of an example and for round targets after
+    examples ending in 0 or 5. The one change is that the multiples route is retrieved
+    times-table knowledge, so it exists only for examples that are themselves times-table
+    numbers (2 to 12): after "7" people endorse 14, 49 and 98, but far multiples of
+    two-digit examples (94 after "47", 62 after "31", 75 after "25") get no multiples
+    boost and are judged by ordinary similarity, factor-kinship and roundness alone.'
+- name: times_table_round_averaging
+  rationale: 'Refinement of `times_table_averaging_exemplar` (similarity to the examples
+    on magnitude, final digit, parity and the set''s common divisor, sharpened by
+    suspicious coincidences, plus a distance-free multiples route only for times-table
+    examples 2-12, with support partly averaged rather than summed over examples).
+    The one change, grafted from `round_number_kinship_exemplar`: round numbers are
+    a familiar class of their own, so a target that is a multiple of ten gains a fixed,
+    distance-free amount of similarity to every example ending in 0 or 5. This predicts
+    that round targets are endorsed well above magnitude and digit similarity after
+    sets containing 0/5-ending examples (100 after "5", 50 after "45, 90"), while
+    far multiples of large two-digit examples (94 after "47", 62 after "31") still
+    get no multiples boost, unlike in the current best model.'
+- name: progression_lattice_exemplar
+  rationale: 'People also entertain an arithmetic-progression concept: they read the
+    examples'' common spacing (the largest step, between 2 and 20, that divides every
+    gap between them) and take the program to produce numbers reached from the examples
+    in whole steps of it. A target on that step lattice gets a fixed boost toward
+    "yes" at any distance from the examples (e.g. 50 after "80, 70, 90, 100", 35 after
+    "53, 47, 41"). Off-lattice targets are judged only by the incumbent''s similarity
+    and arithmetic routes, which are partly averaged across examples.'
+- name: whole_set_round_category
+  rationale: 'People judge a target by its similarity to the stored examples (closeness
+    in magnitude, final digit, parity, the set''s common divisor, sharpened by suspicious
+    coincidences, plus distance-free routes for multiples and factor-kin, with support
+    partly averaged over examples), but the familiar category "round numbers" is only
+    brought to mind when the whole example set fits it: a multiple-of-ten target gains
+    distance-free similarity to the examples only when every example ends in 0 or
+    5 (e.g. 30 or 100 after "5", 50 after "45, 90"). A lone 5- or 0-ending example
+    inside a mixed set (e.g. "15, 11" or "6, 25") gives round targets no boost, unlike
+    in the current best model, where each round-ish example lends kinship to round
+    targets on its own.'
+- name: set_round_kinship_averaging
+  rationale: "Refinement of the incumbent `round_number_averaging_exemplar` (averaged\
+    \ similarity on magnitude, final digit, parity and the set's common divisor, sharpened\
+    \ by suspicious coincidences, plus distance-free multiples, factor-kin and round-number\
+    \ routes). The one change: round-number kinship is read from the set as a whole,\
+    \ not from any single example \u2014 a round target gains distance-free support\
+    \ from 0/5-ending examples only to the extent that the set as a whole looks round,\
+    \ so the route weakens steeply with the fraction of examples that do not end in\
+    \ 0 or 5. Lone round-ish examples and all-round sets (\"5\", \"45, 90\") still\
+    \ carry round targets (100, 50), but a single 5-ending example inside a mixed\
+    \ set (\"15, 11\", \"6, 25\") gives round targets like 40 or 80 almost no boost."
+- name: recency_gated_averaging_route
+  rationale: 'Refinement of `recency_gated_arithmetic_route` (rank 1, tied with the
+    best), with one component grafted from `similarity_averaging_exemplar`. People
+    judge a target by its similarity to each example: magnitude, final digit, parity
+    and the set''s common divisor, all sharpened by suspicious coincidences. They
+    also use distance-free arithmetic routes (multiples, factor-kin and round-number
+    kinship), which need the example held in working memory and so fade with each
+    later example. The one change is that people pool this support across examples
+    by partly averaging it rather than summing it, so each further example dilutes
+    a target''s support. Near and far targets in 3-4-example sets therefore get less
+    support than in single-example sets. A round target in a mixed set like "15, 11"
+    is weakly carried, because the lone 5-ending example is both diluted and faded.'
+- name: biased_lapse_exemplar
+  rationale: 'People judge each target by its similarity to the examples exactly as
+    in the current best account, but the decision rule has a lapse: on a fixed fraction
+    of trials they do not consult the examples at all and simply answer from a standing
+    bias toward yes or no. So targets that similarity marks as clear members (an example
+    itself, a close same-digit neighbour) are still sometimes rejected, and targets
+    it marks as clear non-members are still sometimes accepted, at a floor and ceiling
+    set by the lapse rate and its yes-bias rather than by the examples.'
+- name: parity_salience_asymmetry_exemplar
+  rationale: 'Refinement of the incumbent `round_number_averaging_exemplar` (partly
+    averaged similarity to the examples on magnitude, final digit, parity and the
+    set''s common divisor, sharpened by suspicious coincidences, plus distance-free
+    multiples, factor-kin and round-number routes). The one change is that "all even"
+    and "all odd" are not equally salient shared properties: how much a parity mismatch
+    cuts a target''s similarity depends on whether the set is mostly even or mostly
+    odd, with the strength and direction of this asymmetry inferred from the data.
+    So an odd target after an all-even set such as "12, 14, 16" and an even target
+    after an all-odd set such as "63, 27, 99, 33" are penalized by different amounts,
+    where the incumbent penalizes both by the same amount.'
+- name: featural_contrast_exemplar
+  rationale: People do not compare numbers on a few geometric dimensions; they represent
+    each number as a bundle of familiar properties (odd or even, multiple of 3 to
+    12, square, cube, power of two, prime, final digit, decade) and judge a target
+    by Tversky-style featural contrast with each example. Properties the target shares
+    with an example raise its similarity, while properties only one of the two has
+    lower it, each property weighted by how rare it is among 1-100. So 64 after "16"
+    or 99 after "33" (many shared, rare properties) is endorsed at any distance, while
+    a prime such as 43 or 17 lends almost nothing to its double. Pooled featural similarity,
+    not set-level rule reading, drives the yes/no choice.
+- name: log_distance_gradient_exemplar
+  rationale: 'Refinement of `whole_set_round_category`: people judge a target by its
+    similarity to the examples (magnitude, final digit, parity, the set''s common
+    divisor, sharpened by suspicious coincidences, with distance-free multiples, factor-kin
+    and whole-set round routes, partly averaged over examples). The one change is
+    the shape of the magnitude gradient: how different a target feels from an example
+    grows with the logarithm of their numeric gap, not in proportion to it, so similarity
+    falls off steeply over the first few steps away from an example and then levels
+    off. The sharpest disagreement with the current best model is at the two ends
+    of the gradient: near neighbours that do not share an example''s final digit (e.g.
+    12 after "15", 52 after "48, 63, 53") lose more than a linear gradient allows,
+    while targets 30 versus 60 away from the examples (e.g. 4 or 94 after "24, 35",
+    1 or 97 after "53, 47, 41") are rejected about equally.'
+- name: parity_preserving_multiple_route
+  rationale: A multiple of an example feels like the example's kin only if it keeps
+    the example's odd-or-even character. People still judge a target by its similarity
+    to the examples, with a distance-free route for multiples, but that route is sharply
+    weakened when the multiple has switched parity, i.e. an even multiple of an odd
+    example. So far multiples of an odd example that stay odd (85 or 51 after "17",
+    99 after "33") are endorsed, while its doubles and other even multiples (34 or
+    68 after "17", 86 after "43", 62 after "31") are mostly rejected. Multiples of
+    even examples (44, 66, 88 after "22") keep the full route.
+- name: lone_example_digit_discount
+  rationale: 'Refinement of the incumbent `whole_set_round_category`: people still
+    judge a target by its partly averaged similarity to the examples (magnitude, final
+    digit, parity, the set''s common divisor, sharpened by suspicious coincidences,
+    plus distance-free multiples, factor-kin and whole-set round-number routes). The
+    one change: a final digit only looks like part of the rule once the examples can
+    be compared with one another. When there is just a single example, people cannot
+    tell whether its final digit matters, so a digit mismatch costs much less similarity
+    than it does after two or more examples. After a lone "43" or "9", near targets
+    with a different digit (40, 47; 6, 12) are therefore endorsed more, and far targets
+    that only share the final digit (93; 49, 89) less, than the incumbent predicts,
+    while multi-example sets are unchanged.'
+- name: power_mean_pooled_exemplar
+  rationale: 'Refinement of the incumbent `whole_set_round_category` (similarity to
+    the examples on magnitude, final digit, parity and the set''s common divisor,
+    sharpened by suspicious coincidences, plus distance-free multiples, factor-kin
+    and whole-set round-number routes, pooled across examples). The one change is
+    how support is pooled across the examples: people do not take a simple (partly
+    normalised) sum but a power mean whose exponent is inferred from the data, and
+    when that exponent is below one the pooled support is dragged toward the example
+    the target fits worst, so a target has to fit the set as a whole. A near target
+    that is close to one example of a 3-4-example set but unlike the others (e.g.
+    20 after "16, 52, 88") therefore gets much less support than it would from a single
+    example ("16"). Single-example sets are judged exactly as before, which addresses
+    the critique that larger sets dilute near-target support more than the incumbent
+    predicts.'
+- name: coincidence_decisive_exemplar
+  rationale: 'Refinement of `parity_salience_asymmetry_exemplar` (partly averaged
+    similarity to the examples on magnitude, final digit, asymmetrically salient parity
+    and the set''s common divisor, plus distance-free multiples, factor-kin and round-number
+    routes). The one change is in what a suspicious coincidence among the examples
+    (all the same final digit, all multiples of 5, all the same parity) does. It does
+    not make people''s similarity gradient narrower. Instead it makes them more confident
+    that a rule is at work, so their yes/no decision becomes more decisive. Similarity
+    still sets which targets are favoured, but after coherent sets ("15, 85, 45",
+    "78, 48, 88", "12, 14, 16") people answer all-or-none: well-fitting targets are
+    almost always accepted and poorly fitting ones almost always rejected. After single
+    examples and incoherent sets, answers stay graded.'
+- name: arithmetic_verdict_decisive_exemplar
+  rationale: 'Refinement of `coincidence_decisive_exemplar`: people still judge a
+    target by its partly averaged similarity to the examples (magnitude, final digit,
+    asymmetrically salient parity, the set''s common divisor, plus distance-free multiples,
+    factor-kin and round-number routes), and a suspicious coincidence among the examples
+    still makes their yes/no decision more decisive. The one change: when the target
+    is an arithmetic relative of an example (a multiple of it, or sharing a factor
+    of 3 or more with it), people decide by explicitly checking that relation ("is
+    98 a multiple of 7?"), and that verdict is more all-or-none than a similarity
+    judgment. So even after single examples and incoherent sets, multiples and factor-kin
+    get polarized answers (14 after "7" or 99 after "33" almost always accepted; 34
+    after "17" or 86 after "43" mostly rejected), while other targets stay graded.'
+- name: sample_size_neglect_concepts
+  rationale: 'People infer the hidden program as a Bayesian concept learner would:
+    they weigh candidate rules (odd/even, primes, squares, cubes, powers, multiples
+    of a number, a shared final digit) and magnitude ranges by how well each explains
+    the examples, favouring small concepts that would make the examples a suspicious
+    coincidence (the size principle), and say yes according to how probable it is
+    that the target belongs. The one distortion is sample-size neglect: people treat
+    a set of several examples as only a little more informative than a single one,
+    so the total evidence grows much more slowly with the number of examples than
+    the size principle says. Four examples therefore narrow generalization far less
+    than normative inference implies (e.g. "63, 27, 99, 33" still admits broad ranges
+    and loose rules), while single-example generalization is unchanged.'
+- name: arithmetic_relation_decisive
+  rationale: 'Refinement of `coincidence_decisive_exemplar` (partly averaged similarity
+    to the examples on magnitude, final digit, asymmetrically salient parity and the
+    set''s common divisor, plus distance-free multiples, factor-kin and round-number
+    routes, with a decision that grows more decisive after suspicious coincidences).
+    The one change: a target that stands in an explicit arithmetic relation to an
+    example (it is a multiple of it, shares a factor of 3 or more with it, or is a
+    round number next to a 0/5-ending example) is checked as a rule ("is it in the
+    7 times table?") rather than felt out by resemblance, so people answer it all-or-none
+    even after single examples and incoherent sets. Similarity still decides which
+    way the answer goes, but for such targets (64 after "16", 99 after "33", 86 after
+    "43", 54 after "3", 72 after "24, 35") yes-rates sit nearer 0 or 1 than for targets
+    with no arithmetic tie to any example.'
+- name: parity_preserving_decisive_exemplar
+  rationale: 'Refinement of the incumbent `coincidence_decisive_exemplar` (people
+    judge a target by its partly averaged similarity to the examples on magnitude,
+    final digit, asymmetrically salient parity and the set''s common divisor, plus
+    distance-free multiples, factor-kin and round-number routes, and a suspicious
+    coincidence among the examples makes the yes/no decision more decisive). The one
+    change is grafted from `parity_preserving_multiple_route`: a multiple of an example
+    only feels like the example''s kin if it keeps the example''s odd-or-even character,
+    so the distance-free multiples route is sharply cut when the multiple switches
+    parity. After a lone odd example, its even multiples (34 after "17", 86 after
+    "43", 92 after "23", 98 after "49") are therefore answered with a clear no rather
+    than a graded maybe. Odd multiples of odd examples (99 after "33") and all multiples
+    of even examples (64 after "16", 44 after "22") keep the full route and draw a
+    clear yes. This makes single-example cells more all-or-none than the incumbent
+    predicts, which is the polarization the critique reports.'
+- name: parity_preserving_decisive_route
+  rationale: 'Refinement of `parity_preserving_multiple_route`: people still judge
+    a target by its partly averaged similarity to the examples (magnitude, final digit,
+    parity, the set''s common divisor), with distance-free routes for factor-kin,
+    whole-set round kinship and multiples of an example, the multiples route sharply
+    weakened when the multiple has switched parity (34 or 86 after "17" or "43" rejected,
+    85 or 99 after "17" or "33" kept). The one change, grafted from `coincidence_decisive_exemplar`,
+    is what a suspicious coincidence among the examples (all the same final digit,
+    all multiples of 5, all the same parity) does: it no longer narrows the similarity
+    gradient, it makes people more confident that a rule is at work, so their yes/no
+    decision on that similarity becomes more all-or-none after coherent sets ("15,
+    85, 45", "12, 14, 16") and stays graded after single examples and incoherent sets.'
+- name: problem_size_decisive_exemplar
+  rationale: 'Refinement of the incumbent `coincidence_decisive_exemplar` (partly
+    averaged similarity to the examples on magnitude, final digit, asymmetrically
+    salient parity and the set''s common divisor, plus distance-free multiples, factor-kin
+    and round-number routes, with suspicious coincidences making the yes/no decision
+    more decisive), with one component grafted from `problem_size_multiple_retrieval`:
+    a far multiple of an example feels like its kin only if the multiplication fact
+    linking them is retrieved from memory, and such facts are harder to retrieve the
+    larger the problem (the sum of the two factors, as in the arithmetic problem-size
+    effect). So small facts give a clear yes (14 after "7", 64 after "16", 8 after
+    "4"), while multiples resting on large facts (98 after "49", 86 after "43", 92
+    after "23", 54 or 60 after "3") get almost no route and a clear no. This targets
+    the critique that single-example and incoherent sets get more all-or-none answers
+    than the incumbent predicts, which leaves such far multiples at a graded maybe.'
+- name: running_revision_pooling
+  rationale: 'People read the examples one at a time and keep a running impression
+    of what the program produces, revising it with each new example by an amount that
+    shrinks with how many examples they have already seen (at a rate inferred from
+    the data). A target is then judged by its similarity to that running impression
+    (magnitude, final digit, parity, the set''s common divisor, plus the distance-free
+    multiples, factor-kin and round-number routes, with suspicious coincidences making
+    the decision more decisive), so the examples count unequally by serial position:
+    if the revisions are large, the last example shown dominates (21 after "9, 3,
+    7" counts more via the 7 than 18 via the 9); if small, the first impression sticks;
+    equal weighting is the special case of the current best model.'
+- name: power_law_magnitude_gradient
+  rationale: 'Refinement of `parity_preserving_decisive_route` (partly averaged similarity
+    to the examples on magnitude, final digit, parity and the set''s common divisor,
+    plus distance-free multiples, factor-kin and whole-set round routes, with suspicious
+    coincidences making the yes/no decision more decisive). The one change is the
+    shape of the magnitude gradient: how different a target feels from an example
+    grows as a power of their numeric gap, with the exponent inferred from the data,
+    rather than in direct proportion to it. With an exponent below one, the first
+    few steps away from an example cost much of its similarity while further steps
+    cost progressively less (so 12 after "15" is already doubted, and 60 versus 90
+    away are rejected about equally); above one, similarity would plateau near the
+    examples and then collapse.'
+- name: match_or_maximize_decision
+  rationale: 'People judge a target by its partly averaged similarity to the examples
+    (magnitude, final digit, parity, the set''s common divisor, plus distance-free
+    factor-kin, whole-set round and parity-preserving multiples routes) and turn it
+    into a sense of how likely the target is to belong, which is sharper after sets
+    with a suspicious coincidence, exactly as in the current best account. The one
+    change is the decision rule: on each trial people either probability-match, saying
+    yes about as often as the target seems to belong, or maximize, saying yes whenever
+    it seems more likely in than out. Because how often people maximize does not depend
+    on the set, targets that clearly fit or clearly fail get all-or-none answers after
+    single examples and incoherent sets too, while the matching trials keep graded
+    answers in between.'
+- name: coincidence_rule_violation_route
+  rationale: 'Refinement of the incumbent `parity_preserving_decisive_route` (people
+    judge a target by its partly averaged similarity to the examples on magnitude,
+    final digit, parity and the set''s common divisor, plus distance-free routes for
+    factor-kin, whole-set round kinship and parity-preserving multiples, and a suspicious
+    coincidence makes the yes/no decision more decisive). The one change: when two
+    or more examples share a suspicious coincidence, people read its most specific
+    form (a shared final digit, else all multiples of 5, else a shared parity) as
+    a rule. A target that breaks that rule loses a fixed share of all its support,
+    its arithmetic and round-number routes included, whatever its distance from the
+    examples. So after "15, 85, 45" or "12, 14, 16", targets that break the rule (e.g.
+    33 after "12, 14, 16", or 40 after "15, 85, 45") are rejected more consistently
+    than graded similarity allows, even when they are far away or factor-kin of an
+    example. Single examples and incoherent sets are unaffected.'
+- name: coincidence_violation_exclusion
+  rationale: 'Refinement of the incumbent `parity_preserving_decisive_route` (partly
+    averaged similarity to the examples on magnitude, final digit, parity and the
+    set''s common divisor, with distance-free factor-kin, whole-set round and parity-preserving
+    multiples routes, and a decision that grows more all-or-none after suspicious
+    coincidences). The one change: when two or more examples share a coincidence (all
+    the same final digit, else all multiples of 5, else all the same parity), people
+    take that shared property as a requirement of the program, so a target that breaks
+    it (47 after "78, 48, 88", 52 after "15, 85, 45", 33 after "12, 14, 16") loses
+    similarity to every example by one fixed factor, however near or far it is. This
+    is a categorical exclusion on top of graded similarity: it rejects far rule-breakers
+    after coherent sets more firmly than the incumbent does (the critique''s over-accepted
+    far violations), while single examples and incoherent sets are unaffected.'
+- name: set_kin_consensus_exemplar
+  rationale: 'Refinement of `parity_preserving_decisive_exemplar` (partly averaged
+    similarity to the examples on magnitude, final digit, asymmetrically salient parity
+    and the set''s common divisor, plus distance-free routes for parity-preserving
+    multiples, factor-kin and round-number kinship, with suspicious coincidences making
+    the yes/no decision more decisive). The one change: people credit an arithmetic
+    kinship only to the extent that the target is kin to the set as a whole, so every
+    distance-free route is weakened by the share of examples the target bears no multiple,
+    shared-factor or round-number relation to. After a lone example nothing changes
+    (14 after "7", 64 after "16"), but a far multiple of just one example in a mixed
+    set (72 or 96 after "24, 35") is mostly rejected, while a target related to every
+    example (60 after "3, 30", 30 after "15, 45") keeps the full route.'
+- name: span_fallback_rule_violation
+  rationale: Refinement of the incumbent `coincidence_rule_violation_route`. People
+    still judge a target by its partly averaged similarity to the examples, with distance-free
+    arithmetic and round-number routes. Their decision is still more all-or-none after
+    suspicious coincidences, and a target that breaks the set's most specific shared
+    rule (same final digit, else all multiples of 5, else same parity) still loses
+    a fixed share of its support. The one change adds a concept to that list. When
+    two or more examples share no such rule, people fall back on the concept "numbers
+    in the range the examples span", and a target outside that range loses the same
+    fixed share of support, however near it is. So after incoherent sets such as "24,
+    35", "59, 14" or "48, 63, 53", targets below or above the examples (2, 4, 7, 96,
+    16) are rejected flatly, while targets between them stay graded by similarity.
+    Single examples and coherent sets are unchanged.
+- name: prime_example_multiple_block
+  rationale: 'Refinement of the incumbent `coincidence_rule_violation_route` (partly
+    averaged similarity to the stored examples on magnitude, final digit, parity and
+    the set''s common divisor, plus distance-free factor-kin, whole-set round and
+    parity-preserving multiples routes, a fixed loss for breaking the set''s coincidence
+    rule, and a decision that grows more all-or-none after suspicious coincidences).
+    The one change: a stored example only brings its multiples to mind if people know
+    it as a factor, and a two-digit prime (13, 17, 23, 31, 43, 47) is an indivisible
+    number that people never multiply in everyday arithmetic, so its multiples route
+    is much weaker. After a lone "17", "43" or "23", far multiples such as 34, 51,
+    86 or 92 are therefore mostly rejected, while equally far multiples of one-digit
+    or composite examples (14 after "7", 64 after "16", 99 after "33", 50 after "25")
+    keep the full route and are mostly accepted.'
+- name: prime_rooted_multiple_route
+  rationale: 'People know a number''s multiples only through its times-table factors:
+    an example built from small factors (16, 22, 33, 7, 25) brings its multiples to
+    mind as kin at any distance, but an example with a prime factor above 11 (17,
+    23, 43, 13, 47) is an arithmetic dead end, so its multiples (34, 92, 86, 78, 94)
+    get little of the distance-free multiples route. They are judged by ordinary similarity
+    instead. Everything else is as in the current best account: partly averaged similarity
+    on magnitude, final digit, parity and common divisor; factor-kin and whole-set
+    round routes; a decision made more decisive by suspicious coincidences; and support
+    lost for breaking the set''s coincidence rule.'
+- name: set_kin_consensus_violation_route
+  rationale: 'Refinement of the incumbent `coincidence_rule_violation_route` (partly
+    averaged similarity to the examples on magnitude, final digit, parity and the
+    set''s common divisor, plus distance-free factor-kin, whole-set round and parity-preserving
+    multiples routes; a suspicious coincidence makes the decision more decisive, and
+    a target that breaks a multi-example set''s coincidence rule loses a fixed share
+    of its support). The one change, grafted from `set_kin_consensus_exemplar`: people
+    credit an arithmetic kinship only to the extent that the target is kin to the
+    set as a whole, so every distance-free route is weakened by the share of examples
+    the target has no multiple, shared-factor or round-number relation to. Lone examples
+    are judged as before, but after incoherent mixed sets a factor-kin or multiple
+    of just one example (25 or 55 after "10, 3", 72 or 96 after "24, 35", 16 or 32
+    after "48, 63, 53", 7 after "59, 14") is rejected almost all-or-none, which is
+    the over-graded incoherent-set polarization the critique reports.'
+- name: five_family_multiple_route
+  rationale: 'Refinement of the incumbent `coincidence_rule_violation_route` (partly
+    averaged similarity to the examples on magnitude, final digit, parity and the
+    set''s common divisor, plus distance-free factor-kin, whole-set round and multiples
+    routes, a fixed penalty for breaking the set''s coincidence rule, and a decision
+    that grows more decisive after suspicious coincidences). The one change concerns
+    when a multiple feels like it has lost its example''s character. People see a
+    number ending in 5 as a "five-times-table" number rather than an odd one, and
+    every multiple of it stays in that family. So the multiples route is cut for a
+    parity switch only when the example is odd and does not end in 5: 34 after "17"
+    and 86 after "43" are still rejected, but 20, 70 or 100 after "5", 50 after "25"
+    and 90 after "15" keep the full route and are accepted almost all-or-none.'
+- name: rule_breaker_distance_indifference
+  rationale: 'Refinement of `coincidence_violation_exclusion` (partly averaged similarity
+    to the examples on magnitude, final digit, parity and the set''s common divisor,
+    with distance-free factor-kin, whole-set round and parity-preserving multiples
+    routes, a decision that grows more all-or-none after suspicious coincidences,
+    and a fixed similarity loss for targets that break the set''s shared property).
+    The one change: once people see that a target breaks the set''s rule, its closeness
+    to the examples stops counting, and the more convincing the rule (the more suspicious
+    the coincidence), the more completely closeness is ignored. So after a strong
+    digit rule ("15, 85, 45", "78, 48, 88") wrong-digit targets are rejected about
+    equally whether they are 3 or 40 away, which the critique''s flat digit-violation
+    contrast shows, while after a weak parity rule ("12, 14") near rule-breakers still
+    get some credit for being close.'

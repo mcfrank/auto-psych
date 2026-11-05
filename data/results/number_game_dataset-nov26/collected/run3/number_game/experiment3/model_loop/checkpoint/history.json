@@ -1,0 +1,245 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "consistent_examples_bounded_rules",
+    "argmax_model": "consistent_examples_bounded_rules",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "consistent_examples_bounded_rules": 1.0
+    },
+    "elpd_loo": {
+      "consistent_examples_bounded_rules": -4163.9328
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "range_specific_evidence_strength",
+    "argmax_model": "range_specific_evidence_strength",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "consistent_examples_bounded_rules": 9e-06,
+      "central_tendency_feature_prototype": 0.0,
+      "stray_rate_inferred_concepts": 0.0,
+      "range_specific_evidence_strength": 0.999991
+    },
+    "elpd_loo": {
+      "consistent_examples_bounded_rules": -4163.9328,
+      "central_tendency_feature_prototype": -4422.3118,
+      "stray_rate_inferred_concepts": -4175.8472,
+      "range_specific_evidence_strength": -4152.3518
+    },
+    "critique": {
+      "status": "critiqued",
+      "incumbent": "consistent_examples_bounded_rules",
+      "attempts": 1,
+      "n_statistics": 8,
+      "n_evaluated": 8,
+      "n_significant": 2,
+      "n_significant_fdr": 2
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "range_specific_evidence_strength",
+    "argmax_model": "range_specific_evidence_strength",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "consistent_examples_bounded_rules": 6e-06,
+      "central_tendency_feature_prototype": 0.0,
+      "stray_rate_inferred_concepts": 0.0,
+      "range_specific_evidence_strength": 0.633399,
+      "most_specific_noticed_rule": 0.0,
+      "guessing_lapse_consistent_concepts": 0.092093,
+      "range_evidence_accumulates_with_n": 0.274502
+    },
+    "elpd_loo": {
+      "consistent_examples_bounded_rules": -4163.9328,
+      "central_tendency_feature_prototype": -4422.3118,
+      "stray_rate_inferred_concepts": -4175.8472,
+      "range_specific_evidence_strength": -4152.3518,
+      "most_specific_noticed_rule": -4371.1648,
+      "guessing_lapse_consistent_concepts": -4154.2801,
+      "range_evidence_accumulates_with_n": -4153.1879
+    },
+    "critique": {
+      "status": "critiqued",
+      "incumbent": "range_specific_evidence_strength",
+      "attempts": 1,
+      "n_statistics": 8,
+      "n_evaluated": 8,
+      "n_significant": 1,
+      "n_significant_fdr": 0
+    }
+  },
+  {
+    "step": 3,
+    "iteration": 2,
+    "best_model": "iter2_candidate1",
+    "argmax_model": "iter2_candidate1",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "consistent_examples_bounded_rules": 0.0,
+      "central_tendency_feature_prototype": 0.0,
+      "stray_rate_inferred_concepts": 0.0,
+      "range_specific_evidence_strength": 0.0,
+      "most_specific_noticed_rule": 0.0,
+      "guessing_lapse_consistent_concepts": 0.0,
+      "range_evidence_accumulates_with_n": 0.0,
+      "graded_explaining_away_by_specificity": 0.01052,
+      "iter2_candidate1": 0.989285,
+      "hundreds_chart_block_concepts": 0.0,
+      "shared_rule_explains_away_supersets": 1.6e-05,
+      "specific_rule_explains_away_with_lapse": 0.0,
+      "range_evidence_with_guessing_lapse": 0.00018
+    },
+    "elpd_loo": {
+      "consistent_examples_bounded_rules": -4163.9328,
+      "central_tendency_feature_prototype": -4422.3118,
+      "stray_rate_inferred_concepts": -4175.8472,
+      "range_specific_evidence_strength": -4152.3518,
+      "most_specific_noticed_rule": -4371.1648,
+      "guessing_lapse_consistent_concepts": -4154.2801,
+      "range_evidence_accumulates_with_n": -4153.1879,
+      "graded_explaining_away_by_specificity": -4140.9414,
+      "iter2_candidate1": -4136.3976,
+      "hundreds_chart_block_concepts": -4202.0548,
+      "shared_rule_explains_away_supersets": -4147.4441,
+      "specific_rule_explains_away_with_lapse": -4153.4483,
+      "range_evidence_with_guessing_lapse": -4145.0113
+    },
+    "critique": {
+      "status": "critiqued",
+      "incumbent": "range_specific_evidence_strength",
+      "attempts": 1,
+      "n_statistics": 8,
+      "n_evaluated": 8,
+      "n_significant": 2,
+      "n_significant_fdr": 1
+    }
+  },
+  {
+    "step": 4,
+    "iteration": 3,
+    "best_model": "magnitude_threshold_concepts",
+    "argmax_model": "magnitude_threshold_concepts",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "consistent_examples_bounded_rules": 0.0,
+      "central_tendency_feature_prototype": 0.0,
+      "stray_rate_inferred_concepts": 0.0,
+      "range_specific_evidence_strength": 0.0,
+      "most_specific_noticed_rule": 0.0,
+      "guessing_lapse_consistent_concepts": 0.0,
+      "range_evidence_accumulates_with_n": 0.0,
+      "graded_explaining_away_by_specificity": 4.2e-05,
+      "iter2_candidate1": 0.00395,
+      "hundreds_chart_block_concepts": 0.0,
+      "shared_rule_explains_away_supersets": 0.0,
+      "specific_rule_explains_away_with_lapse": 0.0,
+      "range_evidence_with_guessing_lapse": 1e-06,
+      "directional_stream_extrapolation": 0.00229,
+      "upward_directed_similarity_gradient": 0.0,
+      "belief_criterion_confidence_gain": 0.0,
+      "cumulative_explaining_away_with_lapse": 0.00066,
+      "magnitude_threshold_concepts": 0.992146,
+      "graded_explaining_away_with_guessing": 0.000911
+    },
+    "elpd_loo": {
+      "consistent_examples_bounded_rules": -4163.9328,
+      "central_tendency_feature_prototype": -4422.3118,
+      "stray_rate_inferred_concepts": -4175.8472,
+      "range_specific_evidence_strength": -4152.3518,
+      "most_specific_noticed_rule": -4371.1648,
+      "guessing_lapse_consistent_concepts": -4154.2801,
+      "range_evidence_accumulates_with_n": -4153.1879,
+      "graded_explaining_away_by_specificity": -4140.9414,
+      "iter2_candidate1": -4136.3976,
+      "hundreds_chart_block_concepts": -4202.0548,
+      "shared_rule_explains_away_supersets": -4147.4441,
+      "specific_rule_explains_away_with_lapse": -4153.4483,
+      "range_evidence_with_guessing_lapse": -4145.0113,
+      "directional_stream_extrapolation": -4136.9427,
+      "upward_directed_similarity_gradient": -4410.3297,
+      "belief_criterion_confidence_gain": -4174.1608,
+      "cumulative_explaining_away_with_lapse": -4138.1874,
+      "magnitude_threshold_concepts": -4130.8714,
+      "graded_explaining_away_with_guessing": -4137.864
+    },
+    "critique": {
+      "status": "critiqued",
+      "incumbent": "iter2_candidate1",
+      "attempts": 1,
+      "n_statistics": 8,
+      "n_evaluated": 8,
+      "n_significant": 8,
+      "n_significant_fdr": 8
+    }
+  },
+  {
+    "step": 5,
+    "iteration": 4,
+    "best_model": "exception_weighted_rule_rejection",
+    "argmax_model": "exception_weighted_rule_rejection",
+    "excluded_unreliable": [],
+    "posteriors": {
+      "consistent_examples_bounded_rules": 0.0,
+      "central_tendency_feature_prototype": 0.0,
+      "stray_rate_inferred_concepts": 0.0,
+      "range_specific_evidence_strength": 0.0,
+      "most_specific_noticed_rule": 0.0,
+      "guessing_lapse_consistent_concepts": 0.0,
+      "range_evidence_accumulates_with_n": 0.0,
+      "graded_explaining_away_by_specificity": 0.0,
+      "iter2_candidate1": 0.0,
+      "hundreds_chart_block_concepts": 0.0,
+      "shared_rule_explains_away_supersets": 0.0,
+      "specific_rule_explains_away_with_lapse": 0.0,
+      "range_evidence_with_guessing_lapse": 0.0,
+      "directional_stream_extrapolation": 0.0,
+      "upward_directed_similarity_gradient": 0.0,
+      "belief_criterion_confidence_gain": 0.0,
+      "cumulative_explaining_away_with_lapse": 0.0,
+      "magnitude_threshold_concepts": 0.0,
+      "graded_explaining_away_with_guessing": 0.0,
+      "pairwise_consequential_exemplar": 0.0,
+      "exception_weighted_rule_rejection": 1.0,
+      "graded_explaining_away_with_thresholds": 0.0
+    },
+    "elpd_loo": {
+      "consistent_examples_bounded_rules": -4163.9328,
+      "central_tendency_feature_prototype": -4422.3118,
+      "stray_rate_inferred_concepts": -4175.8472,
+      "range_specific_evidence_strength": -4152.3518,
+      "most_specific_noticed_rule": -4371.1648,
+      "guessing_lapse_consistent_concepts": -4154.2801,
+      "range_evidence_accumulates_with_n": -4153.1879,
+      "graded_explaining_away_by_specificity": -4140.9414,
+      "iter2_candidate1": -4136.3976,
+      "hundreds_chart_block_concepts": -4202.0548,
+      "shared_rule_explains_away_supersets": -4147.4441,
+      "specific_rule_explains_away_with_lapse": -4153.4483,
+      "range_evidence_with_guessing_lapse": -4145.0113,
+      "directional_stream_extrapolation": -4136.9427,
+      "upward_directed_similarity_gradient": -4410.3297,
+      "belief_criterion_confidence_gain": -4174.1608,
+      "cumulative_explaining_away_with_lapse": -4138.1874,
+      "magnitude_threshold_concepts": -4130.8714,
+      "graded_explaining_away_with_guessing": -4137.864,
+      "pairwise_consequential_exemplar": -4350.6232,
+      "exception_weighted_rule_rejection": -4092.8577,
+      "graded_explaining_away_with_thresholds": -4142.2526
+    },
+    "critique": {
+      "status": "critiqued",
+      "incumbent": "magnitude_threshold_concepts",
+      "attempts": 2,
+      "n_statistics": 8,
+      "n_evaluated": 8,
+      "n_significant": 5,
+      "n_significant_fdr": 5
+    }
+  }
+]

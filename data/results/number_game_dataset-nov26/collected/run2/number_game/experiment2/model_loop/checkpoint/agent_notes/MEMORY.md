@@ -1,0 +1,34 @@
+- [PyTensor gather speed](pytensor-gather-speed.md) — one-hot matmul beats fancy-index gather; benchmark dlogp first
+- [Overlap model tweaks](overlap-model-tweaks.md) — parity split +6 nats; salience-scaled slope +4.5; most other tweaks ~0
+- [Final-digit overshadowing](final-digit-overshadowing.md) — shared last digit discounting other saliences +7 nats; adding the seed family on exp2 gave +40 more
+- [Seed multiple property](seed-multiple-property.md) — min-divides-all seed family +10 nats; gcd/spacing/contrast ~0
+- [Seed + digit overshadowing](seed-plus-digit-overshadowing.md) — the two mechanisms stack: MAP +23 over the incumbent; seed-overshadowing weak
+- [Last-example digit recency](last-example-digit-recency.md) — last-shown example final digit as lingering property +25.6 nats MAP; order effect real; stacks with seed+overshadowing (smoke -3159.5)
+- [Leaky memory recency](leaky-memory-recency.md) — forgetting earlier examples gave ~0; order effects are a dead end
+- [Graded consensus properties](graded-consensus-properties.md) — partial-share props weighted fraction^2.5: +3 MAP on exp2 incumbent
+- [Single-example leniency](single-example-leniency.md) — yes-shift on 1-example sets +27 MAP over the exp2 incumbent
+- [Single-example leniency](single-example-leniency.md) — yes-bias on 1-example sets +27 MAP over exp2 incumbent; recency weight shrinks
+- [Single-example breadth](single-example-breadth.md) — lean-to-yes on one-example sets +17.5 MAP on seed model; bounds-off for n=1 +8.8
+- [Graded magnitude band](graded-magnitude-band.md) — Gaussian falloff outside the examples' range instead of hard bounds: +13.8 MAP on exp2 incumbent
+- [Concept-space additions](concept-space-additions.md) — upward arithmetic progression +8.6 on exp2 incumbent; repdigit +2; others ~0; find_MAP unreliable
+- [First-example digit primacy](first-example-digit-primacy.md) — first-example final digit lingers too; smoke -3150.9; single-n leniency = duplicate
+- [Guessing lapse ceiling](guessing-lapse-ceiling.md) — lapse+guess on exp2 incumbent +5 MAP (acts as yes-ceiling ~0.77); trial_index banned in models
+- [Band + primacy](band-plus-primacy.md) — graded band + first-digit primacy stacked; smoke -3137.6 (exp2 iter_2 c5)
+- [Property exemplar GCM](property-exemplar-gcm.md) — exemplar similarity over property mismatches: smoke -3313, ~160 nats worse than overlap
+- [Progression + leniency graft](progression-leniency-graft.md) — on gap_step incumbent: leniency +19.5 MAP, band +8.8, primacy +3
+- [Single-example magnitude neighborhood](single-example-magnitude-neighborhood.md) — n=1-only "about this size" property on gap_step: +16.6; closes proximity critique
+- [Coincidence-gated pattern belief](coincidence-gated-pattern-belief.md) — random-program mixture gated by coincidence strength +19.8 on gap_step incumbent; noisy-OR -59
+- [Progression + band + primacy](progression-band-primacy.md) — primacy grafted on exp2 iter_3 incumbent; smoke -3133.5
+- [Progression + band + primacy](progression-band-primacy.md) — primacy on exp2 progression-band incumbent; smoke -3133.5 (iter_3 c3)
+- [Tempered size principle overlap](tempered-size-principle-overlap.md) — specificity^alpha property weights on exp2 incumbent; smoke -3144.5
+- [Specificity-weighted overlap](specificity-weighted-overlap.md) — size-principle weight tilt on exp2 incumbent; smoke -3144.1
+- [First-impression anchoring](first-impression-anchoring.md) — all first-example props linger: +15.7 MAP on progression band incumbent (digit-only +11.7); seed dispersion likely unfixable
+- [Coincidence + primacy](coincidence-plus-primacy.md) — primacy graft on coincidence-gated +4.9 grouped LOO; band graft ~0; lone-rarity gate worse
+- [Band + leniency](band-plus-leniency.md) — n=1 leniency on progression band incumbent +8 grouped LOO; primacy grafts on incumbent all taken
+- [Critique stats: no imports](critique-stat-no-imports.md) — never write import lines in test_stats files; np/pd/math pre-injected
+- [Undiluted magnitude dimension](undiluted-magnitude-dimension.md) — band as its own logit term instead of in the share: smoke -3181, likely worse
+- [Incremental band narrowing](incremental-band-narrowing.md) — band width shrinks per extra example: +8.9 MAP on exp2 iter_4 incumbent; magnitude order effect ~0
+- [Range-tightened band](range-tightened-band.md) — multi-example band narrower than n=1 band: +9.3 grouped LOO on exp2 iter_4 incumbent
+- [First-impression + span interior](first-impression-span-interior.md) — in-range property on first_impression_anchoring +5.6 MAP; smoke -3128.3
+- [Span-sharpened band](span-sharpened-band.md) — own band width for multi-example sets +9.3 grouped LOO on exp2 iter_4 incumbent; smoke -3123.9
+- [Span interval similarity](span-interval-similarity.md) — n>=2 'between the examples' interval, exp falloff, on exp2 incumbent: +5.9 grouped LOO

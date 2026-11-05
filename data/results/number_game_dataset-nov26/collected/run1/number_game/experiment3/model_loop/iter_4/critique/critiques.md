@@ -1,0 +1,11 @@
+# Critique of `coincidence_rule_violation_route`
+
+4 of 8 evaluated test statistics show a significant discrepancy (p ≤ 0.05), over 1000 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **single_example_cell_polarization** — Among (set, target) cells from one-example sets, fraction of cells whose yes-rate is <=1/9 or >=8/9; observed > null means people answer all-or-none after a lone example even though the model (no coincidence, so its least-steep slope) predicts graded answers there; observed < null means the model is too polarized there. (observed 0.248 vs null mean 0.12, z=3.95, p=0.004, q=0.032) [survives FDR]
+- **incoherent_multi_cell_polarization** — Among (set, target) cells from 2-4-example sets with no coincidence (examples differ in parity, are not all multiples of 5, and do not share a final digit), fraction of cells with yes-rate <=1/9 or >=8/9; observed > null means people are all-or-none even after incoherent multi-example sets (decisiveness not confined to coherent sets), observed < null means the model over-polarizes them. (observed 0.187 vs null mean 0.0999, z=3.07, p=0.00799, q=0.032) [survives FDR]
+- **within_item_trial_drift** — Correlation between trial_index and the rating after subtracting each (set, target) cell's mean rating; observed > null means people become more liberal (more yes) later in the session, observed < null more conservative/fatigued, a time trend the stationary model cannot produce. (observed 0.0248 vs null mean -0.000269, z=2.11, p=0.03, q=0.0799)
+- **digit_rule_violation_proximity_contrast** — In 2-4-example sets whose examples all share a final digit, yes-rate for wrong-final-digit targets within 10 of some example minus that for wrong-digit targets more than 20 from every example; observed < null means people reject digit-rule violators flatly regardless of distance while the model still lets near violators ride on magnitude similarity (observed > null: people's violation rejection is more distance-graded than the model's). (observed 0.000561 vs null mean 0.0385, z=-1.96, p=0.048, q=0.0959)

@@ -1,0 +1,8 @@
+{
+  "models": [
+    "span_fallback_rule_violation",
+    "set_kin_consensus_violation_route",
+    "five_family_multiple_route"
+  ],
+  "ledger_sha256": "83c93f66e46e4eb98af6cc82b1cab4cdd1335d2115d440eae3222b49e849383a"
+}

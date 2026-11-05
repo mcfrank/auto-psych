@@ -1,0 +1,4 @@
+- [PyTensor gather speed](pytensor-gather-speed.md) — one-hot matmul beats fancy-index gather; benchmark dlogp first
+- [Overlap model tweaks](overlap-model-tweaks.md) — parity split +6 nats; salience-scaled slope +4.5; most other tweaks ~0
+- [Final-digit overshadowing](final-digit-overshadowing.md) — visible shared last digit discounting other saliences gave +7 nats
+- [Seed multiple property](seed-multiple-property.md) — min-divides-all seed family +10 nats; gcd/spacing/contrast ~0

@@ -1,0 +1,13 @@
+{
+  "models": [
+    "divisibility_kinship_exemplar",
+    "shared_factor_parity_exemplar",
+    "coincidence_sharpened_exemplar",
+    "common_step_lattice_exemplar",
+    "capacity_limited_attention_exemplar",
+    "digit_run_rule_attention_exemplar",
+    "digit_run_criterion_shared_factor",
+    "digit_run_raised_criterion_exemplar"
+  ],
+  "ledger_sha256": "0baf514d5683123b89b062131974564240a6ddcaaf1b100a84fe749e725cbc31"
+}

@@ -1,0 +1,27 @@
+{
+  "posteriors": {
+    "exception_weighted_rule_rejection": 1.0
+  },
+  "elpd_loo": {
+    "exception_weighted_rule_rejection": -4092.8577
+  },
+  "n_trials": 7560,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "exception_weighted_rule_rejection": {
+      "rank": 0,
+      "elpd_loo": -4092.857689241953,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 1.0,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 7560,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "exception_weighted_rule_rejection"
+}

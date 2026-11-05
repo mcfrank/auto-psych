@@ -1,0 +1,132 @@
+{
+  "posteriors": {
+    "first_impression_anchoring": 0.000171,
+    "progression_band_first_digit_primacy": 0.000177,
+    "coincidence_gated_first_digit_primacy": 3e-06,
+    "incremental_band_narrowing": 0.309537,
+    "span_interval_similarity": 0.084126,
+    "range_tightened_magnitude_band": 0.197204,
+    "span_sharpened_magnitude_band": 0.099609,
+    "first_impression_span_interior": 0.309174
+  },
+  "elpd_loo": {
+    "first_impression_anchoring": -3160.0681,
+    "progression_band_first_digit_primacy": -3160.0336,
+    "coincidence_gated_first_digit_primacy": -3164.1118,
+    "incremental_band_narrowing": -3152.5647,
+    "span_interval_similarity": -3153.8675,
+    "range_tightened_magnitude_band": -3153.0155,
+    "span_sharpened_magnitude_band": -3153.6985,
+    "first_impression_span_interior": -3152.5659
+  },
+  "n_trials": 5040,
+  "criterion": "grouped_cv",
+  "comparison": {
+    "incremental_band_narrowing": {
+      "rank": 0,
+      "elpd_loo": -3152.5647066794427,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.3095370859988466,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 5040,
+      "not_converged": false
+    },
+    "first_impression_span_interior": {
+      "rank": 1,
+      "elpd_loo": -3152.565879702488,
+      "elpd_diff": 0.0011730230453395052,
+      "dse": 6.7158884989487415,
+      "dse_clustered": 6.344405335121359,
+      "weight": 0.3091742047392327,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 5040,
+      "not_converged": false
+    },
+    "range_tightened_magnitude_band": {
+      "rank": 2,
+      "elpd_loo": -3153.015546022448,
+      "elpd_diff": 0.4508393430051001,
+      "dse": 3.7251933139956033,
+      "dse_clustered": 3.3002752595658293,
+      "weight": 0.19720396874787827,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 5040,
+      "not_converged": false
+    },
+    "span_sharpened_magnitude_band": {
+      "rank": 3,
+      "elpd_loo": -3153.698536968919,
+      "elpd_diff": 1.1338302894764638,
+      "dse": 3.6681470382397614,
+      "dse_clustered": 3.3602593605892617,
+      "weight": 0.09960851182117382,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 5040,
+      "not_converged": false
+    },
+    "span_interval_similarity": {
+      "rank": 4,
+      "elpd_loo": -3153.8674687272423,
+      "elpd_diff": 1.3027620477996606,
+      "dse": 4.594324712377412,
+      "dse_clustered": 3.9037108354260215,
+      "weight": 0.08412601579051478,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 5040,
+      "not_converged": false
+    },
+    "progression_band_first_digit_primacy": {
+      "rank": 5,
+      "elpd_loo": -3160.033624835298,
+      "elpd_diff": 7.468918155855135,
+      "dse": 5.950808588971529,
+      "dse_clustered": 5.002252952038064,
+      "weight": 0.00017660489990995948,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 5040,
+      "not_converged": false
+    },
+    "first_impression_anchoring": {
+      "rank": 6,
+      "elpd_loo": -3160.0681217117453,
+      "elpd_diff": 7.503415032302655,
+      "dse": 7.683370695246209,
+      "dse_clustered": 6.804341747561823,
+      "weight": 0.00017061646746316958,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 5040,
+      "not_converged": false
+    },
+    "coincidence_gated_first_digit_primacy": {
+      "rank": 7,
+      "elpd_loo": -3164.1117532417493,
+      "elpd_diff": 11.547046562306605,
+      "dse": 7.7049201827249325,
+      "dse_clustered": 8.058300002552805,
+      "weight": 2.991534980696641e-06,
+      "loo_unreliable": false,
+      "convergence_problems": [],
+      "criterion": "grouped_cv",
+      "n_cv_points": 5040,
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "incremental_band_narrowing"
+}

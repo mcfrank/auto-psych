@@ -1,0 +1,9 @@
+model,file,loglik_per_response,item_r2,share_of_ceiling
+constant: training yes rate,,-0.6313234667025514,,
+constant: unseen yes rate,,-0.623765318520052,,
+tenenbaum_rules_similarity,/sailhome/wurgaft/auto-psych/src/pipelines/outer_loop/projects/number_game/seed_models/tenenbaum_rules_similarity.py,-0.7051700267967532,0.2855866041393681,0.37763693082098226
+bigelow_piantadosi_mixture,/sailhome/wurgaft/auto-psych/src/pipelines/outer_loop/projects/number_game/seed_models/bigelow_piantadosi_mixture.py,-0.6998464767869101,0.3330077287146618,0.4403428409761874
+bigelow_piantadosi_independent,/sailhome/wurgaft/auto-psych/src/pipelines/outer_loop/projects/number_game/seed_models/bigelow_piantadosi_independent.py,-0.629707304635876,0.4576157590101269,0.6051145544752684
+extrapolation_verification_failure,/sailhome/wurgaft/auto-psych/data/results/number_game_dataset-nov26/collected/run3/number_game/experiment1/cognitive_models/extrapolation_verification_failure.py,-0.5518182631464027,0.5099306690925086,0.6742916159807346
+consistent_examples_bounded_rules,/sailhome/wurgaft/auto-psych/data/results/number_game_dataset-nov26/collected/run3/number_game/experiment2/cognitive_models/consistent_examples_bounded_rules.py,-0.5364787384810646,0.5644039371513223,0.7463227178018839
+exception_weighted_rule_rejection,/sailhome/wurgaft/auto-psych/data/results/number_game_dataset-nov26/collected/run3/number_game/experiment3/cognitive_models/exception_weighted_rule_rejection.py,-0.5349361498640536,0.5743256623880659,0.7594424153386229

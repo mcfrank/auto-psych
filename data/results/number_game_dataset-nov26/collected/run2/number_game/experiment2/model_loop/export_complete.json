@@ -1,0 +1,13 @@
+{
+  "models": [
+    "first_impression_anchoring",
+    "progression_band_first_digit_primacy",
+    "coincidence_gated_first_digit_primacy",
+    "incremental_band_narrowing",
+    "span_interval_similarity",
+    "range_tightened_magnitude_band",
+    "span_sharpened_magnitude_band",
+    "first_impression_span_interior"
+  ],
+  "ledger_sha256": "bbb3216500df8cd191b66afecdadd16c5896a15905082402ae60810cb39a4201"
+}

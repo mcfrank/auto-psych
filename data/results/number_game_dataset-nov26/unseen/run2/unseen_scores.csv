@@ -1,0 +1,9 @@
+model,file,loglik_per_response,item_r2,share_of_ceiling
+constant: training yes rate,,-0.6578162759152172,,
+constant: unseen yes rate,,-0.621886327119928,,
+tenenbaum_rules_similarity,/sailhome/wurgaft/auto-psych/src/pipelines/outer_loop/projects/number_game/seed_models/tenenbaum_rules_similarity.py,-0.742099828645848,0.22749981392461677,0.2994620524269493
+bigelow_piantadosi_mixture,/sailhome/wurgaft/auto-psych/src/pipelines/outer_loop/projects/number_game/seed_models/bigelow_piantadosi_mixture.py,-0.7007739078168445,0.25276645916954615,0.332720987071605
+bigelow_piantadosi_independent,/sailhome/wurgaft/auto-psych/src/pipelines/outer_loop/projects/number_game/seed_models/bigelow_piantadosi_independent.py,-0.6216944738223952,0.496155298954567,0.6530980469138928
+seed_multiple_salience_overlap,/sailhome/wurgaft/auto-psych/data/results/number_game_dataset-nov26/collected/run2/number_game/experiment1/cognitive_models/seed_multiple_salience_overlap.py,-0.5591135449267501,0.4611057447837973,0.606961695206343
+incremental_band_narrowing,/sailhome/wurgaft/auto-psych/data/results/number_game_dataset-nov26/collected/run2/number_game/experiment2/cognitive_models/incremental_band_narrowing.py,-0.5236693731540475,0.6276558585455672,0.8261945729772584
+neighbourhood_doubt_three_example_memory,/sailhome/wurgaft/auto-psych/data/results/number_game_dataset-nov26/collected/run2/number_game/experiment3/cognitive_models/neighbourhood_doubt_three_example_memory.py,-0.5250652259900548,0.6263646005762807,0.8244948671400338
