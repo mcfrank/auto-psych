@@ -34,7 +34,9 @@ used the previous seeds.
 
 Every data file here is a byte copy of what the sweep wrote, or the output of
 one of the programs named above; the assembly is
-`~/auto-psych-runs/nov26b-collect/assemble.sh`.
+`collect_scripts/assemble.sh`. `collect_scripts/` keeps the sweep's staging,
+repair and watcher scripts as they ran, from `~/auto-psych-runs/` (since
+deleted), so their paths point at work roots that no longer exist.
 
 ## Results
 

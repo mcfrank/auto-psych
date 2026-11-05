@@ -31,8 +31,10 @@ drew its own items and responses.
 
 Every data file here is a byte copy of what the runs wrote, or the output of
 one of the programs named above; the assembly is
-`~/auto-psych-runs/ngds-nov26-collect/assemble.sh` (from the work roots staged
-by `stage.sh` there).
+`collect_scripts/assemble.sh` (from the work roots staged by
+`collect_scripts/stage.sh`; `launch_dataset_nov26.sh` started each run). These
+ran from `~/auto-psych-runs/ngds-nov26-collect/` (since deleted), so their paths
+point there.
 
 ## How the runs went
 
@@ -129,8 +131,7 @@ better than a constant at the unseen yes rate. In runs 2 and 3 nearly all of the
 place by the end of experiment 2.
 
 Each run's models were scored on that run's own node, from its fit cache where a fit was
-already there, with the code and venv the run ran on (`score_run.sh`, a copy of
-`~/auto-psych-runs/ngds-nov26-collect/score_run.sh`).
+already there, with the code and venv the run ran on (`collect_scripts/score_run.sh`).
 
 ## How the sweep ran
 
