@@ -436,3 +436,46 @@ what this rehearsal showed works: an out-of-memory fit kills one task, and slow 
 `ArrayBackend` should mostly carry over, waiting in-process instead of yielding, but I haven't built it; that's the driver's
 call. Costs: the job's 8 CPUs and 32 GB sit idle during waits, a person launches each job, and a dead job waits for a person. The
 PI wrote to SRCC again on 11-04; I haven't seen an answer.
+
+### Handoff §4 items 1-2, and the sandbox (2026-11-05, code at b8775b4b)
+
+Written by Claude Opus 5.5 (the Sherlock session); not reviewed by a person.
+
+**Bottom line: the smoke replay's mechanics all worked; one slow test fails because of the test, not the code; and an agent in
+the sandbox can't reach Slurm.** Since this section was first written, SRCC replied (Mark Yoder, 11-05: try some segments,
+avoid `--wait`, send specific error messages). The PI decided to try the standard stepped version, which the PI will launch by
+hand (handoff §4 item 3).
+
+**Tests** (job 51213222, a clone at b8775b4b):
+
+- **Fast** (`tests/test_rsa_open_step_*.py tests/test_rsa_open_fit_array.py`, not slow): 39 passed.
+- **Slow** (`tests/test_rsa_open_step_equivalence.py`): failed, in the test's harness. `LocalSlurm.run_arrays` runs the array
+  tasks in the test's own process, where the test has set `RSA_OPEN_FIT_BACKEND=slurm` and replaced `LocalBackend.attempt`. A
+  `fold_after` task fits through `loop_fit`, so it picks the array backend and raises
+  `FitPending: literal_listener: pending (18 GB)`. Full-fit tasks bypass the backend (`_run_child`), which is why the test
+  passed before folds-after (b35f8090). On Sherlock, tasks run with `--export=NONE` (`slurm.py:193`), so they fit locally. The
+  smoke replay's 20 `fold_after` tasks all returned `ok`.
+- **Suggested fix:** run each task with the backend unset and the real `LocalBackend` (or in a subprocess with a clean
+  environment), and keep the "never fit in a step" check for the steps themselves.
+
+**Smoke replay** (handoff §4 item 2; `ROUNDS=1 CANDIDATES=2`, one starting theory; steps on `owners,normal`): mechanics only,
+no timing analysis (PI, 11-05). All 28 jobs `COMPLETED` 0:0, so there are no failed job ids to report.
+
+| check | result |
+|---|---|
+| A fold array held until its full fits end, then released and run | Yes: full fits 51213298 ended 10:55, folds 51213345 (`afterany` on them) started 11:01, all `ok`. The next step 51213347 waited on the folds (`afterany:51213345_*`) |
+| `launch.json` written by the first step and read by the rest | Yes: written by 51213221 (`experiment 1 of 1, at most 40 steps`); `launches.jsonl` has that one line. Steps 51213347, 51244552 and 51254306 resumed from it without a new launch |
+| DONE at the end | Yes: 51254306 exited 0 and wrote `DONE` at 16:40:59 |
+
+**Can an agent reach Slurm?** Probed 11-05 on `sh04-17n29`, inside chain 0's allocation (`srun --overlap`, 1 CPU, 1 GB). The
+probe ran a shell, with no agent, through the harness's own `sandbox_command` (as an opencode agent is wrapped, with no
+credentials) and outside it for comparison (`stepmode_test/sandbox_sbatch_probe.py`):
+
+- **Outside:** `squeue --me` works and `sbatch --test-only` validates a request.
+- **Inside:** the binaries are visible (`/usr` is mounted) and no `SLURM_*` variable is set. Both commands fail Slurm's
+  authentication: `failed to connect to any sack sockets` / `auth_g_create: REQUEST_CONFIG has authentication error`. Exit 1, no
+  job created.
+- **Why:** the sandbox mounts only `/usr`, `/etc` and `/share/software`, not `/run`, where Slurm's auth socket lives.
+- **Caveats:** this is a property of the mounts, not a guarantee. It would change if `/run` were ever mounted, or if Slurm
+  authentication stopped needing the socket. It was checked on one node only. A test that runs `squeue` in the sandbox and
+  expects it to fail would catch that.
