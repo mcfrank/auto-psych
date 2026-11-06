@@ -16,7 +16,10 @@ rsa_step_mode() {
   [[ -n "${SLURM_JOB_NAME:-}" ]] || { echo "FATAL: step mode runs as a Slurm job (its name makes steps singletons)" >&2; exit 1; }
   if [[ "${RSA_STEP_NEW_LAUNCH:-0}" == 1 ]]; then
     local others
-    others="$(squeue --me -h -n "$SLURM_JOB_NAME" -o %i | grep -vx "${SLURM_JOB_ID:-}" || true)"
+    # itself, as squeue names it: its job id, or <array job>_<task> for a one-task array's step
+    local self_ids=("${SLURM_JOB_ID:-}")
+    [[ -n "${SLURM_ARRAY_JOB_ID:-}" ]] && self_ids+=("${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID:-0}")
+    others="$(squeue --me -h -n "$SLURM_JOB_NAME" -o %i | grep -vxF "${self_ids[@]/#/-e}" || true)"
     if [[ -n "$others" ]]; then
       echo "FATAL: $CELL already has a step queued or running (jobs: $(echo $others)); not launching a second" >&2
       exit 1

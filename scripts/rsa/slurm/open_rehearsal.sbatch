@@ -62,11 +62,16 @@ command -v flock >/dev/null || { echo "FATAL: no flock" >&2; exit 1; }
 
 STEP_MODE="${STEP_MODE:-0}"
 if [[ "$STEP_MODE" == 1 ]]; then
-  # Step mode (DISTRIBUTED_DESIGN.md v3 §0b; _step_mode.sh): one plain job per chain, named for it
-  # (steps of a chain are singletons by name), e.g.
+  # Step mode (DISTRIBUTED_DESIGN.md v3 §0b; _step_mode.sh): one job per chain, named for it (steps
+  # of a chain are singletons by name). This header's `--array=0` makes every submission of this
+  # script a one-task array, which no command-line option removes, so a one-task array is a step;
+  # a wider array is refused (2026-11-06: the first stepped segment, 51286645_[0]). E.g.
   #   STEP_MODE=1 CHAIN=0 sbatch --job-name=rsa_open_reh_c0 --partition=mcfrank --cpus-per-task=8 --mem=32G \
   #     --time=2-00:00:00 --no-requeue scripts/rsa/slurm/open_rehearsal.sbatch
-  [[ -z "${SLURM_ARRAY_TASK_ID:-}" ]] || { echo "ERROR: step mode runs one plain job per chain, not an array" >&2; exit 1; }
+  if [[ -n "${SLURM_ARRAY_TASK_ID:-}" && "${SLURM_ARRAY_TASK_COUNT:-1}" != 1 ]]; then
+    echo "ERROR: step mode runs one job per chain, not an array of ${SLURM_ARRAY_TASK_COUNT} (CHAIN picks the chain)" >&2
+    exit 1
+  fi
   CHAIN="${CHAIN:?step mode needs CHAIN}"
 else
   TASK="${SLURM_ARRAY_TASK_ID:?run as an array task}"

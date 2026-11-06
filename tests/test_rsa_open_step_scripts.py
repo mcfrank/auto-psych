@@ -99,3 +99,30 @@ def test_a_person_s_launch_refuses_while_another_step_of_the_chain_is_queued(tmp
                          env=env, capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
     assert "RSA_OPEN_NEW_LAUNCH=1" in out.stdout.splitlines()
+
+
+def test_a_step_that_is_a_one_task_array_knows_itself_in_the_queue(tmp_path):
+    """open_rehearsal.sbatch's header makes each submission a one-task array (2026-11-06): squeue
+    lists the step as <array job>_<task>, not its own job id, and the guard must not take it for a
+    second step."""
+    fake = tmp_path / "squeue_bin"
+    fake.mkdir()
+    cell = tmp_path / "cell"
+    cell.mkdir()
+    env = {"PATH": f"{fake}:{os.environ['PATH']}", "HOME": str(tmp_path), "CELL": "open_chain_0", "CELL_DIR": str(cell),
+           "WORK_ROOT": str(tmp_path), "REPO": "/r", "SLURM_DIR": "/h", "VENV_PY": "/v", "HARNESS_REPO": "/h",
+           "JAX_COMPILATION_CACHE_DIR": "/j", "SLURM_JOB_NAME": "rsa_open_stepped_c0", "SLURM_JOB_ID": "51286646",
+           "SLURM_ARRAY_JOB_ID": "51286645", "SLURM_ARRAY_TASK_ID": "0", "RSA_STEP_NEW_LAUNCH": "1"}
+    for listing, ok in (("51286645_0\n", True), ("51286645_0\n57\n", False)):
+        (fake / "squeue").write_text(f'#!/bin/bash\nprintf "{listing.replace(chr(10), "\\\\n")}"\n')
+        (fake / "squeue").chmod(0o755)
+        out = subprocess.run(["bash", "-c", f"source {SCRIPT}; rsa_step_mode /s"], env=env, capture_output=True,
+                             text=True)
+        assert (out.returncode == 0) is ok, (listing, out.stderr)
+
+
+def test_the_rehearsal_job_takes_a_one_task_array_as_a_step_and_refuses_a_wider_one():
+    text = (REPO / "scripts" / "rsa" / "slurm" / "open_rehearsal.sbatch").read_text()
+    assert "#SBATCH --array=0" in text  # why a step must accept a one-task array
+    assert '"${SLURM_ARRAY_TASK_COUNT:-1}" != 1' in text
+    assert "not an array\" >&2" not in text
