@@ -70,3 +70,16 @@ It reads results afterwards, with no polling loops.
    `open_rehearsal.sbatch`, as in §2). Report: steps and their durations, step MaxRSS with agents,
    whether any session ran twice, any message from Slurm, the agent or SRCC, and that it stopped
    after the experiment with a mail.
+
+   The PI's command, from a Sherlock login shell in the checkout at `auto-psych-open` (a fresh work
+   root, so the staged code is this commit's; copying `private/ground_truth/` from an earlier
+   rehearsal root first saves rebuilding it):
+   ```bash
+   export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_stepped_1 && mkdir -p $WORK_ROOT/logs
+   STEP_MODE=1 CHAIN=0 ARM=open N_EXPERIMENTS=2 MAX_ITERATIONS=2 CANDIDATES=3 \
+     sbatch --job-name=rsa_open_stepped_c0 --partition=mcfrank --cpus-per-task=8 --mem=32G \
+       --time=2-00:00:00 --no-requeue -o $WORK_ROOT/logs/%x_%j.out scripts/rsa/slurm/open_rehearsal.sbatch
+   ```
+   Later steps go to `STEP_PARTITION` (`mcfrank` unless set). If chain 0's live job holds the lab
+   node, `STEP_PARTITION=normal` (exported before `sbatch`) rather than `owners`: a step is never
+   requeued, so a preempted step would end the segment mid-session.

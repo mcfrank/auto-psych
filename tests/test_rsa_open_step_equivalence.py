@@ -34,13 +34,22 @@ class LocalSlurm:
         return ""
 
     def run_arrays(self) -> int:
-        from src.rsa_open.loop.fit_array import run_task
+        """Each task as `fit_array.sbatch` runs it: its own process, with none of the step's settings
+        (Slurm's ``--export=NONE``), so it fits with the local backend. In this process the test has
+        set the slurm backend and made the local one fail (review V3 §11: a `fold_after` task run here
+        found its fold pending)."""
+        import os
+        import subprocess
+        import sys
 
+        env = {k: v for k, v in os.environ.items() if not k.startswith("RSA_OPEN_")}
         n = 0
         for m in self.manifests:
             for i in range(len(json.loads(m.read_text())["tasks"])):
-                out = run_task(m, i)
-                assert out["kind"] != "infrastructure", out
+                done = subprocess.run([sys.executable, "-m", "src.rsa_open.loop.fit_array", "--manifest", str(m),
+                                       "--index", str(i)], env=env, cwd=Path(__file__).resolve().parents[1],
+                                      capture_output=True, text=True)
+                assert done.returncode == 0, (m.name, i, done.stdout[-2000:], done.stderr[-4000:])
                 n += 1
         self.manifests.clear()
         return n
