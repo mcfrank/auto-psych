@@ -32,7 +32,7 @@ import numpyro
 from numpyro.infer import MCMC, NUTS
 
 from src.models.pymc_inference import convergence_problems
-from src.rsa.context import Context, ShapeGroup, group_by_shape
+from src.rsa.context import Context, ShapeGroup, group_by_shape, unique_contexts
 from src.rsa.fit import FitSettings, draw_batches
 from src.rsa.model_file import ModelContractViolation, RSAModel
 from src.rsa_open.links import LinkLikelihood
@@ -135,11 +135,34 @@ def _latent(theory: TheoryModel, link: LinkLikelihood, params, group: ShapeGroup
 
 @dataclass(frozen=True)
 class OpenData:
-    """Trials grouped by display shape, each response checked and encoded for its link."""
+    """Trials as distinct displays and distinct (display, response) patterns, each response
+    checked and encoded for its link.
+
+    Many trials show the same display, and many give it the same response: the closed
+    campaign's three literature sources are 27,949 trials but 173 displays and 402 patterns. The
+    theory is evaluated once per distinct display (`groups`, per display shape), the link once
+    per pattern (`encoded`, with each pattern's display in `pattern_display`), and a pattern's
+    log-likelihood counts once per trial that has it (`counts`). A trial's own log-likelihood is
+    its pattern's (`trial_pattern`), so per-trial results are exact, not approximations. The
+    closed fit worked this way (`src.rsa.fit`); evaluating every trial, as this module did
+    until 2026-11-08, gave the same numbers 11-16 times slower, and built thousands of small
+    device arrays per fit (about 20 s for 17k trials)."""
 
     groups: List[ShapeGroup]
-    encoded: List[Dict[str, jnp.ndarray]]  # per group, the link's response arrays
+    """Per display shape, its distinct displays (``indices``: positions among all displays)."""
+    encoded: List[Dict[str, jnp.ndarray]]
+    """Per shape, each distinct pattern's encoded response."""
+    pattern_display: List[jnp.ndarray]
+    """Per shape, each pattern's row in that shape's displays."""
+    counts: List[jnp.ndarray]
+    """Per shape, how many trials have each pattern."""
+    trial_pattern: np.ndarray
+    """(trials,) each trial's pattern, numbered across shapes in shape order."""
     n_trials: int
+
+    @property
+    def n_patterns(self) -> int:
+        return int(sum(len(c) for c in self.counts))
 
     @classmethod
     def build(cls, contexts: Sequence[Context], responses: Sequence[Mapping[str, Any]],
@@ -147,9 +170,53 @@ class OpenData:
         if len(contexts) != len(responses):
             raise ValueError(f"{len(contexts)} scenes but {len(responses)} responses")
         per_trial = [link.encode(ctx, r, i) for i, (ctx, r) in enumerate(zip(contexts, responses))]
-        groups = list(group_by_shape(contexts).values())
-        encoded = [link.stack([per_trial[i] for i in g.indices]) for g in groups]
-        return cls(groups, encoded, len(contexts))
+        displays, display_of = unique_contexts(contexts)  # model_key: what a theory sees of a scene
+        groups = list(group_by_shape(displays).values())
+        row_of = {int(d): (g, row) for g, grp in enumerate(groups) for row, d in enumerate(grp.indices)}
+        keys: List[Dict[tuple, int]] = [{} for _ in groups]
+        rows: List[List[int]] = [[] for _ in groups]
+        first: List[List[int]] = [[] for _ in groups]
+        counts: List[List[int]] = [[] for _ in groups]
+        where = np.empty((len(contexts), 2), dtype=np.int64)
+        for i, enc in enumerate(per_trial):
+            g, row = row_of[int(display_of[i])]
+            key = (row, tuple((f, np.asarray(enc[f]).dtype.str, np.asarray(enc[f]).shape, np.asarray(enc[f]).tobytes())
+                              for f in sorted(enc)))
+            p = keys[g].get(key)
+            if p is None:
+                p = keys[g][key] = len(rows[g])
+                rows[g].append(row)
+                first[g].append(i)
+                counts[g].append(0)
+            counts[g][p] += 1
+            where[i] = (g, p)
+        offsets = np.cumsum([0] + [len(r) for r in rows])
+        return cls(groups=groups,
+                   encoded=[link.stack([per_trial[i] for i in first[g]]) for g in range(len(groups))],
+                   pattern_display=[jnp.asarray(np.asarray(r, dtype=np.int32)) for r in rows],
+                   counts=[jnp.asarray(np.asarray(c, dtype=np.float32)) for c in counts],
+                   trial_pattern=offsets[where[:, 0]] + where[:, 1], n_trials=len(contexts))
+
+
+def pattern_log_lik(link: LinkLikelihood, latent: jnp.ndarray, lp: Mapping[str, Any], data: OpenData, g: int,
+                    draws: bool = False) -> jnp.ndarray:
+    """Shape ``g``'s patterns' log-likelihoods, from the theory's ``latent`` on its displays
+    ((displays, ...), or (draws, displays, ...) with ``draws``, ``lp`` then batched too)."""
+    group, rows = data.groups[g], data.pattern_display[g]
+    arrays = jax.tree_util.tree_map(lambda a: a[rows], group.arrays)
+    classes = jnp.asarray(group.classes)[rows]
+    enc = data.encoded[g]
+    if draws:
+        return jax.vmap(lambda lat, p: link.log_lik(lat[rows], p, enc, arrays, classes))(latent, lp)
+    return link.log_lik(latent[rows], lp, enc, arrays, classes)
+
+
+def total_log_lik(theory: RSAModel, link: LinkLikelihood, data: OpenData, tp, lp) -> jnp.ndarray:
+    """The data's log-likelihood: each pattern's, once per trial that has it."""
+    total = 0.0
+    for g, group in enumerate(data.groups):
+        total = total + jnp.sum(data.counts[g] * pattern_log_lik(link, _latent(theory, link, tp, group), lp, data, g))
+    return total
 
 
 def _split(theory: RSAModel, link: LinkLikelihood, params: Mapping[str, Any]):
@@ -162,11 +229,9 @@ def trial_log_lik(theory: RSAModel, link: LinkLikelihood, data: OpenData,
                   params: Mapping[str, Any]) -> jnp.ndarray:
     """(trials,) log-likelihood of each response at one parameter setting, in input order."""
     tp, lp = _split(theory, link, params)
-    out = jnp.zeros(data.n_trials)
-    for group, enc in zip(data.groups, data.encoded):
-        ll = link.log_lik(_latent(theory, link, tp, group), lp, enc, group.arrays, jnp.asarray(group.classes))
-        out = out.at[jnp.asarray(group.indices)].set(ll)
-    return out
+    per_pattern = jnp.concatenate([pattern_log_lik(link, _latent(theory, link, tp, group), lp, data, g)
+                                   for g, group in enumerate(data.groups)])
+    return per_pattern[jnp.asarray(data.trial_pattern)]
 
 
 def _numpyro_model(theory: RSAModel, link: LinkLikelihood, data: OpenData):
@@ -176,29 +241,27 @@ def _numpyro_model(theory: RSAModel, link: LinkLikelihood, data: OpenData):
             raise ValueError(f"theory parameter {name!r} belongs to the {link.name!r} link")
         params[name] = numpyro.sample(name, prior)
     tp, lp = _split(theory, link, params)
-    total = 0.0
-    for group, enc in zip(data.groups, data.encoded):
-        total = total + jnp.sum(link.log_lik(_latent(theory, link, tp, group), lp, enc, group.arrays,
-                                             jnp.asarray(group.classes)))
-    numpyro.factor(OBSERVED_SITE, total)
+    numpyro.factor(OBSERVED_SITE, total_log_lik(theory, link, data, tp, lp))
 
 
 def pointwise_log_lik(theory: RSAModel, link: LinkLikelihood, data: OpenData,
                       flat: Mapping[str, np.ndarray]) -> np.ndarray:
     """(draws, trials) log-likelihood of each response at each posterior draw."""
     n_draws = len(next(iter(flat.values())))
-    out = np.empty((n_draws, data.n_trials), dtype=np.float32)
-    for group, enc in zip(data.groups, data.encoded):
-        classes = jnp.asarray(group.classes)
-        per_draw = jax.vmap(lambda latent, lp: link.log_lik(latent, lp, enc, group.arrays, classes))
+    per_pattern = np.empty((n_draws, data.n_patterns), dtype=np.float32)
+    offset = 0
+    for g, group in enumerate(data.groups):
+        width = len(data.counts[g])
         start = 0
         for n, params in draw_batches(flat, np.arange(n_draws)):
             tp, lp = _split(theory, link, params)
             batch = len(next(iter(params.values())))
             latent = _latent(theory, link, tp, group, True, batch)
-            out[start:start + n, group.indices] = np.asarray(per_draw(latent, lp))[:n]
+            per_pattern[start:start + n, offset:offset + width] = np.asarray(
+                pattern_log_lik(link, latent, lp, data, g, draws=True))[:n]
             start += n
-    return out
+        offset += width
+    return per_pattern[:, data.trial_pattern]
 
 
 @dataclass

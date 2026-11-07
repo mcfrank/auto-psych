@@ -37,7 +37,7 @@ from numpyro.infer import MCMC, NUTS
 from src.models.pymc_inference import convergence_problems
 from src.rsa.context import Context
 from src.rsa.fit import FitSettings
-from src.rsa_open.fit import OBSERVED_SITE, OpenData, TheoryModel, _latent, _split, pointwise_log_lik
+from src.rsa_open.fit import OBSERVED_SITE, OpenData, TheoryModel, pointwise_log_lik, total_log_lik
 from src.rsa_open.links import LinkLikelihood
 
 GUARD_K = 4.0  # PI 2026-10-21: no more than 4 clustered SEs worse on any earlier paradigm
@@ -156,9 +156,7 @@ def _corpus_model(theory: TheoryModel, blocks: Sequence[Block]):
         lp = {k: jnp.asarray(fixed[k]) if k in fixed else numpyro.sample(block.param(k), prior)
               for k, prior in link.params.items()}
         tp = {k: params[k] for k in theory.params}
-        for group, enc in zip(block.data.groups, block.data.encoded):
-            total = total + jnp.sum(link.log_lik(_latent(theory, link, tp, group), lp, enc, group.arrays,
-                                                 jnp.asarray(group.classes)))
+        total = total + total_log_lik(theory, link, block.data, tp, lp)
     numpyro.factor(OBSERVED_SITE, total)
 
 
