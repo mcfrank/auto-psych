@@ -4,6 +4,8 @@ Written by Claude Opus 5.5 (the Sherlock session) from chain 1's round 4-5 logs,
 --test-only` and the test jobs of 2026-11-03 (§10); not reviewed by a person. I've read only v3's summary of SRCC's reply, not
 the reply itself.
 
+**Update 2026-11-07 (§11, §12).** The PI launched a real-agent segment in step mode (one experiment of two, 2 rounds of 3): it worked, with no session run twice and a clean stop after the experiment (§11). §12 estimates how long a full-size stepped chain would take: about 5-8 days, against about 10-11 for chain 0.
+
 **Update 2026-11-04 (§11).** Step mode was built after this review. On replayed agents it reproduced chain 1's decisions; real agents remain blocked by rule 10.
 
 **Update after the tests (§10).** Five results change the plan, and each corrects something I wrote below or earlier:
@@ -479,3 +481,125 @@ credentials) and outside it for comparison (`stepmode_test/sandbox_sbatch_probe.
 - **Caveats:** this is a property of the mounts, not a guarantee. It would change if `/run` were ever mounted, or if Slurm
   authentication stopped needing the socket. It was checked on one node only. A test that runs `squeue` in the sandbox and
   expects it to fail would catch that.
+
+### Handoff §4 item 3: the real-agent segment (2026-11-06/07, code at 9d5b4252)
+
+Written by Claude Opus 5.5 (the Sherlock session) from the jobs' logs, `sacct` and the run tree; not reviewed by a person.
+
+**Bottom line: it worked.** Seven steps ran experiment 1 of 2, each agent session ran once, all 90 fit tasks completed, and
+the last step wrote `STOP` and exited 15, which Slurm mailed to the PI. The only message from Slurm was that mail; SRCC sent
+none (PI, 11-07). It took 21 h 47 m, of which the steps themselves ran 9 h 31 m. Nearly all of the rest was spent waiting
+for fits, and only about 33 min in the queue.
+
+**The launch.** The PI submitted it from a clone, `$SCRATCH/auto-psych/stepped_clone`, with
+`WORK_ROOT=$SCRATCH/auto-psych/rsa_open_stepped_1`. The settings were `STEP_MODE=1 CHAIN=0 ARM=open N_EXPERIMENTS=2
+MAX_ITERATIONS=2 CANDIDATES=3 STEP_PARTITION=normal STEP_FIT_PARTITION=owners`, with `sbatch --partition=normal
+--cpus-per-task=8 --mem=32G --time=2-00:00:00 --no-requeue`. The steps ran on `normal` because chain 0 holds the lab node.
+Two earlier submissions never reached step mode:
+
+- **51286645.** The script's header `#SBATCH --array=0` made it a one-task array, which step mode refused. I cancelled it
+  at 0 s, and 9d5b4252 fixed it.
+- **51287612.** It stopped after 18 s with `FATAL: GOOGLE_API_KEY is not set (add it to .../stepped_clone/.secrets)`,
+  because a fresh clone has no `.secrets` file. Copying the checkout's file (mode 600) fixed it. The handoff, or a check
+  before submission, should say so.
+
+**Steps** (8 CPUs and 32 GB each, all `COMPLETED` 0:0 except the stop):
+
+| step | job | queue wait¹ | ran | MaxRSS | what it did | fits it left |
+|---|---|---|---|---|---|---|
+| 1 | 51328695 | 3.5 min | 0:53:36 | 5.8 GB | setup, starting set, ground truth | 15 (51333127) |
+| 2 | 51333128 | 4.5 min | 2:10:23 | 7.4 GB | designer (1 session) and simulated pilot (726 calls) | 7 + 35 folds (51351904/05) |
+| 3 | 51351906 | 3.5 min | 1:38:29 | **17.1 GB** | round 1: critique and 3 candidates | 3 (51393140, early) |
+| 4 | 51393145 | 2.6 min | 1:02:02 | 9.0 GB | round 1: 2 repairs, admissions | 5 folds early (51402111), then 1 + 5 |
+| 5 | 51406241 | 15.4 min | 2:35:29 | 13.6 GB | round 1 scored; round 2: critique and 3 candidates | 2 early (51423925), then 1 |
+| 6 | 51428546 | 3.1 min | 1:03:59 | 7.9 GB | round 2: retry and repair, admissions | 10 folds early (51433936), then 1 + 5 |
+| 7 | 51437423 | 3.8 min | 0:07:19 | 5.7 GB | round 2 scored, export, `STOP` | none |
+
+¹ From the end of the last array the step waited on (or from submission, for step 1) to its start. The gaps between steps
+(1 h 05 m to 5 h 22 m) were the fits themselves. The longest gap, before step 3, was 7 starting fits (4 h) followed by their
+35 folds (1 h 05 m).
+
+- **Fits:** 90 tasks across 12 arrays on `owners`, all `COMPLETED`, none preempted. Each took 2 min to 1 h 15 m. The largest
+  MaxRSS was 4.8 GB, against the 18 GB tier. Arrays started 6-10 min after submission.
+  - One candidate fit timed out at the admission limit: round 1 candidate 1's `quotient_partition_contrast`, after 71 min,
+    with warm-up alone taking 55 min. It was rejected, and its repair was admitted.
+  - Five fold tasks in 51351905 were skipped because their full fit wasn't in the cache. That is the rule for a failed model
+    (the ledger's dropped seed `isolated_graded_costly_l3`), not an infrastructure error.
+- **Memory with agents:** a step peaked at 17.1 GB, during round 1's critique and 3 concurrent candidates; 32 GB is ample at
+  this size.
+- **No session ran twice.** The token log counts 10 candidate sessions, which matches the 10 attempt directories and the 10
+  ledger lines one for one:
+  - round 1: candidates 1-3, plus repairs of 1 and 2
+  - round 2: candidates 1-3, a retry of 1 (its first attempt wrote no `candidate.py`), and a repair of 2
+
+  There were also 2 critiques, one per round, and 1 designer session. Steps 6 and 7 resumed "round 2 from its journal" without
+  spawning anything again. `launches.jsonl` has one line.
+- **The stop:** `[chain] STOPPED: experiment 1 of 2 is done; launch experiment 2`, then exit 15 (`FAILED` to Slurm, hence
+  the mail). Experiment 1 exported `shared_prior_contrast_confusion_l1`. Tokens: 66.7 M, $27.59. The pilot's 2.98 M tokens
+  have no price from the backend.
+- **Messages:** none from SRCC. Slurm sent only the mail at the end. The agent CLI printed `Both GOOGLE_API_KEY and
+  GEMINI_API_KEY are set. Using GOOGLE_API_KEY.` (harmless: the checkout's `.secrets` has both).
+
+**For the driver:**
+
+1. The `STOP` file's hint for the next launch is `CLEAR_STOP=1 STEP_MODE=1 (scripts/rsa/live/open_launch.sh)`. That is the
+   **live** launcher, but this launch came from `open_rehearsal.sbatch`. The hint should name the script that made the launch.
+2. A fresh clone needs `.secrets` (above).
+3. Round times at this size were about 5.5-6 h. Round 1 ran from its critique at 16:10 to its last journal write at 21:20;
+   round 2 from 21:48 to 03:16. Of that time, about half was spent waiting for fits. §12 uses this.
+
+## 12. How long would a revised stepped chain take? (2026-11-07)
+
+Written by Claude Opus 5.5 at the PI's request; not reviewed by a person. **This is an estimate.** It extrapolates from one
+small segment (§11) to a size that has never run stepped.
+
+**Bottom line: about 5-8 days for three full-size experiments, against about 10-11 days for chain 0.** Most of the saving
+comes from failures that no longer cost a whole loop (about 2 days in chain 0). Rounds should also slow down less as the live
+set and the data grow. Infrastructure won't make it much faster than that: the round count, the candidates per round and the
+size of the live set decide how much fitting there is.
+
+**Chain 0 so far** (launched 10-29 21:15 PT; at 11-07 07:00 it had run 8 days 10 h and is in experiment 3's round 3 of up to 5):
+
+| | design + collection | model loop | losses |
+|---|---|---|---|
+| exp 1 | ~2.5 h | 38 h (5 rounds, ~7.6 h a round) | none |
+| exp 2 | ~4.5 h | 72.3 h (35.4 h without failures; 5 rounds) | two out-of-memory crashes, restarts, waiting for fixes |
+| exp 3 | ~7.5 h | 78 h so far | round 3 lost at the 48-h limit (~7 h) |
+
+In experiment 3, the starting fits and standing took about 19.5 h. Round 1 was scored at 11-05 13:39 and round 2 at
+11-06 13:04, so rounds took about 17-24 h, against about 7 h in experiment 1. On one node of 24 cores and 184 GB, 8-9 fits run
+at once (§10). As the live set grew to 20-27 models and the data to three experiments, a round's fits queued behind each other,
+and the slowest few ended it. Rounds 3-5, if all run, add about 1-3 days, for 10-11 days in all.
+
+**What the segment says about stepped rounds:**
+
+- The queue isn't the problem: about 33 min in all over 7 steps, even on `normal`.
+- Fits on the critical path are: about 11.7 of 21.8 h. Arrays run every fit of a round at once, so what counts is the slowest
+  fit, up to the admission limit, not how many there are.
+- Each step reloads the loop. That was cheap at 7-9 live models. Chain 0 measured 35-74 min at 20-27 (§2, §10), on about 3
+  steps a round.
+
+**Estimate per full-size experiment** (6 candidates, 20+ live models, cumulative data):
+
+- **Design and collection: 4-8 h.** Collection is about 1.5-2.5 h; design was 3-5 h in chain 0, plus PI review when the
+  paradigm is new.
+- **Starting fits and folds on the new data: 3-6 h.** That is 5.3 h in the segment and 19.5 h in chain 0's experiment 3, on
+  one node.
+- **Each round: 6-10 h.** The agents run concurrently, so 6 candidates take about as long as 3. Add the slowest fit, the
+  repairs and their fits, the folds, and 2-4 h of restarts at 20+ live models.
+- **Five rounds: 30-50 h**, fewer if two stale rounds stop the loop early. Chain 0 never stopped early.
+- **Relaunch latency: hours.** Step mode stops after each experiment by design, and a person relaunches. A closed laptop or a
+  day of teaching adds directly.
+
+That is about 40-65 h per experiment, or 5-8 days for three.
+
+**What could move it:**
+
+- **Up:** the slowest candidate fits. The admission limit is 4 h, and one slow candidate holds its round's next step for that
+  long. Full-size rounds have never run stepped.
+- **Down:** steps on `mcfrank` once chain 0 is done (no queue, and no other jobs on the node). Saving CV scores to disk would
+  remove most of a restart's cost (§9, A1). Folds that reuse the full fit's adaptation (B1, which needs an amendment) and a
+  compile step (A5) would also help.
+- **The design itself:** rounds per experiment, candidates per round and the live-set cap decide how much fitting there is.
+  Gate item 5's limit of 104 h of running time is already past in chain 0 by any count. If the revision registers a new
+  limit, set it against these parameters as well as the infrastructure.
