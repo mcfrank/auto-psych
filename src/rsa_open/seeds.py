@@ -5,7 +5,10 @@ again the 5 starting models plus the 12 promoted seeds).
     uv run python -m src.rsa_open.seeds            # writes data/rsa_open/seeds/{bar,chain_0,...}
 
 Every theory is `src.rsa_open.port.port_file` of the closed file, with the
-closed manifest's rationale. A name in both the starting models and the promoted seeds (the
+closed manifest's rationale, then `named_constants`: the few numerical-safety values the closed
+seeds wrote by hand (a masking sentinel, tolerances) become memo_kit's ``BIG`` and ``EPS``, with
+identical predictions, so every seed passes the open loop's no-hand-set-numbers gate (PI
+2026-11-08; `src.rsa_open.loop.gates.magic_number_problems`); the build raises if one does not. A name in both the starting models and the promoted seeds (the
 references, rsa_l1 and rsa_l2) is one theory: its two originals must be the same file, else the
 build raises. The output is deterministic; rebuilding over it rewrites it.
 """
@@ -35,6 +38,38 @@ REPEATS = {"chain_3": "chain_0"}
 OUT = here() / "data/rsa_open/seeds"
 
 
+NAMED_CONSTANTS = (
+    ("jnp.eye(n_obj) * 1e5", "jnp.eye(n_obj) * BIG"),  # masks an object's distance to itself out of a min
+    ("(dist < 1e-5)", "(dist < EPS)"),                  # sums of 0/1 features: "equal"
+    ("jnp.maximum(p, 1e-6)", "jnp.maximum(p, EPS)"),    # a floor on a share; only absent features reach it
+)
+
+
+def named_constants(source: str, where: str) -> str:
+    """``source`` with `NAMED_CONSTANTS` applied and memo_kit's names imported; raises if the seed
+    still sets a number by hand."""
+    import re
+
+    from src.rsa_open.loop.gates import magic_number_problems
+
+    out = source
+    for old, new in NAMED_CONSTANTS:
+        out = out.replace(old, new)
+    if out != source:
+        m = re.search(r"^from src\.rsa\.memo_kit import (.+)$", out, re.M)
+        if m is None:
+            raise ValueError(f"{where}: uses memo_kit's named constants but does not import from memo_kit")
+        names = [n.strip() for n in m.group(1).split(",")]
+        body = out.replace(m.group(0), "")
+        names += [c for c in ("BIG", "EPS") if c in body and c not in names]
+        out = out.replace(m.group(0), "from src.rsa.memo_kit import "
+                          + ", ".join(sorted(names, key=lambda n: (n != n.upper(), n))))
+    problems = magic_number_problems(out)
+    if problems:
+        raise ValueError(f"{where}: {problems[0]}")
+    return out
+
+
 def _entries(folder: Path) -> List[Tuple[str, Path, str]]:
     return [(e["name"], Path(folder) / f"{e['name']}.py", e.get("rationale", "")) for e in read_manifest_entries(folder)]
 
@@ -45,7 +80,7 @@ def _write(dst: Path, entries: List[Tuple[str, Path, str]]) -> Path:
         shutil.rmtree(tmp)
     tmp.mkdir(parents=True)
     for name, path, _ in entries:
-        (tmp / f"{name}.py").write_text(port_file(path))
+        (tmp / f"{name}.py").write_text(named_constants(port_file(path), str(path)))
     (tmp / "models_manifest.yaml").write_text(yaml.safe_dump(
         {"models": [{"name": n, "rationale": r} for n, _, r in entries]}, sort_keys=False, width=100))
     if dst.exists():
