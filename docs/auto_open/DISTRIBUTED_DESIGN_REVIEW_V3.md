@@ -4,6 +4,8 @@ Written by Claude Opus 5.5 (the Sherlock session) from chain 1's round 4-5 logs,
 --test-only` and the test jobs of 2026-11-03 (§10); not reviewed by a person. I've read only v3's summary of SRCC's reply, not
 the reply itself.
 
+**Update 2026-11-07 (§13).** The driver's pattern-weighted likelihood (786e609b) makes fits 30× faster on the committed literature but only 2.5-2.9× faster on chain 0's experiment 3 data, with no saving in memory (36-39 GB per fit): the agents' theories are now most of the cost. §13 has the measurements and where I think the rest of the time goes.
+
 **Update 2026-11-07 (§11, §12).** The PI launched a real-agent segment in step mode (one experiment of two, 2 rounds of 3): it worked, with no session run twice and a clean stop after the experiment (§11). §12 estimates how long a full-size stepped chain would take: about 5-8 days, against about 10-11 for chain 0.
 
 **Update 2026-11-04 (§11).** Step mode was built after this review. On replayed agents it reproduced chain 1's decisions; real agents remain blocked by rule 10.
@@ -603,3 +605,116 @@ That is about 40-65 h per experiment, or 5-8 days for three.
 - **The design itself:** rounds per experiment, candidates per round and the live-set cap decide how much fitting there is.
   Gate item 5's limit of 104 h of running time is already past in chain 0 by any count. If the revision registers a new
   limit, set it against these parameters as well as the infrastructure.
+
+## 13. Fit speed with the pattern-weighted likelihood (`HANDOFF_fit_speed.md`, 2026-11-07, code at 786e609b)
+
+Written by Claude Opus 5.5 (the Sherlock session); not reviewed by a person. No agents, no Prolific, nothing written to
+chain 0; the corpus copy and every trial stay on Sherlock (`$SCRATCH/auto-psych/fitspeed/`). One task was still running when
+this was written (marked below).
+
+**Bottom line: on the committed literature the new code is 30× faster, but on chain 0's experiment 3 data it is only
+2.5-2.9× faster, and it needs no less memory.** A typical admission fit goes from about 2.5 h to about 1 h, not to minutes,
+and still peaks at 36-39 GB. The bug the change fixes was real: on a cheap theory nearly all of the time was the per-trial
+overhead. The agents' theories are expensive to compute on each display, though, and for them that computation is now most
+of the cost. I think most of what's left is in that computation and in compiling, and neither is measured yet (below).
+
+### How it was run
+
+- Both codes on the same CPU (AMD EPYC 8224P, `CPU_GEN:SIE`, the lab node's chip), on `owners`/`normal`, each fit pinned
+  to one core with `taskset` and XLA/BLAS set to one thread. The old code is `rsa-open-prereg-a2` (12051f8, what chain 0 runs)
+  with the handoff's `fit_speed.py` copied in and its data line cut to trial counts (the old `OpenData` has no patterns).
+- 4 chains (vectorized) × 1,000 warm-up + 1,000 draws, dense mass, the loop's defaults. The compile cache was off, so
+  **warm-up includes compiling**, as in the handoff's own numbers.
+- Theories: the depth-3 seed `isolated_graded_costly_l3` (102 lines), and experiment 3's three slowest admitted theories
+  with one full-data sidecar each (482-492 lines each, 17 parameters). `cue_claim_figure_anchor_heuristic` was slower but
+  has two sidecars and comes from the round still running, so I left it out.
+- Data: experiment 3's cumulative corpus, the one its loop fits (copied, read-only):
+
+| block | trials | displays | patterns | display shapes |
+|---|---|---|---|---|
+| E (literature) | 50,587 | 260 | 587 | 10 |
+| exp 1 | 2,952 | 24 | 679 | 4 |
+| exp 2 | 4,530 | 29 | 578 | 4 |
+| exp 3 | 4,650 | 29 | 1,779 | 5 |
+| **all** | 62,719 | 342 (327 distinct across blocks) | 3,623 | 23 (13 across blocks) |
+
+  The committed literature alone (handoff item 1) is 27,949 trials, 173 displays and 402 patterns.
+
+### Results (same CPU, one core; every fit converged)
+
+| theory | data | chain 0's recorded time | old code here | new code | speedup | new warm-up / sampling | steps/iter, old → new | ms per leapfrog step, old → new | peak memory, old → new |
+|---|---|---|---|---|---|---|---|---|---|
+| depth-3 seed | literature | — | 58.9 min | **2.0 min** | **30×** | 71 s / 32 s | 14.6 → 14.3 | 118 → 3.6 | 2.5 → 2.4 GB |
+| `figure_ground_crowd_topic_tom` | exp 3 | 156.0 min | 150.2 min | **52.1 min** | **2.9×** | 29.3 / 21.5 min | 17.6 → 15.4 | 249 → 99 | 34.6 → 36.0 GB |
+| `cloned_anchor_partition_shield_tom` | exp 3 | 148.9 min | 148.3 min | **59.7 min** | **2.5×** | 33.2 / 25.1 min | 16.4 → 15.6 | 264 → 112 | 37.3 → 39.1 GB |
+| `fuzzy_intensional_truth_tom` | exp 3 | 147.2 min | 143.0 min | **54.8 min** | **2.6×** | 30.9 / 22.6 min | 16.1 → 15.2 | 259 → 106 | 34.5 → 36.4 GB |
+| depth-3 seed | exp 3 | — (dropped before exp 3) | *running, > 2 h 50 min* | **42.2 min** | ? | 36.4 / 4.8 min | ? → **67.3** | ? → 18 | ? → 5.9 GB |
+
+"Steps/iter" is leapfrog steps per iteration, warm-up and sampling together; with vectorized chains each iteration costs as
+much as its longest chain, so that is what's counted. "ms per leapfrog step" is (warm-up + sampling time) / steps, so it
+includes compiling in both codes. Building the data took 26 s → 2.8 s (literature) and 54-57 s → 3.7-4.1 s (experiment 3).
+Peak memory is `/usr/bin/time`'s maximum resident set size.
+
+### What the numbers say
+
+1. **The old code's per-trial overhead is gone.** On the seed, per-step cost fell 33×, which matches the driver's
+   measurement on a cloud container (25.9 → 1.8 ms per gradient; 119 s for the fit on 4 cores, against 118 s here on one
+   EPYC core).
+2. **On the agents' theories, per-step cost fell only about 2.4×** (249-264 → 99-112 ms). The rest of the speedup comes from
+   taking slightly fewer steps (for `figure_ground`, 15.4 against 17.6 per iteration). The two codes compute the same density,
+   so I read the step difference as a different trajectory from rounding, not a real change. About 100 ms per step for 342
+   displays is roughly 0.3 ms per display per 4-chain step, against about 0.02 ms for the seed. **So the theory itself is
+   now most of the cost.** That is an inference from the totals: the displays differ in size and I haven't profiled anything.
+3. **Chain 0's recorded times match the old code run alone** (148.9 vs 148.3 min, 147.2 vs 143.0, 156.0 vs 150.2). Load on
+   the lab node did not slow chain 0's full fits much. That is unlike the folds in §10, which ran 2-3× slower in the chain.
+4. **Memory didn't fall; it rose by about 1.5-2 GB.** On the first try, at the handoff's 24 GB, all three big theories were
+   killed for running out of memory 7-12 minutes into the fit, at about 25 GB. The peak comes early, which fits §10's finding
+   that compiling takes most of a fit's memory. **24 GB is too little for these theories; 48 GB is safe.**
+5. **The seed is hard to sample on experiment 3's data:** 67 steps per iteration against 14 on the literature, and 36 of its
+   42 minutes in warm-up. Its sampling phase was short (4.8 min), so most of those steps were probably in warm-up, while the
+   step size and mass matrix were still adapting. That is geometry, not per-step cost. The old run will say whether the old
+   code saw the same.
+6. **I couldn't separate compile time from these timings.** In both codes warm-up costs *less* per step than sampling: in
+   chain 0's sidecars for `cloned_anchor`, 263 against 291 ms (21,060 and 11,648 steps). If compiling took, say, 10 minutes,
+   warm-up should cost more per step, not less. So either compiling is short for these theories, or something else makes
+   sampling steps dearer. I don't know which.
+
+### Where value is probably still left (hypotheses, ranked; none tested)
+
+1. **The theories' own computation.** It is now probably 85% or more of a step: the seed's whole step on the same data,
+   links on all 3,623 patterns included, costs about 18 ms of the agents' 99-112. Nothing else in the fit can save more
+   than the remaining share. A profile of one theory's gradient would tell us where it goes: compile time, and per-evaluation time for the
+   whole density, the theory alone and the link alone, by display shape, forward and backward. That is the question for the
+   memo developer: whether memo's generated code for these roughly 490-line theories (nested ToM with partitions over
+   candidate sets) does avoidable work, for example recomputing inner inferences that don't depend on the outer variable,
+   or running in float64. I can write and run such a profile (about 30 min a theory, on two theories) if the driver wants it.
+2. **Compiling, for memory more than for time.** If the 36-39 GB peak is compiling, a compile step of its own (A5) and a
+   persistent cache that the full fit and its 5 folds share would cut each fit's peak to a fraction. Memory, not cores,
+   limits how many fits the lab node can run at once: about 4-5 at 36-39 GB in 192 GB, which leaves most of its 24 cores
+   idle. A direct measurement would settle it: compile time and peak memory alone, then a cached fit's peak.
+3. **One theory call per shape across blocks.** Each block evaluates its own displays, in 23 shape groups. Merged, that is 13
+   groups and 327 displays instead of 342. Under 5% of theory time, and perhaps a smaller graph to compile. Small.
+4. **Sampler geometry for the hard cases** (item 5 above): only worth it if such theories are common. The agents' theories
+   here take about 15 steps per iteration, which is already good.
+5. **Chains on separate cores** buy wall time, not core-hours (§10 B2 measured little gain on the old code; untested on the
+   new one).
+
+### What it means for a centralized chain (rough; not measured beyond the full fits)
+
+Each admitted theory costs a full fit plus 5 folds. On the old code, chain 0's folds took about 90-107 min each (on the lab
+node, under load) and full fits about 2.5 h, so about 10 core-hours a theory. If the folds speed up as much as the full fits
+did (not tested), the new code needs about 4-5. Memory per fit is unchanged, though, so on one node the number of fits at once
+is still about 4-5, set by memory. So the change helps a centralized chain by about 2.5× in fitting time, not by an order of
+magnitude, unless (1) or (2) above also pays off.
+
+### Not done or not as specified
+
+- **The slow tests** that the handoff asks for first (added in 0c15ba4b, after these fits started) are running now (job
+  51484554, `normal`/`owners`, on the 786e609b clone).
+- I did not compare old and new posteriors on experiment 3's data: `fit_speed.py` prints only timing and convergence.
+  The driver's tests compare the likelihoods.
+- The first try (job 51473074) ran the new code on Intel Broadwell (Xeon E5-2640 v4) nodes: the seed on the literature took
+  197 s there against 118 s on EPYC. I cancelled the rest of that array and reran all five new-code tasks on EPYC at 64 GB
+  (51476315). The old code (51473075, 48 GB) was on EPYC throughout.
+- Compute: about 3.6 core-hours for the new code, about 8.4 plus the running task for the old, and about 1 for the first try.
+  Memory requests bought each job 2-9 allocated CPUs, but each fit ran on one of them.
