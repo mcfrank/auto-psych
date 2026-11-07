@@ -78,7 +78,7 @@ from src.rsa_open.loop.critique import CRITIQUE_N_PROPOSALS, CRITIQUE_PPC_REPLIC
 from src.rsa_open.loop import slurm as step
 from src.rsa_open.loop.fit_array import FitPending, FitsPending, FoldAfter, collect_pending
 from src.rsa_open.loop.fitting import FitSummary, fit_backend, loop_fit, loop_fit_summary, read_corpus, write_corpus
-from src.rsa_open.loop.gates import MAX_POOL_DRAWS, GateConfig, admit, pool_predictions
+from src.rsa_open.loop.gates import MAX_POOL_DRAWS, GateConfig, admit, magic_number_problems, pool_predictions
 from src.rsa_open.loop.scores import ScoreStore
 
 SpawnFn = Callable[[Path, str], bool]
@@ -398,7 +398,8 @@ class OpenLoop:
             path, name = item
             if path.name == "candidate.py" and read_candidate(path.parent) is not None:
                 return
-            if code_problems(path.read_text(encoding="utf-8")):
+            if code_problems(path.read_text(encoding="utf-8")) or (
+                    path.name == "candidate.py" and magic_number_problems(path.read_text(encoding="utf-8"))):
                 return
             try:
                 self._fit(path, name, cfg)

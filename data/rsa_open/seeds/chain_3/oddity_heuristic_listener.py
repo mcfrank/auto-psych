@@ -14,7 +14,7 @@ import jax.numpy as jnp
 import numpyro.distributions as dist
 from memo import memo
 
-from src.rsa.memo_kit import at, softmax_prior, vec, with_lapse
+from src.rsa.memo_kit import EPS, at, softmax_prior, vec, with_lapse
 
 PARAMS = {
     "beta": dist.Normal(0.0, 2.0),
@@ -32,7 +32,7 @@ def compute_singleton_indicator(ctx):
     feats = jnp.vstack([ctx.lex, ctx.grayscale[None, :], ctx.familiarization[None, :]])
     diff = feats[:, :, None] - feats[:, None, :]
     dist = jnp.sum(jnp.abs(diff), axis=0)
-    is_identical = (dist < 1e-5).astype(jnp.float32)
+    is_identical = (dist < EPS).astype(jnp.float32)
     copy_count = jnp.sum(is_identical, axis=1)
     is_singleton = (copy_count <= 1.0).astype(jnp.float32)
     return is_singleton

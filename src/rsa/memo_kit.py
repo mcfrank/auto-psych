@@ -14,8 +14,12 @@ import jax
 import jax.numpy as jnp
 
 # Added inside log() so a zero probability gives a large finite penalty, not
-# -inf and a NaN gradient.
+# -inf and a NaN gradient. Also the tolerance for "equal" and the floor for a
+# probability: a theory sets no number by hand (src.rsa_open.loop.gates).
 EPS = 1e-10
+# A value larger than any quantity a display gives (a distance, a count): masks an
+# entry out of a min, e.g. an object's distance to itself.
+BIG = 1e9
 
 
 @jax.jit

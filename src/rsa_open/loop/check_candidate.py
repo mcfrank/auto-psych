@@ -90,7 +90,7 @@ def check(candidate_dir: Path, corpus: Path, full_corpus: Path, limit_sec: float
 def quick(candidate_dir: Path, corpus: Path) -> tuple[bool, str]:
     """The code gate, the theory's shape, then the quick fit on the self-check corpus."""
     from src.rsa.loop.code_gate import code_problems
-    from src.rsa_open.loop.gates import theory_shape_problems
+    from src.rsa_open.loop.gates import magic_number_problems, theory_shape_problems
     from src.rsa_open.quick import quick_fit
 
     path = Path(candidate_dir) / "candidate.py"
@@ -99,7 +99,7 @@ def quick(candidate_dir: Path, corpus: Path) -> tuple[bool, str]:
     source = path.read_text(encoding="utf-8")
     problems = code_problems(source)
     try:
-        problems = problems or theory_shape_problems(source)
+        problems = problems or theory_shape_problems(source) or magic_number_problems(source)
     except SyntaxError as exc:
         return False, f"FAIL: candidate.py is not valid Python: {exc}"
     if problems:

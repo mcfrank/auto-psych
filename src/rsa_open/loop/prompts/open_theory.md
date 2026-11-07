@@ -225,12 +225,26 @@ its step size, and **every pair of parameters correlated above 0.85**, and it pr
 admission fit's time; read those lines. If it names a pair, drop or fix one of them, or
 reparameterise so that one parameter carries the combination the data measure.
 
+### No hand-set numbers
+
+Every number your theory's predictions depend on is either **fitted** (a parameter in `PARAMS`,
+with a prior) or **derived from the display** (`ctx`). Outside `PARAMS`, the only numbers
+allowed are 0, 1, memo_kit's `EPS` (a tolerance or a floor on a probability) and `BIG` (a value
+that masks an entry out of a min), and integers that index arrays or give their axes and sizes
+(`x[2]`, `axis=0`, `jnp.arange(3)`). A weight (`0.87 * contrast`), a threshold on a count
+(`fc == 4`, `n_obj - 3`), an exponent (`x ** 2`; write `x * x`), a mixing share, or a literal
+epsilon (`1e-9`; use `EPS`) is refused. The reason: a number you set by looking at the data was
+tuned on all of it, including the scenes cross-validation holds out, so it makes a theory look
+better than it will be on new data. If an idea needs a weight, make it a parameter and let the
+data decide; if it needs several, ask whether the data can tell them apart (above).
+
 ## What the pipeline checks (in order)
 
 1. The import and code gate (`jax`, `memo`, `numpyro`, `numpy`, a few stdlib modules and
    `src.rsa.memo_kit` only; no file access).
 2. It is a theory: it defines `listener`, no `choice_probs`, and no parameter named like a
-   link's (`temperature`, `lapse`, `center`, `spread`, `kappa`, `cut_low`, `cut_gap`, `phi`).
+   link's (`temperature`, `lapse`, `center`, `spread`, `kappa`, `cut_low`, `cut_gap`, `phi`);
+   and it sets no number by hand (**No hand-set numbers**, above).
 3. The listener contract and the speaker contract (your own speaker or the derived one), at
    several prior draws, on every scene of every paradigm **and on a broad pool of scenes**
    (2-4 objects × 2-4 features, with prior trials and features that share an extension):

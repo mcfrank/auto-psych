@@ -15,7 +15,7 @@ import jax.numpy as jnp
 import numpyro.distributions as dist
 from memo import memo
 
-from src.rsa.memo_kit import EPS, at, softmax_prior, vec, with_lapse
+from src.rsa.memo_kit import BIG, EPS, at, softmax_prior, vec, with_lapse
 
 PARAMS = {
     "alpha": dist.LogNormal(0.0, 1.0),
@@ -31,7 +31,7 @@ def object_isolation(lex: jnp.ndarray, is_sink: jnp.ndarray) -> jnp.ndarray:
     diff = jnp.abs(features[:, :, None] - features[:, None, :])
     pair_dist = jnp.sum(diff, axis=0)
     n_obj = lex.shape[1]
-    eye = jnp.eye(n_obj) * 1e5
+    eye = jnp.eye(n_obj) * BIG
     return jnp.min(pair_dist + eye, axis=1)
 
 

@@ -5,7 +5,7 @@ import jax.numpy as jnp
 import numpyro.distributions as dist
 from memo import memo
 
-from src.rsa.memo_kit import EPS, at, softmax_prior, vec, with_lapse
+from src.rsa.memo_kit import BIG, EPS, at, softmax_prior, vec, with_lapse
 
 PARAMS = {
     "alpha": dist.LogNormal(0.0, 1.0),
@@ -23,7 +23,7 @@ def object_isolation(lex: jnp.ndarray, is_sink: jnp.ndarray) -> jnp.ndarray:
     diff = jnp.abs(features[:, :, None] - features[:, None, :])
     pair_dist = jnp.sum(diff, axis=0)
     n_obj = lex.shape[1]
-    eye = jnp.eye(n_obj) * 1e5
+    eye = jnp.eye(n_obj) * BIG
     return jnp.min(pair_dist + eye, axis=1)
 
 
@@ -33,7 +33,7 @@ def object_feature_surprisal(lex: jnp.ndarray, is_sink: jnp.ndarray) -> jnp.ndar
     n_obj = lex.shape[1]
     counts = jnp.sum(features, axis=1)
     p = counts / n_obj
-    surp = -jnp.log(jnp.maximum(p, 1e-6))
+    surp = -jnp.log(jnp.maximum(p, EPS))
     real_surp = jnp.where(is_sink > 0, 0.0, surp)
     return jnp.sum(features * real_surp[:, None], axis=0)
 

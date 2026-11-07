@@ -92,6 +92,76 @@ def theory_shape_problems(source: str) -> list:
     return problems
 
 
+# --------------------------------------------------------------------------- hand-set numbers
+
+STRUCTURAL_KEYWORDS = frozenset({"axis", "axes", "shape", "size", "num", "k", "offset", "length", "newshape"})
+"""Keyword arguments whose integer values say how arrays are laid out, not what a theory claims."""
+STRUCTURAL_CALLS = frozenset({
+    "arange", "zeros", "ones", "eye", "full", "empty", "identity", "range", "reshape", "repeat", "tile",
+    "broadcast_to", "expand_dims", "squeeze", "moveaxis", "swapaxes", "transpose", "split", "take",
+    "take_along_axis", "roll", "flip", "sum", "max", "min", "mean", "prod", "argmax", "argmin", "any", "all",
+    "cumsum", "cumprod", "logsumexp", "softmax", "log_softmax", "concatenate", "stack", "diagonal", "trace",
+    "tril", "triu", "sort", "argsort", "zeros_like", "ones_like", "full_like", "atleast_1d", "atleast_2d",
+})
+"""Functions whose integer arguments are sizes, axes or positions."""
+
+
+def magic_number_problems(source: str) -> list:
+    """Numbers a theory sets by hand instead of fitting (empty when there are none; PI 2026-11-08).
+
+    Outside ``PARAMS`` (the priors), a numeric literal is allowed only if it is 0 or 1, or an
+    integer that lays out arrays: an index or slice, an ``axis=``/``shape=``-style keyword, or an
+    argument of an array-building or reducing function (`STRUCTURAL_CALLS`). Every other number is
+    a hand-set value: a weight, a threshold compared against a count, an exponent, a literal
+    epsilon (memo_kit's ``EPS`` is the one to use). Open chain 1's theories carried 84-90 such
+    weights each with 2 free parameters: tuned by an agent that saw all the data, outside the
+    cross-validation that fitted parameters are held to."""
+    tree = ast.parse(source)
+    exempt = set()
+    for node in tree.body:
+        targets = node.targets if isinstance(node, ast.Assign) else [node.target] if isinstance(node, ast.AnnAssign) else []
+        if any(getattr(t, "id", "") == "PARAMS" for t in targets):
+            exempt |= {id(n) for n in ast.walk(node)}
+    parent = {}
+    for node in ast.walk(tree):
+        for child in ast.iter_child_nodes(node):
+            parent[id(child)] = node
+    lines = source.splitlines()
+    found = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Constant) and isinstance(node.value, (int, float))) or isinstance(node.value, bool):
+            continue
+        if id(node) in exempt or node.value in (0, 1):
+            continue
+        if isinstance(node.value, int) and _structural(node, parent):
+            continue
+        found.append(node)
+    if not found:
+        return []
+    shown = "; ".join(f"line {n.lineno}: {lines[n.lineno - 1].strip()[:80]}" for n in found[:8])
+    more = f" (and {len(found) - 8} more)" if len(found) > 8 else ""
+    return [f"it sets {len(found)} number(s) by hand outside PARAMS: {shown}{more}. A number the theory's "
+            "predictions depend on is a parameter: put it in PARAMS with a prior so the data fit it, or derive it "
+            "from the display (ctx). Only 0, 1, memo_kit's EPS (a tolerance or floor) and BIG (a mask "
+            "value), and integers that index arrays or give their axes and sizes are allowed"]
+
+
+def _structural(node, parent) -> bool:
+    """Is an integer literal an index, a size, or an axis (not an operand of arithmetic or a comparison)?"""
+    child, up = node, parent.get(id(node))
+    while isinstance(up, (ast.UnaryOp, ast.Tuple, ast.List, ast.Starred)):
+        child, up = up, parent.get(id(up))
+    if isinstance(up, ast.Subscript) and child is up.slice or isinstance(up, ast.Slice):
+        return True
+    if isinstance(up, ast.keyword):
+        return up.arg in STRUCTURAL_KEYWORDS
+    if isinstance(up, ast.Call) and child in up.args:
+        f = up.func
+        name = f.attr if isinstance(f, ast.Attribute) else getattr(f, "id", "")
+        return name in STRUCTURAL_CALLS
+    return False
+
+
 def check_speaker_contract(theory: TheoryModel, groups, *, n_draws: int = 2, seed: int = 0) -> None:
     """Raise `ModelContractViolation` unless the theory's speaker (its own or the derived one) is,
     for every target, a distribution over the scene's real messages with finite gradients."""
@@ -165,6 +235,9 @@ def admit(candidate_dir: Path, name: str, *, cfg: GateConfig, blocks: Sequence[B
         return _refuse(f"candidate.py is not valid Python: {exc}")
     if shape:
         return _refuse("candidate.py is not a theory: " + "; ".join(shape))
+    magic = magic_number_problems(source)
+    if magic:
+        return _refuse("candidate.py " + magic[0])
     try:
         theory = TheoryModel(path, name=name)
         clash = sorted(set(theory.params) & link_parameter_names())
