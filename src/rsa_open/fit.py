@@ -212,11 +212,30 @@ def pattern_log_lik(link: LinkLikelihood, latent: jnp.ndarray, lp: Mapping[str, 
 
 
 def total_log_lik(theory: RSAModel, link: LinkLikelihood, data: OpenData, tp, lp) -> jnp.ndarray:
-    """The data's log-likelihood: each pattern's, once per trial that has it."""
-    total = 0.0
-    for g, group in enumerate(data.groups):
-        total = total + jnp.sum(data.counts[g] * pattern_log_lik(link, _latent(theory, link, tp, group), lp, data, g))
-    return total
+    """The data's log-likelihood: each pattern's, once per trial that has it.
+
+    One compiled function per (theory, link, data). Inside the sampler everything is traced into
+    one program anyway, but numpyro first runs the model eagerly (to find its transforms and a
+    valid starting point), and eagerly every operation of a theory is compiled on its own: 1,904
+    compilations and about 2 minutes for one of chain 1's 460-line theories before sampling
+    began (2026-11-08)."""
+    key = ("total", link.name, id(link), id(data))
+    fn = theory._jitted.get(key)
+    if fn is None:
+        for group in data.groups:  # load each shape's module outside the trace: its OBJ / UTT would be tracers
+            theory.module(group.shape)
+
+        def impl(tp, lp):
+            total = 0.0
+            for g, group in enumerate(data.groups):
+                total = total + jnp.sum(data.counts[g] * pattern_log_lik(link, _latent(theory, link, tp, group), lp,
+                                                                         data, g))
+            return total
+
+        fn = jax.jit(impl)
+        theory._jitted[key] = fn
+        theory._jitted[key + ("refs",)] = (link, data)  # keeps the ids valid while the entry exists
+    return fn(dict(tp), dict(lp))
 
 
 def _split(theory: RSAModel, link: LinkLikelihood, params: Mapping[str, Any]):
