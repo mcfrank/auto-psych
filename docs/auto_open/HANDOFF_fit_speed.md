@@ -21,6 +21,11 @@ The posterior was the same (e.g. alpha 0.964 against 0.966), and so was the pote
 rounding. Separately, building the data took about 20 s per 17k trials, from thousands of small device
 arrays; it now builds arrays for the distinct displays only.
 
+**First, the slow tests** of the changed code, which a 4-core container can't run in reasonable time
+(the fast ones, 131 across the fitting, corpus, gate, loop and critique modules, pass):
+`uv run pytest -q tests/test_rsa_open_fit.py tests/test_rsa_open_fit_patterns.py tests/test_rsa_open_corpus.py
+tests/test_rsa_open_loop_fitting.py tests/test_rsa_open_loop_orchestrator.py`.
+
 **What to run** (no agents; fits in this process; aggregates only), with
 `scripts/rsa/open_compute_checks/fit_speed.py`, on a clone of `auto-psych-open` at this commit and,
 for comparison, one at `rsa-open-prereg-a2` (the code chain 1 runs):
