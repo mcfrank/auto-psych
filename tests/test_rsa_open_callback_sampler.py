@@ -83,3 +83,15 @@ def test_each_chain_starts_where_numpyro_s_batched_start_puts_it(theory, blocks,
         for k in batched:
             assert np.shape(ours[k]) == np.shape(batched[k])
             np.testing.assert_array_equal(np.asarray(ours[k]), np.asarray(batched[k]))
+
+
+def test_a_fit_frees_its_compiled_programs(theory, blocks, monkeypatch):  # noqa: F811
+    """JAX's caches kept every in-process fit's programs: about 0.5 GB a fit until the process could
+    not start a thread (2026-11-08). fit_corpus clears them once its results are numpy."""
+    from src.rsa_open.corpus import fit_corpus
+
+    cleared = []
+    real = jax.clear_caches
+    monkeypatch.setattr(jax, "clear_caches", lambda: (cleared.append(1), real())[1])
+    fit = fit_corpus(theory, blocks, FitSettings(num_warmup=10, num_samples=10, num_chains=2, dense_mass=True))
+    assert cleared == [1] and np.all(np.isfinite(fit.pointwise("E")))

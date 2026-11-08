@@ -123,12 +123,14 @@ commit that adds this section or later.
    percent for both samplers (1% quantile 2.44-2.59 across the callback and the inlined density at seeds
    0-1; 0.5% quantile 2.536). Its check is now "within 3 posterior SDs of the posterior mean".
 
-**Open: a segmentation fault.** In the cloud container `tests/test_rsa_open_loop_orchestrator.py::
-test_a_time_limited_round_scores_admitted_theories_while_repairs_run_and_decides_as_before` crashed twice with a
-segmentation fault inside XLA's compiler, in the test's main process (compiling a gate's contract check, after
-its `run` fixture had run a whole loop of callback fits in that process). Not yet known whether `PJRT_NPROC`,
-the callback, or the 16 GB container causes it; under investigation. If the slow tests crash the same way on
-Sherlock, say so with the fault's stack.
+**A memory leak, found by a crash.** In the cloud the time-limited orchestrator slow test crashed in XLA's
+compiler (a segmentation fault twice; once "LLVM ERROR: pthread_create failed"). The cause: JAX's global
+caches keep every program compiled in a process, and with them each fitted theory, so fits run one after
+another in one process grew it by about 0.5 GB each through the callback (about 0.25 GB with the inlined
+density) until it could not start a thread. `fit_corpus` now clears JAX's caches once its results are numpy:
+flat at 2.55 GB over six fits. Step mode's fits run in children of their own and were not affected; a chain
+whose fits run in its main process (one job per experiment, local backend) would have been. The crashed test
+was rerunning on this fix when this was written; if it fails on Sherlock, report its stack.
 
 **What to run** (no agents; aggregates only):
 

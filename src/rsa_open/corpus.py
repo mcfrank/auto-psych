@@ -342,6 +342,12 @@ def fit_corpus(theory: TheoryModel, blocks: Sequence[Block],
         offsets[block.name] = (start, start + block.n)
         start += block.n
     ll = np.concatenate(lls, axis=1)
+    # Free this fit's compiled programs. JAX's global caches keep every program compiled in the
+    # process, and with them the theory: in-process fits grew a process by about 0.5 GB each (the
+    # callback's programs) until a thread could not be started, and the loop's in-process test crashed
+    # in XLA's compiler (2026-11-08; flat at 2.55 GB over 6 fits with this). Anything JAX the caller
+    # runs next compiles again; results here are numpy already.
+    jax.clear_caches()
     idata = az.from_dict(
         posterior=samples, log_likelihood={OBSERVED_SITE: ll.reshape(chains, draws, -1)},
         sample_stats={"diverging": np.asarray(extra["diverging"]), "n_steps": n_steps,
