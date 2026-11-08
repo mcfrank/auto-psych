@@ -31,12 +31,13 @@ registration has to cover, so nothing decided since the first one (https://osf.i
 - **The plan to registration** (PI 11-08):
   1. Revise the theorist prompt for the hand-set-numbers behaviour (parsimony), before the next
      rehearsal.
-  2. An infrastructure pilot in step mode: both arms, one experiment each, 3 rounds, real agents
-     and simulated participants (no Prolific). It measures each step's wall time, queue waits and
+  2. A stepped rehearsal (`HANDOFF_stepped_rehearsal.md`): both arms, one experiment each, 3 rounds
+     of 6, real agents and simulated participants (no Prolific). It measures each step's wall time, queue waits and
      failures at the new fit speeds; if the fit arrays mostly wait in the queue, the step job runs
      its own fits instead.
-  3. Register, with these measurements, a stage 1 of one open and one fixed chain run together
-     for 3 experiments, behind feasibility gates, then 3 more chains per arm.
+  3. Register, with these measurements, a stage 1 of one open and one fixed ("closed") chain run
+     together for 3 experiments, behind feasibility gates (the PI calls this pair the pilot), then
+     3 more chains per arm.
 - **Gates are on feasibility only** (proposed, 11-08): wall time for 3 experiments, convergence,
   no code change mid-chain, cost per experiment. Nothing that compares the arms, so the
   confirmatory comparison stays clean. The stage-1 pair counts toward the 4 per arm if the gate

@@ -1,7 +1,11 @@
-# Handoff: the infrastructure pilot, both arms in step mode (2026-11-08)
+# Handoff: the stepped rehearsal, both arms in step mode (2026-11-08)
 
-For the Sherlock session and the PI. Written by Claude Opus 5.5; not reviewed by a person. Plan:
-`REREGISTRATION.md` ("The plan to registration", step 2).
+For the Sherlock session and the PI. Written by Claude Opus 5.5; not reviewed by a person.
+
+**Where this sits** (`REREGISTRATION.md`, "The plan to registration"): (1) **this stepped rehearsal**,
+simulated participants, to test step mode with the faster fits and the new theorist instructions; (2)
+register, then a first open and a first fixed ("closed") chain behind a feasibility gate; (3) three more
+chains per arm. "Pilot" means step 2's first pair (or chain 1, the earlier pilot), not this run.
 
 **Purpose.** Measure what a registered chain will cost, on the code it will run, before the
 registration sets its size: each step's wall time and queue waits, agent time against fit time, memory,
@@ -41,10 +45,10 @@ of six theorists (the size the registration is leaning to), three experiments se
 launch, so each stops with a mail after experiment 1:
 
 ```bash
-export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_pilot_1 && mkdir -p $WORK_ROOT/logs
+export WORK_ROOT=$SCRATCH/auto-psych/rsa_open_stepped_rehearsal_2 && mkdir -p $WORK_ROOT/logs
 for ARM in open fixed; do
   STEP_MODE=1 CHAIN=0 ARM=$ARM N_EXPERIMENTS=3 MAX_ITERATIONS=3 CANDIDATES=6 \
-    sbatch --job-name=rsa_open_pilot_${ARM}_c0 --partition=mcfrank --cpus-per-task=8 --mem=32G \
+    sbatch --job-name=rsa_open_steprh_${ARM}_c0 --partition=mcfrank --cpus-per-task=8 --mem=32G \
       --time=2-00:00:00 --no-requeue -o $WORK_ROOT/logs/%x_%j.out scripts/rsa/slurm/open_rehearsal.sbatch
 done
 ```
