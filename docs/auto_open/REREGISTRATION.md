@@ -20,6 +20,23 @@ registration has to cover, so nothing decided since the first one (https://osf.i
   density through a callback compiled once (d2fcfb25); the theory evaluated once per display shape
   across blocks, not per block.
 
+- **The plan to registration** (PI 11-08):
+  1. Revise the theorist prompt for the hand-set-numbers behaviour (parsimony), before the next
+     rehearsal.
+  2. An infrastructure pilot in step mode: both arms, one experiment each, 3 rounds, real agents
+     and simulated participants (no Prolific). It measures each step's wall time, queue waits and
+     failures at the new fit speeds; if the fit arrays mostly wait in the queue, the step job runs
+     its own fits instead.
+  3. Register, with these measurements, a stage 1 of one open and one fixed chain run together
+     for 3 experiments, behind feasibility gates, then 3 more chains per arm.
+- **Gates are on feasibility only** (proposed, 11-08): wall time for 3 experiments, convergence,
+  no code change mid-chain, cost per experiment. Nothing that compares the arms, so the
+  confirmatory comparison stays clean. The stage-1 pair counts toward the 4 per arm if the gate
+  passes with no protocol change, and becomes a pilot otherwise (to be fixed in the registration).
+- **Claims as estimates:** with 4 chains per arm, outcomes (transfer, prospective prediction,
+  parsimony) are reported as estimates, not a significance test. The arms run side by side, with
+  alternating launch order, so recruitment time is not confounded with arm.
+
 ## Open
 
 - **Scale and scope:** rounds per experiment (PI leaning 3), experiments per chain (3 or 4), chains
