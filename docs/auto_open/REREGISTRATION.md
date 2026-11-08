@@ -16,7 +16,9 @@ registration has to cover, so nothing decided since the first one (https://osf.i
   2 free parameters; the closed campaign's finals 0-3 with 9-17. Seeds were made to pass (named
   constants, identical predictions).
 - **Fit speed, no change to what is computed:** each distinct display evaluated once and each pattern
-  once (786e609b); one compiled function per block's likelihood (9664699f).
+  once (786e609b); one compiled function per block's likelihood (9664699f); NUTS reaches the
+  density through a callback compiled once (d2fcfb25); the theory evaluated once per display shape
+  across blocks, not per block.
 
 ## Open
 

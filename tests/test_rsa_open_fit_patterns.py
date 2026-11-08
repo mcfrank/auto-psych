@@ -83,3 +83,37 @@ def test_repeats_collapse_to_displays_and_patterns(repeated):
     displays = sum(len(g.indices) for g in data.groups)
     assert displays == len({id(c) for c in repeated}) and data.n_patterns == displays
     assert data.trial_pattern.shape == (len(repeated),)
+
+
+def test_blocks_share_one_evaluation_per_shape_and_side(theory, repeated):  # noqa: F811
+    """`corpus_log_lik` evaluates the theory once per (display shape, side) across blocks
+    (2026-11-08): its total is the sum of each block's per-trial log-likelihoods, for blocks whose
+    displays overlap, on both sides, with each block's own link parameters."""
+    from src.rsa.model_file import prior_draws
+    from src.rsa_open.fit import OpenData, TheoryModel, _split, corpus_log_lik, share_displays, simulate
+    from src.rsa_open.links import likelihood
+
+    tm = TheoryModel(theory)
+    pool = plain_pool()
+    others = [pool[i] for i in np.random.default_rng(11).choice(len(pool), 30, replace=False)]
+    specs = [("choice", repeated), ("rating", repeated[:40] + others[:20]), ("production", repeated[10:50]),
+             ("binary_judgment", others)]
+    d = {k: float(v) for k, v in prior_draws(tm.params, 1, 5)[0].items()}
+    parts, lps, reference = [], [], 0.0
+    for i, (name, contexts) in enumerate(specs):
+        link = likelihood(name, scale_points=5)
+        params = {**d, **{k: v * (1.0 + 0.1 * i) for k, v in link.reference_params.items()}}
+        responses = simulate(tm, link, contexts, params, jax.random.PRNGKey(20 + i))
+        data = OpenData.build(contexts, responses, link)
+        parts.append((link, data))
+        lps.append(_split(tm, link, params)[1])
+        reference += _per_trial(tm, link, contexts, responses, params).sum()
+    tp = _split(tm, parts[0][0], {**d, **parts[0][0].reference_params})[0]
+    assert float(corpus_log_lik(tm, parts, tp, lps)) == pytest.approx(reference, rel=1e-5)
+
+    shared = share_displays(parts)
+    per_block = {(g.shape, link.side) for link, data in parts for g in data.groups}
+    assert {(s.group.shape, s.side) for s in shared} == per_block  # one evaluation each
+    assert len(shared) < sum(len(data.groups) for _, data in parts)
+    listener_displays = {id(ctx) for _, contexts in specs[:2] for ctx in contexts}  # choice and rating overlap
+    assert sum(len(s.group.indices) for s in shared if s.side == "listener") <= len(listener_displays)

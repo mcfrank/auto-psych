@@ -37,7 +37,7 @@ from numpyro.infer import MCMC, NUTS
 from src.models.pymc_inference import convergence_problems
 from src.rsa.context import Context
 from src.rsa.fit import FitSettings
-from src.rsa_open.fit import OBSERVED_SITE, OpenData, TheoryModel, pointwise_log_lik, total_log_lik
+from src.rsa_open.fit import OBSERVED_SITE, OpenData, TheoryModel, corpus_log_lik, pointwise_log_lik
 from src.rsa_open.links import LinkLikelihood
 
 GUARD_K = 4.0  # PI 2026-10-21: no more than 4 clustered SEs worse on any earlier paradigm
@@ -149,15 +149,14 @@ def paradigm_block(name: str, paradigm, rows: Sequence[Mapping[str, Any]]) -> Bl
 
 def _corpus_model(theory: TheoryModel, blocks: Sequence[Block]):
     params = {name: numpyro.sample(name, prior) for name, prior in theory.params.items()}
-    total = 0.0
+    lps = []
     for block in blocks:
-        link = block.link
         fixed = block.fixed_params
-        lp = {k: jnp.asarray(fixed[k]) if k in fixed else numpyro.sample(block.param(k), prior)
-              for k, prior in link.params.items()}
-        tp = {k: params[k] for k in theory.params}
-        total = total + total_log_lik(theory, link, block.data, tp, lp)
-    numpyro.factor(OBSERVED_SITE, total)
+        lps.append({k: jnp.asarray(fixed[k]) if k in fixed else numpyro.sample(block.param(k), prior)
+                    for k, prior in block.link.params.items()})
+    tp = {k: params[k] for k in theory.params}
+    # one evaluation of the theory per display shape (and side) across the blocks, not per block
+    numpyro.factor(OBSERVED_SITE, corpus_log_lik(theory, [(b.link, b.data) for b in blocks], tp, lps))
 
 
 def block_draws(flat: Mapping[str, np.ndarray], theory: TheoryModel, block: Block) -> Dict[str, np.ndarray]:

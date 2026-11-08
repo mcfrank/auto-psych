@@ -74,6 +74,14 @@ compile the gradient, ~27 s for the small sampler, ~0.06 s an iteration for 4 ch
 of that theory on the literature projects to about 3 min. Same density, same NUTS; the old path stays as
 `inline_potential=True`.
 
+**Also (this round): one evaluation per display shape across blocks.** The corpus likelihood
+traced the theory once per (block, display shape): 18 copies where 11 shapes suffice on the
+literature plus chain 1's first two experiments' blocks, 23 for 13 on experiment 3's corpus. It now
+evaluates each (shape, listener or speaker side) once over every block's distinct displays and hands
+each block its rows (`fit.corpus_log_lik`; same numbers, `tests/test_rsa_open_fit_patterns.py`). On
+the three blocks, with the callback sampler: setup and gradient compile 68.7 s → 50.2 s, peak
+2.6 → 2.2 GB.
+
 **What to run**, as before (`fit_speed.py`, single-core jobs, the same CPU), with
 `JAX_COMPILATION_CACHE_DIR` exported to an empty directory of its own (the fit compiles each of its
 programs once; a second, identical fit should reuse them):

@@ -211,31 +211,98 @@ def pattern_log_lik(link: LinkLikelihood, latent: jnp.ndarray, lp: Mapping[str, 
     return link.log_lik(latent[rows], lp, enc, arrays, classes)
 
 
-def total_log_lik(theory: RSAModel, link: LinkLikelihood, data: OpenData, tp, lp) -> jnp.ndarray:
-    """The data's log-likelihood: each pattern's, once per trial that has it.
+@dataclass(frozen=True)
+class SharedDisplays:
+    """One theory evaluation shared by every part (a block's link and data) that needs it: the
+    distinct displays of one shape, seen from one side (listener or speaker), across all parts.
 
-    One compiled function per (theory, link, data). Inside the sampler everything is traced into
+    ``group`` holds those displays; ``members`` gives, for each (part, shape group) of that shape
+    and side, its displays' rows in ``group``."""
+
+    group: ShapeGroup
+    side: str
+    members: Tuple[Tuple[int, int, jnp.ndarray], ...]
+
+
+def share_displays(parts: Sequence[Tuple[LinkLikelihood, OpenData]]) -> List[SharedDisplays]:
+    """Merge the parts' displays per (shape, side), dropping repeats (identical arrays).
+
+    Each shape is a separately traced copy of the theory in a compiled likelihood, so evaluating it
+    once per block's shape group traced one copy per (block, shape): 18 copies where 11 suffice on
+    the literature and chain 1's first two experiments' blocks, 23 for 13 shapes on its experiment 3
+    (2026-11-08).
+    A block scoring the theory's listener and one scoring its speaker can share a shape; each side
+    is evaluated only for the displays some part needs it on."""
+    by_key: Dict[Tuple[Tuple[int, int], str], List[Tuple[int, int]]] = {}
+    for p, (link, data) in enumerate(parts):
+        for g, group in enumerate(data.groups):
+            by_key.setdefault((group.shape, link.side), []).append((p, g))
+    shared = []
+    for (shape, side), members in sorted(by_key.items()):
+        seen: Dict[tuple, int] = {}
+        picks: List[Tuple[int, int, int]] = []  # (part, group, row) of each distinct display
+        maps = []
+        for p, g in members:
+            group = parts[p][1].groups[g]
+            fields = [np.asarray(f) for f in group.arrays]
+            rows = np.empty(len(group.indices), dtype=np.int32)
+            for r in range(len(rows)):
+                key = tuple((f.dtype.str, f[r].tobytes()) for f in fields)
+                k = seen.get(key)
+                if k is None:
+                    k = seen[key] = len(picks)
+                    picks.append((p, g, r))
+                rows[r] = k
+            maps.append((p, g, jnp.asarray(rows)))
+
+        def gather(get):
+            return np.stack([np.asarray(get(parts[p][1].groups[g]))[r] for p, g, r in picks])
+
+        arrays = type(parts[0][1].groups[0].arrays)(*(jnp.asarray(gather(lambda grp, i=i: grp.arrays[i]))
+                                                      for i in range(len(parts[0][1].groups[0].arrays))))
+        group = ShapeGroup(shape=shape, indices=np.arange(len(picks)), arrays=arrays,
+                           classes=gather(lambda grp: grp.classes))
+        shared.append(SharedDisplays(group=group, side=side, members=tuple(maps)))
+    return shared
+
+
+def corpus_log_lik(theory: RSAModel, parts: Sequence[Tuple[LinkLikelihood, OpenData]], tp,
+                   lps: Sequence[Mapping[str, Any]]) -> jnp.ndarray:
+    """The summed log-likelihood of several parts (a link and its data each, link parameters
+    ``lps[i]``): each pattern's, once per trial that has it, with the theory evaluated once per
+    distinct display of each (shape, side) across the parts (`share_displays`).
+
+    One compiled function per (theory, parts). Inside the sampler everything is traced into
     one program anyway, but numpyro first runs the model eagerly (to find its transforms and a
     valid starting point), and eagerly every operation of a theory is compiled on its own: 1,904
     compilations and about 2 minutes for one of chain 1's 460-line theories before sampling
     began (2026-11-08)."""
-    key = ("total", link.name, id(link), id(data))
+    parts = [tuple(part) for part in parts]
+    key = ("corpus",) + tuple((link.name, id(link), id(data)) for link, data in parts)
     fn = theory._jitted.get(key)
     if fn is None:
-        for group in data.groups:  # load each shape's module outside the trace: its OBJ / UTT would be tracers
-            theory.module(group.shape)
+        shared = share_displays(parts)
+        for s in shared:  # load each shape's module outside the trace: its OBJ / UTT would be tracers
+            theory.module(s.group.shape)
 
-        def impl(tp, lp):
+        def impl(tp, lps):
             total = 0.0
-            for g, group in enumerate(data.groups):
-                total = total + jnp.sum(data.counts[g] * pattern_log_lik(link, _latent(theory, link, tp, group), lp,
-                                                                         data, g))
+            for s in shared:
+                latent = (theory.group_speaker if s.side == "speaker" else theory.group_probs)(tp, s.group)
+                for p, g, rows in s.members:
+                    link, data = parts[p]
+                    total = total + jnp.sum(data.counts[g] * pattern_log_lik(link, latent[rows], lps[p], data, g))
             return total
 
         fn = jax.jit(impl)
         theory._jitted[key] = fn
-        theory._jitted[key + ("refs",)] = (link, data)  # keeps the ids valid while the entry exists
-    return fn(dict(tp), dict(lp))
+        theory._jitted[key + ("refs",)] = parts  # keeps the ids valid while the entry exists
+    return fn(dict(tp), tuple(dict(lp) for lp in lps))
+
+
+def total_log_lik(theory: RSAModel, link: LinkLikelihood, data: OpenData, tp, lp) -> jnp.ndarray:
+    """One link's data's log-likelihood: each pattern's, once per trial that has it."""
+    return corpus_log_lik(theory, [(link, data)], tp, [lp])
 
 
 def _split(theory: RSAModel, link: LinkLikelihood, params: Mapping[str, Any]):
