@@ -94,3 +94,50 @@ programs once; a second, identical fit should reuse them):
 3. Request 16 GB first; report any that run out.
 
 **Report** beside §13: the table with this code's column added.
+
+## Round 3 (2026-11-08): one core, and a cheaper start
+
+Written by Claude Opus 5.5 after review V3 §14; not reviewed by a person. Code: `auto-psych-open` at the
+commit that adds this section or later.
+
+**What changed.**
+
+1. **The one-core deadlock (§14, problem 1) is fixed.** XLA runs the sampler's callback on a thread of
+   its CPU pool, and the callback's gradient needs a second; XLA sizes the pool by the cores a process
+   sees, one for every process that computes. Importing `src.rsa_open` now sets `PJRT_NPROC=2` (XLA's
+   own setting for the pool's size) before JAX starts, so the pool has two threads whatever the cores;
+   the cores a process may use are unchanged. A fit whose pool would be smaller refuses to start
+   (`xla_pool_problem`) instead of hanging. Reproduced and checked in the cloud: §14's test hung on one
+   core (`taskset -c 0`) and now passes (207 s); a fit process on one core has **10 threads**, against
+   6 for JAX alone on one core (SRCC's flag was 140-160). Turning off async dispatch, single-thread
+   Eigen and XLA's concurrency scheduler did not fix it; the legacy runtime is gone from this jaxlib.
+   `tests/test_rsa_open_one_core.py` runs a two-block fit in a process pinned to one core.
+2. **The start costs less (§14's "setup", 135 s and a 7.7 GB peak of a cold fit).** Given all chains'
+   keys at once, numpyro searches for the starts in a compiled loop over the chains, compiling the
+   likelihood and gradient once more. `fit_corpus` now asks one key at a time, which numpyro tries
+   eagerly: the **same starts** (checked against the batched ones; so the same draws), and on chain 1's
+   experiment-2 corpus in the cloud setup took 42 s instead of 102 s, with a peak of 2.0 GB instead of
+   5.1 GB.
+3. **§14's failing recovery test** (`test_a_joint_fit_recovers_the_shared_theory_and_each_block_s_link`)
+   failed on the data, not the sampler: `temperature@exp1`'s true 2.5 sits in the posterior's lowest
+   percent for both samplers (1% quantile 2.44-2.59 across the callback and the inlined density at seeds
+   0-1; 0.5% quantile 2.536). Its check is now "within 3 posterior SDs of the posterior mean".
+
+**Open: a segmentation fault.** In the cloud container `tests/test_rsa_open_loop_orchestrator.py::
+test_a_time_limited_round_scores_admitted_theories_while_repairs_run_and_decides_as_before` crashed twice with a
+segmentation fault inside XLA's compiler, in the test's main process (compiling a gate's contract check, after
+its `run` fixture had run a whole loop of callback fits in that process). Not yet known whether `PJRT_NPROC`,
+the callback, or the 16 GB container causes it; under investigation. If the slow tests crash the same way on
+Sherlock, say so with the fault's stack.
+
+**What to run** (no agents; aggregates only):
+
+1. The slow tests of round 1's five files plus `tests/test_rsa_open_callback_sampler.py` and
+   `tests/test_rsa_open_one_core.py`, on 2 CPUs with **32 GB** (§14's test job peaked at 19.9 GB).
+2. `fit_speed.py` for `figure_ground_crowd_topic_tom` on experiment 3's corpus, cold (an empty
+   `JAX_COMPILATION_CACHE_DIR`), **on one core** (`--cpus-per-task=1`, or `taskset` to one core), 16 GB:
+   total, warm-up and sampling split, peak memory, and the fit process's thread count during sampling
+   (`grep Threads /proc/<pid>/status`). Compare with §14's 13.4 min and 9.8 GB on two cores.
+3. If (2) is fine, the depth-3 seed the same way.
+
+**Report** after §14.

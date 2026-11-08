@@ -276,13 +276,28 @@ def fit_corpus(theory: TheoryModel, blocks: Sequence[Block],
                       init_strategy=strategy)
         args, init_params, constrain = (theory, list(blocks)), None, None
     else:
-        # one key per chain; a single chain takes an unbatched start (numpyro reads a leading axis as chains)
-        keys = (jax.random.PRNGKey(settings.seed) if settings.num_chains == 1
+        from src.rsa_open import xla_pool_problem
+
+        problem = xla_pool_problem()
+        if problem:
+            raise RuntimeError(problem)
+        # One start per chain, each from its own key, found one chain at a time. Given all the keys at
+        # once, numpyro searches for the starts in a compiled loop over the chains, which compiles the
+        # whole likelihood and its gradient into a program of its own: 135 s and a 7.7 GB peak of a big
+        # theory's 15-minute fit (review V3 §14). One key at a time it tries the key's start eagerly
+        # first; the starts are the same (2026-11-08: identical on chain 1's experiment-2 corpus).
+        keys = (jax.random.PRNGKey(settings.seed)[None] if settings.num_chains == 1
                 else jax.random.split(jax.random.PRNGKey(settings.seed), settings.num_chains))
-        info, potential_fn, postprocess, _ = initialize_model(keys, _corpus_model, model_args=(theory, list(blocks)),
-                                                              init_strategy=strategy)
-        init_params = info.z
-        one = init_params if settings.num_chains == 1 else jax.tree_util.tree_map(lambda x: x[0], init_params)
+        starts = []
+        for key in keys:
+            info, potential_fn, postprocess, _ = initialize_model(key, _corpus_model,
+                                                                  model_args=(theory, list(blocks)),
+                                                                  init_strategy=strategy)
+            starts.append(info.z)
+        # a single chain takes an unbatched start (numpyro reads a leading axis as chains)
+        init_params = (starts[0] if settings.num_chains == 1
+                       else jax.tree_util.tree_map(lambda *z: jnp.stack(z), *starts))
+        one = starts[0]
         potential = _callback_potential(potential_fn, one)
         kernel = NUTS(potential_fn=potential, target_accept_prob=settings.target_accept,
                       dense_mass=settings.dense_mass)

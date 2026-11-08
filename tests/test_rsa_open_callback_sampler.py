@@ -55,3 +55,31 @@ def test_the_callback_and_the_inlined_density_give_the_same_posterior(theory, bl
         x, y = np.asarray(a.idata.posterior[k]).ravel(), np.asarray(b.idata.posterior[k]).ravel()
         se = np.sqrt(x.var() / 100 + y.var() / 100)  # a few hundred effective draws each
         assert abs(x.mean() - y.mean()) < 4 * se + 1e-6, (k, x.mean(), y.mean(), se)
+
+
+def test_each_chain_starts_where_numpyro_s_batched_start_puts_it(theory, blocks, monkeypatch):  # noqa: F811
+    """fit_corpus finds the chains' starts one key at a time (numpyro's batched search compiles the
+    likelihood and gradient once more: 135 s and 7.7 GB of a big fit, review V3 §14); the starts are
+    numpyro's batched ones, so the draws do not change."""
+    from numpyro.infer import MCMC
+    from numpyro.infer.util import initialize_model
+
+    from src.rsa_open.corpus import _corpus_model, fit_corpus
+
+    class Started(Exception):
+        pass
+
+    def capture(self, rng_key, *args, init_params=None, **kwargs):
+        raise Started(init_params)
+
+    monkeypatch.setattr(MCMC, "warmup", capture)
+    for chains in (1, 3):
+        with pytest.raises(Started) as started:
+            fit_corpus(theory, blocks, FitSettings(num_warmup=5, num_samples=5, num_chains=chains, seed=4))
+        ours = started.value.args[0]
+        keys = (jax.random.PRNGKey(4) if chains == 1 else jax.random.split(jax.random.PRNGKey(4), chains))
+        batched = initialize_model(keys, _corpus_model, model_args=(theory, list(blocks)))[0].z
+        assert set(ours) == set(batched)
+        for k in batched:
+            assert np.shape(ours[k]) == np.shape(batched[k])
+            np.testing.assert_array_equal(np.asarray(ours[k]), np.asarray(batched[k]))
