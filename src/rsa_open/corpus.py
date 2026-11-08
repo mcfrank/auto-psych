@@ -277,11 +277,14 @@ def fit_corpus(theory: TheoryModel, blocks: Sequence[Block],
                       init_strategy=strategy)
         args, init_params, constrain = (theory, list(blocks)), None, None
     else:
-        keys = jax.random.split(jax.random.PRNGKey(settings.seed), settings.num_chains)
+        # one key per chain; a single chain takes an unbatched start (numpyro reads a leading axis as chains)
+        keys = (jax.random.PRNGKey(settings.seed) if settings.num_chains == 1
+                else jax.random.split(jax.random.PRNGKey(settings.seed), settings.num_chains))
         info, potential_fn, postprocess, _ = initialize_model(keys, _corpus_model, model_args=(theory, list(blocks)),
                                                               init_strategy=strategy)
         init_params = info.z
-        potential = _callback_potential(potential_fn, jax.tree_util.tree_map(lambda x: x[0], init_params))
+        one = init_params if settings.num_chains == 1 else jax.tree_util.tree_map(lambda x: x[0], init_params)
+        potential = _callback_potential(potential_fn, one)
         kernel = NUTS(potential_fn=potential, target_accept_prob=settings.target_accept,
                       dense_mass=settings.dense_mass)
         args = ()

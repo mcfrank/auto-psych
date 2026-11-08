@@ -98,19 +98,20 @@ def test_a_warm_started_fit_is_keyed_by_its_start_and_a_cold_fit_s_key_is_unchan
 
 
 def test_a_warm_start_reaches_the_sampler_and_the_cache(theory_path, corpus, tmp_path, monkeypatch):
-    import src.rsa_open.corpus as corpus_mod
-    from src.rsa_open.loop.fitting import fingerprint, fit_cached
+    import numpyro.infer.util as numpyro_util
+
     from src.rsa.loop.fitting import cache_paths
+    from src.rsa_open.loop.fitting import fingerprint, fit_cached
 
     blocks, path = corpus
     seen = []
-    real = corpus_mod.NUTS
+    real = numpyro_util.initialize_model
 
-    def recording(model, **kw):
+    def recording(*a, **kw):  # where the chains' starting points are set (src.rsa_open.corpus.fit_corpus)
         seen.append(kw.get("init_strategy"))
-        return real(model, **kw)
+        return real(*a, **kw)
 
-    monkeypatch.setattr(corpus_mod, "NUTS", recording)
+    monkeypatch.setattr(numpyro_util, "initialize_model", recording)
     start = {"alpha": 1.4, "lapse@E": 0.05, "temperature@exp1": 1.5, "lapse@exp1": 0.05}
     fitted = fit_cached(theory_path, "rsa_l1", path, QUICK, tmp_path, init=start)  # in-process: no time limit
     assert "init_to_value" in repr(seen[-1]) and "1.4" in repr(seen[-1])
