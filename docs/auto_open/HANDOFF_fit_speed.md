@@ -129,8 +129,8 @@ caches keep every program compiled in a process, and with them each fitted theor
 another in one process grew it by about 0.5 GB each through the callback (about 0.25 GB with the inlined
 density) until it could not start a thread. `fit_corpus` now clears JAX's caches once its results are numpy:
 flat at 2.55 GB over six fits. Step mode's fits run in children of their own and were not affected; a chain
-whose fits run in its main process (one job per experiment, local backend) would have been. The crashed test
-was rerunning on this fix when this was written; if it fails on Sherlock, report its stack.
+whose fits run in its main process (one job per experiment, local backend) would have been. On this fix the crashed
+test passes in the cloud (54 min on 4 cores); if it fails on Sherlock, report its stack.
 
 **What to run** (no agents; aggregates only):
 
