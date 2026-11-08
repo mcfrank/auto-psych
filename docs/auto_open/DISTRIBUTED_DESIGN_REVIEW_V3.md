@@ -4,6 +4,8 @@ Written by Claude Opus 5.5 (the Sherlock session) from chain 1's round 4-5 logs,
 --test-only` and the test jobs of 2026-11-03 (§10); not reviewed by a person. I've read only v3's summary of SRCC's reply, not
 the reply itself.
 
+**Update 2026-11-08 (§14).** The callback sampler and one theory evaluation per display shape (a1853a4c) bring a big theory's fit on experiment 3's corpus to about 14 min and 10-11 GB (chain 0's code: 2.5 h, 35-37 GB). But the callback deadlocks on one core, which is how the loop runs every fit, and two slow tests that passed in round 1 now fail (§14).
+
 **Update 2026-11-07 (§13).** The driver's pattern-weighted likelihood (786e609b) makes fits 30× faster on the committed literature but only 2.5-2.9× faster on chain 0's experiment 3 data, with no saving in memory (36-39 GB per fit): the agents' theories are now most of the cost. §13 has the measurements and where I think the rest of the time goes.
 
 **Update 2026-11-07 (§11, §12).** The PI launched a real-agent segment in step mode (one experiment of two, 2 rounds of 3): it worked, with no session run twice and a clean stop after the experiment (§11). §12 estimates how long a full-size stepped chain would take: about 5-8 days, against about 10-11 for chain 0.
@@ -648,7 +650,7 @@ of the cost. I think most of what's left is in that computation and in compiling
 | `figure_ground_crowd_topic_tom` | exp 3 | 156.0 min | 150.2 min | **52.1 min** | **2.9×** | 29.3 / 21.5 min | 17.6 → 15.4 | 249 → 99 | 34.6 → 36.0 GB |
 | `cloned_anchor_partition_shield_tom` | exp 3 | 148.9 min | 148.3 min | **59.7 min** | **2.5×** | 33.2 / 25.1 min | 16.4 → 15.6 | 264 → 112 | 37.3 → 39.1 GB |
 | `fuzzy_intensional_truth_tom` | exp 3 | 147.2 min | 143.0 min | **54.8 min** | **2.6×** | 30.9 / 22.6 min | 16.1 → 15.2 | 259 → 106 | 34.5 → 36.4 GB |
-| depth-3 seed | exp 3 | — (dropped before exp 3) | *running, > 2 h 50 min* | **42.2 min** | ? | 36.4 / 4.8 min | ? → **67.3** | ? → 18 | ? → 5.9 GB |
+| depth-3 seed | exp 3 | — (dropped before exp 3) | 219.8 min (finished after this section; §14) | **42.2 min** | 5.2× | 36.4 / 4.8 min | 20.2 → **67.3** | 320 → 18 | 5.8 → 5.9 GB |
 
 "Steps/iter" is leapfrog steps per iteration, warm-up and sampling together; with vectorized chains each iteration costs as
 much as its longest chain, so that is what's counted. "ms per leapfrog step" is (warm-up + sampling time) / steps, so it
@@ -718,3 +720,143 @@ magnitude, unless (1) or (2) above also pays off.
   (51476315). The old code (51473075, 48 GB) was on EPYC throughout.
 - Compute: about 3.6 core-hours for the new code, about 8.4 plus the running task for the old, and about 1 for the first try.
   Memory requests bought each job 2-9 allocated CPUs, but each fit ran on one of them.
+
+## 14. Fit speed, round 2: the callback sampler and one evaluation per shape (`HANDOFF_fit_speed.md` round 2, 2026-11-07/08, code at 569b83c1 and a1853a4c)
+
+Written by Claude Opus 5.5 (the Sherlock session); not reviewed by a person. No agents, no Prolific; the corpus copy and
+every trial stay on Sherlock (`$SCRATCH/auto-psych/fitspeed/`). Same data, theories, settings and CPU as §13.
+
+**Bottom line: a big theory's fit on experiment 3's corpus now takes about 14 min and 10-11 GB, against 2.5 h and 35-37 GB
+on chain 0's code: about 10× less time and 3.5× less memory.** The callback sampler (569b83c1) halved §13's times. One
+evaluation per display shape (a1853a4c) halved them again and cut the cold-start peak from 32-36 GB to 10-11 GB. Two
+problems come with it:
+
+- **The callback deadlocks when a process sees only one core, and the loop pins every fit to one core.** As committed, the
+  loop's fits would hang on Sherlock until their time limit.
+- **Two slow tests that passed in round 1 now fail.**
+
+Of what is left, about three quarters is sampler steps, two thirds of them in warm-up. Compiling is now about a sixth.
+
+### Results (experiment 3's corpus, 1,000 + 1,000, 4 chains; every fit converged)
+
+| theory | chain 0's code (§13) | round 1, 786e609b (§13) | callback, 569b83c1 | + per-shape, a1853a4c | a1853a4c: warm-up / sampling | steps/iteration (569b83c1 / a1853a4c) | peak memory (569b83c1 / a1853a4c) |
+|---|---|---|---|---|---|---|---|
+| `figure_ground_crowd_topic_tom` | 150.2 min | 52.1 min | 25.5 min | **13.4 min** (11×) | 9.7 / 2.5 min | 13.8 / 14.2 | 32.8 / **9.8 GB** |
+| `cloned_anchor_partition_shield_tom` | 148.3 | 59.7 | 26.9 | **14.0** (11×) | 10.3 / 2.4 | 13.8 / 13.6 | 35.9 / **11.1** |
+| `fuzzy_intensional_truth_tom` | 143.0 | 54.8 | 27.3 | **14.1** (10×) | 10.2 / 2.7 | 15.0 / 14.1 | 32.0 / **9.9** |
+| depth-3 seed | 219.8 | 42.2 | 20.5 | **17.7** (12×) | 11.1 / 5.6 | 19.6 / 20.7 | 5.9 / 5.5 |
+| `figure_ground`, repeated with the first fit's compile cache | — | — | 12.3 | **10.9** | 7.1 / 2.5 | 13.8 / 14.2 | 5.6 / 5.2 |
+
+Times are `fit_speed.py`'s total; warm-up includes setup and compiling (below). Peak memory is `/usr/bin/time`'s maximum
+resident set. Each new-code fit ran on **two** cores, not one as in §13 (next section). XLA and BLAS were set to one
+thread, and the second core mostly carries the callback's waiting thread, so I read these as about one core of computing;
+that is not measured. Each fit had an empty `JAX_COMPILATION_CACHE_DIR` of its own except the repeat (7 cache entries at
+its start on 569b83c1).
+
+- **Speedups compound.** Against round 1 the big theories are 3.9-4.3× faster; against chain 0's code, 10-11×.
+- **Memory follows compiling.** On 569b83c1 the cold-start peak was still 32-36 GB, while the cached repeat peaked at 5.6
+  GB. On a1853a4c the cold-start peak is 10-11 GB, so **the handoff's 16 GB now suffices**. At 16 GB on 569b83c1, two of
+  the three big theories ran out of memory about 7 minutes in, and the third sat at the limit (first try, job 51503294).
+- **The seed's 67 steps per iteration in round 1 was a one-off.** The old code took 20.2 on the same data (the §13 row
+  that was still running: 219.8 min, warm-up 139 min, sampling 76 min, 5.8 GB), and both callback runs took about 20.
+- The repeat saves less than I expected: 13.4 → 10.9 min. The cache saves compiling, and compiling is now small.
+
+### Where a fit's time goes now (a1853a4c, `figure_ground`)
+
+One extra job (51512343) ran the same fit twice through a wrapper that times numpyro's setup (`initialize_model`) and the
+callback's gradient compile (`_callback_potential`) separately. Nothing in the code under test changed. The first run was
+cold, the second used the first's compile cache. It ran on another node, and its total was 14% longer than the table's
+(912 s against 802 s), so read the shares, not the seconds:
+
+| part | cold | with cache |
+|---|---|---|
+| setup (`initialize_model`: traces the model and compiles the forward likelihood) | 135.0 s, peak 7.7 GB | 17.3 s, peak 1.4 GB |
+| gradient compile (`jit(value_and_grad)`, first call) | 24.7 s | 4.5 s |
+| warm-up steps (1,000 iterations, **20,550** leapfrog steps, 24.6 ms each) | 505 s | 499 s |
+| sampling steps (1,000 iterations, **7,800** leapfrog steps, 22.6-23.9 ms each) | 176 s | 187 s |
+| after sampling (constraining, pointwise log-likelihood, convergence) | 72 s | 74 s |
+| **total** | **912 s, peak 9.8 GB** | **781 s, peak 5.1 GB** |
+
+So:
+
+1. **Three quarters of a cold fit is sampler steps (681 of 912 s), and warm-up takes 2.6× as many steps as sampling** (20.6
+   against 7.8 per iteration). Per step, warm-up and sampling cost the same (24.6 against 22.6 ms). §13's puzzle is
+   resolved: before the callback the sampling phase compiled its own copy of the density.
+2. **Compiling is now 160 s, a sixth of the fit,** and most of it is numpyro's setup compiling the forward likelihood,
+   not the gradient. The cache cuts it to 22 s and the peak from 9.8 to 5.1 GB.
+3. About 2 GB of the cold peak comes after setup; I don't know from what.
+4. About 23 ms per 4-chain leapfrog step on 342 displays, about 0.017 ms per display per chain-step. That is close to
+   what §13 measured for the seed: the theory's per-step cost is no longer large; its steps are.
+
+### Where value is still left (ranked; none tested)
+
+1. **Warm-up.** 505 s of an ~800-900 s fit, and the mass matrix is dense over 17+ parameters. Each admitted theory gets a full
+   fit and 5 folds on 80% of the same data. If each fold started from the full fit's step size and mass matrix and ran a
+   short warm-up, most of five warm-ups per theory would go. These change draws, so it is category B of §9 (test and
+   register). A shorter warm-up for every fit is the blunter version.
+2. **A compile cache that a theory's full fit and folds share.** It saves at most about 140 s and 4.7 GB of peak per fit,
+   and only if the folds' programs match the full fit's. Folds have different displays per shape, so they may not.
+   Untested.
+3. **After sampling, 72 s (8%).** Probably the pointwise log-likelihood over 62,719 trials × 4,000 draws. It might be
+   computed per pattern, as the likelihood now is. Not profiled.
+4. The theory's own computation per step is no longer the main cost (item 4 above).
+
+### Problem 1: on one core the callback deadlocks
+
+On 569b83c1, a fit in a process that can see one core never finishes. It sits at 0% CPU with every thread waiting. Probes
+(jobs 51505939-42; 2 allocated cores, 8 GB, the seed on the literature, killed after 12 min):
+
+| pinned to one core (`taskset`) | `XLA_FLAGS` one thread | result |
+|---|---|---|
+| yes | yes | hung |
+| yes | no | hung |
+| no (2 cores) | yes | 211.6 s (warm-up 150.3, sampling 44.6; 13.4 steps/iteration; converged) |
+| no (2 cores) | no | 172.2 s (121.8 / 34.5) |
+
+Python's thread dumps at the kill (SIGABRT) show:
+
+- the main thread waiting in `jax/_src/interpreters/pxla.py` `__call__` for the sampler's program;
+- the callback's thread in `corpus.py` `host` (`vg(z)`) waiting in the same file, for the gradient's program.
+
+My reading is that the sampler's program holds XLA's only CPU worker while it waits for the callback, and the callback's
+own program needs a worker too. The driver's 4-core container could not show this.
+
+**This matters for the loop.** The loop pins processes that compute to one core, which is the fix for SRCC's thread
+warning (`src/rsa/cpus.py`):
+
+- `_run_child` in `src/rsa_open/loop/fitting.py` starts every time-limited fit child on one core (`CORES.take()`);
+- `pin_main_thread` pins `run_chain.py` and `check_candidate.py`.
+
+So on Sherlock every fit through the callback would hang until its time limit and be recorded as too slow. That probably
+explains the second failing test (next). The fix is the driver's call. One option is two cores per fit child, which is
+how these measurements ran; its thread count is still small, but it should be checked against the SRCC rule. The other is
+a callback that doesn't need a second worker. Separately, on a cheap theory the callback costs time: 172-212 s on two
+cores against round 1's 118 s on one, for the seed on the literature.
+
+### Problem 2: two slow tests fail on 569b83c1
+
+Job 51503320 ran the handoff's slow tests (2 CPUs, 16 GB). Test 3,
+`test_the_callback_and_the_inlined_density_give_the_same_posterior`, **passed**. Two tests failed, and after 1 h 58 min
+the job ran out of memory at 16 GB on the 79th of 80, so there was no summary. Job 51512216 (48 GB, peak 19.9 GB) reran
+the two failures and the two tests the kill never reached, verbosely. The other two passed.
+
+- **`test_rsa_open_corpus.py::test_a_joint_fit_recovers_the_shared_theory_and_each_block_s_link`**: `temperature@exp1`'s
+  1-99% interval is [2.536, 4.357], and the true value is 2.5, so it is missed by 0.036. A seeded recovery test whose draws
+  the callback changes. It could be bad luck at seed 0 or a real shift; one run can't tell them apart.
+- **`test_rsa_open_loop_orchestrator.py::test_a_time_limited_round_scores_admitted_theories_while_repairs_run_and_decides_as_before`**:
+  `theorist.cv_running_at_repair` is empty, while `{'salient_prior_listener'}` was expected. That is, no theory's folds
+  were running when slot 2's repair was spawned, so that theory had not been admitted by then. The test's fits run in
+  one-core children with a 600 s limit, and its call took 934 s. That fits Problem 1: the admission fit hung until the
+  limit. I inferred this and did not trace it; the test stops at that assertion, so whether the round's decisions match
+  was not reached.
+
+Both tests passed in round 1's run on 786e609b (job 51484554 passed its first 61 tests before its time limit; in today's
+order of those five files they are the 40th and 60th, so they were among them unless tests were added ahead of them since). The test job's own peak (19.9 GB at 48) means **the slow suite needs more than 16 GB**.
+
+### Not done or not as specified
+
+- The slow tests were run on 569b83c1, not a1853a4c (which came during the round). The fits ran on both.
+- 48 GB was requested for every fit, not 16 GB first, after the 16 GB first try failed on 569b83c1.
+- No fold, and no fit on one core: the callback cannot run on one.
+- Compute, roughly: 4 core-hours of fits on 569b83c1, 2.5 on a1853a4c, 1 for the timing job, 1.6 for the probes, 6.5
+  for the two test jobs, and about 2 for the first try.
