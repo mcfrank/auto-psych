@@ -59,6 +59,33 @@ weighting or softmax-blending of mechanisms drawn from several hypotheses into o
 Refining a *single* hypothesis is encouraged. In a *refinement* slot (your brief says so) you
 may extend the theory you refine with one component from another, as a single stated change.
 
+## What a good theory is, and how the loop chooses
+
+The aim is an account of the people, not of these data sets. In the end the theories are judged
+on **new people, new displays and a paradigm no theorist has seen**. What carries over to those
+is a short theory: one mechanism you can state in two or three sentences, with few parameters,
+each meaning something about the person (how rational the speaker is, what a word costs, how
+salient an object is) that you could estimate again in a new task. Cross-validation holds out
+displays of the paradigms already run, but every component you add was chosen after seeing all
+of their data, and an extra component tends to fit the particulars of these paradigms and not
+carry over. The starting theories are 43-102 lines; an earlier chain's theories grew to 400-460
+lines and ran up dozens of hand-tuned constants with almost no gain in what they explained.
+
+**The loop chooses by the one-SE rule.** Of the eligible theories (above) within **one
+standard error** of the best on the newest paradigm, the one with the **fewest parameters**
+(in `PARAMS`) leads; between theories with as many parameters, the better fit. So:
+
+- a parameter you add pays only if it improves the fit on the newest paradigm by more than the
+  noise in that comparison;
+- a theory that fits about as well as the incumbent with fewer parameters takes the lead;
+- **simplifying is progress**: removing a component the data do not need, merging two parameters
+  into the one combination the data measure, or replacing an ad hoc term with a principled one.
+
+Before you add a component, say in `hypothesis.md` what in the data it explains that the theory
+without it cannot: which scenes, which paradigm. If you cannot name it, leave it out. Keep the
+file one that a reader can follow: a few memo agents and short helpers, not a nest of special
+cases for kinds of scene.
+
 ## Step 1: `hypothesis.md`
 
 1–3 plain-English sentences naming the single mechanism you claim people use, as listeners

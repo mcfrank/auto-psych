@@ -77,6 +77,36 @@ def _api(text: str) -> str:
     return text.replace("choice_probs", "listener").replace("Models in the set", "Theories in the set")
 
 
+# The refinement slots' change may be a simplification, which the one-SE rule rewards (PI 2026-11-08):
+# the closed loop's wording asked only why a change "should fit better", and every refinement added.
+_REFINE_TEXTS = (
+    ("with ONE stated change to its mechanism (a different functional form, prior, "
+     "depth, or one component taken from another model). Your hypothesis must say "
+     "what you changed and why it should fit better, and list",
+     "with ONE stated change to its mechanism: a simplification (removing a component, or "
+     "merging two parameters into the one combination the data measure), a different "
+     "functional form, prior or depth, or one component taken from another model. A "
+     "simplification that fits about as well is progress: under the one-SE rule it takes "
+     "the lead. Your hypothesis must say what you changed and why: what a removed part was "
+     "not needed for, or what an added one explains that the theory without it cannot. List"),
+    ("and improve it with ONE stated change. Name the model",
+     "and improve it with ONE stated change, which may be a simplification (removing a "
+     "component, or merging two parameters into the one combination the data measure). "
+     "Name the model"),
+)
+
+
+def _parsimony(brief: str, role: str) -> str:
+    """The closed brief's refinement slot, with a simplification counted as a change. Fails loudly
+    when the closed wording changed, so the open slot never silently loses it."""
+    if role not in (closed.SLOT_REFINE_INCUMBENT, closed.SLOT_REFINE_CHOSEN):
+        return brief
+    old, new = _REFINE_TEXTS[0] if role == closed.SLOT_REFINE_INCUMBENT else _REFINE_TEXTS[1]
+    if old not in brief:
+        raise RuntimeError("the closed brief's refinement wording changed; update src.rsa_open.loop.brief")
+    return brief.replace(old, new)
+
+
 # The theorists' self-check fits a fixed fraction of each large block's displays (the literature),
 # whole displays at a time, and every other block whole: a quick smoke fit for their feedback.
 # Admission fits all the data (PI 2026-10-22).
@@ -185,6 +215,8 @@ def write_docs(candidate_dir: Path, *, role: str, lens: Optional[str], context: 
                              incumbent=incumbent, ledger=ledger, attempt_note=attempt_note, critiques=critiques)
     docs = {k: (_api(v) if isinstance(v, str) and k in ("brief", "existing_hypotheses", "menu") else v)
             for k, v in docs.items()}
+    if docs.get("brief"):
+        docs["brief"] = _parsimony(docs["brief"], role)
     for fname, key in (("CANDIDATE_BRIEF.md", "brief"), ("existing_hypotheses.md", "existing_hypotheses"),
                        ("refinement_menu.md", "menu")):
         if docs.get(key):

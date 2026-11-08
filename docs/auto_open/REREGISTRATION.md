@@ -20,6 +20,14 @@ registration has to cover, so nothing decided since the first one (https://osf.i
   density through a callback compiled once (d2fcfb25); the theory evaluated once per display shape
   across blocks, not per block.
 
+- **The one-SE rule** (PI 11-08), both arms: of the trusted, eligible theories within 1 clustered SE
+  of the best on the newest paradigm, the one with the fewest parameters leads
+  (`corpus.simplest_adequate`, `parsimony_k`); pruning still measures distance from the best fit.
+  The theorists are told the aim (short theories that carry over), the rule, and that simplifying
+  is progress (`open_theory.md`; a refinement may be a simplification). Parsimony stays an outcome,
+  measured twice: the incumbent's (which the rule shapes) and the best-by-fit-alone theory's
+  (`fit_best` in `history.json`, which the rule does not touch); the registration says both arms'
+  theorists were steered toward parsimony.
 - **The plan to registration** (PI 11-08):
   1. Revise the theorist prompt for the hand-set-numbers behaviour (parsimony), before the next
      rehearsal.

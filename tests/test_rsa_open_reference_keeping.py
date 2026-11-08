@@ -34,7 +34,7 @@ def _loop(tmp_path):
     loop.live = {}
     for name in pointwise:
         (loop.models_dir / f"{name}.py").write_text("# theory\n")
-        loop.live[name] = SimpleNamespace(name=name, hypothesis=name, source="seed",
+        loop.live[name] = SimpleNamespace(name=name, hypothesis=name, source="seed", theory=SimpleNamespace(params={"a": 0}),
                                           summary=SimpleNamespace(converged=True, timing={}))
     loop.ledger = HypothesisLedger.create(tmp_path / "attempted_hypotheses.jsonl", inherit_from=None)
     loop.history, loop.step = [], 0

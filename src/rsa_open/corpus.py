@@ -41,6 +41,7 @@ from src.rsa_open.fit import OBSERVED_SITE, OpenData, TheoryModel, corpus_log_li
 from src.rsa_open.links import LinkLikelihood
 
 GUARD_K = 4.0  # PI 2026-10-21: no more than 4 clustered SEs worse on any earlier paradigm
+PARSIMONY_K = 1.0  # PI 2026-11-08: the simplest theory within 1 clustered SE of the best leads (`simplest_adequate`)
 DEFAULT_FOLDS = 5
 MAX_HELDOUT_DRAWS = 400  # as the closed loop's held-out score
 
@@ -401,6 +402,34 @@ class CorpusCV:
 
     def elpd(self, block: str) -> float:
         return float(self.pointwise[block].sum())
+
+
+def simplest_adequate(pool: Sequence[str], results: Mapping[str, CorpusCV], blocks: Sequence[Block],
+                      complexity: Mapping[str, int], *, k: float = PARSIMONY_K) -> str:
+    """The one-SE rule (PI 2026-11-08): of the theories in ``pool``, those within ``k`` clustered
+    standard errors of the pool's best on the newest block, the one with the fewest parameters
+    (``complexity``); between equals, the better fit. With ``k`` = 0 it is the best fit.
+
+    Selecting on fit alone let a theory lead on any gain, however small against its noise, and the
+    theorists added a component a round (chain 1: 2 parameters and 84-90 hand-tuned constants). A
+    theory that fits as well with fewer parameters is the better account of the people, and the
+    likelier to hold on a paradigm no one has seen."""
+    from src.models.clustered_se import cluster_dse
+
+    if not pool:
+        raise ValueError("no theories to choose from")
+    newest = blocks[-1]
+    units = np.unique(np.asarray(newest.units), return_inverse=True)[1]
+    elpd = {n: results[n].elpd(newest.name) for n in pool}
+    best = max(pool, key=lambda n: elpd[n])
+
+    def near(n: str) -> bool:
+        if n == best:
+            return True
+        dse = float(cluster_dse(results[best].pointwise[newest.name], results[n].pointwise[newest.name], units))
+        return elpd[best] - elpd[n] <= k * dse
+
+    return min((n for n in pool if near(n)), key=lambda n: (complexity[n], -elpd[n]))
 
 
 def cv_corpus(theory: TheoryModel, blocks: Sequence[Block], folds: Mapping[str, np.ndarray], k: int,

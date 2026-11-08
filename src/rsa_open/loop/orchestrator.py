@@ -26,9 +26,12 @@ incumbent unchanged.
 **Selection** is grouped CV within every block (`src.rsa_open.corpus`): a theory is ranked by
 its out-of-fold lpd on the newest block, and is **eligible** only while, on every earlier
 block (E included), it is within ``guard_k`` clustered SEs of that block's best. The
-incumbent is the best eligible theory whose fit and CV converged. At the end, ineligible
+incumbent is chosen among the eligible theories whose fit and CV converged by the one-SE rule
+(PI 2026-11-08, `src.rsa_open.corpus.simplest_adequate`): of those within ``parsimony_k`` clustered
+SEs of the best on the newest block, the one with the fewest parameters. At the end, ineligible
 theories are pruned, then every theory more than ``prune_dse_multiplier`` clustered SEs behind
-the incumbent on the newest block, and the live set is capped at ``max_live_models``.
+the best on the newest block (never the incumbent), and the live set is capped at
+``max_live_models``.
 
 **Scheduling** (PI 2026-11-02, after open chain 1's experiment 2 lost its loop twice to the
 job's memory): every fit child waits for room in the job's memory (`src.rsa_open.loop.fitting`,
@@ -70,7 +73,8 @@ from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC, ModelFailure
 from src.rsa.loop.gates import read_candidate
 from src.rsa.loop.novelty import DEFAULT_NOVELTY_RMSE_THRESHOLD, plain_pool
 from src.rsa.loop.orchestrator import NAME_RE, _read, _write_atomic, default_fit_workers, prune_margin, stale_rounds
-from src.rsa_open.corpus import DEFAULT_FOLDS, GUARD_K, CorpusCV, CorpusFit, assign_folds, heldout_lpd, standing
+from src.rsa_open.corpus import (DEFAULT_FOLDS, GUARD_K, PARSIMONY_K, CorpusCV, CorpusFit, assign_folds, heldout_lpd,
+                                 simplest_adequate, standing)
 from src.rsa_open.fit import TheoryModel
 from src.rsa_open.loop import brief as briefs
 from src.rsa_open.loop import critique as critique_mod
@@ -133,6 +137,8 @@ class OpenLoopConfig:
     novelty_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD
     cv_folds: int = DEFAULT_FOLDS
     guard_k: float = GUARD_K
+    parsimony_k: float = PARSIMONY_K
+    """The one-SE rule's width (`simplest_adequate`); 0 selects on fit alone."""
     prune_dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER
     max_live_models: int = MAX_LIVE_MODELS
     fit_time_limit_sec: Optional[float] = FIT_TIME_LIMIT_SEC
@@ -605,15 +611,34 @@ class OpenLoop:
         return out
 
     def incumbent(self, s: Mapping[str, dict]) -> str:
+        """The best trusted, eligible theory by the one-SE rule (`simplest_adequate`): of those within
+        ``parsimony_k`` SEs of the best on the newest block, the one with the fewest parameters."""
+        for pool, scored in (([n for n in s if s[n]["trusted"] and s[n]["eligible"]], True),
+                             ([n for n in s if s[n]["trusted"]], True), (list(s), False)):
+            if pool:
+                if scored:  # trusted theories' CV converged, so each has its out-of-fold scores
+                    return simplest_adequate(pool, self.cv, self.blocks, self.complexity(pool), k=self.cfg.parsimony_k)
+                return max(pool, key=lambda n: s[n]["sel_elpd"])
+        raise RuntimeError("no theories")
+
+    def fit_best(self, s: Mapping[str, dict]) -> str:
+        """The incumbent by fit alone (the rule before 2026-11-08), recorded beside it: the parsimony
+        of what the data favour, which the one-SE rule does not touch."""
         for pool in ([n for n in s if s[n]["trusted"] and s[n]["eligible"]], [n for n in s if s[n]["trusted"]], list(s)):
             if pool:
                 return max(pool, key=lambda n: s[n]["sel_elpd"])
         raise RuntimeError("no theories")
 
+    def complexity(self, names) -> Dict[str, int]:
+        """Each theory's number of fitted parameters (its own; the links' are every theory's)."""
+        return {n: len(self.live[n].theory.params) for n in names}
+
     def score(self, round_index: int, events: List[dict], critique: Optional[dict] = None) -> dict:
         s = self.standing()
         best = self.incumbent(s)
-        entry = dict(step=self.step, round=round_index, best_model=best, events=events, critique=critique,
+        entry = dict(step=self.step, round=round_index, best_model=best, fit_best=self.fit_best(s),
+                     n_params=self.complexity(self.live), parsimony_k=self.cfg.parsimony_k,
+                     events=events, critique=critique,
                      admission_limit_sec=self.admission_limit_sec,
                      standing={n: {k: v for k, v in d.items()} for n, d in s.items()},
                      live=[dict(name=m.name, hypothesis=m.hypothesis, source=m.source) for m in self.live.values()],
@@ -625,12 +650,20 @@ class OpenLoop:
         return entry
 
     # ---------- a round ----------
-    def _describe(self, name: str, s: Mapping[str, dict]) -> str:
+    def _describe(self, name: str, s: Mapping[str, dict], lead: Optional[str] = None) -> str:
+        """Its standing for the theorists: scores, its parameters, and whether it leads (``lead``, the
+        incumbent, which the one-SE rule can make a simpler theory than the best fit)."""
         if name not in s:
             return "admitted this round, not yet scored"
         d, newest = s[name], self.blocks[-1].name
         if math.isinf(d["sel_elpd"]):
             return d.get("cv_problem", "not scored")
+        k = len(self.live[name].theory.params) if name in self.live else None
+        lead_text = ""
+        if lead == name:
+            lead_text = ("THE INCUMBENT" if d["sel_diff"] == 0 else
+                         f"THE INCUMBENT (within {self.cfg.parsimony_k:g} SE of the best, with fewer parameters)") + "; "
+        prefix = lead_text + (f"{k} parameter{'s' if k != 1 else ''}; " if k is not None else "")
         text = ("best" if d["sel_diff"] == 0 else f"{d['sel_diff']:.1f} ± {d['sel_dse']:.1f} nats behind the best") + \
             f" on {newest} (held out, grouped CV)"
         parts = [("best" if v["behind"] == 0 else f"{v['behind']:.1f} ± {v['dse']:.1f} behind") + f" on {b}"
@@ -642,13 +675,14 @@ class OpenLoop:
         if d["guard_failures"]:
             text += (f"; NOT eligible to lead: more than {self.cfg.guard_k:g} SEs behind the best on "
                      + ", ".join(d["guard_failures"]))
-        return text
+        return prefix + text
 
     def _docs_for(self, cdir: Path, role: str, lens: Optional[str], round_index: int, s: Mapping[str, dict],
                   incumbent: str, note: Optional[str], critiques: Optional[str] = None) -> str:
         def behind(n):
             return s[n]["sel_diff"] if n in s else float("inf")
-        live = [closed_brief.ZooModel(n, self.live[n].hypothesis, self.models_dir / f"{n}.py", self._describe(n, s))
+        live = [closed_brief.ZooModel(n, self.live[n].hypothesis, self.models_dir / f"{n}.py",
+                                      self._describe(n, s, incumbent))
                 for n in sorted(self.live, key=behind)]
         pruned_dir = self.models_dir / "pruned"
         pruned = [closed_brief.ZooModel(e.name, e.hypothesis, pruned_dir / f"{e.name}.py", f"pruned: {e.detail}")
@@ -946,9 +980,11 @@ class OpenLoop:
                 self._retire(n, "pruned", f"ineligible: more than {self.cfg.guard_k:g} SEs behind the best on {why}")
                 events.append(dict(name=n, outcome="pruned", reason=f"ineligible ({why})"))
         s = {n: d for n, d in s.items() if n in self.live}
-        best = self.incumbent(s)
+        # pruned when distinguishable from the best fit, as before the one-SE rule; the incumbent (within
+        # parsimony_k SEs of it, and simpler) is never pruned
+        best, lead = self.fit_best(s), self.incumbent(s)
         units = np.unique(np.asarray(newest.units), return_inverse=True)[1]
-        for n in [n for n in s if n != best and s[n]["trusted"] and n not in protected]:
+        for n in [n for n in s if n not in (best, lead) and s[n]["trusted"] and n not in protected]:
             a, b = self.cv[best].pointwise[newest.name], self.cv[n].pointwise[newest.name]
             diff, dse = float(a.sum() - b.sum()), float(cluster_dse(a, b, units))
             if diff > self.cfg.prune_dse_multiplier * dse:
