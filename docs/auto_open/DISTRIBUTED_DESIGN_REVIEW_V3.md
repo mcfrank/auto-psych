@@ -4,6 +4,8 @@ Written by Claude Opus 5.5 (the Sherlock session) from chain 1's round 4-5 logs,
 --test-only` and the test jobs of 2026-11-03 (§10); not reviewed by a person. I've read only v3's summary of SRCC's reply, not
 the reply itself.
 
+**Update 2026-11-08 (§15).** On ef7e842d the one-core deadlock is gone: a big theory's fit finishes pinned to one core in 15.8 min and 5.3 GB, with 9-10 threads. Both slow tests that failed in §14 pass, though the joint-fit test's bar was also loosened. The only slow-test failure is a test that cannot import `pytest` as I supplied it; its fit passes when run directly. The stepped rehearsal can launch (§15).
+
 **Update 2026-11-08 (§14).** The callback sampler and one theory evaluation per display shape (a1853a4c) bring a big theory's fit on experiment 3's corpus to about 14 min and 10-11 GB (chain 0's code: 2.5 h, 35-37 GB). But the callback deadlocks on one core, which is how the loop runs every fit, and two slow tests that passed in round 1 now fail (§14).
 
 **Update 2026-11-07 (§13).** The driver's pattern-weighted likelihood (786e609b) makes fits 30× faster on the committed literature but only 2.5-2.9× faster on chain 0's experiment 3 data, with no saving in memory (36-39 GB per fit): the agents' theories are now most of the cost. §13 has the measurements and where I think the rest of the time goes.
@@ -860,3 +862,63 @@ order of those five files they are the 40th and 60th, so they were among them un
 - No fold, and no fit on one core: the callback cannot run on one.
 - Compute, roughly: 4 core-hours of fits on 569b83c1, 2.5 on a1853a4c, 1 for the timing job, 1.6 for the probes, 6.5
   for the two test jobs, and about 2 for the first try.
+
+## 15. Fit speed, round 3: the checks before the stepped rehearsal (`HANDOFF_fit_speed.md` round 3, `HANDOFF_stepped_rehearsal.md` §1, 2026-11-08, code at ef7e842d)
+
+Written by Claude Opus 5.5 (the Sherlock session); not reviewed by a person. No agents, no Prolific; the corpus copy and
+every trial stay on Sherlock. ef7e842d differs from the rehearsal's commit, 16860eb7, only in two docs.
+
+**Bottom line: the handoff's checks pass, so the stepped rehearsal can launch.** Both problems in §14 are gone: fits finish
+on one core, and the two failing slow tests pass. One test still reports `FAILED`, because of how I supplied `pytest`; its
+fit passes when run directly.
+
+### Tests
+
+| suite | job | result | time | peak memory |
+|---|---|---|---|---|
+| Slow tests of the fit files, with the callback and one-core tests (2 cores of 5 allocated, 32 GB) | 51577236 | 70 passed, 1 failed | 2 h 43 min | 13.2 GB |
+| Fast tests | 51577240 | 445 passed, 12 skipped, 44 deselected | 24.5 min | 12.3 GB |
+| The one-core test's own fit script, run directly (one core, `PJRT_NPROC` unset) | 51581490 | `finished True`, exit 0 | 2.1 min | not recorded |
+| The skipped sandbox test, with bubblewrap loaded | 51581500 | passed | 11 s | not recorded |
+
+- **The one failure is not the code's.** `test_a_callback_fit_finishes_in_a_process_that_sees_one_core` sets the
+  subprocess's `PYTHONPATH` to the repo alone, and its script imports `tests.test_rsa_open_corpus`, which imports `pytest`.
+  The Sherlock venv has no `pytest`, so I supply it through `PYTHONPATH` and the subprocess loses it: `ModuleNotFoundError`
+  before any fit starts. So the test as written has not passed on Sherlock; the direct run above is the same script with
+  `pytest` importable. Appending to `PYTHONPATH` instead of replacing it would fix this. I haven't changed it.
+- **The two failures of §14 pass, for different reasons.**
+  - `test_a_time_limited_round_scores_admitted_theories_while_repairs_run_and_decides_as_before` now passes, in 1,247 s
+    (§14: failed at 934 s), including the comparison of the round's decisions, which §14's run never reached. That supports
+    §14's inference that the admission fit had hung.
+  - `test_a_joint_fit_recovers_the_shared_theory_and_each_block_s_link` passes, but its bar changed: it now asks for
+    within 3 posterior SDs rather than the 1-99% interval that §14's value missed by 0.036. This is not evidence that
+    recovery improved, and I did not recheck that value on the new code.
+- **Skips.** Nine need Playwright or Chromium, which compute nodes lack. Two in `test_rsa_open_live.py` look for `.venv` in
+  the repo, and the Sherlock venv is in `$GROUP_HOME`. The twelfth is the sandbox test above.
+- The orchestrator's tests took most of the slow suite's time: the four slowest entries total about 2 h.
+
+### Fits on one core (experiment 3's corpus, 1,000 + 1,000, 4 chains; every fit converged)
+
+One core pinned, 16 GB, an empty compile cache for each fit, on the lab node (AMD EPYC 8224P) alongside my other checks.
+Threads were sampled while each fit ran.
+
+| fit | job | one core, ef7e842d | two cores, a1853a4c (§14) | warm-up / sampling | steps/iteration | peak memory (§14 → now) | threads |
+|---|---|---|---|---|---|---|---|
+| `figure_ground_crowd_topic_tom` | 51577580 | **15.8 min** | 13.4 min | 670 / 186 s | 14.1 | 9.8 → **5.3 GB** | 9-10 |
+| depth-3 seed | 51577581 | **20.9 min** | 17.7 min | 798 / 384 s | 20.7 | 5.5 → 5.4 GB | 9-10 |
+
+- **No hang.** Importing `src.rsa_open` gives XLA's pool two threads, and that is enough in a real fit.
+- **About 18% slower than §14, for the same number of steps.** The cause isn't measured: one core against two, other jobs
+  on the node, and new code all differ. Treat it as an upper bound on what one core costs.
+- **A big theory's cold peak nearly halved**, so 16 GB is more than enough. Between the two runs came one start search per
+  chain, the cache clear (86fb9bb4) and one core instead of two; I didn't separate them.
+- **Thread counts are far below what SRCC flagged** (140-160 per process).
+- **These fits sit around SRCC's 20-minute sensible minimum**, on the largest corpus. The rehearsal will measure real
+  admission fits and folds, on real theories, which these checks do not.
+
+### Not done or not as specified
+
+- The test that failed for the `pytest` reason was not rerun in a passing form; I ran its script directly instead.
+- The handoff asked for slow tests on 2 CPUs and 32 GB. The memory limit gave the job 5 allocated CPUs; I pinned it to 2.
+- First thread samples were wrong (`pgrep -f | head -1` found `/usr/bin/time`), so jobs 51577250 and 51577337 were
+  cancelled and rerun as the two above.
