@@ -50,3 +50,39 @@ iteration, peak memory), and whether each new fit converged.
 mostly be jobs under Slurm's sensible minimum (SRCC: 20 minutes), the fits could run inside the
 experiment's own job again, and the 3-day scoping (`HANDOFF_refit_test.md`) can be revisited with
 full-fidelity settings. The refit test still stands: it measures cheaper settings, not cheaper code.
+
+## Round 2 (2026-11-08): the sampler compiles the density once, outside its own program
+
+Written by Claude Opus 5.5; not reviewed by a person. Code: `auto-psych-open` at d2fcfb25 or later.
+
+**What §13 found and why.** On experiment 3's corpus the big theories still took 52-60 min and 36-39 GB
+a fit. Profiling one of chain 1's experiment-2 theories (463 lines) in a cloud container showed:
+
+- numpyro compiled its whole sampler into one program with the theory's log-density and gradient
+  inlined, once per display shape, and compiled **two** such programs per fit (warm-up and
+  sampling; `fit_corpus` runs them as two calls). On the literature block alone that was ~88 s and
+  6 GB per program, against 14 s and 1.3 GB for the gradient by itself; on three blocks it ran
+  out of memory above 14 GB. That is §13's "warm-up costs less per step than sampling" puzzle: the
+  sampling phase's time included its own compile.
+- Before compiling, numpyro ran the model eagerly to set up: 1,904 one-operation compilations,
+  112-131 s (fixed in 9664699f by jitting each block's likelihood).
+
+**What changed (d2fcfb25).** `fit_corpus` compiles the value and gradient once and gives NUTS an
+opaque callback into it (`_callback_potential`), so the sampler's programs are small. In the container:
+1.8 GB on the literature block, 2.6 GB on three blocks (was out of memory), about 34 s to set up and
+compile the gradient, ~27 s for the small sampler, ~0.06 s an iteration for 4 chains; a 1,000 + 1,000 fit
+of that theory on the literature projects to about 3 min. Same density, same NUTS; the old path stays as
+`inline_potential=True`.
+
+**What to run**, as before (`fit_speed.py`, single-core jobs, the same CPU), with
+`JAX_COMPILATION_CACHE_DIR` exported to an empty directory of its own (the fit compiles each of its
+programs once; a second, identical fit should reuse them):
+
+1. The slow test comparing the two samplers' posteriors:
+   `uv run pytest -q tests/test_rsa_open_callback_sampler.py` (with the fast ones).
+2. `fit_speed.py` on experiment 3's corpus for §13's three theories and the depth-3 seed, at 1,000 +
+   1,000: total time, warm-up and sampling split, steps per iteration, peak memory, convergence. Then the
+   first theory once more with the same cache directory, to see what a repeated fit costs.
+3. Request 16 GB first; report any that run out.
+
+**Report** beside §13: the table with this code's column added.
