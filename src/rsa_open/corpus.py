@@ -216,29 +216,86 @@ class CorpusFit:
         return ll.reshape(-1, ll.shape[-1])[:, start:stop]
 
 
+def _callback_potential(potential_fn, z_one):
+    """``potential_fn`` as NUTS sees it: an opaque call into one separately compiled value-and-gradient.
+
+    numpyro compiles its whole sampler (nested while-loops of leapfrog steps) into one program and
+    would inline the theory's log-density, with its gradient, for every display shape, into it.
+    For agents' large theories that program took minutes and tens of GB to compile, and the
+    sampler's warm-up and sampling phases are two such programs (2026-11-08: chain 1's 463-line
+    experiment-2 theory, 6 GB on the literature alone, out of memory above 14 GB on three blocks;
+    on Sherlock 36-39 GB). Behind a callback the sampler's program is small and the log-density
+    compiles once, alone (1.8 and 2.6 GB). Same density, same sampler: only where it compiles."""
+    vg = jax.jit(jax.value_and_grad(potential_fn))
+    spec = jax.tree_util.tree_map(lambda x: jax.ShapeDtypeStruct(jnp.shape(x), jnp.result_type(x)), z_one)
+    v0, _ = vg(z_one)
+    scalar = jax.ShapeDtypeStruct((), jnp.result_type(v0))
+
+    def host(z):
+        v, g = vg(z)
+        return np.asarray(v, scalar.dtype), jax.tree_util.tree_map(lambda x, s: np.asarray(x, s.dtype), g, spec)
+
+    @jax.custom_vjp
+    def potential(z):
+        return jax.pure_callback(lambda z: host(z)[0], scalar, z, vmap_method="sequential")
+
+    def fwd(z):
+        return jax.pure_callback(host, (scalar, spec), z, vmap_method="sequential")
+
+    def bwd(g, ct):
+        return (jax.tree_util.tree_map(lambda x: ct * x, g),)
+
+    potential.defvjp(fwd, bwd)
+    return potential
+
+
 def fit_corpus(theory: TheoryModel, blocks: Sequence[Block],
                settings: FitSettings = FitSettings(dense_mass=True),
                init: Optional[Mapping[str, float]] = None,
-               on_warmup: Optional[Callable[[Dict[str, Any]], None]] = None) -> CorpusFit:
+               on_warmup: Optional[Callable[[Dict[str, Any]], None]] = None,
+               inline_potential: bool = False) -> CorpusFit:
     """NUTS on the corpus; with ``init`` (constrained values of sampled sites) every chain starts
-    there instead of at random. Warmup and sampling run as two calls (sampling reuses warmup's
-    compiled kernel), each timed with its leapfrog steps; ``on_warmup`` receives the warmup's
-    `src.rsa_open.sampler.warmup_report` (as JSON) and timing once warmup ends, so a fit killed
-    while sampling still says what its geometry was."""
+    there instead of at random. Warmup and sampling run as two calls, each timed with its leapfrog
+    steps; ``on_warmup`` receives the warmup's `src.rsa_open.sampler.warmup_report` (as JSON) and
+    timing once warmup ends, so a fit killed while sampling still says what its geometry was.
+
+    The sampler reaches the log-density through `_callback_potential` (compiled once, outside the
+    sampler's program). ``inline_potential`` runs numpyro's usual way, the density inlined into the
+    sampler, for comparison (`tests/test_rsa_open_callback_sampler.py`)."""
     check_blocks(blocks)
     clash = sorted(set(theory.params) & {b.param(k) for b in blocks for k in b.link.params})
     if clash:
         raise ValueError(f"theory parameters {clash} collide with block link parameters")
     from numpyro.infer import init_to_uniform, init_to_value
+    from numpyro.infer.util import initialize_model
 
     strategy = init_to_value(values={k: float(v) for k, v in init.items()}) if init else init_to_uniform
-    kernel = NUTS(_corpus_model, target_accept_prob=settings.target_accept, dense_mass=settings.dense_mass,
-                  init_strategy=strategy)
-    mcmc = MCMC(kernel, num_warmup=settings.num_warmup, num_samples=settings.num_samples,
-                num_chains=settings.num_chains, chain_method="vectorized", progress_bar=False)
     names = [*theory.params, *(b.param(k) for b in blocks for k in b.free_link_params)]
     t0 = time.perf_counter()
-    mcmc.warmup(jax.random.PRNGKey(settings.seed), theory, list(blocks), collect_warmup=True,
+    if inline_potential:
+        kernel = NUTS(_corpus_model, target_accept_prob=settings.target_accept, dense_mass=settings.dense_mass,
+                      init_strategy=strategy)
+        args, init_params, constrain = (theory, list(blocks)), None, None
+    else:
+        keys = jax.random.split(jax.random.PRNGKey(settings.seed), settings.num_chains)
+        info, potential_fn, postprocess, _ = initialize_model(keys, _corpus_model, model_args=(theory, list(blocks)),
+                                                              init_strategy=strategy)
+        init_params = info.z
+        potential = _callback_potential(potential_fn, jax.tree_util.tree_map(lambda x: x[0], init_params))
+        kernel = NUTS(potential_fn=potential, target_accept_prob=settings.target_accept,
+                      dense_mass=settings.dense_mass)
+        args = ()
+        to_constrained = jax.jit(jax.vmap(postprocess))
+
+        def constrain(z_by_chain):
+            """(chains, draws) unconstrained draws -> the model's sample sites, constrained."""
+            flat = {k: np.asarray(v).reshape(-1, *np.shape(v)[2:]) for k, v in z_by_chain.items()}
+            c, d = np.shape(next(iter(z_by_chain.values())))[:2]
+            out = to_constrained(flat)
+            return {k: np.asarray(v).reshape(c, d, *np.shape(v)[1:]) for k, v in out.items() if k in names}
+    mcmc = MCMC(kernel, num_warmup=settings.num_warmup, num_samples=settings.num_samples,
+                num_chains=settings.num_chains, chain_method="vectorized", progress_bar=False)
+    mcmc.warmup(jax.random.PRNGKey(settings.seed), *args, init_params=init_params, collect_warmup=True,
                 extra_fields=("num_steps", "adapt_state.step_size"))
     warm = mcmc.get_extra_fields(group_by_chain=True)
     warm_steps = np.asarray(warm["num_steps"])
@@ -247,15 +304,19 @@ def fit_corpus(theory: TheoryModel, blocks: Sequence[Block],
         from src.rsa_open.sampler import warmup_report
 
         warm_samples = {k: np.asarray(v) for k, v in mcmc.get_samples(group_by_chain=True).items()}
+        if constrain is not None:
+            warm_samples = constrain(warm_samples)
         on_warmup(dict(report=warmup_report(warm_samples, warm_steps, np.asarray(warm["adapt_state.step_size"]),
                                             names).to_json(), timing=timing))
     t1 = time.perf_counter()
-    mcmc.run(mcmc.post_warmup_state.rng_key, theory, list(blocks),
+    mcmc.run(mcmc.post_warmup_state.rng_key, *args,
              extra_fields=("diverging", "num_steps", "adapt_state.step_size"))
     extra = mcmc.get_extra_fields(group_by_chain=True)
     n_steps = np.asarray(extra["num_steps"])
     timing.update(sampling_sec=time.perf_counter() - t1, sampling_steps=float(n_steps.max(axis=0).sum()))
     samples = {k: np.asarray(v) for k, v in mcmc.get_samples(group_by_chain=True).items()}
+    if constrain is not None:
+        samples = constrain(samples)
     chains, draws = next(iter(samples.values())).shape[:2]
     flat = {k: v.reshape(chains * draws) for k, v in samples.items()}
     lls, offsets, start = [], {}, 0
