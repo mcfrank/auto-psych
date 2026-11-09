@@ -138,3 +138,28 @@ def test_a_rehearsal_launch_clears_a_stop_only_when_a_person_asks():
     assert '"${CLEAR_STOP:-}" == 1 && "$RSA_STEP_NEW_LAUNCH" == 1' in clause  # never a step's continuation
     assert 'mv "$CELL_DIR/STOP" "$CELL_DIR/STOP.$(date +%Y%m%dT%H%M%S)"' in clause
     assert clause.index("mv \"$CELL_DIR/STOP\"") < clause.index("is stopped")
+
+
+def test_steps_run_their_own_fits_by_default_and_are_sized_for_them(tmp_path):
+    """PI 2026-11-09 (review V3 §16): STEP_FITS=local by default, with the step's cores and memory sized
+    for 8 fits beside it, carried to the chain's process and to its continuation's settings."""
+    out, cell, env = _setup(tmp_path)
+    assert out.returncode == 0, out.stderr
+    step_env = dict(line.split("=", 1) for line in out.stdout.splitlines())
+    assert step_env["RSA_OPEN_STEP_FITS"] == "local" and step_env["RSA_OPEN_LAUNCH_EXPERIMENTS"] == "1"
+    subprocess.run(["bash", str(cell / "continuation.sh"), "afterany:5,singleton"], capture_output=True, text=True, check=True)
+    args = (tmp_path / "sbatch_args").read_text().splitlines()
+    assert "--cpus-per-task=12" in args and "--mem=72G" in args and "--time=4-00:00:00" in args
+    settings = (cell / "step_settings.sh").read_text()
+    assert "STEP_FITS=local" in settings and "LAUNCH_EXPERIMENTS=1" in settings
+
+
+def test_unknown_fit_and_launch_settings_are_refused(tmp_path):
+    for k, v in (("STEP_FITS", "elsewhere"), ("LAUNCH_EXPERIMENTS", "2")):
+        cell = tmp_path / k / "cells" / "open_chain_0"
+        cell.mkdir(parents=True)
+        env = {"PATH": os.environ["PATH"], "HOME": str(tmp_path), "CELL": "open_chain_0", "CELL_DIR": str(cell),
+               "WORK_ROOT": str(tmp_path / k / "work"), "REPO": "/r", "SLURM_DIR": "/h", "VENV_PY": "/v",
+               "HARNESS_REPO": "/h", "JAX_COMPILATION_CACHE_DIR": "/j", "SLURM_JOB_NAME": "n", "SLURM_JOB_ID": "1", k: v}
+        out = subprocess.run(["bash", "-c", f"source {SCRIPT}; rsa_step_mode /s"], env=env, capture_output=True, text=True)
+        assert out.returncode != 0 and f"{k} is" in out.stderr

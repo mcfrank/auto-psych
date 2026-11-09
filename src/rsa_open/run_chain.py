@@ -167,7 +167,11 @@ def step_from_env():
                            "step mode and the slurm fit backend go together (scripts/rsa/slurm/open_live.sbatch)")
     if not on:
         return None
-    stepper = step.Stepper(step.StepConfig.from_env())
+    fits = os.environ.get(step.STEP_FITS_ENV, "local") or "local"
+    if fits not in ("local", "array"):
+        raise RuntimeError(f"{step.STEP_FITS_ENV}={fits!r}: local (the step runs its fits) or array (it submits them)")
+    cfg = step.StepConfig.from_env()
+    stepper = step.LocalStepper(cfg) if fits == "local" else step.Stepper(cfg)
     step.activate(stepper)
     return stepper
 
@@ -183,15 +187,31 @@ def this_launch(cfg, chain) -> dict:
         n = chain.first_unfinished()
         if n > chain.cfg.n_experiments:
             raise RuntimeError(f"{chain.cfg.chain}: every experiment is done; there is nothing to launch")
-        record = step.begin_launch(cfg, n)
-        print(f"[chain] launch: experiment {n} of {chain.cfg.n_experiments}, at most {record['max_steps']} steps",
-              flush=True)
+        how = os.environ.get(step.LAUNCH_EXPERIMENTS_ENV, "1") or "1"
+        if how not in ("1", "all"):
+            raise RuntimeError(f"{step.LAUNCH_EXPERIMENTS_ENV}={how!r}: 1 (one experiment a launch) or all (to the end)")
+        last = chain.cfg.n_experiments if how == "all" else n
+        record = step.begin_launch(cfg, n, last_experiment=last)
+        print(f"[chain] launch: experiment{'s' if last > n else ''} {n}{f'-{last}' if last > n else ''} of "
+              f"{chain.cfg.n_experiments}, at most {record['max_steps']} steps", flush=True)
         return record
     record = step.current_launch(cfg)
     if record is None:
         raise RuntimeError(f"a continuation with no launch record ({step.launch_path(cfg)}): a person starts a "
                            "launch (scripts/rsa/live/open_launch.sh)")
     return record
+
+
+def _fresh_process_state() -> None:
+    """Before a step continues in its own job: drop what a new job would not have. JAX keeps every
+    program compiled in the process, and with them each theory loaded so far (2026-11-08: about 0.5 GB
+    a fit until a thread could not start); a job that runs a whole experiment must not accumulate them."""
+    import gc
+
+    import jax
+
+    jax.clear_caches()
+    gc.collect()
 
 
 def main(args: Args) -> list:
@@ -208,31 +228,46 @@ def main(args: Args) -> list:
 
     from src.rsa_open.chain import ExperimentDone
 
+    import os
+
     stepper = step_from_env()
     usage_log = Path(args.run_dir) / "token_usage.jsonl"
     marker = start_usage_log(usage_log)
     try:
-        chain = build(args)
-        if stepper is not None:
-            launch = this_launch(stepper.cfg, chain)
-            chain.cfg = replace(chain.cfg, stop_after_experiment=launch["experiment"])
-        exports = chain.run()
+        while True:  # once, unless a step runs its own fits: then on, in this job, from disk (a fresh chain)
+            try:
+                chain = build(args)
+                if stepper is not None:
+                    launch = this_launch(stepper.cfg, chain)
+                    chain.cfg = replace(chain.cfg, stop_after_experiment=launch.get("last_experiment",
+                                                                                    launch["experiment"]))
+                exports = chain.run()
+                break
+            except FitsPending as pending:
+                if stepper is None:  # only a step's fit backend leaves fits pending
+                    raise RuntimeError("fits are pending outside step mode (RSA_OPEN_FIT_BACKEND=slurm without "
+                                       f"{STEP_MODE_ENV}=1)") from pending
+                try:
+                    stepper.yield_step(pending, reason=f"{len(pending.pending)} fit(s)")
+                except step.StepContinue as c:
+                    print(f"[chain] STEP: ran {c.record['tasks']} fit(s) in this job "
+                          f"({c.record['wait_sec'] / 60:.1f} min, {c.record['workers']} at once); continuing", flush=True)
+                    os.environ[NEW_LAUNCH_ENV] = "0"  # the same launch: its record is read back, not begun again
+                    stepper.close()
+                    _fresh_process_state()
+                    stepper = step_from_env()  # a fresh step, as a continuation job would have
+                    continue
+                except step.StepYield as y:
+                    print(f"[chain] STEP: {len(pending.pending)} fit(s) pending; continues in job "
+                          f"{y.record['continuation']} after arrays {y.record['arrays'] + y.record['after_early']}",
+                          flush=True)
+                    raise SystemExit(step.EXIT_YIELD)
+                except step.StepRefused as refused:
+                    print(f"[chain] STOPPED, the step did not submit: {refused}", flush=True)
+                    raise SystemExit(step.EXIT_REFUSED)
     except ExperimentDone as done:
         print(f"[chain] STOPPED: {done}", flush=True)
         raise SystemExit(EXIT_EXPERIMENT_DONE)
-    except FitsPending as pending:
-        if stepper is None:  # only a step's fit backend leaves fits pending
-            raise RuntimeError("fits are pending outside step mode (RSA_OPEN_FIT_BACKEND=slurm without "
-                               f"{STEP_MODE_ENV}=1)") from pending
-        try:
-            stepper.yield_step(pending, reason=f"{len(pending.pending)} fit(s)")
-        except step.StepYield as y:
-            print(f"[chain] STEP: {len(pending.pending)} fit(s) pending; continues in job {y.record['continuation']} "
-                  f"after arrays {y.record['arrays'] + y.record['after_early']}", flush=True)
-            raise SystemExit(step.EXIT_YIELD)
-        except step.StepRefused as refused:
-            print(f"[chain] STOPPED, the step did not submit: {refused}", flush=True)
-            raise SystemExit(step.EXIT_REFUSED)
     except AwaitingReview as stop:
         print(f"[chain] STOPPED, awaiting the PI's review: {stop}", flush=True)
         raise SystemExit(EXIT_AWAITING_REVIEW)

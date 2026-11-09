@@ -135,3 +135,78 @@ def test_a_loop_run_as_steps_decides_exactly_as_one_run_straight_through(tmp_pat
     log = [json.loads(line) for line in (tmp_path / "cell" / "steps.jsonl").read_text().splitlines()]
     assert sum(1 for e in log if e.get("continuation")) == steps
     assert not (tmp_path / "cell" / "STOP").exists()
+
+
+def run_in_local_steps(cfg, theorist, cell: Path, max_steps: int = 60):
+    """The loop as run_chain runs it with fits in the step's own job (`LocalStepper`): each phase's fits
+    run here as `fit_array` tasks in their own processes, then a fresh loop object continues from disk.
+    Returns (final, steps)."""
+    import src.rsa_open.loop.slurm as step
+    from src.rsa_open.chain import clear_stage
+    from src.rsa_open.loop.fit_array import FitsPending
+    from src.rsa_open.loop.orchestrator import OpenLoop
+
+    steps = 0
+    while True:
+        stepper = step.LocalStepper(step_config(cell), workers=2)
+        step.activate(stepper)
+        resume = (cfg.results_dir / "history.json").exists()
+        if not resume:
+            clear_stage(cfg.results_dir, keep=(".fit_cache", ".scores"))
+        try:
+            return OpenLoop(cfg, theorist).run(resume=resume), steps
+        except FitsPending as ps:
+            with pytest.raises(step.StepContinue) as cont:
+                stepper.yield_step(ps, "test")
+            assert cont.value.record["failed_tasks"] == 0
+        finally:
+            step.activate(None)
+            stepper.close()
+        steps += 1
+        assert steps < max_steps, "the chain is not converging"
+
+
+@pytest.mark.slow  # two loops of two rounds, every fit twice (straight, then in the step's own job)
+def test_a_loop_whose_steps_run_their_own_fits_decides_exactly_as_one_run_straight_through(tmp_path, monkeypatch):
+    import sys
+
+    from src.rsa_open.loop.fitting import LocalBackend
+    from src.rsa_open.loop.orchestrator import OpenLoop, OpenLoopConfig
+
+    def config(root):
+        root.mkdir()
+        seeds, corpus = _inputs(root)
+        return OpenLoopConfig(corpus_path=corpus, seed_models_dir=seeds, results_dir=root / "loop", max_iterations=2,
+                              candidate_count=3, settings=SETTINGS, fit_time_limit_sec=1800)
+
+    straight_theorist = FakeTheorist()
+    OpenLoop(config(tmp_path / "a"), straight_theorist).run()
+
+    def never(*a, **k):
+        raise AssertionError("a step fitted in its own process, not a task's")
+
+    monkeypatch.setenv("RSA_OPEN_FIT_BACKEND", "slurm")
+    monkeypatch.setenv("VENV_PY", sys.executable)
+    monkeypatch.setenv("HARNESS_REPO", str(Path(__file__).resolve().parents[1]))
+    monkeypatch.setenv("JAX_COMPILATION_CACHE_DIR", str(tmp_path / "jax_cache"))
+    monkeypatch.setattr(LocalBackend, "attempt", never)
+    stepped_theorist = FakeTheorist()
+    _, steps = run_in_local_steps(config(tmp_path / "b"), stepped_theorist, tmp_path / "cell")
+    assert steps >= 3
+
+    def ledger(root):
+        return (root / "loop" / "attempted_hypotheses.jsonl").read_text().splitlines()
+
+    def history(root):
+        return [(h["round"], h["best_model"], [(e.get("name"), e.get("outcome")) for e in h["events"]],
+                 {n: (round(d["sel_elpd"], 6), d["trusted"], d["eligible"]) for n, d in h["standing"].items()})
+                for h in json.loads((root / "loop" / "history.json").read_text())]
+
+    assert ledger(tmp_path / "a") == ledger(tmp_path / "b")
+    assert history(tmp_path / "a") == history(tmp_path / "b")
+    assert (json.loads((tmp_path / "a" / "loop" / "export.json").read_text())
+            == json.loads((tmp_path / "b" / "loop" / "export.json").read_text()))
+    assert sorted(n for n, _ in straight_theorist.calls) == sorted(n for n, _ in stepped_theorist.calls)
+    log = [json.loads(line) for line in (tmp_path / "cell" / "steps.jsonl").read_text().splitlines()]
+    assert sum(1 for e in log if e.get("local") and not e.get("early")) == steps and not any(e.get("continuation") for e in log)
+    assert not (tmp_path / "cell" / "STOP").exists()

@@ -50,8 +50,14 @@ SIZE=()
 STEP_MODE="${STEP_MODE:-0}"
 if [[ "$STEP_MODE" == 1 ]]; then
   [[ -z "${PARTICIPANTS:-}" ]] || { echo "not launched: a smoke test fits nothing; run it without STEP_MODE" >&2; exit 1; }
-  PARTITION="${STEP_PARTITION:-mcfrank}" TIME="${STEP_TIME:-2-00:00:00}" LINKS=1
-  SIZE=(--cpus-per-task="${STEP_CPUS:-8}" --mem="${STEP_MEM:-32G}" --no-requeue)
+  STEP_FITS="${STEP_FITS:-local}" LAUNCH_EXPERIMENTS="${LAUNCH_EXPERIMENTS:-1}"
+  if [[ "$STEP_FITS" == local ]]; then  # the step runs its fits (PI 2026-11-09): their cores and memory too
+    PARTITION="${STEP_PARTITION:-mcfrank}" TIME="${STEP_TIME:-4-00:00:00}" LINKS=1
+    SIZE=(--cpus-per-task="${STEP_CPUS:-12}" --mem="${STEP_MEM:-72G}" --no-requeue)
+  else
+    PARTITION="${STEP_PARTITION:-mcfrank}" TIME="${STEP_TIME:-2-00:00:00}" LINKS=1
+    SIZE=(--cpus-per-task="${STEP_CPUS:-8}" --mem="${STEP_MEM:-32G}" --no-requeue)
+  fi
 elif [[ "$STEP_MODE" != 0 ]]; then
   echo "not launched: STEP_MODE must be 0 or 1" >&2; exit 1
 fi
@@ -61,7 +67,7 @@ if [[ -n "${PARTICIPANTS:-}" ]]; then
 fi
 "$VENV_PY" -m src.rsa_open.live --config "$CONFIG" --check --arm "$ARM" --chains "${CHAIN_LIST[@]}" \
   --n-experiments "$([[ -n "$SMOKE" ]] && echo 1 || echo "$N_EXPERIMENTS")" ${PARTICIPANTS:+--participants "$PARTICIPANTS"}
-echo "mode: $PROLIFIC_MODE${SMOKE:+ (smoke test: $PARTICIPANTS people, never modelled)}; $LINKS job(s) of $TIME on $PARTITION per chain$([[ "$STEP_MODE" == 1 ]] && echo ", as steps (fits as arrays on ${STEP_FIT_PARTITION:-mcfrank,owners})")" >&2
+echo "mode: $PROLIFIC_MODE${SMOKE:+ (smoke test: $PARTICIPANTS people, never modelled)}; $LINKS job(s) of $TIME on $PARTITION per chain$([[ "$STEP_MODE" == 1 ]] && { [[ "$STEP_FITS" == local ]] && echo ", as steps running their own fits, $([[ "$LAUNCH_EXPERIMENTS" == all ]] && echo "every experiment" || echo "one experiment") a launch" || echo ", as steps (fits as arrays on ${STEP_FIT_PARTITION:-mcfrank,owners})"; })" >&2
 
 EXTRA_ENV=()
 if [[ "$PROLIFIC_MODE" == "live" ]]; then
@@ -96,6 +102,7 @@ for chain in "${CHAIN_LIST[@]}"; do
   for ((link = 1; link <= LINKS; link++)); do
     id="$(env ${EXTRA_ENV[@]+"${EXTRA_ENV[@]}"} PROLIFIC_MODE="$PROLIFIC_MODE" CONFIG="$CONFIG" WORK_ROOT="$WORK_ROOT" \
           ARM="$ARM" CHAIN="$chain" N_EXPERIMENTS="$N_EXPERIMENTS" STEP_MODE="$STEP_MODE" \
+          ${STEP_FITS:+STEP_FITS="$STEP_FITS"} ${LAUNCH_EXPERIMENTS:+LAUNCH_EXPERIMENTS="$LAUNCH_EXPERIMENTS"} \
           ${PARTICIPANTS:+PARTICIPANTS="$PARTICIPANTS"} ${SMOKE_FROM:+SMOKE_FROM="$SMOKE_FROM"} \
           sbatch --parsable --chdir="$REPO" --partition="$PARTITION" --time="$TIME" ${SIZE[@]+"${SIZE[@]}"} \
             ${MAIL_TYPE:+--mail-type="$MAIL_TYPE"} ${MAIL_USER:+--mail-user="$MAIL_USER"} \

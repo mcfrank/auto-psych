@@ -7,7 +7,8 @@
 # (src.rsa_open.loop.slurm.StepConfig.from_env). Needs CELL, CELL_DIR, WORK_ROOT, REPO, SLURM_DIR,
 # VENV_PY, HARNESS_REPO, JAX_COMPILATION_CACHE_DIR and a Slurm job (its name makes steps
 # singletons). A step a person submitted (RSA_STEP_NEW_LAUNCH=1, set by the job script when it found no
-# STEP_SETTINGS) starts a launch: one experiment, at most 40 steps (src.rsa_open.loop.slurm), and it
+# STEP_SETTINGS) starts a launch: one experiment (LAUNCH_EXPERIMENTS=all: to the chain's end), at most
+# 40 steps an experiment (src.rsa_open.loop.slurm), and it
 # refuses to start while another step of the chain is queued or running. Steps run on STEP_PARTITION (mcfrank) with STEP_CPUS / STEP_MEM / STEP_TIME; fits on
 # STEP_FIT_PARTITION (mcfrank,owners) with STEP_FIT_CONSTRAINT (CPU_GEN:SIE; "none" for none).
 
@@ -25,12 +26,23 @@ rsa_step_mode() {
       exit 1
     fi
   fi
-  STEP_PARTITION="${STEP_PARTITION:-mcfrank}" STEP_TIME="${STEP_TIME:-2-00:00:00}"
-  STEP_CPUS="${STEP_CPUS:-8}" STEP_MEM="${STEP_MEM:-32G}"
+  # STEP_FITS=local (the default, PI 2026-11-09): the step runs its fits itself, so it needs their
+  # cores and memory (8 fits of about 6 GB beside the step's 24: src.rsa_open.loop.slurm.local_workers)
+  # and runs an experiment, or with LAUNCH_EXPERIMENTS=all the whole chain, in one job, continuing
+  # only when its time runs short. STEP_FITS=array submits them as arrays, as built on 11-05.
+  STEP_FITS="${STEP_FITS:-local}" LAUNCH_EXPERIMENTS="${LAUNCH_EXPERIMENTS:-1}"
+  case "$STEP_FITS" in local|array) ;; *) echo "FATAL: STEP_FITS is local or array, not $STEP_FITS" >&2; exit 1 ;; esac
+  case "$LAUNCH_EXPERIMENTS" in 1|all) ;; *) echo "FATAL: LAUNCH_EXPERIMENTS is 1 or all, not $LAUNCH_EXPERIMENTS" >&2; exit 1 ;; esac
+  if [[ "$STEP_FITS" == local ]]; then
+    STEP_TIME="${STEP_TIME:-4-00:00:00}" STEP_CPUS="${STEP_CPUS:-12}" STEP_MEM="${STEP_MEM:-72G}"
+  else
+    STEP_TIME="${STEP_TIME:-2-00:00:00}" STEP_CPUS="${STEP_CPUS:-8}" STEP_MEM="${STEP_MEM:-32G}"
+  fi
+  STEP_PARTITION="${STEP_PARTITION:-mcfrank}"
   STEP_FIT_PARTITION="${STEP_FIT_PARTITION:-mcfrank,owners}" STEP_FIT_CONSTRAINT="${STEP_FIT_CONSTRAINT:-CPU_GEN:SIE}"
   CONT="$CELL_DIR/continuation.sh"
-  local keep=("$@" WORK_ROOT REPO STEP_MODE STEP_PARTITION STEP_TIME STEP_CPUS STEP_MEM STEP_FIT_PARTITION
-              STEP_FIT_CONSTRAINT MAIL_TYPE MAIL_USER)
+  local keep=("$@" WORK_ROOT REPO STEP_MODE STEP_FITS LAUNCH_EXPERIMENTS STEP_PARTITION STEP_TIME STEP_CPUS STEP_MEM
+              STEP_FIT_PARTITION STEP_FIT_CONSTRAINT MAIL_TYPE MAIL_USER)
   local settings="$CELL_DIR/step_settings.sh" k
   [[ "$settings" != *,* ]] || { echo "FATAL: $settings contains a comma; sbatch --export cannot carry it" >&2; exit 1; }
   {
@@ -62,6 +74,7 @@ rsa_step_mode() {
   } > "$CONT.tmp" && chmod 700 "$CONT.tmp" && mv "$CONT.tmp" "$CONT"
   # For the chain's process only; never a sandbox's (agents get an allowlisted environment).
   STEP_ENV=(RSA_OPEN_STEP_MODE=1 RSA_OPEN_FIT_BACKEND=slurm RSA_OPEN_NEW_LAUNCH="${RSA_STEP_NEW_LAUNCH:-0}"
+            RSA_OPEN_STEP_FITS="$STEP_FITS" RSA_OPEN_LAUNCH_EXPERIMENTS="$LAUNCH_EXPERIMENTS"
             RSA_OPEN_CELL_DIR="$CELL_DIR"
             RSA_OPEN_CHAIN_JOB="$SLURM_JOB_NAME" RSA_OPEN_CONTINUATION="$CONT"
             RSA_OPEN_FIT_SCRIPT="$SLURM_DIR/fit_array.sbatch" RSA_OPEN_LOGS="$WORK_ROOT/logs"

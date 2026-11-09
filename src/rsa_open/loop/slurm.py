@@ -39,6 +39,9 @@ from src.rsa_open.loop.fit_array import FitsPending, write_after_manifest, write
 MAX_STEPS = 40
 """Steps per launch (one experiment) before a person is asked: the Sherlock rehearsal took 2-3 a
 round and 3 more for the starting fits and the end, about 18 for 5 rounds (review V3 §11)."""
+LAUNCH_EXPERIMENTS_ENV = "RSA_OPEN_LAUNCH_EXPERIMENTS"
+"""``1`` (a launch runs one experiment and stops with a mail; the default) or ``all`` (it runs to the
+chain's end, PI 2026-11-09), with `MAX_STEPS` per experiment."""
 MAX_QUEUED = 1500
 """The user's queued and running jobs (array tasks counted) above which no step submits more."""
 THROTTLE = 24
@@ -119,11 +122,15 @@ def launch_path(cfg: StepConfig) -> Path:
     return cfg.cell_dir / "launch.json"
 
 
-def begin_launch(cfg: StepConfig, experiment: int, max_steps: Optional[int] = None) -> dict:
-    """Record a person's launch: the experiment it runs and the steps before it (its budget counts from here)."""
-    record = {"experiment": int(experiment), "steps_before": len(_steps(cfg)),
-              "max_steps": int(max_steps if max_steps is not None else cfg.max_steps), "at": time.time(),
-              "job": os.environ.get("SLURM_JOB_ID")}
+def begin_launch(cfg: StepConfig, experiment: int, max_steps: Optional[int] = None,
+                 last_experiment: Optional[int] = None) -> dict:
+    """Record a person's launch: the experiment it starts at, the last it runs (``last_experiment``;
+    the same unless the launch runs on, `LAUNCH_EXPERIMENTS_ENV`), and the steps before it (its budget
+    counts from here)."""
+    last = int(experiment if last_experiment is None else last_experiment)
+    record = {"experiment": int(experiment), "last_experiment": last, "steps_before": len(_steps(cfg)),
+              "max_steps": int(max_steps if max_steps is not None else cfg.max_steps * (last - int(experiment) + 1)),
+              "at": time.time(), "job": os.environ.get("SLURM_JOB_ID")}
     tmp = launch_path(cfg).with_suffix(".json.tmp")
     tmp.write_text(json.dumps(record, indent=1))
     os.replace(tmp, launch_path(cfg))
@@ -138,11 +145,12 @@ def current_launch(cfg: StepConfig) -> Optional[dict]:
 
 
 def _steps(cfg: StepConfig) -> List[dict]:
-    """The chain's steps that submitted a continuation (an early array alone isn't a step)."""
+    """The chain's steps: those that submitted a continuation, and those that ran their fits and went on
+    in the same job (`LocalStepper`). Early fits alone aren't a step."""
     if not cfg.steps_log.exists():
         return []
     entries = [json.loads(line) for line in cfg.steps_log.read_text().splitlines() if line.strip()]
-    return [e for e in entries if e.get("continuation")]
+    return [e for e in entries if e.get("continuation") or (e.get("local") and not e.get("early"))]
 
 
 def queued_jobs(runner: Runner) -> int:
@@ -330,6 +338,162 @@ class Stepper:
         record = submit_step(self.cfg, FitsPending(new, later) if new or later else None, runner=self.runner,
                              reason=reason, depend_on=early)
         raise StepYield(record)
+
+
+# ---------- fits in the step's own job (PI 2026-11-09) ----------
+#
+# The stepped rehearsal (review V3 §16) found 316 of 325 fit tasks under rule 10's 10-minute line (SRCC:
+# aggregate short tasks so a job's work lasts at least 10 minutes, ideally 30), and the steps' CPUs
+# 84-93% idle. So a step can run its fits itself: the same task lists and result files as the arrays
+# (`fit_array.run_task`, each task its own clean process on a core of the job), several at once, and
+# then the chain continues in the same job from disk, as a continuation step would. A launch then
+# submits no job except a continuation when its time runs short (OutOfJobTime).
+
+STEP_FITS_ENV = "RSA_OPEN_STEP_FITS"
+"""``local`` (the step runs its fits; the default) or ``array`` (it submits them, as built on 11-05)."""
+LOCAL_RESERVE_GB = 24.0
+"""The step's own memory, kept free of fits: its peak with agents was 19.2 GB (review V3 §16)."""
+LOCAL_FIT_GB = 6.0
+"""A fit's memory: the rehearsal's largest was 4.3 GB, a big theory on chain 1's experiment-3 corpus 5.3 GB (§15)."""
+FIT_ENV_KEEP = ("PATH", "HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "TMPDIR", "L_SCRATCH", "LD_LIBRARY_PATH")
+"""What a local fit task keeps of the step's environment (as fit_array.sbatch's --export=NONE: never
+``.secrets`` or the agents' settings, since a fit runs agent-written code)."""
+
+
+class StepContinue(Exception):
+    """The step ran its fits itself; the chain continues in this job, from disk."""
+
+    def __init__(self, record: Mapping[str, object]) -> None:
+        super().__init__(record.get("reason", ""))
+        self.record = record
+
+
+def job_memory_gb() -> float:
+    """The job's memory (Slurm's ``SLURM_MEM_PER_NODE``, in MB), else the machine's."""
+    mb = os.environ.get("SLURM_MEM_PER_NODE")
+    if mb:
+        return float(mb) / 1024
+    return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / 1024 ** 3
+
+
+def local_workers(cores: Optional[int] = None, memory_gb: Optional[float] = None) -> int:
+    """Fits at once: a core each, the step keeping one, within the job's memory less the step's own."""
+    from src.rsa.cpus import job_cpus
+
+    cores = len(job_cpus()) if cores is None else cores
+    memory_gb = job_memory_gb() if memory_gb is None else memory_gb
+    return max(1, min(cores - 1, int((memory_gb - LOCAL_RESERVE_GB) // LOCAL_FIT_GB)))
+
+
+def run_local_task(manifest: Path, index: int) -> int:
+    """One fit task in its own process, as `fit_array.sbatch` runs it, on a core of the job's own."""
+    import tempfile
+
+    from src.rsa.cpus import one_core
+
+    env = {k: os.environ[k] for k in FIT_ENV_KEEP if k in os.environ}
+    env.update(XLA_FLAGS="--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1", OPENBLAS_NUM_THREADS="1",
+               JAX_COMPILATION_CACHE_DIR=os.environ["JAX_COMPILATION_CACHE_DIR"])
+    with tempfile.TemporaryDirectory(prefix="rsa_open_fit_") as cache:
+        env.update(XDG_CACHE_HOME=cache, PYTENSOR_FLAGS=f"base_compiledir={cache}/pytensor")
+        with one_core():
+            done = subprocess.run([os.environ["VENV_PY"], "-m", "src.rsa_open.loop.fit_array", "--manifest", str(manifest),
+                                   "--index", str(index)], env=env, cwd=os.environ["HARNESS_REPO"],
+                                  capture_output=True, text=True)
+    if done.returncode != 0:
+        print(f"[local fits] {manifest.name} task {index} exited {done.returncode}: {done.stderr[-2000:]}", flush=True)
+    return done.returncode
+
+
+class LocalStepper(Stepper):
+    """This step's fits, run in its own job (`STEP_FITS_ENV` = ``local``): `submit_early` starts them,
+    `yield_step` waits for every one and raises `StepContinue`. Folds to fit after their full fits
+    (`FoldAfter`) start once every fit started before them has ended, as their arrays did (afterany)."""
+
+    def __init__(self, cfg: StepConfig, *, workers: Optional[int] = None,
+                 launcher: Callable[[Path, int], int] = run_local_task) -> None:
+        from concurrent.futures import ThreadPoolExecutor
+
+        super().__init__(cfg)
+        self.workers = local_workers() if workers is None else workers
+        self.launcher = launcher
+        self._pool = ThreadPoolExecutor(max_workers=self.workers, thread_name_prefix="fit")
+        self._futures: Dict[str, object] = {}
+        self._started = time.time()
+
+    def _start(self, pending: FitsPending, stamp: str) -> int:
+        import threading
+        from concurrent.futures import Future, wait
+
+        new = [p for p in pending.pending if self._key(p) not in self._futures]
+        later = [a for a in pending.after if a.key not in self._futures]
+        by_size: Dict[int, list] = defaultdict(list)
+        for p in new:
+            by_size[p.mem_gb].append(p)
+        for gb, items in sorted(by_size.items()):
+            m = write_manifest(self.cfg.arrays_dir / f"fits_{stamp}_{gb}g.json", items)
+            for i, p in enumerate(items):
+                self._futures[self._key(p)] = self._pool.submit(self.launcher, m, i)
+        if later:
+            before = list(self._futures.values())
+            by_size_after: Dict[int, list] = defaultdict(list)
+            for a in later:
+                by_size_after[a.mem_gb].append(a)
+            for gb, items in sorted(by_size_after.items()):
+                m = write_after_manifest(self.cfg.arrays_dir / f"after_{stamp}_{gb}g.json", items)
+                for i, a in enumerate(items):
+                    placeholder: Future = Future()
+
+                    def run_after(m=m, i=i, placeholder=placeholder):
+                        wait(before)  # their full fits first; never on a pool thread, so it cannot starve the pool
+                        try:
+                            placeholder.set_result(self._pool.submit(self.launcher, m, i).result())
+                        except BaseException as exc:  # noqa: BLE001 - surfaced when the step waits
+                            placeholder.set_exception(exc)
+
+                    threading.Thread(target=run_after, daemon=True, name="fold-after").start()
+                    self._futures[a.key] = placeholder
+        return len(new) + len(later)
+
+    def _check_budget(self) -> int:
+        """As `_check`, without the queue: refuses (STOP written) when the cell is stopped or this launch's
+        steps are spent. Returns the chain's steps so far."""
+        cfg = self.cfg
+        if (cfg.cell_dir / "STOP").exists():
+            raise StepRefused(f"{cfg.cell_dir.name} is stopped")
+        done = _steps(cfg)
+        launch = current_launch(cfg)
+        used = len(done) - (launch["steps_before"] if launch else 0)
+        cap = launch["max_steps"] if launch else cfg.max_steps
+        if used >= cap:
+            why = f"step budget spent: {used} steps in this launch (at most {cap}); a person looks"
+            write_stop(cfg.cell_dir, why)
+            raise StepRefused(why)
+        return len(done)
+
+    def submit_early(self, pending: FitsPending, reason: str = "") -> None:
+        n = self._start(pending, time.strftime("%Y%m%dT%H%M%S") + "_local_early")
+        if n:
+            _log(self.cfg, {"at": time.time(), "reason": reason, "local": True, "early": True, "tasks": n})
+
+    def yield_step(self, pending: FitsPending, reason: str = "") -> None:
+        """Run what isn't running yet, wait for all of this step's fits, and continue in this job."""
+        from concurrent.futures import wait
+
+        done = self._check_budget()
+        started = time.time()
+        n = self._start(pending, time.strftime("%Y%m%dT%H%M%S") + f"_local_{done + 1}")
+        futures = list(self._futures.values())
+        wait(futures)
+        codes = [f.result() for f in futures]  # a launcher's own exception (not a fit's failure) raises here
+        record = {"at": time.time(), "reason": reason, "local": True, "workers": self.workers, "tasks": len(futures),
+                  "new_tasks": n, "failed_tasks": sum(1 for c in codes if c != 0), "wait_sec": time.time() - started}
+        _log(self.cfg, record)
+        self._futures.clear()
+        raise StepContinue(record)
+
+    def close(self) -> None:
+        self._pool.shutdown(wait=False, cancel_futures=True)
 
 
 _ACTIVE: Optional[Stepper] = None
