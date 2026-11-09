@@ -4,6 +4,8 @@ Written by Claude Opus 5.5 (the Sherlock session) from chain 1's round 4-5 logs,
 --test-only` and the test jobs of 2026-11-03 (§10); not reviewed by a person. I've read only v3's summary of SRCC's reply, not
 the reply itself.
 
+**Update 2026-11-09 (§17).** Steps that run their own fits (`STEP_FITS=local`, 295be91b) pass every test, including both slow equivalence tests. Two no-agent replays each ran an experiment in one job (27 and 50 min; §11's array smoke took about 6.5 h), with no array, no failed fit and at most 19.5 GB of 72. Untested: real agents beside 8 fits, and a fit larger than its 6 GB share, since nothing caps a local fit's memory (§17).
+
 **Update 2026-11-09 (§16).** The stepped rehearsal ran both arms through experiment 1 cleanly: closed 7.7 h, open 14.3 h, 325 fit tasks with no failure, and no hand-set numbers in any of 36 theories (32 of 35 in chain 1's experiment 1). Agents now take most of a round. 316 of 325 fit tasks ran under rule 10's 10-minute line, so the fits should be aggregated or run inside the step job, for rule 10 rather than speed. A 3-experiment chain projects to about 27-31 h (closed) and 48-53 h (open) (§16).
 
 **Update 2026-11-08 (§15).** On ef7e842d the one-core deadlock is gone: a big theory's fit finishes pinned to one core in 15.8 min and 5.3 GB, with 9-10 threads. Both slow tests that failed in §14 pass, though the joint-fit test's bar was also loosened. The only slow-test failure is a test that cannot import `pytest` as I supplied it; its fit passes when run directly. The stepped rehearsal can launch (§15).
@@ -1225,3 +1227,81 @@ these numbers, and it may reflect how other accounts' shares moved. It's worth a
 - The designer session wasn't timed separately, and no per-theory fit time is reported, only the distributions above.
 - Monitoring: the handoff says no polling. The PI asked me to monitor, so a laptop script checked every 5 minutes, when logged in.
 - Experiment 2 wasn't launched, as it's the PI's choice after this report.
+
+## 17. Fits in the step's own job (`HANDOFF_centralized_fits.md`, 2026-11-09, code at 295be91b)
+
+Written by Claude Opus 5.5 (the Sherlock session) from the jobs' logs, `sacct`, `seff` and the run trees; not reviewed by a
+person. No agent ran: every job here was a test or a no-agent replay, which this session submitted.
+
+**Bottom line: `STEP_FITS=local` works.** The tests pass, and two no-agent replays each ran an experiment to `DONE` in one
+job, with no array and no continuation job. The handoff's smoke no longer fits a single candidate, because its replayed theories
+are now refused for hand-set numbers. So I also ran a replay whose theories pass the gate: 2 rounds of 2, five continuations in
+the same job, 50 min. Untested: real agents beside 8 local fits, and a fit larger than its share of the step's memory.
+
+### Tests (handoff §1; job 51674390, 12 CPUs, 32 GB, a fresh clone at 295be91b)
+
+- **Fast** (`tests/test_rsa_open*.py`, not slow): 454 passed, 12 skipped, in 20 min. This includes the one-core test, which
+  failed on Sherlock in §15 and now passes.
+- **Slow** (`tests/test_rsa_open_step_equivalence.py`): **both passed**, in 1 h 12 min, with MaxRSS 14.3 GB. The new test
+  (steps run their own fits) took 29.7 min, and the array-mode test 42.2 min.
+
+### Replay 1: the handoff's smoke (job 51674394)
+
+Same input and shape as §11's smoke: chain 1's experiment 2 corpus and starting set, one starting theory plus the chance model,
+1 round of 2. Steps of 12 CPUs, 72 GB on `mcfrank`.
+
+| check | result |
+|---|---|
+| One job, to the end | Yes: `DONE`, exit 0, **27 min** wall (queue wait about 2 min). `sacct --name` shows no array and no continuation job |
+| `steps.jsonl` | 1 record, `"local": true`, `workers` 8, 12 tasks (2 starting fits and their 10 folds), `wait_sec` 1,379 |
+| Failed fit tasks | None |
+| MaxRSS | 19.5 GB of 72 |
+| CPU efficiency (`seff`) | 30% (1 h 38 min of CPU over 5 h 28 min allocated) |
+| Threads, 6 min in, 2 fits running | Chain's process: 21 threads, pinned to core 0. Each `fit_array` task: 1 thread, pinned to its own core (1, 2). Each task's sampler child: 9 threads at about 98% CPU, so one core each |
+| Hangs | None in the log |
+
+**Against §11's array smoke (about 6.5 h): not like for like.** The 4 replayed candidates and their repairs were all refused
+by the hand-set-number gate (33 and 47 numbers), which didn't exist on 11-05. So round 1 fitted nothing, and the run tested
+only the starting fits, one continuation, and the end-of-experiment prune and export.
+
+### Replay 2: a source whose theories pass the gate (job 51676795; my addition, not in the handoff)
+
+The same replay on the stepped rehearsal's closed arm, experiment 1 (§16): its corpus and starting set, the same one starting
+theory, an empty inherited ledger, **2 rounds of 2**. The source's round 1 candidates 1-2 were admitted there.
+
+| step record | tasks | wait |
+|---|---|---|
+| starting fits and folds | 12 | 11.5 min |
+| round 1: first candidates (early) | 2 | 5.3 min |
+| round 1: admitted theories' folds (early) | 10 | 8.4 min |
+| round 2: first candidates (early) | 2 | 4.9 min |
+| round 2: admitted theories' folds (early) | 10 | 6.5 min |
+
+- One job, `DONE` in **50 min**, five continuations in the job, all `"local": true`, no array, no failed task, no error in the log.
+- MaxRSS 15.6 GB of 72; CPU efficiency 24%.
+- 6 replayed sessions (2 critiques, 4 candidates), **none twice**. All 4 candidates were admitted, as in the source. The
+  leader changed in both rounds, and the end prune removed one model.
+- This is a mechanics check: there's no straight-through run of the same input to compare against. The slow test makes that
+  comparison on a synthetic loop.
+
+### For the driver
+
+1. **A local fit's memory isn't capped.** The arrays gave each task its own limit (the 18 GB tier, retried at 36 GB); locally,
+   the tier is written to the manifest, but every fit shares the step's 72 GB with the chain and its agents. `local_workers`
+   budgets 6 GB a fit. In the replays fits were small, and the last measured big theory was 5.3 GB (§15). But chain 1's
+   experiment 3 had folds at 28-32 GB (§11, before the faster likelihood). If one of those returns, the step's cgroup reaches
+   its limit, and Slurm's OOM killer picks a process. If it picks the chain or an agent rather than the fit, the step dies.
+   Not tested. A per-fit `RLIMIT_AS` or a memory-aware worker count would close it.
+2. **The no-agent smoke source has gone stale.** `HANDOFF_stepmode.md` §4.2's smoke (chain 1's experiment 2) no longer fits a
+   candidate, because the gate refuses all its theories. The stepped rehearsal's experiment 1 (as in replay 2) is a better
+   standing source.
+3. **Cores sit idle.** CPU efficiency was 24-30% with no agents. With real agents, the 12 CPUs wait through every session,
+   which took most of a round in §16. That's the price of rule 10 compliance, but it's worth knowing when sizing the pair.
+4. **Threads at 8 fits weren't measured.** I sampled with 2 fits running. At 8, the job should hold about 21 + 8 × 11 ≈ 110
+   threads on 12 cores: each one-core process stays within what §15 measured, but I haven't seen SRCC's checker's view of a
+   job with that many.
+
+### Housekeeping
+
+Clone, inputs and both run trees are in `$SCRATCH/auto-psych/centralfits/` (nothing brought back; no trial-level data or
+ground-truth names here). It can go once nobody needs the replays.
