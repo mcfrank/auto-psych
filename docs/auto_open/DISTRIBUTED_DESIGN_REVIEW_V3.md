@@ -4,6 +4,8 @@ Written by Claude Opus 5.5 (the Sherlock session) from chain 1's round 4-5 logs,
 --test-only` and the test jobs of 2026-11-03 (§10); not reviewed by a person. I've read only v3's summary of SRCC's reply, not
 the reply itself.
 
+**Update 2026-11-09 (§16).** The stepped rehearsal ran both arms through experiment 1 cleanly: closed 7.7 h, open 14.3 h, 325 fit tasks with no failure, and no hand-set numbers in any of 36 theories (32 of 35 in chain 1's experiment 1). Agents now take most of a round. 316 of 325 fit tasks ran under rule 10's 10-minute line, so the fits should be aggregated or run inside the step job, for rule 10 rather than speed. A 3-experiment chain projects to about 27-31 h (closed) and 48-53 h (open) (§16).
+
 **Update 2026-11-08 (§15).** On ef7e842d the one-core deadlock is gone: a big theory's fit finishes pinned to one core in 15.8 min and 5.3 GB, with 9-10 threads. Both slow tests that failed in §14 pass, though the joint-fit test's bar was also loosened. The only slow-test failure is a test that cannot import `pytest` as I supplied it; its fit passes when run directly. The stepped rehearsal can launch (§15).
 
 **Update 2026-11-08 (§14).** The callback sampler and one theory evaluation per display shape (a1853a4c) bring a big theory's fit on experiment 3's corpus to about 14 min and 10-11 GB (chain 0's code: 2.5 h, 35-37 GB). But the callback deadlocks on one core, which is how the loop runs every fit, and two slow tests that passed in round 1 now fail (§14).
@@ -922,3 +924,304 @@ Threads were sampled while each fit ran.
 - The handoff asked for slow tests on 2 CPUs and 32 GB. The memory limit gave the job 5 allocated CPUs; I pinned it to 2.
 - First thread samples were wrong (`pgrep -f | head -1` found `/usr/bin/time`), so jobs 51577250 and 51577337 were
   cancelled and rerun as the two above.
+
+## 16. The stepped rehearsal (`HANDOFF_stepped_rehearsal.md` §3, 2026-11-08/09, code at 16860eb7)
+
+Written by Claude Opus 5.5 (the Sherlock session) from Slurm's records and the run tree; not reviewed by a person. Real
+agents, simulated participants, no Prolific. One chain per arm, one experiment each, 3 rounds of 6 theorists, so everything
+below rests on one run per arm. The PI launched both by hand (jobs 51590614 and 51590619). Work root
+`$SCRATCH/auto-psych/rsa_open_stepped_rehearsal_2`. "Closed" is `ARM=fixed` in the code.
+
+**Bottom line: both arms finished experiment 1 cleanly, the closed arm in 7.7 h and the open arm in 14.3 h, and the hand-set
+numbers are gone: 0 of 36 theories this run, against 32 of 35 in chain 1's experiment 1.** Nothing hung, ran out of memory or
+hit a time limit. Three things need a decision:
+
+1. **The agents now take most of a round, not the fits.** Time with no step running, waiting for fits, is 11-27% of a round.
+2. **The fits are now too short for their own jobs.** 316 of 325 fit tasks ran under rule 10's 10-minute line, and 324 under
+   SRCC's 20 minutes. That is the case for running them inside the step job. Speed isn't: I estimate about the same wall time.
+3. **A 3-experiment chain projects to about 27-31 h (closed) and 48-53 h (open)**, before any time between launches or
+   real collection. The projection is rough.
+
+### Time
+
+| | closed | open |
+|---|---|---|
+| Submitted to stop mail | 15:15 to 22:58, **7 h 43 min** | 15:15 to 05:35, **14 h 20 min** |
+| Step jobs | 9 | 9 |
+| Time inside step jobs | 5.5 h | 11.5 h |
+| Time between steps (fits running or queued) | 2.2 h, 29% | 2.8 h, 19% |
+| Agent minutes, all theorist and critique sessions added up | 982 | 1,128, plus the designer (not timed) |
+
+Each step's queue wait is from when its dependency cleared. Steps never waited long: 2.5 min at most, except one of 12.2.
+
+| closed step | start | run | wait | gap before | peak | what it did |
+|---|---|---|---|---|---|---|
+| 51590619 | 15:18 | 0.8 min | 2.5 | | 0.5 GB | submits 15 design fits on the prior corpus |
+| 51590878 | 15:26 | 27.5 | 0.6 | 7.6 | 5.4 | design, pilot, collection; submits starting fits and their folds |
+| 51593079 | 16:19 | 67.2 | 0.2 | 25.8 | 15.0 | scores the start; round 1's critique and theorists; first admission fits |
+| 51600361 | 17:37 | 30.5 | 0.4 | 10.6 | 9.1 | admits; a repair session; folds |
+| 51604247 | 18:28 | 96.5 | 0.6 | 20.7 | 15.0 | scores round 1; round 2's critique and theorists; admission fits |
+| 51614959 | 20:22 | 11.1 | 12.2 | 16.9 | 4.4 | admits; folds |
+| 51617440 | 20:55 | 80.4 | 1.1 | 22.3 | 14.1 | scores round 2; round 3's critique and theorists; admission fits |
+| 51627641 | 22:27 | 9.9 | 0.5 | 11.0 | 4.2 | admits; folds |
+| 51630867 | 22:54 | 4.4 | 0.7 | 17.0 | 4.1 | scores round 3, prunes, exports, stops (exit 15) |
+
+| open step | start | run | wait | gap before | peak | what it did |
+|---|---|---|---|---|---|---|
+| 51590614 | 15:17 | 1.8 min | 1.5 | | 1.6 GB | submits 15 design fits on the prior corpus |
+| 51590879 | 15:26 | 112.5 | 0.6 | 7.6 | 11.3 | designer, pilot, collection; submits starting fits and their folds |
+| 51599865 | 18:27 | 148.8 | 1.2 | 68.9 | 13.3 | scores the start; round 1's critique, theorists and retries; admission fits |
+| 51620155 | 21:05 | 9.7 | 0.2 | 8.3 | 3.6 | admits; folds |
+| 51621923 | 21:33 | 154.2 | 2.1 | 18.9 | 14.6 | scores round 1; round 2's critique, theorists and a retry; admission fits |
+| 51639060 | 00:22 | 14.3 | 1.9 | 14.3 | 4.1 | admits; folds |
+| 51641452 | 00:53 | 231.9 | 0.6 | 17.2 | 19.2 | scores round 2; round 3's critique, theorists and a retry; admission fits |
+| 51657711 | 04:54 | 11.8 | 0.6 | 9.2 | 3.9 | admits; folds |
+| 51658802 | 05:29 | 6.4 | 1.8 | 23.1 | 5.1 | scores round 3, prunes, exports, stops (exit 15) |
+
+Per round, in minutes. A round runs from the step that starts it to the step that starts the next, or to the stop.
+
+| | round wall | agents' span, first start to last end | agent minutes added up | no step running | share |
+|---|---|---|---|---|---|
+| closed, round 1 | 129 | 103 | 260 | 31 | 24% |
+| closed, round 2 | 147 | 89 | 370 | 39 | 27% |
+| closed, round 3 | 123 | 75 | 352 | 28 | 23% |
+| open, round 1 | 186 | 141 | 399 | 27 | 15% |
+| open, round 2 | 200 | 145 | 361 | 32 | 16% |
+| open, round 3 | 282 | 222 | 368 | 32 | 11% |
+
+Before round 1 the closed arm took 64 min and the open arm 191 min. Most of the open arm's extra time is its 112.5-min design
+step, against 27.5 min, which I attribute to the designer session without having timed it, and a 68.9-min gap, mostly one
+starting fit that took 37 min (below).
+
+**Why the rounds are long:** a session has a 60-minute limit, and a critique, the theorists and any retry or repair run one
+after another. 21 of 43 theorist sessions used at least 55 minutes. The open arm's round 3 took 222 min because its critique
+took 58.8 min and a retry followed the theorists. Critiques took 3.0-18.4 min in the closed arm and 19.7-58.8 in the open arm.
+
+### Fits
+
+Every task asked for 18 GB, the lowest tier, and none moved up.
+
+| | tasks | run time, median / 90th percentile / longest | queue wait, median / longest | MaxRSS, median / largest | under 10 min | under 20 min |
+|---|---|---|---|---|---|---|
+| closed: design, prior corpus | 15 | 1.5 / 2.5 / 3.6 min | 2.3 / 3.1 | 1.6 / 2.1 GB | | 15 |
+| closed: starting and chance model | 7 | 3.4 / 10.8 / 10.8 | 4.8 / 6.2 | 3.4 / 3.8 | | 7 |
+| closed: admission | 19 | 4.7 / 7.1 / 8.4 | 2.6 / 7.4 | 3.6 / 3.9 | | 19 |
+| closed: fold | 125 | 3.5 / 5.8 / 9.1 | 2.8 / 12.3 | 2.6 / 3.7 | | 125 |
+| **closed, all** | **166** | **3.5 / 5.8 / 10.8** | | | **165** | **166** |
+| open: design, prior corpus | 15 | 1.7 / 2.9 / 4.5 | 2.2 / 2.2 | 1.8 / 2.6 | | 15 |
+| open: starting and chance model | 7 | 5.5 / 37.2 / 37.2 | 2.5 / 7.0 | 3.5 / 3.9 | | 6 |
+| open: admission | 17 | 7.0 / 10.5 / 11.6 | 3.7 / 5.2 | 3.8 / 4.3 | | 17 |
+| open: fold | 120 | 5.7 / 8.2 / 10.6 | 5.3 / 13.6 | 2.8 / 3.8 | | 120 |
+| **open, all** | **159** | **5.5 / 8.4 / 37.2** | | | **151** | **158** |
+
+- **No failures:** all 325 tasks completed and logged `ok`. No hang, no out-of-memory kill, no time limit reached.
+- **Convergence:** 324 of 325 fits converged at the first try, and there were no near-miss refits (each arm's cache holds
+  exactly one fit record per task, which is how I infer that). The exception is a starting theory, `isolated_graded_costly_l3`,
+  on the open arm's data: 13 divergent transitions of 4,000, R-hat 1.53, bulk ESS 7, 37.2 min. It was too far off for a refit.
+  The same theory on the closed arm's data took about 10 min and converged.
+- **Open-arm fits ran about 1.5 times longer than closed-arm fits** (admission and fold medians). I don't know why; the data differ.
+- **18 GB is far more than these fits used:** the largest peak was 4.3 GB, and §15's biggest fit on experiment 3's corpus was
+  5.3 GB. Because the lab node caps memory per CPU, the 18 GB also allocates 3 CPUs for a fit that uses one.
+- **Partitions and preemption:** closed 94 tasks on `mcfrank` and 72 on `owners`; open 73 and 86. Attempts on `owners` were preempted
+  or requeued 11 times (closed) and 5 times (open), and each reran. They cost little, 5.8 and 11.7 min of run time, because a
+  preempted attempt was killed early. The table counts each task's final attempt, so a rerun's wait may include the lost attempt.
+
+### The decision this informs
+
+The handoff asks whether the step job should run its own fits if most tasks are short and queue waits are a large share of a
+round. **The first holds strongly. The second doesn't.**
+
+- **Short:** 316 of 325 tasks ran under 10 minutes. Rule 10 says to aggregate short tasks "so that the work inside a job lasts at
+  least 10 minutes, ideally 30". The arrays were designed when fits took 40-80 min; the faster fits changed that.
+- **Queue waits are not large:** medians are 2-5 min and the longest 13.6 min. All the time with no
+  step running, which includes the fits themselves, is 11-27% of a round.
+- **Same wall time, by my estimate:** a round's admission fits and folds add up to about 192 min (closed) and 273 min (open) of
+  one-core fitting, or about 24 and 34 min on the step's 8 cores, against 33 and 30 min now with no step running. The steps' 8 CPUs
+  are mostly idle: they used 16% (closed) and 7% (open) of them.
+
+**So the case for fits inside the step job is rule 10 and the number of jobs (up to 325 fewer here), not speed.** Not tested. It would
+need more memory: 8 fits at 4-6 GB beside a step that peaks at 19 GB is about 50-70 GB. Bundling several fits into each array
+task is the other way to meet rule 10 and leaves the arrays in place. A lower first tier would stop the extra CPU allocation
+either way. I would decide this before the registered pair, because the pair would otherwise submit several hundred more short
+tasks per chain. The driver's and PI's call.
+
+**The larger lever on wall time is the 60-minute session limit**, which half the sessions nearly used. I have no measure of what
+a shorter limit would cost in theory quality, so I don't recommend a number.
+
+### Projected wall time of a 3-experiment chain
+
+| | experiment 1 (measured) | experiment 2 | experiment 3 | total |
+|---|---|---|---|---|
+| closed | 7.7 h | 9.1-10.3 | 10.6-13.0 | **27-31 h** |
+| open | 14.3 h | 16.1-17.6 | 17.9-21.0 | **48-53 h** |
+
+It rests on:
+
+- Agent time staying as measured. One run per arm, and critique and retry times varied a lot.
+- All of the growth being in the time between steps, which I scale by 2.3-3.4 by experiment 3, with half that growth by experiment 2. That
+  range is §15's 15.8 min for a big theory on experiment 3's corpus over this run's admission medians (7.0 and 4.7 min). It's one
+  theory, and I measured no folds on the larger corpus.
+- The lab node staying about as available as it was.
+- Nothing for the time between hand launches, for real collection (studies filled in 79 and 120 min, `DISTRIBUTED_DESIGN.md`) or
+  for review of a paradigm. Those are additional.
+
+The registration's feasibility gate has no wall-time threshold yet, so I can't say whether this passes.
+
+### Failures and messages
+
+- **Stops:** one per arm, both the expected end of a launch (exit 15, so Slurm reports `FAILED`): 51630867 and 51658802. No other
+  `STOP`. No step died. No `FATAL` or traceback in any log.
+- **No session ran twice:** every session's log holds one session id.
+- **Messages:** the two `FAILED` summaries from Slurm, as expected. A mail search on the morning of 11-09 finds nothing from SRCC.
+- **No usage-limit waits.**
+- **Empty sessions (no `candidate.py`), which the retry handled:** 1 closed, 6 open, of 43.
+  - 3 ended on the model's output length limit (`length`), after 17-37 min, all open.
+  - 3 ran into the 60-minute limit (58.8-59.6 min), 1 closed and 2 open. I infer this from their ending mid-work.
+  - 1 stopped by itself after 0.8 min, open.
+  - Closed's 1 retry filled its slot, and 4 of open's 5 did. One slot stayed empty (open, round 1, whose retry also ran into the
+    limit), so that round admitted 5 theories.
+
+**For the driver:**
+
+1. The `STOP` file's hint, `CLEAR_STOP=1 STEP_MODE=1 (scripts/rsa/live/open_launch.sh)`, still names the live launcher (§11), and
+   `open_rehearsal.sbatch` doesn't read `CLEAR_STOP`: it exits 0 while `STOP` exists. So the handoff's command for experiment 2
+   would do nothing here. Moving `STOP` aside and resubmitting should work; I've read that in the code and not run it.
+2. The log line `admission limit 30 min: 2 x the median of the starting fits` misleads. Twice the median is well under 30 min in
+   both arms; 30 min is the floor (`fit_time_limit_sec`). No admission fit came near it (longest 11.6 min).
+3. `open_rehearsal.sbatch`'s header says the theorists are Gemini 3.8 Flash. The usage records say `google/gemini-4-argon` for
+   every theorist and critique session, and Flash only for the pilot's calls. Worth confirming that's the intent, as it sets the cost.
+4. `test_rsa_open_one_core.py` still fails on Sherlock as written (§15).
+
+### What the theorists made
+
+Parameters are `PARAMS` entries, without link parameters such as lapse. Lines are non-blank, non-comment lines of `candidate.py`.
+"Minutes" is the session's length.
+
+**No refusal was for hand-set numbers,** at the gate or in a session: no agent log contains that refusal, so no repair was needed
+for it. All 36 final files pass the check.
+
+| | theories | parameters, median (range) | lines, median (range) | hand-set numbers, median (range) |
+|---|---|---|---|---|
+| closed | 19 | 3 (2-4) | 58 (42-71) | 0 |
+| open | 17 | 4 (3-7) | 79 (47-117) | 0 |
+| chain 1, experiment 1 (5 rounds, older code) | 35 | 3 (2-5) | 67 (48-104) | **9 (0-27); 32 of 35 would be refused** |
+
+So the numbers did not simply become parameters in the closed arm, and only a little in the open arm: theories have about as many
+fitted parameters as chain 1's while setting none by hand. Chain 1's exported theories set 17, 24 and 27 by hand and have 2-3
+parameters; its fourth export is a seed. I also checked for the obvious way around the gate, a tight prior: every prior's scale in
+this run is at least 1.0, and the incumbents' are all `Normal(0, 1)` or `LogNormal(0, 1)`. Files use `EPS` a median of 3 times,
+which the gate allows. I did not read the theories in full for subtler routes.
+
+Closed arm:
+
+| round | slot | theory | parameters | lines | minutes | outcome |
+|---|---|---|---|---|---|---|
+| 1 | explore | `asymmetric_contrast_alignment_listener` | 4 | 60 | 57.8 | admitted |
+| 1 | explore | `relational_contrast_valence_l2` | 4 | 57 | 45.9 | admitted |
+| 1 | explore | `lexical_competition_optout_speaker` | 4 | 71 | 18.1 | admitted |
+| 1 | refine incumbent | `rsa_l2_singleton_distinct_l0` | 3 | 53 | 20.6 | refused: not novel (RMSE 0.0007 from `relational_contrast_valence_l2`, threshold 0.002) |
+| 1 | its repair | `rsa_l2_singleton_distinct_graded_l0` | 4 | 60 | 19.9 | refused: not novel (RMSE 0.0012, same theory) |
+| 1 | refine incumbent | `rsa_l2_candidate_distinct_prior` | 4 | 57 | 42.3 | admitted |
+| 1 | refine chosen | `rsa_l2_singleton_prior` | 2 | 42 | 52.4 | admitted |
+| 2 | explore | `inverse_multiplicity_candidate_prior` | 3 | 58 | 58.8 | admitted |
+| 2 | explore | `bounded_l1_candidate_attention_listener` | 3 | 42 | 56.8 | admitted |
+| 2 | explore | `diagnostic_graded_semantics_l2` | 4 | 64 | 56.0 | admitted |
+| 2 | refine incumbent | `rsa_l2_weber_candidate_distinct_prior` | 3 | 56 | 52.8 | admitted |
+| 2 | refine incumbent | no file | | | 58.8 | retried |
+| 2 | its retry | `rsa_l2_candidate_isolation_prior` | 3 | 58 | 9.1 | admitted |
+| 2 | refine chosen | `relational_candidate_contrast_valence_l2` | 4 | 58 | 59.3 | admitted |
+| 3 | explore | `r3_c1` | 3 | 53 | 54.8 | admitted |
+| 3 | explore | `clone_divided_diagnostic_contrast_l2` | 3 | 61 | 59.6 | admitted |
+| 3 | explore | `qud_contrastive_aspect_speaker_l2` | 3 | 62 | 56.9 | admitted |
+| 3 | refine incumbent | `utterance_evoked_candidate_attention_l1` | 3 | 46 | 59.6 | admitted |
+| 3 | refine incumbent | `r3_c5` | 3 | 43 | 59.3 | admitted |
+| 3 | refine chosen | `diagnostic_candidate_contrast_l2` | 3 | 64 | 48.0 | admitted |
+
+Open arm:
+
+| round | slot | theory | parameters | lines | minutes | outcome |
+|---|---|---|---|---|---|---|
+| 1 | explore | no file | | | 37.3 | retried (`length`) |
+| 1 | its retry | `r1_c1` | 4 | 67 | 54.5 | admitted |
+| 1 | explore | no file | | | 59.6 | retried |
+| 1 | its retry | no file | | | 59.1 | **slot empty** |
+| 1 | explore | `collateral_overlap_cost_l2` | 3 | 70 | 57.6 | admitted |
+| 1 | refine incumbent | `rsa_l2_confusion_singleton_valence_l0` | 7 | 82 | 35.9 | admitted |
+| 1 | refine incumbent | `rsa_l2_coref_confusion_lex` | 5 | 77 | 51.2 | admitted |
+| 1 | refine chosen | no file | | | 0.8 | retried (stopped by itself) |
+| 1 | its retry | `competitor_confusion_singleton_l2` | 3 | 73 | 22.8 | admitted |
+| 2 | explore | no file | | | 24.5 | retried (`length`) |
+| 2 | its retry | `communicative_individuation_prior_l2` | 6 | 80 | 57.2 | admitted |
+| 2 | explore | `attentional_competitor_interference_l2` | 4 | 77 | 58.9 | admitted |
+| 2 | explore | `soft_lexical_individuation_l2` | 5 | 70 | 51.6 | admitted |
+| 2 | refine incumbent | `rsa_l2_ext_confusion_no_feat` | 6 | 79 | 59.7 | admitted |
+| 2 | refine incumbent | `rsa_l2_confusion_lex_prior` | 6 | 73 | 22.7 | admitted |
+| 2 | refine chosen | `rsa_l2_breadth_confusion_valence_l0` | 5 | 79 | 59.8 | admitted |
+| 3 | explore | `contrastive_diagnostic_heuristic` | 4 | 47 | 50.5 | admitted |
+| 3 | explore | `collateral_decision_individuation_l2` | 4 | 117 | 59.3 | admitted |
+| 3 | explore | no file | | | 17.4 | retried (`length`) |
+| 3 | its retry | `qud_aspect_diagnostic_l2` | 4 | 87 | 57.2 | admitted |
+| 3 | refine incumbent | `within_ext_individuation_l2` | 4 | 89 | 56.0 | admitted |
+| 3 | refine incumbent | `r3_c5` | 3 | 86 | 59.2 | admitted |
+| 3 | refine chosen | `individuation_shielded_confusion_l2` | 5 | 82 | 9.3 | admitted |
+
+Incumbent and `fit_best` (the best fit before the one-SE rule) at each scored step, with parameters:
+
+| scored after | closed: incumbent | closed: `fit_best` | open: incumbent | open: `fit_best` |
+|---|---|---|---|---|
+| starting theories | `rsa_l2_singleton_feat_color_valence_l0`, 6 | same | `rsa_l2_singleton_feat_color_valence_l0`, 6 | same |
+| round 1 | `rsa_l2_candidate_distinct_prior`, 4 | same | `rsa_l2_confusion_singleton_valence_l0`, 7 | same |
+| round 2 | `bounded_l1_candidate_attention_listener`, 3 | `diagnostic_graded_semantics_l2`, 4 | `attentional_competitor_interference_l2`, 4 | same |
+| round 3 | `diagnostic_candidate_contrast_l2`, 3 | same | `within_ext_individuation_l2`, 4 | same |
+| end, exported | `diagnostic_candidate_contrast_l2`, 3 (8 carried) | same | `within_ext_individuation_l2`, 4 (6 carried) | same |
+
+- **The one-SE rule changed the incumbent once:** closed, round 2. The incumbent changed at every round in both arms.
+- **Refinements that simplified**, judged from each hypothesis's stated parent and the parameter counts:
+  - **Closed:** 5 of 9 refinement slots removed parameters: 6 to 4 and 6 to 3 (refused, as was its 4-parameter repair) in round 1;
+    4 to 3 twice in round 2; 4 to 3 in round 3. **Two of these became the incumbent**, including the final one.
+  - **Open:** 4 of 9 removed one parameter (6 to 5, 7 to 6 twice, 6 to 5). None became the incumbent, and the round-1 incumbent
+    added one (6 to 7). A fifth, the open arm's `r3_c5`, has 3 parameters though its hypothesis says "the same four parameters".
+    I didn't look into the mismatch.
+  - This compares the arms' theorists on one chain each and is not evidence about the arms.
+
+### Cost
+
+| | closed: tokens (calls) | closed: dollars | open: tokens (calls) | open: dollars |
+|---|---|---|---|---|
+| theorists | 201.06 M (20) | 35.10 | 208.04 M (23) | 64.58 |
+| critique | 2.91 M (3) | 2.15 | 17.62 M (4) | 7.84 |
+| designer | | | 3.49 M (1) | 1.99 |
+| pilot (Gemini 3.8 Flash) | 0.62 M (216) | no price | 1.42 M (423) | no price |
+| **total** | **204.58 M** | **37.25** | **230.56 M** | **74.41** |
+
+- 93-94% of the tokens are cache reads: 192.5 M of closed's total and 214.0 M of open's.
+- **The dollars understate, and the arms can't be compared on them.** $19.02 of closed's $37.25 is estimated from other records' prices,
+  against $2.49 of open's, and the pilot's calls have no price at all. Similar tokens at nearly twice the dollars probably reflects this.
+
+Core-hours count final attempts; the preempted ones add 0.1 and 0.2.
+
+| core-hours allocated | closed | open |
+|---|---|---|
+| step jobs | 43.8 | 92.2 |
+| design fits | 1.3 | 0.5 |
+| starting fits | 1.6 | 3.5 |
+| admission fits | 4.3 | 5.4 |
+| folds | 14.1 | 20.1 |
+| **total** | **65.1** | **121.7** |
+| CPU-hours used (steps; fits) | 7.1; 9.7 | 6.6; 14.4 |
+
+`sshare -U -l` (`mcfrank`):
+
+| | RawUsage | NormUsage | EffectvUsage | FairShare | LevelFS |
+|---|---|---|---|---|---|
+| before launch, 11-08 | 44673641 | 0.000278 | 0.535168 | 0.862590 | 0.186857 |
+| after, 11-09 | 43567107 | 0.000269 | 0.528742 | **0.248751** | 0.189158 |
+
+FairShare fell by about two thirds while RawUsage fell slightly. I don't know why; it isn't explained by this account's usage in
+these numbers, and it may reflect how other accounts' shares moved. It's worth a look before work that relies on `normal`.
+
+### Not done or not as specified
+
+- The designer session wasn't timed separately, and no per-theory fit time is reported, only the distributions above.
+- Monitoring: the handoff says no polling. The PI asked me to monitor, so a laptop script checked every 5 minutes, when logged in.
+- Experiment 2 wasn't launched, as it's the PI's choice after this report.
