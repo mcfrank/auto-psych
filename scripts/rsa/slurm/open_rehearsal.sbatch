@@ -8,7 +8,7 @@
 #SBATCH --output=%x_%A_%a.out
 #
 # The open campaign's Phase 3 rehearsal (docs/auto_open/PLAN.md §9): one chain of the open
-# campaign on simulated participants. The designer (Gemini 4) and the theorists (Gemini 3.8 Flash)
+# campaign on simulated participants. The designer, the theorists and the critic (Gemini 4)
 # are real, sandboxed agents with no network; the pilot's participants are the harness's Gemini
 # calls; the experiments' people answer from a hidden ground truth (src.rsa_open.ground_truth:
 # the closed rehearsals' coherent truth, ported and fixed at its posterior means on E). Array task
@@ -180,7 +180,13 @@ fi
 # --- the chain ----------------------------------------------------------------------
 STEP_ENV=()
 if [[ "$STEP_MODE" == 1 ]]; then
-  [[ ! -f "$CELL_DIR/STOP" ]] || { echo "[open rehearsal] $CELL is stopped: $(cat "$CELL_DIR/STOP")"; exit 0; }
+  # a person's launch with CLEAR_STOP=1 clears a STOP (kept as STOP.<time>), as open_launch.sh does
+  # for live chains; a step's continuation never does
+  if [[ -f "$CELL_DIR/STOP" && "${CLEAR_STOP:-}" == 1 && "$RSA_STEP_NEW_LAUNCH" == 1 ]]; then
+    mv "$CELL_DIR/STOP" "$CELL_DIR/STOP.$(date +%Y%m%dT%H%M%S)"
+    echo "[open rehearsal] $CELL: cleared its STOP"
+  fi
+  [[ ! -f "$CELL_DIR/STOP" ]] || { echo "[open rehearsal] $CELL is stopped: $(cat "$CELL_DIR/STOP"); relaunch with CLEAR_STOP=1"; exit 0; }
   source "$SLURM_DIR/_step_mode.sh"
   rsa_step_mode "$REPO/scripts/rsa/slurm/open_rehearsal.sbatch" ARM CHAIN FIXED_SPEC LITERATURE N_EXPERIMENTS \
     MAX_ITERATIONS CANDIDATES CV_FOLDS PILOT_PARTICIPANTS THEORIST_TIMEOUT_SEC SEED RUN2_ROOT

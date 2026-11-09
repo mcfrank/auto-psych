@@ -59,7 +59,7 @@ print("finished", fit.timing["sampling_steps"] > 0)
 def test_a_callback_fit_finishes_in_a_process_that_sees_one_core():
     """Two blocks, as in the fit that hung (one block's gradient did not); PJRT_NPROC left unset."""
     env = {k: v for k, v in os.environ.items() if k != "PJRT_NPROC"}
-    env["PYTHONPATH"] = str(ROOT)
+    env["PYTHONPATH"] = os.pathsep.join([str(ROOT)] + ([env["PYTHONPATH"]] if env.get("PYTHONPATH") else []))  # keep a pytest supplied there (V3 §15)
     core = min(os.sched_getaffinity(0))
     out = subprocess.run([sys.executable, "-c", ONE_CORE_FIT], cwd=ROOT, env=env, capture_output=True, text=True,
                          timeout=1200, preexec_fn=lambda: os.sched_setaffinity(0, {core}))

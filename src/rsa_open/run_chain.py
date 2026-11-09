@@ -4,7 +4,7 @@
     <agent python> -m src.rsa_open.run_chain --chain 0 --run-dir <agent tree>/_runs/chain_0 \
         --private-dir <private dir with ground_truth.json> --agent-root <agent tree>
 
-The designer (Gemini 4) and the theorists (Gemini 3.8 Flash) are sandboxed opencode agents with
+The designer, the theorists and the critic (Gemini 4) are sandboxed opencode agents with
 no network (`src.rsa.loop.no_network`); the pilot's participants and its legibility checkers are
 the harness's own Gemini calls. The chain starts from ``seeds/chain_<k>`` and designs against
 ``seeds/bar`` (`src.rsa_open.seeds`); its simulated people are ``--private-dir``'s ground truth

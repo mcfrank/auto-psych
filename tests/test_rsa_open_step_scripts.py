@@ -78,7 +78,9 @@ def test_exit_codes_yield_refuse_and_pause(tmp_path):
 def test_a_finished_experiment_stops_the_chain_for_a_person_and_mails(tmp_path):
     out, cell, _ = _setup(tmp_path, "rsa_step_exit 8")
     assert out.returncode == 15, out.stderr
-    assert "launch the next: CLEAR_STOP=1 STEP_MODE=1" in (cell / "STOP").read_text()
+    hint = (cell / "STOP").read_text()
+    assert "launch the next with CLEAR_STOP=1 STEP_MODE=1" in hint  # both launchers read CLEAR_STOP (V3 §16)
+    assert "open_launch.sh" in hint and "open_rehearsal.sbatch" in hint
 
 
 def test_a_person_s_launch_refuses_while_another_step_of_the_chain_is_queued(tmp_path):
@@ -126,3 +128,13 @@ def test_the_rehearsal_job_takes_a_one_task_array_as_a_step_and_refuses_a_wider_
     assert "#SBATCH --array=0" in text  # why a step must accept a one-task array
     assert '"${SLURM_ARRAY_TASK_COUNT:-1}" != 1' in text
     assert "not an array\" >&2" not in text
+
+
+def test_a_rehearsal_launch_clears_a_stop_only_when_a_person_asks():
+    """V3 §16: the STOP's hint said CLEAR_STOP=1, which only the live launcher read; the rehearsal
+    script exited 0 while STOP existed, so experiment 2 could not be launched as the hint said."""
+    src = (REPO / "scripts/rsa/slurm/open_rehearsal.sbatch").read_text()
+    clause = src[src.index("# a person's launch with CLEAR_STOP=1"):src.index('source "$SLURM_DIR/_step_mode.sh"')]
+    assert '"${CLEAR_STOP:-}" == 1 && "$RSA_STEP_NEW_LAUNCH" == 1' in clause  # never a step's continuation
+    assert 'mv "$CELL_DIR/STOP" "$CELL_DIR/STOP.$(date +%Y%m%dT%H%M%S)"' in clause
+    assert clause.index("mv \"$CELL_DIR/STOP\"") < clause.index("is stopped")

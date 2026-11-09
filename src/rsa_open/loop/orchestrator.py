@@ -382,8 +382,14 @@ class OpenLoop:
         self.admission_limit_sec = min(self.cfg.in_play_fit_limit_sec, max(
             self.cfg.fit_time_limit_sec, ADMISSION_FACTOR * float(np.median(list(timed.values())))))
         self.gate_cfg = replace(self.gate_cfg, time_limit_sec=self.admission_limit_sec)
-        print(f"[open loop] admission limit {self.admission_limit_sec / 60:.0f} min: {ADMISSION_FACTOR:g} x the median "
-              f"of the starting fits ({', '.join(f'{n} {t / 60:.0f}' for n, t in sorted(timed.items()))} min)", flush=True)
+        scaled = ADMISSION_FACTOR * float(np.median(list(timed.values())))
+        rule = (f"{ADMISSION_FACTOR:g} x the median of the starting fits" if self.cfg.fit_time_limit_sec < scaled <
+                self.cfg.in_play_fit_limit_sec else
+                f"the floor, above {ADMISSION_FACTOR:g} x their median ({scaled / 60:.0f} min)"
+                if scaled <= self.cfg.fit_time_limit_sec else
+                f"the ceiling, below {ADMISSION_FACTOR:g} x their median ({scaled / 60:.0f} min)")
+        print(f"[open loop] admission limit {self.admission_limit_sec / 60:.0f} min: {rule} "
+              f"(starting fits: {', '.join(f'{n} {t / 60:.0f}' for n, t in sorted(timed.items()))} min)", flush=True)
 
     def _loader(self, path: Path, name: str) -> Callable[[], CorpusFit]:
         """Loads a theory in play's fit from the cache when a step needs it."""

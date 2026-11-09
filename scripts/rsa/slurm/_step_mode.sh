@@ -76,7 +76,7 @@ rsa_step_mode() {
 rsa_step_exit() {
   case "$1" in
     6) echo "[step] $CELL: done; its fits and the next step are submitted (steps.jsonl)" ;;
-    8) printf '%s\t%s\n' "$(date -Is)" "this launch's experiment is done; launch the next: CLEAR_STOP=1 STEP_MODE=1 (scripts/rsa/live/open_launch.sh)" > "$CELL_DIR/STOP"
+    8) printf '%s\t%s\n' "$(date -Is)" "this launch's experiment is done; launch the next with CLEAR_STOP=1 STEP_MODE=1 and the same command (live: scripts/rsa/live/open_launch.sh; rehearsal: sbatch scripts/rsa/slurm/open_rehearsal.sbatch)" > "$CELL_DIR/STOP"
        echo "[step] $CELL: $(cat "$CELL_DIR/STOP")"; return 15 ;;
     7) echo "[step] $CELL: refused to submit: $(cat "$CELL_DIR/STOP" 2>/dev/null)"; return 7 ;;
     5) local next
