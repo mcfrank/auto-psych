@@ -31,12 +31,12 @@ registration has to cover, so nothing decided since the first one (https://osf.i
 - **Fits in the step's own job** (PI 11-09, after the stepped rehearsal, review V3 §16: 316 of 325 fit
   tasks under rule 10's 10-minute line): `STEP_FITS=local`, each step runs its fits on its own cores
   and the chain continues in the same job (`HANDOFF_centralized_fits.md`). A launch submits no job but
-  a continuation when its time runs short. `LAUNCH_EXPERIMENTS=all` lets a launch run the whole chain
-  (open: whether to use it, below).
-- **The feasibility gate's wall time: 48 h** (PI 11-09). Proposed reading: each experiment, launch to
-  export, excluding recruitment and waits for a person, within 48 h (the stepped rehearsal projects at
-  most about 21 h for the open arm's experiment 3). To confirm: per experiment, not for the chain
-  (the open chain projects 48-53 h for three experiments).
+  a continuation when its time runs short. **The registered chains run autonomously** (PI 11-09):
+  `LAUNCH_EXPERIMENTS=all`, one launch per chain, as chain 1 ran as long jobs on the lab node. For
+  live chains that launch approves every experiment's Prolific study.
+- **The feasibility gate's wall time: 48 h per experiment** (PI 11-09): each experiment, from its start
+  to its export, excluding recruitment, within 48 h (the stepped rehearsal projects at most about 21 h,
+  for the open arm's experiment 3).
 - **The plan to registration** (PI 11-08):
   1. Revise the theorist prompt for the hand-set-numbers behaviour (parsimony), before the next
      rehearsal.
@@ -57,10 +57,6 @@ registration has to cover, so nothing decided since the first one (https://osf.i
 
 ## Open
 
-- **Autonomous chains** (`LAUNCH_EXPERIMENTS=all`): SRCC heard on 11-05 that a person starts one job per
-  experiment; with fits in the step a whole chain can be one job (up to 7 days on `mcfrank`) that
-  submits nothing. Tell SRCC before using it. For live chains, each experiment publishes a Prolific
-  study, so the launch approves every experiment's spend.
 
 - **Scale and scope:** rounds per experiment (PI leaning 3), experiments per chain (3 or 4), chains
   per arm, candidates per round, repairs, the carry cap; set against the fit times measured after
