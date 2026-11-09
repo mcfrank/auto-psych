@@ -141,7 +141,7 @@ def test_a_local_fit_gets_a_clean_environment_and_a_core_of_its_own(tmp_path, mo
 
     seen = {}
 
-    def fake_run(cmd, env, cwd, capture_output, text):
+    def fake_run(cmd, env, cwd, capture_output, text, preexec_fn=None):
         import os
 
         seen.update(cmd=cmd, env=env, cwd=cwd, cores=os.sched_getaffinity(0) if hasattr(os, "sched_getaffinity") else None)
@@ -158,3 +158,57 @@ def test_a_local_fit_gets_a_clean_environment_and_a_core_of_its_own(tmp_path, mo
     assert seen["cwd"] == str(tmp_path)
     if seen["cores"] is not None:
         assert len(seen["cores"]) == 1  # started from a thread pinned to one core of the job
+
+
+def test_a_fit_measured_large_reserves_its_tier_and_a_fit_beyond_the_budget_runs_alone(tmp_path):
+    """Review V3 §17: local fits share the step's memory. A theory known to be large (its tier above the
+    first) reserves its tier, so fewer run beside it; one larger than the whole budget runs alone."""
+    from src.rsa_open.loop.fit_array import FitsPending
+    from src.rsa_open.loop.slurm import LOCAL_FIT_GB, LocalStepper, StepContinue, fit_reserve_gb
+
+    assert fit_reserve_gb(18) == LOCAL_FIT_GB and fit_reserve_gb(36) == 36.0 and fit_reserve_gb(72) == 72.0
+    peak, running, lock = [0], [0], threading.Lock()
+
+    def launcher(manifest, index):
+        with lock:
+            running[0] += 1
+            peak[0] = max(peak[0], running[0])
+        time.sleep(0.05)
+        with lock:
+            running[0] -= 1
+        return 0
+
+    stepper = LocalStepper(_cfg(tmp_path / "cell"), workers=6, memory_gb=40.0, launcher=launcher)
+    big = [_pending(tmp_path, f"big{i}", 72) for i in range(2)]  # each over the budget: one at a time
+    with pytest.raises(StepContinue):
+        stepper.yield_step(FitsPending(big), "big")
+    assert peak[0] == 1
+    peak[0] = 0
+    small = [_pending(tmp_path, f"s{i}") for i in range(8)]  # 6 GB each: 6 fit in 40 GB
+    with pytest.raises(StepContinue):
+        stepper.yield_step(FitsPending(small), "small")
+    assert peak[0] == 6
+    stepper.close()
+
+
+def test_a_local_fit_is_the_one_the_kernel_kills_when_the_step_runs_out_of_memory(tmp_path, monkeypatch):
+    import os
+    import subprocess
+
+    import src.rsa_open.loop.slurm as step
+
+    seen, real_run = {}, subprocess.run
+
+    def fake_run(cmd, env, cwd, capture_output, text, preexec_fn):
+        seen["preexec"] = preexec_fn
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    monkeypatch.setattr(step.subprocess, "run", fake_run)
+    for k, v in {"VENV_PY": "/v", "HARNESS_REPO": str(tmp_path), "JAX_COMPILATION_CACHE_DIR": "/jc"}.items():
+        monkeypatch.setenv(k, v)
+    step.run_local_task(tmp_path / "m.json", 0)
+    assert seen["preexec"] is step._fit_process_setup
+    if os.path.exists("/proc/self/oom_score_adj"):  # in a child, as the fit's process would
+        out = real_run(["cat", "/proc/self/oom_score_adj"], preexec_fn=step._fit_process_setup,
+                       capture_output=True, text=True, check=True)
+        assert out.stdout.strip() == str(step.FIT_OOM_SCORE_ADJ)

@@ -53,3 +53,13 @@ Report, briefly:
 
 If it works, the registered pair can use it; nothing else needs a rehearsal with agents, since the agents' side
 did not change. If it doesn't, `STEP_FITS=array` is the fallback, as rehearsed.
+
+## Result and follow-up (2026-11-09)
+
+Review V3 §17: both tests pass, and two no-agent replays each ran an experiment to its end in one job. Its point 1
+(a local fit's memory is not capped) is closed: each local fit raises its own `oom_score_adj` (inherited by its
+sampler child), so if the step runs out of memory the kernel kills a fit, never the chain or an agent, and the
+killed fit is retried at the next memory tier; and a fit whose tier says it is large reserves that much of the step's
+memory before it starts (`MemoryBudget`, `fit_reserve_gb`; a fit larger than the budget runs alone). Point 2: the
+standing no-agent source is the stepped rehearsal's experiment 1 (§17's replay 2), not chain 1's experiment 2, whose
+theories the hand-set-number gate now refuses.

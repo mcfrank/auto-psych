@@ -385,6 +385,50 @@ def local_workers(cores: Optional[int] = None, memory_gb: Optional[float] = None
     return max(1, min(cores - 1, int((memory_gb - LOCAL_RESERVE_GB) // LOCAL_FIT_GB)))
 
 
+FIT_OOM_SCORE_ADJ = 1000
+"""A local fit's `oom_score_adj`: if the step's job runs out of memory, the kernel kills a fit, never the
+chain or an agent (review V3 §17). A killed fit is retried at the next memory tier, as from an array."""
+
+
+def _fit_process_setup() -> None:
+    """In a local fit's process, before it runs (its sampler child inherits this)."""
+    try:
+        with open("/proc/self/oom_score_adj", "w") as f:  # raising it needs no privilege
+            f.write(str(FIT_OOM_SCORE_ADJ))
+    except OSError:  # not Linux: nothing to set
+        pass
+
+
+def fit_reserve_gb(mem_gb: int) -> float:
+    """What a local fit reserves of the step's memory: `LOCAL_FIT_GB` at the first tier (an unmeasured
+    theory, or one that peaked below it), else its tier (a theory measured large, or killed once)."""
+    from src.rsa_open.loop.fit_array import MEM_TIERS
+
+    return LOCAL_FIT_GB if mem_gb <= MEM_TIERS[0] else float(mem_gb)
+
+
+class MemoryBudget:
+    """Fits start while their reserves fit in ``total_gb``; a fit larger than the budget runs alone."""
+
+    def __init__(self, total_gb: float) -> None:
+        import threading
+
+        self.total, self.used, self.running = float(total_gb), 0.0, 0
+        self._cond = threading.Condition()
+
+    def acquire(self, gb: float) -> None:
+        with self._cond:
+            self._cond.wait_for(lambda: self.running == 0 or self.used + gb <= self.total)
+            self.used += gb
+            self.running += 1
+
+    def release(self, gb: float) -> None:
+        with self._cond:
+            self.used -= gb
+            self.running -= 1
+            self._cond.notify_all()
+
+
 def run_local_task(manifest: Path, index: int) -> int:
     """One fit task in its own process, as `fit_array.sbatch` runs it, on a core of the job's own."""
     import tempfile
@@ -399,7 +443,7 @@ def run_local_task(manifest: Path, index: int) -> int:
         with one_core():
             done = subprocess.run([os.environ["VENV_PY"], "-m", "src.rsa_open.loop.fit_array", "--manifest", str(manifest),
                                    "--index", str(index)], env=env, cwd=os.environ["HARNESS_REPO"],
-                                  capture_output=True, text=True)
+                                  capture_output=True, text=True, preexec_fn=_fit_process_setup)
     if done.returncode != 0:
         print(f"[local fits] {manifest.name} task {index} exited {done.returncode}: {done.stderr[-2000:]}", flush=True)
     return done.returncode
@@ -410,14 +454,21 @@ class LocalStepper(Stepper):
     `yield_step` waits for every one and raises `StepContinue`. Folds to fit after their full fits
     (`FoldAfter`) start once every fit started before them has ended, as their arrays did (afterany)."""
 
-    def __init__(self, cfg: StepConfig, *, workers: Optional[int] = None,
+    def __init__(self, cfg: StepConfig, *, workers: Optional[int] = None, memory_gb: Optional[float] = None,
                  launcher: Callable[[Path, int], int] = run_local_task) -> None:
         from concurrent.futures import ThreadPoolExecutor
+
+        from src.rsa.cpus import job_cpus
 
         super().__init__(cfg)
         self.workers = local_workers() if workers is None else workers
         self.launcher = launcher
-        self._pool = ThreadPoolExecutor(max_workers=self.workers, thread_name_prefix="fit")
+        # threads: one per core the step can spare; memory decides how many fits run (`MemoryBudget`)
+        if memory_gb is None:
+            memory_gb = job_memory_gb() - LOCAL_RESERVE_GB if workers is None else self.workers * LOCAL_FIT_GB
+        self.budget = MemoryBudget(memory_gb)
+        threads = max(self.workers, len(job_cpus()) - 1) if workers is None else self.workers
+        self._pool = ThreadPoolExecutor(max_workers=threads, thread_name_prefix="fit")
         self._futures: Dict[str, object] = {}
         self._started = time.time()
 
@@ -433,7 +484,7 @@ class LocalStepper(Stepper):
         for gb, items in sorted(by_size.items()):
             m = write_manifest(self.cfg.arrays_dir / f"fits_{stamp}_{gb}g.json", items)
             for i, p in enumerate(items):
-                self._futures[self._key(p)] = self._pool.submit(self.launcher, m, i)
+                self._futures[self._key(p)] = self._pool.submit(self._run, m, i, fit_reserve_gb(gb))
         if later:
             before = list(self._futures.values())
             by_size_after: Dict[int, list] = defaultdict(list)
@@ -444,16 +495,23 @@ class LocalStepper(Stepper):
                 for i, a in enumerate(items):
                     placeholder: Future = Future()
 
-                    def run_after(m=m, i=i, placeholder=placeholder):
+                    def run_after(m=m, i=i, gb=gb, placeholder=placeholder):
                         wait(before)  # their full fits first; never on a pool thread, so it cannot starve the pool
                         try:
-                            placeholder.set_result(self._pool.submit(self.launcher, m, i).result())
+                            placeholder.set_result(self._pool.submit(self._run, m, i, fit_reserve_gb(gb)).result())
                         except BaseException as exc:  # noqa: BLE001 - surfaced when the step waits
                             placeholder.set_exception(exc)
 
                     threading.Thread(target=run_after, daemon=True, name="fold-after").start()
                     self._futures[a.key] = placeholder
         return len(new) + len(later)
+
+    def _run(self, manifest: Path, index: int, reserve_gb: float) -> int:
+        self.budget.acquire(reserve_gb)
+        try:
+            return self.launcher(manifest, index)
+        finally:
+            self.budget.release(reserve_gb)
 
     def _check_budget(self) -> int:
         """As `_check`, without the queue: refuses (STOP written) when the cell is stopped or this launch's
