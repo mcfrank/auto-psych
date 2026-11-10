@@ -1,18 +1,20 @@
-"""The feasibility gate (`docs/auto_open/PREREG_DRAFT.md` §4): the registered criteria, computed from
-the feasibility chain's run tree alone.
+"""The feasibility gate (`docs/auto_open/PREREG_V2.md` §4): the registered criteria, computed from
+each stage-1 chain's run tree alone. Stage 1 is open chain 1 and fixed chain 1; the gate passes only
+if both do.
 
-    python -m src.rsa_open.gate --run-dir <work root>/cells/open_chain_0 [--json]
+    python -m src.rsa_open.gate --run-dir <cells>/open_chain_0 <cells>/fixed_chain_0 [--json]
 
 This file is registered (its sha256 is in the pre-registration), so the gate is fixed before any
 data it judges. It reads only what the chain writes: each experiment's frozen design record, its
 collection record (``data/participants.json``, aggregates), its loop history and export, the
 chain's stage times (``stage_times.jsonl``) and agent spend (``token_usage.jsonl``). It never
-reads a theory's score against the fixed arm, of which there is none yet.
+compares the two arms.
 
-The items (the definitions accepted by the PI, 2026-10-29; item 5 as amended, 2026-11-02, Addendum C),
-per experiment 1-3 (``EXPERIMENTS``):
-1. **Design:** the experiment froze a paradigm (``design/frozen/record.json``): within the
-   designer's two cycles, since both failing stops the chain without one.
+The items (the definitions accepted by the PI, 2026-10-29; item 5 as revised, 2026-11-09/10,
+`PREREG_V2.md`), per experiment 1-3 (``EXPERIMENTS``):
+1. **Design:** the experiment froze a paradigm (``design/frozen/record.json``): for the open arm within
+   the designer's two cycles, since both failing stops the chain without one; for the fixed arm its
+   frozen spec passed the harness's checks.
 2. **Data:** among recruited participants, final comprehension and catch trials passed each at
    least ``FLOORS``; exclusions at most ``MAX_EXCLUSIONS``; people giving the same answer on
    nearly every test trial (the monitor's flag: at least 90% of their test answers the same) at
@@ -26,15 +28,16 @@ per experiment 1-3 (``EXPERIMENTS``):
    carried theories are apart is reported, not judged: the loop prunes them to near-ties (run B's
    experiments 2-3: 0.4 and 1.0 SEs).
 4. **Loop:** at least two trusted theories at the end and an export (no harness failure).
+5. **Time:** the experiment ran within ``MAX_EXPERIMENT_HOURS`` (PI 2026-11-09): from its design's
+   first start to its loop's last finish, less its collection stage (from its first start to its
+   finish: recruitment, which the 24-hour window bounds, the deploy, and any wait for the PI's
+   review); queue waits and failures count.
 And for the three experiments together:
 4b. **Admissions:** at least one new theory admitted over experiments 1-3 (run B's experiment 3
    admitted none: its loop stopped after two stale rounds).
-5. **Cost:** agent spend at most ``SPEND_FACTOR`` times ``ESTIMATE_AGENT_USD``: every priced call plus
-   the estimate for unpriced ones (`src.rsa_open.spend`). Running time is reported, not judged: from
-   experiment 1's design start to experiment 3's loop finish, less each experiment's collection
-   stage (from its first start to its finish: recruitment, which the 24-hour window bounds, the
-   deploy, and the wait for the PI's review). Participant payments are bounded by the budget by
-   construction and are reported.
+Reported, not judged (PI 2026-11-10): agent spend (every priced call plus the estimate for unpriced
+ones, `src.rsa_open.spend`), the chain's total running time, and participant payments, which the
+budget bounds by construction.
 """
 
 from __future__ import annotations
@@ -53,8 +56,7 @@ MAX_EXCLUSIONS = 0.25
 MAX_SAME_ANSWER = 0.10
 SEPARATION_SE = 4.0
 MIN_TRUSTED_AT_END = 2
-ESTIMATE_AGENT_USD = 330.0  # §3a: at most $110 of agent spend per experiment
-SPEND_FACTOR = 1.5
+MAX_EXPERIMENT_HOURS = 48.0  # PREREG_V2.md §4, item 5 (PI 2026-11-09)
 
 
 def _read(path: Path) -> Optional[Any]:
@@ -141,26 +143,42 @@ def loop_item(exp: Path) -> Dict[str, Any]:
                  admitted=len(admitted), trusted_at_end=len(trusted), stopped_early=export.get("stopped_early"))
 
 
-def running_hours(run_dir: Path, last: int = EXPERIMENTS) -> Optional[float]:
+def _marks(run_dir: Path) -> Optional[List[Dict[str, Any]]]:
     path = run_dir / "stage_times.jsonl"
     if not path.exists():
         return None
-    marks = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
-    def at(n, stage, event, pick):
-        times = [m["at"] for m in marks if m["experiment"] == n and m["stage"] == stage and m["event"] == event]
-        return pick(times) if times else None
 
-    start, end = at(1, "design", "started", min), at(last, "loop", "finished", max)
+def _at(marks, n, stage, event, pick):
+    times = [m["at"] for m in marks if m["experiment"] == n and m["stage"] == stage and m["event"] == event]
+    return pick(times) if times else None
+
+
+def running_hours(run_dir: Path, first: int = 1, last: int = EXPERIMENTS) -> Optional[float]:
+    """Hours from experiment ``first``'s design start to experiment ``last``'s loop finish, less each
+    experiment's collection stage; None when the stage times do not cover them."""
+    marks = _marks(run_dir)
+    if marks is None:
+        return None
+    start, end = _at(marks, first, "design", "started", min), _at(marks, last, "loop", "finished", max)
     if start is None or end is None:
         return None
     collecting = 0.0
-    for n in range(1, last + 1):
-        a, b = at(n, "collect", "started", min), at(n, "collect", "finished", max)
+    for n in range(first, last + 1):
+        a, b = _at(marks, n, "collect", "started", min), _at(marks, n, "collect", "finished", max)
         if a is None or b is None:
             return None
         collecting += b - a
     return (end - start - collecting) / 3600
+
+
+def time_item(run_dir: Path, n: int) -> Dict[str, Any]:
+    hours = running_hours(run_dir, first=n, last=n)
+    if hours is None:
+        return _item(False, "the stage times do not cover this experiment's design, collection and loop")
+    return _item(hours <= MAX_EXPERIMENT_HOURS, f"{hours:.1f} h running (at most {MAX_EXPERIMENT_HOURS:g})",
+                 running_hours=hours)
 
 
 def agent_usd(run_dir: Path) -> Optional[float]:
@@ -183,20 +201,12 @@ def participant_usd(exp: Path) -> Optional[float]:
     return load_paradigm(path).cost_usd
 
 
-def cost_item(run_dir: Path) -> Dict[str, Any]:
+def reported(run_dir: Path) -> Dict[str, Any]:
+    """What the gate reports and does not judge: the chain's running time, agent spend, participant payments."""
     hours, usd = running_hours(run_dir), agent_usd(run_dir)
     paid = [participant_usd(run_dir / f"experiment{n}") for n in range(1, EXPERIMENTS + 1)]
-    time_note = ("the stage times do not cover experiments 1-3" if hours is None
-                 else f"{hours:.0f} h running") + " (reported, not judged)"
-    if usd is None:
-        problem = "no agent spend record"
-    elif usd > SPEND_FACTOR * ESTIMATE_AGENT_USD:
-        problem = f"${usd:.2f} of agents > {SPEND_FACTOR:g} x ${ESTIMATE_AGENT_USD:g}"
-    else:
-        problem = None
-    return _item(problem is None, f"{problem or f'${usd:.2f} of agents'}; {time_note}",
-                 running_hours=hours, agent_usd=usd,
-                 participant_usd=sum(p for p in paid if p is not None) if any(p is not None for p in paid) else None)
+    return {"running_hours": hours, "agent_usd": usd,
+            "participant_usd": sum(p for p in paid if p is not None) if any(p is not None for p in paid) else None}
 
 
 def admissions_item(run_dir: Path) -> Dict[str, Any]:
@@ -206,41 +216,56 @@ def admissions_item(run_dir: Path) -> Dict[str, Any]:
 
 
 def evaluate(run_dir: Path) -> Dict[str, Any]:
+    """One chain's items (§4): each experiment's 1-5, and admissions over the three."""
     run_dir = Path(run_dir)
     out: Dict[str, Any] = {"run_dir": str(run_dir), "experiments": {}}
     for n in range(1, EXPERIMENTS + 1):
         exp = run_dir / f"experiment{n}"
         out["experiments"][n] = {"1_design": design_item(exp), "2_data": data_item(exp),
-                                 "3_information": information_item(exp), "4_loop": loop_item(exp)}
+                                 "3_information": information_item(exp), "4_loop": loop_item(exp),
+                                 "5_time": time_item(run_dir, n)}
     out["4b_admissions"] = admissions_item(run_dir)
-    out["5_cost_and_time"] = cost_item(run_dir)
+    out["reported"] = reported(run_dir)
     out["passed"] = (all(i["passed"] for e in out["experiments"].values() for i in e.values())
-                     and out["4b_admissions"]["passed"] and out["5_cost_and_time"]["passed"])
+                     and out["4b_admissions"]["passed"])
     return out
+
+
+def evaluate_stage(run_dirs: List[Path]) -> Dict[str, Any]:
+    """The gate: every stage-1 chain's items; it passes only if every chain passes."""
+    if not run_dirs:
+        raise ValueError("no chain to judge")
+    chains = [evaluate(d) for d in run_dirs]
+    return {"chains": chains, "passed": all(c["passed"] for c in chains)}
 
 
 def lines(report: Dict[str, Any]) -> List[str]:
     mark = {True: "PASS", False: "FAIL"}
-    out = [f"Feasibility gate (PREREG_DRAFT.md §4): {mark[report['passed']]}", ""]
-    for n, items in report["experiments"].items():
-        for key, item in items.items():
-            out.append(f"experiment {n}, {key}: {mark[item['passed']]}: {item['detail']}")
-    a = report["4b_admissions"]
-    out.append(f"4b_admissions: {mark[a['passed']]}: {a['detail']}")
-    c = report["5_cost_and_time"]
-    out.append(f"5_cost_and_time: {mark[c['passed']]}: {c['detail']}"
-               + (f"; participant payments ${c['participant_usd']:.2f}" if c.get("participant_usd") else ""))
+    out = [f"Feasibility gate (PREREG_V2.md §4): {mark[report['passed']]}"]
+    for chain in report["chains"]:
+        out += ["", f"{chain['run_dir']}: {mark[chain['passed']]}"]
+        for n, items in chain["experiments"].items():
+            for key, item in items.items():
+                out.append(f"experiment {n}, {key}: {mark[item['passed']]}: {item['detail']}")
+        a = chain["4b_admissions"]
+        out.append(f"4b_admissions: {mark[a['passed']]}: {a['detail']}")
+        r = chain["reported"]
+        out.append("reported, not judged: " + "; ".join([
+            "running time not covered" if r["running_hours"] is None else f"{r['running_hours']:.0f} h running",
+            "no agent spend record" if r["agent_usd"] is None else f"${r['agent_usd']:.2f} of agents",
+            "" if r["participant_usd"] is None else f"participant payments ${r['participant_usd']:.2f}"]).rstrip("; "))
     return out
 
 
 @dataclass
 class Args:
-    run_dir: Path
+    run_dir: List[Path]
+    """Each stage-1 chain's run directory (open chain 1 and fixed chain 1)."""
     json: bool = False
 
 
 def main(args: Args) -> Dict[str, Any]:
-    report = evaluate(args.run_dir)
+    report = evaluate_stage(list(args.run_dir))
     print(json.dumps(report, indent=1, default=float) if args.json else "\n".join(lines(report)))
     return report
 

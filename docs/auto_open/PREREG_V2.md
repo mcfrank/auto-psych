@@ -1,27 +1,22 @@
 # Open and fixed-paradigm discovery loops: pre-registration, revision 2 (draft)
 
-**Status: a draft for the PI's review, 2026-11-09. Not registered.** Written by Claude Opus 5.5; not
+**Status: a draft for the PI's review, 2026-11-10 (the PI's decisions of 11-10 included). Not registered.** Written by Claude Opus 5.5; not
 reviewed by a person. It is the revision that §4 of the first registration (https://osf.io/78t69,
 2026-10-29, `PREREG_DRAFT.md`) calls for: "a revision is registered anew, and open chain 1 is then
 reported as a pilot, not counted." Its sections follow the first registration's numbering, so the two
 can be read side by side; the appendix lists every change and its reason.
 
-> **For the PI to confirm before registering** (marked ⟨PI⟩ below; the rest follows decisions already made):
-> 1. **Scale:** 4 chains per arm × 3 experiments per chain × 3 rounds of 6 theorists, fixed now rather than
->    at the gate (§2, §4).
-> 2. **Whether the stage-1 pair counts** as chain 1 of each arm when the gate passes (the first registration's
->    rule for open chain 1), or is always reported as a pilot (§4). The draft says it counts.
-> 3. **The agent-spend cap** of the gate: proposed $150 per experiment of either arm (§3a, §4 item 5).
-> 4. **The prospective test** (each committed theory scored on the next experiment's people) as a reported
->    measure, not a claim (§7).
-> 5. **Chain 1's final state**, to be filled from Sherlock: experiments run, and `gate.py`'s output on it,
->    reported, not judged (§0).
+> **Decided by the PI on 2026-11-10:** 4 chains per arm × 3 experiments × 3 rounds of 6; the stage-1 pair
+> counts as chain 1 of each arm when the gate passes; no agent-spend criterion (spend is reported); the
+> prospective test is reported, not claimed; chain 1 is a pilot. **Still to fill before registering:** chain 1's
+> final state from Sherlock (§0), and the sha256 of the registered files at tagging (§8).
 
 ## 0. Why a new registration, and what exists already
 
 - **Open chain 1 (the code's `chain_0`) is a pilot** (PI 2026-11-08). It ran under the first registration,
-  live, for ⟨PI: chain 1's experiments and its gate output⟩. Its data, theories and timings are reported as
-  the pilot (§7) and never counted in the bakeoff.
+  live, for 11 days of clock time: two experiments finished; a third recruited its participants and its
+  loop started, ⟨to confirm from Sherlock: how far it ran⟩. Its data, theories, timings and spend are reported
+  as the pilot (§7) and never counted in the bakeoff.
 - **What the pilot showed, which this revision acts on:**
   - **Slow fits.** The open fit evaluated every trial; a large theory's fit took 2.5 h and 35-37 GB, and the
     chain ran more than 8 days for 3 experiments. Fits now compute the same density about 10× faster (appendix).
@@ -73,7 +68,7 @@ as in the first registration. Identical by construction, as before, and now also
 - **Agents:** designer, theorists and critic Gemini 4 (`google/gemini-4-argon`), the pilot's simulated people
   Gemini 3.8 Flash; sessions of 60 minutes; the sandbox with no network.
 
-**Scale ⟨PI⟩:** 4 chains per arm, each of **3 experiments**; each experiment's loop runs **3 rounds of 6**
+**Scale** (PI 2026-11-10): 4 chains per arm, each of **3 experiments**; each experiment's loop runs **3 rounds of 6**
 theorists (3 explore, 2 refine the incumbent, 1 refines a theory of its choice). Chain k of
 each arm starts from the same seeds; chain 4 repeats chain 1's seeds, as before.
 
@@ -95,6 +90,7 @@ From the stepped rehearsal (review V3 §16: one chain per arm, experiment 1, 3 r
   experiments, before recruitment (1-24 h a study). Fits now run inside the step's job; the no-agent replays
   ran faster than with arrays (§17), so these projections are, if anything, high.
 - **Agent spend:** about $37 (fixed) and $74 (open) for experiment 1, both understated (some calls unpriced).
+  Reported for every experiment; not a criterion (PI 2026-11-10).
 - **Participants:** the budget, $266.67 an experiment: $800 a chain, $6,400 for 8 chains.
 
 ## 4. The feasibility gate
@@ -103,9 +99,9 @@ From the stepped rehearsal (review V3 §16: one chain per arm, experiment 1, 3 r
 on feasibility only: it looks at no comparison between them.
 
 **Pass** requires every item, for **each** of the two chains (computed by `src/rsa_open/gate.py` from the
-chains' run trees; registered, §8):
-1. **Design** (open chain only): each experiment freezes a paradigm that passes the pilot within the designer's
-   two cycles.
+chains' run trees, `python -m src.rsa_open.gate --run-dir <open chain 1> <fixed chain 1>`; registered, §8):
+1. **Design:** each experiment freezes a paradigm: for the open chain one that passes the pilot within the
+   designer's two cycles; for the fixed chain its frozen spec, through the harness's checks.
 2. **Data:** in each experiment, among recruited participants: final comprehension ≥ 0.8, catch trials passed
    ≥ 0.8, exclusions ≤ 25%, the data parse, and at most 10% of readable participants give the same answer on
    at least 90% of test trials. (As before.)
@@ -113,11 +109,12 @@ chains' run trees; registered, §8):
    paradigm by more than 4 unit-clustered SEs. (As before.)
 4. **Loop:** each experiment's loop ends with at least 2 trusted theories and an export, and at least one new
    theory is admitted over the 3 experiments. (As before.)
-5. **Time and spend** (new): each experiment runs within **48 h** (PI 2026-11-09), counted from its design's
-   start to its loop's export, less recruitment (queue waits and failures count); and each experiment's agent
-   spend is at most **⟨PI: $150⟩**.
+5. **Time** (new): each experiment runs within **48 h** (PI 2026-11-09), counted from its design's start to
+   its loop's export, less recruitment (queue waits and failures count). Agent spend is reported, not judged
+   (PI 2026-11-10).
 
-**If both pass:** the pair counts as chain 1 of each arm ⟨PI⟩, and chains 2-4 of both arms run, concurrently.
+**If both pass:** the pair counts as chain 1 of each arm (PI 2026-11-10), and chains 2-4 of both arms run,
+concurrently.
 **If either fails:** no further chains run under this registration; a revision is registered anew, and the pair
 is reported as a pilot. Either way the gate's outcome and every item's value are reported.
 
@@ -141,9 +138,10 @@ sensitivity analysis; the rehearsals), and:
 - **Parsimony, per theory and arm:** fitted parameters, lines of code, the incumbent and `fit_best` at every
   scored step with their parameters, how often the one-SE rule changed the incumbent, refinements that removed
   parameters, and candidates refused for hand-set numbers.
-- **The prospective test ⟨PI⟩:** each experiment's committed theory scored on the next experiment's people, whom
+- **The prospective test** (PI 2026-11-10): each experiment's committed theory scored on the next experiment's people, whom
   no agent saw, against its cross-validated score, as a check on cross-validation.
-- **The pilot:** open chain 1's experiments, theories (with their hand-set constants), timings and gate values.
+- **The pilot:** open chain 1's experiments (two finished, a third begun), theories with their hand-set
+  constants, timings, participant and agent spend.
 
 ## 8. Registered files
 
@@ -178,5 +176,6 @@ people Gemini 3.8 Flash.
 | The one-SE rule; the theorists' brief on parsimony | 11-08, PI | theories grew a component a round; short theories transfer | which theory leads; what theorists aim for |
 | Stage 1: an open and a fixed chain together | 11-08, PI | test both arms' feasibility before stage 2 | §4 |
 | Fits in the step's own job; one launch per chain | 11-09, PI | 316 of 325 fit tasks ran under 10 min (rule 10) | infrastructure (equivalence test) |
-| Gate item 5: 48 h per experiment and a spend cap | 11-09, PI | measured times (§3a) | a gate criterion |
-| Scale: 4 chains × 3 experiments × 3 rounds of 6 ⟨PI⟩ | | measured times | scale |
+| Gate item 5: 48 h per experiment; agent spend reported, not judged | 11-09 and 11-10, PI | measured times (§3a); spend is not a hypothesis | a gate criterion |
+| The stage-1 pair counts if the gate passes | 11-10, PI | as open chain 1 would have | §4 |
+| Scale: 4 chains × 3 experiments × 3 rounds of 6, fixed now | 11-10, PI | measured times | scale (was set at the gate) |
