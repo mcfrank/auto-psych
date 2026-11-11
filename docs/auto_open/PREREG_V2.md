@@ -147,17 +147,18 @@ sensitivity analysis; the rehearsals), and:
 
 ## 8. Registered files
 
-A new annotated tag, `rsa-open-prereg-v2`, fixes all the code; live chains run only on it. The sha256 of the
-files that decide the gate, the fixed arm and selection, computed at tagging:
+The annotated tag `rsa-open-prereg-v2`, at commit `b32e732b74d99d5f3dd85a9374d7d2e6b44beab8`, fixes all the code; live chains run only on it
+(`code_tag` in `scripts/rsa/live/open_live.yaml`). The sha256 of the files that decide the gate, the fixed arm and
+selection, in that commit:
 
 | file | sha256 |
 |---|---|
-| `src/rsa_open/gate.py` | at tagging |
-| `src/rsa_open/fixed_paradigm.json` | at tagging (unchanged from the first registration's, expected) |
-| `src/rsa_open/loop/orchestrator.py` | at tagging |
-| `src/rsa_open/corpus.py` (the one-SE rule, the guard) | at tagging |
-| `src/rsa_open/loop/gates.py` (no hand-set numbers) | at tagging |
-| `src/rsa_open/loop/prompts/open_theory.md` (the theorists' brief) | at tagging |
+| `src/rsa_open/gate.py` | `0ae779367bdd513a8945704dd90b7b2033852b7cb6f5debf801a11a814c7a6e1` |
+| `src/rsa_open/fixed_paradigm.json` (unchanged from the first registration's) | `98247195c5755fcee16ebfe7f65f04c599f224c8774b3c8a6e52c004ba0cdda1` |
+| `src/rsa_open/loop/orchestrator.py` | `7750355fab1cda82a7f8f41b581ed6547b19fa4e4c1e7ae42be0679c6275dcc8` |
+| `src/rsa_open/corpus.py` (the one-SE rule, the guard) | `fbd566db819246333c1c3074a2d9e5ae5cfcbe9fe1cc884debf0ba8f36bb534c` |
+| `src/rsa_open/loop/gates.py` (no hand-set numbers) | `511081513fa1c9637d6446035c63d293834f6d5e64f415e3070ea678ca149af4` |
+| `src/rsa_open/loop/prompts/open_theory.md` (the theorists' brief) | `6687696fab1c37724b5ebbb78c12a3b23ad3e83e394d0b18edc122465061a13d` |
 
 ## 9. AI disclosure (unchanged)
 

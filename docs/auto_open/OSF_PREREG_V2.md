@@ -9,20 +9,27 @@ chain did not count, "a revision is registered anew, and open chain 1 is then re
 no uploaded files, so the registration links a **tagged commit** of the public repository,
 `rsa-open-prereg-v2`, quoting its full commit SHA and the sha256 of the registered files ("Other").
 
-**Registered:** ⟨URL and date, after approval⟩, tag `rsa-open-prereg-v2`, commit ⟨SHA⟩.
+**Registered:** ⟨URL and date, after approval⟩, tag `rsa-open-prereg-v2`, commit `b32e732b74d99d5f3dd85a9374d7d2e6b44beab8`.
 
 ## Steps
 
-1. **The freeze** (driver): the registered scale and run mode as the live defaults, `code_tag:
-   rsa-open-prereg-v2` in `scripts/rsa/live/open_live.yaml`; tests pass; commit; tag that commit
-   `rsa-open-prereg-v2` (annotated); push the branch and the tag; the full commit SHA and the files' sha256
-   go into `PREREG_V2.md` §8 and "Other" below (a later commit: a file cannot hold its own commit's SHA).
-2. **The registration** (PI, on osf.io; a registration cannot be withdrawn):
+1. **The freeze** (driver, done 2026-11-11): the registered scale and run mode as the live defaults, `code_tag:
+   rsa-open-prereg-v2` in `scripts/rsa/live/open_live.yaml`; the fast suite passes; commit `b32e732b74d99d5f3dd85a9374d7d2e6b44beab8` on
+   `auto-psych-open`; its files' sha256 in `PREREG_V2.md` §8 and "Other" below (a later commit: a file cannot hold
+   its own commit's SHA).
+2. **The tag** (PI: the cloud session can push its branch but not tags). In a checkout of the repository:
+   ```bash
+   git fetch origin auto-psych-open
+   git tag -a rsa-open-prereg-v2 b32e732b74d99d5f3dd85a9374d7d2e6b44beab8 -m "Open campaign, revision 2 (docs/auto_open/PREREG_V2.md): the code every registered live chain runs."
+   git push origin rsa-open-prereg-v2
+   git rev-parse 'rsa-open-prereg-v2^{commit}'   # must print b32e732b74d99d5f3dd85a9374d7d2e6b44beab8
+   ```
+3. **The registration** (PI, on osf.io; a registration cannot be withdrawn):
    1. In the project of the first registration, **Registrations → New registration → "OSF
       Preregistration"**; paste the answers below, with the commit SHA and hashes in "Other".
    2. Link the first registration (https://osf.io/78t69) in its description, as below.
    3. Make it public, submit, and approve it from the confirmation email (final after approval, or 48 hours).
-3. **Record it** (driver): the URL, approval date and commit SHA go in `PREREG_V2.md` (an addendum) and
+4. **Record it** (driver): the URL, approval date and commit SHA go in `PREREG_V2.md` (an addendum) and
    `PLAN.md`. **The stage-1 launch waits for this.** Sherlock stages the tag; the live launcher refuses any
    other code.
 
@@ -188,13 +195,13 @@ study: the designer, theorists and critic are Gemini 4 models, and the pilot's s
 3.8 Flash.
 
 **The frozen materials:** the git tag `rsa-open-prereg-v2` of https://github.com/mcfrank/auto-psych, commit
-⟨SHA⟩.
+`b32e732b74d99d5f3dd85a9374d7d2e6b44beab8`.
 
 | file (in that commit) | sha256 |
 |---|---|
-| `src/rsa_open/gate.py` (the gate) | ⟨at tagging⟩ |
-| `src/rsa_open/fixed_paradigm.json` (the fixed arm's paradigm) | ⟨at tagging⟩ |
-| `src/rsa_open/loop/orchestrator.py` (the loop; the chance theory) | ⟨at tagging⟩ |
-| `src/rsa_open/corpus.py` (the guard and the one-SE rule) | ⟨at tagging⟩ |
-| `src/rsa_open/loop/gates.py` (admission, no hand-set numbers) | ⟨at tagging⟩ |
-| `src/rsa_open/loop/prompts/open_theory.md` (the theorists' brief) | ⟨at tagging⟩ |
+| `src/rsa_open/gate.py` (the gate) | `0ae779367bdd513a8945704dd90b7b2033852b7cb6f5debf801a11a814c7a6e1` |
+| `src/rsa_open/fixed_paradigm.json` (the fixed arm's paradigm) | `98247195c5755fcee16ebfe7f65f04c599f224c8774b3c8a6e52c004ba0cdda1` |
+| `src/rsa_open/loop/orchestrator.py` (the loop; the chance theory) | `7750355fab1cda82a7f8f41b581ed6547b19fa4e4c1e7ae42be0679c6275dcc8` |
+| `src/rsa_open/corpus.py` (the guard and the one-SE rule) | `fbd566db819246333c1c3074a2d9e5ae5cfcbe9fe1cc884debf0ba8f36bb534c` |
+| `src/rsa_open/loop/gates.py` (admission, no hand-set numbers) | `511081513fa1c9637d6446035c63d293834f6d5e64f415e3070ea678ca149af4` |
+| `src/rsa_open/loop/prompts/open_theory.md` (the theorists' brief) | `6687696fab1c37724b5ebbb78c12a3b23ad3e83e394d0b18edc122465061a13d` |
