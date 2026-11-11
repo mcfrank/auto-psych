@@ -1,6 +1,7 @@
 # Open and fixed-paradigm discovery loops: pre-registration, revision 2 (draft)
 
-**Status: a draft for the PI's review, 2026-11-10 (the PI's decisions of 11-10 included). Not registered.** Written by Claude Opus 5.5; not
+**Status: final text for registration (PI 2026-11-11), at the tag `rsa-open-prereg-v2`; OSF answers in
+`OSF_PREREG_V2.md`. Not yet registered.** Written by Claude Opus 5.5; not
 reviewed by a person. It is the revision that §4 of the first registration (https://osf.io/78t69,
 2026-10-29, `PREREG_DRAFT.md`) calls for: "a revision is registered anew, and open chain 1 is then
 reported as a pilot, not counted." Its sections follow the first registration's numbering, so the two
@@ -8,15 +9,14 @@ can be read side by side; the appendix lists every change and its reason.
 
 > **Decided by the PI on 2026-11-10:** 4 chains per arm × 3 experiments × 3 rounds of 6; the stage-1 pair
 > counts as chain 1 of each arm when the gate passes; no agent-spend criterion (spend is reported); the
-> prospective test is reported, not claimed; chain 1 is a pilot. **Still to fill before registering:** chain 1's
-> final state from Sherlock (§0), and the sha256 of the registered files at tagging (§8).
+> prospective test is reported, not claimed; chain 1 is a pilot.
 
 ## 0. Why a new registration, and what exists already
 
 - **Open chain 1 (the code's `chain_0`) is a pilot** (PI 2026-11-08). It ran under the first registration,
-  live, for 11 days of clock time: two experiments finished; a third recruited its participants and its
-  loop started, ⟨to confirm from Sherlock: how far it ran⟩. Its data, theories, timings and spend are reported
-  as the pilot (§7) and never counted in the bakeoff.
+  live, for 11 days of clock time: two experiments finished, and a third was begun (its participants
+  recruited and its loop started) and not finished. Its data, theories, timings and spend are reported as the
+  pilot (§7) and never counted in the bakeoff.
 - **What the pilot showed, which this revision acts on:**
   - **Slow fits.** The open fit evaluated every trial; a large theory's fit took 2.5 h and 35-37 GB, and the
     chain ran more than 8 days for 3 experiments. Fits now compute the same density about 10× faster (appendix).
@@ -120,9 +120,11 @@ is reported as a pilot. Either way the gate's outcome and every item's value are
 
 ## 4a. Failures, 4b. Participants (unchanged)
 
-As in the first registration, with one addition: since a chain runs as one launch, an infrastructure failure is
-resumed by relaunching the chain, which continues from its last finished phase. The blocklist (a person at most
-once per chain), returning-people analysis and exclusions stand as registered.
+As in the first registration, with two additions: since a chain runs as one launch, an infrastructure failure
+is resumed by relaunching the chain, which continues from its last finished phase; and the pilot's participants
+may take part in this registration's chains, as people of other chains may (the new open chain 1 is a different
+chain from the pilot, though it starts from the same seeds). The blocklist (a person at most once per chain),
+returning-people analysis and exclusions stand as registered.
 
 ## 5. Competitors in the bakeoff
 

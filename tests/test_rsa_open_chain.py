@@ -151,7 +151,8 @@ def test_the_chain_command_starts_from_its_chain_s_seeds_and_designs_against_the
     c = run_chain.build(args)
     assert c.cfg.seeds_dir == OUT / "chain_1" and c.cfg.bar_dir == OUT / "bar"
     assert c.cfg.literature == ("E from", tmp_path / "all_trials.csv") and c.cfg.chain == "chain_1"
-    assert c.cfg.loop == {"max_iterations": 5, "candidate_count": 6, "cv_folds": 5, "theorist_timeout_sec": 3600}
+    assert c.cfg.loop == {"max_iterations": 3, "candidate_count": 6, "cv_folds": 5, "theorist_timeout_sec": 3600}
+    assert c.cfg.n_experiments == 3  # the registered scale (PREREG_V2.md §2)
     assert callable(c.theorist_spawn(tmp_path / "run" / "experiment1" / "loop"))
 
 

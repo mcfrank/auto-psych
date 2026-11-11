@@ -528,7 +528,8 @@ def _launch(tmp_path, env, stdin=""):
         (bin_ / tool).chmod(0o755)
     calls = tmp_path / "calls"
     (bin_ / "sbatch").write_text(f'#!/bin/sh\necho "$* | CHAIN=$CHAIN ARM=$ARM CONFIRM=$CONFIRM_LIVE_RECRUITMENT '
-                                 f'PARTICIPANTS=$PARTICIPANTS" >> {calls}\necho $$\n')
+                                 f'PARTICIPANTS=$PARTICIPANTS STEP_MODE=$STEP_MODE STEP_FITS=$STEP_FITS '
+                                 f'LAUNCH_EXPERIMENTS=$LAUNCH_EXPERIMENTS" >> {calls}\necho $$\n')
     (bin_ / "sbatch").chmod(0o755)
     venv = tmp_path / "scratch" / "auto-psych" / "rsa_open_live" / "venv"
     venv.parent.mkdir(parents=True, exist_ok=True)
@@ -542,7 +543,7 @@ def _launch(tmp_path, env, stdin=""):
 
 @pytest.mark.skipif(not (ROOT / ".venv").exists(), reason="needs the project's venv")
 def test_each_chain_gets_a_ladder_of_jobs_and_a_stopped_chain_is_not_relaunched(tmp_path):
-    out, calls = _launch(tmp_path, dict(PROLIFIC_MODE="test", ARM="fixed", CHAINS="0 1", LINKS="3"))
+    out, calls = _launch(tmp_path, dict(PROLIFIC_MODE="test", ARM="fixed", CHAINS="0 1", LINKS="3", STEP_MODE="0"))
     assert out.returncode == 0, out.stderr
     assert "400 people x $0.50 for 3 min: $266.67 a study" in out.stderr
     assert len(calls) == 6 and all("--partition=mcfrank,owners,normal --time=48:00:00" in c for c in calls)
@@ -551,10 +552,32 @@ def test_each_chain_gets_a_ladder_of_jobs_and_a_stopped_chain_is_not_relaunched(
     stop = tmp_path / "scratch" / "auto-psych" / "rsa_open_live" / "cells" / "fixed_chain_0" / "STOP"
     stop.parent.mkdir(parents=True)
     stop.write_text("then\tawaiting review\n")
-    out, calls2 = _launch(tmp_path, dict(PROLIFIC_MODE="test", ARM="fixed", CHAINS="0", LINKS="1"))
+    out, calls2 = _launch(tmp_path, dict(PROLIFIC_MODE="test", ARM="fixed", CHAINS="0", LINKS="1", STEP_MODE="0"))
     assert "relaunch with CLEAR_STOP=1" in out.stderr and calls2 == calls
-    out, calls3 = _launch(tmp_path, dict(PROLIFIC_MODE="test", ARM="fixed", CHAINS="0", LINKS="1", CLEAR_STOP="1"))
+    out, calls3 = _launch(tmp_path, dict(PROLIFIC_MODE="test", ARM="fixed", CHAINS="0", LINKS="1", CLEAR_STOP="1",
+                                         STEP_MODE="0"))
     assert len(calls3) == 7 and not stop.exists() and list(stop.parent.glob("STOP.*"))
+
+
+@pytest.mark.skipif(not (ROOT / ".venv").exists(), reason="needs the project's venv")
+def test_a_chain_launches_by_default_as_one_job_that_runs_its_fits_and_every_experiment(tmp_path):
+    """PREREG_V2.md §2 (PI 2026-11-09): one launch per chain, steps running their own fits, 3 experiments."""
+    out, calls = _launch(tmp_path, dict(PROLIFIC_MODE="test", ARM="open", CHAINS="0 1"))
+    assert out.returncode == 0, out.stderr
+    assert len(calls) == 2 and all("--dependency" not in c for c in calls)  # one job per chain, no ladder
+    assert all("--partition=mcfrank --time=4-00:00:00 --cpus-per-task=12 --mem=72G --no-requeue" in c for c in calls)
+    assert all("STEP_MODE=1 STEP_FITS=local LAUNCH_EXPERIMENTS=all" in c for c in calls)
+    assert "every experiment a launch" in out.stderr
+
+
+def test_the_live_defaults_are_the_registered_scale_and_tag():
+    import yaml
+
+    live = (ROOT / "scripts/rsa/slurm/open_live.sbatch").read_text()
+    assert 'N_EXPERIMENTS="${N_EXPERIMENTS:-3}"' in live and 'MAX_ITERATIONS="${MAX_ITERATIONS:-3}"' in live
+    assert 'CANDIDATES="${CANDIDATES:-6}"' in live
+    assert 'N_EXPERIMENTS="${N_EXPERIMENTS:-3}"' in (ROOT / "scripts/rsa/live/open_launch.sh").read_text()
+    assert yaml.safe_load((ROOT / "scripts/rsa/live/open_live.yaml").read_text())["code_tag"] == "rsa-open-prereg-v2"
 
 
 @pytest.mark.skipif(not (ROOT / ".venv").exists(), reason="needs the project's venv")

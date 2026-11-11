@@ -66,8 +66,8 @@ class Args:
     fixed_spec: Optional[Path] = None
     """The fixed arm's spec, if not the closed paradigm's (the two-measure rehearsal's)."""
     seeds: Path = SEEDS
-    n_experiments: int = 4
-    max_iterations: int = 5
+    n_experiments: int = 3  # the registered scale (PREREG_V2.md §2)
+    max_iterations: int = 3
     candidate_count: int = 6
     cv_folds: int = 5
     """Grouped CV folds per block (fewer for a dry run)."""

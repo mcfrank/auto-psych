@@ -3,9 +3,9 @@
 # items 6-7; scripts/rsa/slurm/open_live.sbatch runs each chain).
 #
 #   PROLIFIC_MODE=test ARM=open CHAINS="0" bash scripts/rsa/live/open_launch.sh      # page + Prolific draft, then stop
-#   PROLIFIC_MODE=live ARM=open CHAINS="0" PARTITION=mcfrank TIME=7-00:00:00 LINKS=1 bash scripts/rsa/live/open_launch.sh
-#                                                                                       # the feasibility chain
-#   PROLIFIC_MODE=live ARM=fixed CHAINS="0 1 2 3" bash scripts/rsa/live/open_launch.sh   # on a pass (normal partition)
+#   PROLIFIC_MODE=live ARM=open CHAINS="0" bash scripts/rsa/live/open_launch.sh      # stage 1 (PREREG_V2.md §4): open chain 1
+#   PROLIFIC_MODE=live ARM=fixed CHAINS="0" bash scripts/rsa/live/open_launch.sh     # ... and fixed chain 1, together
+#   PROLIFIC_MODE=live ARM=open CHAINS="1 2 3" bash scripts/rsa/live/open_launch.sh  # stage 2, on a pass (and ARM=fixed)
 #   PROLIFIC_MODE=live ARM=open CHAINS="0" PARTICIPANTS=15 SMOKE_FROM=<run>/experiment1 \
 #     bash scripts/rsa/live/open_launch.sh                                               # a smoke test: never modelled
 #
@@ -22,12 +22,12 @@
 # writes the cell's STOP, and the ladder's later jobs exit at once. A stopped chain is relaunched
 # only with CLEAR_STOP=1 (its STOP is kept as STOP.<time>).
 #
-# STEP_MODE=1 runs the chain as steps instead (DISTRIBUTED_DESIGN.md v3 §0b; open_live.sbatch):
-# one job per chain on $STEP_PARTITION (mcfrank), 8 cores and 32 GB, never requeued; it fits nothing
-# itself, submits its fits as arrays of single-core jobs (STEP_FIT_PARTITION, mcfrank,owners) and
-# the chain's next step after them, so there is no ladder (LINKS is ignored). A launch runs one
-# experiment (at most 40 steps) and stops with a mail; launch the next with CLEAR_STOP=1 STEP_MODE=1
-# (SRCC ticket #106983: a person starts one job per experiment).
+# A live launch runs as steps by default (STEP_MODE=1; PREREG_V2.md §2): one job per chain on
+# $STEP_PARTITION (mcfrank), 12 cores and 72 GB, never requeued, that runs its own fits
+# (STEP_FITS=local) and every experiment of the chain (LAUNCH_EXPERIMENTS=all), continued by a new job
+# only when its time runs short; there is no ladder (LINKS is ignored). STEP_FITS=array submits fits as
+# arrays instead; LAUNCH_EXPERIMENTS=1 stops after each experiment (relaunch with CLEAR_STOP=1).
+# STEP_MODE=0 is the older ladder; a smoke test always runs that way (it fits nothing).
 #
 # Slurm mails the submitter when a job stops for a person or fails (open_live.sbatch's exit codes);
 # MAIL_USER sends it elsewhere, MAIL_TYPE=NONE turns it off. `python -m src.rsa_open.status` shows
@@ -42,15 +42,15 @@ WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/rsa_open_live}"
 PARTITION="${PARTITION:-mcfrank,owners,normal}"  # the first with room (run D1: a whole node waited hours on normal)
 TIME="${TIME:-48:00:00}"
 LINKS="${LINKS:-4}"
-N_EXPERIMENTS="${N_EXPERIMENTS:-4}"
+N_EXPERIMENTS="${N_EXPERIMENTS:-3}"  # the registered scale (PREREG_V2.md §2)
 source "$REPO/scripts/rsa/slurm/_env.sh"
 cd "$REPO"
 SMOKE=""
 SIZE=()
-STEP_MODE="${STEP_MODE:-0}"
+STEP_MODE="${STEP_MODE:-$([[ -n "${PARTICIPANTS:-}" ]] && echo 0 || echo 1)}"  # steps, except a smoke test
 if [[ "$STEP_MODE" == 1 ]]; then
   [[ -z "${PARTICIPANTS:-}" ]] || { echo "not launched: a smoke test fits nothing; run it without STEP_MODE" >&2; exit 1; }
-  STEP_FITS="${STEP_FITS:-local}" LAUNCH_EXPERIMENTS="${LAUNCH_EXPERIMENTS:-1}"
+  STEP_FITS="${STEP_FITS:-local}" LAUNCH_EXPERIMENTS="${LAUNCH_EXPERIMENTS:-all}"  # one launch per chain (PI 2026-11-09)
   if [[ "$STEP_FITS" == local ]]; then  # the step runs its fits (PI 2026-11-09): their cores and memory too
     PARTITION="${STEP_PARTITION:-mcfrank}" TIME="${STEP_TIME:-4-00:00:00}" LINKS=1
     SIZE=(--cpus-per-task="${STEP_CPUS:-12}" --mem="${STEP_MEM:-72G}" --no-requeue)

@@ -52,7 +52,7 @@
 # that dies leaves no continuation: Slurm's FAIL / TIME_LIMIT mail reaches the PI, and the
 # status command shows the chain idle (relaunch it with the launcher; it resumes).
 #
-# Overrides: CONFIG (scripts/rsa/live/open_live.yaml), N_EXPERIMENTS (4), MAX_ITERATIONS (5),
+# Overrides: CONFIG (scripts/rsa/live/open_live.yaml), N_EXPERIMENTS (3), MAX_ITERATIONS (3; PREREG_V2.md §2),
 # CANDIDATES (6), CV_FOLDS (5), PILOT_PARTICIPANTS (12), THEORIST_TIMEOUT_SEC (3600), SEED (0),
 # RUN2_ROOT (E's source), CODE_TAG (the frozen tag the staged code must be).
 set -euo pipefail
@@ -104,8 +104,8 @@ if [[ "$PROLIFIC_MODE" == "live" ]]; then
 elif [[ "$PROLIFIC_MODE" != "test" ]]; then
   echo "FATAL: PROLIFIC_MODE must be test or live, not $PROLIFIC_MODE" >&2; exit 1
 fi
-N_EXPERIMENTS="${N_EXPERIMENTS:-4}"
-MAX_ITERATIONS="${MAX_ITERATIONS:-5}"
+N_EXPERIMENTS="${N_EXPERIMENTS:-3}"  # the registered scale (PREREG_V2.md §2): 3 experiments of 3 rounds of 6
+MAX_ITERATIONS="${MAX_ITERATIONS:-3}"
 CANDIDATES="${CANDIDATES:-6}"
 CV_FOLDS="${CV_FOLDS:-5}"
 PILOT_PARTICIPANTS="${PILOT_PARTICIPANTS:-12}"
