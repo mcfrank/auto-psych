@@ -8,9 +8,13 @@ choices (user decisions, 2026-10-27):
 
 - **One final**, the run's best model at its end
   (`collected/run1/number_game/experiment3/cognitive_models/even_rule_digit_size_principle_counting.py`).
-- **The run's own data**: experiment 3's cumulative 7,560 responses
-  (`model_loop/responses.csv`: 840 (example set, target) items × 9 responses, on 150 example
-  sets), not the full Bigelow & Piantadosi bank.
+- **All three runs' data pooled** (user decision, 2026-11-04): each run's experiment-3
+  cumulative `model_loop/responses.csv`, in run order, 22,680 responses on 241 example sets.
+  This is the file behind the paper's pooled number-game fits (Figures 2 and 3), as the
+  sr-oct26 ablation uses all its runs pooled. Not the full Bigelow & Piantadosi bank.
+  - The first elimination (2026-10-27) used run 1's 7,560 responses alone, set before runs 2
+    and 3 had finished. It is superseded; its result is in git history
+    (`data/results/number_game_dataset-oct26/analysis/ablation/`).
 - **Grouped CV over whole example sets** (`cv_group: [number_set]`), the unit the run itself
   selected models by (`scripts/number_game/configs/dataset_run.yaml`, the run's
   `harness/run1/holdout.json`). A term must predict example sets it was never fitted on.
@@ -63,14 +67,15 @@ modifies. `parity` acts only through the similarity and the mutual standard, so 
 of them. The band's width is part of `decade_band`: it has no value at which the band term
 is absent.
 
-## 2. The rule (fixed 2026-10-27, before any fit)
+## 2. The rule (fixed 2026-10-27, before any fit; the data changed to all runs pooled on 2026-11-04, after the run-1 elimination, nothing else)
 
-**Data:** the run's 7,560 responses (`src.number_game.ablation.data`; a test checks the file
-and its count).
+**Data:** all three runs' 22,680 responses pooled (`src.number_game.ablation.data`; a test
+checks the file, its count and that it is the paper's pooled file).
 
 **Criterion:** ELPD from 5-fold CV grouped by example set (`src.model_comparison.cv`,
 `cv_group=("number_set",)`, fold seed 0):
-- every response to an example set falls in one fold (the folds have 1,512 responses each);
+- every response to an example set falls in one fold, including an example set drawn by
+  more than one run (the folds have 4,536 responses each, 48–49 example sets);
 - each held-out response is scored by its log posterior predictive density;
 - the SE of a difference is clustered by example set, the CV unit
   (`src.models.clustered_se.cluster_dse` over `example_set_clusters`).
@@ -99,7 +104,7 @@ total cost against the full final, with its SE: drops that each fall below 2 SE 
 
 **Where the settings differ from what the run used, and why.**
 - **5 folds, not the run's 4.** The run's folds served selection inside the loop. Here the
-  sr-oct26 rule (5 folds) applies, and 150 example sets split evenly into 5 folds.
+  sr-oct26 rule (5 folds) applies, and the 241 example sets split into 5 equal folds.
 - **Production NUTS, not the run's cheap `warm_start_nuts`** (200 tuning steps, 500 draws).
   Those settings were for selection inside the loop, not for a final analysis.
 - **The SE is clustered by example set.** The run's own comparison (`model_posterior.json`)
@@ -111,7 +116,9 @@ total cost against the full final, with its SE: drops that each fall below 2 SE 
   1,500 on every parameter, with a peak memory of ~2.7 GB (1.6 GB in the parent, 0.27 GB per
   chain). A repeat with the compile cache warm took 289 s. Nothing argues for cheaper
   settings.
-- **A shorter time limit per attempt** (1 h, not 22 h): 10× the measured fit.
+- **A shorter time limit per attempt** (3 h, not 22 h): about 10× the expected pooled fit
+  (the measurement above was on run 1's data, a third of the pooled responses; 1 h when the
+  ablation used run 1's data alone).
 - **Several fits per array task.** One fit is shorter than the 10 minutes Sherlock asks a job
   to last, so each worker array task fits `TASKS_PER_JOB` (5) of the round's (model, fold)
   tasks in turn.
@@ -127,11 +134,12 @@ total cost against the full final, with its SE: drops that each fall below 2 SE 
    It submits a **setup** job, then a **driver** chain
    (`scripts/number_game/slurm/ablation.sbatch`, modelled on the sr-oct26 one).
    - **Setup:** builds the shared venv, stages the code once into `$WORK_ROOT/code`, and
-     copies the run's responses to `$WORK_ROOT/data/responses.csv`. `$WORK_ROOT` is
-     `$SCRATCH/auto-psych/ng_ablation`. Every later job runs the staged code, so the checkout
+     writes the three runs' pooled responses to `$WORK_ROOT/data/responses.csv`. `$WORK_ROOT`
+     is `$SCRATCH/auto-psych/ng_ablation_pooled` (the run-1 ablation's
+     `$SCRATCH/auto-psych/ng_ablation` holds other data and code; setup would refuse it). Every later job runs the staged code, so the checkout
      can move on. A setup on other code refuses.
    - **Driver** (1 core): replays the rule over the saved fits. It then submits the round's
-     missing (model, fold) fits as one array of 5 fits per task (4 cores, 8 GB, ≤ 8 h,
+     missing (model, fold) fits as one array of 5 fits per task (4 cores, 16 GB, ≤ 8 h,
      `normal,owners`, `--requeue`) and queues the next driver after it.
    - **Stopping:** when nothing is missing, the driver writes `elimination.json`,
      `summary.md` and `lean/` under `$WORK_ROOT/ng/`. A round still missing fits after 2
@@ -139,14 +147,16 @@ total cost against the full final, with its SE: drops that each fall below 2 SE 
    - **Knobs:** `SEEDS`, `WORKER_PARTITION`, `WORKER_CPUS`, `WORKER_MEM`, `WORKER_TIME`,
      `TASKS_PER_JOB`, `MAX_PARALLEL`, `MAX_ATTEMPTS`.
 
-2. **Cost**, from the measured fit (~6 min on 4 cores, ~0.4 core-hours):
-   - Round 1 is 55 fits: (1 + 10) models × 5 folds. That is 11 array tasks of ~30 min, about
-     22 core-hours.
+2. **Cost**, from the fit measured on run 1's data (~6 min on 4 cores), scaled by the
+   pooled data's 3× responses: expect ~20 min and ~1.3 core-hours a fit, not yet measured.
+   - Round 1 is 55 fits: (1 + 10) models × 5 folds. That is 11 array tasks of ~1.5 h, about
+     70 core-hours.
    - Each later round costs one model fewer, plus any it newly opens (a term whose modifier
      went). It runs until the rule stops. If every round dropped something down to one term,
-     85 models would be scored: 425 fits, about 170 core-hours.
-   - The wall time is set by the rounds, which run in order: up to 13, each ~30–45 min of
-     fitting plus queue waits. Expect hours to a day.
+     85 models would be scored: 425 fits, about 550 core-hours. The run-1 elimination took
+     7 rounds.
+   - The wall time is set by the rounds, which run in order: up to 13, each ~1.5–2 h of
+     fitting plus queue waits. Expect one to two days.
    - Smaller variants may sample faster or slower than the full model; the attempt records
      (`cv/<model>/fold<k>.json`, `seconds`) show it.
 
@@ -163,7 +173,7 @@ total cost against the full final, with its SE: drops that each fall below 2 SE 
    `data/results/number_game_dataset-oct26/analysis/ablation/`:
 
    ```bash
-   SRC=shr:/scratch/users/<sunetid>/auto-psych/ng_ablation   # Sherlock's $SCRATCH
+   SRC=shr:/scratch/users/<sunetid>/auto-psych/ng_ablation_pooled   # Sherlock's $SCRATCH
    rsync -av --prune-empty-dirs --include='*/' --include='elimination.json' --include='summary.md' \
      --include='lean/**' --include='cv/*/*.json' --exclude='*' \
      "$SRC/ng/" data/results/number_game_dataset-oct26/analysis/ablation/
@@ -174,13 +184,14 @@ total cost against the full final, with its SE: drops that each fall below 2 SE 
 
 ## 4. Caveats, stated now
 
-- **The final was selected on these same 7,560 responses.** The loop chose its mechanisms
-  because they helped on these data (by grouped CV over these example sets, but over many
-  candidates). Mechanisms that only fit these data are therefore favoured, and the lean model
-  is an upper bound on what is needed. A cleaner test, not set up here, would score the same
-  rule on responses the run never drew. The bank has 263,569 of them, on items whose example
+- **The final was selected on run 1's 7,560 responses, a third of these data.** The loop
+  chose its mechanisms because they helped there (by grouped CV over those example sets, but
+  over many candidates). Mechanisms that only fit run 1's data are therefore still favoured,
+  less than when the ablation used run 1's data alone, and the lean model is an upper bound on
+  what is needed. A cleaner test, not set up here, would score the same rule on runs 2 and 3
+  alone, or on responses no run drew. The bank has 263,569 of them, on items whose example
   sets largely overlap the run's (README, table B).
-- **The run's items were chosen by EIG to be where the models disagree.** They are not a
+- **The runs' items were chosen by EIG to be where the models disagree.** They are not a
   sample of the number game. A term can matter a lot on these items and little on typical
   ones, or the reverse. The lean model says what these items need.
 - **Grouped CV holds out example sets, not targets or people.** It asks whether a term

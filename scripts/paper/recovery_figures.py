@@ -232,7 +232,7 @@ def alien_plot(df: pd.DataFrame) -> ggplot:
     )
 
 
-DOMAINS = ("Subjective randomness", "Number game", "Reference games")
+DOMAINS = ("Subjective randomness", "Number sequence generalization", "Reference games")
 
 
 def _panel(domain: str, gt: str) -> str:

@@ -10,7 +10,12 @@
   models' papers from ``seed_papers.yaml``), and the non-winning models
   (the other models live at the end and those pruned during the runs) as
   one strip in admission order. How each
-  domain is scored is for the caption (the figure data's ``scoring``).
+  domain is scored is for the caption (the figure data's ``scoring``). The
+  number game's column is its pooled models scored on the Bigelow &
+  Piantadosi responses no run drew (``number_game_unseen_items.py``; one of
+  its two test sets, ``--ng-test-set``); its strip is "pending" until those
+  scores include the non-winning models. Figures 3 and 4 keep the figure
+  data's cross-validated comparison.
 - Figure 3 (``fig3_conditions``): per domain, all runs' data pooled: each
   condition's observed choice proportion against the prediction of the best
   starting model (top row) and of the best discovered model (bottom row), both fitted
@@ -37,7 +42,7 @@ import hashlib
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
 import matplotlib
 
@@ -54,13 +59,20 @@ DOMAINS = ["subjective_randomness", "rsa", "number_game"]
 DOMAIN_TITLES = {
     "subjective_randomness": "Subjective randomness",
     "rsa": "Reference games",
-    "number_game": "Number game",
+    "number_game": "Number sequence generalization",
 }
 
 # ColorBrewer Dark2, its first two colours (teal, orange); as a pair they
 # pass the colour-vision-deficiency separation and contrast checks.
 COLOR_DISCOVERED = "#1b9e77"
 COLOR_SEED = "#d95f02"
+# Figure 2's promoted seeds (reference games: models auto-psych's inner loop
+# wrote on published data before the live runs), apart from the seeds that
+# predate auto-psych. With the seeds' orange and RUN_COLORS it passes the
+# palette validator's checks on every pair (worst CVD separation ΔE 9.0,
+# deutan, against the orange; normal vision 15.3); below 3:1 on white, so its
+# points are named and in the legend.
+COLOR_PROMOTED = "#c9a000"
 INK = "#0b0b0b"
 INK_SECONDARY = "#52514e"
 GRID = "#e4e3df"
@@ -92,6 +104,10 @@ class Args:
     """The paper each starting model implements (or null), per domain."""
     """Directory with one ``<domain>.yaml`` pseudocode spec per domain."""
     out_dir: Path = here() / "data" / "paper" / "figures"
+    ng_unseen: Path = here() / "data" / "paper" / "number_game_unseen_items.json"
+    """The number game's pooled models scored on unseen items: Figure 2's column."""
+    ng_test_set: Literal["unseen_items", "unseen_example_sets"] = "unseen_example_sets"
+    """Which of its test sets Figure 2 draws."""
     domains: List[str] = field(default_factory=lambda: list(DOMAINS))
     pending_domains: List[str] = field(default_factory=list)
     """Domains drawn as a 'pending' placeholder (their data are not in yet)."""
@@ -121,6 +137,35 @@ def load_domain_data(args: Args) -> Dict[str, Optional[Dict[str, Any]]]:
             raise RuntimeError(f"{path} holds domain {data['domain']!r}, not {domain!r}")
         loaded[domain] = data
     return loaded
+
+
+NG_TEST_SETS = {
+    "unseen_items": "the (example set, target) items no run drew",
+    "unseen_example_sets": "the example sets no run drew",
+}
+
+
+def number_game_unseen_view(data: Dict[str, Any], unseen: Dict[str, Any], test_set: str) -> Dict[str, Any]:
+    """Figure 2's number game: the pooled winners and seeds, and once scored
+    the non-winning models (``strip``), on ``test_set`` of the unseen-items
+    record, each against that test set's best seed. ``data`` is not changed."""
+    pooled = data["pooled"]
+    if unseen["winner_runs"] != pooled["winner_runs"]:
+        raise RuntimeError(f"number game: the unseen-items record scores the winners {unseen['winner_runs']}, "
+                           f"the figure data's are {pooled['winner_runs']}")
+    scored = unseen[test_set]
+    view = {key: value for key, value in pooled.items() if key not in ("pruned_during_run", "others_at_end")}
+    view.update(best_seed=scored["best_seed"], elpd={m: r["lpd"] for m, r in scored["models"].items()},
+                vs_best_seed={m: r["vs_best_seed"] for m, r in scored["models"].items()})
+    if "strip" in scored:
+        missing = sorted({*pooled["pruned_during_run"], *pooled["others_at_end"]} - set(scored["strip"]))
+        if missing:
+            raise RuntimeError(f"number game: no unseen-items score for the non-winning models {missing}")
+        for key in ("pruned_during_run", "others_at_end"):
+            view[key] = {label: scored["strip"][label] for label in pooled[key]}
+    return {**data, "pooled": view,
+            "scoring": (f"log predictive density on {NG_TEST_SETS[test_set]} "
+                        f"({scored['n_responses']:,} responses), the models fitted on all runs pooled")}
 
 
 def load_pseudocode(spec_dir: Path, domain: str, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -222,6 +267,26 @@ def best_seed_elpd(domain: str, data: Dict[str, Any]) -> float:
     if len(found) != 1:
         raise RuntimeError(f"{domain}: the runs record {sorted(found)} as the best starting model's ELPD")
     return found.pop()
+
+
+def seed_color(data: Dict[str, Any], model: str) -> str:
+    """A starting model's colour: the promoted seeds' (``promoted_seeds``,
+    which auto-psych wrote) or the seeds' that predate auto-psych."""
+    return COLOR_PROMOTED if model in data.get("promoted_seeds", ()) else COLOR_SEED
+
+
+def zero_line_color(domain: str, data: Dict[str, Any]) -> str:
+    """The colour of a panel's zero line: its best starting model's."""
+    best = data["pooled"]["best_seed"] if domain in POOLED_VIEW else data["runs"][0]["best_seed"]
+    return seed_color(data, best)
+
+
+def textbook_line(data: Dict[str, Any]) -> Optional[float]:
+    """Where Figure 2 draws the best textbook model's line, as a difference
+    from the panel's zero (reference games, whose zero is the best promoted
+    seed), or ``None`` where the figure data record no textbook model."""
+    line = data.get("best_textbook")
+    return None if line is None else float(line["diff"])
 
 
 def _model_name(names: Dict[str, str], domain: str, model: str) -> str:
@@ -391,7 +456,8 @@ def _name_band(ax, fig, items: List[Tuple[str, List[Tuple[float, float]]]], at: 
     the panel (``at`` "top": the best discovered models, highest on top, each
     name ending at its point's column) or at the bottom ("bottom": the
     starting models, lowest at the bottom, each name starting at its point's
-    column), shifted right where a name would cross the y-axis (and a bottom
+    column), shifted right where a name would cross the y-axis, no further
+    than the panel's right edge (and a bottom
     name left where it would run past the panel's right edge), with a leader
     line to its point. The panel's range grows to hold the band, whose ticks
     are hidden."""
@@ -418,7 +484,8 @@ def _name_band(ax, fig, items: List[Tuple[str, List[Tuple[float, float]]]], at: 
         probe = ax.text(x, y_text, text, ha=ha, va="center", fontsize=5)
         box = probe.get_window_extent(renderer)
         probe.remove()
-        x_text = x if box.x0 >= frame.x0 else to_data.transform((box.x1 + frame.x0 - box.x0, 0))[0]
+        # A top name longer than the panel ends at its right edge (the band's ticks are hidden).
+        x_text = x if box.x0 >= frame.x0 else to_data.transform((min(box.x1 + frame.x0 - box.x0, frame.x1), 0))[0]
         if not top and box.x0 < frame.x0:
             x_text = to_data.transform((frame.x0, 0))[0]
         if not top and box.x1 > frame.x1:
@@ -444,18 +511,21 @@ def _elpd_ticks(axis) -> None:
 LEGEND_ROW_PT = 10.0  # one row of Figure 2's legend
 
 
-def _fig2_legend(fig, hollow: List[str], n_runs: int) -> float:
+def _fig2_legend(fig, hollow: List[str], n_runs: int, promoted: bool = False) -> float:
     """Figure 2's legend, at the top: the kinds of model (the loop's in
-    neutral ink), then the runs' colours. Returns the figure fraction it
-    takes."""
+    neutral ink; the promoted seeds where a panel draws them), then the runs'
+    colours. Returns the figure fraction it takes."""
     def dot(color, label, size=3.6, **kw):
         return Line2D([], [], marker="o", color=color, linestyle="none", markersize=size,
                       label=label, **kw)
 
     kinds = [
-        dot(COLOR_SEED, "Starting models"),
-        Line2D([], [], color=INK_SECONDARY, linewidth=0.7, linestyle=(0, (3, 2)),
-               label="Best starting model"),
+        dot(COLOR_SEED, "Seed models"),
+        Line2D([], [], color=COLOR_SEED, linewidth=0.7, linestyle=(0, (3, 2)),
+               label="Best seed model"),
+        *([dot(COLOR_PROMOTED, "Promoted seeds"),
+           Line2D([], [], color=COLOR_PROMOTED, linewidth=0.7, linestyle=(0, (3, 2)),
+                  label="Best promoted seed")] if promoted else []),
         dot(NEUTRAL_GREY, "Non-winning models (in the order tried)", size=2.8),
         Line2D([], [], marker="o", color=INK_SECONDARY, markersize=3.6, linestyle="none",
                label="Best discovered (±2 SE)"),
@@ -519,6 +589,7 @@ def draw_elpd(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path,
                              gridspec_kw={"width_ratios": widths})
     hollow: List[str] = []
     drawn = []
+    promoted_drawn = any(data is not None and data.get("promoted_seeds") for data in domain_data.values())
     bands: Dict[Any, Tuple[List[Any], List[Any]]] = {}  # per panel: the top and bottom bands' names
     for ax, (domain, columns) in zip(np.atleast_1d(axes), rows_by_domain.items()):
         if columns is None:
@@ -530,7 +601,11 @@ def draw_elpd(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path,
         ax.set_xticks([])
         # Raw ELPD: every difference shifted by the best starting model's own.
         off = best_seed_elpd(domain, domain_data[domain])
-        ax.axhline(off, color=INK_SECONDARY, linewidth=0.7, linestyle=(0, (3, 2)), zorder=0)
+        ax.axhline(off, color=zero_line_color(domain, domain_data[domain]), linewidth=0.7,
+                   linestyle=(0, (3, 2)), zorder=0)
+        textbook = textbook_line(domain_data[domain])
+        if textbook is not None:  # the best seed that predates auto-psych, beside a promoted zero
+            ax.axhline(off + textbook, color=COLOR_SEED, linewidth=0.7, linestyle=(0, (3, 2)), zorder=0)
         xs = _column_positions(columns)
         pending_strips = []
         seed_names = _seed_names(columns)
@@ -545,7 +620,8 @@ def draw_elpd(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path,
                 across = x + (np.asarray(col["progress"]) - 0.5) * (NONWINNING_SPAN - 0.5)
                 _strip(ax, across, np.asarray(col["values"], dtype=float) + off, col["runs"])
                 continue
-            color = RUN_COLORS[col["run"]] if col["kind"] == "winner" else COLOR_SEED
+            color = (RUN_COLORS[col["run"]] if col["kind"] == "winner"
+                     else seed_color(domain_data[domain], col["model"]))
             y = off + col["diff"]
             if col["se"] is None:
                 hollow.append(f"{domain}:{col['model']}")
@@ -574,7 +650,7 @@ def draw_elpd(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path,
         ax.set_title(panel_title(domain, mock_domains=mock_domains), fontsize=7.5, color=INK,
                      loc="left", pad=3)
     drawn[0].set_ylabel("ELPD (nats)", fontsize=6.5, color=INK, labelpad=2)
-    legend = _fig2_legend(fig, hollow, _n_runs(rows_by_domain))
+    legend = _fig2_legend(fig, hollow, _n_runs(rows_by_domain), promoted_drawn)
     fig.tight_layout(w_pad=0.8, rect=(0, 0, 0.97, 1 - legend))
     fig.canvas.draw()  # the final layout, so names are placed in its coordinates
     for ax, (winners_here, seeds_here) in bands.items():
@@ -614,6 +690,7 @@ def draw_elpd_horizontal(domain_data: Dict[str, Optional[Dict[str, Any]]], out_d
     fig, axes = plt.subplots(1, len(rows_by_domain), figsize=(FULL_WIDTH_IN, FIG2_HORIZONTAL_HEIGHT_IN))
     hollow: List[str] = []
     drawn = []
+    promoted_drawn = any(data is not None and data.get("promoted_seeds") for data in domain_data.values())
     for ax, (domain, rows) in zip(np.atleast_1d(axes), rows_by_domain.items()):
         if rows is None:
             _pending(ax, domain)
@@ -621,7 +698,11 @@ def draw_elpd_horizontal(domain_data: Dict[str, Optional[Dict[str, Any]]], out_d
         drawn.append(ax)
         _style(ax)
         off = best_seed_elpd(domain, domain_data[domain])
-        ax.axvline(off, color=INK_SECONDARY, linewidth=0.7, linestyle=(0, (3, 2)), zorder=0)
+        ax.axvline(off, color=zero_line_color(domain, domain_data[domain]), linewidth=0.7,
+                   linestyle=(0, (3, 2)), zorder=0)
+        textbook = textbook_line(domain_data[domain])
+        if textbook is not None:  # the best seed that predates auto-psych, beside a promoted zero
+            ax.axvline(off + textbook, color=COLOR_SEED, linewidth=0.7, linestyle=(0, (3, 2)), zorder=0)
         heights = [_row_height(r) for r in rows]
         ys = list(np.cumsum(heights) - np.asarray(heights) / 2)
         for y, row in zip(ys, rows):
@@ -634,7 +715,8 @@ def draw_elpd_horizontal(domain_data: Dict[str, Optional[Dict[str, Any]]], out_d
                 across = y + (0.5 - np.asarray(row["progress"])) * (HORIZONTAL_NONWINNING_SPAN - 0.5)
                 _strip(ax, np.asarray(row["values"], dtype=float) + off, across, row["runs"])
                 continue
-            color = RUN_COLORS[row["run"]] if row["kind"] == "winner" else COLOR_SEED
+            color = (RUN_COLORS[row["run"]] if row["kind"] == "winner"
+                     else seed_color(domain_data[domain], row["model"]))
             x, half = off + row["diff"], 2 * (row["se"] or 0.0)
             if row["se"] is None:
                 hollow.append(f"{domain}:{row['model']}")
@@ -664,7 +746,7 @@ def draw_elpd_horizontal(domain_data: Dict[str, Optional[Dict[str, Any]]], out_d
         ax.set_title(panel_title(domain, mock_domains=mock_domains), fontsize=7.5, color=INK,
                      loc="left", pad=3)
     drawn[len(drawn) // 2].set_xlabel("ELPD (nats)", fontsize=6.5, color=INK, labelpad=2)
-    legend = _fig2_legend(fig, hollow, _n_runs(rows_by_domain))
+    legend = _fig2_legend(fig, hollow, _n_runs(rows_by_domain), promoted_drawn)
     fig.tight_layout(w_pad=0.6, rect=(0, 0, 1, 1 - legend))
     _save(fig, out_dir, "fig2_elpd_horizontal")
 
@@ -673,13 +755,14 @@ def draw_elpd_horizontal(domain_data: Dict[str, Optional[Dict[str, Any]]], out_d
 # game's 840 cells all have 9 responses, so every point is full size and
 # they stack on the ten possible observed proportions.
 FIG3_ALPHA = {"number_game": 0.1}
+FIG3_HEIGHT_IN = 3.7  # panels wider than tall: the axes are not held square
 
 
 def draw_conditions(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path,
                     mock_domains: List[str]) -> None:
     rows = [("best_seed", "Best starting model", COLOR_SEED),
             ("best_model", "Best discovered model", COLOR_DISCOVERED)]
-    fig, axes = plt.subplots(2, len(domain_data), figsize=(FULL_WIDTH_IN, 4.9))
+    fig, axes = plt.subplots(2, len(domain_data), figsize=(FULL_WIDTH_IN, FIG3_HEIGHT_IN))
     axes = np.asarray(axes).reshape(2, len(domain_data))
     for col, (domain, data) in enumerate(domain_data.items()):
         for row, (key, label, color) in enumerate(rows):
@@ -703,7 +786,7 @@ def draw_conditions(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: P
                     fontsize=6.5, color=INK, va="top", ha="left")
             ax.set_xlim(-0.02, 1.02)
             ax.set_ylim(-0.02, 1.02)
-            ax.set_aspect("equal")
+            ax.set_yticks([0, 0.5, 1])
             ax.set_xlabel(f"{label}: predicted", fontsize=7, color=INK)
             if col == 0:
                 ax.set_ylabel("Observed proportion", fontsize=7, color=INK)
@@ -753,8 +836,12 @@ def main(args: Args) -> None:
     names = yaml.safe_load(args.model_names.read_text())
     papers = yaml.safe_load(args.seed_papers.read_text())
     drawn = [d for d, data in domain_data.items() if data is not None]
+    fig2_data = dict(domain_data)
+    if fig2_data.get("number_game") is not None:
+        fig2_data["number_game"] = number_game_unseen_view(
+            domain_data["number_game"], json.loads(args.ng_unseen.read_text()), args.ng_test_set)
     for draw in (draw_elpd, draw_elpd_horizontal):
-        draw(domain_data, args.out_dir, args.mock_domains, {d: names[d] for d in drawn},
+        draw(fig2_data, args.out_dir, args.mock_domains, {d: names[d] for d in drawn},
              {d: papers[d] for d in drawn})
     draw_conditions(domain_data, args.out_dir, args.mock_domains)
     draw_pseudocode(specs, args.out_dir, args.mock_domains)

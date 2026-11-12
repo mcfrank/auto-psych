@@ -49,7 +49,11 @@ def _setup(tmp_path, *, winner_in_spec="w", corrupt_sha=False):
     spec_dir = tmp_path / "pseudocode"
     spec_dir.mkdir()
     for domain in ("subjective_randomness", "rsa"):
-        (data_dir / f"{domain}.json").write_text(json.dumps(_domain_data(domain)))
+        data = _domain_data(domain)
+        if domain == "rsa":  # Figure 2's second line: the best textbook model
+            data["best_textbook"] = {"model": "s0", "diff": -10.0}
+            data["promoted_seeds"] = ["s1"]  # drawn in the promoted seeds' colour
+        (data_dir / f"{domain}.json").write_text(json.dumps(data))
         source = tmp_path / f"{domain}_model.py"
         source.write_text("model = None\n")
         sha = hashlib.sha256(source.read_bytes()).hexdigest()
@@ -212,3 +216,82 @@ def test_starting_models_are_named_by_their_paper_and_the_best_by_its_name_witho
     rows = figures.forest_rows("rsa", _domain_data("rsa"), NAMES, PAPERS)
     assert [figures._row_label(r) for r in rows if r["kind"] == "seed"] == [
         "Seed one\n(Author & Other, 1999)", "Seed two"]
+
+
+def _ng_with_strip():
+    data = _domain_data("number_game")
+    data["pooled"].update(runs=["r1", "r2"], others_at_end={"r1__x": 15.0}, pruned_during_run={"r2__y": -3.0},
+                          pruned_order={"r2__y": 4}, others_order={"r1__x": 7})
+    return data
+
+
+def _unseen(strip=True):
+    def test_set(best_seed, shift):
+        record = {"best_seed": best_seed, "n_responses": 1000, "models": {
+            m: {"lpd": lpd + shift, "vs_best_seed": {"diff": diff, "se": se}}
+            for m, (lpd, diff, se) in {"w": (-50.0, 30.0, 5.0), "w_b": (-60.0, 20.0, 4.0),
+                                       "s1": (-90.0, -10.0, 3.0), "s2": (-80.0, 0.0, 0.0)}.items()}}
+        if strip:
+            record["strip"] = {"r1__x": 12.0, "r2__y": -7.0}
+        return record
+    return {"winner_runs": {"w": "r1", "w_b": "r2"}, "unseen_items": test_set("s2", 0.0),
+            "unseen_example_sets": test_set("s2", 40.0)}
+
+
+def test_figure_2s_number_game_is_its_models_scored_on_unseen_items():
+    data = _ng_with_strip()
+    view = figures.number_game_unseen_view(data, _unseen(), "unseen_items")
+    rows = figures.forest_rows("number_game", view, NAMES, PAPERS)
+    assert _labelled(rows) == [("winner", "Winner one", 30.0, 5.0), ("winner", "Winner two", 20.0, 4.0),
+                               ("seed", "Seed two", 0.0, 0.0), ("seed", "Seed one", -10.0, 3.0)]
+    (strip,) = [r for r in rows if "values" in r]
+    assert strip["values"] == [12.0, -7.0]
+    assert figures.best_seed_elpd("number_game", view) == -80.0
+    assert figures.best_seed_elpd("number_game", figures.number_game_unseen_view(
+        data, _unseen(), "unseen_example_sets")) == -40.0
+    # Figures 3 and 4 keep the cross-validated comparison.
+    assert data["pooled"]["best_seed"] == "s1" and data["pooled"]["others_at_end"] == {"r1__x": 15.0}
+
+
+def test_an_unscored_unseen_strip_is_drawn_pending():
+    view = figures.number_game_unseen_view(_ng_with_strip(), _unseen(strip=False), "unseen_items")
+    (strip,) = [r for r in figures.forest_rows("number_game", view, NAMES, PAPERS) if "values" in r]
+    assert strip["values"] is None
+
+
+def test_unseen_scores_of_other_winners_raise():
+    unseen = _unseen()
+    unseen["winner_runs"] = {"w": "r1", "other": "r2"}
+    with pytest.raises(RuntimeError, match="winners"):
+        figures.number_game_unseen_view(_ng_with_strip(), unseen, "unseen_items")
+
+
+def test_an_unseen_strip_missing_a_model_raises():
+    unseen = _unseen()
+    del unseen["unseen_items"]["strip"]["r2__y"]
+    with pytest.raises(RuntimeError, match="r2__y"):
+        figures.number_game_unseen_view(_ng_with_strip(), unseen, "unseen_items")
+
+
+def test_figure_2_draws_the_best_textbook_model_only_where_the_data_record_one():
+    rsa = {**_domain_data("rsa"), "best_textbook": {"model": "s1", "diff": -10.0}}
+
+    assert figures.textbook_line(rsa) == -10.0
+    assert figures.textbook_line(_domain_data("subjective_randomness")) is None
+
+
+
+def test_promoted_seeds_are_coloured_apart_from_the_seeds_that_predate_auto_psych():
+    rsa = {**_domain_data("rsa"), "promoted_seeds": ["s1"]}
+    rows = figures.forest_rows("rsa", rsa, NAMES, PAPERS)
+
+    colours = {r["model"]: figures.seed_color(rsa, r["model"]) for r in rows if r["kind"] == "seed"}
+    assert colours == {"s1": figures.COLOR_PROMOTED, "s2": figures.COLOR_SEED}
+    # Each panel's zero line is its best starting model's colour.
+    assert figures.zero_line_color("rsa", rsa) == figures.COLOR_PROMOTED
+    sr = _domain_data("subjective_randomness")
+    assert figures.zero_line_color("subjective_randomness", sr) == figures.COLOR_SEED
+
+
+def test_the_number_game_is_titled_number_sequence_generalization():
+    assert figures.panel_title("number_game", mock_domains=[]) == "Number sequence generalization"

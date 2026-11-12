@@ -14,6 +14,16 @@ difference from the best seed's with the SE clustered by example set, and the
 item R² (squared correlation of each item's mean predicted P(yes) with its yes
 rate) as a share of the noise ceiling 1 - mean[r(1-r)/(n-1)] / var(r).
 
+Figure 2's non-winning models (the pooled view's ``pruned_during_run`` and
+``others_at_end``) are scored on both test sets too, in shards
+(``--strip-shard``), each from its all-data fit on the pooled responses at the
+runs' sampler settings, as the figure data fitted it (read from the same fit
+cache, never sampled). Each shard saves every model's summed log predictive
+density per test set (``<work dir>/pooled/unseen_strip/``); the run without
+``--strip-shard`` needs every one and records each against its test set's
+best seed (``strip``).
+
+    uv run python -m scripts.paper.number_game_unseen_items --work-dir <dir> --strip-shard 0 --strip-shards 1
     uv run python -m scripts.paper.number_game_unseen_items --work-dir <figure data work dir>
 """
 
@@ -23,7 +33,7 @@ import csv
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 import numpy as np
 import tyro
@@ -49,6 +59,9 @@ class Args:
     """Posterior draws (thinned) behind each response's predictive density."""
     chunk_rows: int = 5000
     """Responses predicted per posterior-predictive pass (bounds memory)."""
+    strip_shard: Optional[int] = None
+    """Score this shard of the non-winning models (of ``strip_shards``) and stop."""
+    strip_shards: int = 1
 
 
 def read_rows(path: Path) -> List[Dict[str, str]]:
@@ -122,6 +135,41 @@ def score(rows: Sequence[Mapping[str, Any]], lpd: Dict[str, np.ndarray], p_yes: 
     }
 
 
+def strip_labels(pooled: Mapping[str, Any]) -> List[str]:
+    """The pooled view's non-winning models: Figure 2's strip."""
+    return sorted({*pooled["pruned_during_run"], *pooled["others_at_end"]})
+
+
+def strip_record(lpd: np.ndarray, set_unseen: np.ndarray) -> Dict[str, float]:
+    """A non-winning model's summed log predictive density on each test set."""
+    return {"unseen_items": float(lpd.sum()), "unseen_example_sets": float(lpd[set_unseen].sum())}
+
+
+def save_strip_record(records_dir: Path, label: str, record: Mapping[str, float]) -> None:
+    from src.runtime.atomic_files import write_text_atomically
+
+    records_dir.mkdir(parents=True, exist_ok=True)
+    write_text_atomically(records_dir / f"{label}.json", json.dumps(record, indent=1) + "\n")
+
+
+def collect_strip(labels: Sequence[str], records_dir: Path) -> Dict[str, Dict[str, float]]:
+    """Every non-winning model's record; any missing one raises, naming them all."""
+    missing = [label for label in labels if not (records_dir / f"{label}.json").exists()]
+    if missing:
+        raise FileNotFoundError(f"no unseen-items record in {records_dir} for {len(missing)} non-winning "
+                                f"models (run their --strip-shard): {missing}")
+    return {label: json.loads((records_dir / f"{label}.json").read_text()) for label in labels}
+
+
+def with_strip(record: Dict[str, Any], strip: Mapping[str, Mapping[str, float]]) -> Dict[str, Any]:
+    """Each test set's non-winning models against its best seed (``strip``)."""
+    for test_set in ("unseen_items", "unseen_example_sets"):
+        scored = record[test_set]
+        top = scored["models"][scored["best_seed"]]["lpd"]
+        scored["strip"] = {label: sums[test_set] - top for label, sums in strip.items()}
+    return record
+
+
 def predict(fitted: Any, rows: Sequence[Mapping[str, Any]], *, draws: int, chunk_rows: int) -> np.ndarray:
     """(draws, responses) posterior-predictive P(yes), in chunks of rows."""
     from src.models.data_binding import make_stim_data
@@ -145,6 +193,7 @@ def main(args: Args) -> None:
     pooled = args.work_dir / ng.POOLED_DIR
     responses = pooled / "responses.csv"
     figure_data = json.loads(args.figure_data.read_text())["pooled"]
+    strip_dir = pooled / "unseen_strip"
     winners = list(figure_data["winner_runs"])
     seeds = [name for name in figure_data["vs_best_seed"] if name not in winners]
 
@@ -153,6 +202,28 @@ def main(args: Args) -> None:
     print(f"[unseen] {len(rows):,} responses on unseen items, "
           f"{set_unseen.sum():,} of them on unseen example sets", flush=True)
     ratings = np.array([r["rating"] for r in rows])
+
+    if args.strip_shard is not None:
+        from scripts.paper import removed_models as rm
+        from scripts.paper import sr_figure_data as sr
+
+        ng_args = ng.Args(harness_root=args.harness_root, runs=args.runs)
+        infos = [ng.run_models(ng_args, run, settings["fit_kwargs"], settings["selection"]) for run in args.runs]
+        extras = ng.pooled_extras(infos)
+        mine = rm.shard_of(strip_labels(figure_data), args.strip_shard, args.strip_shards)
+        models_dir = pooled / "unseen_strip_models" / f"shard_{args.strip_shard}"
+        for label in mine:
+            if (strip_dir / f"{label}.json").exists():
+                continue
+            sr.write_model_set(models_dir, {label: extras[label]["file"]})
+            fitted = load_cached_fit(label, models_dir, responses, cache_dir=pooled / "fit_cache",
+                                     **settings["fit_kwargs"])
+            model_lpd = pointwise_lpd(predict(fitted, rows, draws=args.prediction_draws, chunk_rows=args.chunk_rows),
+                                      ratings)
+            save_strip_record(strip_dir, label, strip_record(model_lpd, set_unseen))
+            print(f"[unseen strip] {label}: lpd/response {model_lpd.mean():.4f}", flush=True)
+        return
+    strip = collect_strip(strip_labels(figure_data), strip_dir)  # before any prediction: a missing one stops here
 
     lpd: Dict[str, np.ndarray] = {}
     p_yes: Dict[str, np.ndarray] = {}
@@ -176,6 +247,7 @@ def main(args: Args) -> None:
         "unseen_example_sets": score(unseen_set_rows, {n: v[set_unseen] for n, v in lpd.items()},
                                      {n: v[set_unseen] for n, v in p_yes.items()}, seeds),
     }
+    record = with_strip(record, strip)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(record, indent=2))
     print(f"wrote {args.out}", flush=True)

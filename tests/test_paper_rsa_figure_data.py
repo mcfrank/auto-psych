@@ -200,3 +200,20 @@ def test_a_chain_starting_model_the_test_did_not_score_raises(tmp_path):
     chains["chains"][0]["models"].append("p9")
     with pytest.raises(RuntimeError, match="p9"):
         _run(tmp_path, _prereg(), _panels(), chains)
+
+
+def test_the_best_textbook_model_is_recorded_against_the_best_promoted_seed(tmp_path):
+    # Figure 2 draws it as a second line beside the zero (the best promoted seed).
+    data = _run(tmp_path, _prereg(), _panels())
+
+    assert data["best_textbook"] == {"model": "s1", "diff": -10.0}
+
+
+def test_the_promoted_seeds_are_the_ones_auto_psych_promoted_not_the_textbook_models(tmp_path):
+    # Figure 2 colours a promoted seed apart from the models that predate
+    # auto-psych; a textbook model that was also promoted (rsa_l1, rsa_l2) is one of those.
+    prereg = _prereg()
+    prereg["lpd"]["seed:p3"] = -125.0
+    data = _run(tmp_path, prereg, _panels())
+
+    assert data["promoted_seeds"] == ["p1", "p2"]

@@ -69,7 +69,18 @@ What each figure shows:
     The starting models are the three literature seeds (pruned in experiment
     1), the other models live at the end each run's other carried models;
     `number_game_figure_data.py` refits them all, per run and pooled. The SE
-    is stimulus-clustered ((set, target) cells).
+    is stimulus-clustered ((set, target) cells). Figure 2 draws instead the
+    pooled models' log predictive density on held-out responses
+    (`data/paper/number_game_unseen_items.json`, `number_game_unseen_items.py`):
+    by default on the Bigelow & Piantadosi example sets no run drew (14 sets,
+    15,090 responses; `figures.py --ng-test-set unseen_items` draws every item
+    no run drew), the winners and seeds from their pooled fits, the
+    non-winning models from their all-data pooled fits at the runs' settings
+    (scored in shards on Sherlock:
+    `STRIP_SHARDS=22 sbatch --array=0-21 scripts/paper/number_game_unseen_items.sbatch`,
+    then the assembly without `--array`), each against the best seed on that
+    test (SE clustered by example set). Figures 3 and 4 keep the
+    cross-validated comparison.
   - Every domain also draws the models pruned during the run (grey dots):
     every model the run admitted and later pruned, retired or dropped,
     scored on the same data as the rest of its column (`pruned_during_run`;
@@ -116,7 +127,7 @@ What each figure shows:
   chain 0's reference-game final, the best on the pre-registered test
   (`data/rsa/c0_ablation/eliminate/`, `docs/auto_rsa/ABLATION_C0.md`; it
   replaces the consolidation's superset elimination), and the number-game
-  dataset run's final on run 1's data (`data/results/number_game_dataset-oct26/analysis/ablation/`,
+  dataset run's final on all three runs' data pooled (`data/results/number_game_dataset-oct26/analysis/ablation/`,
   `docs/ng_ablation.md`; Figure 3's best). Each panel is the path of the model kept
   after each round: its grouped-CV ELPD against the full model's, by its
   number of mechanisms, each step named by the mechanism it dropped, with ±1

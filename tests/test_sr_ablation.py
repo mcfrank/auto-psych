@@ -248,6 +248,32 @@ def test_each_model_records_the_clustered_se_of_its_own_elpd():
     assert record["rounds"][0]["elpd_se"] > 0
 
 
+def test_each_model_records_the_clustered_se_of_its_difference_from_the_starting_model():
+    # The ablation figure's error bars: each model's ELPD-CV against the full model's.
+    from src.subjective_randomness.ablation.eliminate import eliminate
+
+    contributions = dict(RULE_CONTRIBUTIONS, final_run=0.1 * UNITS,  # vary across stimulus pairs
+                         variety=-0.01 * (UNITS % 3))
+    score = fake_score("run2", contributions)
+    record = eliminate("run2", RULE_START, score, UNITS)
+
+    def sums(mechanisms):
+        s = V.canonical("run2", mechanisms)
+        return np.bincount(UNITS, weights=score([s])[s].pointwise)
+
+    start = sums(RULE_START)
+
+    def se_vs_start(mechanisms):
+        return np.sqrt(N_UNITS * np.var(start - sums(mechanisms)))
+
+    assert record["rounds"][0]["se_vs_start"] == 0.0
+    for r in record["rounds"]:
+        assert r["se_vs_start"] == pytest.approx(se_vs_start(r["mechanisms"]))
+        for c in r["candidates"]:
+            assert c["se_vs_start"] == pytest.approx(se_vs_start(set(r["mechanisms"]) - {c["mechanism"]}))
+    assert record["rounds"][1]["se_vs_start"] > 0
+
+
 def test_an_unconverged_candidate_is_never_dropped_and_an_unconverged_start_raises():
     from src.subjective_randomness.ablation.eliminate import eliminate
 

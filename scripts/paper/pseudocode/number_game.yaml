@@ -5,7 +5,7 @@ domain: number_game
 model: even_rule_digit_size_principle_counting
 source: data/results/number_game_dataset-oct26/collected/run1/number_game/experiment3/model_loop/models/even_rule_digit_size_principle_counting.py
 sha256: 55d24ab2031f08aae8f454fde750d8e3d8bfb11429645f1fd649df9d61273117
-title: "Number game: is the target in the concept the examples come from?"
+title: "Number sequence generalization: is the target in the concept the examples come from?"
 lines:
   - code: "sim(t) = share of examples ending in t's digit"
     note: "graded last-digit similarity"

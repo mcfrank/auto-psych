@@ -24,8 +24,10 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
 import tyro  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
+from matplotlib.text import Text  # noqa: E402
 from pyprojroot import here  # noqa: E402
 
 from scripts.paper.figures import (  # noqa: E402
@@ -42,7 +44,7 @@ RSA_ELIMINATION = here() / "data" / "rsa" / "c0_ablation" / "eliminate" / "elimi
 NG_ELIMINATION = (here() / "data" / "results" / "number_game_dataset-oct26" / "analysis" / "ablation"
                   / "elimination.json")
 PANEL_TITLES = {"subjective_randomness": "Subjective randomness", "rsa": "Reference games",
-                "number_game": "Number game"}
+                "number_game": "Number sequence generalization"}
 
 COLOR_KEPT = COLOR_DISCOVERED  # Dark2 green
 COLOR_STOP = "#9a9892"
@@ -71,22 +73,25 @@ def elimination_sources(sr_figure_data: Dict[str, Any]) -> List[Tuple[str, Path]
 
 def elimination_path(elimination: Dict[str, Any]) -> Dict[str, Any]:
     """The model kept after each round, ``kept``: (mechanisms, ELPD-CV minus
-    the starting model's, the clustered SE of its ELPD-CV, converged, the
+    the starting model's, the clustered SE of that difference, converged, the
     mechanism it dropped or None); and ``stop``: (mechanisms, ELPD-CV minus
     the starting model's, SE, mechanism) of the removal that stopped the
     elimination (the last round's converged candidate with the highest
-    ELPD-CV, as the rule takes it), or None when no candidate converged."""
+    ELPD-CV, as the rule takes it), or None when no candidate converged. The
+    SE is paired, against the starting model (zero for it): a model's own
+    ELPD SE includes the item-to-item variation every model shares, several
+    times the whole path."""
     rounds = elimination["rounds"]
     start = rounds[0]["elpd_cv"]
     kept = []
     for prev, rd in zip([None] + rounds[:-1], rounds):
         dropped = None if prev is None else (set(prev["mechanisms"]) - set(rd["mechanisms"])).pop()
-        kept.append((len(rd["mechanisms"]), rd["elpd_cv"] - start, rd["elpd_se"], rd["converged"], dropped))
+        kept.append((len(rd["mechanisms"]), rd["elpd_cv"] - start, rd["se_vs_start"], rd["converged"], dropped))
     converged = [c for c in rounds[-1]["candidates"] if c["converged"]]
     stop = None
     if converged:
         best = max(converged, key=lambda c: c["elpd_cv"])
-        stop = (len(rounds[-1]["mechanisms"]) - 1, best["elpd_cv"] - start, best["elpd_se"], best["mechanism"])
+        stop = (len(rounds[-1]["mechanisms"]) - 1, best["elpd_cv"] - start, best["se_vs_start"], best["mechanism"])
     return {"kept": kept, "stop": stop}
 
 
@@ -94,59 +99,78 @@ def _display(mechanism: str) -> str:
     return mechanism.replace("_personal", " (personal)").replace("_", " ")
 
 
-ABOVE, BELOW = ((0, 5), "center", "bottom"), ((0, -6), "center", "top")
+FLAG_ANGLE = 30.0  # degrees: each name rises from its point, parallel to its neighbours
+NAME_FONTSIZE = 6
 
 
-def _placements(y: float, y_prev: float, y_next: Optional[float]) -> List[Tuple[Tuple[int, int], str, str]]:
-    """Where to name a point, best first: on the side its line leaves free —
-    above a peak, below a trough, beside a point the line passes through (to
-    the right, above a falling line, below a rising one; else to the left, on
-    the other side), to the left of the path's end — then centred above or
-    below."""
-    if y_next is None:
-        return [((-7, 0), "right", "center")]
-    if y >= max(y_prev, y_next):
-        return [ABOVE, BELOW]
-    if y <= min(y_prev, y_next):
-        return [BELOW, ABOVE]
-    if y_next < y:
-        return [((5, 3), "left", "bottom"), ((-5, -3), "right", "top"), ABOVE, BELOW]
-    return [((5, -3), "left", "top"), ((-5, 3), "right", "bottom"), BELOW, ABOVE]
-
-
-def _name(ax, x: float, y: float, text: str, placement: Tuple[Tuple[int, int], str, str]):
-    at, ha, va = placement
-    return ax.annotate(text, (x, y), xytext=at, textcoords="offset points", ha=ha, va=va, fontsize=6,
-                       color=INK_SECONDARY)
-
-
-def name_points(ax, path: Dict[str, Any], renderer) -> None:
-    """Name each step by the mechanism it dropped, at its first placement that
-    stays inside the axes and overlaps no name already placed, preferring one
-    that does not cross the path either (its first placement when none fits)."""
-    xs = [k[0] for k in path["kept"]] + ([path["stop"][0]] if path["stop"] else [])
-    ys = [k[1] for k in path["kept"]] + ([path["stop"][1]] if path["stop"] else [])
-    line = ax.transData.transform([(x0 + (x1 - x0) * t / 20, y0 + (y1 - y0) * t / 20)
-                                   for x0, y0, x1, y1 in zip(xs, ys, xs[1:], ys[1:]) for t in range(21)])
-    steps = [(x, y, dropped) for x, y, _, _, dropped in path["kept"]]
-    if path["stop"] is not None:
-        x, y, _, mechanism = path["stop"]
-        steps.append((x, y, mechanism))
-    frame = ax.get_window_extent(renderer)
-    placed = []
-    for i, (x, y, dropped) in enumerate(steps):
+def name_points(ax, path: Dict[str, Any], renderer) -> List[Tuple[Any, int]]:
+    """Name each step by the mechanism it dropped, anchored at its own point so
+    no name can be read as another's: a flag rising up and to the right from
+    the point, just right of its error bar (over the descending path's empty
+    side; neighbours' flags run parallel), and the path's last point named
+    beside it on the left. Returns
+    each name with its point's index (the starting model, index 0, is not
+    named). ``fit_names`` then makes room for the flags."""
+    kept = path["kept"] + ([(*path["stop"][:3], True, path["stop"][3])] if path["stop"] else [])
+    names: List[Tuple[Any, int]] = []
+    for i, (x, y, _, _, dropped) in enumerate(kept):
         if dropped is None:
             continue
-        boxes = []
-        for placement in _placements(y, ys[i - 1], ys[i + 1] if i + 1 < len(ys) else None):
-            name = _name(ax, x, y, _display(dropped), placement)
-            box = name.get_window_extent(renderer)
-            name.remove()
-            fits = frame.x0 <= box.x0 and box.x1 <= frame.x1 and not any(box.overlaps(b) for b in placed)
-            boxes.append((placement, box, fits, fits and not any(box.contains(*pt) for pt in line)))
-        placement, box, _, _ = next((b for b in boxes if b[3]), next((b for b in boxes if b[2]), boxes[0]))
-        _name(ax, x, y, _display(dropped), placement)
-        placed.append(box)
+        style = dict(textcoords="offset points", fontsize=NAME_FONTSIZE, color=INK_SECONDARY)
+        if i == len(kept) - 1:
+            name = ax.annotate(_display(dropped), (x, y), xytext=(-6, 0), ha="right", va="center", **style)
+        else:
+            name = ax.annotate(_display(dropped), (x, y), xytext=(4.0, 1.5), ha="left", va="bottom",
+                               rotation=FLAG_ANGLE, rotation_mode="anchor", **style)
+        names.append((name, i))
+    return names
+
+
+def _text_corners(name, renderer) -> np.ndarray:
+    """A name's rotated text rectangle, its four corners in display units."""
+    probe = Text(text=name.get_text(), fontsize=name.get_fontsize(), figure=name.figure)
+    box = probe.get_window_extent(renderer)
+    w, h = box.width, box.height
+    x0 = {"left": 0.0, "center": -w / 2, "right": -w}[name.get_horizontalalignment()]
+    y0 = {"bottom": 0.0, "baseline": 0.0, "center": -h / 2, "center_baseline": -h / 2,
+          "top": -h}[name.get_verticalalignment()]
+    corners = np.array([(x0, y0), (x0 + w, y0), (x0 + w, y0 + h), (x0, y0 + h)])
+    angle = np.radians(name.get_rotation())
+    rotation = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
+    name.update_positions(renderer)
+    anchor = np.asarray(name.get_transform().transform(name.get_position()))
+    return anchor + corners @ rotation.T
+
+
+def _polygons_overlap(p: np.ndarray, q: np.ndarray) -> bool:
+    """Whether two convex polygons intersect (separating-axis test)."""
+    for poly in (p, q):
+        for a, b in zip(poly, np.roll(poly, -1, axis=0)):
+            normal = np.array([a[1] - b[1], b[0] - a[0]])
+            if (p @ normal).max() < (q @ normal).min() or (q @ normal).max() < (p @ normal).min():
+                return False
+    return True
+
+
+def fit_names(axes, names: List[List[Tuple[Any, int]]], renderer, pad_pt: float = 2.0) -> None:
+    """Raise the shared y-limit until every name fits inside its panel's top;
+    the band added holds names only, so its ticks are hidden."""
+    data_top = axes[0].get_ylim()[1]
+    for _ in range(4):
+        need = 0.0
+        for ax, panel in zip(axes, names):
+            top = ax.get_window_extent(renderer).y1
+            for name, _ in panel:
+                need = max(need, _text_corners(name, renderer)[:, 1].max() - top)
+        if need <= 0:
+            break
+        ax = axes[0]
+        lo, hi = ax.get_ylim()
+        per_px = (hi - lo) / ax.get_window_extent(renderer).height
+        ax.set_ylim(lo, hi + (need + pad_pt * renderer.points_to_pixels(1.0)) * per_px)
+    lo, hi = axes[0].get_ylim()
+    axes[0].set_yticks([t for t in axes[0].get_yticks() if lo <= t <= data_top])
+    axes[0].set_ylim(lo, hi)
 
 
 def draw_panel(ax, elimination: Dict[str, Any], title: str) -> Dict[str, Any]:
@@ -183,15 +207,18 @@ def draw_ablation(eliminations: List[Tuple[str, Dict[str, Any]]], out_dir: Path)
              for ax, letter, (domain, elimination) in zip(axes, "ABCD", eliminations)]
     axes[0].set_ylabel("ELPD-CV vs the full model (nats)", fontsize=7, color=INK)
     fig.canvas.draw()  # fixes the shared limits the names are placed against
-    for ax, path in zip(axes, paths):
-        name_points(ax, path, fig.canvas.get_renderer())
+    renderer = fig.canvas.get_renderer()
+    names = [name_points(ax, path, renderer) for ax, path in zip(axes, paths)]
+    fit_names(axes, names, renderer)
     handles = [
-        Line2D([], [], color=COLOR_KEPT, lw=1.2, marker="o", ms=4, label="best model after each round (±1 SE)"),
+        Line2D([], [], color=COLOR_KEPT, lw=1.2, marker="o", ms=4, label="best model after each round (±1 SE of its difference from the full model)"),
         Line2D([], [], color=COLOR_STOP, lw=1.0, ls=(0, (4, 3)), marker="o", ms=4,
                label="removal that stopped the elimination"),
-        Line2D([], [], color="none", marker="o", ms=4, mfc=SURFACE, mec=COLOR_KEPT, label="fit not converged"),
     ]
-    fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.06), ncol=3, fontsize=6.5,
+    if any(not k[3] for path in paths for k in path["kept"]):  # only where a hollow point is drawn
+        handles.append(Line2D([], [], color="none", marker="o", ms=4, mfc=SURFACE, mec=COLOR_KEPT,
+                              label="fit not converged"))
+    fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.06), ncol=len(handles), fontsize=6.5,
                frameon=False, handletextpad=0.4, columnspacing=1.5)
     _save(fig, out_dir, "fig_ablation")
 
@@ -200,9 +227,10 @@ def main(args: Args) -> None:
     sources = elimination_sources(json.loads(args.sr_figure_data.read_text()))
     eliminations = [(domain, json.loads(path.read_text())) for domain, path in sources]
     for (domain, elimination), (_, path) in zip(eliminations, sources):
-        if any("elpd_se" not in r for r in elimination["rounds"]):
-            raise ValueError(f"{path} records no model's own ELPD SE (elpd_se): rerun its ablation's plan step "
-                             "(it replays the saved CVs, no fits) and commit the new elimination.json")
+        if any("se_vs_start" not in r for r in elimination["rounds"]):
+            raise ValueError(f"{path} records no SE of each model's difference from the full model (se_vs_start): "
+                             "rerun its ablation's plan step (it replays the saved CVs, no fits) and commit the "
+                             "new elimination.json")
     draw_ablation(eliminations, args.out_dir)
     print(f"wrote fig_ablation to {args.out_dir}", flush=True)
 

@@ -800,6 +800,22 @@
       }
     }
   ],
+  "best_textbook": {
+    "model": "rsa_l1_shared_prior",
+    "diff": -651.7341909893403
+  },
+  "promoted_seeds": [
+    "competitor_confusion_speaker",
+    "evaluative_prominence_l2",
+    "familiar_isolated_graded_costly_l2",
+    "isolated_graded_costly_l3",
+    "lexical_preemption_heuristic",
+    "oddity_heuristic_listener",
+    "rsa_l2_singleton_distinct_feat_color_l0",
+    "rsa_l2_singleton_feat_color_familiar_l0",
+    "rsa_l2_singleton_feat_color_valence_l0",
+    "softmax_surprisal_isolated_costly_l4"
+  ],
   "pooled": {
     "best_model": "boundary_avoidable_ambiguity_listener",
     "best_seed": "rsa_l1_shared_prior",

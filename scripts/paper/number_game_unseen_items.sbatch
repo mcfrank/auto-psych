@@ -10,6 +10,9 @@
 #  responses no run drew (number_game_unseen_items.py). Reads the pooled fits
 #  from the figure data's fit cache; never samples.
 #    FIT_WORK_DIR=<figure data work dir> sbatch scripts/paper/number_game_unseen_items.sbatch
+#  As an array (STRIP_SHARDS=<n> sbatch --array=0-<n-1> ...), each task scores
+#  its shard of Figure 2's non-winning models instead; the assembly above
+#  needs every shard's records.
 # ============================================================================
 set -euo pipefail
 : "${FIT_WORK_DIR:?set by the submitting shell}"
@@ -21,4 +24,9 @@ export PYTENSOR_FLAGS="base_compiledir=${L_SCRATCH:-/tmp}/pytensor/job_${SLURM_J
 
 cd "$REPO"
 echo "[paper] unseen items, code $(git rev-parse HEAD)"
-"$VENV_PY" -m scripts.paper.number_game_unseen_items --work-dir "$FIT_WORK_DIR"
+if [[ -n "${SLURM_ARRAY_TASK_ID:-}" ]]; then
+  "$VENV_PY" -m scripts.paper.number_game_unseen_items --work-dir "$FIT_WORK_DIR" \
+    --strip-shard "$SLURM_ARRAY_TASK_ID" --strip-shards "${STRIP_SHARDS:?set with the array}"
+else
+  "$VENV_PY" -m scripts.paper.number_game_unseen_items --work-dir "$FIT_WORK_DIR"
+fi

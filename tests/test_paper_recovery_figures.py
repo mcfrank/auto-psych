@@ -28,8 +28,8 @@ def test_one_panel_per_ground_truth_in_domain_order(frame):
     assert list(frame["panel"].cat.categories) == [
         "Subjective randomness\nencoding difficulty", "Subjective randomness\nfinite experience",
         "Subjective randomness\nlocal representativeness", "Subjective randomness\nregularity detection",
-        "Number game\nTenenbaum (2000)", "Number game\nBigelow & Piantadosi, mixture",
-        "Number game\nBigelow & Piantadosi, independent",
+        "Number sequence generalization\nTenenbaum (2000)", "Number sequence generalization\nBigelow & Piantadosi, mixture",
+        "Number sequence generalization\nBigelow & Piantadosi, independent",
         "Reference games\nliteral listener", "Reference games\nsalience listener"]
 
 
@@ -42,7 +42,7 @@ def test_the_number_game_is_the_mean_and_sem_of_the_november_sweeps_three_repeat
     root = rf.Args().ng_root
     final = pd.Series([pd.read_csv(root / f"run{r}" / "tenenbaum_rules_similarity" / "holdout.csv")["rmse"].iloc[-1]
                        for r in (1, 2, 3)])
-    row = _row(frame, "Number game\nTenenbaum (2000)", "best model", 17)
+    row = _row(frame, "Number sequence generalization\nTenenbaum (2000)", "best model", 17)
     assert row["n"] == 3
     assert (row["mean"], row["err"]) == pytest.approx((final.mean(), final.std(ddof=1) / 3 ** 0.5))
 

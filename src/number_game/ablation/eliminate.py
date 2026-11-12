@@ -6,7 +6,7 @@
 The rule, ``plan`` and ``worker`` are `src.ablation.eliminate`'s, unchanged
 from the sr-oct26 ablation (docs/ng_ablation.md, fixed before any fit). What
 is the number game's: the final (`src.number_game.ablation.final`), the data
-(the run's own 7,560 responses, `src.number_game.ablation.data`), the CV unit
+(all three runs' 22,680 responses pooled, `src.number_game.ablation.data`), the CV unit
 and the SE's clusters (the example set: ``number_set``, the unit the run
 itself selected by), and that a worker array task fits ``tasks_per_job``
 (model, fold) tasks in turn, since one fit takes only ~6 minutes.
@@ -42,8 +42,8 @@ ABLATION = E.Ablation(variants=V.VARIANTS, cv_group=CV_GROUP, units=example_set_
 class Args(E.Args):
     final: Literal["ng"]
     data: Path
-    """The run's cumulative responses (`src.number_game.ablation.data`); the CV folds are written beside them."""
-    time_limit_hours: float = 1.0
+    """All three runs' responses pooled (`src.number_game.ablation.data`); the CV folds are written beside them."""
+    time_limit_hours: float = 3.0
     """worker: per sampling attempt; a timed-out attempt moves on to the next seed."""
     tasks_per_job: int = 5
     """worker: array task ``task`` fits ``next.json``'s tasks ``task * tasks_per_job`` onwards, this many."""

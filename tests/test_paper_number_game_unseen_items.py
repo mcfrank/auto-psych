@@ -42,3 +42,32 @@ def test_models_are_scored_against_the_seed_best_on_these_rows():
     # Example-set sums of the differences are 0.8 and 0.7: sqrt(2 * var).
     assert win["se"] == pytest.approx(np.sqrt(2 * np.var([0.8, 0.7])))
     assert scored["models"]["s2"]["vs_best_seed"] == {"diff": 0.0, "se": 0.0}
+
+
+# --- the non-winning models (Figure 2's strip) --------------------------------------------
+
+
+def test_the_strip_is_the_pooled_non_winning_models():
+    pooled = {"pruned_during_run": {"r2__y": 1.0}, "others_at_end": {"r1__x": 2.0}}
+    assert un.strip_labels(pooled) == ["r1__x", "r2__y"]
+
+
+def test_a_strip_record_sums_each_test_sets_responses():
+    record = un.strip_record(np.array([-1.0, -2.0, -3.0]), np.array([True, False, True]))
+    assert record == {"unseen_items": -6.0, "unseen_example_sets": -4.0}
+
+
+def test_each_strip_model_is_drawn_against_its_test_sets_best_seed(tmp_path):
+    for label, sums in {"r1__a": (-12.0, -3.0), "r2__b": (-9.0, -5.0)}.items():
+        un.save_strip_record(tmp_path, label, {"unseen_items": sums[0], "unseen_example_sets": sums[1]})
+    record = {"unseen_items": {"best_seed": "s", "models": {"s": {"lpd": -10.0}}},
+              "unseen_example_sets": {"best_seed": "t", "models": {"t": {"lpd": -4.0}}}}
+    out = un.with_strip(record, un.collect_strip(["r1__a", "r2__b"], tmp_path))
+    assert out["unseen_items"]["strip"] == {"r1__a": -2.0, "r2__b": 1.0}
+    assert out["unseen_example_sets"]["strip"] == {"r1__a": 1.0, "r2__b": -1.0}
+
+
+def test_a_strip_model_without_a_record_stops_the_assembly(tmp_path):
+    un.save_strip_record(tmp_path, "r1__a", {"unseen_items": -1.0, "unseen_example_sets": -1.0})
+    with pytest.raises(FileNotFoundError, match="r2__b"):
+        un.collect_strip(["r1__a", "r2__b"], tmp_path)

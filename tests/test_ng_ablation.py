@@ -7,7 +7,10 @@ import pytest
 from pyprojroot import here
 
 from src.number_game.ablation import variants as V
-from src.number_game.ablation.data import RESPONSES
+from src.number_game.ablation import data as ng_data
+
+# A real run's responses, for the checks that need some data but not the ablation's.
+RUN1 = ng_data.run_responses("run1")
 
 FINAL_DIR = here() / "data/results/number_game_dataset-oct26/collected/run1/number_game/experiment3/cognitive_models"
 MECHANISMS = V.spec("ng").MECHANISMS
@@ -19,7 +22,7 @@ def bound(model):
     from src.models.data_binding import extract_observed
 
     with model:
-        pm.set_data(extract_observed(RESPONSES, model))
+        pm.set_data(extract_observed(RUN1, model))
     return model
 
 
@@ -128,40 +131,56 @@ def test_the_full_and_the_smallest_variant_meet_the_data_contract(tmp_path):
     while removable := V.removals("ng", smallest):
         smallest -= {removable[0]}
     assert len(smallest) == 1
+    pooled = tmp_path / "responses.csv"
+    ng_data.main(ng_data.Args(out=pooled))
     for on in (MECHANISMS, smallest):
         name, _ = V.write_variant("ng", on, tmp_path)
-        assert model_contract_violation(name, tmp_path, RESPONSES) is None, name
+        assert model_contract_violation(name, tmp_path, pooled) is None, name
 
 
 # --- the data and the CV units -----------------------------------------------------------
 
 
-def test_the_data_are_the_runs_own_responses(tmp_path):
-    from src.number_game.ablation import data
+def test_the_data_are_all_three_runs_responses_pooled(tmp_path):
+    import csv
 
-    lines = RESPONSES.read_text().splitlines()
-    assert lines[0] == "number_set,target,trial_index,rating" and len(lines) - 1 == 7560
-    data.main(data.Args(out=tmp_path / "responses.csv"))
-    data.main(data.Args(out=tmp_path / "responses.csv"))  # up to date: kept
-    (tmp_path / "responses.csv").write_text(RESPONSES.read_text() + '"2,4",6,0,1\n')
+    from scripts.paper.number_game_figure_data import pool_responses
+
+    out = tmp_path / "responses.csv"
+    ng_data.main(ng_data.Args(out=out))
+    lines = out.read_text().splitlines()
+    assert lines[0] == "number_set,target,trial_index,rating" and len(lines) - 1 == 22680
+    # every run's rows, in run order, unchanged
+    expected = []
+    for run in ("run1", "run2", "run3"):
+        with ng_data.run_responses(run).open(newline="") as f:
+            expected += [tuple(r.values()) for r in csv.DictReader(f)]
+    with out.open(newline="") as f:
+        assert [tuple(r.values()) for r in csv.DictReader(f)] == expected
+    # the same file as Figures 2 and 3's pooled fits
+    figure = tmp_path / "figure_pooled.csv"
+    pool_responses({run: ng_data.run_responses(run) for run in ("run1", "run2", "run3")}, figure)
+    assert out.read_text() == figure.read_text()
+    ng_data.main(ng_data.Args(out=out))  # up to date: kept
+    out.write_text(RUN1.read_text())
     with pytest.raises(ValueError, match="is not"):
-        data.main(data.Args(out=tmp_path / "responses.csv"))
+        ng_data.main(ng_data.Args(out=out))
 
 
 def test_folds_and_clusters_are_whole_example_sets(tmp_path):
-    import shutil
-
     from src.model_comparison.cv import fold_training_files
     from src.number_game.ablation.eliminate import ABLATION, example_set_clusters
     from src.ablation.eliminate import Args, _selection
 
-    shutil.copy(RESPONSES, tmp_path / "responses.csv")
+    ng_data.main(ng_data.Args(out=tmp_path / "responses.csv"))
     args = Args(final="ng", data=tmp_path / "responses.csv", out=tmp_path / "out")
     rows, folds, paths = fold_training_files(args.data, _selection(ABLATION, args))
     units = example_set_clusters(rows)
-    assert units.max() + 1 == len({r["number_set"] for r in rows}) == 150
-    assert all(len(set(folds[units == u])) == 1 for u in range(150))  # an example set is in one fold
-    assert list(np.bincount(folds)) == [1512] * 5
+    n_sets = len({r["number_set"] for r in rows})
+    assert len(rows) == 22680 and units.max() + 1 == n_sets
+    # an example set drawn by several runs is one unit, in one fold
+    assert all(len(set(folds[units == u])) == 1 for u in range(n_sets))
+    assert sorted(set(folds)) == [0, 1, 2, 3, 4] and np.bincount(folds).sum() == 22680
     assert all(r["number_set"] == rows[np.flatnonzero(units == units[i])[0]]["number_set"] for i, r in enumerate(rows))
 
 
@@ -232,7 +251,7 @@ def test_an_array_task_fits_its_share_of_the_rounds_tasks(tmp_path, monkeypatch)
     (tmp_path / "next.json").write_text(json.dumps(dict(status="need", tasks=[{}] * 7, seeds=[1], attempt=1)))
     done = []
     monkeypatch.setattr(ng.E, "worker", lambda ablation, args: done.append(args.task))
-    args = ng.Args(final="ng", data=RESPONSES, out=tmp_path, mode="worker", tasks_per_job=5)
+    args = ng.Args(final="ng", data=RUN1, out=tmp_path, mode="worker", tasks_per_job=5)
     ng.worker(ng.replace(args, task=0))
     ng.worker(ng.replace(args, task=1))
     assert done == [0, 1, 2, 3, 4, 5, 6]
@@ -251,7 +270,7 @@ def test_plan_and_workers_run_the_elimination_to_a_lean_model(tmp_path):
 
     data = tmp_path / "data" / "responses.csv"
     data.parent.mkdir()
-    lines = RESPONSES.read_text().splitlines()
+    lines = RUN1.read_text().splitlines()
     data.write_text("\n".join([lines[0]] + lines[1::4]) + "\n")
     args = Args(final="ng", data=data, out=tmp_path / "ng", start=["intercept", "even_rule"], folds=2,
                 draws=300, tune=300, chains=2, target_accept=0.9, method="nuts", seeds=[1], time_limit_hours=0.5,

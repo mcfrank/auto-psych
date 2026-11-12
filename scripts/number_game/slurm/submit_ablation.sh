@@ -8,7 +8,7 @@
 # or two drivers will submit the same round twice.
 set -euo pipefail
 export REPO="${REPO:-$HOME/auto-psych}"
-export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/ng_ablation}"
+export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/ng_ablation_pooled}"
 SBATCH="$REPO/scripts/number_game/slurm/ablation.sbatch"
 mkdir -p "$WORK_ROOT/logs"
 cd "$REPO"

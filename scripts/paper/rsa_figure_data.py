@@ -255,6 +255,15 @@ def main(args: Args) -> None:
                     "(the pre-registered bar)"
                 ),
                 "runs": runs,
+                # Figure 2's second line: the best textbook model against the zero.
+                "best_textbook": {
+                    "model": best_textbook,
+                    "diff": _lpds(prereg, TEXTBOOK_PREFIX)[best_textbook]
+                    - _lpds(prereg, PROMOTED_PREFIX)[best_promoted],
+                },
+                # The seeds auto-psych promoted, Figure 2's own colour; a textbook
+                # model that was also promoted (rsa_l1, rsa_l2) predates auto-psych.
+                "promoted_seeds": sorted(set(_lpds(prereg, PROMOTED_PREFIX)) - set(_lpds(prereg, TEXTBOOK_PREFIX))),
                 "pooled": {
                     "best_model": best["best_model"],
                     "best_seed": best_textbook,

@@ -12,8 +12,8 @@
 # submit_ablation.sh, which runs:
 #
 #   STAGE=setup   build the shared venv, stage the code once ($WORK_ROOT/code, its identity in
-#                 $WORK_ROOT/code_commit; a later setup on other code refuses) and copy the run's
-#                 responses ($WORK_ROOT/data/responses.csv) from the checkout.
+#                 $WORK_ROOT/code_commit; a later setup on other code refuses) and write the three
+#                 runs' pooled responses ($WORK_ROOT/data/responses.csv) from the checkout.
 #   STAGE=driver  replay the rule over the saved fold fits (`eliminate --mode plan`). When fits
 #                 are missing, submit them as an array of workers (TASKS_PER_JOB (model, fold)
 #                 fits per array task, one after another) and queue the next driver after it.
@@ -29,7 +29,7 @@
 # MAX_PARALLEL, MAX_ATTEMPTS.
 set -euo pipefail
 export REPO="${REPO:-$HOME/auto-psych}"
-export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/ng_ablation}"
+export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/ng_ablation_pooled}"
 STAGE="${STAGE:-driver}"
 [[ "$STAGE" =~ ^(setup|driver|worker)$ ]] || { echo "ERROR: STAGE must be setup, driver or worker, not $STAGE" >&2; exit 1; }
 source "$REPO/scripts/_venv.sh"
@@ -39,8 +39,8 @@ CODE="$WORK_ROOT/code"
 DATA="$WORK_ROOT/data/responses.csv"
 WORKER_PARTITION="${WORKER_PARTITION:-normal,owners}"
 WORKER_CPUS="${WORKER_CPUS:-4}"         # one per chain
-WORKER_MEM="${WORKER_MEM:-8GB}"         # a fit's peak was ~2.7 GB
-WORKER_TIME="${WORKER_TIME:-08:00:00}"  # a fit took ~6 min (docs/ng_ablation.md); a task of 5 ~30 min
+WORKER_MEM="${WORKER_MEM:-16GB}"        # ~2.7 GB peak on run 1's data alone; the pooled data are 3x
+WORKER_TIME="${WORKER_TIME:-08:00:00}"  # ~6 min a fit on run 1's data, ~20 min expected pooled; a task of 5 ~1.5 h
 TASKS_PER_JOB="${TASKS_PER_JOB:-5}"     # one fit alone is under Sherlock's 10-minute minimum job
 MAX_ATTEMPTS="${MAX_ATTEMPTS:-2}"
 mkdir -p "$WORK_ROOT/logs"
@@ -68,7 +68,7 @@ if [[ "$STAGE" == "setup" ]]; then
     printf '%s\n' "$repo_code" > "$WORK_ROOT/code_commit.tmp" && mv "$WORK_ROOT/code_commit.tmp" "$WORK_ROOT/code_commit"
     echo "[setup] staged code $repo_code"
   fi
-  # The run's data live in the checkout (data/ is not staged); an existing file must be the same.
+  # The runs' data live in the checkout (data/ is not staged); an existing file must be the same.
   "$VENV_PY" -m src.number_game.ablation.data --out "$DATA"
   exit 0
 fi
