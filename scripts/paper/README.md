@@ -8,7 +8,7 @@ run), then the assembly.
 | step | on Sherlock | writes | cost |
 |---|---|---|---|
 | SR data | `bash scripts/paper/submit_figure_data.sh sr` | `data/paper/figure_data/subjective_randomness.json` | 176 removed models on each run's data and 254 other models on all runs pooled (86 shards), then 15 MCMC fits at ~7,700 trials and 7 on all runs pooled (~23,000) |
-| number-game data | `bash scripts/paper/submit_figure_data.sh number_game` | `data/paper/figure_data/number_game.json` | 170 removed models on each run's data and 250 other models on all runs pooled, × 5 fits (84 shards), then 7-10 models × 5 per run and 6 × 5 pooled |
+| number-game data | `bash scripts/paper/submit_figure_data.sh number_game` | `data/paper/figure_data/number_game.json` | the November sweep: 176 removed models on each run's data and 264 other models on all runs pooled, × 5 fits (88 shards), then 4-11 models × 5 per run and 6 × 5 pooled; work dir `$SCRATCH/auto-psych/paper/number_game_figure_data_nov26` |
 | RSA chain models | `bash scripts/paper/submit_rsa_chain_models.sh` | `data/rsa/prereg/chain_models_lpd.json` (sums only) | 224 numpyro fits on the pooled data (28 shards of 8) |
 | RSA data | `uv run python -m scripts.paper.rsa_figure_data` (anywhere) | `data/paper/figure_data/rsa.json` | seconds: reads aggregates, the chain models' sums included (`--chain-models None` leaves them out) |
 | figures | `uv run python -m scripts.paper.figures` (anywhere) | `data/paper/figures/fig{2,3,4}_*.{pdf,png}` | seconds |
@@ -65,16 +65,17 @@ What each figure shows:
     example sets, the runs' own criterion and settings, from their
     `holdout.json`, which must agree) on each of the three dataset runs'
     final data, 7,560 responses each, and on all three pooled, 22,680
-    (`data/results/number_game_dataset-oct26/`; each run drew its own items).
+    (the November sweep, `data/results/number_game_dataset-nov26/`, which
+    started from the 2016 paper's seeds; each run drew its own items; the
+    October sweep, `number_game_dataset-oct26/`, is not used).
     The starting models are the three literature seeds (pruned in experiment
     1), the other models live at the end each run's other carried models;
     `number_game_figure_data.py` refits them all, per run and pooled. The SE
     is stimulus-clustered ((set, target) cells). Figure 2 draws instead the
     pooled models' log predictive density on held-out responses
     (`data/paper/number_game_unseen_items.json`, `number_game_unseen_items.py`):
-    by default on the Bigelow & Piantadosi example sets no run drew (14 sets,
-    15,090 responses; `figures.py --ng-test-set unseen_items` draws every item
-    no run drew), the winners and seeds from their pooled fits, the
+    by default on the Bigelow & Piantadosi example sets no run drew
+    (`figures.py --ng-test-set unseen_items` draws every item no run drew), the winners and seeds from their pooled fits, the
     non-winning models from their all-data pooled fits at the runs' settings
     (scored in shards on Sherlock:
     `STRIP_SHARDS=22 sbatch --array=0-21 scripts/paper/number_game_unseen_items.sbatch`,
@@ -113,12 +114,14 @@ What each figure shows:
     runs hide participant ids, so nothing is renumbered); the best model is
     the winner and the best starting model the seed with the highest ELPD-CV
     there. Conditions are (example set, target) cells, 9 responses per run
-    that drew the cell: 2,147 cells, 1,845 drawn by one run, 231 by two and
-    71 by all three.
+    that drew the cell: 2,139 cells, 1,856 drawn by one run, 185 by two and
+    98 by all three (244 example sets).
 - **Figure 4** (`fig4_pseudocode`): hand-written annotated pseudocode of each
   domain's Figure 3 model, `pseudocode/<domain>.yaml`. Each spec records its
   model file's SHA-256, and the figure script refuses a spec whose model
-  changed or that is not Figure 3's best model.
+  changed or that is not Figure 3's best model. The number game's spec still
+  describes the October sweep's winner: it is rewritten once the November
+  figure data name the best model.
 
 - **Ablation figure** (`fig_ablation`, `uv run python -m scripts.paper.ablation_figure`,
   seconds): the backward elimination of each domain's overall winner, one
@@ -127,8 +130,12 @@ What each figure shows:
   chain 0's reference-game final, the best on the pre-registered test
   (`data/rsa/c0_ablation/eliminate/`, `docs/auto_rsa/ABLATION_C0.md`; it
   replaces the consolidation's superset elimination), and the number-game
-  dataset run's final on all three runs' data pooled (`data/results/number_game_dataset-oct26/analysis/ablation/`,
-  `docs/ng_ablation.md`; Figure 3's best). Each panel is the path of the model kept
+  November sweep's final best on all three runs' data pooled
+  (`data/results/number_game_dataset-nov26/analysis/ablation/`,
+  `docs/ng_ablation.md`; Figure 3's best). That elimination is not run yet
+  (its final is chosen by the pooled comparison), so until it is committed
+  draw the panel as pending: `ablation_figure --pending-domains number_game`;
+  without that a missing record raises. Each panel is the path of the model kept
   after each round: its grouped-CV ELPD against the full model's, by its
   number of mechanisms, each step named by the mechanism it dropped, with ±1
   clustered SE of the model's own ELPD-CV (`elpd_se`); the path's last step,

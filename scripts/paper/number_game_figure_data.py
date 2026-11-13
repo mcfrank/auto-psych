@@ -1,11 +1,14 @@
 """Number-game data behind the paper's Figures 2 and 3.
 
-The number game's runs are the October 2026 dataset runs (``data/results/
-number_game_dataset-oct26/``, seeds 1-3): three experiments each, whose
-responses were drawn from Bigelow & Piantadosi's bank, each run drawing its
-own items. Every model is compared by the runs' own criterion, grouped
-cross-validation over example sets (``src.model_comparison.posterior.
-compare_table`` with the runs' ``selection``), at the runs' own sampler
+The number game's runs are the November 2026 dataset runs (``data/results/
+number_game_dataset-nov26/``, seeds 1-3), which started from the 2016 paper's
+seeds (Tenenbaum 2000, and Bigelow & Piantadosi's Mixture and Independent
+models): three experiments each, whose responses were drawn from Bigelow &
+Piantadosi's bank, each run drawing its own items. (The October 2026 runs,
+``number_game_dataset-oct26/``, started from earlier seeds and are not used.)
+Every model is compared by the runs' own criterion, grouped cross-validation
+over example sets (``src.model_comparison.posterior.compare_table`` with the
+runs' ``selection``), at the runs' own sampler
 settings (both from each run's ``holdout.json``; they must agree).
 
 - Each run (``runs``): on its final cumulative data (experiment 3's
@@ -64,7 +67,7 @@ from pyprojroot import here
 from scripts.paper import removed_models as rm
 from scripts.paper import sr_figure_data as sr
 
-RUN_ROOT = here() / "data" / "results" / "number_game_dataset-oct26"
+RUN_ROOT = here() / "data" / "results" / "number_game_dataset-nov26"
 DEFAULT_RUNS_ROOT = RUN_ROOT / "collected"
 DEFAULT_HARNESS_ROOT = RUN_ROOT / "harness"
 DEFAULT_OUT = here() / "data" / "paper" / "figure_data" / "number_game.json"
@@ -101,10 +104,10 @@ class Args:
     pooled_fit_method: str = "nuts_no_jitter"
     """Sampler settings of the winners' and seeds' fits on all runs pooled
     (chains are the runs'), the finals comparison's
-    (``scripts/paper/ng_finals_comparison.py``). At the runs' settings run 2's
-    winner did not converge on the pooled data (R-hat 1.058, bulk ESS 64;
-    2026-10-31). The removed models on the pooled data keep the runs' settings
-    (user decision 2026-11-01)."""
+    (``scripts/paper/ng_finals_comparison.py``). At the runs' settings the
+    October runs' run-2 winner did not converge on the pooled data (R-hat
+    1.058, bulk ESS 64; 2026-10-31). The removed models on the pooled data
+    keep the runs' settings (user decision 2026-11-01)."""
     pooled_fit_task: Optional[int] = None
     """Fit only this one (pooled winner or seed, training file) into the
     pooled fit cache and stop: a Slurm array runs the pooled fits in parallel

@@ -12,6 +12,11 @@ import pytest
 from scripts.paper import number_game_figure_data as ng
 
 RUN1_DIR = ng.run_dir(ng.DEFAULT_RUNS_ROOT, "run1")
+RUN3_DIR = ng.run_dir(ng.DEFAULT_RUNS_ROOT, "run3")
+
+
+def test_the_runs_are_the_november_sweep_from_the_2016_papers_seeds():
+    assert ng.RUN_ROOT == ng.here() / "data" / "results" / "number_game_dataset-nov26"
 
 
 def _fake_compare(elpd, se_between, not_converged=()):
@@ -94,11 +99,11 @@ def test_the_committed_run_gives_its_settings_live_models_and_seed_files():
     final_dir = ng.sr.final_experiment_dir(RUN1_DIR)
     live = ng.live_models(final_dir)
     assert final_dir.name == "experiment3"
-    assert live["winner"] == "even_rule_digit_size_principle_counting"
-    assert len(live["others"]) == 3
+    assert live["winner"] == "span_fallback_rule_violation"
+    assert len(live["others"]) == 2
     assert live["n_trials"] == 7560
     # Figure 2 draws them in admission order with the pruned models.
-    assert len(ng.rm.pruned_order(final_dir, live["others"])) == 3
+    assert len(ng.rm.pruned_order(final_dir, live["others"])) == 2
 
     seeds = json.loads((RUN1_DIR / "starting_models.json").read_text())["starting_models"]
     for seed in seeds:  # pruned in experiment 1: found in its pruned/ directory
@@ -113,12 +118,25 @@ def test_the_removed_models_are_every_admitted_model_not_live_at_the_end_nor_a_s
     removed = ng.rm.removed_models(RUN1_DIR, final_dir,
                                    live=[live["winner"], *live["others"]], seeds=seeds)
 
-    assert len(removed) == 84
+    assert len(removed) == 87
     assert not set(removed) & {live["winner"], *live["others"], *seeds}
-    # Dropped as unfittable, never moved to pruned/: found in models/.
-    assert removed["bayesian_digit_feature_concepts"]["outcome"] == "dropped"
-    assert sum(r["outcome"] == "pruned" for r in removed.values()) == 83
+    assert all(r["outcome"] == "pruned" for r in removed.values())
     assert all(r["file"].exists() for r in removed.values())
+
+
+def test_a_model_dropped_as_unfittable_is_found_in_models_not_pruned():
+    final_dir = ng.sr.final_experiment_dir(RUN3_DIR)
+    live = ng.live_models(final_dir)
+    seeds = json.loads((RUN3_DIR / "starting_models.json").read_text())["starting_models"]
+
+    removed = ng.rm.removed_models(RUN3_DIR, final_dir,
+                                   live=[live["winner"], *live["others"]], seeds=seeds)
+
+    assert removed["ordered_sweep_concepts"]["outcome"] == "dropped"
+    assert removed["ordered_sweep_concepts"]["file"] == (
+        RUN3_DIR / "experiment1" / "model_loop" / "models" / "ordered_sweep_concepts.py")
+    # Run 3 reused the placeholder name iter2_candidate1 for two models.
+    assert {"iter2_candidate1_experiment1", "iter2_candidate1_experiment3"} <= set(removed)
 
 
 def test_the_models_pruned_at_the_end_of_experiment_3_keep_the_loops_elpd():
@@ -130,15 +148,13 @@ def test_the_models_pruned_at_the_end_of_experiment_3_keep_the_loops_elpd():
 
     recorded = ng.rm.recorded_scores(final_dir, removed)
 
-    assert len(recorded) == 32
-    # A refit on the final data at the run's settings gave -4689.3915 (2026-10-19).
-    assert recorded["digit_rule_size_principle_counting"] == pytest.approx(-4689.3915, abs=1e-4)
+    assert len(recorded) == 35
+    assert recorded["round_number_kinship_exemplar"] == pytest.approx(-4255.512, abs=1e-4)
     # Exactly the models pruned (not retired) at the end of experiment 3.
     late = {n for n, r in removed.items() if r["outcome"] == "pruned"
             and r["context"] == "experiment3 end of experiment"
             and ng.rm.RETIRED_MARK not in r["detail"]}
     assert set(recorded) == late
-    assert "bayesian_digit_feature_concepts" not in recorded  # dropped in experiment 3
     assert any(r["context"].startswith("experiment1") for n, r in removed.items()
                if n not in recorded)
 
@@ -187,9 +203,10 @@ def test_runs_with_different_settings_are_not_pooled(tmp_path):
 
 
 RUNS = ["run1", "run2", "run3"]
-WINNERS = {"run1": "even_rule_digit_size_principle_counting",
-           "run2": "relational_analogy_transfer", "run3": "outlier_tolerant_rule_concepts"}
-SEEDS = ["bigelow_piantadosi_independent", "bigelow_piantadosi_interval",
+WINNERS = {"run1": "span_fallback_rule_violation",
+           "run2": "neighbourhood_doubt_three_example_memory",
+           "run3": "exception_weighted_rule_rejection"}
+SEEDS = ["bigelow_piantadosi_independent", "bigelow_piantadosi_mixture",
          "tenenbaum_rules_similarity"]
 
 
@@ -231,7 +248,7 @@ def test_the_figure_data_pool_all_three_runs(tmp_path, monkeypatch):
     data = json.loads(args.out.read_text())
     assert [r["run"] for r in data["runs"]] == RUNS
     assert {r["run"]: r["best_model"] for r in data["runs"]} == WINNERS
-    assert [len(r["pruned_during_run"]) for r in data["runs"]] == [84, 78, 73]
+    assert [len(r["pruned_during_run"]) for r in data["runs"]] == [87, 82, 86]
     pooled = data["pooled"]
     assert pooled["runs"] == RUNS
     assert pooled["n_trials"] == 3 * 7560
@@ -241,8 +258,8 @@ def test_the_figure_data_pool_all_three_runs(tmp_path, monkeypatch):
     assert pooled["best_seed"] == SEEDS[0]
     assert pooled["vs_best_seed"][WINNERS["run2"]] == {"diff": 390.0, "se": 5.0}
     # Every run's other models, labelled by their run (names repeat across runs).
-    assert len(pooled["others_at_end"]) == 3 + 6 + 6
-    assert len(pooled["pruned_during_run"]) == 84 + 78 + 73
+    assert len(pooled["others_at_end"]) == 2 + 7 + 0
+    assert len(pooled["pruned_during_run"]) == 87 + 82 + 86
     assert all(label.split("__")[0] in RUNS for label in pooled["pruned_during_run"])
     assert set(pooled["pruned_order"]) == set(pooled["pruned_during_run"])
     assert set(pooled["others_order"]) == set(pooled["others_at_end"])

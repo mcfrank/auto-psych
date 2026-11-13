@@ -1,5 +1,15 @@
 # Ablating the number-game final: how much of the final model is needed
 
+> **Status (2026-11-12): this is the October sweep's ablation, superseded.** The paper's
+> number-game runs are now the November sweep (`data/results/number_game_dataset-nov26/`,
+> from the 2016 paper's seeds; user decision 2026-11-12). Its ablation is not run yet: the
+> final to ablate is the November winner best on all runs pooled
+> (`data/paper/figure_data/number_game.json`, `pooled.best_model`, once the figure-data job
+> has run), which needs its own switchable rewrite in `src/number_game/ablation/final.py`.
+> Then `src/number_game/ablation/data.py` points at the November runs, and the result goes
+> to `data/results/number_game_dataset-nov26/analysis/ablation/`, where
+> `scripts/paper/ablation_figure.py` reads it. The rule below is unchanged.
+
 2026-10-27. The number-game dataset run (`data/results/number_game_dataset-oct26/`) ended on
 `even_rule_digit_size_principle_counting`: a logistic model of P(yes) with 13 terms and 14
 parameters. The question is how much of that the data need. This is the sr-oct26 ablation

@@ -50,12 +50,24 @@ def test_a_panel_per_domain_in_the_papers_order_from_each_domains_ablation():
     # Chain 0's final, the best on the pre-registered test (docs/auto_rsa/ABLATION_C0.md),
     # not the consolidation's superset, whose elimination could not start.
     assert paths["rsa"] == ablation_figure.here() / "data/rsa/c0_ablation/eliminate/elimination.json"
-    assert paths["number_game"] == (ablation_figure.here() / "data/results/number_game_dataset-oct26"
+    # The November sweep's (from the 2016 paper's seeds), the definitive number-game runs.
+    assert paths["number_game"] == (ablation_figure.here() / "data/results/number_game_dataset-nov26"
                                     / "analysis/ablation/elimination.json")
 
 
+def test_a_missing_elimination_raises_unless_its_domain_is_pending(tmp_path, monkeypatch):
+    monkeypatch.setattr(ablation_figure, "NG_ELIMINATION", tmp_path / "absent" / "elimination.json")
+    import pytest
+
+    with pytest.raises(FileNotFoundError, match="number_game.*--pending-domains"):
+        ablation_figure.main(ablation_figure.Args(out_dir=tmp_path))
+    ablation_figure.main(ablation_figure.Args(out_dir=tmp_path, pending_domains=["number_game"]))
+    assert (tmp_path / "fig_ablation.pdf").exists() and (tmp_path / "fig_ablation.png").exists()
+
+
 def test_the_figure_is_drawn_from_the_committed_eliminations(tmp_path):
-    ablation_figure.main(ablation_figure.Args(out_dir=tmp_path))
+    pending = [] if ablation_figure.NG_ELIMINATION.exists() else ["number_game"]
+    ablation_figure.main(ablation_figure.Args(out_dir=tmp_path, pending_domains=pending))
     assert (tmp_path / "fig_ablation.pdf").exists() and (tmp_path / "fig_ablation.png").exists()
 
 

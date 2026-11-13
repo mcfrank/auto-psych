@@ -50,41 +50,89 @@ def source_file(run_dir: Path, name: str) -> Path:
     return copies[0]
 
 
-def removed_models(run_dir: Path, final_dir: Path, *, live: Sequence[str],
-                   seeds: Sequence[str]) -> Dict[str, Dict[str, Any]]:
-    """Every model the run admitted and later removed: name -> its source
-    file and the ledger's last entry for it (``outcome``: ``pruned`` or
-    ``dropped``; its ``detail`` and ``context``). The final ledger continues
-    every earlier experiment's. A model's copies (in
-    any experiment's ``models/`` or ``models/pruned/``) must be identical."""
+def _experiment_of(context: str) -> str:
+    experiment = context.split(" ", 1)[0]
+    if not experiment.startswith("experiment"):
+        raise RuntimeError(f"the ledger context {context!r} names no experiment")
+    return experiment
+
+
+def _copy_in_experiment(run_dir: Path, experiment: str, name: str) -> Path:
+    """A model's file in one experiment's ``models/`` or ``models/pruned/``."""
+    loop = run_dir / experiment / "model_loop" / "models"
+    copies = [p for p in (loop / f"{name}.py", loop / "pruned" / f"{name}.py") if p.exists()]
+    if not copies:
+        raise FileNotFoundError(f"no source file of the model {name!r} in {loop}")
+    if len({sr._sha256(p) for p in copies}) > 1:
+        raise RuntimeError(f"the model {name!r} has differing copies in {experiment}: {copies}")
+    return copies[0]
+
+
+def _admissions(final_dir: Path) -> List[Dict[str, Any]]:
+    """Each model the run admitted, in the order of its first admission: its
+    ``key``, its ledger ``name``, whether it was ``last`` admitted under that
+    name, its source ``file`` and the ledger's last entry for it (``entry``).
+    The key is the name, unless the name was admitted again with different
+    code (agents can reuse a placeholder name such as ``iter2_candidate1`` in
+    a later experiment): then each admission is its own model, keyed
+    ``<name>_<experiment>``. The final ledger continues every earlier
+    experiment's, in the order things happened."""
     from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
 
+    run_dir = final_dir.parent
     entries = HypothesisLedger(final_dir / "model_loop" / "attempted_hypotheses.jsonl").entries()
-    admitted = [e.name for e in entries if e.outcome == "admitted"]
-    last = {e.name: e for e in entries}
-    removed: Dict[str, Dict[str, Any]] = {}
-    for name in dict.fromkeys(admitted):
-        if name in live or name in seeds:
+    starts: Dict[str, List[int]] = {}
+    for i, e in enumerate(entries):
+        if e.outcome == "admitted":
+            starts.setdefault(e.name, []).append(i)
+    split = {
+        name for name, idx in starts.items() if len(idx) > 1 and len({
+            sr._sha256(_copy_in_experiment(run_dir, _experiment_of(entries[i].context), name))
+            for i in idx}) > 1
+    }
+    admissions: Dict[str, Dict[str, Any]] = {}
+    for name, idx in starts.items():
+        if name not in split:
+            admissions[name] = {"key": name, "name": name, "last": True, "first": idx[0],
+                                "entry": [e for e in entries if e.name == name][-1]}
             continue
-        if last[name].outcome == "admitted":
-            raise RuntimeError(f"{name!r} was admitted, is not live at the end and was never removed")
-        removed[name] = {"file": source_file(run_dir, name), "outcome": last[name].outcome,
-                         "detail": last[name].detail, "context": last[name].context}
+        for n, start in enumerate(idx):
+            end = idx[n + 1] if n + 1 < len(idx) else len(entries)
+            experiment = _experiment_of(entries[start].context)
+            key = f"{name}_{experiment}"
+            if key in admissions:
+                raise RuntimeError(f"{name!r} was admitted twice in {experiment} with different code")
+            admissions[key] = {
+                "key": key, "name": name, "last": end == len(entries), "first": start,
+                "file": _copy_in_experiment(run_dir, experiment, name),
+                "entry": [e for e in entries[start:end] if e.name == name][-1]}
+    return sorted(admissions.values(), key=lambda a: a["first"])
+
+
+def removed_models(run_dir: Path, final_dir: Path, *, live: Sequence[str],
+                   seeds: Sequence[str]) -> Dict[str, Dict[str, Any]]:
+    """Every model the run admitted and later removed: its key (``_admissions``)
+    -> its ledger ``name``, its source file and the ledger's last entry for it
+    (``outcome``: ``pruned`` or ``dropped``; its ``detail`` and ``context``).
+    A model's copies (in any experiment's ``models/`` or ``models/pruned/``)
+    must be identical."""
+    removed: Dict[str, Dict[str, Any]] = {}
+    for a in _admissions(final_dir):
+        name, last = a["name"], a["entry"]
+        if (name in live or name in seeds) and a["last"]:
+            continue
+        if last.outcome == "admitted":
+            raise RuntimeError(f"{a['key']!r} was admitted, is not live at the end and was never removed")
+        removed[a["key"]] = {"name": name, "file": a.get("file") or source_file(run_dir, name),
+                             "outcome": last.outcome, "detail": last.detail, "context": last.context}
     return removed
 
 
 def admission_order(final_dir: Path) -> Dict[str, int]:
-    """Each model's place in the order the run admitted models (0 first),
-    from its first ``admitted`` entry in the final experiment's ledger, which
-    continues every earlier experiment's in the order things happened. Figure
-    2 draws the removed models in this order."""
-    from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
-
-    order: Dict[str, int] = {}
-    for e in HypothesisLedger(final_dir / "model_loop" / "attempted_hypotheses.jsonl").entries():
-        if e.outcome == "admitted" and e.name not in order:
-            order[e.name] = len(order)
-    return order
+    """Each model's place in the order the run admitted models (0 first), by
+    its key (``_admissions``). Figure 2 draws the removed models in this
+    order."""
+    return {a["key"]: n for n, a in enumerate(_admissions(final_dir))}
 
 
 def pruned_order(final_dir: Path, names: Sequence[str]) -> Dict[str, int]:
@@ -108,10 +156,11 @@ def recorded_scores(final_dir: Path, removed: Dict[str, Dict[str, Any]]) -> Dict
     history = json.loads((final_dir / "model_loop" / "history.json").read_text())
     unreliable = {n for step in history for n in step.get("excluded_unreliable") or []}
     scores: Dict[str, float] = {}
-    for name, entry in removed.items():
+    for key, entry in removed.items():
         if (entry["outcome"] != "pruned" or RETIRED_MARK in entry["detail"]
                 or not entry["context"].startswith(f"{final_dir.name} end of experiment")):
             continue
+        name = entry["name"]  # the history records the ledger's name
         values = {float(step["elpd_loo"][name]) for step in history
                   if name in (step.get("elpd_loo") or {})}
         if len(values) != 1:
@@ -122,7 +171,7 @@ def recorded_scores(final_dir: Path, removed: Dict[str, Dict[str, Any]]) -> Dict
         if name in unreliable:
             raise RuntimeError(f"{name!r} was pruned, but {final_dir.name}'s history marks its "
                                "PSIS-LOO unreliable")
-        scores[name] = values.pop()
+        scores[key] = values.pop()
     return scores
 
 

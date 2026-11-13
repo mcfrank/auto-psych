@@ -26,4 +26,4 @@ cd "$REPO"
 echo "[paper] code $(git rev-parse HEAD) $( [[ -z "$(git status --porcelain)" ]] && echo clean || echo DIRTY)"
 "$VENV_PY" -m scripts.paper.parameter_summaries \
   --sr-work-dir "$WORK_ROOT/sr_figure_data" \
-  --number-game-work-dir "$WORK_ROOT/number_game_figure_data"
+  --number-game-work-dir "$WORK_ROOT/number_game_figure_data_nov26"

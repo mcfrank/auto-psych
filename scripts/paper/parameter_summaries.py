@@ -12,8 +12,9 @@ Fit sets:
   runs' final data pooled (Figure 3's fits).
 - ``sr_run1`` .. ``sr_run3``: the run's winner and the seeds fitted on that
   run's final data at the live run's settings (Figure 2's per-run fits).
-- ``number_game``: the run's winner and the three seeds fitted on all of its
-  final data (not the CV folds).
+- ``number_game_pooled``: every run's winner and the three seeds fitted on
+  the three runs' final data pooled (Figure 3's fits; all the data, not the
+  CV folds), from the November sweep.
 
 Two tables are written to ``--out-dir``:
 
@@ -34,7 +35,7 @@ Usage (loading the pooled fits takes ~10 GB of memory: run it as a job,
 ``sbatch scripts/paper/parameter_summaries.sbatch``):
     uv run python -m scripts.paper.parameter_summaries \\
         --sr-work-dir $SCRATCH/auto-psych/paper/sr_figure_data \\
-        --number-game-work-dir $SCRATCH/auto-psych/paper/number_game_figure_data
+        --number-game-work-dir $SCRATCH/auto-psych/paper/number_game_figure_data_nov26
 """
 
 from __future__ import annotations
@@ -51,7 +52,6 @@ from pyprojroot import here
 
 SR_FIGURE_DATA = here() / "data" / "paper" / "figure_data" / "subjective_randomness.json"
 SR_RUNS_ROOT = here() / "data" / "results" / "human_experiment_sr-oct26" / "collected"
-NUMBER_GAME_ROOT = here() / "data" / "results" / "number_game_dataset-oct26"
 DEFAULT_OUT_DIR = here() / "data" / "paper" / "parameter_summaries"
 
 PERSON_QUANTILES = [0.05, 0.25, 0.5, 0.75, 0.95]
@@ -67,9 +67,8 @@ class Args:
     sr_figure_data: Path = SR_FIGURE_DATA
     """The SR figure data: which models were fitted, and at what settings."""
     sr_runs_root: Path = SR_RUNS_ROOT
-    number_game_run_dir: Path = NUMBER_GAME_ROOT / "collected" / "run1" / "number_game"
-    number_game_holdout: Path = NUMBER_GAME_ROOT / "harness" / "run1" / "holdout.json"
     number_game_figure_data: Path = here() / "data" / "paper" / "figure_data" / "number_game.json"
+    """The number-game figure data: which models were fitted, and at what settings."""
 
 
 @dataclass
@@ -118,16 +117,17 @@ def sr_fit_sets(args: Args) -> List[FitSet]:
 
 
 def number_game_fit_set(args: Args) -> FitSet:
-    winner = json.loads(args.number_game_figure_data.read_text())["runs"][0]["best_model"]
-    seeds = json.loads((args.number_game_run_dir / "starting_models.json").read_text())[
-        "starting_models"]
+    figure = json.loads(args.number_game_figure_data.read_text())
+    pooled = figure["pooled"]
+    pooled_dir = args.number_game_work_dir / "pooled"
     return FitSet(
-        label="number_game",
-        roles={winner: "winner", **{seed: "seed" for seed in seeds}},
-        models_dir=args.number_game_work_dir / "models",
-        responses=args.number_game_work_dir / "responses.csv",
-        cache_dir=args.number_game_work_dir / "fit_cache",
-        fit_kwargs=json.loads(args.number_game_holdout.read_text())["fit_kwargs"],
+        label="number_game_pooled",
+        roles={name: ("winner" if name in pooled["winner_runs"] else "seed")
+               for name in pooled["elpd"]},
+        models_dir=pooled_dir / "models",
+        responses=pooled_dir / "responses.csv",
+        cache_dir=pooled_dir / "fit_cache",
+        fit_kwargs=figure["pooled_fit_settings"],
     )
 
 

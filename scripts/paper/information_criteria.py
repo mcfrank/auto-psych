@@ -272,15 +272,21 @@ TRAJECTORY_EVERY = 10_000
 
 def _maximize_from(f_and_grad: Callable, x0: np.ndarray, free: np.ndarray, maxiter: int = 100_000,
                    log: Optional[Callable[[str], None]] = None):
+    from pymc.logprob.utils import ParameterValueError
+
     def neg(v):
         x = x0.copy()
         x[free] = v
-        value, grad = f_and_grad(x)
-        if not math.isfinite(value):
+        try:
+            value, grad = f_and_grad(x)
+        except ParameterValueError:  # e.g. a probability outside [0, 1]: log-likelihood -inf
+            value = -math.inf
+        if not math.isfinite(value) or not np.isfinite(grad[free]).all():  # a NaN step poisons every coordinate
+            rejected[0] = True
             return 1e300, np.zeros(len(free))
         return -value, -grad[free]
 
-    trajectory, count = [], [0]
+    trajectory, count, rejected = [], [0], [False]
 
     def callback(intermediate_result):  # scipy passes the OptimizeResult only under this name
         count[0] += 1
@@ -289,12 +295,33 @@ def _maximize_from(f_and_grad: Callable, x0: np.ndarray, free: np.ndarray, maxit
             if log is not None:
                 log(f"iteration {count[0]}: log-likelihood {trajectory[-1][1]:.4f}")
 
-    res = optimize.minimize(neg, x0[free], jac=True, method="L-BFGS-B", callback=callback,
-                            options={"maxiter": maxiter, "maxfun": 2 * maxiter, "ftol": 1e-14, "gtol": 1e-7})
+    # L-BFGS-B's line search cannot back off from a point the likelihood rejects
+    # (it stops where it was); so step uphill, halving until the point is
+    # accepted and better, and climb again from there.
+    v, nit = x0[free], 0
+    while True:
+        rejected[0] = False
+        res = optimize.minimize(neg, v, jac=True, method="L-BFGS-B", callback=callback,
+                                options={"maxiter": maxiter - nit, "maxfun": 2 * maxiter,
+                                         "ftol": 1e-14, "gtol": 1e-7})
+        nit += int(res.nit)
+        v = res.x
+        if not rejected[0] or nit >= maxiter:
+            break
+        uphill = -np.asarray(res.jac, dtype=float)
+        step = 1.0 / max(float(np.linalg.norm(uphill)), 1e-300)
+        while step * np.linalg.norm(uphill) > 1e-12:
+            trial = v + step * uphill
+            if neg(trial)[0] < res.fun:
+                break
+            step /= 2
+        else:
+            break
+        v = trial
     x = x0.copy()
     x[free] = res.x
-    trajectory.append((int(res.nit), -float(res.fun)))
-    return -float(res.fun), x, float(np.linalg.norm(res.jac)), str(res.message), int(res.nit), trajectory
+    trajectory.append((nit, -float(res.fun)))
+    return -float(res.fun), x, float(np.linalg.norm(res.jac)), str(res.message), nit, trajectory
 
 
 def maximize(lik: Any, starts: Sequence[np.ndarray], free: Optional[np.ndarray] = None,
@@ -512,10 +539,11 @@ def _person_is(lik: PyMCLikelihood, b: _Blocks, mode: np.ndarray, neg_h: np.ndar
 @dataclass
 class Evidence:
     log_evidence: float  # importance-sampled log p(data | model)
-    laplace: float
+    laplace: Optional[float]  # None when the proposal comes from posterior draws
     min_ess: float  # of the (outer) importance weights
     n_samples: int
     inner_min_ess: Optional[float] = None  # hierarchical: the worst person's, over the outer samples
+    proposal: str = "mode"  # "mode" (the posterior mode and Hessian) or "posterior draws"
 
 
 def _hessian_from_grad(grad: Callable[[np.ndarray], np.ndarray], x: np.ndarray, h: float = 1e-4) -> np.ndarray:
@@ -543,18 +571,23 @@ def _hessian_from_values(f: Callable[[np.ndarray], float], x: np.ndarray, h: flo
 
 
 def _laplace_log_integral(value: float, neg_h: np.ndarray) -> float:
+    if not (math.isfinite(value) and np.isfinite(neg_h).all()):
+        raise RuntimeError("the log posterior or its Hessian at the mode is not finite")
     sign, logdet = np.linalg.slogdet(neg_h)
     if sign <= 0:
         raise RuntimeError("the Hessian at the posterior mode is not negative definite")
     return value + 0.5 * len(neg_h) * math.log(2 * math.pi) - 0.5 * logdet
 
 
-def _t_importance(log_f: Callable[[np.ndarray], float], mode: np.ndarray, neg_h: np.ndarray, n: int,
+def _t_importance(log_f: Callable[[np.ndarray], float], mode: np.ndarray, cov: np.ndarray, n: int,
                   rng: np.random.Generator, df: float, scale: float):
     """log of the integral of exp(log_f) by importance sampling from a
-    multivariate t around ``mode``, and the effective sample size."""
+    multivariate t around ``mode`` with scale matrix ``scale**2 * cov``, and
+    the effective sample size."""
     d = len(mode)
-    chol = np.linalg.cholesky(scale ** 2 * np.linalg.inv(neg_h))
+    if not (np.isfinite(mode).all() and np.isfinite(cov).all()):
+        raise RuntimeError("the importance-sampling proposal is not finite")
+    chol = np.linalg.cholesky(scale ** 2 * cov)
     logdet = 2 * float(np.log(np.diag(chol)).sum())
     log_w = np.empty(n)
     for s in range(n):
@@ -567,29 +600,67 @@ def _t_importance(log_f: Callable[[np.ndarray], float], mode: np.ndarray, neg_h:
     return float(special.logsumexp(log_w) - math.log(n)), float(weights.sum() ** 2 / (weights ** 2).sum())
 
 
+def _draws_proposal(draws: np.ndarray):
+    """The mean and covariance of posterior draws (rows) on the unconstrained scale."""
+    draws = np.asarray(draws, dtype=float)
+    if draws.ndim != 2 or len(draws) <= draws.shape[1]:
+        raise ValueError(f"need more posterior draws than coordinates, got {draws.shape}")
+    return draws.mean(axis=0), np.atleast_2d(np.cov(draws, rowvar=False))
+
+
+def unconstrained_draws(lik: Any, flat: Mapping[str, np.ndarray], n: int) -> np.ndarray:
+    """``n`` evenly thinned posterior draws (constrained values per parameter,
+    as ``src.rsa.fit.posterior_flat`` gives them) on the unconstrained scale."""
+    total = len(next(iter(flat.values())))
+    picks = np.linspace(0, total - 1, n).astype(int)
+    return np.stack([lik.point_from_constrained({k: v[i] for k, v in flat.items()}) for i in picks])
+
+
 def flat_log_evidence(lik: Any, *, start: np.ndarray, n_samples: int, seed: int,
-                      df: float = 4.0, scale: float = 1.3) -> Evidence:
+                      draws: Optional[np.ndarray] = None, df: float = 4.0, scale: float = 1.3) -> Evidence:
     """log p(data | model) of a model without per-person coordinates: the
     likelihood integrated against the whole prior over every coordinate, by
-    importance sampling around the posterior mode."""
-    _, mode, *_ = _maximize_from(lik.posterior_and_grad, np.asarray(start, dtype=float), np.arange(lik.dim))
+    importance sampling from a multivariate t around the posterior mode
+    (scaled by the inverse Hessian there) or, given posterior ``draws``
+    (unconstrained, one per row), around their mean with their covariance,
+    which needs no Hessian (a likelihood with ridges has none at its mode)."""
+    rng = np.random.default_rng(seed)
+    if draws is not None:
+        centre, cov = _draws_proposal(draws)
+        value, ess = _t_importance(lambda x: lik.posterior_and_grad(x)[0], centre, cov, n_samples, rng, df, scale)
+        return Evidence(log_evidence=value, laplace=None, min_ess=ess, n_samples=n_samples,
+                        proposal="posterior draws")
+    # From the start given and the prior median: a start out on a ridge (an MLE
+    # running off) can overflow the log posterior.
+    found = []
+    for x0 in (np.asarray(start, dtype=float), np.asarray(lik.x0, dtype=float)):
+        _, x, *_ = _maximize_from(lik.posterior_and_grad, x0, np.arange(lik.dim))
+        value = lik.posterior_and_grad(x)[0] if np.isfinite(x).all() else -math.inf
+        if math.isfinite(value):
+            found.append((value, x))
+    if not found:
+        raise RuntimeError("no start reached a finite posterior mode")
+    mode = max(found, key=lambda f: f[0])[1]
     neg_h = -_hessian_from_grad(lambda x: lik.posterior_and_grad(x)[1], mode)
     laplace = _laplace_log_integral(lik.posterior_and_grad(mode)[0], neg_h)
-    value, ess = _t_importance(lambda x: lik.posterior_and_grad(x)[0], mode, neg_h, n_samples,
-                               np.random.default_rng(seed), df, scale)
+    value, ess = _t_importance(lambda x: lik.posterior_and_grad(x)[0], mode, np.linalg.inv(neg_h), n_samples,
+                               rng, df, scale)
     return Evidence(log_evidence=value, laplace=laplace, min_ess=ess, n_samples=n_samples)
 
 
 def hierarchical_log_evidence(lik: PyMCLikelihood, coords: Coordinates, units: np.ndarray, *,
                               start: np.ndarray, n_outer: int, n_inner: int, seed: int,
-                              df: float = 4.0, scale: float = 1.3) -> Evidence:
+                              draws: Optional[np.ndarray] = None, df: float = 4.0,
+                              scale: float = 1.3) -> Evidence:
     """log p(data | model) with per-person coordinates: each person's
     coordinates integrated against their prior given the population ones
     (``_person_is``), and the population coordinates against theirs, by
     importance sampling around the mode of that marginal (nested: each outer
     draw's likelihood is the product of the persons' inner estimates, so the
     estimate is unbiased on the natural scale). Coordinates the likelihood does
-    not use integrate to one under their own (elementwise) prior."""
+    not use integrate to one under their own (elementwise) prior. Given
+    posterior ``draws``, the outer proposal is their population coordinates'
+    mean and covariance instead of the mode and a finite-difference Hessian."""
     b = _blocks(lik, coords, units)
     bad = [lik.coordinate_names[j] for j in coords.unused if not lik.has_elementwise_prior(j)]
     if bad:
@@ -610,11 +681,16 @@ def hierarchical_log_evidence(lik: PyMCLikelihood, coords: Coordinates, units: n
         mode, neg_h = _laplace_at(lik, b, at(v))
         return population_prior(mode) + _laplace_total(lik, b, mode, neg_h)
 
-    res = optimize.minimize(lambda v: -laplace_marginal(v), base[pop], method="L-BFGS-B",
-                            options={"maxiter": 2000, "eps": 1e-5, "ftol": 1e-12, "gtol": 1e-6})
-    centre = res.x
-    neg_h = -_hessian_from_values(laplace_marginal, centre)
-    laplace = _laplace_log_integral(laplace_marginal(centre), neg_h)
+    if draws is not None:
+        centre, cov = _draws_proposal(np.asarray(draws, dtype=float)[:, pop])
+        laplace = None
+    else:
+        res = optimize.minimize(lambda v: -laplace_marginal(v), base[pop], method="L-BFGS-B",
+                                options={"maxiter": 2000, "eps": 1e-5, "ftol": 1e-12, "gtol": 1e-6})
+        centre = res.x
+        neg_h = -_hessian_from_values(laplace_marginal, centre)
+        laplace = _laplace_log_integral(laplace_marginal(centre), neg_h)
+        cov = np.linalg.inv(neg_h)
     rng = np.random.default_rng(seed)
     inner_ess = []
 
@@ -624,9 +700,10 @@ def hierarchical_log_evidence(lik: PyMCLikelihood, coords: Coordinates, units: n
         inner_ess.append(ess)
         return population_prior(mode) + total
 
-    value, ess = _t_importance(outer, centre, neg_h, n_outer, rng, df, scale)
+    value, ess = _t_importance(outer, centre, cov, n_outer, rng, df, scale)
     return Evidence(log_evidence=value, laplace=laplace, min_ess=ess, n_samples=n_outer,
-                    inner_min_ess=float(min(inner_ess)))
+                    inner_min_ess=float(min(inner_ess)),
+                    proposal="mode" if draws is None else "posterior draws")
 
 
 # ---------------------------------------------------------------------------
@@ -642,8 +719,13 @@ def pymc_record(models_dir: Path, name: str, responses: Path, *, unit: Optional[
                 starts: Sequence[np.ndarray] = (), n_samples: int = 4000, seed: int = 0,
                 constrained_starts: Sequence[Mapping[str, Any]] = (), jitter_starts: int = 0,
                 maxiter: int = 2_000_000, evidence_outer: int = 1000,
-                evidence_inner: int = 1000) -> Dict[str, Any]:
+                evidence_inner: int = 1000,
+                posterior_draws: Sequence[Mapping[str, Any]] = ()) -> Dict[str, Any]:
+    """``posterior_draws`` (constrained values, e.g. a cached MCMC fit's) give the
+    evidence's importance-sampling proposal; without them it is built at the
+    posterior mode."""
     lik = PyMCLikelihood.build(models_dir, name, responses)
+    draws = np.stack([lik.point_from_constrained(d) for d in posterior_draws]) if posterior_draws else None
     starts = [*starts, *(lik.point_from_constrained(v) for v in constrained_starts),
               *(generic(lik.x0, seed=s, sd=0.5) for s in range(1, jitter_starts + 1))]
     reference = starts[0] if starts else lik.x0
@@ -667,9 +749,9 @@ def pymc_record(models_dir: Path, name: str, responses: Path, *, unit: Optional[
                     "n_samples": m.n_samples, "k": coords.k_marginal,
                     "is_lower_bound": True, **criteria(m.log_lik, coords.k_marginal, lik.n_trials)}
         ev = hierarchical_log_evidence(lik, coords, units, start=m.x, n_outer=evidence_outer,
-                                       n_inner=evidence_inner, seed=seed)
+                                       n_inner=evidence_inner, seed=seed, draws=draws)
     else:
-        ev = flat_log_evidence(lik, start=fit.x, n_samples=n_samples, seed=seed)
+        ev = flat_log_evidence(lik, start=fit.x, n_samples=n_samples, seed=seed, draws=draws)
     return {"model": name, "n": lik.n_trials, "n_units": len(coords.per_unit),
             "per_unit_k": (len(next(iter(coords.per_unit.values()))) if coords.per_unit else 0),
             "unused_coordinates": len(coords.unused), "conditional": conditional, "marginal": marginal,
@@ -678,7 +760,8 @@ def pymc_record(models_dir: Path, name: str, responses: Path, *, unit: Optional[
 
 def _evidence_record(ev: Evidence, inner_samples: Optional[int]) -> Dict[str, Any]:
     return {"log_evidence": ev.log_evidence, "laplace": ev.laplace, "min_ess": ev.min_ess,
-            "n_samples": ev.n_samples, "inner_min_ess": ev.inner_min_ess, "inner_samples": inner_samples}
+            "n_samples": ev.n_samples, "inner_min_ess": ev.inner_min_ess, "inner_samples": inner_samples,
+            "proposal": ev.proposal}
 
 
 # ---------------------------------------------------------------------------
@@ -688,6 +771,7 @@ def _evidence_record(ev: Evidence, inner_samples: Optional[int]) -> Dict[str, An
 from pyprojroot import here  # noqa: E402
 
 FIGURE_DATA = here() / "data" / "paper" / "figure_data"
+NG_RUNS_ROOT = here() / "data" / "results" / "number_game_dataset-nov26" / "collected"
 NG_UNSEEN = here() / "data" / "paper" / "number_game_unseen_items.json"
 RSA_LIVE = here() / "data" / "rsa" / "live"
 RSA_SEEDS = here() / "data" / "rsa" / "live_seeds"
@@ -709,19 +793,22 @@ def _runs(root: Path) -> List[str]:
     return sorted(p.name for p in root.glob("run*") if p.is_dir())
 
 
+def _best_model(loop: Path) -> str:
+    return json.loads((loop / "model_posterior.json").read_text())["best_model"]
+
+
 def _pymc_tasks(domain: str) -> List[Task]:
     """Every run's winner and the seeds, on all runs' final data pooled (as
     Figures 2 and 3 fit them)."""
-    from scripts.paper import number_game_figure_data as ng
     from scripts.paper import sr_figure_data as sr
 
-    root = sr.DEFAULT_RUNS_ROOT if domain == "subjective_randomness" else ng.DEFAULT_RUNS_ROOT
+    root = sr.DEFAULT_RUNS_ROOT if domain == "subjective_randomness" else NG_RUNS_ROOT
     winners, seeds, sources = [], {}, []
     for run in _runs(root):
         tree = root / run / domain
         final = sr.final_experiment_dir(tree)
         loop = final / "model_loop"
-        winner = json.loads((loop / "model_posterior.json").read_text())["best_model"]
+        winner = _best_model(loop)
         winners.append((winner, loop / "models" / f"{winner}.py"))
         for name in json.loads((tree / "starting_models.json").read_text())["starting_models"]:
             path = sr.seed_file(tree, final, name)
@@ -778,8 +865,12 @@ def _cached_fit(fit_dir: Path, run: str, model: str) -> Path:
     return found[0]
 
 
+EVIDENCE_DRAWS = 500  # posterior draws (evenly thinned) behind the evidence's proposal
+
+
 def _posterior_summary(nc: Path) -> Dict[str, Any]:
-    """PSIS-LOO and WAIC of a cached fit, and its posterior mean and best draw as starts."""
+    """PSIS-LOO and WAIC of a cached fit, its posterior mean and best draw as
+    starts, and ``EVIDENCE_DRAWS`` of its draws for the evidence's proposal."""
     import arviz as az
 
     idata = az.from_netcdf(str(nc))
@@ -790,10 +881,13 @@ def _posterior_summary(nc: Path) -> Dict[str, Any]:
     post = idata.posterior
     mean = {v: post[v].mean(("chain", "draw")).values for v in post.data_vars}
     best = {v: post[v].isel(chain=c, draw=d).values for v in post.data_vars}
+    flat = post.stack(sample=("chain", "draw"))
+    picks = np.linspace(0, flat.sizes["sample"] - 1, EVIDENCE_DRAWS).astype(int)
+    draws = [{v: flat[v].isel(sample=int(i)).values for v in post.data_vars} for i in picks]
     stats_ = {"elpd_loo": float(loo.elpd_loo), "p_loo": float(loo.p_loo),
               "lppd": float(loo.elpd_loo + loo.p_loo), "elpd_waic": float(waic.elpd_waic),
               "p_waic": float(waic.p_waic), "best_draw_log_lik": float(per_draw.values.max())}
-    return {"stats": stats_, "starts": [mean, best]}
+    return {"stats": stats_, "starts": [mean, best], "draws": draws}
 
 
 def run_task(task: Task, *, work_dir: Path, sr_fit_dir: Path, rsa_pooled: Optional[Path],
@@ -810,7 +904,8 @@ def run_task(task: Task, *, work_dir: Path, sr_fit_dir: Path, rsa_pooled: Option
             posterior = _posterior_summary(_cached_fit(sr_fit_dir, task.run, task.model))
         record = pymc_record(task.file.parent, task.model, responses, unit=DOMAIN_UNIT[task.domain],
                              constrained_starts=posterior["starts"] if posterior else (),
-                             jitter_starts=0 if posterior else 4, n_samples=n_samples)
+                             jitter_starts=0 if posterior else 4, n_samples=n_samples,
+                             posterior_draws=posterior["draws"] if posterior else ())
         if posterior:
             record["posterior"] = posterior["stats"]
         record["inputs"] = {"responses_sha256": _sha(responses)}
@@ -843,7 +938,14 @@ def rsa_record(task: Task, pooled: Optional[Path], *, n_samples: int) -> Dict[st
              if np.any(np.abs(lik.class_probs(np.where(np.arange(lik.dim) == j, probe + 0.37, probe))
                               - lik.class_probs(probe)) > 1e-6)]
     k = len(moved)
-    ev = flat_log_evidence(lik, start=fit.x, n_samples=n_samples, seed=0)
+    # The proposal from NUTS draws (the live loop's settings): a t at the mode
+    # left softmax_surprisal_isolated_costly_l4 an effective sample size of 1-38.
+    from src.rsa.fit import FitSettings, fit as nuts_fit, posterior_flat
+
+    fitted = nuts_fit(RSAModel(task.file, name=task.model), trials.contexts, trials.choices,
+                      FitSettings(dense_mass=True, init="map"))
+    ev = flat_log_evidence(lik, start=fit.x, n_samples=n_samples, seed=0,
+                           draws=unconstrained_draws(lik, posterior_flat(fitted), EVIDENCE_DRAWS))
     return {"model": task.model, "n": lik.n_trials, "n_units": 0, "per_unit_k": 0,
             "unused_coordinates": lik.dim - k,
             "conditional": {"log_lik": fit.log_lik, "k": k,
@@ -851,7 +953,8 @@ def rsa_record(task: Task, pooled: Optional[Path], *, n_samples: int) -> Dict[st
                             "grad_norm": fit.grad_norm, "optimizer": fit.message, "iterations": fit.iterations,
                             "running_off": [lik.coordinate_names[j] for j in np.where(np.abs(fit.x) > 12)[0]],
                             **criteria(fit.log_lik, k, lik.n_trials)},
-            "marginal": None, "evidence": _evidence_record(ev, None),
+            "marginal": None,
+            "evidence": {**_evidence_record(ev, None), "nuts_convergence_problems": fitted.convergence_problems},
             "inputs": {"responses_sha256": bar["data"]["sha256"]}}
 
 
@@ -882,6 +985,9 @@ def _elpd_differences(domain: str, run: str, winner: str):
     the pre-registered experiment (reference games)."""
     if domain == "number_game":
         unseen = json.loads(NG_UNSEEN.read_text())
+        if winner not in unseen["winner_runs"]:
+            raise RuntimeError(f"number_game: {NG_UNSEEN} scores the winners {sorted(unseen['winner_runs'])}, "
+                               f"not {winner} (rerun number_game_unseen_items.py on the November figure data)")
         lpd = {m: v["lpd"] for m, v in unseen["unseen_example_sets"]["models"].items()}
         return unseen["winner_runs"][winner], {m: lpd[winner] - v for m, v in lpd.items() if m != winner}
     data = json.loads((FIGURE_DATA / f"{domain}.json").read_text())

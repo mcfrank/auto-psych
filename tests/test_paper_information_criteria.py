@@ -107,6 +107,45 @@ def test_the_climb_is_logged_along_the_way(tmp_path, monkeypatch):
     assert sum(line.startswith("iteration") for line in lines) == fit.iterations
 
 
+# p is the parameter itself, so PyMC raises (rather than returning -inf) outside [0, 1]
+UNBOUNDED_P = '''
+import numpy as np
+import pymc as pm
+
+with pm.Model() as model:
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    theta = pm.Normal("theta", 0.5, 1.0)
+    pm.Bernoulli("response", p=theta, observed=chose_left)
+'''
+
+
+@pytest.mark.parametrize("start", [0.999, 0.5])  # the first step lands below 0 and above 1
+def test_the_climb_backs_off_from_parameters_the_model_rejects(tmp_path, start):
+    # exception_weighted_rule_rejection: a line search overshot to a probability
+    # outside [0, 1] and PyMC's parameter check raised, killing the task. That is
+    # a log-likelihood of -inf, like any other non-finite value, and L-BFGS-B
+    # stops dead at one; the climb must step back and carry on.
+    rows = [{"chose_left": int(t < 7)} for t in range(10)]
+    models, responses = _write(tmp_path, "unbounded", UNBOUNDED_P, rows)
+    lik = ic.PyMCLikelihood.build(models, "unbounded", responses)
+    fit = ic.maximize(lik, starts=[np.array([start])])
+    assert fit.x[0] == pytest.approx(0.7, abs=1e-4)
+    assert fit.log_lik == pytest.approx(7 * math.log(0.7) + 3 * math.log(0.3), abs=1e-6)
+
+
+def test_a_non_finite_gradient_does_not_poison_the_climb():
+    # exception_weighted_rule_rejection: where the log-likelihood is finite but
+    # its gradient is not, L-BFGS-B took the NaN step and every coordinate went
+    # NaN. Such a point is rejected like a non-finite value.
+    def f_and_grad(x):
+        grad = np.array([np.nan if x[0] > 0.5 else -2.0 * (x[0] - 1.0)])
+        return -(x[0] - 1.0) ** 2, grad
+
+    value, x, *_ = ic._maximize_from(f_and_grad, np.array([-3.0]), np.arange(1))
+    assert np.isfinite(x).all() and x[0] <= 0.5
+    assert -16.0 < value <= -0.25
+
+
 def test_coordinates_split_into_per_person_population_and_unused(tmp_path):
     models, responses = _write(tmp_path, "hier", HIERARCHICAL, _hier_rows())
     lik = ic.PyMCLikelihood.build(models, "hier", responses)
@@ -195,7 +234,11 @@ def test_the_tasks_are_each_runs_winner_and_seeds_and_every_rsa_final_and_seed()
     assert {"local_representativeness", "motif_stack", "falk_konold_dp",
             "finite_experience_occurrence"} <= set(sr)
     ng = {t.model: t.role for t in by[("number_game", "pooled")]}
-    assert sorted(ng.values()) == ["seed"] * 3 + ["winner"] * 3
+    assert ng == {  # the November sweep's runs (number_game_dataset-nov26), not October's
+        "span_fallback_rule_violation": "winner", "neighbourhood_doubt_three_example_memory": "winner",
+        "exception_weighted_rule_rejection": "winner", "bigelow_piantadosi_independent": "seed",
+        "bigelow_piantadosi_mixture": "seed", "tenenbaum_rules_similarity": "seed"}
+    assert all("number_game_dataset-nov26" in str(p) for t in by[("number_game", "pooled")] for p in t.sources)
     for t in by[("subjective_randomness", "pooled")] + by[("number_game", "pooled")]:
         assert t.responses is None and len(t.sources) == 3 and all(p.exists() for p in t.sources)
     rsa = {t.model: t.role for t in by[("rsa", "pooled")]}
@@ -284,6 +327,40 @@ def test_the_evidence_of_a_hierarchical_model_matches_quadrature(tmp_path):
     assert ev.min_ess > 200
 
 
+def test_the_evidence_can_take_its_proposal_from_posterior_draws(tmp_path):
+    # A likelihood with ridges (motif_stack's Viterbi maximum) has no Hessian
+    # at its mode; MCMC draws give the proposal instead.
+    rows = [{"group": g, "chose_left": int(t < k)} for g, k in ((0, 3), (1, 8)) for t in range(10)]
+    models, responses = _write(tmp_path, "grouped", GROUPED, rows)
+    lik = ic.PyMCLikelihood.build(models, "grouped", responses)
+    rng = np.random.default_rng(1)
+    draws = np.stack([lik.point_from_constrained({"theta": np.array([a, b])})
+                      for a, b in zip(rng.beta(4, 8, 2000), rng.beta(9, 3, 2000))])
+    ev = ic.flat_log_evidence(lik, start=lik.x0, n_samples=4000, seed=0, draws=draws)
+    assert ev.proposal == "posterior draws" and ev.laplace is None
+    assert ev.log_evidence == pytest.approx(special.betaln(4, 8) + special.betaln(9, 3), abs=0.01)
+    assert ev.min_ess > 1000
+
+
+def test_the_hierarchical_evidence_can_take_its_proposal_from_posterior_draws(tmp_path):
+    import pymc as pm
+
+    models, responses = _write(tmp_path, "hier", HIERARCHICAL, _hier_rows())
+    lik = ic.PyMCLikelihood.build(models, "hier", responses)
+    with lik.model:
+        idata = pm.sample(draws=1000, tune=1000, chains=2, random_seed=3, progressbar=False,
+                          compute_convergence_checks=False)
+    post = idata.posterior.stack(sample=("chain", "draw"))
+    draws = np.stack([lik.point_from_constrained({v: post[v].isel(sample=i).values for v in ("mu", "sigma", "z")})
+                      for i in range(0, post.sizes["sample"], 4)])
+    units = ic.unit_column(responses, "participant_id")
+    coords = ic.classify_coordinates(lik, lik.x0, units=units)
+    ev = ic.hierarchical_log_evidence(lik, coords, units, start=lik.x0, n_outer=1000, n_inner=1000, seed=0,
+                                      draws=draws)
+    assert ev.proposal == "posterior draws"
+    assert ev.log_evidence == pytest.approx(_quadrature_evidence(), abs=0.05)
+
+
 def test_the_rsa_evidence_integrates_the_lapse_prior():
     from pyprojroot import here
     from src.rsa.context import Context
@@ -331,5 +408,71 @@ def test_the_pooled_responses_are_every_runs_final_data():
 def test_the_pooled_elpd_beside_each_comparison_is_figure_2s():
     _, sr = ic._elpd_differences("subjective_randomness", "pooled", "personal_pattern_detection_gain")
     assert sr["falk_konold_dp"] == pytest.approx(3260.2 + 1146.0, abs=0.1)  # PSIS-LOO on all runs pooled
-    _, ng = ic._elpd_differences("number_game", "pooled", "even_rule_digit_size_principle_counting")
-    assert ng["bigelow_piantadosi_independent"] == pytest.approx(-9554.1 + 10666.6, abs=0.1)  # the unseen example sets
+
+
+def _unseen(tmp_path, winner_runs, lpd):
+    import json
+    path = tmp_path / "number_game_unseen_items.json"
+    path.write_text(json.dumps({"winner_runs": winner_runs, "unseen_example_sets": {
+        "models": {m: {"lpd": v} for m, v in lpd.items()}}}))
+    return path
+
+
+def test_the_number_game_elpd_beside_each_comparison_is_figure_2s_unseen_example_sets(tmp_path, monkeypatch):
+    monkeypatch.setattr(ic, "NG_UNSEEN", _unseen(
+        tmp_path, {"neighbourhood_doubt_three_example_memory": "run2"},
+        {"neighbourhood_doubt_three_example_memory": -9000.0, "bigelow_piantadosi_mixture": -9500.0}))
+    run, ng = ic._elpd_differences("number_game", "pooled", "neighbourhood_doubt_three_example_memory")
+    assert (run, ng) == ("run2", {"bigelow_piantadosi_mixture": 500.0})
+
+
+def test_unseen_items_scored_on_other_models_than_the_runs_winners_raise(tmp_path, monkeypatch):
+    # e.g. the October sweep's, before the November ones are scored
+    monkeypatch.setattr(ic, "NG_UNSEEN", _unseen(
+        tmp_path, {"relational_analogy_transfer": "run2"},
+        {"relational_analogy_transfer": -9000.0, "bigelow_piantadosi_interval": -9500.0}))
+    with pytest.raises(RuntimeError, match="neighbourhood_doubt_three_example_memory"):
+        ic._elpd_differences("number_game", "pooled", "neighbourhood_doubt_three_example_memory")
+
+
+def test_a_record_takes_its_evidence_proposal_from_posterior_draws_when_given(tmp_path):
+    rows = [{"group": g, "chose_left": int(t < k)} for g, k in ((0, 3), (1, 8)) for t in range(10)]
+    models, responses = _write(tmp_path, "grouped", GROUPED, rows)
+    rng = np.random.default_rng(2)
+    draws = [{"theta": np.array([a, b])} for a, b in zip(rng.beta(4, 8, 1000), rng.beta(9, 3, 1000))]
+    record = ic.pymc_record(models, "grouped", responses, unit=None, starts=[], n_samples=20000,
+                            posterior_draws=draws)
+    assert record["evidence"]["proposal"] == "posterior draws"
+    assert record["evidence"]["log_evidence"] == pytest.approx(special.betaln(4, 8) + special.betaln(9, 3), abs=0.01)
+
+
+def test_a_non_finite_hessian_raises_rather_than_returning_nan():
+    with pytest.raises(RuntimeError, match="not finite"):
+        ic._laplace_log_integral(0.0, np.array([[np.nan]]))
+    with pytest.raises(RuntimeError, match="not finite"):
+        ic._t_importance(lambda x: 0.0, np.zeros(1), np.array([[np.nan]]), 10, np.random.default_rng(0), 4.0, 1.3)
+
+
+def test_the_posterior_mode_search_survives_a_start_on_a_ridge(tmp_path):
+    # isolated_graded_costly_l3's MLE runs off along a ridge where its log
+    # posterior overflows; the prior median is searched from as well.
+    rows = [{"group": g, "chose_left": int(t < k)} for g, k in ((0, 3), (1, 8)) for t in range(10)]
+    models, responses = _write(tmp_path, "grouped", GROUPED, rows)
+    lik = ic.PyMCLikelihood.build(models, "grouped", responses)
+    # At logit 800, p is exactly 1: the failures have log-likelihood -inf there.
+    ev = ic.flat_log_evidence(lik, start=np.full(lik.dim, 800.0), n_samples=4000, seed=0)
+    assert ev.log_evidence == pytest.approx(special.betaln(4, 8) + special.betaln(9, 3), abs=0.01)
+
+
+def test_an_rsa_posteriors_draws_go_onto_the_unconstrained_scale():
+    from pyprojroot import here
+    from src.rsa.context import Context
+    from src.rsa.model_file import RSAModel
+
+    path = here() / "src" / "pipelines" / "outer_loop" / "projects" / "rsa_reference" / "seed_models" / "literal_listener.py"
+    ctx = Context(objects=((1, 0), (0, 1), (0, 0)), feature_names=("f0", "f1"), utterance=0)
+    lik = ic.RSALikelihood.build(RSAModel(path, name="literal_listener"), [ctx] * 4, [0, 0, 1, 2])
+    lapse = np.linspace(0.01, 0.5, 50)
+    draws = ic.unconstrained_draws(lik, {"lapse": lapse}, n=10)
+    assert draws.shape == (10, 1)
+    assert draws[:, 0] == pytest.approx(special.logit(lapse[np.linspace(0, 49, 10).astype(int)]))

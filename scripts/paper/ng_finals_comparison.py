@@ -4,8 +4,8 @@
     python scripts/paper/ng_finals_comparison.py --out <dir> --mode fit --task <0..14>   (a Slurm array)
     python scripts/paper/ng_finals_comparison.py --out <dir> --mode report
 
-The three runs (data/results/number_game_dataset-oct26/) ended on three different finals, each
-scored only on its own run's items. This compares them on one data set and picks the one to
+The three runs of the November sweep (data/results/number_game_dataset-nov26/, started from the
+2016 paper's seeds) ended on three different finals, each scored only on its own run's items. This compares them on one data set and picks the one to
 ablate (user decision, 2026-10-28):
 
 - **Data** (``--mode data``): each run's experiment-3 cumulative responses, pooled. The runs drew
@@ -35,9 +35,9 @@ import numpy as np
 import tyro
 from pyprojroot import here
 
-COLLECTED = here() / "data/results/number_game_dataset-oct26/collected"
-FINALS = {1: "even_rule_digit_size_principle_counting", 2: "relational_analogy_transfer",
-          3: "outlier_tolerant_rule_concepts"}
+COLLECTED = here() / "data/results/number_game_dataset-nov26/collected"
+FINALS = {1: "span_fallback_rule_violation", 2: "neighbourhood_doubt_three_example_memory",
+          3: "exception_weighted_rule_rejection"}
 FOLDS = 5
 SAMPLER = dict(draws=1000, tune=4000, chains=4, target_accept=0.95, method="nuts_no_jitter", random_seed=20261018)
 

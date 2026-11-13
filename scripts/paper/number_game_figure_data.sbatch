@@ -7,13 +7,14 @@
 #SBATCH --output=%x-%j.out
 # ============================================================================
 #  The number-game data behind the paper's Figures 2 and 3
-#  (scripts/paper/number_game_figure_data.py): each of the three dataset
-#  runs' live models and the three seeds on its final data (7,560 responses;
-#  35-50 fits a run, about 9 minutes each on a 15-core laptop), and the three
-#  winners and the seeds on all runs pooled (22,680; 30 fits), each fitted on
-#  all the data and on each of the 4 grouped-CV folds at the runs' sampler
-#  settings, plus the records of the runs' 235 removed models and 15 other
-#  live models, which the shards of submit_figure_data.sh score first:
+#  (scripts/paper/number_game_figure_data.py): each of the November sweep's
+#  three dataset runs' live models and the three seeds on its final data
+#  (7,560 responses; 20-55 fits a run, about 9 minutes each on a 15-core
+#  laptop), and the three winners and the seeds on all runs pooled (22,680;
+#  30 fits), each fitted on all the data and on each of the 4 grouped-CV
+#  folds at the runs' sampler settings, plus the records of the runs' 255
+#  removed models and 9 other live models, which the shards of
+#  submit_figure_data.sh score first:
 #
 #    cd $HOME/auto-psych && bash scripts/paper/submit_figure_data.sh number_game
 #
@@ -28,7 +29,7 @@ export WORK_ROOT="${WORK_ROOT:-$SCRATCH/auto-psych/paper}"
 source "$REPO/scripts/_venv.sh"
 export UV_PROJECT_ENVIRONMENT="$(shared_venv_path)"
 source "$REPO/scripts/subjective_randomness/slurm/_env.sh"
-FIT_WORK_DIR="${FIT_WORK_DIR:-$WORK_ROOT/number_game_figure_data}"
+FIT_WORK_DIR="${FIT_WORK_DIR:-$WORK_ROOT/number_game_figure_data_nov26}"
 export PYTENSOR_FLAGS="base_compiledir=${L_SCRATCH:-/tmp}/pytensor/job_${SLURM_JOB_ID}"
 
 cd "$REPO"

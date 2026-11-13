@@ -2,7 +2,10 @@
 domain's overall winner, one panel each — the subjective-randomness final best
 on all runs pooled (Figure 3's; ``docs/sr_ablation.md``), chain 0's
 reference-game final (``docs/auto_rsa/ABLATION_C0.md``) and the number-game
-dataset run's final (``docs/ng_ablation.md``).
+dataset runs' final best on all runs pooled (the November sweep, from the
+2016 paper's seeds; ``docs/ng_ablation.md``). A domain whose elimination is
+not in yet can be drawn as "results pending" (``--pending-domains``); any
+other missing record raises.
 
 Each panel is the path of the model kept after each round: its grouped-CV
 ELPD against the starting model's, by its number of mechanisms, each step
@@ -16,7 +19,7 @@ Usage:
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -35,13 +38,14 @@ from scripts.paper.figures import (  # noqa: E402
     FULL_WIDTH_IN,
     INK,
     INK_SECONDARY,
+    _pending,
     _save,
     _style,
 )
 
 SR_ABLATION = here() / "data" / "results" / "human_experiment_sr-oct26" / "analysis" / "results" / "ablation"
 RSA_ELIMINATION = here() / "data" / "rsa" / "c0_ablation" / "eliminate" / "elimination.json"
-NG_ELIMINATION = (here() / "data" / "results" / "number_game_dataset-oct26" / "analysis" / "ablation"
+NG_ELIMINATION = (here() / "data" / "results" / "number_game_dataset-nov26" / "analysis" / "ablation"
                   / "elimination.json")
 PANEL_TITLES = {"subjective_randomness": "Subjective randomness", "rsa": "Reference games",
                 "number_game": "Number sequence generalization"}
@@ -56,6 +60,8 @@ class Args:
     sr_figure_data: Path = here() / "data" / "paper" / "figure_data" / "subjective_randomness.json"
     """Names the final best on all runs pooled (``pooled.best_model``)."""
     out_dir: Path = here() / "data" / "paper" / "figures"
+    pending_domains: List[str] = field(default_factory=list)
+    """Domains drawn as a 'results pending' panel (their elimination is not in yet)."""
 
 
 def best_sr_elimination(figure_data: Dict[str, Any]) -> Tuple[str, Path]:
@@ -198,24 +204,31 @@ def draw_panel(ax, elimination: Dict[str, Any], title: str) -> Dict[str, Any]:
     return path
 
 
-def draw_ablation(eliminations: List[Tuple[str, Dict[str, Any]]], out_dir: Path) -> None:
+def draw_ablation(eliminations: List[Tuple[str, Optional[Dict[str, Any]]]], out_dir: Path) -> None:
+    """One panel per domain; a domain whose elimination is ``None`` is drawn
+    as "results pending"."""
     # Each panel as wide as its steps need.
-    widths = [max(len(e["rounds"]) + 2, 8) for _, e in eliminations]  # room for the title
+    widths = [max(len(e["rounds"]) + 2, 8) if e else 8 for _, e in eliminations]  # room for the title
     fig, axes = plt.subplots(1, len(eliminations), figsize=(FULL_WIDTH_IN, 2.0), sharey=True,
                              gridspec_kw=dict(wspace=0.15, width_ratios=widths))
-    paths = [draw_panel(ax, elimination, f"{letter}. {PANEL_TITLES[domain]}")
-             for ax, letter, (domain, elimination) in zip(axes, "ABCD", eliminations)]
+    paths: List[Optional[Dict[str, Any]]] = []
+    for ax, letter, (domain, elimination) in zip(axes, "ABCD", eliminations):
+        if elimination is None:
+            _pending(ax, domain)
+            paths.append(None)
+        else:
+            paths.append(draw_panel(ax, elimination, f"{letter}. {PANEL_TITLES[domain]}"))
     axes[0].set_ylabel("ELPD-CV vs the full model (nats)", fontsize=7, color=INK)
     fig.canvas.draw()  # fixes the shared limits the names are placed against
     renderer = fig.canvas.get_renderer()
-    names = [name_points(ax, path, renderer) for ax, path in zip(axes, paths)]
+    names = [name_points(ax, path, renderer) if path else [] for ax, path in zip(axes, paths)]
     fit_names(axes, names, renderer)
     handles = [
         Line2D([], [], color=COLOR_KEPT, lw=1.2, marker="o", ms=4, label="best model after each round (±1 SE of its difference from the full model)"),
         Line2D([], [], color=COLOR_STOP, lw=1.0, ls=(0, (4, 3)), marker="o", ms=4,
                label="removal that stopped the elimination"),
     ]
-    if any(not k[3] for path in paths for k in path["kept"]):  # only where a hollow point is drawn
+    if any(not k[3] for path in paths if path for k in path["kept"]):  # only where a hollow point is drawn
         handles.append(Line2D([], [], color="none", marker="o", ms=4, mfc=SURFACE, mec=COLOR_KEPT,
                               label="fit not converged"))
     fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.06), ncol=len(handles), fontsize=6.5,
@@ -225,9 +238,17 @@ def draw_ablation(eliminations: List[Tuple[str, Dict[str, Any]]], out_dir: Path)
 
 def main(args: Args) -> None:
     sources = elimination_sources(json.loads(args.sr_figure_data.read_text()))
-    eliminations = [(domain, json.loads(path.read_text())) for domain, path in sources]
+    eliminations: List[Tuple[str, Optional[Dict[str, Any]]]] = []
+    for domain, path in sources:
+        if domain in args.pending_domains:
+            eliminations.append((domain, None))
+        elif not path.exists():
+            raise FileNotFoundError(f"no elimination record for {domain} at {path} (pass it in "
+                                    "--pending-domains to draw its panel as pending)")
+        else:
+            eliminations.append((domain, json.loads(path.read_text())))
     for (domain, elimination), (_, path) in zip(eliminations, sources):
-        if any("se_vs_start" not in r for r in elimination["rounds"]):
+        if elimination is not None and any("se_vs_start" not in r for r in elimination["rounds"]):
             raise ValueError(f"{path} records no SE of each model's difference from the full model (se_vs_start): "
                              "rerun its ablation's plan step (it replays the saved CVs, no fits) and commit the "
                              "new elimination.json")
