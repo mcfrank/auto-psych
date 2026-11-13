@@ -12,7 +12,8 @@
 # The impossible-model control is copied to impossible/run1 (final_impossible_1).
 #
 # Only light files are copied (holdout.*, trajectory.json, agent_activity.md,
-# eval_exclusions.jsonl, code_commit; ~200 KB a cell): never the MCMC caches or
+# eval_exclusions.jsonl, code_commit, and scoring_code_commit for a cell scored
+# on other code than its loop ran on; ~200 KB a cell): never the MCMC caches or
 # the agent trees. A cell with no holdout.json is unfinished and is skipped and
 # listed. Re-run it when the remaining cells finish; it replaces the
 # destination.
@@ -26,7 +27,8 @@ SRC="${SCRATCH:?SCRATCH is unset}/auto-psych"
 DEST="$REPO/data/results/final_recovery"
 
 CELL_FILES=(holdout.json holdout.csv holdout.png trajectory.json
-            agent_activity.md eval_exclusions.jsonl code_commit)
+            agent_activity.md eval_exclusions.jsonl code_commit
+            scoring_code_commit)
 SWEEP_FILES=(LAUNCH.txt test_retest.json test_retest.csv test_retest.png
              MISSING_CELLS.txt OUTSIDE_PATH_WARNINGS.txt code_commit)
 
@@ -95,4 +97,4 @@ done
 
 echo "collected into $DEST"
 echo "cells: $(find "$DEST" -name holdout.json | wc -l) with results, ${#unfinished[@]} without"
-printf '  unfinished: %s\n' "${unfinished[@]}"
+(( ${#unfinished[@]} == 0 )) || printf '  unfinished: %s\n' "${unfinished[@]}"

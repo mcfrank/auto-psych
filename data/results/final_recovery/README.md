@@ -1,6 +1,6 @@
 # Final recovery runs
 
-Collected 2026-10-09 16:16 by scripts/subjective_randomness/collect_final_results.sh.
+Collected 2026-11-12 17:15 by scripts/subjective_randomness/collect_final_results.sh.
 
 Claude Opus 5.5 agents (API billing), faithful config. Repeats, by sweep:
 
@@ -16,4 +16,4 @@ Claude Opus 5.5 agents (API billing), faithful config. Repeats, by sweep:
 
 ## Cells without a result at collection time
 
-- final_1/run1/finite_experience_occurrence -> run1/finite_experience_occurrence
+None.
