@@ -1,7 +1,7 @@
 # Open and fixed-paradigm discovery loops: pre-registration, revision 2 (draft)
 
-**Status: final text for registration (PI 2026-11-11), at the tag `rsa-open-prereg-v2`; OSF answers in
-`OSF_PREREG_V2.md`. Not yet registered.** Written by Claude Opus 5.5; not
+**Status: registered on OSF, https://osf.io/wurh5 (2026-11-13), at the tag `rsa-open-prereg-v2`, commit
+`b32e732b74d99d5f3dd85a9374d7d2e6b44beab8` (Addendum A). OSF answers in `OSF_PREREG_V2.md`.** Written by Claude Opus 5.5; not
 reviewed by a person. It is the revision that §4 of the first registration (https://osf.io/78t69,
 2026-10-29, `PREREG_DRAFT.md`) calls for: "a revision is registered anew, and open chain 1 is then
 reported as a pilot, not counted." Its sections follow the first registration's numbering, so the two
@@ -182,3 +182,15 @@ people Gemini 3.8 Flash.
 | Gate item 5: 48 h per experiment; agent spend reported, not judged | 11-09 and 11-10, PI | measured times (§3a); spend is not a hypothesis | a gate criterion |
 | The stage-1 pair counts if the gate passes | 11-10, PI | as open chain 1 would have | §4 |
 | Scale: 4 chains × 3 experiments × 3 rounds of 6, fixed now | 11-10, PI | measured times | scale (was set at the gate) |
+
+## Addenda
+
+### Addendum A (2026-11-13): the OSF registration
+
+- **Registered:** https://osf.io/wurh5, submitted by the PI on 2026-11-13 from the answers in `OSF_PREREG_V2.md`,
+  public; final on the PI's approval (or after OSF's 48 hours).
+- **The code:** the annotated tag `rsa-open-prereg-v2` of https://github.com/mcfrank/auto-psych, made by the PI,
+  at commit `b32e732b74d99d5f3dd85a9374d7d2e6b44beab8`; every registered live chain runs on it (`open_live.yaml`, `code_tag`), and the files of §8
+  have the sha256 listed there (checked against the tag on 2026-11-13). Commits after the tag on
+  `auto-psych-open` (this addendum among them) change no code a live chain runs.
+- **No data** of this registration's chains existed at registration: neither stage-1 chain had been designed.

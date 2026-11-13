@@ -9,7 +9,7 @@ chain did not count, "a revision is registered anew, and open chain 1 is then re
 no uploaded files, so the registration links a **tagged commit** of the public repository,
 `rsa-open-prereg-v2`, quoting its full commit SHA and the sha256 of the registered files ("Other").
 
-**Registered:** ⟨URL and date, after approval⟩, tag `rsa-open-prereg-v2`, commit `b32e732b74d99d5f3dd85a9374d7d2e6b44beab8`.
+**Registered: https://osf.io/wurh5 (2026-11-13), tag `rsa-open-prereg-v2`, commit `b32e732b74d99d5f3dd85a9374d7d2e6b44beab8`** (`PREREG_V2.md`, Addendum A).
 
 ## Steps
 
