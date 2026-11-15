@@ -3,7 +3,7 @@
     python -m src.number_game.ablation.data --out <responses.csv>
 
 Each run's cumulative experiment-3 ``model_loop/responses.csv`` of the dataset
-run (``data/results/number_game_dataset-oct26/``), in run order: 22,680
+run (``data/results/number_game_dataset-nov26/``), in run order: 22,680
 responses, the same file as the paper's pooled fits (Figures 2 and 3;
 ``scripts.paper.number_game_figure_data.pool_responses``). Not the full
 Bigelow & Piantadosi bank. The runs hide participant ids, so nothing is
@@ -20,7 +20,7 @@ from pathlib import Path
 import tyro
 from pyprojroot import here
 
-COLLECTED = here() / "data/results/number_game_dataset-oct26/collected"
+COLLECTED = here() / "data/results/number_game_dataset-nov26/collected"
 RUNS = ("run1", "run2", "run3")
 COLUMNS = ("number_set", "target", "trial_index", "rating")
 

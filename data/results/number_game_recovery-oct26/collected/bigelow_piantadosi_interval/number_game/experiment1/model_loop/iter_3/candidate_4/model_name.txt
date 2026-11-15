@@ -1,1 +1,0 @@
-tempered_gain_shifted_criterion

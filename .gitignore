@@ -122,3 +122,6 @@ paper/**/*.fls
 paper/**/*.fdb_latexmk
 paper/**/*.synctex.gz
 paper/**/*.blg
+
+# The PNAS writeup PDF (kept local)
+docs/writeup/

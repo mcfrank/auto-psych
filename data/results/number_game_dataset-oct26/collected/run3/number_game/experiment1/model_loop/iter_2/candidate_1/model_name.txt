@@ -1,1 +1,0 @@
-digit_place_similarity_gradient

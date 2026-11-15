@@ -4,8 +4,7 @@ The number game's runs are the November 2026 dataset runs (``data/results/
 number_game_dataset-nov26/``, seeds 1-3), which started from the 2016 paper's
 seeds (Tenenbaum 2000, and Bigelow & Piantadosi's Mixture and Independent
 models): three experiments each, whose responses were drawn from Bigelow &
-Piantadosi's bank, each run drawing its own items. (The October 2026 runs,
-``number_game_dataset-oct26/``, started from earlier seeds and are not used.)
+Piantadosi's bank, each run drawing its own items.
 Every model is compared by the runs' own criterion, grouped cross-validation
 over example sets (``src.model_comparison.posterior.compare_table`` with the
 runs' ``selection``), at the runs' own sampler

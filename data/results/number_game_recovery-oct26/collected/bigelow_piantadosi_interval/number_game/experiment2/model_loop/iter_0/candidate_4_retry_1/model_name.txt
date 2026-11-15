@@ -1,1 +1,0 @@
-width_prior_split_tempering

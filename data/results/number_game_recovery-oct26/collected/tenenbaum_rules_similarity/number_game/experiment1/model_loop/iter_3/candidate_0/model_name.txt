@@ -1,1 +1,0 @@
-offset_arithmetic_progression_concepts

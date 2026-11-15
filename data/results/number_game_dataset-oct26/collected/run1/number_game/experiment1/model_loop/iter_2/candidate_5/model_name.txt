@@ -1,1 +1,0 @@
-span_filled_nearest_exemplar

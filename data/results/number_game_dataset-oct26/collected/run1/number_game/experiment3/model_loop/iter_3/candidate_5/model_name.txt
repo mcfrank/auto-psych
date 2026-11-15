@@ -1,1 +1,0 @@
-digit_rule_size_principle_counting

@@ -1,1 +1,0 @@
-round_counting_privileged_factor

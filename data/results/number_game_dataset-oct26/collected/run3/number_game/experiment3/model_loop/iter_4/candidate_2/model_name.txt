@@ -1,1 +1,0 @@
-surface_format_screened_concepts

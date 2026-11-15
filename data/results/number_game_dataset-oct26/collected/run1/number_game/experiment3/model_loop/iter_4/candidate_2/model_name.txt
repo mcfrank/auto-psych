@@ -1,1 +1,0 @@
-spacing_progression_extrapolation

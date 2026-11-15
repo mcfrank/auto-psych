@@ -1,1 +1,0 @@
-parity_kind_rule_prior

@@ -1,1 +1,0 @@
-log_odds_yes_bias_concept_learning

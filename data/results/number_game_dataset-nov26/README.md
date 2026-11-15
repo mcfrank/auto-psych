@@ -8,10 +8,9 @@ items by EIG, and collection drew 9 real responses per item from Bigelow &
 Piantadosi's (2016) bank, never reusing a response (`data_source: dataset`,
 `scripts/number_game/configs/dataset_run.yaml`: five rounds of six candidates
 per experiment, selection by grouped cross-validation over example sets with 4
-folds, `hide_participant_id`, `warm_start_nuts` fits). Unlike
-`../number_game_dataset-oct26/`, the loop started from the 2016 paper's seeds:
-Tenenbaum (2000) and Bigelow & Piantadosi's Mixture and Independent models, so
-the two sweeps are not comparable. The runs differ only in their seed, so each
+folds, `hide_participant_id`, `warm_start_nuts` fits). The loop started from the 2016
+paper's seeds: Tenenbaum (2000) and Bigelow & Piantadosi's Mixture and
+Independent models. The runs differ only in their seed, so each
 drew its own items and responses.
 
 - `collected/run<R>/number_game/experiment<N>/`: the drawn responses
@@ -81,7 +80,7 @@ an example that breaks a rule costs it an inferred amount.
 scores it on every (set, target) item of the bank that run never drew. Item R²
 is the squared correlation, across items, of predicted P(yes) with the observed
 yes rate; the ceiling is the R² that sampling noise in the observed rates
-allows. As in `../number_game_dataset-oct26/`, two caveats: much of the
+allows. Two caveats: much of the
 log-likelihood gap can be calibration, and the unseen items share the example
 sets each run sampled, so their targets are new but many of their example sets
 are not.

@@ -1,1 +1,0 @@
-limited_capacity_example_memory

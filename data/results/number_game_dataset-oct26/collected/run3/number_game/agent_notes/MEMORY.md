@@ -1,1 +1,0 @@
-- [Fast grouped interval likelihood](fast-grouped-interval-likelihood.md) — (size, n-contained) keys + sparse CSR keep the incumbent family fast, even with midpoint priors

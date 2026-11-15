@@ -1,1 +1,0 @@
-stray_closing_example

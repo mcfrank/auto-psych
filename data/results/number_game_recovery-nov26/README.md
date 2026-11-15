@@ -11,8 +11,7 @@ subscription, five rounds of six candidates per experiment, selection by
 grouped cross-validation over example sets (4 folds), `hide_participant_id`,
 `warm_start_nuts` fits (`scripts/number_game/configs/holdout_recovery.yaml`,
 submitted with `scripts/number_game/slurm/submit_recovery.sh` on the SC
-cluster). Comparable with no earlier sweep: `../number_game_recovery-oct26/`
-used the previous seeds.
+cluster).
 
 - `test_retest.{json,csv,png}`: the sweep's summary over all nine cells
   (`scripts/subjective_randomness/holdout_test_retest.py`).
@@ -22,7 +21,7 @@ used the previous seeds.
   `run1/tenenbaum_rules_similarity/superseded/20261101T111021_finished_cell/`
   holds that cell's records before its redo (below).
 - `collected/run<R>/<ground truth>/number_game/experiment<N>/`: the experiment
-  trees, as in `../number_game_recovery-oct26/` (simulated responses, design,
+  trees (simulated responses, design,
   carried models and ledger, every round's proposals and critiques; no fit
   traces), written by `scripts/outer_loop_live/collect_human_results.py`.
   `collected/run<R>/SUMMARY.md` is the collector's generic table.

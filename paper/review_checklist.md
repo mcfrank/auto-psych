@@ -112,7 +112,6 @@ Fixed
 - [ ] **Discussion (main:186), recovery "in three domains":** recovery is reported only for subjective randomness.
   - The SI recovery figure is `\includegraphics{}` with no file.
   - The reference-games and number-game text is placeholders.
-  - Number-game recovery exists for 2 of 3 cells (`data/results/number_game_recovery-oct26/`); one cell ran out of memory.
 ---
 
 ## Methods errors

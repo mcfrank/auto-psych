@@ -66,8 +66,7 @@ What each figure shows:
     `holdout.json`, which must agree) on each of the three dataset runs'
     final data, 7,560 responses each, and on all three pooled, 22,680
     (the November sweep, `data/results/number_game_dataset-nov26/`, which
-    started from the 2016 paper's seeds; each run drew its own items; the
-    October sweep, `number_game_dataset-oct26/`, is not used).
+    started from the 2016 paper's seeds; each run drew its own items).
     The starting models are the three literature seeds (pruned in experiment
     1), the other models live at the end each run's other carried models;
     `number_game_figure_data.py` refits them all, per run and pooled. The SE

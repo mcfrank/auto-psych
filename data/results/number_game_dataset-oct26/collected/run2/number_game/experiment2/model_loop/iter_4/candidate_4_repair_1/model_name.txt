@@ -1,1 +1,0 @@
-set_homogeneity_criterion_momentum

@@ -1,1 +1,0 @@
-inferred_stray_example_rate

@@ -1,1 +1,0 @@
-proximity_weighted_digit_similarity

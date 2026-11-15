@@ -1,1 +1,0 @@
-divisor_lattice_size_principle

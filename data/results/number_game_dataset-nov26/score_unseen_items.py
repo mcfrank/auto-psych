@@ -1,8 +1,8 @@
 """Score models on the number-game items a dataset run never drew.
 
-``../number_game_dataset-oct26/score_unseen_items.py`` with models named by
-file (each experiment's winner sits in its own experiment's
-``cognitive_models/``) and the results written to ``--out-dir``. Each model is
+Models are named by file (each experiment's winner sits in its own
+experiment's ``cognitive_models/``) and the results written to ``--out-dir``.
+Each model is
 fitted (or loaded from ``--cache``) on the run's cumulative responses
 (``--train``: experiment 3's ``model_loop/responses.csv``) and predicts every
 (set, target) item of the Bigelow & Piantadosi bank that the run did not draw.

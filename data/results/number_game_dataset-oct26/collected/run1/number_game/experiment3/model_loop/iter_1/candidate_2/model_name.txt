@@ -1,1 +1,0 @@
-even_numbers_privileged_rule

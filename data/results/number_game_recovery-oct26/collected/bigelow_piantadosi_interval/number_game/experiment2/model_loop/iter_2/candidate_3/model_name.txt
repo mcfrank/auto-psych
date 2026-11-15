@@ -1,1 +1,0 @@
-rule_size_inflation_anchored

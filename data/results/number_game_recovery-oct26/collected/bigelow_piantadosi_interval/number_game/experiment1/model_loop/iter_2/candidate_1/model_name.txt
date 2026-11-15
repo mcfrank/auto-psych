@@ -1,1 +1,0 @@
-digit_grid_exemplar_similarity
