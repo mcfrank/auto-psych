@@ -13,9 +13,13 @@
 #    2. the shards (figure_data_shard.sbatch, an array of N_SHARDS, at most
 #       MAX_PARALLEL at once), each scoring its share of the removed models
 #       into $FIT_WORK_DIR; a task refuses to run on another commit;
+#    2b. number_game only: the pooled winners' and seeds' fits
+#       (number_game_pooled_fits.sbatch, 30 tasks of up to 48 h), beside
+#       the shards;
 #    3. the assembly (<domain>_figure_data.sbatch), after every shard has
-#       ended (afterany): it fits the rest and writes the figure data, and
-#       raises naming any removed model a failed shard left unscored.
+#       ended (afterany) and every pooled fit succeeded (afterok): it fits
+#       the rest and writes the figure data, and raises naming any removed
+#       model a failed shard left unscored.
 #  Resubmitting reuses every record and fit already in $FIT_WORK_DIR. Keep
 #  the checkout unchanged until the assembly has finished.
 #
@@ -57,7 +61,14 @@ shards=$(sbatch --parsable --dependency="afterok:$setup" --job-name="paper_${DOM
   --cpus-per-task="$SHARD_CPUS" --mem="$SHARD_MEM" --time="$SHARD_TIME" \
   --export=ALL,REPO,WORK_ROOT,FIT_WORK_DIR,MODULE="$MODULE",N_SHARDS="$N_SHARDS" \
   scripts/paper/figure_data_shard.sbatch)
-assembly=$(sbatch --parsable --dependency="afterany:$shards" \
+after="afterany:$shards"
+if [[ "$DOMAIN" == number_game ]]; then  # the slow pooled fits: the assembly's 8 h would not hold them
+  pooled=$(sbatch --parsable --dependency="afterok:$setup" \
+    --export=ALL,REPO,WORK_ROOT,FIT_WORK_DIR scripts/paper/number_game_pooled_fits.sbatch)
+  echo "[paper] number_game: pooled fits $pooled"
+  after="$after,afterok:$pooled"
+fi
+assembly=$(sbatch --parsable --dependency="$after" \
   --export=ALL,REPO,WORK_ROOT,FIT_WORK_DIR "$ASSEMBLY")
 echo "[paper] $DOMAIN: setup $setup -> $N_SHARDS shards $shards -> assembly $assembly"
 echo "[paper] work dir $FIT_WORK_DIR"
