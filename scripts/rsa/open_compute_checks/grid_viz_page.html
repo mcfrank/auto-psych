@@ -1,0 +1,543 @@
+<title>Standard RSA Grid</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a lab notebook, as the campaign's model reports. The grid first (every theory, one cell each),
+   then what each choice is worth, then every display: people against two theories, the game drawn underneath. */
+:root {
+  --page: #f5f6f4; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11, 11, 11, 0.10);
+  --human: #cfcec6; --human-ink: #6b6a64; --said: #eef3fb;
+  --a: #2a78d6; --b: #eb6834;
+  --st0: #2a78d6; --st1: #eb6834; --st2: #1baf7a;
+  --mid: #ecebe5;
+  --up1: #dbe9fb; --up2: #a9cbf5; --up3: #6da7ec; --up4: #3987e5; --up5: #184f95;
+  --dn1: #fbe3d6; --dn2: #f5bb9c; --dn3: #ee8f5f; --dn4: #d95926; --dn5: #943b14;
+  --hatch: #d6d5cd;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0f100f; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, 0.10);
+    --human: #4a4a46; --human-ink: #a9a89f; --said: #1c2a3d;
+    --a: #3987e5; --b: #d95926; --st0: #3987e5; --st1: #d95926; --st2: #199e70;
+    --mid: #262624;
+    --up1: #1c2f4a; --up2: #1f4d86; --up3: #2a6bc0; --up4: #4f95e8; --up5: #9ec5f4;
+    --dn1: #3f2418; --dn2: #7a3a1c; --dn3: #b24d22; --dn4: #e0733f; --dn5: #f5bb9c;
+    --hatch: #3a3a37;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #0f100f; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, 0.10);
+  --human: #4a4a46; --human-ink: #a9a89f; --said: #1c2a3d;
+  --a: #3987e5; --b: #d95926; --st0: #3987e5; --st1: #d95926; --st2: #199e70;
+  --mid: #262624;
+  --up1: #1c2f4a; --up2: #1f4d86; --up3: #2a6bc0; --up4: #4f95e8; --up5: #9ec5f4;
+  --dn1: #3f2418; --dn2: #7a3a1c; --dn3: #b24d22; --dn4: #e0733f; --dn5: #f5bb9c;
+  --hatch: #3a3a37;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; display: grid; gap: 40px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 600; }
+h1 { font-size: 26px; letter-spacing: -0.01em; }
+h2 { font-size: 18px; }
+.eyebrow { font-family: var(--font-data); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { color: var(--ink-2); max-width: 72ch; margin: 6px 0 0; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-family: var(--font-data); font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.meta b { color: var(--ink); font-weight: 500; }
+.interim { display: inline-flex; gap: 6px; align-items: center; margin-top: 12px; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface); font-size: 12px; color: var(--ink-2); }
+.interim::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--b); }
+section { display: grid; gap: 14px; min-width: 0; }
+.section-head { display: grid; gap: 4px; }
+.section-head p { margin: 0; color: var(--ink-2); max-width: 78ch; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; min-width: 0; }
+.scroll-x { overflow-x: auto; }
+svg { display: block; overflow: visible; }
+svg text { font-family: var(--font-data); }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: end; }
+.control { display: grid; gap: 4px; min-width: 0; }
+.control .label { font-family: var(--font-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: 12.5px; padding: 4px 11px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--ink-2); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--page); border-color: var(--ink); }
+.chip:focus-visible, select:focus-visible, button:focus-visible, .hit:focus-visible, .cell:focus-visible { outline: 2px solid var(--a); outline-offset: 2px; }
+select { font: inherit; font-size: 13px; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--ink); max-width: 100%; }
+.pick { display: flex; gap: 8px; align-items: center; min-width: 0; }
+.pick svg { flex: none; }
+label.check { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--ink-2); cursor: pointer; }
+.cell { cursor: pointer; }
+.cell.selected-a rect.box { stroke: var(--a); stroke-width: 2.5; }
+.cell.selected-b rect.box { stroke: var(--b); stroke-width: 2.5; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 12px; color: var(--ink-2); }
+.legend .item { display: inline-flex; gap: 6px; align-items: center; }
+.ramp { display: inline-flex; gap: 2px; align-items: center; }
+.ramp i { display: block; width: 22px; height: 10px; border-radius: 2px; }
+.summary { font-size: 14px; color: var(--ink-2); max-width: 80ch; }
+.summary b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 12px; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 10px 8px; display: grid; gap: 4px; min-width: 0; }
+.panel header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; font-size: 12px; }
+.panel header .src { font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.panel header .delta { font-family: var(--font-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.panel .cond { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.panel svg { width: 100%; height: auto; }
+.hit { fill: transparent; }
+.hit:hover { fill: var(--grid); fill-opacity: 0.45; }
+.more { justify-self: start; font: inherit; font-size: 13px; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; }
+details.table-view summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
+table { border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; width: 100%; }
+th, td { text-align: left; padding: 5px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { font-weight: 500; color: var(--muted); font-size: 11.5px; }
+td.num, th.num { text-align: right; font-family: var(--font-data); }
+.tip { position: fixed; z-index: 20; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 6px 24px rgba(0,0,0,0.14); max-width: 320px; display: grid; gap: 2px; }
+.tip .row { display: flex; justify-content: space-between; gap: 14px; }
+.tip .row span:last-child { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+.tip .head { font-weight: 600; margin-bottom: 2px; }
+.tip .sub { color: var(--muted); }
+.empty { color: var(--muted); font-size: 13px; padding: 12px 0; }
+.notes { color: var(--ink-2); font-size: 13px; max-width: 80ch; display: grid; gap: 6px; }
+.notes p { margin: 0; }
+@media (prefers-reduced-motion: no-preference) { .chip, .more { transition: background-color 120ms, color 120ms; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">auto-psych · open RSA campaign · side study</div>
+    <h1>Standard RSA, compared on the reference-game literature</h1>
+    <p class="lede">Sixty-six textbook rational-speech-act theories, crossed on recursion depth, where a salience prior enters,
+      what makes an object salient, how literal word meanings are, and whether words cost. Each is fitted with grouped
+      cross-validation; every number here is out-of-fold log predictive density, in nats, against plain RSA (depth 1, nothing else).</p>
+    <div class="meta" id="meta"></div>
+    <div id="interim"></div>
+  </header>
+
+  <section>
+    <div class="section-head">
+      <h2>The grid</h2>
+      <p>One cell per theory. Blue cells predict people's choices better than plain RSA, orange worse; the number is the
+        difference in nats. Click a cell to look at that theory's displays below.</p>
+    </div>
+    <div class="controls">
+      <div class="control"><span class="label">Data</span><div class="chips" id="study-chips" role="group" aria-label="Which data"></div></div>
+    </div>
+    <div class="card scroll-x"><svg id="grid" role="img" aria-label="Every grid theory's score against plain RSA"></svg></div>
+    <div class="legend" id="grid-legend"></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>What each choice is worth</h2>
+      <p>Each row compares grid theories that differ only in one choice, averaged over every such pair: the change in nats
+        from the first level to the second, for each source. Wins counts the pairs in which the second level fits better overall.</p>
+    </div>
+    <div class="controls">
+      <label class="check"><input type="checkbox" id="with-d0"> include depth-0 pairs (the literal listener has no speaker, so salience and cost act differently there)</label>
+    </div>
+    <div class="card scroll-x"><svg id="contrasts" role="img" aria-label="Average change in fit for each modelling choice, by source"></svg></div>
+    <div class="legend" id="contrast-legend"></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Displays: people against two theories</h2>
+      <p>Grey bars are people's choice proportions with 95% intervals; the marks are each theory's out-of-fold predictions.
+        Under the bars each column is one kind of object (×2 for identical copies): a filled dot means a word is true of it,
+        and the highlighted row is the word the speaker said. The number in each header is how many nats theory A gains over B on that display.</p>
+    </div>
+    <div class="controls">
+      <div class="control"><span class="label">Theory A</span><div class="pick"><svg width="14" height="14" viewBox="-7 -7 14 14" aria-hidden="true"><circle r="5" fill="var(--a)"></circle></svg><select id="pick-a" aria-label="Theory A"></select></div></div>
+      <div class="control"><span class="label">Theory B</span><div class="pick"><svg width="14" height="14" viewBox="-7 -7 14 14" aria-hidden="true"><path d="M0,-6 L6,0 L0,6 L-6,0 Z" fill="var(--b)"></path></svg><select id="pick-b" aria-label="Theory B"></select></div></div>
+    </div>
+    <div class="controls">
+      <div class="control"><span class="label">Source</span><div class="chips" id="src-chips" role="group" aria-label="Source"></div></div>
+      <div class="control"><span class="label">Trials</span><div class="chips" id="word-chips" role="group" aria-label="Word heard or not"></div></div>
+      <div class="control"><span class="label">Order</span><div class="chips" id="sort-chips" role="group" aria-label="Order"></div></div>
+    </div>
+    <p class="summary" id="summary"></p>
+    <div class="panels" id="panels"></div>
+    <button class="more" id="more" type="button">Show more displays</button>
+    <details class="table-view" id="table-view"><summary>Table of these displays</summary>
+      <div class="scroll-x"><table id="disp-table"></table></div></details>
+  </section>
+
+  <section class="notes" id="notes">
+    <h2>How to read it</h2>
+    <p>Fits: grouped 5-fold cross-validation (whole experimental conditions held out together), NUTS with 4 chains.
+      Uncertainty: in the grid's tooltips, the difference from plain RSA over its stimulus-clustered standard error.
+      A display's predictions are exact out-of-fold probabilities, recovered from the per-trial scores; where two or more kinds
+      of object were never chosen, they share the remaining probability equally (marked "est.").</p>
+    <p>Theories marked † did not converge (R-hat or divergences); read their numbers with care. Built from
+      <code>scripts/rsa/open_compute_checks/grid_viz.py</code>; method and findings in <code>docs/auto_open/RSA_GRID.md</code>.</p>
+  </section>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script id="bundle" type="application/json">__BUNDLE__</script>
+<script>
+(() => {
+  const B = JSON.parse(document.getElementById("bundle").textContent);
+  const NS = "http://www.w3.org/2000/svg";
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  function el(tag, attrs = {}, parent) {
+    const svgTag = ["svg", "g", "rect", "line", "circle", "path", "text", "title", "pattern", "defs"].includes(tag);
+    const n = svgTag ? document.createElementNS(NS, tag) : document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v === undefined || v === null) continue;
+      if (k === "text") n.textContent = v; else n.setAttribute(k, v);
+    }
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  const fmt = (v, d = 0) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
+  const T = B.theories, byName = Object.fromEntries(T.map((t, i) => [t.name, i]));
+  const STUDY = Object.fromEntries(B.studies.map((s) => [s.id, s.label]));
+  const ref = B.meta.reference;
+
+  // ---------- naming ----------
+  const SAL = [["none", ""], ["listener", "fc"], ["listener", "singleton"], ["shared", "fc"], ["shared", "singleton"]];
+  const salLabel = (s, k) => s === "none" ? "no salience prior" : `${k === "fc" ? "feature-count" : "singleton"} prior, ${s === "listener" ? "top listener only" : "shared by every level"}`;
+  const short = (t) => `L${t.depth} · ${t.salience === "none" ? "no prior" : (t.kind === "fc" ? "feat-count" : "singleton") + (t.salience === "listener" ? " (top)" : " (shared)")} · ${t.semantics}${t.cost !== "none" ? " · cost" : ""}`;
+  const describe = (t) => `${t.depth === 0 ? "Literal listener" : `Depth-${t.depth} pragmatic listener`}, ${salLabel(t.salience, t.kind)}, ${t.semantics === "bool" ? "Boolean" : "graded"} meanings${t.cost !== "none" ? ", extension cost" : ""}`;
+  const nameOf = (d, s, k, sem, c) => `grid_d${d}_${s === "none" ? "nosal" : (s === "listener" ? "lst" : "shr") + k}_${sem}_${c === "none" ? "nocost" : "cost"}`;
+  const valid = (d, s, c) => !(d === 0 && (s === "shared" || c !== "none"));
+
+  // ---------- header ----------
+  const meta = document.getElementById("meta");
+  for (const [k, v] of [["trials", B.meta.trials.toLocaleString()], ["held-out units", B.meta.units], ["sources", B.studies.length],
+    ["theories fitted", `${B.meta.n_done} of ${B.meta.n_total}`], ["built", B.meta.built]]) {
+    const s = el("span", {}, meta); s.append(`${k} `); el("b", { text: v }, s);
+  }
+  if (B.meta.n_done < B.meta.n_total) {
+    const missingDepths = [...new Set(B.meta.missing.map((n) => n.match(/grid_d(\d)/)[1]))].sort();
+    el("div", { class: "interim", text: `Interim: ${B.meta.n_total - B.meta.n_done} theories still fitting (depth ${missingDepths.join(", ")}); their cells are hatched` }, document.getElementById("interim"));
+  }
+
+  // ---------- tooltip ----------
+  const tip = document.getElementById("tip");
+  function showTip(ev, head, rows, sub) {
+    tip.replaceChildren();
+    el("div", { class: "head", text: head }, tip);
+    if (sub) el("div", { class: "sub", text: sub }, tip);
+    for (const [a, b] of rows) { const r = el("div", { class: "row" }, tip); el("span", { text: a }, r); el("span", { text: b }, r); }
+    tip.hidden = false;
+    const r = ev.target.getBoundingClientRect ? ev.target.getBoundingClientRect() : { left: 0, top: 0, width: 0 };
+    const x = ev.clientX ?? r.left + r.width / 2, y = ev.clientY ?? r.top;
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, x + 14)) + "px";
+    tip.style.top = (y + h + 20 > innerHeight ? y - h - 12 : y + 14) + "px";
+  }
+  const hideTip = () => { tip.hidden = true; };
+
+  // ---------- state ----------
+  const state = { study: "pooled", a: null, b: ref, src: "all", word: "all", sort: "diff", shown: 30, withD0: false };
+  const best = [...T].sort((x, y) => y.pooled - x.pooled)[0];
+  state.a = best.name;
+
+  function score(t, study) { return study === "pooled" ? { d: t.pooled, se: t.pooled_se } : t.studies[study] && { d: t.studies[study].d, se: t.studies[study].se }; }
+  function step(v) {
+    const a = Math.abs(v), i = a < 10 ? 0 : a < 50 ? 1 : a < 150 ? 2 : a < 300 ? 3 : a < 450 ? 4 : 5;
+    return i === 0 ? "--mid" : `--${v > 0 ? "up" : "dn"}${i}`;
+  }
+  function inkOn(color) {
+    const m = color.match(/^#([0-9a-f]{6})$/i); if (!m) return css("--ink");
+    const n = parseInt(m[1], 16), r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+    const lin = (c) => c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b) > 0.3 ? "#0b0b0b" : "#ffffff";
+  }
+
+  // ---------- chips ----------
+  function chips(boxId, options, key, after) {
+    const box = document.getElementById(boxId); box.replaceChildren();
+    for (const [value, label] of options) {
+      const c = el("button", { type: "button", class: "chip", "aria-pressed": String(state[key] === value), text: label }, box);
+      c.addEventListener("click", () => { state[key] = value; chips(boxId, options, key, after); after(); });
+    }
+  }
+
+  // ---------- the grid ----------
+  function drawGrid() {
+    const svg = document.getElementById("grid"); svg.replaceChildren();
+    const defs = el("defs", {}, svg);
+    const pat = el("pattern", { id: "hatch", width: 6, height: 6, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, defs);
+    el("rect", { width: 6, height: 6, fill: css("--surface") }, pat);
+    el("line", { x1: 0, y1: 0, x2: 0, y2: 6, stroke: css("--hatch"), "stroke-width": 2.5 }, pat);
+    const cols = [["bool", "none"], ["bool", "extension"], ["graded", "none"], ["graded", "extension"]];
+    const cw = 54, ch = 40, gapD = 18, left = 210, top = 58;
+    const W = left + 4 * (4 * cw) + 3 * gapD + 6, H = top + SAL.length * ch + 8;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", W); svg.setAttribute("height", H);
+    for (let d = 0; d < 4; d++) {
+      const x0 = left + d * (4 * cw + gapD);
+      el("text", { x: x0 + 2 * cw, y: 14, "text-anchor": "middle", "font-size": 12, "font-weight": 500, fill: css("--ink"),
+        "font-family": "var(--font-body)", text: d === 0 ? "depth 0 · literal listener" : `depth ${d} · L${d}` }, svg);
+      el("line", { x1: x0 + 4, x2: x0 + 4 * cw - 4, y1: 21, y2: 21, stroke: css("--axis") }, svg);
+      cols.forEach(([sem, cost], j) => {
+        const cx = x0 + j * cw + cw / 2;
+        el("text", { x: cx, y: 36, "text-anchor": "middle", "font-size": 9.5, fill: css("--ink-2"), text: sem === "bool" ? "Boolean" : "graded" }, svg);
+        el("text", { x: cx, y: 48, "text-anchor": "middle", "font-size": 9.5, fill: css("--muted"), text: cost === "none" ? "no cost" : "cost" }, svg);
+      });
+    }
+    SAL.forEach(([s, k], i) => {
+      const y = top + i * ch;
+      const lab = s === "none" ? ["no salience prior", ""] : [`${k === "fc" ? "feature count" : "singleton"}`, s === "listener" ? "top listener's prior" : "shared by every level"];
+      el("text", { x: left - 12, y: y + ch / 2 - (lab[1] ? 2 : -4), "text-anchor": "end", "font-size": 12, fill: css("--ink"), "font-family": "var(--font-body)", text: lab[0] }, svg);
+      if (lab[1]) el("text", { x: left - 12, y: y + ch / 2 + 12, "text-anchor": "end", "font-size": 10.5, fill: css("--muted"), "font-family": "var(--font-body)", text: lab[1] }, svg);
+      for (let d = 0; d < 4; d++) cols.forEach(([sem, cost], j) => {
+        const x = left + d * (4 * cw + gapD) + j * cw;
+        if (!valid(d, s, cost)) return;
+        const name = nameOf(d, s, k, sem, cost), idx = byName[name];
+        const g = el("g", { class: "cell" + (name === state.a ? " selected-a" : name === state.b ? " selected-b" : ""), tabindex: idx === undefined ? undefined : 0,
+          role: idx === undefined ? undefined : "button", "aria-label": idx === undefined ? undefined : describe(T[idx]) }, svg);
+        if (idx === undefined) {
+          el("rect", { class: "box", x: x + 2, y: y + 2, width: cw - 4, height: ch - 4, rx: 4, fill: "url(#hatch)", stroke: css("--border") }, g);
+          g.addEventListener("pointermove", (ev) => showTip(ev, short({ depth: d, salience: s, kind: k, semantics: sem, cost }), [["status", "still fitting"]]));
+          g.addEventListener("pointerleave", hideTip);
+          return;
+        }
+        const t = T[idx], sc = score(t, state.study);
+        const fill = css(step(sc.d));
+        el("rect", { class: "box", x: x + 2, y: y + 2, width: cw - 4, height: ch - 4, rx: 4, fill, stroke: name === ref ? css("--ink") : "none", "stroke-width": name === ref ? 1.5 : 0 }, g);
+        el("text", { x: x + cw / 2, y: y + ch / 2 + 4, "text-anchor": "middle", "font-size": 11.5, "font-weight": 500, fill: inkOn(fill), "pointer-events": "none",
+          text: name === ref ? "RSA" : fmt(sc.d) + (t.converged ? "" : "†") }, g);
+        const rows = () => {
+          const out = [["pooled", `${fmt(t.pooled)} nats` + (t.pooled_se ? ` (${fmt(t.pooled / t.pooled_se, 1)} SE)` : "")]];
+          for (const st of B.studies) { const v = t.studies[st.id]; out.push([st.label, `${fmt(v.d)}` + (v.se ? ` (${fmt(v.d / v.se, 1)} SE)` : "")]); }
+          out.push(["parameters", String(t.n_params)]);
+          if (!t.converged) out.push(["fit", "did not converge"]);
+          return out;
+        };
+        g.addEventListener("pointermove", (ev) => showTip(ev, short(t), rows(), describe(t)));
+        g.addEventListener("focus", (ev) => showTip(ev, short(t), rows(), describe(t)));
+        g.addEventListener("pointerleave", hideTip); g.addEventListener("blur", hideTip);
+        const pick = () => { state.a = name; state.shown = 30; syncPicks(); drawGrid(); renderDisplays(); };
+        g.addEventListener("click", pick);
+        g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+      });
+    });
+    const lg = document.getElementById("grid-legend"); lg.replaceChildren();
+    const r = el("span", { class: "item" }, lg); r.append("worse");
+    const ramp = el("span", { class: "ramp" }, r);
+    for (const v of ["--dn5", "--dn4", "--dn3", "--dn2", "--dn1", "--mid", "--up1", "--up2", "--up3", "--up4", "--up5"]) el("i", { style: `background: var(${v})` }, ramp);
+    r.append("better than plain RSA");
+    el("span", { class: "item", text: "steps at ±10, 50, 150, 300, 450 nats" }, lg);
+    el("span", { class: "item", text: "† did not converge" }, lg);
+    const sa = el("span", { class: "item" }, lg); el("span", { style: "display:inline-block;width:14px;height:10px;border:2.5px solid var(--a);border-radius:3px" }, sa); sa.append("theory A below");
+    const sb = el("span", { class: "item" }, lg); el("span", { style: "display:inline-block;width:14px;height:10px;border:2.5px solid var(--b);border-radius:3px" }, sb); sb.append("theory B");
+  }
+
+  // ---------- contrasts ----------
+  const CONTRASTS = [
+    ["depth", "1 − 0", (t) => t.depth === 0, (t) => t.depth === 1, ["depth"]],
+    ["depth", "2 − 1", (t) => t.depth === 1, (t) => t.depth === 2, ["depth"]],
+    ["depth", "3 − 2", (t) => t.depth === 2, (t) => t.depth === 3, ["depth"]],
+    ["salience", "singleton prior (top listener) − none", (t) => t.salience === "none", (t) => t.salience === "listener" && t.kind === "singleton", ["salience", "kind"]],
+    ["salience", "singleton prior (shared) − none", (t) => t.salience === "none", (t) => t.salience === "shared" && t.kind === "singleton", ["salience", "kind"]],
+    ["salience", "feature-count prior (top listener) − none", (t) => t.salience === "none", (t) => t.salience === "listener" && t.kind === "fc", ["salience", "kind"]],
+    ["salience", "feature-count prior (shared) − none", (t) => t.salience === "none", (t) => t.salience === "shared" && t.kind === "fc", ["salience", "kind"]],
+    ["salience", "shared − top-listener prior", (t) => t.salience === "listener", (t) => t.salience === "shared", ["salience"]],
+    ["salience", "singleton − feature count", (t) => t.kind === "fc", (t) => t.kind === "singleton", ["kind"]],
+    ["meanings", "graded − Boolean", (t) => t.semantics === "bool", (t) => t.semantics === "graded", ["semantics"]],
+    ["cost", "extension cost − none", (t) => t.cost === "none", (t) => t.cost === "extension", ["cost"]],
+  ];
+  const AX = ["depth", "salience", "kind", "semantics", "cost"];
+  function contrastRows() {
+    const rows = [];
+    for (const [axis, label, from, to, varies] of CONTRASTS) {
+      const keep = AX.filter((a) => !varies.includes(a));
+      const pairs = [];
+      for (const x of T) if (from(x)) for (const y of T) if (to(y) && keep.every((a) => x[a] === y[a])) {
+        if (!state.withD0 && axis !== "depth" && x.depth === 0) continue;
+        pairs.push([x, y]);
+      }
+      if (!pairs.length) continue;
+      const per = Object.fromEntries(B.studies.map((s) => [s.id, pairs.reduce((a, [x, y]) => a + y.studies[s.id].d - x.studies[s.id].d, 0) / pairs.length]));
+      const pooled = pairs.reduce((a, [x, y]) => a + y.pooled - x.pooled, 0) / pairs.length;
+      rows.push({ axis, label, per, pooled, n: pairs.length, wins: pairs.filter(([x, y]) => y.pooled > x.pooled).length });
+    }
+    return rows;
+  }
+  function drawContrasts() {
+    const svg = document.getElementById("contrasts"); svg.replaceChildren();
+    const rows = contrastRows();
+    const left = 400, right = 150, rowH = 30, top = 30;
+    const W = 1080, H = top + rows.length * rowH + 30;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", W); svg.setAttribute("height", H);
+    const vals = rows.flatMap((r) => Object.values(r.per));
+    const lim = Math.max(50, ...vals.map(Math.abs));
+    const f = (v) => Math.sign(v) * Math.sqrt(Math.abs(v));
+    const lo = Math.min(0, ...vals) < -1 ? -lim : -lim * 0.08, hi = lim;
+    const x = (v) => left + (f(v) - f(lo)) / (f(hi) - f(lo)) * (W - left - right);
+    const ticks = [-400, -200, -100, -50, -10, 0, 10, 50, 100, 200, 400].filter((t) => t >= lo && t <= hi);
+    for (const t of ticks) {
+      el("line", { x1: x(t), x2: x(t), y1: top - 6, y2: H - 24, stroke: css(t === 0 ? "--axis" : "--grid"), "stroke-width": t === 0 ? 1.5 : 1 }, svg);
+      el("text", { x: x(t), y: H - 8, "text-anchor": "middle", "font-size": 10, fill: css("--muted"), text: t === 0 ? "0" : fmt(t) }, svg);
+    }
+    el("text", { x: left, y: 12, "font-size": 10, fill: css("--muted"), text: "change in nats (square-root scale)" }, svg);
+    el("text", { x: W - right + 14, y: 12, "font-size": 10, fill: css("--muted"), text: "pooled" }, svg);
+    el("text", { x: W - 8, y: 12, "text-anchor": "end", "font-size": 10, fill: css("--muted"), text: "wins" }, svg);
+    let lastAxis = null;
+    rows.forEach((r, i) => {
+      const y = top + i * rowH + rowH / 2;
+      if (r.axis !== lastAxis && i > 0) el("line", { x1: 8, x2: W - 8, y1: y - rowH / 2, y2: y - rowH / 2, stroke: css("--grid") }, svg);
+      if (r.axis !== lastAxis) el("text", { x: 8, y: y + 4, "font-size": 10, fill: css("--muted"), "letter-spacing": "0.06em", text: r.axis.toUpperCase() }, svg);
+      lastAxis = r.axis;
+      el("text", { x: left - 14, y: y + 4, "text-anchor": "end", "font-size": 12, fill: css("--ink"), "font-family": "var(--font-body)", text: r.label }, svg);
+      const xs = B.studies.map((s) => x(r.per[s.id]));
+      el("line", { x1: Math.min(...xs), x2: Math.max(...xs), y1: y, y2: y, stroke: css("--axis"), "stroke-width": 2, "stroke-linecap": "round" }, svg);
+      B.studies.forEach((s, j) => el("circle", { cx: x(r.per[s.id]), cy: y, r: 5.5, fill: css(`--st${j}`), stroke: css("--surface"), "stroke-width": 2 }, svg));
+      el("text", { x: W - right + 14, y: y + 4, "font-size": 12, fill: css("--ink"), text: fmt(r.pooled) }, svg);
+      el("text", { x: W - 8, y: y + 4, "text-anchor": "end", "font-size": 12, fill: css("--ink-2"), text: `${r.wins}/${r.n}` }, svg);
+      const hit = el("rect", { x: 0, y: y - rowH / 2, width: W, height: rowH, class: "hit", tabindex: 0 }, svg);
+      svg.insertBefore(hit, svg.firstChild.nextSibling);
+      const tipRows = () => [...B.studies.map((s) => [s.label, `${fmt(r.per[s.id])} nats`]), ["pooled", `${fmt(r.pooled)} nats`], ["pairs, second level better", `${r.wins} of ${r.n}`]];
+      hit.addEventListener("pointermove", (ev) => showTip(ev, `${r.axis}: ${r.label}`, tipRows()));
+      hit.addEventListener("focus", (ev) => showTip(ev, `${r.axis}: ${r.label}`, tipRows()));
+      hit.addEventListener("pointerleave", hideTip); hit.addEventListener("blur", hideTip);
+    });
+    const lg = document.getElementById("contrast-legend"); lg.replaceChildren();
+    B.studies.forEach((s, j) => { const it = el("span", { class: "item" }, lg);
+      const k = el("svg", { width: 12, height: 12, viewBox: "-6 -6 12 12" }, it); el("circle", { r: 5, fill: css(`--st${j}`) }, k); it.append(s.label); });
+  }
+
+  // ---------- displays ----------
+  function syncPicks() {
+    for (const [id, key] of [["pick-a", "a"], ["pick-b", "b"]]) document.getElementById(id).value = state[key];
+  }
+  function fillPicks() {
+    const sorted = [...T].sort((x, y) => x.depth - y.depth || y.pooled - x.pooled);
+    for (const [id, key] of [["pick-a", "a"], ["pick-b", "b"]]) {
+      const s = document.getElementById(id); s.replaceChildren();
+      for (const t of sorted) el("option", { value: t.name, text: `${short(t)}  (${fmt(t.pooled)})${t.name === ref ? " · plain RSA" : ""}${t.converged ? "" : " †"}` }, s);
+      s.value = state[key];
+      s.addEventListener("change", () => { state[key] = s.value; state.shown = 30; drawGrid(); renderDisplays(); });
+    }
+  }
+  function visible() {
+    const ia = byName[state.a], ib = byName[state.b];
+    let ds = B.displays.filter((d) => (state.src === "all" || d.source === state.src) &&
+      (state.word === "all" || (state.word === "word" ? d.said !== null : d.said === null)));
+    ds = ds.map((d) => ({ d, gain: d.lpd[ia] - d.lpd[ib] }));
+    if (state.sort === "diff") ds.sort((p, q) => Math.abs(q.gain) - Math.abs(p.gain));
+    else if (state.sort === "a") ds.sort((p, q) => q.gain - p.gain);
+    else if (state.sort === "b") ds.sort((p, q) => p.gain - q.gain);
+    else ds.sort((p, q) => q.d.n - p.d.n);
+    return ds;
+  }
+  function wilson(k, n) {
+    if (!n) return [0, 1];
+    const z = 1.96, p = k / n, den = 1 + z * z / n, c = (p + z * z / (2 * n)) / den;
+    const h = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / den;
+    return [Math.max(0, c - h), Math.min(1, c + h)];
+  }
+  function marker(parent, cx, cy, which) {
+    if (which === "a") return el("circle", { cx, cy, r: 4.5, fill: css("--a"), stroke: css("--surface"), "stroke-width": 1.5 }, parent);
+    return el("path", { d: `M${cx},${cy - 5.5} L${cx + 5.5},${cy} L${cx},${cy + 5.5} L${cx - 5.5},${cy} Z`, fill: css("--b"), stroke: css("--surface"), "stroke-width": 1.5 }, parent);
+  }
+  function panel(parent, d, gain) {
+    const ia = byName[state.a], ib = byName[state.b];
+    const card = el("div", { class: "panel" }, parent);
+    const hd = el("header", {}, card);
+    el("span", { class: "src", text: STUDY[d.source] || d.source }, hd);
+    el("span", { class: "delta", style: `color: var(${Math.abs(gain) < 0.5 ? "--muted" : gain > 0 ? "--a" : "--b"})`, text: `A ${fmt(gain, 1)}` }, hd);
+    el("div", { class: "cond", text: `${d.unit} · n = ${d.n}${d.estimated ? " · est." : ""}` }, card);
+    const nW = d.words.length, k = d.classes.length;
+    const W = 232, left = 64, right = 6, plotTop = 8, plotH = 92, gap = 16, rowH = 14;
+    const featTop = plotTop + plotH + gap, H = featTop + rowH * Math.max(nW, 1) + 6;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `${STUDY[d.source]}, ${d.unit}: people against theories A and B` }, card);
+    const slotW = (W - left - right) / k, y = (v) => plotTop + plotH * (1 - v);
+    for (const t of [0, 0.5, 1]) {
+      el("line", { x1: left, x2: W - right, y1: y(t), y2: y(t), stroke: css(t === 0 ? "--axis" : "--grid") }, svg);
+      el("text", { x: left - 6, y: y(t) + 3, "text-anchor": "end", "font-size": 9, fill: css("--muted"), text: t === 0.5 ? ".5" : String(t) }, svg);
+    }
+    if (d.said !== null) el("rect", { x: 2, y: featTop + rowH * d.said - rowH / 2, width: W - right - 2 + 2, height: rowH, rx: 3, fill: css("--said") }, svg);
+    d.words.forEach((w, f) => {
+      const said = f === d.said;
+      const label = w.length > 10 ? w.slice(0, 9) + "…" : w;
+      el("text", { x: left - 8, y: featTop + rowH * f + 3.5, "text-anchor": "end", "font-size": 9, fill: css(said ? "--ink" : "--muted"),
+        "font-weight": said ? 600 : 400, text: said ? `“${label}”` : label }, svg);
+    });
+    if (d.said === null) el("text", { x: 4, y: plotTop + 10, "font-size": 9, fill: css("--muted"), text: "no word:" }, svg),
+      el("text", { x: 4, y: plotTop + 21, "font-size": 9, fill: css("--muted"), text: "prior" }, svg);
+    d.classes.forEach((c, i) => {
+      const cx = left + slotW * (i + 0.5);
+      const bw = Math.min(16, slotW * 0.3), bx = cx - bw - 2;
+      const obs = c.count / d.n, top = y(obs), base = y(0), h = Math.max(0, base - top);
+      if (h > 0) {
+        const r = Math.min(4, h, bw / 2);
+        el("path", { d: `M${bx},${base} V${top + r} Q${bx},${top} ${bx + r},${top} H${bx + bw - r} Q${bx + bw},${top} ${bx + bw},${top + r} V${base} Z`, fill: css("--human") }, svg);
+      }
+      const [lo, hi] = wilson(c.count, d.n);
+      el("line", { x1: bx + bw / 2, x2: bx + bw / 2, y1: y(lo), y2: y(hi), stroke: css("--human-ink"), "stroke-width": 1.5 }, svg);
+      marker(svg, cx + 6, y(d.preds[ia][i]), "a");
+      marker(svg, cx + 17, y(d.preds[ib][i]), "b");
+      for (let f = 0; f < nW; f++) {
+        const fy = featTop + rowH * f;
+        if (c.features[f]) el("circle", { cx, cy: fy, r: 3.6, fill: css(f === d.said ? "--ink" : "--ink-2") }, svg);
+        else el("circle", { cx, cy: fy, r: 3, fill: "none", stroke: css("--axis"), "stroke-width": 1.2 }, svg);
+      }
+      if (c.copies > 1) el("text", { x: cx + 9, y: featTop + rowH * (nW - 1) + 3.5, "font-size": 8.5, fill: css("--muted"), text: `×${c.copies}` }, svg);
+      const hit = el("rect", { x: left + slotW * i, y: 0, width: slotW, height: H, class: "hit", tabindex: 0, rx: 4 }, svg);
+      svg.insertBefore(hit, svg.firstChild);
+      const rows = () => [["people", `${obs.toFixed(2)}  (${c.count}/${d.n})`], ["A · " + short(T[ia]), d.preds[ia][i].toFixed(2)], ["B · " + short(T[ib]), d.preds[ib][i].toFixed(2)]];
+      const head = () => `${d.words.filter((_, f) => c.features[f]).join(" + ") || "no word fits"}${c.copies > 1 ? ` · ×${c.copies}` : ""}`;
+      hit.addEventListener("pointermove", (ev) => showTip(ev, head(), rows(), d.item ? `example item: ${d.item.replaceAll("_", " ")}` : ""));
+      hit.addEventListener("focus", (ev) => showTip(ev, head(), rows()));
+      hit.addEventListener("pointerleave", hideTip); hit.addEventListener("blur", hideTip);
+    });
+  }
+  function renderDisplays() {
+    const ds = visible();
+    const box = document.getElementById("panels"); box.replaceChildren();
+    const tA = T[byName[state.a]], tB = T[byName[state.b]];
+    const total = ds.reduce((a, p) => a + p.gain, 0);
+    const sorted = ds.map((p) => p.gain).sort((x, y) => Math.abs(y) - Math.abs(x));
+    let acc = 0, half = 0; const absTot = sorted.reduce((a, v) => a + Math.abs(v), 0);
+    for (const v of sorted) { acc += Math.abs(v); half++; if (acc >= absTot / 2) break; }
+    const sm = document.getElementById("summary"); sm.replaceChildren();
+    if (!ds.length) { sm.textContent = ""; el("div", { class: "empty", text: "No displays match these filters." }, box); document.getElementById("more").hidden = true; return; }
+    sm.append(`Over these ${ds.length} displays (${ds.reduce((a, p) => a + p.d.n, 0).toLocaleString()} trials), A (${short(tA)}) `);
+    el("b", { text: `${total >= 0 ? "gains" : "loses"} ${Math.abs(total).toFixed(0)} nats` }, sm);
+    sm.append(` against B (${short(tB)}). `);
+    if (state.a !== state.b && ds.length > 1) { sm.append("Half of the difference, in either direction, sits in "); el("b", { text: `${half} display${half === 1 ? "" : "s"}` }, sm); sm.append("."); }
+    for (const p of ds.slice(0, state.shown)) panel(box, p.d, p.gain);
+    const more = document.getElementById("more");
+    more.hidden = ds.length <= state.shown;
+    more.textContent = `Show ${Math.min(30, ds.length - state.shown)} more of ${ds.length - state.shown}`;
+    if (document.getElementById("table-view").open) renderTable(ds);
+  }
+  function renderTable(ds = visible()) {
+    const t = document.getElementById("disp-table"); t.replaceChildren();
+    const ia = byName[state.a], ib = byName[state.b];
+    const hr = el("tr", {}, el("thead", {}, t));
+    for (const [h, num] of [["source"], ["condition"], ["word"], ["n", 1], ["lpd A", 1], ["lpd B", 1], ["A − B", 1]]) el("th", { text: h, class: num ? "num" : undefined }, hr);
+    const body = el("tbody", {}, t);
+    for (const { d, gain } of ds) {
+      const tr = el("tr", {}, body);
+      for (const v of [STUDY[d.source] || d.source, d.unit.length > 48 ? d.unit.slice(0, 47) + "…" : d.unit, d.said === null ? "(prior)" : d.words[d.said]]) el("td", { text: v }, tr);
+      for (const v of [String(d.n), d.lpd[ia].toFixed(1), d.lpd[ib].toFixed(1), fmt(gain, 1)]) el("td", { class: "num", text: v }, tr);
+    }
+  }
+  document.getElementById("more").addEventListener("click", () => { state.shown += 30; renderDisplays(); });
+  document.getElementById("table-view").addEventListener("toggle", (e) => { if (e.target.open) renderTable(); });
+  document.getElementById("with-d0").addEventListener("change", (e) => { state.withD0 = e.target.checked; drawContrasts(); });
+
+  chips("study-chips", [["pooled", "All three, pooled"], ...B.studies.map((s) => [s.id, s.label])], "study", drawGrid);
+  chips("src-chips", [["all", "All"], ...B.studies.map((s) => [s.id, s.label])], "src", () => { state.shown = 30; renderDisplays(); });
+  chips("word-chips", [["all", "All"], ["word", "A word heard"], ["prior", "No word (prior)"]], "word", () => { state.shown = 30; renderDisplays(); });
+  chips("sort-chips", [["diff", "Biggest A–B difference"], ["a", "A ahead"], ["b", "B ahead"], ["n", "Most trials"]], "sort", () => { state.shown = 30; renderDisplays(); });
+  fillPicks(); drawGrid(); drawContrasts(); renderDisplays();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { drawGrid(); drawContrasts(); renderDisplays(); });
+})();
+</script>

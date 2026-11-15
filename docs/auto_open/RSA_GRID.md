@@ -55,6 +55,9 @@ No agents, no Prolific; copies of the data, never the originals; aggregates only
    theory against plain RSA, pooled and per study with clustered SEs, and each axis's contrast (pairs of grid points
    that differ only on it), per study. Copy both to `data/rsa_open/grid/all_studies/` and write
    `docs/auto_open/RSA_GRID_REPORT.md`: the table, the axis contrasts, any theory that did not converge, and time.
+4. **Page:** `python scripts/rsa/open_compute_checks/grid_viz.py --corpus corpus.json --grid grid --fits fits --out
+   grid_viz.html`, copied to `data/rsa_open/grid/all_studies/` (aggregates only; check its size, it grows with the
+   displays: about 2 KB a display).
 
 **Caveats for reading it.** The closed campaign's pre-registered data are spent for confirmatory claims
 (`docs/auto_rsa/CONSOLIDATION.md` §5): this is exploratory. Studies differ in paradigm and in trials per person, so the
@@ -78,7 +81,8 @@ Three sources, 27,949 trials, 164 units; grouped 5-fold CV, 4 chains × 500 + 50
 | literal listener | −864 | −429 (−3.0) | −512 (−4.5) | +77 (3.0) |
 | *for comparison: the 6-parameter seed (stage-1 refit)* | *+594* | *−7* | *+171* | *+430* |
 
-Each axis, averaged over pairs of grid points that differ only on it (wins: pairs where the second level is better):
+Each axis, averaged over pairs of grid points that differ only on it (wins: pairs where the second level is better;
+depth-0 pairs left out except for depth itself, as the page does by default):
 
 | contrast | pairs | pooled | wins | Mayn & Demberg 2026 | pragmods | Sikos 2021 |
 |---|---|---|---|---|---|---|
@@ -87,7 +91,8 @@ Each axis, averaged over pairs of grid points that differ only on it (wins: pair
 | singleton salience − none (depth ≥ 1, top listener / shared) | 8 / 8 | +370 / +368 | 8/8, 8/8 | +6 / −3 | −6 / −4 | +371 / +376 |
 | feature-count salience − none (depth ≥ 1, top listener / shared) | 8 / 8 | −21 / −19 | 0/8, 0/8 | +4 / 0 | −20 / −18 | −5 / 0 |
 | shared − top-listener salience (same kind) | 8 + 8 | +2 (fc), −2 (singleton) | 3/8, 7/8 | | | |
-| graded − Boolean meanings | 23 | +107 | 22/23 | +28 | +64 | +14 |
+| graded − Boolean meanings, depth 1 / depth 2 | 10 / 10 | +57 / +2 | 10/10, 9/10 | +3 / −2 | +25 / +2 | +29 / +2 |
+| (graded − Boolean at depth 0, the literal listener) | 3 | +622 | 3/3 | +216 | +401 | +5 |
 | extension cost − none | 20 | +34 | 15/20 | +1 | +5 | +27 |
 
 What it says so far:
@@ -99,10 +104,19 @@ What it says so far:
 2. **Pragmatic reasoning matters on the other two sources** (depth 1 over 0: +230 and +295), but **a second level adds
    little** (+24, though in 19 of 20 pairs). Whether salience is common knowledge or the top listener's alone makes no
    difference here (±2).
-3. **Graded meanings help consistently** (+107, 22 of 23 pairs, on every source), most on pragmods: the open arm's
-   recurring discovery holds up as a standard-RSA choice. Extension cost helps a little (+34, 15 of 20).
+3. **Graded meanings help a depth-1 listener** (+57, 10 of 10 pairs, on pragmods and Sikos) **and do almost nothing
+   at depth 2** (+2): a second level of reasoning and graded meanings do much the same work here, so the open arm's
+   recurring discovery is, on this literature, an alternative to deeper recursion rather than an addition to it. (An
+   earlier version of this section said +107 on every source: that average included the literal listener, for which
+   graded meanings are a large repair, +622.) Extension cost helps a little (+34, 15 of 20).
 4. **On Mayn & Demberg 2026, the largest source, no choice beyond depth 1 matters** (every depth-1/2 theory within
    ±16 nats of plain RSA).
+
+**The page.** `data/rsa_open/grid/literature/grid_viz.html` (built by `scripts/rsa/open_compute_checks/grid_viz.py`
+from the fits; aggregates only) shows the grid as a heatmap per source, these contrasts computed live, and all 213
+displays with people's choices against any two grid theories, sorted by where they differ. It is the campaign's
+old model-report design (`src/rsa/report_template.html`) carried over. For the Sherlock run, build it from the
+all-studies fits the same way; display panels cover the choice blocks only.
 5. **The best grid theory is about 150 nats behind the 6-parameter seed, and the gap is pragmods** (+15 against +171):
    pragmods' prior and salience conditions carry preferences the grid's one-weight salience cannot express. On Sikos
    and Mayn & Demberg the grid matches the seed.
