@@ -59,3 +59,54 @@ No agents, no Prolific; copies of the data, never the originals; aggregates only
 **Caveats for reading it.** The closed campaign's pre-registered data are spent for confirmatory claims
 (`docs/auto_rsa/CONSOLIDATION.md` §5): this is exploratory. Studies differ in paradigm and in trials per person, so the
 per-study columns matter as much as the pooled one. Stage 1's two chains share people.
+
+## First results: the committed literature (interim: depths 0-2, 46 of 66)
+
+Three sources, 27,949 trials, 164 units; grouped 5-fold CV, 4 chains × 500 + 500. Nats over plain RSA
+(`grid_d1_nosal_bool_nocost`), clustered SE ratio in parentheses; the full table is
+`data/rsa_open/grid/literature/grid_report.md`. Depth 3 is still fitting.
+
+| theory | pooled | Mayn & Demberg 2026 | pragmods | Sikos 2021 |
+|---|---|---|---|---|
+| d2, shared singleton salience, Boolean | +445 | +9 (0.7) | +15 (0.5) | +420 (3.8) |
+| d1, shared singleton salience, graded | +443 | +7 (0.5) | +16 (0.6) | +420 (3.8) |
+| d2, shared singleton, graded, cost | +441 | +10 (0.7) | +11 (0.4) | +419 (3.8) |
+| ... the 15 depth-1/2 singleton theories lie within +396 to +445 | | | | |
+| d0, listener singleton salience, graded | +186 | −125 (−2.9) | −111 (−3.1) | +422 (3.9) |
+| best without salience: d2, graded, cost | +116 | +9 (0.8) | +28 (1.6) | +79 (2.6) |
+| d2, no salience, Boolean (plain RSA, depth 2) | +39 | +7 (1.5) | +14 (2.3) | +17 (3.2) |
+| literal listener | −864 | −429 (−3.0) | −512 (−4.5) | +77 (3.0) |
+| *for comparison: the 6-parameter seed (stage-1 refit)* | *+594* | *−7* | *+171* | *+430* |
+
+Each axis, averaged over pairs of grid points that differ only on it (wins: pairs where the second level is better):
+
+| contrast | pairs | pooled | wins | Mayn & Demberg 2026 | pragmods | Sikos 2021 |
+|---|---|---|---|---|---|---|
+| depth 1 − 0 | 6 | +473 | 6/6 | +230 | +295 | −52 |
+| depth 2 − 1 | 20 | +24 | 19/20 | +1 | +10 | +13 |
+| singleton salience − none (depth ≥ 1, top listener / shared) | 8 / 8 | +370 / +368 | 8/8, 8/8 | +6 / −3 | −6 / −4 | +371 / +376 |
+| feature-count salience − none (depth ≥ 1, top listener / shared) | 8 / 8 | −21 / −19 | 0/8, 0/8 | +4 / 0 | −20 / −18 | −5 / 0 |
+| shared − top-listener salience (same kind) | 8 + 8 | +2 (fc), −2 (singleton) | 3/8, 7/8 | | | |
+| graded − Boolean meanings | 23 | +107 | 22/23 | +28 | +64 | +14 |
+| extension cost − none | 20 | +34 | 15/20 | +1 | +5 | +27 |
+
+What it says so far:
+
+1. **One choice dominates: salience as being a singleton**, worth about 370 nats, and all of it on Sikos 2021, whose
+   displays turn on a unique object. On Sikos a literal listener with that prior (+422) does as well as any pragmatic
+   one, and plain RSA is *worse* there than the literal listener (depth 1 − 0: −52). Feature-count salience never helps
+   once there is a speaker (0 of 16 pairs).
+2. **Pragmatic reasoning matters on the other two sources** (depth 1 over 0: +230 and +295), but **a second level adds
+   little** (+24, though in 19 of 20 pairs). Whether salience is common knowledge or the top listener's alone makes no
+   difference here (±2).
+3. **Graded meanings help consistently** (+107, 22 of 23 pairs, on every source), most on pragmods: the open arm's
+   recurring discovery holds up as a standard-RSA choice. Extension cost helps a little (+34, 15 of 20).
+4. **On Mayn & Demberg 2026, the largest source, no choice beyond depth 1 matters** (every depth-1/2 theory within
+   ±16 nats of plain RSA).
+5. **The best grid theory is about 150 nats behind the 6-parameter seed, and the gap is pragmods** (+15 against +171):
+   pragmods' prior and salience conditions carry preferences the grid's one-weight salience cannot express. On Sikos
+   and Mayn & Demberg the grid matches the seed.
+
+Not converged (R-hat or divergences; read with care): `grid_d1_lstfc_bool_cost`, `grid_d1_lstsingleton_bool_cost`,
+`grid_d2_shrsingleton_graded_nocost` (its Mayn & Demberg score, −68, is out of line with its neighbours and is likely
+the fit, not the theory). Fits took 4-28 minutes each on this container (depth 2 with cost the slowest so far).
