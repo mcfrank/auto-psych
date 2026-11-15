@@ -1,0 +1,17 @@
+{
+ "source": "chain_0, experiment 1",
+ "paradigm": "Which one does Bob mean? (forced choice)",
+ "response": "choice",
+ "domains": 6,
+ "trials": 13,
+ "minutes": 3.0,
+ "mean": 4.084788029925187,
+ "n": 401,
+ "counts": {
+  "1": 9,
+  "2": 19,
+  "3": 74,
+  "4": 126,
+  "5": 173
+ }
+}

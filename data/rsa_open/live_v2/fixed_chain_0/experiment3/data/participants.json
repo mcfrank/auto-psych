@@ -1,0 +1,206 @@
+{
+ "collection": "live",
+ "prolific_mode": "live",
+ "study_id": "6af8bc3666cf974a0f67fba9",
+ "target": 400,
+ "smoke_test": false,
+ "other_study": 0,
+ "second_submissions": 0,
+ "recruited": 400,
+ "responses": 400,
+ "readable": 400,
+ "kept": 354,
+ "excluded": 46,
+ "exclusion_rate": 0.115,
+ "exclusion_reasons": {
+  "missed a catch trial": 45,
+  "failed the comprehension checks on the second reading": 4
+ },
+ "comprehension_final": 0.99,
+ "catch_pass": 0.93875,
+ "same_answer": {
+  "n": 0,
+  "share": 0.0,
+  "people": {}
+ },
+ "fast": {
+  "n": 0,
+  "people": {}
+ },
+ "minutes": {
+  "median": 2.8096916666666667,
+  "p10": 1.5799666666666667,
+  "p90": 5.897766666666667
+ },
+ "enjoyment": {
+  "mean": 4.0875,
+  "n": 400,
+  "counts": {
+   "1": 11,
+   "2": 16,
+   "3": 75,
+   "4": 123,
+   "5": 175
+  }
+ },
+ "hourly_usd_at_median": 10.67732817657928,
+ "returning": {
+  "all": {
+   "n": 13,
+   "share": 0.0325,
+   "earlier_studies": {
+    "1": 13
+   }
+  },
+  "kept": {
+   "n": 10,
+   "share": 0.02824858757062147,
+   "earlier_studies": {
+    "1": 10
+   }
+  }
+ },
+ "excluded_people": {
+  "p969": [
+   "missed a catch trial"
+  ],
+  "p980": [
+   "missed a catch trial"
+  ],
+  "p999": [
+   "missed a catch trial"
+  ],
+  "p1000": [
+   "missed a catch trial"
+  ],
+  "p1001": [
+   "missed a catch trial"
+  ],
+  "p1029": [
+   "missed a catch trial"
+  ],
+  "p1033": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p1046": [
+   "missed a catch trial"
+  ],
+  "p1049": [
+   "missed a catch trial"
+  ],
+  "p1063": [
+   "missed a catch trial"
+  ],
+  "p1078": [
+   "missed a catch trial"
+  ],
+  "p1086": [
+   "missed a catch trial"
+  ],
+  "p947": [
+   "missed a catch trial"
+  ],
+  "p1105": [
+   "missed a catch trial"
+  ],
+  "p1122": [
+   "missed a catch trial"
+  ],
+  "p1127": [
+   "failed the comprehension checks on the second reading",
+   "missed a catch trial"
+  ],
+  "p1130": [
+   "missed a catch trial"
+  ],
+  "p1135": [
+   "failed the comprehension checks on the second reading",
+   "missed a catch trial"
+  ],
+  "p1142": [
+   "missed a catch trial"
+  ],
+  "p1160": [
+   "missed a catch trial"
+  ],
+  "p1168": [
+   "missed a catch trial"
+  ],
+  "p1183": [
+   "missed a catch trial"
+  ],
+  "p1184": [
+   "missed a catch trial"
+  ],
+  "p1189": [
+   "failed the comprehension checks on the second reading",
+   "missed a catch trial"
+  ],
+  "p1192": [
+   "missed a catch trial"
+  ],
+  "p1203": [
+   "missed a catch trial"
+  ],
+  "p1217": [
+   "missed a catch trial"
+  ],
+  "p1221": [
+   "missed a catch trial"
+  ],
+  "p1224": [
+   "missed a catch trial"
+  ],
+  "p1225": [
+   "missed a catch trial"
+  ],
+  "p1233": [
+   "missed a catch trial"
+  ],
+  "p1239": [
+   "missed a catch trial"
+  ],
+  "p1241": [
+   "missed a catch trial"
+  ],
+  "p196": [
+   "missed a catch trial"
+  ],
+  "p1258": [
+   "missed a catch trial"
+  ],
+  "p1261": [
+   "missed a catch trial"
+  ],
+  "p1262": [
+   "missed a catch trial"
+  ],
+  "p1266": [
+   "missed a catch trial"
+  ],
+  "p1271": [
+   "missed a catch trial"
+  ],
+  "p1275": [
+   "missed a catch trial"
+  ],
+  "p953": [
+   "missed a catch trial"
+  ],
+  "p1298": [
+   "missed a catch trial"
+  ],
+  "p1323": [
+   "missed a catch trial"
+  ],
+  "p1324": [
+   "missed a catch trial"
+  ],
+  "p1329": [
+   "missed a catch trial"
+  ],
+  "p1337": [
+   "missed a catch trial"
+  ]
+ }
+}

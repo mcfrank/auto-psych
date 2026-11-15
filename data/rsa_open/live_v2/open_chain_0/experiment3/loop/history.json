@@ -1,0 +1,2762 @@
+[
+ {
+  "step": 0,
+  "round": -1,
+  "best_model": "extension_noisy_graded_semantics_l2",
+  "fit_best": "extension_noisy_graded_semantics_l2",
+  "n_params": {
+   "extension_noisy_graded_semantics_l2": 2,
+   "l1_graded_semantics_l2": 2,
+   "attentional_feature_capacity_l2": 2,
+   "l1_specificity_graded_l2": 2,
+   "crowded_s2_graded_l0_l2": 2
+  },
+  "parsimony_k": 1.0,
+  "events": [
+   {
+    "outcome": "seeded",
+    "name": "extension_noisy_graded_semantics_l2"
+   },
+   {
+    "outcome": "seeded",
+    "name": "l1_graded_semantics_l2"
+   },
+   {
+    "outcome": "seeded",
+    "name": "attentional_feature_capacity_l2"
+   },
+   {
+    "outcome": "seeded",
+    "name": "l1_specificity_graded_l2"
+   },
+   {
+    "outcome": "seeded",
+    "name": "crowded_s2_graded_l0_l2"
+   }
+  ],
+  "critique": null,
+  "admission_limit_sec": 1800,
+  "standing": {
+   "extension_noisy_graded_semantics_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20750.896816253662,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -13212.335982084274,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp2": {
+      "elpd_cv": -13975.338019371033,
+      "behind": 733.7487831115723,
+      "dse": 321.3422047405393
+     },
+     "exp3": {
+      "elpd_cv": -6152.611365318298,
+      "behind": 66.1726701259613,
+      "dse": 59.80788573688083
+     }
+    },
+    "sel_elpd": -6152.611365318298,
+    "sel_diff": 66.1726701259613,
+    "sel_dse": 59.80788573688083,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "l1_graded_semantics_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21009.103862524033,
+      "behind": 258.2070462703705,
+      "dse": 47.15445065350148
+     },
+     "exp1": {
+      "elpd_cv": -13326.973809480667,
+      "behind": 114.63782739639282,
+      "dse": 26.889817574639352
+     },
+     "exp2": {
+      "elpd_cv": -13241.687717437744,
+      "behind": 0.0984811782836914,
+      "dse": 2.305432000106088
+     },
+     "exp3": {
+      "elpd_cv": -6120.128348112106,
+      "behind": 33.68965291976929,
+      "dse": 9.20771053298464
+     }
+    },
+    "sel_elpd": -6120.128348112106,
+    "sel_diff": 33.68965291976929,
+    "sel_dse": 9.20771053298464,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "attentional_feature_capacity_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21005.5173227787,
+      "behind": 254.62050652503967,
+      "dse": 47.488766570643946
+     },
+     "exp1": {
+      "elpd_cv": -13324.671933889389,
+      "behind": 112.33595180511475,
+      "dse": 26.942343176685874
+     },
+     "exp2": {
+      "elpd_cv": -13242.085624456406,
+      "behind": 0.49638819694519043,
+      "dse": 1.150980764800173
+     },
+     "exp3": {
+      "elpd_cv": -6099.079409122467,
+      "behind": 12.640713930130005,
+      "dse": 5.737500941435049
+     }
+    },
+    "sel_elpd": -6099.079409122467,
+    "sel_diff": 12.640713930130005,
+    "sel_dse": 5.737500941435049,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "l1_specificity_graded_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20994.089297771454,
+      "behind": 243.19248151779175,
+      "dse": 48.60316022936926
+     },
+     "exp1": {
+      "elpd_cv": -13324.482453346252,
+      "behind": 112.14647126197815,
+      "dse": 27.665256391552095
+     },
+     "exp2": {
+      "elpd_cv": -13241.58923625946,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp3": {
+      "elpd_cv": -6086.438695192337,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": -6086.438695192337,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "crowded_s2_graded_l0_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21064.063421726227,
+      "behind": 313.1666054725647,
+      "dse": 46.093340686998324
+     },
+     "exp1": {
+      "elpd_cv": -13265.05358505249,
+      "behind": 52.71760296821594,
+      "dse": 15.985851592491596
+     },
+     "exp2": {
+      "elpd_cv": -13402.315115451813,
+      "behind": 160.7258791923523,
+      "dse": 104.74896780644056
+     },
+     "exp3": {
+      "elpd_cv": -6169.1413605213165,
+      "behind": 82.70266532897949,
+      "dse": 31.094639237255763
+     }
+    },
+    "sel_elpd": -6169.1413605213165,
+    "sel_diff": 82.70266532897949,
+    "sel_dse": 31.094639237255763,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "extension_noisy_graded_semantics_l2",
+    "hypothesis": "Refining noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by scaling each real word's semantic confusion noise on false objects by the squared proportion of display objects in that word's literal extension: defining ext_size = jnp.sum(real_lex, axis=1, keepdims=True) and replacing sem_noise = 1.0 / (n_utt * n_obj) with sem_noise = (ext_size * ext_size) / (n_utt * n_obj * n_obj), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, fc_safe, graded_true, noisy_real, soft_lex, L0, L1, L2, listener, and speaker) unchanged. Under uniform constant noise across utterances, depth-two pragmatic recursion suppresses false-alarm probabilities on three-of-four valid-referent trials to nearly zero because two levels of speaker likelihood inversion amplify the ratio between valid and false referents. Because a word that spans most of the display induces greater referential crowding and feature-verification interference across objects than a word with a small extension, scaling semantic confusion by the squared extension proportion explains why listeners make substantially more false-alarm choices when a heard word applies to three of four objects than when it applies to two across E and exp1.",
+    "source": "seed"
+   },
+   {
+    "name": "l1_graded_semantics_l2",
+    "hypothesis": "Refining extension_noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by using the literal truth-conditional lexicon ctx.lex in L0 and in the L2 speaker while retaining the noisy graded lexicon soft_lex in the L1 speaker (updating L1 to take true_lex and soft_lex, calling L0[u, r](true_lex) inside L1, and calling L2(params[\"alpha\"], ctx.lex, soft_lex, prior) in listener and speaker), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, listener, and speaker) unchanged. In extension_noisy_graded_semantics_l2, passing soft_lex into L0, L1, and L2 compounds the 1/feature_count feature-dilution penalty three times across recursion levels and assigns positive L2 probability to literally false referents; restricting graded feature dilution and extension-crowding noise to the L1 speaker's lexical verification while keeping L0 and L2 truth-conditional avoids over-penalizing multi-feature valid referents on ambiguous trials and restores exact zero listener probability on literally false referents, closing both the valid-referent feature-count gap and the valid-versus-false referent rating contrast on exp2.",
+    "source": "seed"
+   },
+   {
+    "name": "attentional_feature_capacity_l2",
+    "hypothesis": "Listeners and speakers communicate under capacity-bounded feature attention: each object's pre-linguistic salience combines contextual uniqueness, feature distinctiveness, and non-empty complexity extremity that penalizes empty referents without positive features. When a speaker plans or a listener interprets a word, feature verification is diluted by the object's alternative feature load at the literal and intermediate levels, while high-extension utterances that leave a false distractor induce attentional leakage proportional to the squared valid-referent share, which the top-level speaker filters to true referents except when referential crowding leaks to false distractors.",
+    "source": "seed"
+   },
+   {
+    "name": "l1_specificity_graded_l2",
+    "hypothesis": "Refining l1_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by scaling the L1 speaker's true-feature lexical weight by contextual feature specificity (n_obj / ext_size) so that graded_true = (ctx.lex * n_obj) / (fc_safe * jnp.maximum(ext_size, 1.0)), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, noisy_real, soft_lex, L0, L1, L2, listener, and speaker) unchanged. In l1_graded_semantics_l2, dividing the L1 speaker's lexical weight only by feature count leaves a universal all-true word with the same lexical applicability as a specific two-referent word on multi-feature objects, causing the L1 speaker to strongly avoid the universal word on complex objects and leading L2 to over-predict the rating drop between two-referent and four-referent valid objects in exp2. Weighting L1 lexical access by contextual specificity (n_obj / ext_size) attenuates the feature-dilution advantage of universal words relative to diagnostic words at L1, reducing the L2 penalty on complex valid referents under universal words and closing the extension-size 2-versus-4 rating discrepancy in exp2.",
+    "source": "seed"
+   },
+   {
+    "name": "crowded_s2_graded_l0_l2",
+    "hypothesis": "Refining `r1_c3` with no parameters added or removed (retaining only `alpha` and `w_salience`) and the same recursion depth (`L2` calling `L1`, which calls `L0`), by replacing the `L1` speaker's lexical filter with the literal truth-conditional lexicon `true_lex` while retaining `soft_lex` inside the literal listener `L0` and adding `(1.0 - sem_noise)` to the L2 speaker's lexical filter `true_lex + sem_noise * (1.0 - true_lex)` (updating `L1` to take `true_lex` and `soft_lex` with `wpp=at(true_lex, u, r) * exp(alpha * log(L0[u, r](soft_lex) + {EPS}))`, updating `L2` to take `s2_lex`, `true_lex`, and `soft_lex` with `wpp=at(s2_lex, u, r) * exp(alpha * log(L1[u, r](alpha, true_lex, soft_lex, prior) + {EPS}))`, and defining `s2_real = ctx.lex + sem_noise * (1.0 - ctx.lex)` and `s2_lex = jnp.where(ctx.is_sink[:, None] > 0, ctx.lex, s2_real)` in `compute_lex_and_prior`), while keeping all other terms (`real_mask`, `real_lex`, `diff`, `pair_dist`, `is_singleton`, `distinct`, `n_real`, `fc_norm`, `fc_dev`, `extremity`, `prior`, `n_utt`, `n_obj`, `ext_size`, `sem_noise`, `fc_safe`, `graded_true`, `noisy_real`, `soft_lex`, `L0`, `listener`, and `speaker`) unchanged. When speakers at both pragmatic levels restrict production to true words while extension-scaled referential crowding leaks into the L2 speaker's false-object lexical filter and L0's feature verification, listeners preserve elevated false-alarm probabilities on three-of-four valid-referent trials across E and exp1 while avoiding compounded feature-dilution penalties across L0 and L1 on exp2.",
+    "source": "seed"
+   }
+  ],
+  "ledger_entries": 77
+ },
+ {
+  "step": 1,
+  "round": 0,
+  "best_model": "extension_cost_speaker_l2",
+  "fit_best": "extension_cost_speaker_l2",
+  "n_params": {
+   "extension_noisy_graded_semantics_l2": 2,
+   "l1_graded_semantics_l2": 2,
+   "attentional_feature_capacity_l2": 2,
+   "l1_specificity_graded_l2": 2,
+   "crowded_s2_graded_l0_l2": 2,
+   "discriminative_audience_design_l2": 2,
+   "relative_diagnostic_crowding_l2": 2,
+   "extension_cost_speaker_l2": 2,
+   "literal_speaker_extension_noisy_l2": 2,
+   "literal_competition_speaker_l2": 2,
+   "specificity_noisy_graded_semantics_l2": 2
+  },
+  "parsimony_k": 1.0,
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "discriminative_audience_design_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Speakers and listeners operate under asymmetric perspective-taking: when producing a referring expression for a known target, a speaker evaluates candidate true words directly by their discriminative odds (the ratio of excluded distractors to extension size) alongside literal referential recovery and baseline true-feature retrieval, whereas a listener interpreting a heard word recursively inverts a speaker whose feature verification is diluted by object complexity and crowded by extension size scaled by the maximum of the scene's object and utterance counts. Because production is guided by direct extension discriminability rather than recursive avoidance of low-complexity competitors, speakers in exp3 strongly prefer the narrowest true word even when its sole competitor is a single-feature object, show no bias toward words whose competitors have more unmentioned features, and choose uniformly among scene words when the target has no true features. On comprehension paradigms (E, exp1, and exp2), bounding crowding noise by display size prevents false-referent probability inflation on sparse two-feature displays while preserving false-alarm choices on crowded multi-referent scenes."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "relative_diagnostic_crowding_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret utterances at depth two under an extremity-and-uniqueness salience prior with feature verification diluted by object complexity and false-referent confusion driven strictly by pairwise competition among valid referents in a word's extension, while speakers produce true words according to their target-relative diagnostic contrast (how strongly a word identifies the target and excludes distractors relative to the target's average true feature). This mechanism disagrees most sharply with the incumbent on speaker production displays where a multi-feature target has a narrow two-object feature shared with a simple one-feature competitor and a broader three- or four-object feature shared with complex multi-feature competitors: the incumbent predicts speakers avoid the narrowest feature because inverse feature-count dilution favors the complex competitors, whereas target-relative diagnostic contrast predicts speakers strongly prefer the narrowest true feature and treat equal-extension true features symmetrically regardless of competitor complexity. Simultaneously, because pairwise extension competition vanishes when a word applies to only a single object, listeners assign zero crowding noise on uniquely identifying utterances while preserving elevated false alarms on crowded multi-referent utterances."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "extension_cost_speaker_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Speakers select referring expressions by combining a target object's baseline feature availability (shared equally across its true features) with a pragmatic specificity choice that weights candidate words by their literal referential specificity and penalizes broad extensions proportional to the fraction of display objects sharing the word, while routing featureless targets to the silent unnamed option so forced production over real words is indifferent. Listeners invert this graded-semantics speaker at depth two under a shared salience prior favoring singletons, distinctive objects, and complexity-extreme referents, with extension-scaled referential crowding noise that is further attenuated by the word's extension share at the top-level speaker."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "literal_speaker_extension_noisy_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Refining extension_noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by simplifying speaker(params, ctx) to evaluate the literal truth-conditional listener table = L0(ctx.lex) instead of calling compute_soft_lex_and_prior(ctx, params[\"w_salience\"]) and table = L2(params[\"alpha\"], soft_lex, prior), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, L0, L1, L2, and listener) unchanged. In extension_noisy_graded_semantics_l2, deriving speaker production from L2(alpha, soft_lex, prior) forces speakers to penalize true features shared with single-feature competitors (reversing the preference for narrow extension-2 features over broader extension-3 features when competitors differ in feature count) and biases speakers on featureless targets toward high-extension words via sem_noise. Grounding speaker production directly in literal listener informativeness L0(ctx.lex) while retaining depth-two noisy graded inference in comprehension explains why speakers in exp3 consistently prefer the narrowest true feature regardless of competitor feature counts and respond without extension-crowding bias on featureless targets, while preserving listener false-alarm and choice accuracy across E, exp1, and exp2."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "literal_competition_speaker_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Refining extension_noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (L2 calling L1, which calls L0), by replacing the L2 listener table in speaker(params, ctx) with a direct literal-competition speaker S1 combined with squared graded truth availability: adding @memo def S1[u: UTT, r: OBJ](alpha, lex: ...) where the speaker chooses u in UTT with wpp=at(lex, u, r) * exp(alpha * log(L0[u, r](lex) + {EPS}) - 1.0 / (alpha * L0[u, r](lex) + {EPS})), returning graded_true from compute_soft_lex_and_prior, and in speaker(params, ctx) setting table = S1(params[\"alpha\"], ctx.lex) + graded_true * graded_true, raw = table * real, total = jnp.sum(raw, axis=0, keepdims=True), and weights = jnp.where(total > 0, raw, real), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, L0, L1, L2, and listener) unchanged. In extension_noisy_graded_semantics_l2, deriving speaker production from L2(soft_lex) causes the speaker to favor broader extensions over narrower ones whenever a narrower word's competitor has a low feature count, and to favor the largest-extension false word when the target is featureless. Grounding speaker production in truth-conditional literal informativeness with an extension-competition penalty 1 / (alpha * L0) and baseline graded truth availability explains why speakers strongly prefer the narrowest true word regardless of competitor feature counts, treat tied-extension true words symmetrically, still occasionally produce broader true words without inflating false utterances, and respond uniformly when the target has no true features in exp3."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "specificity_noisy_graded_semantics_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Refining l1_specificity_graded_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by using the specificity-weighted noisy graded lexicon soft_lex across all three recursion levels (removing true_lex from L1 and L2 so L1 calls L0[u, r](soft_lex), L2 weights speaker choices by at(soft_lex, u, r) * exp(alpha * log(L1[u, r](alpha, soft_lex, prior) + {EPS})), and listener and speaker call L2(params[\"alpha\"], soft_lex, prior)) while weighting top-level speaker production in speaker by the truth-conditional specificity-graded lexical applicability ctx.lex * soft_lex (replacing weights = (table + EPS) * real with weights = (ctx.lex * soft_lex * table + EPS) * real) and keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, L0, and listener) unchanged. In l1_specificity_graded_l2, passing ctx.lex to L0 and L2 zeroes out extension-scaled semantic confusion noise on false referents (causing listener false-alarm failures on E and exp1), while normalizing L2(r | u) across utterances in speaker without re-applying the speaker's lexical filter ctx.lex * soft_lex divides out utterance-level specificity (n_obj / ext_size) during L2's object normalization. Propagating soft_lex through L0, L1, and L2 while weighting speaker production by ctx.lex * soft_lex restores extension-scaled false-alarm sensitivity on E and exp1 and preserves utterance specificity in production, resolving the severe under-prediction of smallest-extension true word choices (smallest_true_ext_reversed_graded_l0, smallest_true_ext_aligned_nonunique_rate, non_minimal_true_rate_in_multi_feature_nonunique_targets, and chosen_normalized_ext_in_nonunique_scenes) on exp3."
+   }
+  ],
+  "critique": {
+   "status": "critiqued",
+   "incumbent": "extension_noisy_graded_semantics_l2",
+   "attempts": 1,
+   "dir": "/scratch/users/mcfrank/auto-psych/agent_trees/c849fb19dc228b3a/repo/_runs/chain_0/experiment3/loop/round_1/critique",
+   "block": "exp3",
+   "n_statistics": 8,
+   "n_evaluated": 8,
+   "n_significant": 8,
+   "n_significant_fdr": 8
+  },
+  "admission_limit_sec": 1800,
+  "standing": {
+   "extension_noisy_graded_semantics_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20750.896816253662,
+      "behind": 128.41282057762146,
+      "dse": 53.36264169155417
+     },
+     "exp1": {
+      "elpd_cv": -13212.335982084274,
+      "behind": 55.62336802482605,
+      "dse": 15.768200610093128
+     },
+     "exp2": {
+      "elpd_cv": -13975.338019371033,
+      "behind": 733.7487831115723,
+      "dse": 321.3422047405393
+     },
+     "exp3": {
+      "elpd_cv": -6152.611365318298,
+      "behind": 734.6495945453644,
+      "dse": 146.06844846974553
+     }
+    },
+    "sel_elpd": -6152.611365318298,
+    "sel_diff": 734.6495945453644,
+    "sel_dse": 146.06844846974553,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "l1_graded_semantics_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21009.103862524033,
+      "behind": 386.61986684799194,
+      "dse": 70.19053528563464
+     },
+     "exp1": {
+      "elpd_cv": -13326.973809480667,
+      "behind": 170.26119542121887,
+      "dse": 26.265792305938778
+     },
+     "exp2": {
+      "elpd_cv": -13241.687717437744,
+      "behind": 0.0984811782836914,
+      "dse": 2.305432000106088
+     },
+     "exp3": {
+      "elpd_cv": -6120.128348112106,
+      "behind": 702.1665773391724,
+      "dse": 144.64763420425865
+     }
+    },
+    "sel_elpd": -6120.128348112106,
+    "sel_diff": 702.1665773391724,
+    "sel_dse": 144.64763420425865,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "attentional_feature_capacity_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21005.5173227787,
+      "behind": 383.03332710266113,
+      "dse": 70.17043657995265
+     },
+     "exp1": {
+      "elpd_cv": -13324.671933889389,
+      "behind": 167.9593198299408,
+      "dse": 26.416140993847204
+     },
+     "exp2": {
+      "elpd_cv": -13242.085624456406,
+      "behind": 0.49638819694519043,
+      "dse": 1.150980764800173
+     },
+     "exp3": {
+      "elpd_cv": -6099.079409122467,
+      "behind": 681.1176383495331,
+      "dse": 141.3878770957595
+     }
+    },
+    "sel_elpd": -6099.079409122467,
+    "sel_diff": 681.1176383495331,
+    "sel_dse": 141.3878770957595,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "l1_specificity_graded_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20994.089297771454,
+      "behind": 371.6053020954132,
+      "dse": 69.70853610852076
+     },
+     "exp1": {
+      "elpd_cv": -13324.482453346252,
+      "behind": 167.7698392868042,
+      "dse": 27.22778373634927
+     },
+     "exp2": {
+      "elpd_cv": -13241.58923625946,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp3": {
+      "elpd_cv": -6086.438695192337,
+      "behind": 668.4769244194031,
+      "dse": 139.36664940042607
+     }
+    },
+    "sel_elpd": -6086.438695192337,
+    "sel_diff": 668.4769244194031,
+    "sel_dse": 139.36664940042607,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "crowded_s2_graded_l0_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21064.063421726227,
+      "behind": 441.57942605018616,
+      "dse": 79.02753678676008
+     },
+     "exp1": {
+      "elpd_cv": -13265.05358505249,
+      "behind": 108.34097099304199,
+      "dse": 17.91683113748277
+     },
+     "exp2": {
+      "elpd_cv": -13402.315115451813,
+      "behind": 160.7258791923523,
+      "dse": 104.74896780644056
+     },
+     "exp3": {
+      "elpd_cv": -6169.1413605213165,
+      "behind": 751.1795897483826,
+      "dse": 145.90124282561112
+     }
+    },
+    "sel_elpd": -6169.1413605213165,
+    "sel_diff": 751.1795897483826,
+    "sel_dse": 145.90124282561112,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "discriminative_audience_design_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20654.33846759796,
+      "behind": 31.854471921920776,
+      "dse": 41.62196256701652
+     },
+     "exp1": {
+      "elpd_cv": -13158.765591621399,
+      "behind": 2.0529775619506836,
+      "dse": 2.0645488954808946
+     },
+     "exp2": {
+      "elpd_cv": -13950.54747581482,
+      "behind": 708.9582395553589,
+      "dse": 305.20914573990694
+     },
+     "exp3": {
+      "elpd_cv": -5418.964869260788,
+      "behind": 1.003098487854004,
+      "dse": 9.603836723697977
+     }
+    },
+    "sel_elpd": -5418.964869260788,
+    "sel_diff": 1.003098487854004,
+    "sel_dse": 9.603836723697977,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "relative_diagnostic_crowding_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20787.305914402008,
+      "behind": 164.8219187259674,
+      "dse": 66.45257354923154
+     },
+     "exp1": {
+      "elpd_cv": -13161.880653381348,
+      "behind": 5.168039321899414,
+      "dse": 3.8441541554489014
+     },
+     "exp2": {
+      "elpd_cv": -13703.149096727371,
+      "behind": 461.55986046791077,
+      "dse": 253.17163983012247
+     },
+     "exp3": {
+      "elpd_cv": -5441.253411531448,
+      "behind": 23.291640758514404,
+      "dse": 11.332850483411008
+     }
+    },
+    "sel_elpd": -5441.253411531448,
+    "sel_diff": 23.291640758514404,
+    "sel_dse": 11.332850483411008,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "extension_cost_speaker_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20674.387691020966,
+      "behind": 51.90369534492493,
+      "dse": 49.729108007443564
+     },
+     "exp1": {
+      "elpd_cv": -13156.712614059448,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp2": {
+      "elpd_cv": -13959.752267599106,
+      "behind": 718.1630313396454,
+      "dse": 313.26893938238146
+     },
+     "exp3": {
+      "elpd_cv": -5417.961770772934,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": -5417.961770772934,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "literal_speaker_extension_noisy_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20650.931666612625,
+      "behind": 28.447670936584473,
+      "dse": 41.10830460552397
+     },
+     "exp1": {
+      "elpd_cv": -13158.274030447006,
+      "behind": 1.5614163875579834,
+      "dse": 2.009709130070998
+     },
+     "exp2": {
+      "elpd_cv": -14005.074888706207,
+      "behind": 763.4856524467468,
+      "dse": 328.0651143430767
+     },
+     "exp3": {
+      "elpd_cv": -5492.996221065521,
+      "behind": 75.03445029258728,
+      "dse": 18.92804011634175
+     }
+    },
+    "sel_elpd": -5492.996221065521,
+    "sel_diff": 75.03445029258728,
+    "sel_dse": 18.92804011634175,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "literal_competition_speaker_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20652.743494033813,
+      "behind": 30.259498357772827,
+      "dse": 40.19759743894616
+     },
+     "exp1": {
+      "elpd_cv": -13159.184628486633,
+      "behind": 2.4720144271850586,
+      "dse": 2.3930664147063703
+     },
+     "exp2": {
+      "elpd_cv": -14002.368448734283,
+      "behind": 760.779212474823,
+      "dse": 326.75122228196244
+     },
+     "exp3": {
+      "elpd_cv": -8608.559270858765,
+      "behind": 3190.5975000858307,
+      "dse": 162.53046922009014
+     }
+    },
+    "sel_elpd": -8608.559270858765,
+    "sel_diff": 3190.5975000858307,
+    "sel_dse": 162.53046922009014,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "specificity_noisy_graded_semantics_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20622.48399567604,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -13182.732825040817,
+      "behind": 26.02021098136902,
+      "dse": 18.327098258285602
+     },
+     "exp2": {
+      "elpd_cv": -14127.777908563614,
+      "behind": 886.1886723041534,
+      "dse": 359.88065880076385
+     },
+     "exp3": {
+      "elpd_cv": -5762.2367289066315,
+      "behind": 344.2749581336975,
+      "dse": 83.46174391721179
+     }
+    },
+    "sel_elpd": -5762.2367289066315,
+    "sel_diff": 344.2749581336975,
+    "sel_dse": 83.46174391721179,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "extension_noisy_graded_semantics_l2",
+    "hypothesis": "Refining noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by scaling each real word's semantic confusion noise on false objects by the squared proportion of display objects in that word's literal extension: defining ext_size = jnp.sum(real_lex, axis=1, keepdims=True) and replacing sem_noise = 1.0 / (n_utt * n_obj) with sem_noise = (ext_size * ext_size) / (n_utt * n_obj * n_obj), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, fc_safe, graded_true, noisy_real, soft_lex, L0, L1, L2, listener, and speaker) unchanged. Under uniform constant noise across utterances, depth-two pragmatic recursion suppresses false-alarm probabilities on three-of-four valid-referent trials to nearly zero because two levels of speaker likelihood inversion amplify the ratio between valid and false referents. Because a word that spans most of the display induces greater referential crowding and feature-verification interference across objects than a word with a small extension, scaling semantic confusion by the squared extension proportion explains why listeners make substantially more false-alarm choices when a heard word applies to three of four objects than when it applies to two across E and exp1.",
+    "source": "seed"
+   },
+   {
+    "name": "l1_graded_semantics_l2",
+    "hypothesis": "Refining extension_noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by using the literal truth-conditional lexicon ctx.lex in L0 and in the L2 speaker while retaining the noisy graded lexicon soft_lex in the L1 speaker (updating L1 to take true_lex and soft_lex, calling L0[u, r](true_lex) inside L1, and calling L2(params[\"alpha\"], ctx.lex, soft_lex, prior) in listener and speaker), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, listener, and speaker) unchanged. In extension_noisy_graded_semantics_l2, passing soft_lex into L0, L1, and L2 compounds the 1/feature_count feature-dilution penalty three times across recursion levels and assigns positive L2 probability to literally false referents; restricting graded feature dilution and extension-crowding noise to the L1 speaker's lexical verification while keeping L0 and L2 truth-conditional avoids over-penalizing multi-feature valid referents on ambiguous trials and restores exact zero listener probability on literally false referents, closing both the valid-referent feature-count gap and the valid-versus-false referent rating contrast on exp2.",
+    "source": "seed"
+   },
+   {
+    "name": "attentional_feature_capacity_l2",
+    "hypothesis": "Listeners and speakers communicate under capacity-bounded feature attention: each object's pre-linguistic salience combines contextual uniqueness, feature distinctiveness, and non-empty complexity extremity that penalizes empty referents without positive features. When a speaker plans or a listener interprets a word, feature verification is diluted by the object's alternative feature load at the literal and intermediate levels, while high-extension utterances that leave a false distractor induce attentional leakage proportional to the squared valid-referent share, which the top-level speaker filters to true referents except when referential crowding leaks to false distractors.",
+    "source": "seed"
+   },
+   {
+    "name": "l1_specificity_graded_l2",
+    "hypothesis": "Refining l1_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by scaling the L1 speaker's true-feature lexical weight by contextual feature specificity (n_obj / ext_size) so that graded_true = (ctx.lex * n_obj) / (fc_safe * jnp.maximum(ext_size, 1.0)), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, noisy_real, soft_lex, L0, L1, L2, listener, and speaker) unchanged. In l1_graded_semantics_l2, dividing the L1 speaker's lexical weight only by feature count leaves a universal all-true word with the same lexical applicability as a specific two-referent word on multi-feature objects, causing the L1 speaker to strongly avoid the universal word on complex objects and leading L2 to over-predict the rating drop between two-referent and four-referent valid objects in exp2. Weighting L1 lexical access by contextual specificity (n_obj / ext_size) attenuates the feature-dilution advantage of universal words relative to diagnostic words at L1, reducing the L2 penalty on complex valid referents under universal words and closing the extension-size 2-versus-4 rating discrepancy in exp2.",
+    "source": "seed"
+   },
+   {
+    "name": "crowded_s2_graded_l0_l2",
+    "hypothesis": "Refining `r1_c3` with no parameters added or removed (retaining only `alpha` and `w_salience`) and the same recursion depth (`L2` calling `L1`, which calls `L0`), by replacing the `L1` speaker's lexical filter with the literal truth-conditional lexicon `true_lex` while retaining `soft_lex` inside the literal listener `L0` and adding `(1.0 - sem_noise)` to the L2 speaker's lexical filter `true_lex + sem_noise * (1.0 - true_lex)` (updating `L1` to take `true_lex` and `soft_lex` with `wpp=at(true_lex, u, r) * exp(alpha * log(L0[u, r](soft_lex) + {EPS}))`, updating `L2` to take `s2_lex`, `true_lex`, and `soft_lex` with `wpp=at(s2_lex, u, r) * exp(alpha * log(L1[u, r](alpha, true_lex, soft_lex, prior) + {EPS}))`, and defining `s2_real = ctx.lex + sem_noise * (1.0 - ctx.lex)` and `s2_lex = jnp.where(ctx.is_sink[:, None] > 0, ctx.lex, s2_real)` in `compute_lex_and_prior`), while keeping all other terms (`real_mask`, `real_lex`, `diff`, `pair_dist`, `is_singleton`, `distinct`, `n_real`, `fc_norm`, `fc_dev`, `extremity`, `prior`, `n_utt`, `n_obj`, `ext_size`, `sem_noise`, `fc_safe`, `graded_true`, `noisy_real`, `soft_lex`, `L0`, `listener`, and `speaker`) unchanged. When speakers at both pragmatic levels restrict production to true words while extension-scaled referential crowding leaks into the L2 speaker's false-object lexical filter and L0's feature verification, listeners preserve elevated false-alarm probabilities on three-of-four valid-referent trials across E and exp1 while avoiding compounded feature-dilution penalties across L0 and L1 on exp2.",
+    "source": "seed"
+   },
+   {
+    "name": "discriminative_audience_design_l2",
+    "hypothesis": "Speakers and listeners operate under asymmetric perspective-taking: when producing a referring expression for a known target, a speaker evaluates candidate true words directly by their discriminative odds (the ratio of excluded distractors to extension size) alongside literal referential recovery and baseline true-feature retrieval, whereas a listener interpreting a heard word recursively inverts a speaker whose feature verification is diluted by object complexity and crowded by extension size scaled by the maximum of the scene's object and utterance counts. Because production is guided by direct extension discriminability rather than recursive avoidance of low-complexity competitors, speakers in exp3 strongly prefer the narrowest true word even when its sole competitor is a single-feature object, show no bias toward words whose competitors have more unmentioned features, and choose uniformly among scene words when the target has no true features. On comprehension paradigms (E, exp1, and exp2), bounding crowding noise by display size prevents false-referent probability inflation on sparse two-feature displays while preserving false-alarm choices on crowded multi-referent scenes.",
+    "source": "round 1 candidate 1 explore retry 1"
+   },
+   {
+    "name": "relative_diagnostic_crowding_l2",
+    "hypothesis": "Listeners interpret utterances at depth two under an extremity-and-uniqueness salience prior with feature verification diluted by object complexity and false-referent confusion driven strictly by pairwise competition among valid referents in a word's extension, while speakers produce true words according to their target-relative diagnostic contrast (how strongly a word identifies the target and excludes distractors relative to the target's average true feature). This mechanism disagrees most sharply with the incumbent on speaker production displays where a multi-feature target has a narrow two-object feature shared with a simple one-feature competitor and a broader three- or four-object feature shared with complex multi-feature competitors: the incumbent predicts speakers avoid the narrowest feature because inverse feature-count dilution favors the complex competitors, whereas target-relative diagnostic contrast predicts speakers strongly prefer the narrowest true feature and treat equal-extension true features symmetrically regardless of competitor complexity. Simultaneously, because pairwise extension competition vanishes when a word applies to only a single object, listeners assign zero crowding noise on uniquely identifying utterances while preserving elevated false alarms on crowded multi-referent utterances.",
+    "source": "round 1 candidate 2 explore retry 1"
+   },
+   {
+    "name": "extension_cost_speaker_l2",
+    "hypothesis": "Speakers select referring expressions by combining a target object's baseline feature availability (shared equally across its true features) with a pragmatic specificity choice that weights candidate words by their literal referential specificity and penalizes broad extensions proportional to the fraction of display objects sharing the word, while routing featureless targets to the silent unnamed option so forced production over real words is indifferent. Listeners invert this graded-semantics speaker at depth two under a shared salience prior favoring singletons, distinctive objects, and complexity-extreme referents, with extension-scaled referential crowding noise that is further attenuated by the word's extension share at the top-level speaker.",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "literal_speaker_extension_noisy_l2",
+    "hypothesis": "Refining extension_noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by simplifying speaker(params, ctx) to evaluate the literal truth-conditional listener table = L0(ctx.lex) instead of calling compute_soft_lex_and_prior(ctx, params[\"w_salience\"]) and table = L2(params[\"alpha\"], soft_lex, prior), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, L0, L1, L2, and listener) unchanged. In extension_noisy_graded_semantics_l2, deriving speaker production from L2(alpha, soft_lex, prior) forces speakers to penalize true features shared with single-feature competitors (reversing the preference for narrow extension-2 features over broader extension-3 features when competitors differ in feature count) and biases speakers on featureless targets toward high-extension words via sem_noise. Grounding speaker production directly in literal listener informativeness L0(ctx.lex) while retaining depth-two noisy graded inference in comprehension explains why speakers in exp3 consistently prefer the narrowest true feature regardless of competitor feature counts and respond without extension-crowding bias on featureless targets, while preserving listener false-alarm and choice accuracy across E, exp1, and exp2.",
+    "source": "round 1 candidate 4 refine incumbent extension_noisy_graded_semantics_l2"
+   },
+   {
+    "name": "literal_competition_speaker_l2",
+    "hypothesis": "Refining extension_noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (L2 calling L1, which calls L0), by replacing the L2 listener table in speaker(params, ctx) with a direct literal-competition speaker S1 combined with squared graded truth availability: adding @memo def S1[u: UTT, r: OBJ](alpha, lex: ...) where the speaker chooses u in UTT with wpp=at(lex, u, r) * exp(alpha * log(L0[u, r](lex) + {EPS}) - 1.0 / (alpha * L0[u, r](lex) + {EPS})), returning graded_true from compute_soft_lex_and_prior, and in speaker(params, ctx) setting table = S1(params[\"alpha\"], ctx.lex) + graded_true * graded_true, raw = table * real, total = jnp.sum(raw, axis=0, keepdims=True), and weights = jnp.where(total > 0, raw, real), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, L0, L1, L2, and listener) unchanged. In extension_noisy_graded_semantics_l2, deriving speaker production from L2(soft_lex) causes the speaker to favor broader extensions over narrower ones whenever a narrower word's competitor has a low feature count, and to favor the largest-extension false word when the target is featureless. Grounding speaker production in truth-conditional literal informativeness with an extension-competition penalty 1 / (alpha * L0) and baseline graded truth availability explains why speakers strongly prefer the narrowest true word regardless of competitor feature counts, treat tied-extension true words symmetrically, still occasionally produce broader true words without inflating false utterances, and respond uniformly when the target has no true features in exp3.",
+    "source": "round 1 candidate 5 refine incumbent extension_noisy_graded_semantics_l2"
+   },
+   {
+    "name": "specificity_noisy_graded_semantics_l2",
+    "hypothesis": "Refining l1_specificity_graded_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by using the specificity-weighted noisy graded lexicon soft_lex across all three recursion levels (removing true_lex from L1 and L2 so L1 calls L0[u, r](soft_lex), L2 weights speaker choices by at(soft_lex, u, r) * exp(alpha * log(L1[u, r](alpha, soft_lex, prior) + {EPS})), and listener and speaker call L2(params[\"alpha\"], soft_lex, prior)) while weighting top-level speaker production in speaker by the truth-conditional specificity-graded lexical applicability ctx.lex * soft_lex (replacing weights = (table + EPS) * real with weights = (ctx.lex * soft_lex * table + EPS) * real) and keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, L0, and listener) unchanged. In l1_specificity_graded_l2, passing ctx.lex to L0 and L2 zeroes out extension-scaled semantic confusion noise on false referents (causing listener false-alarm failures on E and exp1), while normalizing L2(r | u) across utterances in speaker without re-applying the speaker's lexical filter ctx.lex * soft_lex divides out utterance-level specificity (n_obj / ext_size) during L2's object normalization. Propagating soft_lex through L0, L1, and L2 while weighting speaker production by ctx.lex * soft_lex restores extension-scaled false-alarm sensitivity on E and exp1 and preserves utterance specificity in production, resolving the severe under-prediction of smallest-extension true word choices (smallest_true_ext_reversed_graded_l0, smallest_true_ext_aligned_nonunique_rate, non_minimal_true_rate_in_multi_feature_nonunique_targets, and chosen_normalized_ext_in_nonunique_scenes) on exp3.",
+    "source": "round 1 candidate 6 refine chosen"
+   }
+  ],
+  "ledger_entries": 83
+ },
+ {
+  "step": 2,
+  "round": 1,
+  "best_model": "graded_lexical_uncertainty_l2",
+  "fit_best": "graded_lexical_uncertainty_l2",
+  "n_params": {
+   "extension_noisy_graded_semantics_l2": 2,
+   "l1_graded_semantics_l2": 2,
+   "attentional_feature_capacity_l2": 2,
+   "l1_specificity_graded_l2": 2,
+   "crowded_s2_graded_l0_l2": 2,
+   "discriminative_audience_design_l2": 2,
+   "relative_diagnostic_crowding_l2": 2,
+   "extension_cost_speaker_l2": 2,
+   "literal_speaker_extension_noisy_l2": 2,
+   "literal_competition_speaker_l2": 2,
+   "specificity_noisy_graded_semantics_l2": 2,
+   "communicative_prior_pragmatic_speaker_l2": 2,
+   "attentional_capacity_verification_l2": 2,
+   "graded_lexical_uncertainty_l2": 2,
+   "graded_specificity_availability_l2": 2,
+   "graded_competitor_extension_cost_l2": 2,
+   "attentional_focus_discriminative_l2": 2
+  },
+  "parsimony_k": 1.0,
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "communicative_prior_pragmatic_speaker_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners and speakers share a pre-linguistic expectation over referents grounded in communicative topic worthiness: before hearing a word, people expect speakers to talk about objects that are contextually unique, perceptually distinct, extreme in feature complexity, and identifiable by a concise, non-redundant feature profile rather than crowded, overlapping features. In comprehension, a depth-two pragmatic listener integrates this communicative prior with graded, specificity-modulated feature verification and extension-scaled referential crowding; in production, a speaker selects true words by combining baseline feature availability with pragmatic utility against a depth-one listener who weighs referential recovery against extension redundancy and competitor feature alternatives."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "attentional_capacity_verification_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners and speakers communicate under capacity-bounded feature attention: verifying a feature on an object divides attention across the object's features while crowding false distractors in proportion to pairwise competition among the utterance's referents, attenuated at the top listener level by the utterance's extension share. When producing an utterance for a target, a speaker evaluates candidate words against a capacity-bounded literal listener whose feature verification grants an attentional-focus bonus inversely proportional to each object's feature load, combining a quadratic extension-cost pragmatic choice with extension-crowded feature availability strengthened by literal recovery. Because single-feature distractors capture stronger attentional focus than multi-feature distractors during literal verification, speakers prefer narrower words more strongly when shared with multi-feature distractors than with single-feature distractors, while literal-recovery-boosted, extension-crowded availability elevates runner-up narrow features over broader and universal words on complex targets."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "graded_lexical_uncertainty_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners and speakers communicate under graded lexical uncertainty in which a word's meaning is diluted across an object's competing features and subject to referential crowding across the scene. When producing a referring expression for a target object, speakers integrate pragmatic specificity selection with uncertain-lexicon referential retrieval, weighting candidate words both by how strongly a pragmatic listener recovers the target from its discriminative extension and by how reliably a literal listener operating over feature-diluted word meanings identifies the target among competing referents. When interpreting a heard word, listeners invert this graded-semantics speaker at recursion depth two under a shared salience prior favoring contextual singletons, distinctive objects, and complexity-extreme referents, with false-referent confusion noise bounded by display size and attenuated at the top-level speaker by the word's non-universal contrast."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "graded_specificity_availability_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Refining extension_cost_speaker_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by weighting the top-level production speaker's baseline feature availability in S_prod by the literal graded-semantics listener recovery probability L0[u, r](graded_true) so that S_prod chooses u in UTT with wpp=S1[u, r](alpha, true_lex, spec_lex, ext_share) + at(graded_true, u, r) * L0[u, r](graded_true), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, sem_noise, fc_safe, graded_true, spec_lex, noisy_real, s2_real, soft_lex, s2_lex, L0, L1, L2, S1, listener, and speaker) unchanged. In extension_cost_speaker_l2, adding unmodulated baseline feature availability at(graded_true, u, r) to S1 assigns the same baseline floor 1 / feature_count to every true feature of the target regardless of extension size or distractor complexity, which flattens the choice rate between runner-up (extension-2) and broader (extension-3+) features on targets that have a uniquely identifying feature, inflates globally redundant universal feature choices, and ignores whether distractors sharing a narrower feature have alternative features. Modulating baseline feature availability by L0[u, r](graded_true) preserves extension-graded specificity among suboptimal true features, suppresses universal feature production, and favors narrower features when their distractors are multi-feature objects whose feature load dilutes their competing availability in exp3."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "graded_competitor_extension_cost_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Refining extension_cost_speaker_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by replacing the pragmatic production speaker S1 with a two-level recursive production speaker where S1 chooses utterances with wpp=at(graded_true, u, r) * exp(alpha * log(L0[u, r](true_lex) + {EPS})) and S_prod mixes S2 (which chooses utterances with wpp=at(spec_lex, u, r) * exp((1.0 + alpha) * (log(L0[u, r](S1(alpha, true_lex, graded_true)) + {EPS}) - vec(ext_share, u)))) with baseline feature availability at(graded_true, u, r), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, sem_noise, fc_safe, graded_true, spec_lex, noisy_real, s2_real, soft_lex, s2_lex, L0, L1, L2, and listener) unchanged. In extension_cost_speaker_l2, evaluating S1 against the flat truth-conditional literal listener L0(true_lex) ignores whether distractors sharing a candidate word possess alternative features and gives extension-2 runner-up features nearly zero pragmatic probability alongside broader features whenever a unique extension-1 feature exists. Conditioning speaker production on an intermediate speaker S1 whose feature choice is diluted by object complexity (1 / feature_count) while weighting top-level choices by literal specificity (spec_lex) and extension cost (ext_share) explains why speakers in exp3 prefer narrower features more strongly when their distractors have multiple alternative features, prefer runner-up extension-2 features over broader extension-3+ features on targets with a unique feature, and avoid globally redundant universal features."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "attentional_focus_discriminative_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Refining discriminative_audience_design_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by evaluating speaker production against an attentional-focus literal listener L0(focus_lex) with extension-share crowding cost and literal-recovery-modulated baseline availability: defining focus_lex = ctx.lex + graded_true and ext_share = (ext_size[:, 0] / n_obj) * (1.0 - ctx.is_sink) in compute_representations, updating S1_disc[u: UTT, r: OBJ](alpha, focus_lex: ..., spec_lex: ..., ext_share: ...) so the speaker chooses u in UTT with wpp=at(spec_lex, u, r) * exp(alpha * log(L0[u, r](focus_lex) + {EPS}) - vec(ext_share, u)), and setting raw_spk = (disc_probs + true_avail * (1.0 + L0(focus_lex))) * real_mask in speaker(params, ctx), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, denom_scale, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, ext_safe, disc_odds, spec_real, spec_lex, true_avail, L0, L1, L2, and listener) unchanged. In discriminative_audience_design_l2, evaluating S1_disc against the flat truth-conditional listener L0(ctx.lex) with unmodulated baseline availability true_avail ignores competitor feature counts (predicting identical narrow-feature preference whether a shared distractor has one feature or multiple features) and gives equal baseline retrieval weight to suboptimal and universal features regardless of extension size. Grounding speaker evaluation in L0(ctx.lex + graded_true) with extension-share cost and recovery-boosted availability true_avail * (1.0 + L0(focus_lex)) explains why speakers in exp3 prefer narrower features more strongly when shared with multi-feature distractors than with single-feature distractors, maintain specificity gradation between extension-2 and broader suboptimal features on complex targets, and suppress globally redundant universal features."
+   }
+  ],
+  "critique": {
+   "status": "critiqued",
+   "incumbent": "extension_cost_speaker_l2",
+   "attempts": 1,
+   "dir": "/scratch/users/mcfrank/auto-psych/agent_trees/c849fb19dc228b3a/repo/_runs/chain_0/experiment3/loop/round_2/critique",
+   "block": "exp3",
+   "n_statistics": 8,
+   "n_evaluated": 8,
+   "n_significant": 5,
+   "n_significant_fdr": 3
+  },
+  "admission_limit_sec": 1800,
+  "standing": {
+   "extension_noisy_graded_semantics_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20750.896816253662,
+      "behind": 128.41282057762146,
+      "dse": 53.36264169155417
+     },
+     "exp1": {
+      "elpd_cv": -13212.335982084274,
+      "behind": 55.78279995918274,
+      "dse": 16.087284538611637
+     },
+     "exp2": {
+      "elpd_cv": -13975.338019371033,
+      "behind": 733.7487831115723,
+      "dse": 321.3422047405393
+     },
+     "exp3": {
+      "elpd_cv": -6152.611365318298,
+      "behind": 754.1878139972687,
+      "dse": 143.99420158883714
+     }
+    },
+    "sel_elpd": -6152.611365318298,
+    "sel_diff": 754.1878139972687,
+    "sel_dse": 143.99420158883714,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "l1_graded_semantics_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21009.103862524033,
+      "behind": 386.61986684799194,
+      "dse": 70.19053528563464
+     },
+     "exp1": {
+      "elpd_cv": -13326.973809480667,
+      "behind": 170.42062735557556,
+      "dse": 26.353448248472972
+     },
+     "exp2": {
+      "elpd_cv": -13241.687717437744,
+      "behind": 0.0984811782836914,
+      "dse": 2.305432000106088
+     },
+     "exp3": {
+      "elpd_cv": -6120.128348112106,
+      "behind": 721.7047967910767,
+      "dse": 142.57502630362154
+     }
+    },
+    "sel_elpd": -6120.128348112106,
+    "sel_diff": 721.7047967910767,
+    "sel_dse": 142.57502630362154,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "attentional_feature_capacity_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21005.5173227787,
+      "behind": 383.03332710266113,
+      "dse": 70.17043657995265
+     },
+     "exp1": {
+      "elpd_cv": -13324.671933889389,
+      "behind": 168.11875176429749,
+      "dse": 26.49608292949334
+     },
+     "exp2": {
+      "elpd_cv": -13242.085624456406,
+      "behind": 0.49638819694519043,
+      "dse": 1.150980764800173
+     },
+     "exp3": {
+      "elpd_cv": -6099.079409122467,
+      "behind": 700.6558578014374,
+      "dse": 139.29366904434897
+     }
+    },
+    "sel_elpd": -6099.079409122467,
+    "sel_diff": 700.6558578014374,
+    "sel_dse": 139.29366904434897,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "l1_specificity_graded_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20994.089297771454,
+      "behind": 371.6053020954132,
+      "dse": 69.70853610852076
+     },
+     "exp1": {
+      "elpd_cv": -13324.482453346252,
+      "behind": 167.9292712211609,
+      "dse": 27.30178283812712
+     },
+     "exp2": {
+      "elpd_cv": -13241.58923625946,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp3": {
+      "elpd_cv": -6086.438695192337,
+      "behind": 688.0151438713074,
+      "dse": 137.25255827641314
+     }
+    },
+    "sel_elpd": -6086.438695192337,
+    "sel_diff": 688.0151438713074,
+    "sel_dse": 137.25255827641314,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "crowded_s2_graded_l0_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21064.063421726227,
+      "behind": 441.57942605018616,
+      "dse": 79.02753678676008
+     },
+     "exp1": {
+      "elpd_cv": -13265.05358505249,
+      "behind": 108.50040292739868,
+      "dse": 18.14198704154479
+     },
+     "exp2": {
+      "elpd_cv": -13402.315115451813,
+      "behind": 160.7258791923523,
+      "dse": 104.74896780644056
+     },
+     "exp3": {
+      "elpd_cv": -6169.1413605213165,
+      "behind": 770.7178092002869,
+      "dse": 143.71185751802085
+     }
+    },
+    "sel_elpd": -6169.1413605213165,
+    "sel_diff": 770.7178092002869,
+    "sel_dse": 143.71185751802085,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "discriminative_audience_design_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20654.33846759796,
+      "behind": 31.854471921920776,
+      "dse": 41.62196256701652
+     },
+     "exp1": {
+      "elpd_cv": -13158.765591621399,
+      "behind": 2.212409496307373,
+      "dse": 1.978191135503887
+     },
+     "exp2": {
+      "elpd_cv": -13950.54747581482,
+      "behind": 708.9582395553589,
+      "dse": 305.20914573990694
+     },
+     "exp3": {
+      "elpd_cv": -5418.964869260788,
+      "behind": 20.5413179397583,
+      "dse": 7.089599836622097
+     }
+    },
+    "sel_elpd": -5418.964869260788,
+    "sel_diff": 20.5413179397583,
+    "sel_dse": 7.089599836622097,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "relative_diagnostic_crowding_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20787.305914402008,
+      "behind": 164.8219187259674,
+      "dse": 66.45257354923154
+     },
+     "exp1": {
+      "elpd_cv": -13161.880653381348,
+      "behind": 5.3274712562561035,
+      "dse": 3.685836246755794
+     },
+     "exp2": {
+      "elpd_cv": -13703.149096727371,
+      "behind": 461.55986046791077,
+      "dse": 253.17163983012247
+     },
+     "exp3": {
+      "elpd_cv": -5441.253411531448,
+      "behind": 42.8298602104187,
+      "dse": 11.499819700055639
+     }
+    },
+    "sel_elpd": -5441.253411531448,
+    "sel_diff": 42.8298602104187,
+    "sel_dse": 11.499819700055639,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "extension_cost_speaker_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20674.387691020966,
+      "behind": 51.90369534492493,
+      "dse": 49.729108007443564
+     },
+     "exp1": {
+      "elpd_cv": -13156.712614059448,
+      "behind": 0.15943193435668945,
+      "dse": 0.47821533353016177
+     },
+     "exp2": {
+      "elpd_cv": -13959.752267599106,
+      "behind": 718.1630313396454,
+      "dse": 313.26893938238146
+     },
+     "exp3": {
+      "elpd_cv": -5417.961770772934,
+      "behind": 19.538219451904297,
+      "dse": 9.677421949716281
+     }
+    },
+    "sel_elpd": -5417.961770772934,
+    "sel_diff": 19.538219451904297,
+    "sel_dse": 9.677421949716281,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "literal_speaker_extension_noisy_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20650.931666612625,
+      "behind": 28.447670936584473,
+      "dse": 41.10830460552397
+     },
+     "exp1": {
+      "elpd_cv": -13158.274030447006,
+      "behind": 1.7208483219146729,
+      "dse": 1.9981723605935882
+     },
+     "exp2": {
+      "elpd_cv": -14005.074888706207,
+      "behind": 763.4856524467468,
+      "dse": 328.0651143430767
+     },
+     "exp3": {
+      "elpd_cv": -5492.996221065521,
+      "behind": 94.57266974449158,
+      "dse": 16.86235605677305
+     }
+    },
+    "sel_elpd": -5492.996221065521,
+    "sel_diff": 94.57266974449158,
+    "sel_dse": 16.86235605677305,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "literal_competition_speaker_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20652.743494033813,
+      "behind": 30.259498357772827,
+      "dse": 40.19759743894616
+     },
+     "exp1": {
+      "elpd_cv": -13159.184628486633,
+      "behind": 2.631446361541748,
+      "dse": 2.5237601825055225
+     },
+     "exp2": {
+      "elpd_cv": -14002.368448734283,
+      "behind": 760.779212474823,
+      "dse": 326.75122228196244
+     },
+     "exp3": {
+      "elpd_cv": -8608.559270858765,
+      "behind": 3210.135719537735,
+      "dse": 164.3380969540259
+     }
+    },
+    "sel_elpd": -8608.559270858765,
+    "sel_diff": 3210.135719537735,
+    "sel_dse": 164.3380969540259,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "specificity_noisy_graded_semantics_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20622.48399567604,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -13182.732825040817,
+      "behind": 26.179642915725708,
+      "dse": 18.46921036219998
+     },
+     "exp2": {
+      "elpd_cv": -14127.777908563614,
+      "behind": 886.1886723041534,
+      "dse": 359.88065880076385
+     },
+     "exp3": {
+      "elpd_cv": -5762.2367289066315,
+      "behind": 363.8131775856018,
+      "dse": 81.16777311286653
+     }
+    },
+    "sel_elpd": -5762.2367289066315,
+    "sel_diff": 363.8131775856018,
+    "sel_dse": 81.16777311286653,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "communicative_prior_pragmatic_speaker_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20657.12776207924,
+      "behind": 34.64376640319824,
+      "dse": 58.18159770776316
+     },
+     "exp1": {
+      "elpd_cv": -13178.727372646332,
+      "behind": 22.174190521240234,
+      "dse": 10.37023373485785
+     },
+     "exp2": {
+      "elpd_cv": -13875.265690088272,
+      "behind": 633.6764538288116,
+      "dse": 279.76795203982425
+     },
+     "exp3": {
+      "elpd_cv": -5402.99378657341,
+      "behind": 4.570235252380371,
+      "dse": 5.480981528603815
+     }
+    },
+    "sel_elpd": -5402.99378657341,
+    "sel_diff": 4.570235252380371,
+    "sel_dse": 5.480981528603815,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "attentional_capacity_verification_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20798.170215129852,
+      "behind": 175.68621945381165,
+      "dse": 70.210767235686
+     },
+     "exp1": {
+      "elpd_cv": -13168.58503293991,
+      "behind": 12.031850814819336,
+      "dse": 5.896690739703788
+     },
+     "exp2": {
+      "elpd_cv": -13683.699270248413,
+      "behind": 442.11003398895264,
+      "dse": 247.0147374487124
+     },
+     "exp3": {
+      "elpd_cv": -5398.700213670731,
+      "behind": 0.27666234970092773,
+      "dse": 6.319146293843312
+     }
+    },
+    "sel_elpd": -5398.700213670731,
+    "sel_diff": 0.27666234970092773,
+    "sel_dse": 6.319146293843312,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "graded_lexical_uncertainty_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20676.569501638412,
+      "behind": 54.085505962371826,
+      "dse": 50.15680918230879
+     },
+     "exp1": {
+      "elpd_cv": -13156.739807128906,
+      "behind": 0.18662500381469727,
+      "dse": 1.4057430665026411
+     },
+     "exp2": {
+      "elpd_cv": -13910.91449022293,
+      "behind": 669.3252539634705,
+      "dse": 291.7577553318165
+     },
+     "exp3": {
+      "elpd_cv": -5398.42355132103,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": -5398.42355132103,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "graded_specificity_availability_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20673.207313776016,
+      "behind": 50.723318099975586,
+      "dse": 49.93100901017489
+     },
+     "exp1": {
+      "elpd_cv": -13156.553182125092,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp2": {
+      "elpd_cv": -13961.035145044327,
+      "behind": 719.4459087848663,
+      "dse": 313.7761592674316
+     },
+     "exp3": {
+      "elpd_cv": -5430.869961261749,
+      "behind": 32.446409940719604,
+      "dse": 8.12361035883317
+     }
+    },
+    "sel_elpd": -5430.869961261749,
+    "sel_diff": 32.446409940719604,
+    "sel_dse": 8.12361035883317,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "graded_competitor_extension_cost_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20673.922519207,
+      "behind": 51.43852353096008,
+      "dse": 49.74858374421954
+     },
+     "exp1": {
+      "elpd_cv": -13156.809389591217,
+      "behind": 0.2562074661254883,
+      "dse": 0.4325857562711337
+     },
+     "exp2": {
+      "elpd_cv": -13959.848354578018,
+      "behind": 718.2591183185577,
+      "dse": 312.92843379604017
+     },
+     "exp3": {
+      "elpd_cv": -5533.515302181244,
+      "behind": 135.09175086021423,
+      "dse": 31.512539366588886
+     }
+    },
+    "sel_elpd": -5533.515302181244,
+    "sel_diff": 135.09175086021423,
+    "sel_dse": 31.512539366588886,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "attentional_focus_discriminative_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20654.59261059761,
+      "behind": 32.108614921569824,
+      "dse": 41.45076282743715
+     },
+     "exp1": {
+      "elpd_cv": -13158.263922929764,
+      "behind": 1.7107408046722412,
+      "dse": 2.031716256154063
+     },
+     "exp2": {
+      "elpd_cv": -13950.708889484406,
+      "behind": 709.1196532249451,
+      "dse": 305.31368670818284
+     },
+     "exp3": {
+      "elpd_cv": -5411.882457017899,
+      "behind": 13.458905696868896,
+      "dse": 5.56494769363787
+     }
+    },
+    "sel_elpd": -5411.882457017899,
+    "sel_diff": 13.458905696868896,
+    "sel_dse": 5.56494769363787,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "extension_noisy_graded_semantics_l2",
+    "hypothesis": "Refining noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by scaling each real word's semantic confusion noise on false objects by the squared proportion of display objects in that word's literal extension: defining ext_size = jnp.sum(real_lex, axis=1, keepdims=True) and replacing sem_noise = 1.0 / (n_utt * n_obj) with sem_noise = (ext_size * ext_size) / (n_utt * n_obj * n_obj), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, fc_safe, graded_true, noisy_real, soft_lex, L0, L1, L2, listener, and speaker) unchanged. Under uniform constant noise across utterances, depth-two pragmatic recursion suppresses false-alarm probabilities on three-of-four valid-referent trials to nearly zero because two levels of speaker likelihood inversion amplify the ratio between valid and false referents. Because a word that spans most of the display induces greater referential crowding and feature-verification interference across objects than a word with a small extension, scaling semantic confusion by the squared extension proportion explains why listeners make substantially more false-alarm choices when a heard word applies to three of four objects than when it applies to two across E and exp1.",
+    "source": "seed"
+   },
+   {
+    "name": "l1_graded_semantics_l2",
+    "hypothesis": "Refining extension_noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by using the literal truth-conditional lexicon ctx.lex in L0 and in the L2 speaker while retaining the noisy graded lexicon soft_lex in the L1 speaker (updating L1 to take true_lex and soft_lex, calling L0[u, r](true_lex) inside L1, and calling L2(params[\"alpha\"], ctx.lex, soft_lex, prior) in listener and speaker), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, listener, and speaker) unchanged. In extension_noisy_graded_semantics_l2, passing soft_lex into L0, L1, and L2 compounds the 1/feature_count feature-dilution penalty three times across recursion levels and assigns positive L2 probability to literally false referents; restricting graded feature dilution and extension-crowding noise to the L1 speaker's lexical verification while keeping L0 and L2 truth-conditional avoids over-penalizing multi-feature valid referents on ambiguous trials and restores exact zero listener probability on literally false referents, closing both the valid-referent feature-count gap and the valid-versus-false referent rating contrast on exp2.",
+    "source": "seed"
+   },
+   {
+    "name": "attentional_feature_capacity_l2",
+    "hypothesis": "Listeners and speakers communicate under capacity-bounded feature attention: each object's pre-linguistic salience combines contextual uniqueness, feature distinctiveness, and non-empty complexity extremity that penalizes empty referents without positive features. When a speaker plans or a listener interprets a word, feature verification is diluted by the object's alternative feature load at the literal and intermediate levels, while high-extension utterances that leave a false distractor induce attentional leakage proportional to the squared valid-referent share, which the top-level speaker filters to true referents except when referential crowding leaks to false distractors.",
+    "source": "seed"
+   },
+   {
+    "name": "l1_specificity_graded_l2",
+    "hypothesis": "Refining l1_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by scaling the L1 speaker's true-feature lexical weight by contextual feature specificity (n_obj / ext_size) so that graded_true = (ctx.lex * n_obj) / (fc_safe * jnp.maximum(ext_size, 1.0)), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, noisy_real, soft_lex, L0, L1, L2, listener, and speaker) unchanged. In l1_graded_semantics_l2, dividing the L1 speaker's lexical weight only by feature count leaves a universal all-true word with the same lexical applicability as a specific two-referent word on multi-feature objects, causing the L1 speaker to strongly avoid the universal word on complex objects and leading L2 to over-predict the rating drop between two-referent and four-referent valid objects in exp2. Weighting L1 lexical access by contextual specificity (n_obj / ext_size) attenuates the feature-dilution advantage of universal words relative to diagnostic words at L1, reducing the L2 penalty on complex valid referents under universal words and closing the extension-size 2-versus-4 rating discrepancy in exp2.",
+    "source": "seed"
+   },
+   {
+    "name": "crowded_s2_graded_l0_l2",
+    "hypothesis": "Refining `r1_c3` with no parameters added or removed (retaining only `alpha` and `w_salience`) and the same recursion depth (`L2` calling `L1`, which calls `L0`), by replacing the `L1` speaker's lexical filter with the literal truth-conditional lexicon `true_lex` while retaining `soft_lex` inside the literal listener `L0` and adding `(1.0 - sem_noise)` to the L2 speaker's lexical filter `true_lex + sem_noise * (1.0 - true_lex)` (updating `L1` to take `true_lex` and `soft_lex` with `wpp=at(true_lex, u, r) * exp(alpha * log(L0[u, r](soft_lex) + {EPS}))`, updating `L2` to take `s2_lex`, `true_lex`, and `soft_lex` with `wpp=at(s2_lex, u, r) * exp(alpha * log(L1[u, r](alpha, true_lex, soft_lex, prior) + {EPS}))`, and defining `s2_real = ctx.lex + sem_noise * (1.0 - ctx.lex)` and `s2_lex = jnp.where(ctx.is_sink[:, None] > 0, ctx.lex, s2_real)` in `compute_lex_and_prior`), while keeping all other terms (`real_mask`, `real_lex`, `diff`, `pair_dist`, `is_singleton`, `distinct`, `n_real`, `fc_norm`, `fc_dev`, `extremity`, `prior`, `n_utt`, `n_obj`, `ext_size`, `sem_noise`, `fc_safe`, `graded_true`, `noisy_real`, `soft_lex`, `L0`, `listener`, and `speaker`) unchanged. When speakers at both pragmatic levels restrict production to true words while extension-scaled referential crowding leaks into the L2 speaker's false-object lexical filter and L0's feature verification, listeners preserve elevated false-alarm probabilities on three-of-four valid-referent trials across E and exp1 while avoiding compounded feature-dilution penalties across L0 and L1 on exp2.",
+    "source": "seed"
+   },
+   {
+    "name": "discriminative_audience_design_l2",
+    "hypothesis": "Speakers and listeners operate under asymmetric perspective-taking: when producing a referring expression for a known target, a speaker evaluates candidate true words directly by their discriminative odds (the ratio of excluded distractors to extension size) alongside literal referential recovery and baseline true-feature retrieval, whereas a listener interpreting a heard word recursively inverts a speaker whose feature verification is diluted by object complexity and crowded by extension size scaled by the maximum of the scene's object and utterance counts. Because production is guided by direct extension discriminability rather than recursive avoidance of low-complexity competitors, speakers in exp3 strongly prefer the narrowest true word even when its sole competitor is a single-feature object, show no bias toward words whose competitors have more unmentioned features, and choose uniformly among scene words when the target has no true features. On comprehension paradigms (E, exp1, and exp2), bounding crowding noise by display size prevents false-referent probability inflation on sparse two-feature displays while preserving false-alarm choices on crowded multi-referent scenes.",
+    "source": "round 1 candidate 1 explore retry 1"
+   },
+   {
+    "name": "relative_diagnostic_crowding_l2",
+    "hypothesis": "Listeners interpret utterances at depth two under an extremity-and-uniqueness salience prior with feature verification diluted by object complexity and false-referent confusion driven strictly by pairwise competition among valid referents in a word's extension, while speakers produce true words according to their target-relative diagnostic contrast (how strongly a word identifies the target and excludes distractors relative to the target's average true feature). This mechanism disagrees most sharply with the incumbent on speaker production displays where a multi-feature target has a narrow two-object feature shared with a simple one-feature competitor and a broader three- or four-object feature shared with complex multi-feature competitors: the incumbent predicts speakers avoid the narrowest feature because inverse feature-count dilution favors the complex competitors, whereas target-relative diagnostic contrast predicts speakers strongly prefer the narrowest true feature and treat equal-extension true features symmetrically regardless of competitor complexity. Simultaneously, because pairwise extension competition vanishes when a word applies to only a single object, listeners assign zero crowding noise on uniquely identifying utterances while preserving elevated false alarms on crowded multi-referent utterances.",
+    "source": "round 1 candidate 2 explore retry 1"
+   },
+   {
+    "name": "extension_cost_speaker_l2",
+    "hypothesis": "Speakers select referring expressions by combining a target object's baseline feature availability (shared equally across its true features) with a pragmatic specificity choice that weights candidate words by their literal referential specificity and penalizes broad extensions proportional to the fraction of display objects sharing the word, while routing featureless targets to the silent unnamed option so forced production over real words is indifferent. Listeners invert this graded-semantics speaker at depth two under a shared salience prior favoring singletons, distinctive objects, and complexity-extreme referents, with extension-scaled referential crowding noise that is further attenuated by the word's extension share at the top-level speaker.",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "literal_speaker_extension_noisy_l2",
+    "hypothesis": "Refining extension_noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by simplifying speaker(params, ctx) to evaluate the literal truth-conditional listener table = L0(ctx.lex) instead of calling compute_soft_lex_and_prior(ctx, params[\"w_salience\"]) and table = L2(params[\"alpha\"], soft_lex, prior), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, L0, L1, L2, and listener) unchanged. In extension_noisy_graded_semantics_l2, deriving speaker production from L2(alpha, soft_lex, prior) forces speakers to penalize true features shared with single-feature competitors (reversing the preference for narrow extension-2 features over broader extension-3 features when competitors differ in feature count) and biases speakers on featureless targets toward high-extension words via sem_noise. Grounding speaker production directly in literal listener informativeness L0(ctx.lex) while retaining depth-two noisy graded inference in comprehension explains why speakers in exp3 consistently prefer the narrowest true feature regardless of competitor feature counts and respond without extension-crowding bias on featureless targets, while preserving listener false-alarm and choice accuracy across E, exp1, and exp2.",
+    "source": "round 1 candidate 4 refine incumbent extension_noisy_graded_semantics_l2"
+   },
+   {
+    "name": "literal_competition_speaker_l2",
+    "hypothesis": "Refining extension_noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (L2 calling L1, which calls L0), by replacing the L2 listener table in speaker(params, ctx) with a direct literal-competition speaker S1 combined with squared graded truth availability: adding @memo def S1[u: UTT, r: OBJ](alpha, lex: ...) where the speaker chooses u in UTT with wpp=at(lex, u, r) * exp(alpha * log(L0[u, r](lex) + {EPS}) - 1.0 / (alpha * L0[u, r](lex) + {EPS})), returning graded_true from compute_soft_lex_and_prior, and in speaker(params, ctx) setting table = S1(params[\"alpha\"], ctx.lex) + graded_true * graded_true, raw = table * real, total = jnp.sum(raw, axis=0, keepdims=True), and weights = jnp.where(total > 0, raw, real), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, L0, L1, L2, and listener) unchanged. In extension_noisy_graded_semantics_l2, deriving speaker production from L2(soft_lex) causes the speaker to favor broader extensions over narrower ones whenever a narrower word's competitor has a low feature count, and to favor the largest-extension false word when the target is featureless. Grounding speaker production in truth-conditional literal informativeness with an extension-competition penalty 1 / (alpha * L0) and baseline graded truth availability explains why speakers strongly prefer the narrowest true word regardless of competitor feature counts, treat tied-extension true words symmetrically, still occasionally produce broader true words without inflating false utterances, and respond uniformly when the target has no true features in exp3.",
+    "source": "round 1 candidate 5 refine incumbent extension_noisy_graded_semantics_l2"
+   },
+   {
+    "name": "specificity_noisy_graded_semantics_l2",
+    "hypothesis": "Refining l1_specificity_graded_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by using the specificity-weighted noisy graded lexicon soft_lex across all three recursion levels (removing true_lex from L1 and L2 so L1 calls L0[u, r](soft_lex), L2 weights speaker choices by at(soft_lex, u, r) * exp(alpha * log(L1[u, r](alpha, soft_lex, prior) + {EPS})), and listener and speaker call L2(params[\"alpha\"], soft_lex, prior)) while weighting top-level speaker production in speaker by the truth-conditional specificity-graded lexical applicability ctx.lex * soft_lex (replacing weights = (table + EPS) * real with weights = (ctx.lex * soft_lex * table + EPS) * real) and keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, L0, and listener) unchanged. In l1_specificity_graded_l2, passing ctx.lex to L0 and L2 zeroes out extension-scaled semantic confusion noise on false referents (causing listener false-alarm failures on E and exp1), while normalizing L2(r | u) across utterances in speaker without re-applying the speaker's lexical filter ctx.lex * soft_lex divides out utterance-level specificity (n_obj / ext_size) during L2's object normalization. Propagating soft_lex through L0, L1, and L2 while weighting speaker production by ctx.lex * soft_lex restores extension-scaled false-alarm sensitivity on E and exp1 and preserves utterance specificity in production, resolving the severe under-prediction of smallest-extension true word choices (smallest_true_ext_reversed_graded_l0, smallest_true_ext_aligned_nonunique_rate, non_minimal_true_rate_in_multi_feature_nonunique_targets, and chosen_normalized_ext_in_nonunique_scenes) on exp3.",
+    "source": "round 1 candidate 6 refine chosen"
+   },
+   {
+    "name": "communicative_prior_pragmatic_speaker_l2",
+    "hypothesis": "Listeners and speakers share a pre-linguistic expectation over referents grounded in communicative topic worthiness: before hearing a word, people expect speakers to talk about objects that are contextually unique, perceptually distinct, extreme in feature complexity, and identifiable by a concise, non-redundant feature profile rather than crowded, overlapping features. In comprehension, a depth-two pragmatic listener integrates this communicative prior with graded, specificity-modulated feature verification and extension-scaled referential crowding; in production, a speaker selects true words by combining baseline feature availability with pragmatic utility against a depth-one listener who weighs referential recovery against extension redundancy and competitor feature alternatives.",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "attentional_capacity_verification_l2",
+    "hypothesis": "Listeners and speakers communicate under capacity-bounded feature attention: verifying a feature on an object divides attention across the object's features while crowding false distractors in proportion to pairwise competition among the utterance's referents, attenuated at the top listener level by the utterance's extension share. When producing an utterance for a target, a speaker evaluates candidate words against a capacity-bounded literal listener whose feature verification grants an attentional-focus bonus inversely proportional to each object's feature load, combining a quadratic extension-cost pragmatic choice with extension-crowded feature availability strengthened by literal recovery. Because single-feature distractors capture stronger attentional focus than multi-feature distractors during literal verification, speakers prefer narrower words more strongly when shared with multi-feature distractors than with single-feature distractors, while literal-recovery-boosted, extension-crowded availability elevates runner-up narrow features over broader and universal words on complex targets.",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "graded_lexical_uncertainty_l2",
+    "hypothesis": "Listeners and speakers communicate under graded lexical uncertainty in which a word's meaning is diluted across an object's competing features and subject to referential crowding across the scene. When producing a referring expression for a target object, speakers integrate pragmatic specificity selection with uncertain-lexicon referential retrieval, weighting candidate words both by how strongly a pragmatic listener recovers the target from its discriminative extension and by how reliably a literal listener operating over feature-diluted word meanings identifies the target among competing referents. When interpreting a heard word, listeners invert this graded-semantics speaker at recursion depth two under a shared salience prior favoring contextual singletons, distinctive objects, and complexity-extreme referents, with false-referent confusion noise bounded by display size and attenuated at the top-level speaker by the word's non-universal contrast.",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "graded_specificity_availability_l2",
+    "hypothesis": "Refining extension_cost_speaker_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by weighting the top-level production speaker's baseline feature availability in S_prod by the literal graded-semantics listener recovery probability L0[u, r](graded_true) so that S_prod chooses u in UTT with wpp=S1[u, r](alpha, true_lex, spec_lex, ext_share) + at(graded_true, u, r) * L0[u, r](graded_true), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, sem_noise, fc_safe, graded_true, spec_lex, noisy_real, s2_real, soft_lex, s2_lex, L0, L1, L2, S1, listener, and speaker) unchanged. In extension_cost_speaker_l2, adding unmodulated baseline feature availability at(graded_true, u, r) to S1 assigns the same baseline floor 1 / feature_count to every true feature of the target regardless of extension size or distractor complexity, which flattens the choice rate between runner-up (extension-2) and broader (extension-3+) features on targets that have a uniquely identifying feature, inflates globally redundant universal feature choices, and ignores whether distractors sharing a narrower feature have alternative features. Modulating baseline feature availability by L0[u, r](graded_true) preserves extension-graded specificity among suboptimal true features, suppresses universal feature production, and favors narrower features when their distractors are multi-feature objects whose feature load dilutes their competing availability in exp3.",
+    "source": "round 2 candidate 4 refine incumbent extension_cost_speaker_l2 retry 1"
+   },
+   {
+    "name": "graded_competitor_extension_cost_l2",
+    "hypothesis": "Refining extension_cost_speaker_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by replacing the pragmatic production speaker S1 with a two-level recursive production speaker where S1 chooses utterances with wpp=at(graded_true, u, r) * exp(alpha * log(L0[u, r](true_lex) + {EPS})) and S_prod mixes S2 (which chooses utterances with wpp=at(spec_lex, u, r) * exp((1.0 + alpha) * (log(L0[u, r](S1(alpha, true_lex, graded_true)) + {EPS}) - vec(ext_share, u)))) with baseline feature availability at(graded_true, u, r), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, sem_noise, fc_safe, graded_true, spec_lex, noisy_real, s2_real, soft_lex, s2_lex, L0, L1, L2, and listener) unchanged. In extension_cost_speaker_l2, evaluating S1 against the flat truth-conditional literal listener L0(true_lex) ignores whether distractors sharing a candidate word possess alternative features and gives extension-2 runner-up features nearly zero pragmatic probability alongside broader features whenever a unique extension-1 feature exists. Conditioning speaker production on an intermediate speaker S1 whose feature choice is diluted by object complexity (1 / feature_count) while weighting top-level choices by literal specificity (spec_lex) and extension cost (ext_share) explains why speakers in exp3 prefer narrower features more strongly when their distractors have multiple alternative features, prefer runner-up extension-2 features over broader extension-3+ features on targets with a unique feature, and avoid globally redundant universal features.",
+    "source": "round 2 candidate 5 refine incumbent extension_cost_speaker_l2"
+   },
+   {
+    "name": "attentional_focus_discriminative_l2",
+    "hypothesis": "Refining discriminative_audience_design_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by evaluating speaker production against an attentional-focus literal listener L0(focus_lex) with extension-share crowding cost and literal-recovery-modulated baseline availability: defining focus_lex = ctx.lex + graded_true and ext_share = (ext_size[:, 0] / n_obj) * (1.0 - ctx.is_sink) in compute_representations, updating S1_disc[u: UTT, r: OBJ](alpha, focus_lex: ..., spec_lex: ..., ext_share: ...) so the speaker chooses u in UTT with wpp=at(spec_lex, u, r) * exp(alpha * log(L0[u, r](focus_lex) + {EPS}) - vec(ext_share, u)), and setting raw_spk = (disc_probs + true_avail * (1.0 + L0(focus_lex))) * real_mask in speaker(params, ctx), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, denom_scale, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, ext_safe, disc_odds, spec_real, spec_lex, true_avail, L0, L1, L2, and listener) unchanged. In discriminative_audience_design_l2, evaluating S1_disc against the flat truth-conditional listener L0(ctx.lex) with unmodulated baseline availability true_avail ignores competitor feature counts (predicting identical narrow-feature preference whether a shared distractor has one feature or multiple features) and gives equal baseline retrieval weight to suboptimal and universal features regardless of extension size. Grounding speaker evaluation in L0(ctx.lex + graded_true) with extension-share cost and recovery-boosted availability true_avail * (1.0 + L0(focus_lex)) explains why speakers in exp3 prefer narrower features more strongly when shared with multi-feature distractors than with single-feature distractors, maintain specificity gradation between extension-2 and broader suboptimal features on complex targets, and suppress globally redundant universal features.",
+    "source": "round 2 candidate 6 refine chosen retry 1"
+   }
+  ],
+  "ledger_entries": 89
+ },
+ {
+  "step": 3,
+  "round": 2,
+  "best_model": "complexity_gated_retrieval_decision_l2",
+  "fit_best": "complexity_gated_retrieval_decision_l2",
+  "n_params": {
+   "extension_noisy_graded_semantics_l2": 2,
+   "l1_graded_semantics_l2": 2,
+   "attentional_feature_capacity_l2": 2,
+   "l1_specificity_graded_l2": 2,
+   "crowded_s2_graded_l0_l2": 2,
+   "discriminative_audience_design_l2": 2,
+   "relative_diagnostic_crowding_l2": 2,
+   "extension_cost_speaker_l2": 2,
+   "literal_speaker_extension_noisy_l2": 2,
+   "literal_competition_speaker_l2": 2,
+   "specificity_noisy_graded_semantics_l2": 2,
+   "communicative_prior_pragmatic_speaker_l2": 2,
+   "attentional_capacity_verification_l2": 2,
+   "graded_lexical_uncertainty_l2": 2,
+   "graded_specificity_availability_l2": 2,
+   "graded_competitor_extension_cost_l2": 2,
+   "attentional_focus_discriminative_l2": 2,
+   "discriminative_contrast_heuristic": 2,
+   "complexity_gated_retrieval_decision_l2": 2,
+   "aspectual_qud_retrieval_l2": 2,
+   "coupled_salience_lexical_uncertainty_l2": 1,
+   "r3_c5": 2,
+   "dual_literal_specificity_speaker_l2": 2
+  },
+  "parsimony_k": 1.0,
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "discriminative_contrast_heuristic",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners and speakers communicate through a non-Bayesian diagnostic contrast heuristic rather than recursive Theory of Mind: each feature's contextual specificity is determined by its direct extension rarity and its effective uniqueness among objects that rely on it, while each object's perceptual anchor salience combines singleton pop-out, pairwise feature distinctiveness, and complexity extremity. When interpreting a heard word, the listener scores each object in a single step by its noisy feature match (diluted by the object's feature count and extension-crowded confusion noise bounded by display size) weighted by the object's perceptual salience and the effective diagnostic contrast of the heard word relative to the object's competing features. When producing a word for a target object, the speaker selects directly among true words by combining an exponential preference for high discriminative contrast and low extension share with feature-diluted diagnostic availability attenuated by extension crowding."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "complexity_gated_retrieval_decision_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners and speakers map pragmatic beliefs into responses through a complexity-gated retrieval decision rule rather than pure expected-utility maximization: when selecting a referring expression for a target object, a speaker combines a specificity-and-cost-weighted pragmatic choice (whose extension penalty grows with the word's extension share and the target's unmentioned feature load) with a structured feature-availability fallback weighted by both literal and feature-diluted target recovery. In comprehension, listeners invert a depth-two graded-semantics speaker under a shared salience prior favoring contextual singletons, distinctive objects, and complexity-extreme referents, with referential crowding noise bounded by display size and attenuated at the top listener level by the word's non-universal contrast. Grounding the speaker's decision rule in complexity-and-crowding-scaled extension cost and dual-recovery availability explains why speakers strongly prefer the narrowest true feature (extension size 2) on multi-feature non-unique targets in exp3 while preserving runner-up specificity gradation, competitor-complexity sensitivity, and comprehension accuracy across E, exp1, and exp2."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "aspectual_qud_retrieval_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Speakers and listeners communicate under an aspectual Question Under Discussion (QUD) in which a referring expression answers both which object is intended and which salient aspect characterizes that object's feature profile. In production, a speaker selects true words by combining extension-cost pragmatic specificity with dual-QUD literal retrieval that evaluates how well a candidate word identifies the target under both flat object-identity verification and feature-diluted aspectual verification. In comprehension, a depth-two pragmatic listener inverts a graded-semantics speaker under a shared salience prior favoring contextual singletons, distinctive objects, and complexity-extreme referents, with referential crowding noise bounded by display size and attenuated at the top speaker level by the word's extension share."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "coupled_salience_lexical_uncertainty_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Refining graded_lexical_uncertainty_l2 by removing the separate salience parameter w_salience from PARAMS (leaving only alpha in PARAMS) and deriving the pre-linguistic salience prior weight directly from speaker rationality as w_salience = alpha / (1.0 + alpha) inside compute_lex_and_prior(ctx, alpha) (called by listener and speaker with params[\"alpha\"]), while keeping the recursion depth (listener calling L2, which calls L1, which calls L0, and speaker calling S_prod, which calls S1 and L0) and all other terms (L0, L1, L2, S1, S_prod, real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, denom_scale, sem_noise, fc_safe, fc_inv, graded_true, disc_share, spec_real, spec_lex, noisy_real, s2_real, soft_lex, s2_lex, listener, and speaker) unchanged. In graded_lexical_uncertainty_l2, fitting w_salience as a separate free parameter alongside alpha is unnecessary because pre-linguistic sensitivity to object uniqueness, distinctiveness, and complexity extremity scales directly with bounded pragmatic sensitivity alpha / (1.0 + alpha), matching comprehension and production across E, exp1, exp2, and exp3 with one parameter instead of two."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "r3_c5",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Refining graded_lexical_uncertainty_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by adding an unscaled extension-share crowding penalty -vec(ext_share, u) in S1 so S1[u: UTT, r: OBJ](alpha, true_lex: ..., spec_lex: ..., ext_share: ...) chooses u in UTT with wpp=at(spec_lex, u, r) * exp((1.0 + alpha) * (log(L0[u, r](true_lex) + {EPS}) - vec(ext_share, u)) - vec(ext_share, u)), and incorporating discriminative specificity into the top-level production speaker's uncertain-lexicon retrieval so S_prod[u: UTT, r: OBJ](alpha, true_lex: ..., spec_lex: ..., graded_lex: ..., fc_inv: ..., ext_share: ...) chooses u in UTT with wpp=S1[u, r](alpha, true_lex, spec_lex, ext_share) + vec(fc_inv, r) * (at(spec_lex, u, r) + L0[u, r](graded_lex)), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, denom_scale, sem_noise, fc_safe, fc_inv, graded_true, disc_share, spec_real, spec_lex, noisy_real, s2_real, soft_lex, s2_lex, L0, L1, L2, compute_lex_and_prior, listener, and speaker) unchanged. In graded_lexical_uncertainty_l2, the top-level speaker's uncertain-lexicon retrieval term vec(fc_inv, r) * L0[u, r](graded_lex) lacks direct discriminative specificity at(spec_lex, u, r) and S1 applies only the rationality-scaled extension cost, which under-predicts selection of the narrowest true label on multi-feature targets without a uniquely identifying feature (narrowest_label_rate_multifeature_nonunique_target in exp3) when a broader feature's distractors have high feature counts that dilute their competing weight in L0(graded_lex). Strengthening S1's extension-crowding penalty with -vec(ext_share, u) and adding at(spec_lex, u, r) to the feature-diluted retrieval term vec(fc_inv, r) * (at(spec_lex, u, r) + L0[u, r](graded_lex)) ensures that both pragmatic selection and baseline lexical retrieval favor narrower, more discriminative extensions, increasing narrowest-label production on multi-feature non-unique targets in exp3 while preserving comprehension predictions across E, exp1, and exp2."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "dual_literal_specificity_speaker_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Refining graded_specificity_availability_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by evaluating the pragmatic speaker S1 with squared literal specificity, quadratic rationality, and baseline extension-share cost wpp=at(spec_lex, u, r) * at(spec_lex, u, r) * exp((1.0 + alpha) * (1.0 + alpha) * (log(L0[u, r](true_lex) + {EPS}) - vec(ext_share, u)) - vec(ext_share, u)) and weighting baseline feature availability in S_prod by the sum of graded and literal listener recovery wpp=S1[u, r](alpha, true_lex, spec_lex, ext_share) + at(graded_true, u, r) * (L0[u, r](graded_true) + L0[u, r](true_lex)), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, sem_noise, fc_safe, graded_true, spec_lex, noisy_real, s2_real, soft_lex, s2_lex, L0, L1, L2, listener, and speaker) unchanged. In graded_specificity_availability_l2, weighting baseline availability solely by feature-diluted recovery L0[u, r](graded_true) penalizes narrow two-referent features whenever they are shared with a single-feature distractor (because the single-feature distractor captures greater graded weight than the multi-feature target), while linear specificity and rationality in S1 under-suppress three- and four-referent competitors at the joint comprehension-production rationality scale. Combining graded and literal listener recovery L0[u, r](graded_true) + L0[u, r](true_lex) in baseline availability alongside squared-specificity quadratic-rationality pragmatic evaluation in S1 preserves a consistent narrow-extension advantage even against single-feature distractors while retaining sensitivity to distractor feature load, closing the narrowest-label production gap on multi-feature non-unique targets in exp3."
+   }
+  ],
+  "critique": {
+   "status": "critiqued",
+   "incumbent": "graded_lexical_uncertainty_l2",
+   "attempts": 1,
+   "dir": "/scratch/users/mcfrank/auto-psych/agent_trees/c849fb19dc228b3a/repo/_runs/chain_0/experiment3/loop/round_3/critique",
+   "block": "exp3",
+   "n_statistics": 8,
+   "n_evaluated": 8,
+   "n_significant": 1,
+   "n_significant_fdr": 0
+  },
+  "admission_limit_sec": 1800,
+  "standing": {
+   "extension_noisy_graded_semantics_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20750.896816253662,
+      "behind": 128.41282057762146,
+      "dse": 53.36264169155417
+     },
+     "exp1": {
+      "elpd_cv": -13212.335982084274,
+      "behind": 55.78279995918274,
+      "dse": 16.087284538611637
+     },
+     "exp2": {
+      "elpd_cv": -13975.338019371033,
+      "behind": 733.7487831115723,
+      "dse": 321.3422047405393
+     },
+     "exp3": {
+      "elpd_cv": -6152.611365318298,
+      "behind": 762.3982992172241,
+      "dse": 144.8323363580804
+     }
+    },
+    "sel_elpd": -6152.611365318298,
+    "sel_diff": 762.3982992172241,
+    "sel_dse": 144.8323363580804,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "l1_graded_semantics_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21009.103862524033,
+      "behind": 386.61986684799194,
+      "dse": 70.19053528563464
+     },
+     "exp1": {
+      "elpd_cv": -13326.973809480667,
+      "behind": 170.42062735557556,
+      "dse": 26.353448248472972
+     },
+     "exp2": {
+      "elpd_cv": -13241.687717437744,
+      "behind": 0.0984811782836914,
+      "dse": 2.305432000106088
+     },
+     "exp3": {
+      "elpd_cv": -6120.128348112106,
+      "behind": 729.9152820110321,
+      "dse": 143.47012015547543
+     }
+    },
+    "sel_elpd": -6120.128348112106,
+    "sel_diff": 729.9152820110321,
+    "sel_dse": 143.47012015547543,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "attentional_feature_capacity_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21005.5173227787,
+      "behind": 383.03332710266113,
+      "dse": 70.17043657995265
+     },
+     "exp1": {
+      "elpd_cv": -13324.671933889389,
+      "behind": 168.11875176429749,
+      "dse": 26.49608292949334
+     },
+     "exp2": {
+      "elpd_cv": -13242.085624456406,
+      "behind": 0.49638819694519043,
+      "dse": 1.150980764800173
+     },
+     "exp3": {
+      "elpd_cv": -6099.079409122467,
+      "behind": 708.8663430213928,
+      "dse": 140.17900850166419
+     }
+    },
+    "sel_elpd": -6099.079409122467,
+    "sel_diff": 708.8663430213928,
+    "sel_dse": 140.17900850166419,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "l1_specificity_graded_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20994.089297771454,
+      "behind": 371.6053020954132,
+      "dse": 69.70853610852076
+     },
+     "exp1": {
+      "elpd_cv": -13324.482453346252,
+      "behind": 167.9292712211609,
+      "dse": 27.30178283812712
+     },
+     "exp2": {
+      "elpd_cv": -13241.58923625946,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp3": {
+      "elpd_cv": -6086.438695192337,
+      "behind": 696.2256290912628,
+      "dse": 138.11118055982192
+     }
+    },
+    "sel_elpd": -6086.438695192337,
+    "sel_diff": 696.2256290912628,
+    "sel_dse": 138.11118055982192,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "crowded_s2_graded_l0_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -21064.063421726227,
+      "behind": 441.57942605018616,
+      "dse": 79.02753678676008
+     },
+     "exp1": {
+      "elpd_cv": -13265.05358505249,
+      "behind": 108.50040292739868,
+      "dse": 18.14198704154479
+     },
+     "exp2": {
+      "elpd_cv": -13402.315115451813,
+      "behind": 160.7258791923523,
+      "dse": 104.74896780644056
+     },
+     "exp3": {
+      "elpd_cv": -6169.1413605213165,
+      "behind": 778.9282944202423,
+      "dse": 144.61658127642278
+     }
+    },
+    "sel_elpd": -6169.1413605213165,
+    "sel_diff": 778.9282944202423,
+    "sel_dse": 144.61658127642278,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "discriminative_audience_design_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20654.33846759796,
+      "behind": 31.854471921920776,
+      "dse": 41.62196256701652
+     },
+     "exp1": {
+      "elpd_cv": -13158.765591621399,
+      "behind": 2.212409496307373,
+      "dse": 1.978191135503887
+     },
+     "exp2": {
+      "elpd_cv": -13950.54747581482,
+      "behind": 708.9582395553589,
+      "dse": 305.20914573990694
+     },
+     "exp3": {
+      "elpd_cv": -5418.964869260788,
+      "behind": 28.751803159713745,
+      "dse": 7.86790177459953
+     }
+    },
+    "sel_elpd": -5418.964869260788,
+    "sel_diff": 28.751803159713745,
+    "sel_dse": 7.86790177459953,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "relative_diagnostic_crowding_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20787.305914402008,
+      "behind": 164.8219187259674,
+      "dse": 66.45257354923154
+     },
+     "exp1": {
+      "elpd_cv": -13161.880653381348,
+      "behind": 5.3274712562561035,
+      "dse": 3.685836246755794
+     },
+     "exp2": {
+      "elpd_cv": -13703.149096727371,
+      "behind": 461.55986046791077,
+      "dse": 253.17163983012247
+     },
+     "exp3": {
+      "elpd_cv": -5441.253411531448,
+      "behind": 51.040345430374146,
+      "dse": 11.395946795311287
+     }
+    },
+    "sel_elpd": -5441.253411531448,
+    "sel_diff": 51.040345430374146,
+    "sel_dse": 11.395946795311287,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "extension_cost_speaker_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20674.387691020966,
+      "behind": 51.90369534492493,
+      "dse": 49.729108007443564
+     },
+     "exp1": {
+      "elpd_cv": -13156.712614059448,
+      "behind": 0.15943193435668945,
+      "dse": 0.47821533353016177
+     },
+     "exp2": {
+      "elpd_cv": -13959.752267599106,
+      "behind": 718.1630313396454,
+      "dse": 313.26893938238146
+     },
+     "exp3": {
+      "elpd_cv": -5417.961770772934,
+      "behind": 27.74870467185974,
+      "dse": 9.154549405490238
+     }
+    },
+    "sel_elpd": -5417.961770772934,
+    "sel_diff": 27.74870467185974,
+    "sel_dse": 9.154549405490238,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "literal_speaker_extension_noisy_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20650.931666612625,
+      "behind": 28.447670936584473,
+      "dse": 41.10830460552397
+     },
+     "exp1": {
+      "elpd_cv": -13158.274030447006,
+      "behind": 1.7208483219146729,
+      "dse": 1.9981723605935882
+     },
+     "exp2": {
+      "elpd_cv": -14005.074888706207,
+      "behind": 763.4856524467468,
+      "dse": 328.0651143430767
+     },
+     "exp3": {
+      "elpd_cv": -5492.996221065521,
+      "behind": 102.78315496444702,
+      "dse": 17.68507064556495
+     }
+    },
+    "sel_elpd": -5492.996221065521,
+    "sel_diff": 102.78315496444702,
+    "sel_dse": 17.68507064556495,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "literal_competition_speaker_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20652.743494033813,
+      "behind": 30.259498357772827,
+      "dse": 40.19759743894616
+     },
+     "exp1": {
+      "elpd_cv": -13159.184628486633,
+      "behind": 2.631446361541748,
+      "dse": 2.5237601825055225
+     },
+     "exp2": {
+      "elpd_cv": -14002.368448734283,
+      "behind": 760.779212474823,
+      "dse": 326.75122228196244
+     },
+     "exp3": {
+      "elpd_cv": -8608.559270858765,
+      "behind": 3218.3462047576904,
+      "dse": 164.03948970522728
+     }
+    },
+    "sel_elpd": -8608.559270858765,
+    "sel_diff": 3218.3462047576904,
+    "sel_dse": 164.03948970522728,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "specificity_noisy_graded_semantics_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20622.48399567604,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -13182.732825040817,
+      "behind": 26.179642915725708,
+      "dse": 18.46921036219998
+     },
+     "exp2": {
+      "elpd_cv": -14127.777908563614,
+      "behind": 886.1886723041534,
+      "dse": 359.88065880076385
+     },
+     "exp3": {
+      "elpd_cv": -5762.2367289066315,
+      "behind": 372.02366280555725,
+      "dse": 82.04907417063704
+     }
+    },
+    "sel_elpd": -5762.2367289066315,
+    "sel_diff": 372.02366280555725,
+    "sel_dse": 82.04907417063704,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "communicative_prior_pragmatic_speaker_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20657.12776207924,
+      "behind": 34.64376640319824,
+      "dse": 58.18159770776316
+     },
+     "exp1": {
+      "elpd_cv": -13178.727372646332,
+      "behind": 22.174190521240234,
+      "dse": 10.37023373485785
+     },
+     "exp2": {
+      "elpd_cv": -13875.265690088272,
+      "behind": 633.6764538288116,
+      "dse": 279.76795203982425
+     },
+     "exp3": {
+      "elpd_cv": -5402.99378657341,
+      "behind": 12.780720472335815,
+      "dse": 5.310787199081894
+     }
+    },
+    "sel_elpd": -5402.99378657341,
+    "sel_diff": 12.780720472335815,
+    "sel_dse": 5.310787199081894,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "attentional_capacity_verification_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20798.170215129852,
+      "behind": 175.68621945381165,
+      "dse": 70.210767235686
+     },
+     "exp1": {
+      "elpd_cv": -13168.58503293991,
+      "behind": 12.031850814819336,
+      "dse": 5.896690739703788
+     },
+     "exp2": {
+      "elpd_cv": -13683.699270248413,
+      "behind": 442.11003398895264,
+      "dse": 247.0147374487124
+     },
+     "exp3": {
+      "elpd_cv": -5398.700213670731,
+      "behind": 8.487147569656372,
+      "dse": 5.1964928128721075
+     }
+    },
+    "sel_elpd": -5398.700213670731,
+    "sel_diff": 8.487147569656372,
+    "sel_dse": 5.1964928128721075,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "graded_lexical_uncertainty_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20676.569501638412,
+      "behind": 54.085505962371826,
+      "dse": 50.15680918230879
+     },
+     "exp1": {
+      "elpd_cv": -13156.739807128906,
+      "behind": 0.18662500381469727,
+      "dse": 1.4057430665026411
+     },
+     "exp2": {
+      "elpd_cv": -13910.91449022293,
+      "behind": 669.3252539634705,
+      "dse": 291.7577553318165
+     },
+     "exp3": {
+      "elpd_cv": -5398.42355132103,
+      "behind": 8.210485219955444,
+      "dse": 3.5529642777457116
+     }
+    },
+    "sel_elpd": -5398.42355132103,
+    "sel_diff": 8.210485219955444,
+    "sel_dse": 3.5529642777457116,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "graded_specificity_availability_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20673.207313776016,
+      "behind": 50.723318099975586,
+      "dse": 49.93100901017489
+     },
+     "exp1": {
+      "elpd_cv": -13156.553182125092,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp2": {
+      "elpd_cv": -13961.035145044327,
+      "behind": 719.4459087848663,
+      "dse": 313.7761592674316
+     },
+     "exp3": {
+      "elpd_cv": -5430.869961261749,
+      "behind": 40.65689516067505,
+      "dse": 9.69170676966558
+     }
+    },
+    "sel_elpd": -5430.869961261749,
+    "sel_diff": 40.65689516067505,
+    "sel_dse": 9.69170676966558,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "graded_competitor_extension_cost_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20673.922519207,
+      "behind": 51.43852353096008,
+      "dse": 49.74858374421954
+     },
+     "exp1": {
+      "elpd_cv": -13156.809389591217,
+      "behind": 0.2562074661254883,
+      "dse": 0.4325857562711337
+     },
+     "exp2": {
+      "elpd_cv": -13959.848354578018,
+      "behind": 718.2591183185577,
+      "dse": 312.92843379604017
+     },
+     "exp3": {
+      "elpd_cv": -5533.515302181244,
+      "behind": 143.30223608016968,
+      "dse": 31.32596625604758
+     }
+    },
+    "sel_elpd": -5533.515302181244,
+    "sel_diff": 143.30223608016968,
+    "sel_dse": 31.32596625604758,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "attentional_focus_discriminative_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20654.59261059761,
+      "behind": 32.108614921569824,
+      "dse": 41.45076282743715
+     },
+     "exp1": {
+      "elpd_cv": -13158.263922929764,
+      "behind": 1.7107408046722412,
+      "dse": 2.031716256154063
+     },
+     "exp2": {
+      "elpd_cv": -13950.708889484406,
+      "behind": 709.1196532249451,
+      "dse": 305.31368670818284
+     },
+     "exp3": {
+      "elpd_cv": -5411.882457017899,
+      "behind": 21.66939091682434,
+      "dse": 6.412078461481267
+     }
+    },
+    "sel_elpd": -5411.882457017899,
+    "sel_diff": 21.66939091682434,
+    "sel_dse": 6.412078461481267,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "discriminative_contrast_heuristic": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20798.29862523079,
+      "behind": 175.81462955474854,
+      "dse": 60.24861467629588
+     },
+     "exp1": {
+      "elpd_cv": -13181.860361814499,
+      "behind": 25.30717968940735,
+      "dse": 12.326455644406074
+     },
+     "exp2": {
+      "elpd_cv": -13977.734863042831,
+      "behind": 736.145626783371,
+      "dse": 330.2089630228086
+     },
+     "exp3": {
+      "elpd_cv": -5419.104559183121,
+      "behind": 28.89149308204651,
+      "dse": 8.357890745326012
+     }
+    },
+    "sel_elpd": -5419.104559183121,
+    "sel_diff": 28.89149308204651,
+    "sel_dse": 8.357890745326012,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "complexity_gated_retrieval_decision_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20677.319647550583,
+      "behind": 54.835651874542236,
+      "dse": 50.06288844896157
+     },
+     "exp1": {
+      "elpd_cv": -13157.41595339775,
+      "behind": 0.8627712726593018,
+      "dse": 1.493123010255049
+     },
+     "exp2": {
+      "elpd_cv": -13908.826268434525,
+      "behind": 667.2370321750641,
+      "dse": 291.44920151239927
+     },
+     "exp3": {
+      "elpd_cv": -5390.213066101074,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": -5390.213066101074,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "aspectual_qud_retrieval_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20676.535040855408,
+      "behind": 54.051045179367065,
+      "dse": 50.133270012454254
+     },
+     "exp1": {
+      "elpd_cv": -13157.206686496735,
+      "behind": 0.6535043716430664,
+      "dse": 1.4421173905330174
+     },
+     "exp2": {
+      "elpd_cv": -13910.270461320877,
+      "behind": 668.6812250614166,
+      "dse": 291.64598931548835
+     },
+     "exp3": {
+      "elpd_cv": -5394.831462144852,
+      "behind": 4.618396043777466,
+      "dse": 2.2818258593157603
+     }
+    },
+    "sel_elpd": -5394.831462144852,
+    "sel_diff": 4.618396043777466,
+    "sel_dse": 2.2818258593157603,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "coupled_salience_lexical_uncertainty_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20653.649756669998,
+      "behind": 31.16576099395752,
+      "dse": 47.54770366188995
+     },
+     "exp1": {
+      "elpd_cv": -13163.992883443832,
+      "behind": 7.439701318740845,
+      "dse": 3.8246019743208564
+     },
+     "exp2": {
+      "elpd_cv": -13902.36848449707,
+      "behind": 660.7792482376099,
+      "dse": 291.5176567634548
+     },
+     "exp3": {
+      "elpd_cv": -5398.777780532837,
+      "behind": 8.564714431762695,
+      "dse": 3.6206217580089937
+     }
+    },
+    "sel_elpd": -5398.777780532837,
+    "sel_diff": 8.564714431762695,
+    "sel_dse": 3.6206217580089937,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "r3_c5": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20677.091351747513,
+      "behind": 54.60735607147217,
+      "dse": 50.19174724138713
+     },
+     "exp1": {
+      "elpd_cv": -13157.026541233063,
+      "behind": 0.4733591079711914,
+      "dse": 1.4374778556266865
+     },
+     "exp2": {
+      "elpd_cv": -13910.655992746353,
+      "behind": 669.0667564868927,
+      "dse": 292.1283120734705
+     },
+     "exp3": {
+      "elpd_cv": -5394.61753988266,
+      "behind": 4.404473781585693,
+      "dse": 3.6182820782386753
+     }
+    },
+    "sel_elpd": -5394.61753988266,
+    "sel_diff": 4.404473781585693,
+    "sel_dse": 3.6182820782386753,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "dual_literal_specificity_speaker_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20674.25245165825,
+      "behind": 51.76845598220825,
+      "dse": 49.88505243546075
+     },
+     "exp1": {
+      "elpd_cv": -13156.675651311874,
+      "behind": 0.12246918678283691,
+      "dse": 0.30082378669089743
+     },
+     "exp2": {
+      "elpd_cv": -13960.122889995575,
+      "behind": 718.5336537361145,
+      "dse": 313.2648276479028
+     },
+     "exp3": {
+      "elpd_cv": -5391.209491729736,
+      "behind": 0.9964256286621094,
+      "dse": 1.7586430787053668
+     }
+    },
+    "sel_elpd": -5391.209491729736,
+    "sel_diff": 0.9964256286621094,
+    "sel_dse": 1.7586430787053668,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "extension_noisy_graded_semantics_l2",
+    "hypothesis": "Refining noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by scaling each real word's semantic confusion noise on false objects by the squared proportion of display objects in that word's literal extension: defining ext_size = jnp.sum(real_lex, axis=1, keepdims=True) and replacing sem_noise = 1.0 / (n_utt * n_obj) with sem_noise = (ext_size * ext_size) / (n_utt * n_obj * n_obj), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, fc_safe, graded_true, noisy_real, soft_lex, L0, L1, L2, listener, and speaker) unchanged. Under uniform constant noise across utterances, depth-two pragmatic recursion suppresses false-alarm probabilities on three-of-four valid-referent trials to nearly zero because two levels of speaker likelihood inversion amplify the ratio between valid and false referents. Because a word that spans most of the display induces greater referential crowding and feature-verification interference across objects than a word with a small extension, scaling semantic confusion by the squared extension proportion explains why listeners make substantially more false-alarm choices when a heard word applies to three of four objects than when it applies to two across E and exp1.",
+    "source": "seed"
+   },
+   {
+    "name": "l1_graded_semantics_l2",
+    "hypothesis": "Refining extension_noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by using the literal truth-conditional lexicon ctx.lex in L0 and in the L2 speaker while retaining the noisy graded lexicon soft_lex in the L1 speaker (updating L1 to take true_lex and soft_lex, calling L0[u, r](true_lex) inside L1, and calling L2(params[\"alpha\"], ctx.lex, soft_lex, prior) in listener and speaker), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, listener, and speaker) unchanged. In extension_noisy_graded_semantics_l2, passing soft_lex into L0, L1, and L2 compounds the 1/feature_count feature-dilution penalty three times across recursion levels and assigns positive L2 probability to literally false referents; restricting graded feature dilution and extension-crowding noise to the L1 speaker's lexical verification while keeping L0 and L2 truth-conditional avoids over-penalizing multi-feature valid referents on ambiguous trials and restores exact zero listener probability on literally false referents, closing both the valid-referent feature-count gap and the valid-versus-false referent rating contrast on exp2.",
+    "source": "seed"
+   },
+   {
+    "name": "attentional_feature_capacity_l2",
+    "hypothesis": "Listeners and speakers communicate under capacity-bounded feature attention: each object's pre-linguistic salience combines contextual uniqueness, feature distinctiveness, and non-empty complexity extremity that penalizes empty referents without positive features. When a speaker plans or a listener interprets a word, feature verification is diluted by the object's alternative feature load at the literal and intermediate levels, while high-extension utterances that leave a false distractor induce attentional leakage proportional to the squared valid-referent share, which the top-level speaker filters to true referents except when referential crowding leaks to false distractors.",
+    "source": "seed"
+   },
+   {
+    "name": "l1_specificity_graded_l2",
+    "hypothesis": "Refining l1_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by scaling the L1 speaker's true-feature lexical weight by contextual feature specificity (n_obj / ext_size) so that graded_true = (ctx.lex * n_obj) / (fc_safe * jnp.maximum(ext_size, 1.0)), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, noisy_real, soft_lex, L0, L1, L2, listener, and speaker) unchanged. In l1_graded_semantics_l2, dividing the L1 speaker's lexical weight only by feature count leaves a universal all-true word with the same lexical applicability as a specific two-referent word on multi-feature objects, causing the L1 speaker to strongly avoid the universal word on complex objects and leading L2 to over-predict the rating drop between two-referent and four-referent valid objects in exp2. Weighting L1 lexical access by contextual specificity (n_obj / ext_size) attenuates the feature-dilution advantage of universal words relative to diagnostic words at L1, reducing the L2 penalty on complex valid referents under universal words and closing the extension-size 2-versus-4 rating discrepancy in exp2.",
+    "source": "seed"
+   },
+   {
+    "name": "crowded_s2_graded_l0_l2",
+    "hypothesis": "Refining `r1_c3` with no parameters added or removed (retaining only `alpha` and `w_salience`) and the same recursion depth (`L2` calling `L1`, which calls `L0`), by replacing the `L1` speaker's lexical filter with the literal truth-conditional lexicon `true_lex` while retaining `soft_lex` inside the literal listener `L0` and adding `(1.0 - sem_noise)` to the L2 speaker's lexical filter `true_lex + sem_noise * (1.0 - true_lex)` (updating `L1` to take `true_lex` and `soft_lex` with `wpp=at(true_lex, u, r) * exp(alpha * log(L0[u, r](soft_lex) + {EPS}))`, updating `L2` to take `s2_lex`, `true_lex`, and `soft_lex` with `wpp=at(s2_lex, u, r) * exp(alpha * log(L1[u, r](alpha, true_lex, soft_lex, prior) + {EPS}))`, and defining `s2_real = ctx.lex + sem_noise * (1.0 - ctx.lex)` and `s2_lex = jnp.where(ctx.is_sink[:, None] > 0, ctx.lex, s2_real)` in `compute_lex_and_prior`), while keeping all other terms (`real_mask`, `real_lex`, `diff`, `pair_dist`, `is_singleton`, `distinct`, `n_real`, `fc_norm`, `fc_dev`, `extremity`, `prior`, `n_utt`, `n_obj`, `ext_size`, `sem_noise`, `fc_safe`, `graded_true`, `noisy_real`, `soft_lex`, `L0`, `listener`, and `speaker`) unchanged. When speakers at both pragmatic levels restrict production to true words while extension-scaled referential crowding leaks into the L2 speaker's false-object lexical filter and L0's feature verification, listeners preserve elevated false-alarm probabilities on three-of-four valid-referent trials across E and exp1 while avoiding compounded feature-dilution penalties across L0 and L1 on exp2.",
+    "source": "seed"
+   },
+   {
+    "name": "discriminative_audience_design_l2",
+    "hypothesis": "Speakers and listeners operate under asymmetric perspective-taking: when producing a referring expression for a known target, a speaker evaluates candidate true words directly by their discriminative odds (the ratio of excluded distractors to extension size) alongside literal referential recovery and baseline true-feature retrieval, whereas a listener interpreting a heard word recursively inverts a speaker whose feature verification is diluted by object complexity and crowded by extension size scaled by the maximum of the scene's object and utterance counts. Because production is guided by direct extension discriminability rather than recursive avoidance of low-complexity competitors, speakers in exp3 strongly prefer the narrowest true word even when its sole competitor is a single-feature object, show no bias toward words whose competitors have more unmentioned features, and choose uniformly among scene words when the target has no true features. On comprehension paradigms (E, exp1, and exp2), bounding crowding noise by display size prevents false-referent probability inflation on sparse two-feature displays while preserving false-alarm choices on crowded multi-referent scenes.",
+    "source": "round 1 candidate 1 explore retry 1"
+   },
+   {
+    "name": "relative_diagnostic_crowding_l2",
+    "hypothesis": "Listeners interpret utterances at depth two under an extremity-and-uniqueness salience prior with feature verification diluted by object complexity and false-referent confusion driven strictly by pairwise competition among valid referents in a word's extension, while speakers produce true words according to their target-relative diagnostic contrast (how strongly a word identifies the target and excludes distractors relative to the target's average true feature). This mechanism disagrees most sharply with the incumbent on speaker production displays where a multi-feature target has a narrow two-object feature shared with a simple one-feature competitor and a broader three- or four-object feature shared with complex multi-feature competitors: the incumbent predicts speakers avoid the narrowest feature because inverse feature-count dilution favors the complex competitors, whereas target-relative diagnostic contrast predicts speakers strongly prefer the narrowest true feature and treat equal-extension true features symmetrically regardless of competitor complexity. Simultaneously, because pairwise extension competition vanishes when a word applies to only a single object, listeners assign zero crowding noise on uniquely identifying utterances while preserving elevated false alarms on crowded multi-referent utterances.",
+    "source": "round 1 candidate 2 explore retry 1"
+   },
+   {
+    "name": "extension_cost_speaker_l2",
+    "hypothesis": "Speakers select referring expressions by combining a target object's baseline feature availability (shared equally across its true features) with a pragmatic specificity choice that weights candidate words by their literal referential specificity and penalizes broad extensions proportional to the fraction of display objects sharing the word, while routing featureless targets to the silent unnamed option so forced production over real words is indifferent. Listeners invert this graded-semantics speaker at depth two under a shared salience prior favoring singletons, distinctive objects, and complexity-extreme referents, with extension-scaled referential crowding noise that is further attenuated by the word's extension share at the top-level speaker.",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "literal_speaker_extension_noisy_l2",
+    "hypothesis": "Refining extension_noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by simplifying speaker(params, ctx) to evaluate the literal truth-conditional listener table = L0(ctx.lex) instead of calling compute_soft_lex_and_prior(ctx, params[\"w_salience\"]) and table = L2(params[\"alpha\"], soft_lex, prior), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, L0, L1, L2, and listener) unchanged. In extension_noisy_graded_semantics_l2, deriving speaker production from L2(alpha, soft_lex, prior) forces speakers to penalize true features shared with single-feature competitors (reversing the preference for narrow extension-2 features over broader extension-3 features when competitors differ in feature count) and biases speakers on featureless targets toward high-extension words via sem_noise. Grounding speaker production directly in literal listener informativeness L0(ctx.lex) while retaining depth-two noisy graded inference in comprehension explains why speakers in exp3 consistently prefer the narrowest true feature regardless of competitor feature counts and respond without extension-crowding bias on featureless targets, while preserving listener false-alarm and choice accuracy across E, exp1, and exp2.",
+    "source": "round 1 candidate 4 refine incumbent extension_noisy_graded_semantics_l2"
+   },
+   {
+    "name": "literal_competition_speaker_l2",
+    "hypothesis": "Refining extension_noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (L2 calling L1, which calls L0), by replacing the L2 listener table in speaker(params, ctx) with a direct literal-competition speaker S1 combined with squared graded truth availability: adding @memo def S1[u: UTT, r: OBJ](alpha, lex: ...) where the speaker chooses u in UTT with wpp=at(lex, u, r) * exp(alpha * log(L0[u, r](lex) + {EPS}) - 1.0 / (alpha * L0[u, r](lex) + {EPS})), returning graded_true from compute_soft_lex_and_prior, and in speaker(params, ctx) setting table = S1(params[\"alpha\"], ctx.lex) + graded_true * graded_true, raw = table * real, total = jnp.sum(raw, axis=0, keepdims=True), and weights = jnp.where(total > 0, raw, real), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, L0, L1, L2, and listener) unchanged. In extension_noisy_graded_semantics_l2, deriving speaker production from L2(soft_lex) causes the speaker to favor broader extensions over narrower ones whenever a narrower word's competitor has a low feature count, and to favor the largest-extension false word when the target is featureless. Grounding speaker production in truth-conditional literal informativeness with an extension-competition penalty 1 / (alpha * L0) and baseline graded truth availability explains why speakers strongly prefer the narrowest true word regardless of competitor feature counts, treat tied-extension true words symmetrically, still occasionally produce broader true words without inflating false utterances, and respond uniformly when the target has no true features in exp3.",
+    "source": "round 1 candidate 5 refine incumbent extension_noisy_graded_semantics_l2"
+   },
+   {
+    "name": "specificity_noisy_graded_semantics_l2",
+    "hypothesis": "Refining l1_specificity_graded_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by using the specificity-weighted noisy graded lexicon soft_lex across all three recursion levels (removing true_lex from L1 and L2 so L1 calls L0[u, r](soft_lex), L2 weights speaker choices by at(soft_lex, u, r) * exp(alpha * log(L1[u, r](alpha, soft_lex, prior) + {EPS})), and listener and speaker call L2(params[\"alpha\"], soft_lex, prior)) while weighting top-level speaker production in speaker by the truth-conditional specificity-graded lexical applicability ctx.lex * soft_lex (replacing weights = (table + EPS) * real with weights = (ctx.lex * soft_lex * table + EPS) * real) and keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, L0, and listener) unchanged. In l1_specificity_graded_l2, passing ctx.lex to L0 and L2 zeroes out extension-scaled semantic confusion noise on false referents (causing listener false-alarm failures on E and exp1), while normalizing L2(r | u) across utterances in speaker without re-applying the speaker's lexical filter ctx.lex * soft_lex divides out utterance-level specificity (n_obj / ext_size) during L2's object normalization. Propagating soft_lex through L0, L1, and L2 while weighting speaker production by ctx.lex * soft_lex restores extension-scaled false-alarm sensitivity on E and exp1 and preserves utterance specificity in production, resolving the severe under-prediction of smallest-extension true word choices (smallest_true_ext_reversed_graded_l0, smallest_true_ext_aligned_nonunique_rate, non_minimal_true_rate_in_multi_feature_nonunique_targets, and chosen_normalized_ext_in_nonunique_scenes) on exp3.",
+    "source": "round 1 candidate 6 refine chosen"
+   },
+   {
+    "name": "communicative_prior_pragmatic_speaker_l2",
+    "hypothesis": "Listeners and speakers share a pre-linguistic expectation over referents grounded in communicative topic worthiness: before hearing a word, people expect speakers to talk about objects that are contextually unique, perceptually distinct, extreme in feature complexity, and identifiable by a concise, non-redundant feature profile rather than crowded, overlapping features. In comprehension, a depth-two pragmatic listener integrates this communicative prior with graded, specificity-modulated feature verification and extension-scaled referential crowding; in production, a speaker selects true words by combining baseline feature availability with pragmatic utility against a depth-one listener who weighs referential recovery against extension redundancy and competitor feature alternatives.",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "attentional_capacity_verification_l2",
+    "hypothesis": "Listeners and speakers communicate under capacity-bounded feature attention: verifying a feature on an object divides attention across the object's features while crowding false distractors in proportion to pairwise competition among the utterance's referents, attenuated at the top listener level by the utterance's extension share. When producing an utterance for a target, a speaker evaluates candidate words against a capacity-bounded literal listener whose feature verification grants an attentional-focus bonus inversely proportional to each object's feature load, combining a quadratic extension-cost pragmatic choice with extension-crowded feature availability strengthened by literal recovery. Because single-feature distractors capture stronger attentional focus than multi-feature distractors during literal verification, speakers prefer narrower words more strongly when shared with multi-feature distractors than with single-feature distractors, while literal-recovery-boosted, extension-crowded availability elevates runner-up narrow features over broader and universal words on complex targets.",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "graded_lexical_uncertainty_l2",
+    "hypothesis": "Listeners and speakers communicate under graded lexical uncertainty in which a word's meaning is diluted across an object's competing features and subject to referential crowding across the scene. When producing a referring expression for a target object, speakers integrate pragmatic specificity selection with uncertain-lexicon referential retrieval, weighting candidate words both by how strongly a pragmatic listener recovers the target from its discriminative extension and by how reliably a literal listener operating over feature-diluted word meanings identifies the target among competing referents. When interpreting a heard word, listeners invert this graded-semantics speaker at recursion depth two under a shared salience prior favoring contextual singletons, distinctive objects, and complexity-extreme referents, with false-referent confusion noise bounded by display size and attenuated at the top-level speaker by the word's non-universal contrast.",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "graded_specificity_availability_l2",
+    "hypothesis": "Refining extension_cost_speaker_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by weighting the top-level production speaker's baseline feature availability in S_prod by the literal graded-semantics listener recovery probability L0[u, r](graded_true) so that S_prod chooses u in UTT with wpp=S1[u, r](alpha, true_lex, spec_lex, ext_share) + at(graded_true, u, r) * L0[u, r](graded_true), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, sem_noise, fc_safe, graded_true, spec_lex, noisy_real, s2_real, soft_lex, s2_lex, L0, L1, L2, S1, listener, and speaker) unchanged. In extension_cost_speaker_l2, adding unmodulated baseline feature availability at(graded_true, u, r) to S1 assigns the same baseline floor 1 / feature_count to every true feature of the target regardless of extension size or distractor complexity, which flattens the choice rate between runner-up (extension-2) and broader (extension-3+) features on targets that have a uniquely identifying feature, inflates globally redundant universal feature choices, and ignores whether distractors sharing a narrower feature have alternative features. Modulating baseline feature availability by L0[u, r](graded_true) preserves extension-graded specificity among suboptimal true features, suppresses universal feature production, and favors narrower features when their distractors are multi-feature objects whose feature load dilutes their competing availability in exp3.",
+    "source": "round 2 candidate 4 refine incumbent extension_cost_speaker_l2 retry 1"
+   },
+   {
+    "name": "graded_competitor_extension_cost_l2",
+    "hypothesis": "Refining extension_cost_speaker_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by replacing the pragmatic production speaker S1 with a two-level recursive production speaker where S1 chooses utterances with wpp=at(graded_true, u, r) * exp(alpha * log(L0[u, r](true_lex) + {EPS})) and S_prod mixes S2 (which chooses utterances with wpp=at(spec_lex, u, r) * exp((1.0 + alpha) * (log(L0[u, r](S1(alpha, true_lex, graded_true)) + {EPS}) - vec(ext_share, u)))) with baseline feature availability at(graded_true, u, r), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, sem_noise, fc_safe, graded_true, spec_lex, noisy_real, s2_real, soft_lex, s2_lex, L0, L1, L2, and listener) unchanged. In extension_cost_speaker_l2, evaluating S1 against the flat truth-conditional literal listener L0(true_lex) ignores whether distractors sharing a candidate word possess alternative features and gives extension-2 runner-up features nearly zero pragmatic probability alongside broader features whenever a unique extension-1 feature exists. Conditioning speaker production on an intermediate speaker S1 whose feature choice is diluted by object complexity (1 / feature_count) while weighting top-level choices by literal specificity (spec_lex) and extension cost (ext_share) explains why speakers in exp3 prefer narrower features more strongly when their distractors have multiple alternative features, prefer runner-up extension-2 features over broader extension-3+ features on targets with a unique feature, and avoid globally redundant universal features.",
+    "source": "round 2 candidate 5 refine incumbent extension_cost_speaker_l2"
+   },
+   {
+    "name": "attentional_focus_discriminative_l2",
+    "hypothesis": "Refining discriminative_audience_design_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by evaluating speaker production against an attentional-focus literal listener L0(focus_lex) with extension-share crowding cost and literal-recovery-modulated baseline availability: defining focus_lex = ctx.lex + graded_true and ext_share = (ext_size[:, 0] / n_obj) * (1.0 - ctx.is_sink) in compute_representations, updating S1_disc[u: UTT, r: OBJ](alpha, focus_lex: ..., spec_lex: ..., ext_share: ...) so the speaker chooses u in UTT with wpp=at(spec_lex, u, r) * exp(alpha * log(L0[u, r](focus_lex) + {EPS}) - vec(ext_share, u)), and setting raw_spk = (disc_probs + true_avail * (1.0 + L0(focus_lex))) * real_mask in speaker(params, ctx), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, denom_scale, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, ext_safe, disc_odds, spec_real, spec_lex, true_avail, L0, L1, L2, and listener) unchanged. In discriminative_audience_design_l2, evaluating S1_disc against the flat truth-conditional listener L0(ctx.lex) with unmodulated baseline availability true_avail ignores competitor feature counts (predicting identical narrow-feature preference whether a shared distractor has one feature or multiple features) and gives equal baseline retrieval weight to suboptimal and universal features regardless of extension size. Grounding speaker evaluation in L0(ctx.lex + graded_true) with extension-share cost and recovery-boosted availability true_avail * (1.0 + L0(focus_lex)) explains why speakers in exp3 prefer narrower features more strongly when shared with multi-feature distractors than with single-feature distractors, maintain specificity gradation between extension-2 and broader suboptimal features on complex targets, and suppress globally redundant universal features.",
+    "source": "round 2 candidate 6 refine chosen retry 1"
+   },
+   {
+    "name": "discriminative_contrast_heuristic",
+    "hypothesis": "Listeners and speakers communicate through a non-Bayesian diagnostic contrast heuristic rather than recursive Theory of Mind: each feature's contextual specificity is determined by its direct extension rarity and its effective uniqueness among objects that rely on it, while each object's perceptual anchor salience combines singleton pop-out, pairwise feature distinctiveness, and complexity extremity. When interpreting a heard word, the listener scores each object in a single step by its noisy feature match (diluted by the object's feature count and extension-crowded confusion noise bounded by display size) weighted by the object's perceptual salience and the effective diagnostic contrast of the heard word relative to the object's competing features. When producing a word for a target object, the speaker selects directly among true words by combining an exponential preference for high discriminative contrast and low extension share with feature-diluted diagnostic availability attenuated by extension crowding.",
+    "source": "round 3 candidate 1 explore"
+   },
+   {
+    "name": "complexity_gated_retrieval_decision_l2",
+    "hypothesis": "Listeners and speakers map pragmatic beliefs into responses through a complexity-gated retrieval decision rule rather than pure expected-utility maximization: when selecting a referring expression for a target object, a speaker combines a specificity-and-cost-weighted pragmatic choice (whose extension penalty grows with the word's extension share and the target's unmentioned feature load) with a structured feature-availability fallback weighted by both literal and feature-diluted target recovery. In comprehension, listeners invert a depth-two graded-semantics speaker under a shared salience prior favoring contextual singletons, distinctive objects, and complexity-extreme referents, with referential crowding noise bounded by display size and attenuated at the top listener level by the word's non-universal contrast. Grounding the speaker's decision rule in complexity-and-crowding-scaled extension cost and dual-recovery availability explains why speakers strongly prefer the narrowest true feature (extension size 2) on multi-feature non-unique targets in exp3 while preserving runner-up specificity gradation, competitor-complexity sensitivity, and comprehension accuracy across E, exp1, and exp2.",
+    "source": "round 3 candidate 2 explore"
+   },
+   {
+    "name": "aspectual_qud_retrieval_l2",
+    "hypothesis": "Speakers and listeners communicate under an aspectual Question Under Discussion (QUD) in which a referring expression answers both which object is intended and which salient aspect characterizes that object's feature profile. In production, a speaker selects true words by combining extension-cost pragmatic specificity with dual-QUD literal retrieval that evaluates how well a candidate word identifies the target under both flat object-identity verification and feature-diluted aspectual verification. In comprehension, a depth-two pragmatic listener inverts a graded-semantics speaker under a shared salience prior favoring contextual singletons, distinctive objects, and complexity-extreme referents, with referential crowding noise bounded by display size and attenuated at the top speaker level by the word's extension share.",
+    "source": "round 3 candidate 3 explore"
+   },
+   {
+    "name": "coupled_salience_lexical_uncertainty_l2",
+    "hypothesis": "Refining graded_lexical_uncertainty_l2 by removing the separate salience parameter w_salience from PARAMS (leaving only alpha in PARAMS) and deriving the pre-linguistic salience prior weight directly from speaker rationality as w_salience = alpha / (1.0 + alpha) inside compute_lex_and_prior(ctx, alpha) (called by listener and speaker with params[\"alpha\"]), while keeping the recursion depth (listener calling L2, which calls L1, which calls L0, and speaker calling S_prod, which calls S1 and L0) and all other terms (L0, L1, L2, S1, S_prod, real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, denom_scale, sem_noise, fc_safe, fc_inv, graded_true, disc_share, spec_real, spec_lex, noisy_real, s2_real, soft_lex, s2_lex, listener, and speaker) unchanged. In graded_lexical_uncertainty_l2, fitting w_salience as a separate free parameter alongside alpha is unnecessary because pre-linguistic sensitivity to object uniqueness, distinctiveness, and complexity extremity scales directly with bounded pragmatic sensitivity alpha / (1.0 + alpha), matching comprehension and production across E, exp1, exp2, and exp3 with one parameter instead of two.",
+    "source": "round 3 candidate 4 refine incumbent graded_lexical_uncertainty_l2"
+   },
+   {
+    "name": "r3_c5",
+    "hypothesis": "Refining graded_lexical_uncertainty_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by adding an unscaled extension-share crowding penalty -vec(ext_share, u) in S1 so S1[u: UTT, r: OBJ](alpha, true_lex: ..., spec_lex: ..., ext_share: ...) chooses u in UTT with wpp=at(spec_lex, u, r) * exp((1.0 + alpha) * (log(L0[u, r](true_lex) + {EPS}) - vec(ext_share, u)) - vec(ext_share, u)), and incorporating discriminative specificity into the top-level production speaker's uncertain-lexicon retrieval so S_prod[u: UTT, r: OBJ](alpha, true_lex: ..., spec_lex: ..., graded_lex: ..., fc_inv: ..., ext_share: ...) chooses u in UTT with wpp=S1[u, r](alpha, true_lex, spec_lex, ext_share) + vec(fc_inv, r) * (at(spec_lex, u, r) + L0[u, r](graded_lex)), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, denom_scale, sem_noise, fc_safe, fc_inv, graded_true, disc_share, spec_real, spec_lex, noisy_real, s2_real, soft_lex, s2_lex, L0, L1, L2, compute_lex_and_prior, listener, and speaker) unchanged. In graded_lexical_uncertainty_l2, the top-level speaker's uncertain-lexicon retrieval term vec(fc_inv, r) * L0[u, r](graded_lex) lacks direct discriminative specificity at(spec_lex, u, r) and S1 applies only the rationality-scaled extension cost, which under-predicts selection of the narrowest true label on multi-feature targets without a uniquely identifying feature (narrowest_label_rate_multifeature_nonunique_target in exp3) when a broader feature's distractors have high feature counts that dilute their competing weight in L0(graded_lex). Strengthening S1's extension-crowding penalty with -vec(ext_share, u) and adding at(spec_lex, u, r) to the feature-diluted retrieval term vec(fc_inv, r) * (at(spec_lex, u, r) + L0[u, r](graded_lex)) ensures that both pragmatic selection and baseline lexical retrieval favor narrower, more discriminative extensions, increasing narrowest-label production on multi-feature non-unique targets in exp3 while preserving comprehension predictions across E, exp1, and exp2.",
+    "source": "round 3 candidate 5 refine incumbent graded_lexical_uncertainty_l2"
+   },
+   {
+    "name": "dual_literal_specificity_speaker_l2",
+    "hypothesis": "Refining graded_specificity_availability_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by evaluating the pragmatic speaker S1 with squared literal specificity, quadratic rationality, and baseline extension-share cost wpp=at(spec_lex, u, r) * at(spec_lex, u, r) * exp((1.0 + alpha) * (1.0 + alpha) * (log(L0[u, r](true_lex) + {EPS}) - vec(ext_share, u)) - vec(ext_share, u)) and weighting baseline feature availability in S_prod by the sum of graded and literal listener recovery wpp=S1[u, r](alpha, true_lex, spec_lex, ext_share) + at(graded_true, u, r) * (L0[u, r](graded_true) + L0[u, r](true_lex)), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, sem_noise, fc_safe, graded_true, spec_lex, noisy_real, s2_real, soft_lex, s2_lex, L0, L1, L2, listener, and speaker) unchanged. In graded_specificity_availability_l2, weighting baseline availability solely by feature-diluted recovery L0[u, r](graded_true) penalizes narrow two-referent features whenever they are shared with a single-feature distractor (because the single-feature distractor captures greater graded weight than the multi-feature target), while linear specificity and rationality in S1 under-suppress three- and four-referent competitors at the joint comprehension-production rationality scale. Combining graded and literal listener recovery L0[u, r](graded_true) + L0[u, r](true_lex) in baseline availability alongside squared-specificity quadratic-rationality pragmatic evaluation in S1 preserves a consistent narrow-extension advantage even against single-feature distractors while retaining sensitivity to distractor feature load, closing the narrowest-label production gap on multi-feature non-unique targets in exp3.",
+    "source": "round 3 candidate 6 refine chosen"
+   }
+  ],
+  "ledger_entries": 95
+ },
+ {
+  "step": 4,
+  "round": 3,
+  "best_model": "complexity_gated_retrieval_decision_l2",
+  "fit_best": "complexity_gated_retrieval_decision_l2",
+  "n_params": {
+   "l1_specificity_graded_l2": 2,
+   "specificity_noisy_graded_semantics_l2": 2,
+   "attentional_capacity_verification_l2": 2,
+   "graded_specificity_availability_l2": 2,
+   "complexity_gated_retrieval_decision_l2": 2,
+   "r3_c5": 2,
+   "dual_literal_specificity_speaker_l2": 2
+  },
+  "parsimony_k": 1.0,
+  "events": [
+   {
+    "name": "specificity_noisy_graded_semantics_l2",
+    "outcome": "kept",
+    "reason": "the best theory on E, the guard's reference there"
+   },
+   {
+    "name": "graded_specificity_availability_l2",
+    "outcome": "kept",
+    "reason": "the best theory on exp1, the guard's reference there"
+   },
+   {
+    "name": "l1_specificity_graded_l2",
+    "outcome": "kept",
+    "reason": "the best theory on exp2, the guard's reference there"
+   },
+   {
+    "name": "l1_graded_semantics_l2",
+    "outcome": "pruned",
+    "reason": "ineligible (E: 386.6 \u00b1 70.2, exp1: 170.4 \u00b1 26.4)"
+   },
+   {
+    "name": "attentional_feature_capacity_l2",
+    "outcome": "pruned",
+    "reason": "ineligible (E: 383.0 \u00b1 70.2, exp1: 168.1 \u00b1 26.5)"
+   },
+   {
+    "name": "crowded_s2_graded_l0_l2",
+    "outcome": "pruned",
+    "reason": "ineligible (E: 441.6 \u00b1 79.0, exp1: 108.5 \u00b1 18.1)"
+   },
+   {
+    "name": "extension_noisy_graded_semantics_l2",
+    "outcome": "pruned",
+    "reason": "762.4 nats behind complexity_gated_retrieval_decision_l2"
+   },
+   {
+    "name": "discriminative_audience_design_l2",
+    "outcome": "pruned",
+    "reason": "28.8 nats behind complexity_gated_retrieval_decision_l2"
+   },
+   {
+    "name": "relative_diagnostic_crowding_l2",
+    "outcome": "pruned",
+    "reason": "51.0 nats behind complexity_gated_retrieval_decision_l2"
+   },
+   {
+    "name": "extension_cost_speaker_l2",
+    "outcome": "pruned",
+    "reason": "27.7 nats behind complexity_gated_retrieval_decision_l2"
+   },
+   {
+    "name": "literal_speaker_extension_noisy_l2",
+    "outcome": "pruned",
+    "reason": "102.8 nats behind complexity_gated_retrieval_decision_l2"
+   },
+   {
+    "name": "literal_competition_speaker_l2",
+    "outcome": "pruned",
+    "reason": "3218.3 nats behind complexity_gated_retrieval_decision_l2"
+   },
+   {
+    "name": "communicative_prior_pragmatic_speaker_l2",
+    "outcome": "pruned",
+    "reason": "12.8 nats behind complexity_gated_retrieval_decision_l2"
+   },
+   {
+    "name": "graded_lexical_uncertainty_l2",
+    "outcome": "pruned",
+    "reason": "8.2 nats behind complexity_gated_retrieval_decision_l2"
+   },
+   {
+    "name": "graded_competitor_extension_cost_l2",
+    "outcome": "pruned",
+    "reason": "143.3 nats behind complexity_gated_retrieval_decision_l2"
+   },
+   {
+    "name": "attentional_focus_discriminative_l2",
+    "outcome": "pruned",
+    "reason": "21.7 nats behind complexity_gated_retrieval_decision_l2"
+   },
+   {
+    "name": "discriminative_contrast_heuristic",
+    "outcome": "pruned",
+    "reason": "28.9 nats behind complexity_gated_retrieval_decision_l2"
+   },
+   {
+    "name": "aspectual_qud_retrieval_l2",
+    "outcome": "pruned",
+    "reason": "4.6 nats behind complexity_gated_retrieval_decision_l2"
+   },
+   {
+    "name": "coupled_salience_lexical_uncertainty_l2",
+    "outcome": "pruned",
+    "reason": "8.6 nats behind complexity_gated_retrieval_decision_l2"
+   }
+  ],
+  "critique": null,
+  "admission_limit_sec": 1800,
+  "standing": {
+   "l1_specificity_graded_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20994.089297771454,
+      "behind": 371.6053020954132,
+      "dse": 69.70853610852076
+     },
+     "exp1": {
+      "elpd_cv": -13324.482453346252,
+      "behind": 167.9292712211609,
+      "dse": 27.30178283812712
+     },
+     "exp2": {
+      "elpd_cv": -13241.58923625946,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp3": {
+      "elpd_cv": -6086.438695192337,
+      "behind": 696.2256290912628,
+      "dse": 138.11118055982192
+     }
+    },
+    "sel_elpd": -6086.438695192337,
+    "sel_diff": 696.2256290912628,
+    "sel_dse": 138.11118055982192,
+    "cv_converged": true,
+    "guard_failures": [
+     "E",
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "specificity_noisy_graded_semantics_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20622.48399567604,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -13182.732825040817,
+      "behind": 26.179642915725708,
+      "dse": 18.46921036219998
+     },
+     "exp2": {
+      "elpd_cv": -14127.777908563614,
+      "behind": 886.1886723041534,
+      "dse": 359.88065880076385
+     },
+     "exp3": {
+      "elpd_cv": -5762.2367289066315,
+      "behind": 372.02366280555725,
+      "dse": 82.04907417063704
+     }
+    },
+    "sel_elpd": -5762.2367289066315,
+    "sel_diff": 372.02366280555725,
+    "sel_dse": 82.04907417063704,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "attentional_capacity_verification_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20798.170215129852,
+      "behind": 175.68621945381165,
+      "dse": 70.210767235686
+     },
+     "exp1": {
+      "elpd_cv": -13168.58503293991,
+      "behind": 12.031850814819336,
+      "dse": 5.896690739703788
+     },
+     "exp2": {
+      "elpd_cv": -13683.699270248413,
+      "behind": 442.11003398895264,
+      "dse": 247.0147374487124
+     },
+     "exp3": {
+      "elpd_cv": -5398.700213670731,
+      "behind": 8.487147569656372,
+      "dse": 5.1964928128721075
+     }
+    },
+    "sel_elpd": -5398.700213670731,
+    "sel_diff": 8.487147569656372,
+    "sel_dse": 5.1964928128721075,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "graded_specificity_availability_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20673.207313776016,
+      "behind": 50.723318099975586,
+      "dse": 49.93100901017489
+     },
+     "exp1": {
+      "elpd_cv": -13156.553182125092,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp2": {
+      "elpd_cv": -13961.035145044327,
+      "behind": 719.4459087848663,
+      "dse": 313.7761592674316
+     },
+     "exp3": {
+      "elpd_cv": -5430.869961261749,
+      "behind": 40.65689516067505,
+      "dse": 9.69170676966558
+     }
+    },
+    "sel_elpd": -5430.869961261749,
+    "sel_diff": 40.65689516067505,
+    "sel_dse": 9.69170676966558,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "complexity_gated_retrieval_decision_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20677.319647550583,
+      "behind": 54.835651874542236,
+      "dse": 50.06288844896157
+     },
+     "exp1": {
+      "elpd_cv": -13157.41595339775,
+      "behind": 0.8627712726593018,
+      "dse": 1.493123010255049
+     },
+     "exp2": {
+      "elpd_cv": -13908.826268434525,
+      "behind": 667.2370321750641,
+      "dse": 291.44920151239927
+     },
+     "exp3": {
+      "elpd_cv": -5390.213066101074,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": -5390.213066101074,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "r3_c5": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20677.091351747513,
+      "behind": 54.60735607147217,
+      "dse": 50.19174724138713
+     },
+     "exp1": {
+      "elpd_cv": -13157.026541233063,
+      "behind": 0.4733591079711914,
+      "dse": 1.4374778556266865
+     },
+     "exp2": {
+      "elpd_cv": -13910.655992746353,
+      "behind": 669.0667564868927,
+      "dse": 292.1283120734705
+     },
+     "exp3": {
+      "elpd_cv": -5394.61753988266,
+      "behind": 4.404473781585693,
+      "dse": 3.6182820782386753
+     }
+    },
+    "sel_elpd": -5394.61753988266,
+    "sel_diff": 4.404473781585693,
+    "sel_dse": 3.6182820782386753,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "dual_literal_specificity_speaker_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20674.25245165825,
+      "behind": 51.76845598220825,
+      "dse": 49.88505243546075
+     },
+     "exp1": {
+      "elpd_cv": -13156.675651311874,
+      "behind": 0.12246918678283691,
+      "dse": 0.30082378669089743
+     },
+     "exp2": {
+      "elpd_cv": -13960.122889995575,
+      "behind": 718.5336537361145,
+      "dse": 313.2648276479028
+     },
+     "exp3": {
+      "elpd_cv": -5391.209491729736,
+      "behind": 0.9964256286621094,
+      "dse": 1.7586430787053668
+     }
+    },
+    "sel_elpd": -5391.209491729736,
+    "sel_diff": 0.9964256286621094,
+    "sel_dse": 1.7586430787053668,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "l1_specificity_graded_l2",
+    "hypothesis": "Refining l1_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by scaling the L1 speaker's true-feature lexical weight by contextual feature specificity (n_obj / ext_size) so that graded_true = (ctx.lex * n_obj) / (fc_safe * jnp.maximum(ext_size, 1.0)), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, noisy_real, soft_lex, L0, L1, L2, listener, and speaker) unchanged. In l1_graded_semantics_l2, dividing the L1 speaker's lexical weight only by feature count leaves a universal all-true word with the same lexical applicability as a specific two-referent word on multi-feature objects, causing the L1 speaker to strongly avoid the universal word on complex objects and leading L2 to over-predict the rating drop between two-referent and four-referent valid objects in exp2. Weighting L1 lexical access by contextual specificity (n_obj / ext_size) attenuates the feature-dilution advantage of universal words relative to diagnostic words at L1, reducing the L2 penalty on complex valid referents under universal words and closing the extension-size 2-versus-4 rating discrepancy in exp2.",
+    "source": "seed"
+   },
+   {
+    "name": "specificity_noisy_graded_semantics_l2",
+    "hypothesis": "Refining l1_specificity_graded_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same recursion depth (L2 calling L1, which calls L0), by using the specificity-weighted noisy graded lexicon soft_lex across all three recursion levels (removing true_lex from L1 and L2 so L1 calls L0[u, r](soft_lex), L2 weights speaker choices by at(soft_lex, u, r) * exp(alpha * log(L1[u, r](alpha, soft_lex, prior) + {EPS})), and listener and speaker call L2(params[\"alpha\"], soft_lex, prior)) while weighting top-level speaker production in speaker by the truth-conditional specificity-graded lexical applicability ctx.lex * soft_lex (replacing weights = (table + EPS) * real with weights = (ctx.lex * soft_lex * table + EPS) * real) and keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, L0, and listener) unchanged. In l1_specificity_graded_l2, passing ctx.lex to L0 and L2 zeroes out extension-scaled semantic confusion noise on false referents (causing listener false-alarm failures on E and exp1), while normalizing L2(r | u) across utterances in speaker without re-applying the speaker's lexical filter ctx.lex * soft_lex divides out utterance-level specificity (n_obj / ext_size) during L2's object normalization. Propagating soft_lex through L0, L1, and L2 while weighting speaker production by ctx.lex * soft_lex restores extension-scaled false-alarm sensitivity on E and exp1 and preserves utterance specificity in production, resolving the severe under-prediction of smallest-extension true word choices (smallest_true_ext_reversed_graded_l0, smallest_true_ext_aligned_nonunique_rate, non_minimal_true_rate_in_multi_feature_nonunique_targets, and chosen_normalized_ext_in_nonunique_scenes) on exp3.",
+    "source": "round 1 candidate 6 refine chosen"
+   },
+   {
+    "name": "attentional_capacity_verification_l2",
+    "hypothesis": "Listeners and speakers communicate under capacity-bounded feature attention: verifying a feature on an object divides attention across the object's features while crowding false distractors in proportion to pairwise competition among the utterance's referents, attenuated at the top listener level by the utterance's extension share. When producing an utterance for a target, a speaker evaluates candidate words against a capacity-bounded literal listener whose feature verification grants an attentional-focus bonus inversely proportional to each object's feature load, combining a quadratic extension-cost pragmatic choice with extension-crowded feature availability strengthened by literal recovery. Because single-feature distractors capture stronger attentional focus than multi-feature distractors during literal verification, speakers prefer narrower words more strongly when shared with multi-feature distractors than with single-feature distractors, while literal-recovery-boosted, extension-crowded availability elevates runner-up narrow features over broader and universal words on complex targets.",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "graded_specificity_availability_l2",
+    "hypothesis": "Refining extension_cost_speaker_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by weighting the top-level production speaker's baseline feature availability in S_prod by the literal graded-semantics listener recovery probability L0[u, r](graded_true) so that S_prod chooses u in UTT with wpp=S1[u, r](alpha, true_lex, spec_lex, ext_share) + at(graded_true, u, r) * L0[u, r](graded_true), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, sem_noise, fc_safe, graded_true, spec_lex, noisy_real, s2_real, soft_lex, s2_lex, L0, L1, L2, S1, listener, and speaker) unchanged. In extension_cost_speaker_l2, adding unmodulated baseline feature availability at(graded_true, u, r) to S1 assigns the same baseline floor 1 / feature_count to every true feature of the target regardless of extension size or distractor complexity, which flattens the choice rate between runner-up (extension-2) and broader (extension-3+) features on targets that have a uniquely identifying feature, inflates globally redundant universal feature choices, and ignores whether distractors sharing a narrower feature have alternative features. Modulating baseline feature availability by L0[u, r](graded_true) preserves extension-graded specificity among suboptimal true features, suppresses universal feature production, and favors narrower features when their distractors are multi-feature objects whose feature load dilutes their competing availability in exp3.",
+    "source": "round 2 candidate 4 refine incumbent extension_cost_speaker_l2 retry 1"
+   },
+   {
+    "name": "complexity_gated_retrieval_decision_l2",
+    "hypothesis": "Listeners and speakers map pragmatic beliefs into responses through a complexity-gated retrieval decision rule rather than pure expected-utility maximization: when selecting a referring expression for a target object, a speaker combines a specificity-and-cost-weighted pragmatic choice (whose extension penalty grows with the word's extension share and the target's unmentioned feature load) with a structured feature-availability fallback weighted by both literal and feature-diluted target recovery. In comprehension, listeners invert a depth-two graded-semantics speaker under a shared salience prior favoring contextual singletons, distinctive objects, and complexity-extreme referents, with referential crowding noise bounded by display size and attenuated at the top listener level by the word's non-universal contrast. Grounding the speaker's decision rule in complexity-and-crowding-scaled extension cost and dual-recovery availability explains why speakers strongly prefer the narrowest true feature (extension size 2) on multi-feature non-unique targets in exp3 while preserving runner-up specificity gradation, competitor-complexity sensitivity, and comprehension accuracy across E, exp1, and exp2.",
+    "source": "round 3 candidate 2 explore"
+   },
+   {
+    "name": "r3_c5",
+    "hypothesis": "Refining graded_lexical_uncertainty_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by adding an unscaled extension-share crowding penalty -vec(ext_share, u) in S1 so S1[u: UTT, r: OBJ](alpha, true_lex: ..., spec_lex: ..., ext_share: ...) chooses u in UTT with wpp=at(spec_lex, u, r) * exp((1.0 + alpha) * (log(L0[u, r](true_lex) + {EPS}) - vec(ext_share, u)) - vec(ext_share, u)), and incorporating discriminative specificity into the top-level production speaker's uncertain-lexicon retrieval so S_prod[u: UTT, r: OBJ](alpha, true_lex: ..., spec_lex: ..., graded_lex: ..., fc_inv: ..., ext_share: ...) chooses u in UTT with wpp=S1[u, r](alpha, true_lex, spec_lex, ext_share) + vec(fc_inv, r) * (at(spec_lex, u, r) + L0[u, r](graded_lex)), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, denom_scale, sem_noise, fc_safe, fc_inv, graded_true, disc_share, spec_real, spec_lex, noisy_real, s2_real, soft_lex, s2_lex, L0, L1, L2, compute_lex_and_prior, listener, and speaker) unchanged. In graded_lexical_uncertainty_l2, the top-level speaker's uncertain-lexicon retrieval term vec(fc_inv, r) * L0[u, r](graded_lex) lacks direct discriminative specificity at(spec_lex, u, r) and S1 applies only the rationality-scaled extension cost, which under-predicts selection of the narrowest true label on multi-feature targets without a uniquely identifying feature (narrowest_label_rate_multifeature_nonunique_target in exp3) when a broader feature's distractors have high feature counts that dilute their competing weight in L0(graded_lex). Strengthening S1's extension-crowding penalty with -vec(ext_share, u) and adding at(spec_lex, u, r) to the feature-diluted retrieval term vec(fc_inv, r) * (at(spec_lex, u, r) + L0[u, r](graded_lex)) ensures that both pragmatic selection and baseline lexical retrieval favor narrower, more discriminative extensions, increasing narrowest-label production on multi-feature non-unique targets in exp3 while preserving comprehension predictions across E, exp1, and exp2.",
+    "source": "round 3 candidate 5 refine incumbent graded_lexical_uncertainty_l2"
+   },
+   {
+    "name": "dual_literal_specificity_speaker_l2",
+    "hypothesis": "Refining graded_specificity_availability_l2 with no parameters added or removed (retaining only alpha and w_salience) and the same listener recursion depth (listener calling L2, which calls L1, which calls L0), by evaluating the pragmatic speaker S1 with squared literal specificity, quadratic rationality, and baseline extension-share cost wpp=at(spec_lex, u, r) * at(spec_lex, u, r) * exp((1.0 + alpha) * (1.0 + alpha) * (log(L0[u, r](true_lex) + {EPS}) - vec(ext_share, u)) - vec(ext_share, u)) and weighting baseline feature availability in S_prod by the sum of graded and literal listener recovery wpp=S1[u, r](alpha, true_lex, spec_lex, ext_share) + at(graded_true, u, r) * (L0[u, r](graded_true) + L0[u, r](true_lex)), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, sem_noise, fc_safe, graded_true, spec_lex, noisy_real, s2_real, soft_lex, s2_lex, L0, L1, L2, listener, and speaker) unchanged. In graded_specificity_availability_l2, weighting baseline availability solely by feature-diluted recovery L0[u, r](graded_true) penalizes narrow two-referent features whenever they are shared with a single-feature distractor (because the single-feature distractor captures greater graded weight than the multi-feature target), while linear specificity and rationality in S1 under-suppress three- and four-referent competitors at the joint comprehension-production rationality scale. Combining graded and literal listener recovery L0[u, r](graded_true) + L0[u, r](true_lex) in baseline availability alongside squared-specificity quadratic-rationality pragmatic evaluation in S1 preserves a consistent narrow-extension advantage even against single-feature distractors while retaining sensitivity to distractor feature load, closing the narrowest-label production gap on multi-feature non-unique targets in exp3.",
+    "source": "round 3 candidate 6 refine chosen"
+   }
+  ],
+  "ledger_entries": 111
+ }
+]

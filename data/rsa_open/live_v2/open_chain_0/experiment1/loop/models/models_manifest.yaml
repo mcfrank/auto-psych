@@ -1,0 +1,58 @@
+models:
+- name: rsa_l2_singleton_feat_color_valence_l0
+  rationale: 'RSA pragmatic listener at depth 2 with singleton salience, contextual
+    distinctiveness, visual feature complexity, evaluative valence framing, visual
+    color contrast, and literal L0. Refining rsa_l2_singleton_distinct_feat_color_l0
+    by incorporating the evaluative valence framing component from polarity_congruence_listener:
+    speakers and listeners reason at depth 2 (inverting a speaker who simulates a
+    depth-1 pragmatic listener) with common knowledge of an object prior combining
+    discrete visual singleton salience (favoring unique objects with no duplicates
+    in the scene), continuous contextual distinctiveness (favoring objects with greater
+    feature contrast relative to the rest of the display), visual feature complexity
+    modulated by evaluative framing valence (favoring feature-rich items under neutral/positive
+    framing but inverting to favor sparse, featureless items when referring to a least
+    favorite object), and visual color contrast (favoring fully colored objects over
+    desaturated grayscale distractors). Crucially, the foundational simulated literal
+    listener L0 operates purely on truth-conditional semantics without perceptual
+    bias, preventing redundant prior compounding across reasoning tiers. On prior
+    trials with no informative word, choices are governed directly by the combined
+    perceptual prior. A lapse parameter mixes in uniform guessing.'
+- name: attentional_load_l1
+  rationale: 'Listeners interpret referring expressions under limited visual attention
+    to the display''s feature matrix: an object''s baseline visual salience reflects
+    how strongly its feature density stands out from the scene average (favoring sparse
+    minimal objects and full-featured objects over intermediate ones) while penalizing
+    visually confusable neighbors. On heard-word trials, a depth-one pragmatic listener
+    inverts a confusion-averse speaker under this shared salience prior, but when
+    a heard word''s extension spans most of the display while still leaving a false
+    distractor, attentional overload in feature verification causes the listener''s
+    posterior to partially fall back toward the baseline visual salience prior.'
+- name: uncertainty_gated_belief_l2
+  rationale: Listeners and speakers infer referents by probability matching over a
+    capacity-bounded belief distribution where pragmatic reasoning is gated by an
+    utterance's referential uncertainty (the ratio of competing true referents to
+    scene objects) and anchored by a boundary-extremity visual prior. When a word's
+    extension spans most of the display while leaving a false distractor, high referential
+    uncertainty causes the listener's decision rule to partially fall back from depth-two
+    pragmatic beliefs toward the visual boundary-extremity prior, explaining elevated
+    false alarms on three-true displays and strong avoidance of intermediate-complexity
+    objects on silent trials across E and exp1.
+- name: extension_noisy_graded_semantics_l2
+  rationale: 'Refining noisy_graded_semantics_l2 with no parameters added or removed
+    (retaining only alpha and w_salience) and the same recursion depth (L2 calling
+    L1, which calls L0), by scaling each real word''s semantic confusion noise on
+    false objects by the squared proportion of display objects in that word''s literal
+    extension: defining ext_size = jnp.sum(real_lex, axis=1, keepdims=True) and replacing
+    sem_noise = 1.0 / (n_utt * n_obj) with sem_noise = (ext_size * ext_size) / (n_utt
+    * n_obj * n_obj), while keeping all other terms (real_mask, real_lex, diff, pair_dist,
+    is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, fc_safe, graded_true,
+    noisy_real, soft_lex, L0, L1, L2, listener, and speaker) unchanged. Under uniform
+    constant noise across utterances, depth-two pragmatic recursion suppresses false-alarm
+    probabilities on three-of-four valid-referent trials to nearly zero because two
+    levels of speaker likelihood inversion amplify the ratio between valid and false
+    referents. Because a word that spans most of the display induces greater referential
+    crowding and feature-verification interference across objects than a word with
+    a small extension, scaling semantic confusion by the squared extension proportion
+    explains why listeners make substantially more false-alarm choices when a heard
+    word applies to three of four objects than when it applies to two across E and
+    exp1.'

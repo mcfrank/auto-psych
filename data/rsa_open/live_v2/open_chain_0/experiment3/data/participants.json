@@ -1,0 +1,138 @@
+{
+ "collection": "live",
+ "prolific_mode": "live",
+ "study_id": "6af91082510f24c631afbfb2",
+ "target": 250,
+ "smoke_test": false,
+ "other_study": 0,
+ "second_submissions": 0,
+ "recruited": 250,
+ "responses": 252,
+ "readable": 252,
+ "kept": 228,
+ "excluded": 24,
+ "exclusion_rate": 0.09523809523809523,
+ "exclusion_reasons": {
+  "missed a catch trial": 16,
+  "failed the comprehension checks on the second reading": 9
+ },
+ "comprehension_final": 0.9642857142857143,
+ "catch_pass": 0.9623015873015873,
+ "same_answer": {
+  "n": 0,
+  "share": 0.0,
+  "people": {}
+ },
+ "fast": {
+  "n": 0,
+  "people": {}
+ },
+ "minutes": {
+  "median": 6.332116666666667,
+  "p10": 3.4684166666666667,
+  "p90": 11.4182
+ },
+ "enjoyment": {
+  "mean": 3.861111111111111,
+  "n": 252,
+  "counts": {
+   "1": 7,
+   "2": 17,
+   "3": 63,
+   "4": 82,
+   "5": 83
+  }
+ },
+ "hourly_usd_at_median": 7.580403603850213,
+ "returning": {
+  "all": {
+   "n": 71,
+   "share": 0.28174603174603174,
+   "earlier_studies": {
+    "1": 71
+   }
+  },
+  "kept": {
+   "n": 62,
+   "share": 0.2719298245614035,
+   "earlier_studies": {
+    "1": 62
+   }
+  }
+ },
+ "excluded_people": {
+  "p1330": [
+   "missed a catch trial"
+  ],
+  "p1398": [
+   "missed a catch trial"
+  ],
+  "p318": [
+   "missed a catch trial"
+  ],
+  "p1403": [
+   "missed a catch trial"
+  ],
+  "p1408": [
+   "missed a catch trial"
+  ],
+  "p1411": [
+   "missed a catch trial"
+  ],
+  "p852": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p1413": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p1426": [
+   "missed a catch trial"
+  ],
+  "p1050": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p1431": [
+   "missed a catch trial"
+  ],
+  "p573": [
+   "missed a catch trial"
+  ],
+  "p1439": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p1440": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p1448": [
+   "missed a catch trial"
+  ],
+  "p1318": [
+   "missed a catch trial"
+  ],
+  "p633": [
+   "missed a catch trial"
+  ],
+  "p429": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p1497": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p1498": [
+   "missed a catch trial"
+  ],
+  "p1509": [
+   "missed a catch trial"
+  ],
+  "p1516": [
+   "missed a catch trial"
+  ],
+  "p530": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p1524": [
+   "failed the comprehension checks on the second reading",
+   "missed a catch trial"
+  ]
+ }
+}

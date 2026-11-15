@@ -1,0 +1,1 @@
+{"best_model": "sole_exclusion_shadowing_heuristic", "live": ["contrastive_tier_resolution_qud_l2", "r3_c2", "sole_exclusion_leakage_l2_2", "sole_exclusion_shadowing_heuristic", "sole_singleton_shadowed_sufficiency_l2", "tier_span_leakage_soft_truth_l2"]}

@@ -1,0 +1,202 @@
+{
+ "collection": "live",
+ "prolific_mode": "live",
+ "study_id": "6af82a44ec33154980728327",
+ "target": 200,
+ "smoke_test": false,
+ "other_study": 0,
+ "second_submissions": 0,
+ "recruited": 200,
+ "responses": 200,
+ "readable": 200,
+ "kept": 157,
+ "excluded": 43,
+ "exclusion_rate": 0.215,
+ "exclusion_reasons": {
+  "missed a catch trial": 25,
+  "failed the comprehension checks on the second reading": 21
+ },
+ "comprehension_final": 0.895,
+ "catch_pass": 0.925,
+ "same_answer": {
+  "n": 4,
+  "share": 0.02,
+  "people": {
+   "p532": "rating 6 | rating 6 on 24 of 25 test trials",
+   "p772": "rating 7 | rating 7 on 25 of 25 test trials",
+   "p788": "rating 7 | rating 7 on 25 of 25 test trials",
+   "p578": "rating 7 | rating 7 on 23 of 25 test trials"
+  }
+ },
+ "fast": {
+  "n": 0,
+  "people": {}
+ },
+ "minutes": {
+  "median": 6.620950000000001,
+  "p10": 3.813483333333333,
+  "p90": 13.062933333333332
+ },
+ "enjoyment": {
+  "mean": 4.32,
+  "n": 200,
+  "counts": {
+   "1": 0,
+   "2": 5,
+   "3": 29,
+   "4": 63,
+   "5": 103
+  }
+ },
+ "hourly_usd_at_median": 9.062143650080426,
+ "returning": {
+  "all": {
+   "n": 138,
+   "share": 0.69,
+   "earlier_studies": {
+    "1": 138
+   }
+  },
+  "kept": {
+   "n": 106,
+   "share": 0.6751592356687898,
+   "earlier_studies": {
+    "1": 106
+   }
+  }
+ },
+ "excluded_people": {
+  "p679": [
+   "missed a catch trial"
+  ],
+  "p903": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p532": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p357": [
+   "missed a catch trial"
+  ],
+  "p906": [
+   "missed a catch trial"
+  ],
+  "p907": [
+   "missed a catch trial"
+  ],
+  "p908": [
+   "missed a catch trial"
+  ],
+  "p589": [
+   "missed a catch trial"
+  ],
+  "p591": [
+   "missed a catch trial"
+  ],
+  "p665": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p757": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p912": [
+   "missed a catch trial"
+  ],
+  "p913": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p677": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p560": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p768": [
+   "missed a catch trial"
+  ],
+  "p566": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p647": [
+   "missed a catch trial"
+  ],
+  "p582": [
+   "missed a catch trial"
+  ],
+  "p788": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p793": [
+   "missed a catch trial"
+  ],
+  "p437": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p926": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p927": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p725": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p601": [
+   "missed a catch trial"
+  ],
+  "p773": [
+   "missed a catch trial"
+  ],
+  "p791": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p393": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p604": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p720": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p539": [
+   "missed a catch trial"
+  ],
+  "p898": [
+   "failed the comprehension checks on the second reading",
+   "missed a catch trial"
+  ],
+  "p599": [
+   "missed a catch trial"
+  ],
+  "p616": [
+   "missed a catch trial"
+  ],
+  "p940": [
+   "missed a catch trial"
+  ],
+  "p942": [
+   "missed a catch trial"
+  ],
+  "p600": [
+   "missed a catch trial"
+  ],
+  "p819": [
+   "failed the comprehension checks on the second reading"
+  ],
+  "p565": [
+   "failed the comprehension checks on the second reading",
+   "missed a catch trial"
+  ],
+  "p639": [
+   "missed a catch trial"
+  ],
+  "p957": [
+   "missed a catch trial"
+  ],
+  "p752": [
+   "failed the comprehension checks on the second reading",
+   "missed a catch trial"
+  ]
+ }
+}

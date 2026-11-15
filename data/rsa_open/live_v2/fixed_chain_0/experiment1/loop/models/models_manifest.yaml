@@ -1,0 +1,61 @@
+models:
+- name: r1_c5
+  rationale: 'Refining rsa_l2_singleton_feat_color_valence_l0 by incorporating speaker
+    competitor-confusion aversion from competitor_confusion_speaker into the depth-2
+    speaker without adding or removing any free parameters (retaining all six parameters:
+    alpha, w_singleton, w_distinct, w_features, w_valence, and w_color). In rsa_l2_singleton_feat_color_valence_l0,
+    when the minimal true referents are a duplicated pair, the depth-2 speaker under-selects
+    the shared word for the duplicate pair relative to a richer singleton competitor
+    that possesses an unused uniquely-identifying feature, causing the listener to
+    over-predict choosing that richer competitor on word trials (such as exp1 unit41
+    and unit33, flagged by word_duplicated_two_feature_vs_unique_feat_competitor_rate
+    in critiques.md). Here, while the literal listener L0 and depth-1 pragmatic listener
+    L1 remain unchanged, the depth-2 speaker simulated inside L2 subtracts the competitor-confusion
+    penalty for each real word and target referent (the sum of exponentially decaying
+    perceptual similarity over other context objects that also satisfy that word)
+    from the log depth-1 listener probability before scaling by rationality alpha.'
+- name: r3_c1
+  rationale: Listeners interpret referring expressions through a non-Bayesian diagnostic
+    sufficiency heuristic rather than recursive speaker simulation. On word trials,
+    listeners directly score literal referents by penalizing the diagnosticity of
+    their strongest unmentioned feature across distinct referent types alongside perceptual
+    competitor crowding and partial-feature tier ambiguity, while rewarding minimal-complexity
+    literal matches; this explains why people strongly favor unique single-feature
+    referents over partial-feature competitors and avoid non-prototype maximal referents
+    while retaining support for holistic all-feature prototypes against cloned minimal
+    referents. On prior trials without an informative word, listeners anchor on unique
+    maximal-complexity prototypes and perceptually isolated singletons while avoiding
+    duplicated and intermediate-complexity items.
+- name: complexity_tier_qud_l2
+  rationale: "Speakers communicate under a complexity-tier Question Under Discussion\
+    \ (QUD), selecting utterances to resolve both the target referent's complexity\
+    \ tier and its identity while avoiding confusion with visually similar or intermediate-tier\
+    \ competitors. Listeners jointly infer the speaker's target referent and complexity-tier\
+    \ goal at recursive depth 2, expecting unmarked reference to anchor on unique,\
+    \ extreme-complexity objects\u2014especially the maximal-feature prototype\u2014\
+    while suppressing ambiguous intermediate-tier items."
+- name: prototype_tier_confusion_l2
+  rationale: We refine `tier_competitor_confusion_l2` while keeping recursion depth
+    2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating
+    `L0`) and the exact same two free parameters (`alpha` and `w_confusion`, both
+    with `LogNormal(0.0, 0.5)` priors), by extending complexity-tier confusion with
+    incomplete-prototype penalty and complete-prototype anchoring on upper-tier literal
+    referents alongside singleton uniqueness in the object priors. Specifically, in
+    `confusion` we add `(is_non_all_max - is_all_utt * (min_cloned + gap_utt)) / n_obj`,
+    penalizing upper-tier literal referents (`is_max_utt`) that lack at least one
+    scene feature (`is_non_all_max`, where `fc < n_real_words`) while reducing confusion
+    on complete all-features literal referents (`is_all_utt`, where `fc == n_real_words`)
+    when the minimal-complexity literal tier is cloned (`min_cloned`) or separated
+    by a multi-feature span (`gap_utt = max(fc - min_true_fc - 1, 0) / n_real_words`);
+    in `word_prior` we subtract `is_singleton / (n_obj * n_real_words)` inside the
+    `-w_confusion` weight; and in `prior_choice` we replace `-is_max_fc / n_obj` with
+    `-(is_max_fc * (1.0 + is_singleton * inter_frac) + is_singleton) / n_obj` (where
+    `inter_frac = sum(is_inter_scene) / n_obj`). Penalizing incomplete upper-tier
+    literal referents and rewarding complete all-features prototypes explains why
+    listeners on word trials reject partial-feature competitors in favor of minimal-feature
+    referents (`unique_single_feature_referent_vs_partial_feature_competitor_rate`,
+    `max_literal_referent_rate_in_three_referent_false_distractor_scenes`, and `cloned_min_referent_vs_distinct_max_competitors_rate`)
+    yet select all-features prototypes against single-feature referents (`cloned_single_feature_referent_rate_against_unique_all_features_competitor`
+    and `all_features_referent_rate_against_unique_single_feature_with_false_distractor`),
+    while singleton and unique-maximum anchoring in the prior explains why listeners
+    favor unique maximal-feature objects on three-tier prior displays (`prior_unique_max_feature_rate_in_four_object_three_tier_scenes`).

@@ -1,0 +1,17 @@
+{
+ "source": "chain_0, experiment 3",
+ "paradigm": "pragmatic_speaker_production",
+ "response": "production",
+ "domains": 3,
+ "trials": 30,
+ "minutes": 4.5,
+ "mean": 3.861111111111111,
+ "n": 252,
+ "counts": {
+  "1": 7,
+  "2": 17,
+  "3": 63,
+  "4": 82,
+  "5": 83
+ }
+}

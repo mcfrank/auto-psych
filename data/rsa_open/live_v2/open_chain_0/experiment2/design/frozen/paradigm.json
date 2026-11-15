@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "name": "pragmatic_dual_rating_7pt",
+  "summary": "Two-step listener paradigm collecting 7-point likelihood ratings on two distinct probed objects within the same scene.",
+  "charter": {
+    "question": "How do listeners jointly grade the plausibility of two distinct candidate referents (such as competing true referents or false distractors) within the same referential context?"
+  },
+  "instructions": {
+    "welcome": "Welcome! You will see groups of cartoons (robots, houses, and snowmen) and judge which one a speaker means.",
+    "task": "On each screen, a speaker sees the same objects you see and says one word for one object. You will rate two highlighted objects one after the other from 1 (Very unlikely) to 7 (Very likely): first rate how likely the speaker meant the first highlighted object, then rate the second highlighted object. Rate an object 1 if it lacks the named part, and 7 if it uniquely has that part.",
+    "comprehension_checks": [
+      {
+        "question": "What do you do on each screen?",
+        "options": [
+          "Rate two highlighted objects from 1 (Very unlikely) to 7 (Very likely), one after the other",
+          "Click two objects at random",
+          "Type a word for each object"
+        ],
+        "correct": 0
+      },
+      {
+        "question": "Does the speaker see the same objects on the screen that you see?",
+        "options": [
+          "Yes, the speaker sees the exact same objects",
+          "No, the speaker sees different objects",
+          "No, the speaker sees nothing"
+        ],
+        "correct": 0
+      }
+    ]
+  },
+  "materials": {
+    "kind": "svg",
+    "domains": [
+      {
+        "name": "robot",
+        "base": "<g><rect x=\"36\" y=\"80\" width=\"10\" height=\"14\" rx=\"3\" fill=\"#64748b\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"54\" y=\"80\" width=\"10\" height=\"14\" rx=\"3\" fill=\"#64748b\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"22\" y=\"52\" width=\"8\" height=\"22\" rx=\"4\" fill=\"#94a3b8\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"70\" y=\"52\" width=\"8\" height=\"22\" rx=\"4\" fill=\"#94a3b8\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"30\" y=\"48\" width=\"40\" height=\"34\" rx=\"6\" fill=\"#cbd5e1\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"45\" y=\"42\" width=\"10\" height=\"7\" fill=\"#64748b\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"28\" y=\"28\" width=\"4\" height=\"8\" rx=\"1\" fill=\"#64748b\" stroke=\"#334155\" stroke-width=\"1.5\"/><rect x=\"68\" y=\"28\" width=\"4\" height=\"8\" rx=\"1\" fill=\"#64748b\" stroke=\"#334155\" stroke-width=\"1.5\"/><rect x=\"32\" y=\"20\" width=\"36\" height=\"24\" rx=\"5\" fill=\"#cbd5e1\" stroke=\"#334155\" stroke-width=\"2\"/><circle cx=\"42\" cy=\"30\" r=\"4\" fill=\"#38bdf8\" stroke=\"#0f172a\" stroke-width=\"1.5\"/><circle cx=\"58\" cy=\"30\" r=\"4\" fill=\"#38bdf8\" stroke=\"#0f172a\" stroke-width=\"1.5\"/><rect x=\"40\" y=\"37\" width=\"20\" height=\"4\" rx=\"1\" fill=\"#475569\"/></g>",
+        "features": [
+          {
+            "word": "crown",
+            "svg": "<g><polygon points=\"35,20 35,6 43,13 50,4 57,13 65,6 65,20\" fill=\"#facc15\" stroke=\"#854d0e\" stroke-width=\"2\"/><circle cx=\"50\" cy=\"14\" r=\"2.3\" fill=\"#ef4444\"/><circle cx=\"40\" cy=\"15\" r=\"1.7\" fill=\"#2563eb\"/><circle cx=\"60\" cy=\"15\" r=\"1.7\" fill=\"#2563eb\"/></g>",
+            "phrase": null
+          },
+          {
+            "word": "wings",
+            "svg": "<g><polygon points=\"22,50 2,34 6,50 2,64 22,64\" fill=\"#a855f7\" stroke=\"#581c87\" stroke-width=\"2\"/><polygon points=\"78,50 98,34 94,50 98,64 78,64\" fill=\"#a855f7\" stroke=\"#581c87\" stroke-width=\"2\"/></g>",
+            "phrase": null
+          },
+          {
+            "word": "heart",
+            "svg": "<g><path d=\"M 50 74 C 50 74 37 65 37 57 C 37 52 43 50 50 56 C 57 50 63 52 63 57 C 63 65 50 74 50 74 Z\" fill=\"#ef4444\" stroke=\"#7f1d1d\" stroke-width=\"2\"/></g>",
+            "phrase": null
+          },
+          {
+            "word": "tail",
+            "svg": "<g><path d=\"M 70 76 Q 84 88 93 76\" fill=\"none\" stroke=\"#ea580c\" stroke-width=\"6\" stroke-linecap=\"round\"/><path d=\"M 70 76 Q 84 88 93 76\" fill=\"none\" stroke=\"#fb923c\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"98,70 88,73 95,81\" fill=\"#ea580c\" stroke=\"#7c2d12\" stroke-width=\"1.5\"/></g>",
+            "phrase": null
+          }
+        ],
+        "variants": [
+          "<g><rect x=\"36\" y=\"80\" width=\"10\" height=\"14\" rx=\"3\" fill=\"#64748b\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"54\" y=\"80\" width=\"10\" height=\"14\" rx=\"3\" fill=\"#64748b\" stroke=\"#334155\" stroke-width=\"2\"/><rect x=\"22\" y=\"52\" width=\"8\" height=\"22\" rx=\"4\" fill=\"#93c5fd\" stroke=\"#1e3a8a\" stroke-width=\"2\"/><rect x=\"70\" y=\"52\" width=\"8\" height=\"22\" rx=\"4\" fill=\"#93c5fd\" stroke=\"#1e3a8a\" stroke-width=\"2\"/><rect x=\"30\" y=\"48\" width=\"40\" height=\"34\" rx=\"6\" fill=\"#bfdbfe\" stroke=\"#1e3a8a\" stroke-width=\"2\"/><rect x=\"45\" y=\"42\" width=\"10\" height=\"7\" fill=\"#64748b\" stroke=\"#1e3a8a\" stroke-width=\"2\"/><rect x=\"28\" y=\"28\" width=\"4\" height=\"8\" rx=\"1\" fill=\"#64748b\" stroke=\"#1e3a8a\" stroke-width=\"1.5\"/><rect x=\"68\" y=\"28\" width=\"4\" height=\"8\" rx=\"1\" fill=\"#64748b\" stroke=\"#1e3a8a\" stroke-width=\"1.5\"/><rect x=\"32\" y=\"20\" width=\"36\" height=\"24\" rx=\"5\" fill=\"#bfdbfe\" stroke=\"#1e3a8a\" stroke-width=\"2\"/><circle cx=\"42\" cy=\"30\" r=\"4\" fill=\"#fde047\" stroke=\"#0f172a\" stroke-width=\"1.5\"/><circle cx=\"58\" cy=\"30\" r=\"4\" fill=\"#fde047\" stroke=\"#0f172a\" stroke-width=\"1.5\"/><rect x=\"40\" y=\"37\" width=\"20\" height=\"4\" rx=\"1\" fill=\"#1e3a8a\"/></g>"
+        ]
+      },
+      {
+        "name": "house",
+        "base": "<g><rect x=\"24\" y=\"44\" width=\"52\" height=\"44\" fill=\"#fef08a\" stroke=\"#713f12\" stroke-width=\"2\"/><polygon points=\"18,44 50,18 82,44\" fill=\"#b45309\" stroke=\"#451a03\" stroke-width=\"2\"/><rect x=\"48\" y=\"62\" width=\"14\" height=\"26\" rx=\"1\" fill=\"#78350f\" stroke=\"#451a03\" stroke-width=\"2\"/><circle cx=\"59\" cy=\"75\" r=\"2\" fill=\"#facc15\"/></g>",
+        "features": [
+          {
+            "word": "chimney",
+            "svg": "<g><rect x=\"62\" y=\"10\" width=\"12\" height=\"24\" fill=\"#dc2626\" stroke=\"#7f1d1d\" stroke-width=\"2\"/><rect x=\"60\" y=\"8\" width=\"16\" height=\"4\" fill=\"#991b1b\" stroke=\"#7f1d1d\" stroke-width=\"1.5\"/><circle cx=\"70\" cy=\"4\" r=\"3\" fill=\"#9ca3af\"/></g>",
+            "phrase": null
+          },
+          {
+            "word": "window",
+            "svg": "<g><rect x=\"28\" y=\"50\" width=\"16\" height=\"16\" fill=\"#38bdf8\" stroke=\"#0f172a\" stroke-width=\"2\"/><line x1=\"36\" y1=\"50\" x2=\"36\" y2=\"66\" stroke=\"#ffffff\" stroke-width=\"2\"/><line x1=\"28\" y1=\"58\" x2=\"44\" y2=\"58\" stroke=\"#ffffff\" stroke-width=\"2\"/><rect x=\"28\" y=\"50\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"#0f172a\" stroke-width=\"2\"/></g>",
+            "phrase": null
+          },
+          {
+            "word": "flag",
+            "svg": "<g><line x1=\"18\" y1=\"10\" x2=\"18\" y2=\"44\" stroke=\"#334155\" stroke-width=\"2.5\"/><circle cx=\"18\" cy=\"9\" r=\"2\" fill=\"#facc15\" stroke=\"#854d0e\" stroke-width=\"1\"/><polygon points=\"18,11 38,17 18,24\" fill=\"#22c55e\" stroke=\"#14532d\" stroke-width=\"2\"/></g>",
+            "phrase": null
+          },
+          {
+            "word": "fence",
+            "svg": "<g><rect x=\"76\" y=\"71\" width=\"22\" height=\"3\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"1.5\"/><rect x=\"76\" y=\"81\" width=\"22\" height=\"3\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"1.5\"/><polygon points=\"77,88 77,65 80,60 83,65 83,88\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"1.5\"/><polygon points=\"85,88 85,65 88,60 91,65 91,88\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"1.5\"/><polygon points=\"93,88 93,65 96,60 99,65 99,88\" fill=\"#ffffff\" stroke=\"#334155\" stroke-width=\"1.5\"/></g>",
+            "phrase": null
+          }
+        ],
+        "variants": [
+          "<g><rect x=\"24\" y=\"44\" width=\"52\" height=\"44\" fill=\"#fed7aa\" stroke=\"#7c2d12\" stroke-width=\"2\"/><polygon points=\"18,44 50,18 82,44\" fill=\"#9a3412\" stroke=\"#431407\" stroke-width=\"2\"/><rect x=\"48\" y=\"62\" width=\"14\" height=\"26\" rx=\"1\" fill=\"#57534e\" stroke=\"#292524\" stroke-width=\"2\"/><circle cx=\"59\" cy=\"75\" r=\"2\" fill=\"#facc15\"/></g>"
+        ]
+      },
+      {
+        "name": "snowman",
+        "base": "<g><circle cx=\"50\" cy=\"76\" r=\"18\" fill=\"#f8fafc\" stroke=\"#475569\" stroke-width=\"2\"/><circle cx=\"50\" cy=\"52\" r=\"14\" fill=\"#f8fafc\" stroke=\"#475569\" stroke-width=\"2\"/><circle cx=\"50\" cy=\"30\" r=\"11\" fill=\"#f8fafc\" stroke=\"#475569\" stroke-width=\"2\"/><circle cx=\"46\" cy=\"27\" r=\"1.8\" fill=\"#0f172a\"/><circle cx=\"54\" cy=\"27\" r=\"1.8\" fill=\"#0f172a\"/><polygon points=\"50,29 61,31 50,33\" fill=\"#f97316\" stroke=\"#9a3412\" stroke-width=\"1\"/><circle cx=\"46\" cy=\"35\" r=\"1.2\" fill=\"#0f172a\"/><circle cx=\"50\" cy=\"36\" r=\"1.2\" fill=\"#0f172a\"/><circle cx=\"54\" cy=\"35\" r=\"1.2\" fill=\"#0f172a\"/></g>",
+        "features": [
+          {
+            "word": "hat",
+            "svg": "<g><rect x=\"35\" y=\"17\" width=\"30\" height=\"4\" rx=\"1\" fill=\"#1e293b\" stroke=\"#0f172a\" stroke-width=\"1.5\"/><rect x=\"40\" y=\"5\" width=\"20\" height=\"13\" fill=\"#1e293b\" stroke=\"#0f172a\" stroke-width=\"1.5\"/><rect x=\"40\" y=\"14\" width=\"20\" height=\"3\" fill=\"#ef4444\"/></g>",
+            "phrase": null
+          },
+          {
+            "word": "scarf",
+            "svg": "<g><rect x=\"37\" y=\"38\" width=\"26\" height=\"6\" rx=\"3\" fill=\"#dc2626\" stroke=\"#7f1d1d\" stroke-width=\"1.5\"/><rect x=\"27\" y=\"40\" width=\"9\" height=\"18\" rx=\"2\" fill=\"#dc2626\" stroke=\"#7f1d1d\" stroke-width=\"1.5\"/></g>",
+            "phrase": null
+          },
+          {
+            "word": "buttons",
+            "svg": "<g><circle cx=\"50\" cy=\"51\" r=\"3.5\" fill=\"#2563eb\" stroke=\"#1e3a8a\" stroke-width=\"1.5\"/><circle cx=\"50\" cy=\"65\" r=\"3.5\" fill=\"#2563eb\" stroke=\"#1e3a8a\" stroke-width=\"1.5\"/><circle cx=\"50\" cy=\"79\" r=\"3.5\" fill=\"#2563eb\" stroke=\"#1e3a8a\" stroke-width=\"1.5\"/></g>",
+            "phrase": null
+          },
+          {
+            "word": "broom",
+            "svg": "<g><line x1=\"78\" y1=\"36\" x2=\"78\" y2=\"90\" stroke=\"#78350f\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><polygon points=\"70,36 86,36 90,18 66,18\" fill=\"#eab308\" stroke=\"#854d0e\" stroke-width=\"2\"/><rect x=\"70\" y=\"32\" width=\"16\" height=\"4\" fill=\"#dc2626\"/></g>",
+            "phrase": null
+          }
+        ],
+        "variants": [
+          "<g><circle cx=\"50\" cy=\"76\" r=\"18\" fill=\"#eff6ff\" stroke=\"#3b82f6\" stroke-width=\"2\"/><circle cx=\"50\" cy=\"52\" r=\"14\" fill=\"#eff6ff\" stroke=\"#3b82f6\" stroke-width=\"2\"/><circle cx=\"50\" cy=\"30\" r=\"11\" fill=\"#eff6ff\" stroke=\"#3b82f6\" stroke-width=\"2\"/><circle cx=\"46\" cy=\"27\" r=\"1.8\" fill=\"#0f172a\"/><circle cx=\"54\" cy=\"27\" r=\"1.8\" fill=\"#0f172a\"/><polygon points=\"50,29 61,31 50,33\" fill=\"#f97316\" stroke=\"#9a3412\" stroke-width=\"1\"/><circle cx=\"46\" cy=\"35\" r=\"1.2\" fill=\"#0f172a\"/><circle cx=\"50\" cy=\"36\" r=\"1.2\" fill=\"#0f172a\"/><circle cx=\"54\" cy=\"35\" r=\"1.2\" fill=\"#0f172a\"/></g>"
+        ]
+      }
+    ]
+  },
+  "scene_space": {
+    "sizes": [
+      [
+        2,
+        2
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        4,
+        2
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        4,
+        4
+      ]
+    ],
+    "prior_queries": true,
+    "synonyms": false
+  },
+  "response": {
+    "type": "rating",
+    "link": "rating",
+    "prompt": "The speaker says: {message}. How likely is it they meant this first highlighted object?",
+    "prior_prompt": "You don't hear the word. How likely is it the speaker meant this first highlighted object?",
+    "scale_labels": [
+      "Very unlikely",
+      "Very likely"
+    ],
+    "scale_points": 7,
+    "total_points": null
+  },
+  "second_response": {
+    "type": "rating",
+    "link": "rating",
+    "prompt": "How likely is it the speaker meant this second highlighted object when saying {message}?",
+    "prior_prompt": "How likely is it the speaker meant this second highlighted object?",
+    "scale_labels": [
+      "Very unlikely",
+      "Very likely"
+    ],
+    "scale_points": 7,
+    "total_points": null
+  },
+  "design": {
+    "n_participants": 200,
+    "trials_per_participant": 25,
+    "distinct_trials": 50,
+    "catch_trials": 2,
+    "minutes": 5.5,
+    "pay_usd": 1.0
+  },
+  "content": {
+    "deception": false,
+    "affective_stimuli": false
+  }
+}

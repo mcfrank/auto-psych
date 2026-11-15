@@ -1,0 +1,17 @@
+{
+ "source": "chain_0, experiment 1",
+ "paradigm": "pragmatic_choice_and_rating_7pt",
+ "response": "choice + rating",
+ "domains": 3,
+ "trials": 25,
+ "minutes": 5.5,
+ "mean": 3.8656716417910446,
+ "n": 201,
+ "counts": {
+  "1": 8,
+  "2": 12,
+  "3": 47,
+  "4": 66,
+  "5": 68
+ }
+}

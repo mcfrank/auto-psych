@@ -1,0 +1,156 @@
+models:
+- name: sole_exclusion_shadowing_heuristic
+  rationale: "Listeners interpret referring expressions through a single-parameter\
+    \ non-Bayesian diagnostic feature-contrast heuristic rather than recursive Theory\
+    \ of Mind simulation. When a word is heard, listeners directly score candidate\
+    \ referents by divisive normalization across each object's competing features\u2014\
+    weighted by damped inverse scene extension, feature-overlap crowding, and lexical\
+    \ shadowing\u2014while allowing low-rate associative spillover onto a scene's\
+    \ sole excluded singleton distractor (whether minimal, non-minimal, or empty)\
+    \ and discounting multi-feature prototypes against unique minimal matches. On\
+    \ silent prior trials, listeners apply the same perceptual boundary contrast directly\
+    \ to favor isolated singletons and maximal prototypes over duplicated or intermediate-tier\
+    \ items."
+- name: r3_c2
+  rationale: "Listeners infer speaker intent through depth-2 recursive reasoning over\
+    \ a confusion-averse speaker and convert posterior beliefs into responses via\
+    \ a tier-sufficiency and singleton-leakage decision rule. When selecting a referent\
+    \ on heard-word trials, the listener's decision rule amplifies unique minimal-complexity\
+    \ matches and complete all-feature prototypes (tempered when the minimal referent\
+    \ is a unique singleton), suppresses shadowed incomplete competitors, and permits\
+    \ low-rate decision intrusion onto the scene's sole excluded singleton whenever\
+    \ a shared word spans multiple literal referents. On silent prior trials, the\
+    \ same decision rule favors perceptually isolated singletons and unique maximal-complexity\
+    \ anchors\u2014especially against cloned minimal tiers\u2014over duplicated or\
+    \ intermediate-tier items."
+- name: contrastive_tier_resolution_qud_l2
+  rationale: "Speakers communicate under a contrastive complexity-tier Question Under\
+    \ Discussion (QUD): rather than merely identifying a referent in isolation, speakers\
+    \ select utterances to resolve the target's complexity tier\u2014either highlighting\
+    \ the scene's holistic all-feature prototype or isolating a diagnostic minimal-tier\
+    \ referent\u2014while avoiding words that blur tier boundaries across unshadowed\
+    \ intermediate or similarity-crowded competitors. Listeners reason recursively\
+    \ at depth two about this tier-resolution goal under a figure-ground topicality\
+    \ prior that anchors on unique complexity-boundary objects and maximal prototypes,\
+    \ while allowing low-rate QUD-driven lexical leakage onto a scene's sole excluded\
+    \ singleton whenever an over-inclusive word leaves multiple literal tiers or clones\
+    \ in competition. This mechanism explains why listeners occasionally choose a\
+    \ sole false singleton (whether minimal or non-minimal) when competing literal\
+    \ referents span multiple complexity tiers, strongly favor unique maximal prototypes\
+    \ over cloned minimal tiers on silent prior trials, and sharpen preference for\
+    \ unique minimal singletons over uncloned maximal prototypes on word trials."
+- name: tier_span_leakage_soft_truth_l2
+  rationale: 'We refine `soft_lexical_truth_l2` while keeping recursion depth two
+    (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating
+    `L0`) and the exact same two free parameters (`alpha` and `w_lex`, both with `LogNormal(0.0,
+    0.5)` priors), by extending soft lexical leakage to any positive-feature sole
+    excluded singleton whenever an over-inclusive word leaves multiple literal referents
+    in tier or clone competition, scaling the leakage distance on non-minimal sole
+    false singletons by uncloned competition and maximal-tier exclusion, attenuating
+    prototype truth strengthening when a unique single-feature minimal referent competes
+    without intermediate tiers or minimal clones, and strengthening maximal-singleton
+    anchoring against cloned minimal tiers on silent prior displays. Specifically,
+    in `compute_lexical_terms`, we add `max_scene_cloned = jnp.max(is_max_fc * is_clone)`
+    and `has_utt_comp = jnp.where((has_tier_span > 0) | (min_cloned > 0) | (max_cloned
+    > 0) | (has_inter_utt > 0), 1.0, 0.0)`, replace `is_sole_false_singleton` with
+    `real_words * (1.0 - real_lex) * is_singleton[None, :] * jnp.where((n_true > 1.0)
+    & (n_false == 1.0), 1.0, 0.0) * jnp.where((is_min_fc[None, :] > 0) & (min_fc >
+    0.0), jnp.where((min_fc < min_true_fc) | (has_utt_comp > 0), 1.0, 0.0), jnp.where(fc[None,
+    :] > 0.0, has_utt_comp, jnp.where((min_cloned > 0) | (max_cloned > 0) | (has_inter_utt
+    > 0), 1.0, 0.0)))`, replace `false_dist` with `n_false + jnp.maximum(min_true_fc
+    - fc[None, :], 1.0 + (1.0 - has_tier_span)) + is_empty[None, :] * (1.0 - has_inter_utt)
+    * jnp.where(min_true_fc == 1.0, 1.0, 0.0) + (1.0 - is_min_fc[None, :]) * (1.0
+    - min_cloned - max_cloned) * (1.0 - has_inter_utt) - (1.0 - is_min_fc[None, :])
+    * (min_cloned + jnp.where(fc[None, :] == max_true_fc, max_cloned, 0.0) + has_inter_utt
+    * jnp.max(is_all_utt, axis=1, keepdims=True)) - (min_cloned + max_cloned) / n_obj`,
+    replace `is_all_utt * (min_cloned + gap_utt) / n_obj` in `truth_grade` with `is_all_utt
+    * (min_cloned + gap_utt * (min_cloned + max_cloned + has_inter_utt + multi_min_utt
+    + jnp.where(min_true_fc > 1.0, 1.0, 0.0))) / n_obj`, and in `prior_choice` replace
+    `is_max_fc * (1.0 - inter_scene_cloned * is_all_feats * jnp.where(min_fc > 0.0,
+    1.0, 0.0) + jnp.where(min_fc == 0.0, inter_scene_cloned * (1.0 - is_all_feats),
+    0.0))` with `is_max_fc * (1.0 + min_scene_cloned * (1.0 - has_inter_scene) * (1.0
+    - max_scene_cloned) / n_real_utt - inter_scene_cloned * is_all_feats * jnp.where(min_fc
+    > 0.0, 1.0, 0.0) + jnp.where(min_fc == 0.0, inter_scene_cloned * (1.0 - is_all_feats),
+    0.0))`. These changes address all four discrepancies in `critiques.md`: allowing
+    soft lexical leakage onto positive-feature sole false singletons when a single-feature
+    minimal singleton competes against all-feature maximal prototypes (`zero_leakage_sole_false_singleton_rate`)
+    and when a non-minimal singleton is excluded by uncloned multi-tier literal referents
+    (`non_minimal_sole_false_singleton_rate`), reducing over-selection of all-feature
+    prototypes against unique single-feature minimal singletons (`maximal_prototype_over_minimal_singleton_rate`),
+    and increasing unique maximal-object selection on silent prior displays with cloned
+    minimal tiers (`prior_maximal_singleton_over_cloned_minimal_rate`).'
+- name: sole_singleton_shadowed_sufficiency_l2
+  rationale: We refine `unshadowed_tier_intrusion_l2` while keeping recursion depth
+    two (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating
+    `L0`) and the exact same two free parameters (`alpha` and `w_suff`, both with
+    `LogNormal(0.0, 0.5)` priors), by extending sole-false-singleton lexical intrusion
+    to multi-feature prototype competition while scaling the intrusion distance by
+    candidate referent complexity and unmentioned-feature shadowing. Specifically,
+    in `compute_sufficiency_terms`, we add `unshadowed_min_feats = jnp.maximum(n_min_feats
+    - 1.0 - (fc[None, :] - n_min_feats), 0.0)`; replace `is_false_min` and `sem_lex`
+    with `is_false_min = real_words * (1.0 - real_lex) * is_singleton[None, :] * jnp.where((n_true
+    > 1.0) & (n_false == 1.0), 1.0, 0.0) * jnp.where((min_fc > 0.0) & ((is_min_fc[None,
+    :] > 0) & ((min_fc < min_true_fc) | (min_cloned > 0) | (has_inter_utt > 0) | (max_cloned
+    > 0) | (max_true_fc > min_true_fc + 1.0)) | ((1.0 - is_min_fc[None, :]) * (true_cloned
+    + has_inter_utt + jnp.where(max_true_fc > fc[None, :], 1.0, 0.0)) > 0)) | ((is_empty[None,
+    :] > 0) & ((has_inter_utt > 0) | (min_cloned > 0))), 1.0, 0.0)` and `sem_lex =
+    ctx.lex + is_false_min * jnp.exp(-w_suff * (n_false + jnp.maximum(min_true_fc
+    - fc[None, :], 1.0 + (1.0 - has_tier_span)) + is_empty[None, :] * (1.0 - has_inter_utt)
+    * jnp.where(min_true_fc == 1.0, 1.0, 0.0) - (1.0 - is_min_fc[None, :]) * (min_cloned
+    + jnp.where(fc[None, :] == max_true_fc, max_cloned, 0.0) - (1.0 - true_cloned)
+    * has_inter_utt * has_uniq_feat[None, :]) - (min_cloned + max_cloned) / n_obj))`;
+    in `spk_cost`, replace `is_inter_utt` with `is_inter_utt * (1.0 - (n_min_feats
+    - 1.0) * is_singleton[None, :] / n_real_utt)` and `is_incomplete_utt * is_singleton[None,
+    :] / n_real_utt` with `is_incomplete_utt * is_singleton[None, :] * (1.0 - is_max_utt
+    * min_cloned * (1.0 - has_inter_utt) * jnp.where(min_true_fc == 1.0, 1.0, 0.0))
+    / n_real_utt`; in `suff_score`, replace `is_all_utt * (min_cloned + gap_utt +
+    max_cloned * (1.0 - min_cloned) * (1.0 - has_inter_utt) / n_real_utt) / n_obj`
+    with `is_all_utt * (min_cloned * (1.0 + is_singleton[None, :] / n_real_utt) +
+    gap_utt - (1.0 - min_cloned) * (1.0 - max_cloned) * (1.0 - has_inter_utt) / n_real_utt)
+    / n_obj`, replace `(n_min_feats - 1.0) * (has_false_min_tier + has_inter_utt *
+    inter_all_shadowed)` with `unshadowed_min_feats * has_false_min_tier`, and replace
+    `+ is_inter_utt * is_singleton[None, :] * jnp.maximum(n_min_feats - 1.0, 0.0)
+    * (min_cloned + jnp.where(min_fc == 0.0, 1.0, 0.0)) / n_real_utt + is_incomplete_utt
+    * is_max_utt * is_singleton[None, :] * (1.0 - multi_max_utt) * min_cloned * (1.0
+    - has_inter_utt) * jnp.where(min_true_fc == 1.0, 1.0, 0.0) / n_real_utt` with
+    `- is_inter_utt * is_singleton[None, :] * (1.0 - has_min_feat[None, :]) / n_real_utt`
+    (dropping `inter_all_shadowed`); and in `prior_choice`, replace `is_max_fc * (1.0
+    - inter_scene_cloned * is_all_feats)` with `is_max_fc * (1.0 + is_singleton *
+    min_scene_cloned * (1.0 - has_inter_scene) - inter_scene_cloned * is_all_feats
+    * jnp.where(min_fc > 0.0, 1.0, 0.0) + jnp.where(min_fc == 0.0, inter_scene_cloned
+    * (1.0 - is_all_feats), 0.0))`. These changes address all four discrepancies in
+    `critiques.md` (`zero_leakage_sole_false_singleton_rate`, `non_minimal_sole_false_singleton_rate`,
+    `prior_maximal_singleton_over_cloned_minimal_rate`, and `maximal_prototype_over_minimal_singleton_rate`).
+- name: sole_exclusion_leakage_l2_2
+  rationale: 'We refine `soft_lexical_truth_l2` while keeping recursion depth two
+    (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating
+    `L0`) and the exact same two free parameters (`alpha` and `w_lex`, both with `LogNormal(0.0,
+    0.5)` priors), by unifying soft lexical truth leakage onto any positive-feature
+    sole excluded singleton whenever a shared word spans multiple literal tiers or
+    clones, attenuating holistic prototype strengthening when a unique minimal singleton
+    competes without clones or intermediate tiers, and strengthening unique maximal-object
+    anchoring on silent prior trials with cloned minimal tiers. Specifically, in `compute_lexical_terms`,
+    we add `max_scene_cloned = jnp.max(is_max_fc * is_clone)` and redefine `has_utt_comp
+    = jnp.where((has_tier_span > 0) | (min_cloned > 0) | (max_cloned > 0) | (has_inter_utt
+    > 0), 1.0, 0.0)`; replace `is_sole_false_singleton` with `real_words * (1.0 -
+    real_lex) * is_singleton[None, :] * jnp.where((n_true > 1.0) & (n_false == 1.0),
+    1.0, 0.0) * jnp.where(fc[None, :] > 0.0, jnp.where((fc[None, :] < min_true_fc)
+    | (has_utt_comp > 0), 1.0, 0.0), jnp.where((min_cloned > 0) | (max_cloned > 0)
+    | (has_inter_utt > 0), 1.0, 0.0))`; in `false_dist`, replace `(min_cloned + jnp.where(fc[None,
+    :] == max_true_fc, max_cloned, 0.0))` with `(min_cloned + jnp.where(fc[None, :]
+    == max_true_fc, max_cloned, 0.0) + has_tier_span * (1.0 - has_uniq_feat[None,
+    :]) / n_real_utt)`; in `truth_grade`, replace `is_all_utt * (min_cloned + gap_utt)
+    / n_obj` with `is_all_utt * (min_cloned + gap_utt - (1.0 - min_cloned) * (1.0
+    - max_cloned) * (1.0 - has_inter_utt) * (1.0 - multi_min_utt) / n_real_utt) /
+    n_obj`; and in `prior_choice`, replace `is_max_fc * (1.0 - inter_scene_cloned
+    * is_all_feats * jnp.where(min_fc > 0.0, 1.0, 0.0) + jnp.where(min_fc == 0.0,
+    inter_scene_cloned * (1.0 - is_all_feats), 0.0))` with `is_max_fc * (1.0 + min_scene_cloned
+    * (1.0 - has_inter_scene) * (1.0 - max_scene_cloned) - inter_scene_cloned * is_all_feats
+    * jnp.where(min_fc > 0.0, 1.0, 0.0) + jnp.where(min_fc == 0.0, inter_scene_cloned
+    * (1.0 - is_all_feats), 0.0))`. These changes address all four discrepancies in
+    `critiques.md`: allowing soft lexical leakage onto positive-feature sole false
+    singletons under prototype competition (`zero_leakage_sole_false_singleton_rate`)
+    and uncloned multi-tier competition (`non_minimal_sole_false_singleton_rate`),
+    reducing over-selection of all-feature prototypes against unique minimal singletons
+    (`maximal_prototype_over_minimal_singleton_rate`), and increasing unique maximal-object
+    selection on silent prior displays with cloned minimal tiers (`prior_maximal_singleton_over_cloned_minimal_rate`).'

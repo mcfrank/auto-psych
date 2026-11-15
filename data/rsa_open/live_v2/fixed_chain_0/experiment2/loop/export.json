@@ -1,0 +1,1 @@
+{"best_model": "contrastive_anchor_decision_l2", "live": ["contrastive_anchor_decision_l2", "diagnostic_prototype_contrast_heuristic", "holistic_diagnostic_qud_l2", "prototype_span_false_access_l2", "prototype_span_speaker_access_l2", "prototype_uniqueness_false_access_l2", "sparse_singleton_prototype_qud_l2", "type_crowding_prototype_span_l2"]}

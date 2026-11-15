@@ -1,0 +1,17 @@
+{
+ "source": "chain_0, experiment 2",
+ "paradigm": "pragmatic_dual_rating_7pt",
+ "response": "rating + rating",
+ "domains": 3,
+ "trials": 25,
+ "minutes": 5.5,
+ "mean": 4.32,
+ "n": 200,
+ "counts": {
+  "1": 0,
+  "2": 5,
+  "3": 29,
+  "4": 63,
+  "5": 103
+ }
+}

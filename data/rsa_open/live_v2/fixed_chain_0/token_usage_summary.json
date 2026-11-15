@@ -1,0 +1,55 @@
+{
+  "n_calls": 717,
+  "n_calls_missing_usage": 0,
+  "input_tokens": 25370436,
+  "output_tokens": 2832889,
+  "reasoning_tokens": 1147708,
+  "cache_read_tokens": 447610336,
+  "cache_write_tokens": 0,
+  "total_tokens": 476961369,
+  "cost_usd": 13.8191598,
+  "n_usage_limit_hits": 0,
+  "usage_limit_wait_sec": 0.0,
+  "by_source": {
+    "rsa:candidate": {
+      "n_calls": 60,
+      "n_calls_missing_usage": 0,
+      "input_tokens": 23267497,
+      "output_tokens": 2534827,
+      "reasoning_tokens": 472746,
+      "cache_read_tokens": 439299243,
+      "cache_write_tokens": 0,
+      "total_tokens": 465574313,
+      "cost_usd": 11.584777099999998,
+      "n_usage_limit_hits": 0,
+      "usage_limit_wait_sec": 0.0
+    },
+    "rsa:critique": {
+      "n_calls": 9,
+      "n_calls_missing_usage": 0,
+      "input_tokens": 870537,
+      "output_tokens": 295467,
+      "reasoning_tokens": 101412,
+      "cache_read_tokens": 8311093,
+      "cache_write_tokens": 0,
+      "total_tokens": 9578509,
+      "cost_usd": 2.2343827000000003,
+      "n_usage_limit_hits": 0,
+      "usage_limit_wait_sec": 0.0
+    },
+    "rsa_open:pilot": {
+      "n_calls": 648,
+      "n_calls_missing_usage": 0,
+      "input_tokens": 1232402,
+      "output_tokens": 2595,
+      "reasoning_tokens": 573550,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "total_tokens": 1808547,
+      "cost_usd": null,
+      "n_usage_limit_hits": 0,
+      "usage_limit_wait_sec": 0.0
+    }
+  },
+  "claude_auth": []
+}

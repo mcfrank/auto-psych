@@ -1,0 +1,151 @@
+models:
+- name: l1_specificity_graded_l2
+  rationale: Refining l1_graded_semantics_l2 with no parameters added or removed (retaining
+    only alpha and w_salience) and the same recursion depth (L2 calling L1, which
+    calls L0), by scaling the L1 speaker's true-feature lexical weight by contextual
+    feature specificity (n_obj / ext_size) so that graded_true = (ctx.lex * n_obj)
+    / (fc_safe * jnp.maximum(ext_size, 1.0)), while keeping all other terms (real_mask,
+    real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity,
+    prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, noisy_real, soft_lex, L0, L1,
+    L2, listener, and speaker) unchanged. In l1_graded_semantics_l2, dividing the
+    L1 speaker's lexical weight only by feature count leaves a universal all-true
+    word with the same lexical applicability as a specific two-referent word on multi-feature
+    objects, causing the L1 speaker to strongly avoid the universal word on complex
+    objects and leading L2 to over-predict the rating drop between two-referent and
+    four-referent valid objects in exp2. Weighting L1 lexical access by contextual
+    specificity (n_obj / ext_size) attenuates the feature-dilution advantage of universal
+    words relative to diagnostic words at L1, reducing the L2 penalty on complex valid
+    referents under universal words and closing the extension-size 2-versus-4 rating
+    discrepancy in exp2.
+- name: specificity_noisy_graded_semantics_l2
+  rationale: Refining l1_specificity_graded_l2 with no parameters added or removed
+    (retaining only alpha and w_salience) and the same recursion depth (L2 calling
+    L1, which calls L0), by using the specificity-weighted noisy graded lexicon soft_lex
+    across all three recursion levels (removing true_lex from L1 and L2 so L1 calls
+    L0[u, r](soft_lex), L2 weights speaker choices by at(soft_lex, u, r) * exp(alpha
+    * log(L1[u, r](alpha, soft_lex, prior) + {EPS})), and listener and speaker call
+    L2(params["alpha"], soft_lex, prior)) while weighting top-level speaker production
+    in speaker by the truth-conditional specificity-graded lexical applicability ctx.lex
+    * soft_lex (replacing weights = (table + EPS) * real with weights = (ctx.lex *
+    soft_lex * table + EPS) * real) and keeping all other terms (real_mask, real_lex,
+    diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior,
+    n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex,
+    L0, and listener) unchanged. In l1_specificity_graded_l2, passing ctx.lex to L0
+    and L2 zeroes out extension-scaled semantic confusion noise on false referents
+    (causing listener false-alarm failures on E and exp1), while normalizing L2(r
+    | u) across utterances in speaker without re-applying the speaker's lexical filter
+    ctx.lex * soft_lex divides out utterance-level specificity (n_obj / ext_size)
+    during L2's object normalization. Propagating soft_lex through L0, L1, and L2
+    while weighting speaker production by ctx.lex * soft_lex restores extension-scaled
+    false-alarm sensitivity on E and exp1 and preserves utterance specificity in production,
+    resolving the severe under-prediction of smallest-extension true word choices
+    (smallest_true_ext_reversed_graded_l0, smallest_true_ext_aligned_nonunique_rate,
+    non_minimal_true_rate_in_multi_feature_nonunique_targets, and chosen_normalized_ext_in_nonunique_scenes)
+    on exp3.
+- name: attentional_capacity_verification_l2
+  rationale: 'Listeners and speakers communicate under capacity-bounded feature attention:
+    verifying a feature on an object divides attention across the object''s features
+    while crowding false distractors in proportion to pairwise competition among the
+    utterance''s referents, attenuated at the top listener level by the utterance''s
+    extension share. When producing an utterance for a target, a speaker evaluates
+    candidate words against a capacity-bounded literal listener whose feature verification
+    grants an attentional-focus bonus inversely proportional to each object''s feature
+    load, combining a quadratic extension-cost pragmatic choice with extension-crowded
+    feature availability strengthened by literal recovery. Because single-feature
+    distractors capture stronger attentional focus than multi-feature distractors
+    during literal verification, speakers prefer narrower words more strongly when
+    shared with multi-feature distractors than with single-feature distractors, while
+    literal-recovery-boosted, extension-crowded availability elevates runner-up narrow
+    features over broader and universal words on complex targets.'
+- name: graded_specificity_availability_l2
+  rationale: Refining extension_cost_speaker_l2 with no parameters added or removed
+    (retaining only alpha and w_salience) and the same listener recursion depth (listener
+    calling L2, which calls L1, which calls L0), by weighting the top-level production
+    speaker's baseline feature availability in S_prod by the literal graded-semantics
+    listener recovery probability L0[u, r](graded_true) so that S_prod chooses u in
+    UTT with wpp=S1[u, r](alpha, true_lex, spec_lex, ext_share) + at(graded_true,
+    u, r) * L0[u, r](graded_true), while keeping all other terms (real_mask, real_lex,
+    diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior,
+    n_utt, n_obj, ext_size, ext_safe, ext_share, sem_noise, fc_safe, graded_true,
+    spec_lex, noisy_real, s2_real, soft_lex, s2_lex, L0, L1, L2, S1, listener, and
+    speaker) unchanged. In extension_cost_speaker_l2, adding unmodulated baseline
+    feature availability at(graded_true, u, r) to S1 assigns the same baseline floor
+    1 / feature_count to every true feature of the target regardless of extension
+    size or distractor complexity, which flattens the choice rate between runner-up
+    (extension-2) and broader (extension-3+) features on targets that have a uniquely
+    identifying feature, inflates globally redundant universal feature choices, and
+    ignores whether distractors sharing a narrower feature have alternative features.
+    Modulating baseline feature availability by L0[u, r](graded_true) preserves extension-graded
+    specificity among suboptimal true features, suppresses universal feature production,
+    and favors narrower features when their distractors are multi-feature objects
+    whose feature load dilutes their competing availability in exp3.
+- name: complexity_gated_retrieval_decision_l2
+  rationale: 'Listeners and speakers map pragmatic beliefs into responses through
+    a complexity-gated retrieval decision rule rather than pure expected-utility maximization:
+    when selecting a referring expression for a target object, a speaker combines
+    a specificity-and-cost-weighted pragmatic choice (whose extension penalty grows
+    with the word''s extension share and the target''s unmentioned feature load) with
+    a structured feature-availability fallback weighted by both literal and feature-diluted
+    target recovery. In comprehension, listeners invert a depth-two graded-semantics
+    speaker under a shared salience prior favoring contextual singletons, distinctive
+    objects, and complexity-extreme referents, with referential crowding noise bounded
+    by display size and attenuated at the top listener level by the word''s non-universal
+    contrast. Grounding the speaker''s decision rule in complexity-and-crowding-scaled
+    extension cost and dual-recovery availability explains why speakers strongly prefer
+    the narrowest true feature (extension size 2) on multi-feature non-unique targets
+    in exp3 while preserving runner-up specificity gradation, competitor-complexity
+    sensitivity, and comprehension accuracy across E, exp1, and exp2.'
+- name: r3_c5
+  rationale: 'Refining graded_lexical_uncertainty_l2 with no parameters added or removed
+    (retaining only alpha and w_salience) and the same listener recursion depth (listener
+    calling L2, which calls L1, which calls L0), by adding an unscaled extension-share
+    crowding penalty -vec(ext_share, u) in S1 so S1[u: UTT, r: OBJ](alpha, true_lex:
+    ..., spec_lex: ..., ext_share: ...) chooses u in UTT with wpp=at(spec_lex, u,
+    r) * exp((1.0 + alpha) * (log(L0[u, r](true_lex) + {EPS}) - vec(ext_share, u))
+    - vec(ext_share, u)), and incorporating discriminative specificity into the top-level
+    production speaker''s uncertain-lexicon retrieval so S_prod[u: UTT, r: OBJ](alpha,
+    true_lex: ..., spec_lex: ..., graded_lex: ..., fc_inv: ..., ext_share: ...) chooses
+    u in UTT with wpp=S1[u, r](alpha, true_lex, spec_lex, ext_share) + vec(fc_inv,
+    r) * (at(spec_lex, u, r) + L0[u, r](graded_lex)), while keeping all other terms
+    (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm,
+    fc_dev, extremity, prior, n_utt, n_obj, ext_size, ext_safe, ext_share, denom_scale,
+    sem_noise, fc_safe, fc_inv, graded_true, disc_share, spec_real, spec_lex, noisy_real,
+    s2_real, soft_lex, s2_lex, L0, L1, L2, compute_lex_and_prior, listener, and speaker)
+    unchanged. In graded_lexical_uncertainty_l2, the top-level speaker''s uncertain-lexicon
+    retrieval term vec(fc_inv, r) * L0[u, r](graded_lex) lacks direct discriminative
+    specificity at(spec_lex, u, r) and S1 applies only the rationality-scaled extension
+    cost, which under-predicts selection of the narrowest true label on multi-feature
+    targets without a uniquely identifying feature (narrowest_label_rate_multifeature_nonunique_target
+    in exp3) when a broader feature''s distractors have high feature counts that dilute
+    their competing weight in L0(graded_lex). Strengthening S1''s extension-crowding
+    penalty with -vec(ext_share, u) and adding at(spec_lex, u, r) to the feature-diluted
+    retrieval term vec(fc_inv, r) * (at(spec_lex, u, r) + L0[u, r](graded_lex)) ensures
+    that both pragmatic selection and baseline lexical retrieval favor narrower, more
+    discriminative extensions, increasing narrowest-label production on multi-feature
+    non-unique targets in exp3 while preserving comprehension predictions across E,
+    exp1, and exp2.'
+- name: dual_literal_specificity_speaker_l2
+  rationale: Refining graded_specificity_availability_l2 with no parameters added
+    or removed (retaining only alpha and w_salience) and the same listener recursion
+    depth (listener calling L2, which calls L1, which calls L0), by evaluating the
+    pragmatic speaker S1 with squared literal specificity, quadratic rationality,
+    and baseline extension-share cost wpp=at(spec_lex, u, r) * at(spec_lex, u, r)
+    * exp((1.0 + alpha) * (1.0 + alpha) * (log(L0[u, r](true_lex) + {EPS}) - vec(ext_share,
+    u)) - vec(ext_share, u)) and weighting baseline feature availability in S_prod
+    by the sum of graded and literal listener recovery wpp=S1[u, r](alpha, true_lex,
+    spec_lex, ext_share) + at(graded_true, u, r) * (L0[u, r](graded_true) + L0[u,
+    r](true_lex)), while keeping all other terms (real_mask, real_lex, diff, pair_dist,
+    is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj,
+    ext_size, ext_safe, ext_share, sem_noise, fc_safe, graded_true, spec_lex, noisy_real,
+    s2_real, soft_lex, s2_lex, L0, L1, L2, listener, and speaker) unchanged. In graded_specificity_availability_l2,
+    weighting baseline availability solely by feature-diluted recovery L0[u, r](graded_true)
+    penalizes narrow two-referent features whenever they are shared with a single-feature
+    distractor (because the single-feature distractor captures greater graded weight
+    than the multi-feature target), while linear specificity and rationality in S1
+    under-suppress three- and four-referent competitors at the joint comprehension-production
+    rationality scale. Combining graded and literal listener recovery L0[u, r](graded_true)
+    + L0[u, r](true_lex) in baseline availability alongside squared-specificity quadratic-rationality
+    pragmatic evaluation in S1 preserves a consistent narrow-extension advantage even
+    against single-feature distractors while retaining sensitivity to distractor feature
+    load, closing the narrowest-label production gap on multi-feature non-unique targets
+    in exp3.

@@ -1,0 +1,307 @@
+{
+ "chains": [
+  {
+   "run_dir": "/scratch/users/mcfrank/auto-psych/agent_trees/c849fb19dc228b3a/repo/_runs/chain_0",
+   "experiments": {
+    "1": {
+     "1_design": {
+      "passed": true,
+      "detail": "froze paradigm 5c92f6d98709 (submitted by designer)",
+      "joint_eig_bits": 3.567697703964585
+     },
+     "2_data": {
+      "passed": true,
+      "detail": "all within bounds",
+      "same_answer_share": 0.0,
+      "comprehension_final": 0.9701492537313433,
+      "catch_pass": 0.9875621890547264,
+      "exclusion_rate": 0.05472636815920398,
+      "recruited": 200,
+      "kept": 190
+     },
+     "3_information": {
+      "passed": true,
+      "detail": "competitor_confusion_speaker is 1614.4 nats ahead of chance on exp1 (7.2 clustered SEs; more than 4 needed)",
+      "incumbent": "competitor_confusion_speaker",
+      "ahead_of_chance": 1614.39719581604,
+      "dse": 224.66716277459565,
+      "ratio": 7.185728327533715,
+      "chance_converged": true,
+      "carried": {
+       "theories": 6,
+       "furthest": "oddity_heuristic_listener",
+       "behind": 375.4603946208954,
+       "dse": 60.502432183002014,
+       "ratio": 6.205707457928938
+      }
+     },
+     "4_loop": {
+      "passed": true,
+      "detail": "18 admitted, 4 trusted at the end",
+      "admitted": 18,
+      "trusted_at_end": 4,
+      "stopped_early": null
+     },
+     "5_time": {
+      "passed": true,
+      "detail": "9.2 h running (at most 48)",
+      "running_hours": 9.221603108445803
+     }
+    },
+    "2": {
+     "1_design": {
+      "passed": true,
+      "detail": "froze paradigm a00c944dd518 (submitted by designer)",
+      "joint_eig_bits": 3.9684658347829065
+     },
+     "2_data": {
+      "passed": true,
+      "detail": "all within bounds",
+      "same_answer_share": 0.02,
+      "comprehension_final": 0.895,
+      "catch_pass": 0.925,
+      "exclusion_rate": 0.215,
+      "recruited": 200,
+      "kept": 157
+     },
+     "3_information": {
+      "passed": false,
+      "detail": "extension_noisy_graded_semantics_l2 is 261.1 nats ahead of chance on exp2 (1.2 clustered SEs; more than 4 needed)",
+      "incumbent": "extension_noisy_graded_semantics_l2",
+      "ahead_of_chance": 261.1059823036194,
+      "dse": 209.5219102786102,
+      "ratio": 1.246198939081911,
+      "chance_converged": true,
+      "carried": {
+       "theories": 4,
+       "furthest": "uncertainty_gated_belief_l2",
+       "behind": 1069.1990501880646,
+       "dse": 447.9132081290055,
+       "ratio": 2.387067473750673
+      }
+     },
+     "4_loop": {
+      "passed": true,
+      "detail": "16 admitted, 5 trusted at the end",
+      "admitted": 16,
+      "trusted_at_end": 5,
+      "stopped_early": null
+     },
+     "5_time": {
+      "passed": true,
+      "detail": "13.6 h running (at most 48)",
+      "running_hours": 13.565675364931424
+     }
+    },
+    "3": {
+     "1_design": {
+      "passed": true,
+      "detail": "froze paradigm caee7248b6fa (submitted by designer)",
+      "joint_eig_bits": 3.8298165060673366
+     },
+     "2_data": {
+      "passed": true,
+      "detail": "all within bounds",
+      "same_answer_share": 0.0,
+      "comprehension_final": 0.9642857142857143,
+      "catch_pass": 0.9623015873015873,
+      "exclusion_rate": 0.09523809523809523,
+      "recruited": 250,
+      "kept": 228
+     },
+     "3_information": {
+      "passed": true,
+      "detail": "extension_noisy_graded_semantics_l2 is 2576.5 nats ahead of chance on exp3 (11.9 clustered SEs; more than 4 needed)",
+      "incumbent": "extension_noisy_graded_semantics_l2",
+      "ahead_of_chance": 2576.490467071533,
+      "dse": 216.7422874192763,
+      "ratio": 11.88734555563424,
+      "chance_converged": true,
+      "carried": {
+       "theories": 5,
+       "furthest": "crowded_s2_graded_l0_l2",
+       "behind": 82.70266532897949,
+       "dse": 31.094639237255763,
+       "ratio": 2.6597081476954405
+      }
+     },
+     "4_loop": {
+      "passed": true,
+      "detail": "18 admitted, 7 trusted at the end",
+      "admitted": 18,
+      "trusted_at_end": 7,
+      "stopped_early": null
+     },
+     "5_time": {
+      "passed": true,
+      "detail": "13.9 h running (at most 48)",
+      "running_hours": 13.900800755288866
+     }
+    }
+   },
+   "4b_admissions": {
+    "passed": true,
+    "detail": "52 new theories admitted over experiments 1-3",
+    "admitted": 52
+   },
+   "reported": {
+    "running_hours": 36.6880800422695,
+    "agent_usd": 114.49081840000001,
+    "participant_usd": 799.9999999999999
+   },
+   "passed": false
+  },
+  {
+   "run_dir": "/scratch/users/mcfrank/auto-psych/agent_trees/be1e85ca0b58aea3/repo/_runs/chain_0",
+   "experiments": {
+    "1": {
+     "1_design": {
+      "passed": true,
+      "detail": "froze paradigm 24c339dcbd15 (submitted by fixed arm)",
+      "joint_eig_bits": 3.5426471513003333
+     },
+     "2_data": {
+      "passed": true,
+      "detail": "all within bounds",
+      "same_answer_share": 0.0,
+      "comprehension_final": 0.9750623441396509,
+      "catch_pass": 0.9413965087281796,
+      "exclusion_rate": 0.1172069825436409,
+      "recruited": 400,
+      "kept": 354
+     },
+     "3_information": {
+      "passed": true,
+      "detail": "rsa_l2_singleton_feat_color_valence_l0 is 1221.7 nats ahead of chance on exp1 (7.4 clustered SEs; more than 4 needed)",
+      "incumbent": "rsa_l2_singleton_feat_color_valence_l0",
+      "ahead_of_chance": 1221.6592631340027,
+      "dse": 164.33032071355055,
+      "ratio": 7.434168313122909,
+      "chance_converged": true,
+      "carried": {
+       "theories": 6,
+       "furthest": "oddity_heuristic_listener",
+       "behind": 372.94284534454346,
+       "dse": 62.64237880759957,
+       "ratio": 5.953523037335537
+      }
+     },
+     "4_loop": {
+      "passed": true,
+      "detail": "18 admitted, 4 trusted at the end",
+      "admitted": 18,
+      "trusted_at_end": 4,
+      "stopped_early": null
+     },
+     "5_time": {
+      "passed": true,
+      "detail": "7.7 h running (at most 48)",
+      "running_hours": 7.688136184944047
+     }
+    },
+    "2": {
+     "1_design": {
+      "passed": true,
+      "detail": "froze paradigm 24c339dcbd15 (submitted by fixed arm)",
+      "joint_eig_bits": 3.894876674843321
+     },
+     "2_data": {
+      "passed": true,
+      "detail": "all within bounds",
+      "same_answer_share": 0.002506265664160401,
+      "comprehension_final": 0.9799498746867168,
+      "catch_pass": 0.9160401002506265,
+      "exclusion_rate": 0.15288220551378445,
+      "recruited": 400,
+      "kept": 338
+     },
+     "3_information": {
+      "passed": true,
+      "detail": "complexity_tier_qud_l2 is 1360.3 nats ahead of chance on exp2 (9.2 clustered SEs; more than 4 needed)",
+      "incumbent": "complexity_tier_qud_l2",
+      "ahead_of_chance": 1360.3209047317505,
+      "dse": 147.09862144234643,
+      "ratio": 9.247679491441817,
+      "chance_converged": true,
+      "carried": {
+       "theories": 4,
+       "furthest": "r1_c5",
+       "behind": 23.191762924194336,
+       "dse": 16.2105455909041,
+       "ratio": 1.4306589987450802
+      }
+     },
+     "4_loop": {
+      "passed": true,
+      "detail": "17 admitted, 8 trusted at the end",
+      "admitted": 17,
+      "trusted_at_end": 8,
+      "stopped_early": null
+     },
+     "5_time": {
+      "passed": true,
+      "detail": "8.0 h running (at most 48)",
+      "running_hours": 8.015531158049901
+     }
+    },
+    "3": {
+     "1_design": {
+      "passed": true,
+      "detail": "froze paradigm 24c339dcbd15 (submitted by fixed arm)",
+      "joint_eig_bits": 3.9722227686310916
+     },
+     "2_data": {
+      "passed": true,
+      "detail": "all within bounds",
+      "same_answer_share": 0.0,
+      "comprehension_final": 0.99,
+      "catch_pass": 0.93875,
+      "exclusion_rate": 0.115,
+      "recruited": 400,
+      "kept": 354
+     },
+     "3_information": {
+      "passed": true,
+      "detail": "diagnostic_prototype_contrast_heuristic is 1304.0 nats ahead of chance on exp3 (9.3 clustered SEs; more than 4 needed)",
+      "incumbent": "diagnostic_prototype_contrast_heuristic",
+      "ahead_of_chance": 1303.9999642372131,
+      "dse": 139.66809392980286,
+      "ratio": 9.336419847560911,
+      "chance_converged": true,
+      "carried": {
+       "theories": 8,
+       "furthest": "prototype_uniqueness_false_access_l2",
+       "behind": 20.329946994781494,
+       "dse": 8.145467251111214,
+       "ratio": 2.495860135219138
+      }
+     },
+     "4_loop": {
+      "passed": true,
+      "detail": "18 admitted, 6 trusted at the end",
+      "admitted": 18,
+      "trusted_at_end": 6,
+      "stopped_early": null
+     },
+     "5_time": {
+      "passed": true,
+      "detail": "9.2 h running (at most 48)",
+      "running_hours": 9.246678766873147
+     }
+    }
+   },
+   "4b_admissions": {
+    "passed": true,
+    "detail": "53 new theories admitted over experiments 1-3",
+    "admitted": 53
+   },
+   "reported": {
+    "running_hours": 24.95034710135725,
+    "agent_usd": 126.30915979999999,
+    "participant_usd": 799.9999999999999
+   },
+   "passed": true
+  }
+ ],
+ "passed": false
+}

@@ -1,0 +1,88 @@
+models:
+- name: extension_noisy_graded_semantics_l2
+  rationale: 'Refining noisy_graded_semantics_l2 with no parameters added or removed
+    (retaining only alpha and w_salience) and the same recursion depth (L2 calling
+    L1, which calls L0), by scaling each real word''s semantic confusion noise on
+    false objects by the squared proportion of display objects in that word''s literal
+    extension: defining ext_size = jnp.sum(real_lex, axis=1, keepdims=True) and replacing
+    sem_noise = 1.0 / (n_utt * n_obj) with sem_noise = (ext_size * ext_size) / (n_utt
+    * n_obj * n_obj), while keeping all other terms (real_mask, real_lex, diff, pair_dist,
+    is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, fc_safe, graded_true,
+    noisy_real, soft_lex, L0, L1, L2, listener, and speaker) unchanged. Under uniform
+    constant noise across utterances, depth-two pragmatic recursion suppresses false-alarm
+    probabilities on three-of-four valid-referent trials to nearly zero because two
+    levels of speaker likelihood inversion amplify the ratio between valid and false
+    referents. Because a word that spans most of the display induces greater referential
+    crowding and feature-verification interference across objects than a word with
+    a small extension, scaling semantic confusion by the squared extension proportion
+    explains why listeners make substantially more false-alarm choices when a heard
+    word applies to three of four objects than when it applies to two across E and
+    exp1.'
+- name: l1_graded_semantics_l2
+  rationale: Refining extension_noisy_graded_semantics_l2 with no parameters added
+    or removed (retaining only alpha and w_salience) and the same recursion depth
+    (L2 calling L1, which calls L0), by using the literal truth-conditional lexicon
+    ctx.lex in L0 and in the L2 speaker while retaining the noisy graded lexicon soft_lex
+    in the L1 speaker (updating L1 to take true_lex and soft_lex, calling L0[u, r](true_lex)
+    inside L1, and calling L2(params["alpha"], ctx.lex, soft_lex, prior) in listener
+    and speaker), while keeping all other terms (real_mask, real_lex, diff, pair_dist,
+    is_singleton, distinct, n_real, fc_norm, fc_dev, extremity, prior, n_utt, n_obj,
+    ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, listener, and
+    speaker) unchanged. In extension_noisy_graded_semantics_l2, passing soft_lex into
+    L0, L1, and L2 compounds the 1/feature_count feature-dilution penalty three times
+    across recursion levels and assigns positive L2 probability to literally false
+    referents; restricting graded feature dilution and extension-crowding noise to
+    the L1 speaker's lexical verification while keeping L0 and L2 truth-conditional
+    avoids over-penalizing multi-feature valid referents on ambiguous trials and restores
+    exact zero listener probability on literally false referents, closing both the
+    valid-referent feature-count gap and the valid-versus-false referent rating contrast
+    on exp2.
+- name: attentional_feature_capacity_l2
+  rationale: 'Listeners and speakers communicate under capacity-bounded feature attention:
+    each object''s pre-linguistic salience combines contextual uniqueness, feature
+    distinctiveness, and non-empty complexity extremity that penalizes empty referents
+    without positive features. When a speaker plans or a listener interprets a word,
+    feature verification is diluted by the object''s alternative feature load at the
+    literal and intermediate levels, while high-extension utterances that leave a
+    false distractor induce attentional leakage proportional to the squared valid-referent
+    share, which the top-level speaker filters to true referents except when referential
+    crowding leaks to false distractors.'
+- name: l1_specificity_graded_l2
+  rationale: Refining l1_graded_semantics_l2 with no parameters added or removed (retaining
+    only alpha and w_salience) and the same recursion depth (L2 calling L1, which
+    calls L0), by scaling the L1 speaker's true-feature lexical weight by contextual
+    feature specificity (n_obj / ext_size) so that graded_true = (ctx.lex * n_obj)
+    / (fc_safe * jnp.maximum(ext_size, 1.0)), while keeping all other terms (real_mask,
+    real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm, fc_dev, extremity,
+    prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, noisy_real, soft_lex, L0, L1,
+    L2, listener, and speaker) unchanged. In l1_graded_semantics_l2, dividing the
+    L1 speaker's lexical weight only by feature count leaves a universal all-true
+    word with the same lexical applicability as a specific two-referent word on multi-feature
+    objects, causing the L1 speaker to strongly avoid the universal word on complex
+    objects and leading L2 to over-predict the rating drop between two-referent and
+    four-referent valid objects in exp2. Weighting L1 lexical access by contextual
+    specificity (n_obj / ext_size) attenuates the feature-dilution advantage of universal
+    words relative to diagnostic words at L1, reducing the L2 penalty on complex valid
+    referents under universal words and closing the extension-size 2-versus-4 rating
+    discrepancy in exp2.
+- name: crowded_s2_graded_l0_l2
+  rationale: Refining `r1_c3` with no parameters added or removed (retaining only
+    `alpha` and `w_salience`) and the same recursion depth (`L2` calling `L1`, which
+    calls `L0`), by replacing the `L1` speaker's lexical filter with the literal truth-conditional
+    lexicon `true_lex` while retaining `soft_lex` inside the literal listener `L0`
+    and adding `(1.0 - sem_noise)` to the L2 speaker's lexical filter `true_lex +
+    sem_noise * (1.0 - true_lex)` (updating `L1` to take `true_lex` and `soft_lex`
+    with `wpp=at(true_lex, u, r) * exp(alpha * log(L0[u, r](soft_lex) + {EPS}))`,
+    updating `L2` to take `s2_lex`, `true_lex`, and `soft_lex` with `wpp=at(s2_lex,
+    u, r) * exp(alpha * log(L1[u, r](alpha, true_lex, soft_lex, prior) + {EPS}))`,
+    and defining `s2_real = ctx.lex + sem_noise * (1.0 - ctx.lex)` and `s2_lex = jnp.where(ctx.is_sink[:,
+    None] > 0, ctx.lex, s2_real)` in `compute_lex_and_prior`), while keeping all other
+    terms (`real_mask`, `real_lex`, `diff`, `pair_dist`, `is_singleton`, `distinct`,
+    `n_real`, `fc_norm`, `fc_dev`, `extremity`, `prior`, `n_utt`, `n_obj`, `ext_size`,
+    `sem_noise`, `fc_safe`, `graded_true`, `noisy_real`, `soft_lex`, `L0`, `listener`,
+    and `speaker`) unchanged. When speakers at both pragmatic levels restrict production
+    to true words while extension-scaled referential crowding leaks into the L2 speaker's
+    false-object lexical filter and L0's feature verification, listeners preserve
+    elevated false-alarm probabilities on three-of-four valid-referent trials across
+    E and exp1 while avoiding compounded feature-dilution penalties across L0 and
+    L1 on exp2.

@@ -1,0 +1,2194 @@
+[
+ {
+  "step": 0,
+  "round": -1,
+  "best_model": "complexity_tier_qud_l2",
+  "fit_best": "complexity_tier_qud_l2",
+  "n_params": {
+   "r1_c5": 6,
+   "r3_c1": 2,
+   "complexity_tier_qud_l2": 2,
+   "prototype_tier_confusion_l2": 2
+  },
+  "parsimony_k": 1.0,
+  "events": [
+   {
+    "outcome": "seeded",
+    "name": "r1_c5"
+   },
+   {
+    "outcome": "seeded",
+    "name": "r3_c1"
+   },
+   {
+    "outcome": "seeded",
+    "name": "complexity_tier_qud_l2"
+   },
+   {
+    "outcome": "seeded",
+    "name": "prototype_tier_confusion_l2"
+   }
+  ],
+  "critique": null,
+  "admission_limit_sec": 1800,
+  "standing": {
+   "r1_c5": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20634.779023885727,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -3935.1972773075104,
+      "behind": 73.52665853500366,
+      "dse": 15.107277725820897
+     },
+     "exp2": {
+      "elpd_cv": -3689.3157896995544,
+      "behind": 23.191762924194336,
+      "dse": 16.2105455909041
+     }
+    },
+    "sel_elpd": -3689.3157896995544,
+    "sel_diff": 23.191762924194336,
+    "sel_dse": 16.2105455909041,
+    "cv_converged": true,
+    "guard_failures": [
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "r3_c1": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20807.453936100006,
+      "behind": 172.67491221427917,
+      "dse": 49.92888003967048
+     },
+     "exp1": {
+      "elpd_cv": -3871.1682329177856,
+      "behind": 9.49761414527893,
+      "dse": 7.88542902493006
+     },
+     "exp2": {
+      "elpd_cv": -3682.8039264678955,
+      "behind": 16.6798996925354,
+      "dse": 14.07221348741451
+     }
+    },
+    "sel_elpd": -3682.8039264678955,
+    "sel_diff": 16.6798996925354,
+    "sel_dse": 14.07221348741451,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "complexity_tier_qud_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20693.413667678833,
+      "behind": 58.63464379310608,
+      "dse": 37.5533736222511
+     },
+     "exp1": {
+      "elpd_cv": -3862.3165850639343,
+      "behind": 0.6459662914276123,
+      "dse": 3.6360158821810638
+     },
+     "exp2": {
+      "elpd_cv": -3666.12402677536,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": -3666.12402677536,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_tier_confusion_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20773.99317932129,
+      "behind": 139.21415543556213,
+      "dse": 47.16254282688556
+     },
+     "exp1": {
+      "elpd_cv": -3861.6706187725067,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp2": {
+      "elpd_cv": -3677.8863525390625,
+      "behind": 11.762325763702393,
+      "dse": 7.849706919624088
+     }
+    },
+    "sel_elpd": -3677.8863525390625,
+    "sel_diff": 11.762325763702393,
+    "sel_dse": 7.849706919624088,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "r1_c5",
+    "hypothesis": "Refining rsa_l2_singleton_feat_color_valence_l0 by incorporating speaker competitor-confusion aversion from competitor_confusion_speaker into the depth-2 speaker without adding or removing any free parameters (retaining all six parameters: alpha, w_singleton, w_distinct, w_features, w_valence, and w_color). In rsa_l2_singleton_feat_color_valence_l0, when the minimal true referents are a duplicated pair, the depth-2 speaker under-selects the shared word for the duplicate pair relative to a richer singleton competitor that possesses an unused uniquely-identifying feature, causing the listener to over-predict choosing that richer competitor on word trials (such as exp1 unit41 and unit33, flagged by word_duplicated_two_feature_vs_unique_feat_competitor_rate in critiques.md). Here, while the literal listener L0 and depth-1 pragmatic listener L1 remain unchanged, the depth-2 speaker simulated inside L2 subtracts the competitor-confusion penalty for each real word and target referent (the sum of exponentially decaying perceptual similarity over other context objects that also satisfy that word) from the log depth-1 listener probability before scaling by rationality alpha.",
+    "source": "seed"
+   },
+   {
+    "name": "r3_c1",
+    "hypothesis": "Listeners interpret referring expressions through a non-Bayesian diagnostic sufficiency heuristic rather than recursive speaker simulation. On word trials, listeners directly score literal referents by penalizing the diagnosticity of their strongest unmentioned feature across distinct referent types alongside perceptual competitor crowding and partial-feature tier ambiguity, while rewarding minimal-complexity literal matches; this explains why people strongly favor unique single-feature referents over partial-feature competitors and avoid non-prototype maximal referents while retaining support for holistic all-feature prototypes against cloned minimal referents. On prior trials without an informative word, listeners anchor on unique maximal-complexity prototypes and perceptually isolated singletons while avoiding duplicated and intermediate-complexity items.",
+    "source": "seed"
+   },
+   {
+    "name": "complexity_tier_qud_l2",
+    "hypothesis": "Speakers communicate under a complexity-tier Question Under Discussion (QUD), selecting utterances to resolve both the target referent's complexity tier and its identity while avoiding confusion with visually similar or intermediate-tier competitors. Listeners jointly infer the speaker's target referent and complexity-tier goal at recursive depth 2, expecting unmarked reference to anchor on unique, extreme-complexity objects\u2014especially the maximal-feature prototype\u2014while suppressing ambiguous intermediate-tier items.",
+    "source": "seed"
+   },
+   {
+    "name": "prototype_tier_confusion_l2",
+    "hypothesis": "We refine `tier_competitor_confusion_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_confusion`, both with `LogNormal(0.0, 0.5)` priors), by extending complexity-tier confusion with incomplete-prototype penalty and complete-prototype anchoring on upper-tier literal referents alongside singleton uniqueness in the object priors. Specifically, in `confusion` we add `(is_non_all_max - is_all_utt * (min_cloned + gap_utt)) / n_obj`, penalizing upper-tier literal referents (`is_max_utt`) that lack at least one scene feature (`is_non_all_max`, where `fc < n_real_words`) while reducing confusion on complete all-features literal referents (`is_all_utt`, where `fc == n_real_words`) when the minimal-complexity literal tier is cloned (`min_cloned`) or separated by a multi-feature span (`gap_utt = max(fc - min_true_fc - 1, 0) / n_real_words`); in `word_prior` we subtract `is_singleton / (n_obj * n_real_words)` inside the `-w_confusion` weight; and in `prior_choice` we replace `-is_max_fc / n_obj` with `-(is_max_fc * (1.0 + is_singleton * inter_frac) + is_singleton) / n_obj` (where `inter_frac = sum(is_inter_scene) / n_obj`). Penalizing incomplete upper-tier literal referents and rewarding complete all-features prototypes explains why listeners on word trials reject partial-feature competitors in favor of minimal-feature referents (`unique_single_feature_referent_vs_partial_feature_competitor_rate`, `max_literal_referent_rate_in_three_referent_false_distractor_scenes`, and `cloned_min_referent_vs_distinct_max_competitors_rate`) yet select all-features prototypes against single-feature referents (`cloned_single_feature_referent_rate_against_unique_all_features_competitor` and `all_features_referent_rate_against_unique_single_feature_with_false_distractor`), while singleton and unique-maximum anchoring in the prior explains why listeners favor unique maximal-feature objects on three-tier prior displays (`prior_unique_max_feature_rate_in_four_object_three_tier_scenes`).",
+    "source": "seed"
+   }
+  ],
+  "ledger_entries": 38
+ },
+ {
+  "step": 1,
+  "round": 0,
+  "best_model": "prototype_anchored_tier_qud_l2",
+  "fit_best": "prototype_anchored_tier_qud_l2",
+  "n_params": {
+   "r1_c5": 6,
+   "r3_c1": 2,
+   "complexity_tier_qud_l2": 2,
+   "prototype_tier_confusion_l2": 2,
+   "counterfactual_omission_l2": 2,
+   "prototype_specificity_anchor_l2": 2,
+   "alternative_competition_cost_l2": 2,
+   "prototype_anchored_tier_qud_l2": 2,
+   "familiarity_prototype_tier_confusion_l2": 2
+  },
+  "parsimony_k": 1.0,
+  "events": [
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": null,
+    "outcome": "no file",
+    "reason": ""
+   },
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "counterfactual_omission_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Speakers and listeners reason under counterfactual feature-omission and perceptual distinctiveness at recursive depth 2, where the literal listener evaluates candidate referents by discounting objects in proportion to their unmentioned diagnostic features rather than treating all literal matches equally. Speakers choose words to maximize literal and depth-1 listener recovery while avoiding similarity-based crowding among unique competitor types, equivalence-class redundancy, and intermediate-tier ambiguity, with low-rate false lexical access on sparse minimal-complexity singletons. Before hearing a word, listeners anchor on unique maximal-complexity prototypes and perceptually isolated objects while discounting intermediate-complexity items."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "prototype_specificity_anchor_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners and speakers reason at recursive depth 2 under prototype-anchored specificity: speakers choose utterances to maximize listener recovery while avoiding similarity-based competitor confusion, intermediate-complexity tier ambiguity, and redundant descriptions of duplicated minimal referents when a unique maximal-complexity prototype is available. Before hearing an informative word, and as a baseline communicative expectation, people anchor on unique maximal-complexity prototypes and perceptually isolated referents while discounting duplicated or intermediate-tier items; on displays where duplicated minimal-complexity referents compete against a unique all-features prototype (such as exp2 unit12, unit32, and unit35) or on two-tier prior displays (such as exp2 unit18 and unit21), this mechanism predicts substantially stronger selection of the maximal-complexity prototype than the incumbent's complexity-tier QUD model."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "alternative_competition_cost_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Speakers choose words by trading off pragmatic informativeness against an utterance alternative-competition cost that reflects both competitor crowding among other objects satisfying the word and lexical rivalry from alternative unmentioned features on the target referent, while also allowing low-probability false lexical access on sparse minimal-complexity objects. Listeners invert this speaker at recursive depth 2 under a perceptual distinctiveness and complexity-boundary prior, explaining why people temper their preference for cloned minimal referents in favor of all-feature prototypes, occasionally intrude on literally false minimal-complexity objects, and treat same-tier minimal referents symmetrically despite asymmetric overlap with cloned higher-tier competitors."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "prototype_anchored_tier_qud_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine `complexity_tier_qud_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_qud`, both with `LogNormal(0.0, 0.5)` priors), by replacing the unconditional all-features bonus in `word_prior` (`is_all_feats * (max_fc - min_fc - 1.0) / (n_obj * n_real_utt)`, so `word_prior` becomes `softmax_prior(-w_qud * baseline_confusion)`) with utterance-level complete-prototype QUD anchoring in `qud_cost` from `prototype_tier_confusion_l2` (`-is_all_utt * (min_cloned + gap_utt) / n_obj`, where `is_all_utt = is_max_utt * is_all_feats[None, :]`, `min_cloned = max(is_min_utt * is_clone[None, :], axis=1, keepdims=True)`, and `gap_utt = maximum(fc[None, :] - min_true_fc - 1.0, 0.0) / n_real_utt`) alongside clone-resolved scene priors (`baseline_confusion` uses `is_clone / n_obj` instead of `is_clone * (1.0 - is_inter_scene) / n_obj`, and `prior_choice` replaces `(n_obj - 1.0)` with `(n_obj - 1.0 - min_scene_cloned)` and `has_inter_scene * (1.0 - is_clone)` with `(has_inter_scene * (1.0 - is_clone) + min_scene_cloned)`, where `min_scene_cloned = max(is_min_fc * is_clone)` and `is_min_fc` marks `fc == min_fc` when `max_fc > min_fc`). Moving complete-prototype anchoring from the unconditional `word_prior` into `qud_cost` conditioned on cloned minimal-tier competitors (`min_cloned`) or multi-feature utterance spans (`gap_utt`) explains why listeners on word trials shift away from duplicated minimal-complexity referents toward the unique higher-complexity prototype (`cloned_minimal_true_choice_rate` in `critiques.md`) without over-predicting the rich referent in standard reference games on `E` where the minimal referent is a unique singleton (`min_cloned == 0` and `gap_utt == 0`). Extending clone-disfavoring to intermediate-tier displays and accounting for cloned minimal-tier distractors (`min_scene_cloned`) in `prior_choice` explains why listeners on silent prior trials select unique intermediate-tier objects more often (`prior_intermediate_tier_selection_rate`) and strongly favor unique all-features prototypes over duplicated empty objects on two-tier prior displays (`prior_two_tier_all_features_vs_empty_preference`)."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "familiarity_prototype_tier_confusion_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine `prototype_tier_confusion_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_confusion`, both with `LogNormal(0.0, 0.5)` priors), by gating the speaker's incomplete-prototype confusion penalty on unique upper-tier competitors without cloned minimal referents while integrating perceptual familiarity, grayscale contrast, endpoint clone confusion, and complete-prototype anchoring into the object priors. Specifically, we add `has_inter_scene = jnp.max(is_inter_scene)` and `is_all_feats = jnp.where((fc == n_real_words) & (max_fc > min_fc), 1.0, 0.0)`, and remove `inter_frac`; in `tier_utt` inside `confusion`, we replace `is_non_all_max` with `is_non_all_max * is_singleton[None, :] * (1.0 - min_cloned)` so that incomplete upper-tier literal referents incur confusion only when they are unique and the minimal literal tier is not cloned; in `baseline_confusion`, we add `(1.0 - is_singleton) * (1.0 - is_inter_scene) / n_obj + ctx.grayscale / n_obj`; in `word_prior`, we replace `is_singleton / (n_obj * n_real_words)` with `(is_singleton + is_all_feats * (max_fc - min_fc - 1.0)) / (n_obj * n_real_words)`; and in `prior_choice`, we replace `baseline_confusion + is_inter_scene - (is_max_fc * (1.0 + is_singleton * inter_frac) + is_singleton) / n_obj` with `baseline_confusion - ctx.familiarization + is_inter_scene * (1.0 - ctx.has_familiarization) * (1.0 - jnp.abs(ctx.valence)) * (n_obj - 1.0) / n_obj - (is_max_fc + is_all_feats * has_inter_scene * is_singleton) / n_obj`. Gating the incomplete-prototype penalty when minimal referents are cloned and strengthening complete-prototype anchoring explains why listeners on heard-word scenes with cloned minimal referents do not over-select the clones against a unique higher-complexity competitor (`cloned_minimal_true_choice_rate` in `critiques.md`), while familiarity- and valence-gated intermediate suppression and endpoint clone confusion on prior trials explain why listeners select intermediate-tier objects and prefer all-features prototypes over empty objects on two-tier displays (`prior_intermediate_tier_selection_rate` and `prior_two_tier_all_features_vs_empty_preference`)."
+   }
+  ],
+  "critique": {
+   "status": "critiqued",
+   "incumbent": "complexity_tier_qud_l2",
+   "attempts": 1,
+   "dir": "/scratch/users/mcfrank/auto-psych/agent_trees/be1e85ca0b58aea3/repo/_runs/chain_0/experiment2/loop/round_1/critique",
+   "block": "exp2",
+   "n_statistics": 8,
+   "n_evaluated": 8,
+   "n_significant": 5,
+   "n_significant_fdr": 2
+  },
+  "admission_limit_sec": 1800,
+  "standing": {
+   "r1_c5": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20634.779023885727,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -3935.1972773075104,
+      "behind": 74.29875183105469,
+      "dse": 13.963722693083357
+     },
+     "exp2": {
+      "elpd_cv": -3689.3157896995544,
+      "behind": 38.85901355743408,
+      "dse": 14.634637577666753
+     }
+    },
+    "sel_elpd": -3689.3157896995544,
+    "sel_diff": 38.85901355743408,
+    "sel_dse": 14.634637577666753,
+    "cv_converged": true,
+    "guard_failures": [
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "r3_c1": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20807.453936100006,
+      "behind": 172.67491221427917,
+      "dse": 49.92888003967048
+     },
+     "exp1": {
+      "elpd_cv": -3871.1682329177856,
+      "behind": 10.269707441329956,
+      "dse": 8.537109206864503
+     },
+     "exp2": {
+      "elpd_cv": -3682.8039264678955,
+      "behind": 32.34715032577515,
+      "dse": 13.843033560248347
+     }
+    },
+    "sel_elpd": -3682.8039264678955,
+    "sel_diff": 32.34715032577515,
+    "sel_dse": 13.843033560248347,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "complexity_tier_qud_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20693.413667678833,
+      "behind": 58.63464379310608,
+      "dse": 37.5533736222511
+     },
+     "exp1": {
+      "elpd_cv": -3862.3165850639343,
+      "behind": 1.4180595874786377,
+      "dse": 1.3064661429609232
+     },
+     "exp2": {
+      "elpd_cv": -3666.12402677536,
+      "behind": 15.667250633239746,
+      "dse": 5.688127110369235
+     }
+    },
+    "sel_elpd": -3666.12402677536,
+    "sel_diff": 15.667250633239746,
+    "sel_dse": 5.688127110369235,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_tier_confusion_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20773.99317932129,
+      "behind": 139.21415543556213,
+      "dse": 47.16254282688556
+     },
+     "exp1": {
+      "elpd_cv": -3861.6706187725067,
+      "behind": 0.7720932960510254,
+      "dse": 3.7238063065933944
+     },
+     "exp2": {
+      "elpd_cv": -3677.8863525390625,
+      "behind": 27.42957639694214,
+      "dse": 8.311863969999177
+     }
+    },
+    "sel_elpd": -3677.8863525390625,
+    "sel_diff": 27.42957639694214,
+    "sel_dse": 8.311863969999177,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "counterfactual_omission_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20690.151847839355,
+      "behind": 55.37282395362854,
+      "dse": 36.735817093382195
+     },
+     "exp1": {
+      "elpd_cv": -3862.1010360717773,
+      "behind": 1.2025105953216553,
+      "dse": 1.4181426931679504
+     },
+     "exp2": {
+      "elpd_cv": -3659.7692313194275,
+      "behind": 9.312455177307129,
+      "dse": 3.224482331629551
+     }
+    },
+    "sel_elpd": -3659.7692313194275,
+    "sel_diff": 9.312455177307129,
+    "sel_dse": 3.224482331629551,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_specificity_anchor_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20693.2094271183,
+      "behind": 58.43040323257446,
+      "dse": 37.01599192315246
+     },
+     "exp1": {
+      "elpd_cv": -3860.8985254764557,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp2": {
+      "elpd_cv": -3661.013986825943,
+      "behind": 10.557210683822632,
+      "dse": 4.014699471321285
+     }
+    },
+    "sel_elpd": -3661.013986825943,
+    "sel_diff": 10.557210683822632,
+    "sel_dse": 4.014699471321285,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "alternative_competition_cost_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20690.343549728394,
+      "behind": 55.564525842666626,
+      "dse": 37.27451903522425
+     },
+     "exp1": {
+      "elpd_cv": -3862.049383163452,
+      "behind": 1.15085768699646,
+      "dse": 1.2423249692645084
+     },
+     "exp2": {
+      "elpd_cv": -3658.385262489319,
+      "behind": 7.928486347198486,
+      "dse": 3.0552206173672403
+     }
+    },
+    "sel_elpd": -3658.385262489319,
+    "sel_diff": 7.928486347198486,
+    "sel_dse": 3.0552206173672403,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_anchored_tier_qud_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20661.371280431747,
+      "behind": 26.592256546020508,
+      "dse": 34.00616932436861
+     },
+     "exp1": {
+      "elpd_cv": -3861.983988046646,
+      "behind": 1.0854625701904297,
+      "dse": 2.0047559704804008
+     },
+     "exp2": {
+      "elpd_cv": -3650.4567761421204,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": -3650.4567761421204,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "familiarity_prototype_tier_confusion_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20703.05648303032,
+      "behind": 68.27745914459229,
+      "dse": 37.57518970576206
+     },
+     "exp1": {
+      "elpd_cv": -3862.685069322586,
+      "behind": 1.786543846130371,
+      "dse": 3.478066215176921
+     },
+     "exp2": {
+      "elpd_cv": -3659.282902956009,
+      "behind": 8.82612681388855,
+      "dse": 4.9492031857780425
+     }
+    },
+    "sel_elpd": -3659.282902956009,
+    "sel_diff": 8.82612681388855,
+    "sel_dse": 4.9492031857780425,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "r1_c5",
+    "hypothesis": "Refining rsa_l2_singleton_feat_color_valence_l0 by incorporating speaker competitor-confusion aversion from competitor_confusion_speaker into the depth-2 speaker without adding or removing any free parameters (retaining all six parameters: alpha, w_singleton, w_distinct, w_features, w_valence, and w_color). In rsa_l2_singleton_feat_color_valence_l0, when the minimal true referents are a duplicated pair, the depth-2 speaker under-selects the shared word for the duplicate pair relative to a richer singleton competitor that possesses an unused uniquely-identifying feature, causing the listener to over-predict choosing that richer competitor on word trials (such as exp1 unit41 and unit33, flagged by word_duplicated_two_feature_vs_unique_feat_competitor_rate in critiques.md). Here, while the literal listener L0 and depth-1 pragmatic listener L1 remain unchanged, the depth-2 speaker simulated inside L2 subtracts the competitor-confusion penalty for each real word and target referent (the sum of exponentially decaying perceptual similarity over other context objects that also satisfy that word) from the log depth-1 listener probability before scaling by rationality alpha.",
+    "source": "seed"
+   },
+   {
+    "name": "r3_c1",
+    "hypothesis": "Listeners interpret referring expressions through a non-Bayesian diagnostic sufficiency heuristic rather than recursive speaker simulation. On word trials, listeners directly score literal referents by penalizing the diagnosticity of their strongest unmentioned feature across distinct referent types alongside perceptual competitor crowding and partial-feature tier ambiguity, while rewarding minimal-complexity literal matches; this explains why people strongly favor unique single-feature referents over partial-feature competitors and avoid non-prototype maximal referents while retaining support for holistic all-feature prototypes against cloned minimal referents. On prior trials without an informative word, listeners anchor on unique maximal-complexity prototypes and perceptually isolated singletons while avoiding duplicated and intermediate-complexity items.",
+    "source": "seed"
+   },
+   {
+    "name": "complexity_tier_qud_l2",
+    "hypothesis": "Speakers communicate under a complexity-tier Question Under Discussion (QUD), selecting utterances to resolve both the target referent's complexity tier and its identity while avoiding confusion with visually similar or intermediate-tier competitors. Listeners jointly infer the speaker's target referent and complexity-tier goal at recursive depth 2, expecting unmarked reference to anchor on unique, extreme-complexity objects\u2014especially the maximal-feature prototype\u2014while suppressing ambiguous intermediate-tier items.",
+    "source": "seed"
+   },
+   {
+    "name": "prototype_tier_confusion_l2",
+    "hypothesis": "We refine `tier_competitor_confusion_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_confusion`, both with `LogNormal(0.0, 0.5)` priors), by extending complexity-tier confusion with incomplete-prototype penalty and complete-prototype anchoring on upper-tier literal referents alongside singleton uniqueness in the object priors. Specifically, in `confusion` we add `(is_non_all_max - is_all_utt * (min_cloned + gap_utt)) / n_obj`, penalizing upper-tier literal referents (`is_max_utt`) that lack at least one scene feature (`is_non_all_max`, where `fc < n_real_words`) while reducing confusion on complete all-features literal referents (`is_all_utt`, where `fc == n_real_words`) when the minimal-complexity literal tier is cloned (`min_cloned`) or separated by a multi-feature span (`gap_utt = max(fc - min_true_fc - 1, 0) / n_real_words`); in `word_prior` we subtract `is_singleton / (n_obj * n_real_words)` inside the `-w_confusion` weight; and in `prior_choice` we replace `-is_max_fc / n_obj` with `-(is_max_fc * (1.0 + is_singleton * inter_frac) + is_singleton) / n_obj` (where `inter_frac = sum(is_inter_scene) / n_obj`). Penalizing incomplete upper-tier literal referents and rewarding complete all-features prototypes explains why listeners on word trials reject partial-feature competitors in favor of minimal-feature referents (`unique_single_feature_referent_vs_partial_feature_competitor_rate`, `max_literal_referent_rate_in_three_referent_false_distractor_scenes`, and `cloned_min_referent_vs_distinct_max_competitors_rate`) yet select all-features prototypes against single-feature referents (`cloned_single_feature_referent_rate_against_unique_all_features_competitor` and `all_features_referent_rate_against_unique_single_feature_with_false_distractor`), while singleton and unique-maximum anchoring in the prior explains why listeners favor unique maximal-feature objects on three-tier prior displays (`prior_unique_max_feature_rate_in_four_object_three_tier_scenes`).",
+    "source": "seed"
+   },
+   {
+    "name": "counterfactual_omission_l2",
+    "hypothesis": "Speakers and listeners reason under counterfactual feature-omission and perceptual distinctiveness at recursive depth 2, where the literal listener evaluates candidate referents by discounting objects in proportion to their unmentioned diagnostic features rather than treating all literal matches equally. Speakers choose words to maximize literal and depth-1 listener recovery while avoiding similarity-based crowding among unique competitor types, equivalence-class redundancy, and intermediate-tier ambiguity, with low-rate false lexical access on sparse minimal-complexity singletons. Before hearing a word, listeners anchor on unique maximal-complexity prototypes and perceptually isolated objects while discounting intermediate-complexity items.",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "prototype_specificity_anchor_l2",
+    "hypothesis": "Listeners and speakers reason at recursive depth 2 under prototype-anchored specificity: speakers choose utterances to maximize listener recovery while avoiding similarity-based competitor confusion, intermediate-complexity tier ambiguity, and redundant descriptions of duplicated minimal referents when a unique maximal-complexity prototype is available. Before hearing an informative word, and as a baseline communicative expectation, people anchor on unique maximal-complexity prototypes and perceptually isolated referents while discounting duplicated or intermediate-tier items; on displays where duplicated minimal-complexity referents compete against a unique all-features prototype (such as exp2 unit12, unit32, and unit35) or on two-tier prior displays (such as exp2 unit18 and unit21), this mechanism predicts substantially stronger selection of the maximal-complexity prototype than the incumbent's complexity-tier QUD model.",
+    "source": "round 1 candidate 2 explore"
+   },
+   {
+    "name": "alternative_competition_cost_l2",
+    "hypothesis": "Speakers choose words by trading off pragmatic informativeness against an utterance alternative-competition cost that reflects both competitor crowding among other objects satisfying the word and lexical rivalry from alternative unmentioned features on the target referent, while also allowing low-probability false lexical access on sparse minimal-complexity objects. Listeners invert this speaker at recursive depth 2 under a perceptual distinctiveness and complexity-boundary prior, explaining why people temper their preference for cloned minimal referents in favor of all-feature prototypes, occasionally intrude on literally false minimal-complexity objects, and treat same-tier minimal referents symmetrically despite asymmetric overlap with cloned higher-tier competitors.",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "prototype_anchored_tier_qud_l2",
+    "hypothesis": "We refine `complexity_tier_qud_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_qud`, both with `LogNormal(0.0, 0.5)` priors), by replacing the unconditional all-features bonus in `word_prior` (`is_all_feats * (max_fc - min_fc - 1.0) / (n_obj * n_real_utt)`, so `word_prior` becomes `softmax_prior(-w_qud * baseline_confusion)`) with utterance-level complete-prototype QUD anchoring in `qud_cost` from `prototype_tier_confusion_l2` (`-is_all_utt * (min_cloned + gap_utt) / n_obj`, where `is_all_utt = is_max_utt * is_all_feats[None, :]`, `min_cloned = max(is_min_utt * is_clone[None, :], axis=1, keepdims=True)`, and `gap_utt = maximum(fc[None, :] - min_true_fc - 1.0, 0.0) / n_real_utt`) alongside clone-resolved scene priors (`baseline_confusion` uses `is_clone / n_obj` instead of `is_clone * (1.0 - is_inter_scene) / n_obj`, and `prior_choice` replaces `(n_obj - 1.0)` with `(n_obj - 1.0 - min_scene_cloned)` and `has_inter_scene * (1.0 - is_clone)` with `(has_inter_scene * (1.0 - is_clone) + min_scene_cloned)`, where `min_scene_cloned = max(is_min_fc * is_clone)` and `is_min_fc` marks `fc == min_fc` when `max_fc > min_fc`). Moving complete-prototype anchoring from the unconditional `word_prior` into `qud_cost` conditioned on cloned minimal-tier competitors (`min_cloned`) or multi-feature utterance spans (`gap_utt`) explains why listeners on word trials shift away from duplicated minimal-complexity referents toward the unique higher-complexity prototype (`cloned_minimal_true_choice_rate` in `critiques.md`) without over-predicting the rich referent in standard reference games on `E` where the minimal referent is a unique singleton (`min_cloned == 0` and `gap_utt == 0`). Extending clone-disfavoring to intermediate-tier displays and accounting for cloned minimal-tier distractors (`min_scene_cloned`) in `prior_choice` explains why listeners on silent prior trials select unique intermediate-tier objects more often (`prior_intermediate_tier_selection_rate`) and strongly favor unique all-features prototypes over duplicated empty objects on two-tier prior displays (`prior_two_tier_all_features_vs_empty_preference`).",
+    "source": "round 1 candidate 5 refine incumbent complexity_tier_qud_l2"
+   },
+   {
+    "name": "familiarity_prototype_tier_confusion_l2",
+    "hypothesis": "We refine `prototype_tier_confusion_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_confusion`, both with `LogNormal(0.0, 0.5)` priors), by gating the speaker's incomplete-prototype confusion penalty on unique upper-tier competitors without cloned minimal referents while integrating perceptual familiarity, grayscale contrast, endpoint clone confusion, and complete-prototype anchoring into the object priors. Specifically, we add `has_inter_scene = jnp.max(is_inter_scene)` and `is_all_feats = jnp.where((fc == n_real_words) & (max_fc > min_fc), 1.0, 0.0)`, and remove `inter_frac`; in `tier_utt` inside `confusion`, we replace `is_non_all_max` with `is_non_all_max * is_singleton[None, :] * (1.0 - min_cloned)` so that incomplete upper-tier literal referents incur confusion only when they are unique and the minimal literal tier is not cloned; in `baseline_confusion`, we add `(1.0 - is_singleton) * (1.0 - is_inter_scene) / n_obj + ctx.grayscale / n_obj`; in `word_prior`, we replace `is_singleton / (n_obj * n_real_words)` with `(is_singleton + is_all_feats * (max_fc - min_fc - 1.0)) / (n_obj * n_real_words)`; and in `prior_choice`, we replace `baseline_confusion + is_inter_scene - (is_max_fc * (1.0 + is_singleton * inter_frac) + is_singleton) / n_obj` with `baseline_confusion - ctx.familiarization + is_inter_scene * (1.0 - ctx.has_familiarization) * (1.0 - jnp.abs(ctx.valence)) * (n_obj - 1.0) / n_obj - (is_max_fc + is_all_feats * has_inter_scene * is_singleton) / n_obj`. Gating the incomplete-prototype penalty when minimal referents are cloned and strengthening complete-prototype anchoring explains why listeners on heard-word scenes with cloned minimal referents do not over-select the clones against a unique higher-complexity competitor (`cloned_minimal_true_choice_rate` in `critiques.md`), while familiarity- and valence-gated intermediate suppression and endpoint clone confusion on prior trials explain why listeners select intermediate-tier objects and prefer all-features prototypes over empty objects on two-tier displays (`prior_intermediate_tier_selection_rate` and `prior_two_tier_all_features_vs_empty_preference`).",
+    "source": "round 1 candidate 6 refine chosen"
+   }
+  ],
+  "ledger_entries": 44
+ },
+ {
+  "step": 2,
+  "round": 1,
+  "best_model": "prototype_span_false_access_l2",
+  "fit_best": "prototype_span_false_access_l2",
+  "n_params": {
+   "r1_c5": 6,
+   "r3_c1": 2,
+   "complexity_tier_qud_l2": 2,
+   "prototype_tier_confusion_l2": 2,
+   "counterfactual_omission_l2": 2,
+   "prototype_specificity_anchor_l2": 2,
+   "alternative_competition_cost_l2": 2,
+   "prototype_anchored_tier_qud_l2": 2,
+   "familiarity_prototype_tier_confusion_l2": 2,
+   "figure_ground_topicality_prior_l2": 2,
+   "attentional_encoding_bottleneck_l2": 2,
+   "noisy_graded_lexicon_l2": 2,
+   "sparse_singleton_prototype_qud_l2": 2,
+   "distinctive_tier_qud_l2": 2,
+   "prototype_span_false_access_l2": 2
+  },
+  "parsimony_k": 1.0,
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "figure_ground_topicality_prior_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners form baseline communicative expectations before hearing a word through a figure-ground topicality prior that weights each object by its perceptual distinctiveness, prototype completeness, and structural uniqueness within its complexity tier, while speakers reason recursively at depth 2 to maximize listener recovery and avoid referential competition. Because objects that are structurally isolated or anchor the scene's complexity boundaries stand out as natural discourse topics while duplicated or crowded intermediate items recede into the background, this prior directly governs silent trials and anchors pragmatic inference on word trials\u2014explaining why listeners favor unique intermediate referents over cloned minimal distractors, preserve balanced support for unique minimal singletons on prior displays, and strongly discount non-unique incomplete maximal competitors on word trials."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "attentional_encoding_bottleneck_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Resource-limited listeners interpret referring expressions under bounded attentional encoding of the display: rather than maintaining perfect, uniform representations of all objects and their features, perceptual attention selectively sharpens unique complexity-boundary anchors (minimal-complexity singletons and complete all-feature prototypes) while compressing cloned or intermediate-tier competitors and allowing low-probability false feature attribution to unattended minimal singletons. Speakers and listeners reason recursively at depth 2 over this attentionally filtered display, penalizing utterances that leave unencoded features or suffer similarity- and clone-based attentional crowding, which explains why people occasionally select literally false minimal singletons, discount incomplete maximal competitors lacking unique features, treat same-tier minimal referents symmetrically despite asymmetric overlap with cloned distractors, and favor unique intermediate or minimal items over cloned minimal distractors on silent trials."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "noisy_graded_lexicon_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Speakers and listeners reason pragmatically at recursive depth 2 under graded lexical specificity and noisy feature applicability: literal word applicability in the base listener softens on candidate referents carrying redundant unmentioned features without a uniquely identifying feature or competing unmentioned singleton features, while speaker word selection allows low-probability noisy lexical access on sparse minimal-complexity singletons alongside prototype-anchored tier and similarity competition. On silent prior displays and as a baseline communicative expectation, listeners anchor on perceptually isolated singletons and maximal-complexity prototypes while discounting cloned and intermediate-tier objects, explaining people's choices of false minimal singletons, preference against incomplete maximal referents lacking unique features, symmetric treatment of minimal referents, and balanced choices across minimal, intermediate, and maximal tiers."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "sparse_singleton_prototype_qud_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine `prototype_anchored_tier_qud_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_qud`, both with `LogNormal(0.0, 0.5)` priors), by incorporating low-probability false lexical access on sparse minimal-complexity singletons from `alternative_competition_cost_l2` (`sem_lex = ctx.lex + is_false_min * jnp.exp(-w_qud * (n_obj - min_cloned))`, where `is_false_min = real_words * (1.0 - real_lex) * is_min_fc[None, :] * (1.0 - is_clone[None, :]) * jnp.where((min_fc > 0.0) & (min_fc < min_true_fc), 1.0, 0.0)`) into the speaker's lexical weights at `L1` and `L2`. Allowing the pragmatic speaker to occasionally apply an utterance to the scene's unique positive minimal-complexity object when it lacks the heard feature and all literal referents are strictly more complex explains why listeners intrude on literally false minimal-feature singletons more often than random lapse predicts (`false_minimal_singleton_choice_rate` in `critiques.md`) and reduces over-prediction of the unique maximal referent against cloned multi-feature minimal referents (`four_object_cloned_minimal_non_maximal_rate`)."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "distinctive_tier_qud_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine `prototype_anchored_tier_qud_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_qud`, both with `LogNormal(0.0, 0.5)` priors), by incorporating low-rate false lexical access on unique minimal-complexity objects from `counterfactual_omission_l2` alongside distinctive-feature competition on incomplete referents and complete-prototype prior anchoring. Specifically, in `L1` and `L2` we pass `sem_lex: ...` and replace `at(lex, u, r)` in the speaker's choice weight with `at(sem_lex, u, r)` (where `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_qud * (n_obj - min_cloned))` and `is_false_min = real_words * (1.0 - real_lex) * is_min_fc[None, :] * (1.0 - is_clone[None, :]) * jnp.where((min_fc > 0.0) & (min_fc < min_true_fc), 1.0, 0.0)`); in `qud_cost`, we replace `is_incomplete_utt * (1.0 - is_clone[None, :]) / n_real_utt` with `incomplete_penalty = is_incomplete_utt * ((1.0 - is_clone[None, :]) / n_real_utt + (1.0 - has_unique_feat[None, :]) * utt_has_unique)` (where `feat_ext = jnp.sum(real_lex, axis=1, keepdims=True)`, `has_unique_feat = jnp.max(jnp.where((real_lex > 0) & (feat_ext == 1.0), 1.0, 0.0), axis=0)`, and `utt_has_unique = jnp.max(is_incomplete_utt * has_unique_feat[None, :], axis=1, keepdims=True)`) and replace `(min_cloned + gap_utt)` with `(min_cloned + gap_utt * (1.0 - min_cloned))`; in `baseline_confusion`, we replace `is_clone / n_obj` with `is_clone * (1.0 + is_min_fc * has_inter_scene) / n_obj`; and in `prior_choice`, we replace `min_scene_cloned` inside the intermediate-tier penalty with `min_scene_cloned * (1.0 - is_clone)` and replace `is_max_fc` in the maximal-tier bonus with `is_max_fc * is_all_feats`. Allowing low-rate speaker access on literally false minimal singletons (`sem_lex`), penalizing incomplete referents lacking a scene-unique feature when a competing incomplete referent possesses one (`incomplete_penalty`), and preventing additive double-counting of `min_cloned` and `gap_utt` explain why listeners occasionally select false minimal singletons (`false_minimal_singleton_choice_rate`), reject non-unique incomplete maximal referents (`incomplete_max_referent_no_unique_feature_preference`), and favor non-maximal referents when minimal referents are cloned (`four_object_cloned_minimal_non_maximal_rate`), while penalizing cloned minimal tiers on three-tier scenes and restricting maximal-tier prior anchoring to complete prototypes explain why silent-prior listeners prefer unique intermediate referents over cloned minimal ones (`prior_unique_intermediate_vs_cloned_minimal_preference`) and unique minimal referents over incomplete maximal ones (`prior_unique_minimal_vs_maximal_tier_preference`)."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "prototype_span_false_access_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine `alternative_competition_cost_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_cost`, both with `LogNormal(0.0, 0.5)` priors), by extending false minimal lexical access (`sem_lex`) to both literal and pragmatic listeners while replacing the speaker's equivalence-class competition cost (`utt_cost`) and object priors (`word_prior`, `prior_choice`) with diagnostic incomplete-referent suppression, prototype-span anchoring, and clone-resolved scene priors. Specifically, in `L0`, `L1`, and `L2`, we pass `sem_lex` to `L0` (`L0[u: UTT, r: OBJ](sem_lex: ...)` instead of `lex: ...`, removing `lex` from `L1` and `L2` signatures); in `compute_speaker_terms`, we add `min_scene_cloned = jnp.max(is_min_fc * is_clone)`, `inter_scene_cloned = jnp.max(is_inter_scene * is_clone)`, `is_max_utt = jnp.where((real_lex > 0) & (fc[None, :] == max_true_fc) & (max_true_fc > min_true_fc), 1.0, 0.0)`, `max_cloned = jnp.max(is_max_utt * is_clone[None, :], axis=1, keepdims=True)`, `gap_utt = jnp.maximum(fc[None, :] - min_true_fc - 1.0, 0.0) / n_real_utt`, and `has_uniq_feat = jnp.max(jnp.where(jnp.sum(real_lex, axis=1, keepdims=True) == 1.0, real_lex, 0.0), axis=0)`; redefine `min_cloned = jnp.max(is_min_utt * is_clone[None, :], axis=1, keepdims=True)` (removing `(1.0 - jnp.max(is_inter_utt, axis=1, keepdims=True))`); replace `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_cost * (n_obj - min_cloned))` with `sem_lex = ctx.lex + is_false_min * jnp.where(jnp.sum(real_lex, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned))`; replace `(real_lex @ unique_sim) + (copy_count[None, :] - 1.0) * real_lex` with `(real_lex @ sim)`, `is_incomplete_utt * is_singleton[None, :] / n_real_utt` with `is_incomplete_utt * is_singleton[None, :] * (1.0 + is_max_utt * (1.0 - has_uniq_feat[None, :]) * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * (1.0 - max_cloned)) / n_real_utt`, and `- is_all_utt * min_cloned * is_singleton[None, :] / n_obj` with `- is_all_utt * (min_cloned + gap_utt) / n_obj` in `utt_cost` (dropping `unique_sim`); replace `is_clone * (1.0 - is_inter_scene) / n_obj` with `is_clone / n_obj` in `baseline_crowd`; remove `- is_all_feats * (max_fc - min_fc - 1.0) / (n_obj * n_real_utt)` from `word_prior`; and in `prior_choice` replace `(1.0 - 1.0 / n_obj) / (1.0 + is_singleton / n_obj)` with `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton)) / n_obj` and `(is_max_fc + is_all_feats * (has_inter_scene * is_singleton + is_clone / n_obj)) / n_obj` with `(is_max_fc * (1.0 - inter_scene_cloned) + is_all_feats * (has_inter_scene * is_singleton + min_scene_cloned + inter_scene_cloned)) / n_obj`. This single refinement explains why listeners on word trials intrude on literally false minimal-feature singletons under referential ambiguity (`false_minimal_singleton_choice_rate`), reject incomplete maximal referents lacking a scene-unique feature (`incomplete_max_referent_no_unique_feature_preference`), and balance cloned minimal referents against prototypes (`four_object_cloned_minimal_non_maximal_rate`), while on silent prior trials favoring unique intermediate-tier objects over cloned minimal objects (`prior_unique_intermediate_vs_cloned_minimal_preference`) and unique minimal-tier objects over non-prototype maximal-tier objects when intermediate tiers are cloned (`prior_unique_minimal_vs_maximal_tier_preference`)."
+   }
+  ],
+  "critique": {
+   "status": "critiqued",
+   "incumbent": "prototype_anchored_tier_qud_l2",
+   "attempts": 1,
+   "dir": "/scratch/users/mcfrank/auto-psych/agent_trees/be1e85ca0b58aea3/repo/_runs/chain_0/experiment2/loop/round_2/critique",
+   "block": "exp2",
+   "n_statistics": 8,
+   "n_evaluated": 8,
+   "n_significant": 6,
+   "n_significant_fdr": 6
+  },
+  "admission_limit_sec": 1800,
+  "standing": {
+   "r1_c5": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20634.779023885727,
+      "behind": 69.61554288864136,
+      "dse": 49.73335072751216
+     },
+     "exp1": {
+      "elpd_cv": -3935.1972773075104,
+      "behind": 80.47335243225098,
+      "dse": 14.771472274204763
+     },
+     "exp2": {
+      "elpd_cv": -3689.3157896995544,
+      "behind": 49.972025871276855,
+      "dse": 15.48931314350292
+     }
+    },
+    "sel_elpd": -3689.3157896995544,
+    "sel_diff": 49.972025871276855,
+    "sel_dse": 15.48931314350292,
+    "cv_converged": true,
+    "guard_failures": [
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "r3_c1": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20807.453936100006,
+      "behind": 242.29045510292053,
+      "dse": 50.39307406184786
+     },
+     "exp1": {
+      "elpd_cv": -3871.1682329177856,
+      "behind": 16.444308042526245,
+      "dse": 8.945368144545263
+     },
+     "exp2": {
+      "elpd_cv": -3682.8039264678955,
+      "behind": 43.46016263961792,
+      "dse": 13.658546449915837
+     }
+    },
+    "sel_elpd": -3682.8039264678955,
+    "sel_diff": 43.46016263961792,
+    "sel_dse": 13.658546449915837,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "complexity_tier_qud_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20693.413667678833,
+      "behind": 128.25018668174744,
+      "dse": 40.13429752256749
+     },
+     "exp1": {
+      "elpd_cv": -3862.3165850639343,
+      "behind": 7.592660188674927,
+      "dse": 5.92644565751466
+     },
+     "exp2": {
+      "elpd_cv": -3666.12402677536,
+      "behind": 26.78026294708252,
+      "dse": 7.40075363430398
+     }
+    },
+    "sel_elpd": -3666.12402677536,
+    "sel_diff": 26.78026294708252,
+    "sel_dse": 7.40075363430398,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_tier_confusion_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20773.99317932129,
+      "behind": 208.8296983242035,
+      "dse": 53.73025679146741
+     },
+     "exp1": {
+      "elpd_cv": -3861.6706187725067,
+      "behind": 6.9466938972473145,
+      "dse": 6.104164914616369
+     },
+     "exp2": {
+      "elpd_cv": -3677.8863525390625,
+      "behind": 38.54258871078491,
+      "dse": 10.321893266708665
+     }
+    },
+    "sel_elpd": -3677.8863525390625,
+    "sel_diff": 38.54258871078491,
+    "sel_dse": 10.321893266708665,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "counterfactual_omission_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20690.151847839355,
+      "behind": 124.9883668422699,
+      "dse": 38.7003412123754
+     },
+     "exp1": {
+      "elpd_cv": -3862.1010360717773,
+      "behind": 7.377111196517944,
+      "dse": 5.456011288811115
+     },
+     "exp2": {
+      "elpd_cv": -3659.7692313194275,
+      "behind": 20.425467491149902,
+      "dse": 6.954560589323749
+     }
+    },
+    "sel_elpd": -3659.7692313194275,
+    "sel_diff": 20.425467491149902,
+    "sel_dse": 6.954560589323749,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_specificity_anchor_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20693.2094271183,
+      "behind": 128.04594612121582,
+      "dse": 39.52923851239664
+     },
+     "exp1": {
+      "elpd_cv": -3860.8985254764557,
+      "behind": 6.174600601196289,
+      "dse": 5.565741985943728
+     },
+     "exp2": {
+      "elpd_cv": -3661.013986825943,
+      "behind": 21.670222997665405,
+      "dse": 7.122743728044173
+     }
+    },
+    "sel_elpd": -3661.013986825943,
+    "sel_diff": 21.670222997665405,
+    "sel_dse": 7.122743728044173,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "alternative_competition_cost_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20690.343549728394,
+      "behind": 125.18006873130798,
+      "dse": 39.202687139737755
+     },
+     "exp1": {
+      "elpd_cv": -3862.049383163452,
+      "behind": 7.325458288192749,
+      "dse": 5.623220746138324
+     },
+     "exp2": {
+      "elpd_cv": -3658.385262489319,
+      "behind": 19.04149866104126,
+      "dse": 6.6806697298511
+     }
+    },
+    "sel_elpd": -3658.385262489319,
+    "sel_diff": 19.04149866104126,
+    "sel_dse": 6.6806697298511,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_anchored_tier_qud_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20661.371280431747,
+      "behind": 96.20779943466187,
+      "dse": 39.75490497028197
+     },
+     "exp1": {
+      "elpd_cv": -3861.983988046646,
+      "behind": 7.260063171386719,
+      "dse": 5.407596524134849
+     },
+     "exp2": {
+      "elpd_cv": -3650.4567761421204,
+      "behind": 11.113012313842773,
+      "dse": 6.568538762126023
+     }
+    },
+    "sel_elpd": -3650.4567761421204,
+    "sel_diff": 11.113012313842773,
+    "sel_dse": 6.568538762126023,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "familiarity_prototype_tier_confusion_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20703.05648303032,
+      "behind": 137.89300203323364,
+      "dse": 39.89446242931081
+     },
+     "exp1": {
+      "elpd_cv": -3862.685069322586,
+      "behind": 7.96114444732666,
+      "dse": 5.2703540645809275
+     },
+     "exp2": {
+      "elpd_cv": -3659.282902956009,
+      "behind": 19.939139127731323,
+      "dse": 7.732608998766694
+     }
+    },
+    "sel_elpd": -3659.282902956009,
+    "sel_diff": 19.939139127731323,
+    "sel_dse": 7.732608998766694,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "figure_ground_topicality_prior_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20662.95255255699,
+      "behind": 97.789071559906,
+      "dse": 40.68211315720888
+     },
+     "exp1": {
+      "elpd_cv": -3863.8564188480377,
+      "behind": 9.13249397277832,
+      "dse": 5.584889991658358
+     },
+     "exp2": {
+      "elpd_cv": -3639.866803407669,
+      "behind": 0.5230395793914795,
+      "dse": 5.516540609228618
+     }
+    },
+    "sel_elpd": -3639.866803407669,
+    "sel_diff": 0.5230395793914795,
+    "sel_dse": 5.516540609228618,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "attentional_encoding_bottleneck_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20662.291702985764,
+      "behind": 97.12822198867798,
+      "dse": 38.47167024682991
+     },
+     "exp1": {
+      "elpd_cv": -3863.172333717346,
+      "behind": 8.448408842086792,
+      "dse": 5.504330883883581
+     },
+     "exp2": {
+      "elpd_cv": -3648.4423139095306,
+      "behind": 9.098550081253052,
+      "dse": 6.653007148275485
+     }
+    },
+    "sel_elpd": -3648.4423139095306,
+    "sel_diff": 9.098550081253052,
+    "sel_dse": 6.653007148275485,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "noisy_graded_lexicon_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20637.314968824387,
+      "behind": 72.15148782730103,
+      "dse": 39.21106905306582
+     },
+     "exp1": {
+      "elpd_cv": -3863.2759256362915,
+      "behind": 8.552000761032104,
+      "dse": 5.721698667995321
+     },
+     "exp2": {
+      "elpd_cv": -3645.57337141037,
+      "behind": 6.229607582092285,
+      "dse": 6.667429972101324
+     }
+    },
+    "sel_elpd": -3645.57337141037,
+    "sel_diff": 6.229607582092285,
+    "sel_dse": 6.667429972101324,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "sparse_singleton_prototype_qud_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20687.476927757263,
+      "behind": 122.31344676017761,
+      "dse": 53.66671298172449
+     },
+     "exp1": {
+      "elpd_cv": -3861.4070987701416,
+      "behind": 6.683173894882202,
+      "dse": 7.947322841447332
+     },
+     "exp2": {
+      "elpd_cv": -3639.728005170822,
+      "behind": 0.38424134254455566,
+      "dse": 5.291412080224373
+     }
+    },
+    "sel_elpd": -3639.728005170822,
+    "sel_diff": 0.38424134254455566,
+    "sel_dse": 5.291412080224373,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "distinctive_tier_qud_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20655.3774600029,
+      "behind": 90.2139790058136,
+      "dse": 39.61785563370677
+     },
+     "exp1": {
+      "elpd_cv": -3854.7239248752594,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp2": {
+      "elpd_cv": -3646.3160955905914,
+      "behind": 6.972331762313843,
+      "dse": 6.5430480327444425
+     }
+    },
+    "sel_elpd": -3646.3160955905914,
+    "sel_diff": 6.972331762313843,
+    "sel_dse": 6.5430480327444425,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_span_false_access_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20565.163480997086,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -3856.716080188751,
+      "behind": 1.9921553134918213,
+      "dse": 7.144935726375844
+     },
+     "exp2": {
+      "elpd_cv": -3639.3437638282776,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": -3639.3437638282776,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "r1_c5",
+    "hypothesis": "Refining rsa_l2_singleton_feat_color_valence_l0 by incorporating speaker competitor-confusion aversion from competitor_confusion_speaker into the depth-2 speaker without adding or removing any free parameters (retaining all six parameters: alpha, w_singleton, w_distinct, w_features, w_valence, and w_color). In rsa_l2_singleton_feat_color_valence_l0, when the minimal true referents are a duplicated pair, the depth-2 speaker under-selects the shared word for the duplicate pair relative to a richer singleton competitor that possesses an unused uniquely-identifying feature, causing the listener to over-predict choosing that richer competitor on word trials (such as exp1 unit41 and unit33, flagged by word_duplicated_two_feature_vs_unique_feat_competitor_rate in critiques.md). Here, while the literal listener L0 and depth-1 pragmatic listener L1 remain unchanged, the depth-2 speaker simulated inside L2 subtracts the competitor-confusion penalty for each real word and target referent (the sum of exponentially decaying perceptual similarity over other context objects that also satisfy that word) from the log depth-1 listener probability before scaling by rationality alpha.",
+    "source": "seed"
+   },
+   {
+    "name": "r3_c1",
+    "hypothesis": "Listeners interpret referring expressions through a non-Bayesian diagnostic sufficiency heuristic rather than recursive speaker simulation. On word trials, listeners directly score literal referents by penalizing the diagnosticity of their strongest unmentioned feature across distinct referent types alongside perceptual competitor crowding and partial-feature tier ambiguity, while rewarding minimal-complexity literal matches; this explains why people strongly favor unique single-feature referents over partial-feature competitors and avoid non-prototype maximal referents while retaining support for holistic all-feature prototypes against cloned minimal referents. On prior trials without an informative word, listeners anchor on unique maximal-complexity prototypes and perceptually isolated singletons while avoiding duplicated and intermediate-complexity items.",
+    "source": "seed"
+   },
+   {
+    "name": "complexity_tier_qud_l2",
+    "hypothesis": "Speakers communicate under a complexity-tier Question Under Discussion (QUD), selecting utterances to resolve both the target referent's complexity tier and its identity while avoiding confusion with visually similar or intermediate-tier competitors. Listeners jointly infer the speaker's target referent and complexity-tier goal at recursive depth 2, expecting unmarked reference to anchor on unique, extreme-complexity objects\u2014especially the maximal-feature prototype\u2014while suppressing ambiguous intermediate-tier items.",
+    "source": "seed"
+   },
+   {
+    "name": "prototype_tier_confusion_l2",
+    "hypothesis": "We refine `tier_competitor_confusion_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_confusion`, both with `LogNormal(0.0, 0.5)` priors), by extending complexity-tier confusion with incomplete-prototype penalty and complete-prototype anchoring on upper-tier literal referents alongside singleton uniqueness in the object priors. Specifically, in `confusion` we add `(is_non_all_max - is_all_utt * (min_cloned + gap_utt)) / n_obj`, penalizing upper-tier literal referents (`is_max_utt`) that lack at least one scene feature (`is_non_all_max`, where `fc < n_real_words`) while reducing confusion on complete all-features literal referents (`is_all_utt`, where `fc == n_real_words`) when the minimal-complexity literal tier is cloned (`min_cloned`) or separated by a multi-feature span (`gap_utt = max(fc - min_true_fc - 1, 0) / n_real_words`); in `word_prior` we subtract `is_singleton / (n_obj * n_real_words)` inside the `-w_confusion` weight; and in `prior_choice` we replace `-is_max_fc / n_obj` with `-(is_max_fc * (1.0 + is_singleton * inter_frac) + is_singleton) / n_obj` (where `inter_frac = sum(is_inter_scene) / n_obj`). Penalizing incomplete upper-tier literal referents and rewarding complete all-features prototypes explains why listeners on word trials reject partial-feature competitors in favor of minimal-feature referents (`unique_single_feature_referent_vs_partial_feature_competitor_rate`, `max_literal_referent_rate_in_three_referent_false_distractor_scenes`, and `cloned_min_referent_vs_distinct_max_competitors_rate`) yet select all-features prototypes against single-feature referents (`cloned_single_feature_referent_rate_against_unique_all_features_competitor` and `all_features_referent_rate_against_unique_single_feature_with_false_distractor`), while singleton and unique-maximum anchoring in the prior explains why listeners favor unique maximal-feature objects on three-tier prior displays (`prior_unique_max_feature_rate_in_four_object_three_tier_scenes`).",
+    "source": "seed"
+   },
+   {
+    "name": "counterfactual_omission_l2",
+    "hypothesis": "Speakers and listeners reason under counterfactual feature-omission and perceptual distinctiveness at recursive depth 2, where the literal listener evaluates candidate referents by discounting objects in proportion to their unmentioned diagnostic features rather than treating all literal matches equally. Speakers choose words to maximize literal and depth-1 listener recovery while avoiding similarity-based crowding among unique competitor types, equivalence-class redundancy, and intermediate-tier ambiguity, with low-rate false lexical access on sparse minimal-complexity singletons. Before hearing a word, listeners anchor on unique maximal-complexity prototypes and perceptually isolated objects while discounting intermediate-complexity items.",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "prototype_specificity_anchor_l2",
+    "hypothesis": "Listeners and speakers reason at recursive depth 2 under prototype-anchored specificity: speakers choose utterances to maximize listener recovery while avoiding similarity-based competitor confusion, intermediate-complexity tier ambiguity, and redundant descriptions of duplicated minimal referents when a unique maximal-complexity prototype is available. Before hearing an informative word, and as a baseline communicative expectation, people anchor on unique maximal-complexity prototypes and perceptually isolated referents while discounting duplicated or intermediate-tier items; on displays where duplicated minimal-complexity referents compete against a unique all-features prototype (such as exp2 unit12, unit32, and unit35) or on two-tier prior displays (such as exp2 unit18 and unit21), this mechanism predicts substantially stronger selection of the maximal-complexity prototype than the incumbent's complexity-tier QUD model.",
+    "source": "round 1 candidate 2 explore"
+   },
+   {
+    "name": "alternative_competition_cost_l2",
+    "hypothesis": "Speakers choose words by trading off pragmatic informativeness against an utterance alternative-competition cost that reflects both competitor crowding among other objects satisfying the word and lexical rivalry from alternative unmentioned features on the target referent, while also allowing low-probability false lexical access on sparse minimal-complexity objects. Listeners invert this speaker at recursive depth 2 under a perceptual distinctiveness and complexity-boundary prior, explaining why people temper their preference for cloned minimal referents in favor of all-feature prototypes, occasionally intrude on literally false minimal-complexity objects, and treat same-tier minimal referents symmetrically despite asymmetric overlap with cloned higher-tier competitors.",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "prototype_anchored_tier_qud_l2",
+    "hypothesis": "We refine `complexity_tier_qud_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_qud`, both with `LogNormal(0.0, 0.5)` priors), by replacing the unconditional all-features bonus in `word_prior` (`is_all_feats * (max_fc - min_fc - 1.0) / (n_obj * n_real_utt)`, so `word_prior` becomes `softmax_prior(-w_qud * baseline_confusion)`) with utterance-level complete-prototype QUD anchoring in `qud_cost` from `prototype_tier_confusion_l2` (`-is_all_utt * (min_cloned + gap_utt) / n_obj`, where `is_all_utt = is_max_utt * is_all_feats[None, :]`, `min_cloned = max(is_min_utt * is_clone[None, :], axis=1, keepdims=True)`, and `gap_utt = maximum(fc[None, :] - min_true_fc - 1.0, 0.0) / n_real_utt`) alongside clone-resolved scene priors (`baseline_confusion` uses `is_clone / n_obj` instead of `is_clone * (1.0 - is_inter_scene) / n_obj`, and `prior_choice` replaces `(n_obj - 1.0)` with `(n_obj - 1.0 - min_scene_cloned)` and `has_inter_scene * (1.0 - is_clone)` with `(has_inter_scene * (1.0 - is_clone) + min_scene_cloned)`, where `min_scene_cloned = max(is_min_fc * is_clone)` and `is_min_fc` marks `fc == min_fc` when `max_fc > min_fc`). Moving complete-prototype anchoring from the unconditional `word_prior` into `qud_cost` conditioned on cloned minimal-tier competitors (`min_cloned`) or multi-feature utterance spans (`gap_utt`) explains why listeners on word trials shift away from duplicated minimal-complexity referents toward the unique higher-complexity prototype (`cloned_minimal_true_choice_rate` in `critiques.md`) without over-predicting the rich referent in standard reference games on `E` where the minimal referent is a unique singleton (`min_cloned == 0` and `gap_utt == 0`). Extending clone-disfavoring to intermediate-tier displays and accounting for cloned minimal-tier distractors (`min_scene_cloned`) in `prior_choice` explains why listeners on silent prior trials select unique intermediate-tier objects more often (`prior_intermediate_tier_selection_rate`) and strongly favor unique all-features prototypes over duplicated empty objects on two-tier prior displays (`prior_two_tier_all_features_vs_empty_preference`).",
+    "source": "round 1 candidate 5 refine incumbent complexity_tier_qud_l2"
+   },
+   {
+    "name": "familiarity_prototype_tier_confusion_l2",
+    "hypothesis": "We refine `prototype_tier_confusion_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_confusion`, both with `LogNormal(0.0, 0.5)` priors), by gating the speaker's incomplete-prototype confusion penalty on unique upper-tier competitors without cloned minimal referents while integrating perceptual familiarity, grayscale contrast, endpoint clone confusion, and complete-prototype anchoring into the object priors. Specifically, we add `has_inter_scene = jnp.max(is_inter_scene)` and `is_all_feats = jnp.where((fc == n_real_words) & (max_fc > min_fc), 1.0, 0.0)`, and remove `inter_frac`; in `tier_utt` inside `confusion`, we replace `is_non_all_max` with `is_non_all_max * is_singleton[None, :] * (1.0 - min_cloned)` so that incomplete upper-tier literal referents incur confusion only when they are unique and the minimal literal tier is not cloned; in `baseline_confusion`, we add `(1.0 - is_singleton) * (1.0 - is_inter_scene) / n_obj + ctx.grayscale / n_obj`; in `word_prior`, we replace `is_singleton / (n_obj * n_real_words)` with `(is_singleton + is_all_feats * (max_fc - min_fc - 1.0)) / (n_obj * n_real_words)`; and in `prior_choice`, we replace `baseline_confusion + is_inter_scene - (is_max_fc * (1.0 + is_singleton * inter_frac) + is_singleton) / n_obj` with `baseline_confusion - ctx.familiarization + is_inter_scene * (1.0 - ctx.has_familiarization) * (1.0 - jnp.abs(ctx.valence)) * (n_obj - 1.0) / n_obj - (is_max_fc + is_all_feats * has_inter_scene * is_singleton) / n_obj`. Gating the incomplete-prototype penalty when minimal referents are cloned and strengthening complete-prototype anchoring explains why listeners on heard-word scenes with cloned minimal referents do not over-select the clones against a unique higher-complexity competitor (`cloned_minimal_true_choice_rate` in `critiques.md`), while familiarity- and valence-gated intermediate suppression and endpoint clone confusion on prior trials explain why listeners select intermediate-tier objects and prefer all-features prototypes over empty objects on two-tier displays (`prior_intermediate_tier_selection_rate` and `prior_two_tier_all_features_vs_empty_preference`).",
+    "source": "round 1 candidate 6 refine chosen"
+   },
+   {
+    "name": "figure_ground_topicality_prior_l2",
+    "hypothesis": "Listeners form baseline communicative expectations before hearing a word through a figure-ground topicality prior that weights each object by its perceptual distinctiveness, prototype completeness, and structural uniqueness within its complexity tier, while speakers reason recursively at depth 2 to maximize listener recovery and avoid referential competition. Because objects that are structurally isolated or anchor the scene's complexity boundaries stand out as natural discourse topics while duplicated or crowded intermediate items recede into the background, this prior directly governs silent trials and anchors pragmatic inference on word trials\u2014explaining why listeners favor unique intermediate referents over cloned minimal distractors, preserve balanced support for unique minimal singletons on prior displays, and strongly discount non-unique incomplete maximal competitors on word trials.",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "attentional_encoding_bottleneck_l2",
+    "hypothesis": "Resource-limited listeners interpret referring expressions under bounded attentional encoding of the display: rather than maintaining perfect, uniform representations of all objects and their features, perceptual attention selectively sharpens unique complexity-boundary anchors (minimal-complexity singletons and complete all-feature prototypes) while compressing cloned or intermediate-tier competitors and allowing low-probability false feature attribution to unattended minimal singletons. Speakers and listeners reason recursively at depth 2 over this attentionally filtered display, penalizing utterances that leave unencoded features or suffer similarity- and clone-based attentional crowding, which explains why people occasionally select literally false minimal singletons, discount incomplete maximal competitors lacking unique features, treat same-tier minimal referents symmetrically despite asymmetric overlap with cloned distractors, and favor unique intermediate or minimal items over cloned minimal distractors on silent trials.",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "noisy_graded_lexicon_l2",
+    "hypothesis": "Speakers and listeners reason pragmatically at recursive depth 2 under graded lexical specificity and noisy feature applicability: literal word applicability in the base listener softens on candidate referents carrying redundant unmentioned features without a uniquely identifying feature or competing unmentioned singleton features, while speaker word selection allows low-probability noisy lexical access on sparse minimal-complexity singletons alongside prototype-anchored tier and similarity competition. On silent prior displays and as a baseline communicative expectation, listeners anchor on perceptually isolated singletons and maximal-complexity prototypes while discounting cloned and intermediate-tier objects, explaining people's choices of false minimal singletons, preference against incomplete maximal referents lacking unique features, symmetric treatment of minimal referents, and balanced choices across minimal, intermediate, and maximal tiers.",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "sparse_singleton_prototype_qud_l2",
+    "hypothesis": "We refine `prototype_anchored_tier_qud_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_qud`, both with `LogNormal(0.0, 0.5)` priors), by incorporating low-probability false lexical access on sparse minimal-complexity singletons from `alternative_competition_cost_l2` (`sem_lex = ctx.lex + is_false_min * jnp.exp(-w_qud * (n_obj - min_cloned))`, where `is_false_min = real_words * (1.0 - real_lex) * is_min_fc[None, :] * (1.0 - is_clone[None, :]) * jnp.where((min_fc > 0.0) & (min_fc < min_true_fc), 1.0, 0.0)`) into the speaker's lexical weights at `L1` and `L2`. Allowing the pragmatic speaker to occasionally apply an utterance to the scene's unique positive minimal-complexity object when it lacks the heard feature and all literal referents are strictly more complex explains why listeners intrude on literally false minimal-feature singletons more often than random lapse predicts (`false_minimal_singleton_choice_rate` in `critiques.md`) and reduces over-prediction of the unique maximal referent against cloned multi-feature minimal referents (`four_object_cloned_minimal_non_maximal_rate`).",
+    "source": "round 2 candidate 4 refine incumbent prototype_anchored_tier_qud_l2"
+   },
+   {
+    "name": "distinctive_tier_qud_l2",
+    "hypothesis": "We refine `prototype_anchored_tier_qud_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_qud`, both with `LogNormal(0.0, 0.5)` priors), by incorporating low-rate false lexical access on unique minimal-complexity objects from `counterfactual_omission_l2` alongside distinctive-feature competition on incomplete referents and complete-prototype prior anchoring. Specifically, in `L1` and `L2` we pass `sem_lex: ...` and replace `at(lex, u, r)` in the speaker's choice weight with `at(sem_lex, u, r)` (where `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_qud * (n_obj - min_cloned))` and `is_false_min = real_words * (1.0 - real_lex) * is_min_fc[None, :] * (1.0 - is_clone[None, :]) * jnp.where((min_fc > 0.0) & (min_fc < min_true_fc), 1.0, 0.0)`); in `qud_cost`, we replace `is_incomplete_utt * (1.0 - is_clone[None, :]) / n_real_utt` with `incomplete_penalty = is_incomplete_utt * ((1.0 - is_clone[None, :]) / n_real_utt + (1.0 - has_unique_feat[None, :]) * utt_has_unique)` (where `feat_ext = jnp.sum(real_lex, axis=1, keepdims=True)`, `has_unique_feat = jnp.max(jnp.where((real_lex > 0) & (feat_ext == 1.0), 1.0, 0.0), axis=0)`, and `utt_has_unique = jnp.max(is_incomplete_utt * has_unique_feat[None, :], axis=1, keepdims=True)`) and replace `(min_cloned + gap_utt)` with `(min_cloned + gap_utt * (1.0 - min_cloned))`; in `baseline_confusion`, we replace `is_clone / n_obj` with `is_clone * (1.0 + is_min_fc * has_inter_scene) / n_obj`; and in `prior_choice`, we replace `min_scene_cloned` inside the intermediate-tier penalty with `min_scene_cloned * (1.0 - is_clone)` and replace `is_max_fc` in the maximal-tier bonus with `is_max_fc * is_all_feats`. Allowing low-rate speaker access on literally false minimal singletons (`sem_lex`), penalizing incomplete referents lacking a scene-unique feature when a competing incomplete referent possesses one (`incomplete_penalty`), and preventing additive double-counting of `min_cloned` and `gap_utt` explain why listeners occasionally select false minimal singletons (`false_minimal_singleton_choice_rate`), reject non-unique incomplete maximal referents (`incomplete_max_referent_no_unique_feature_preference`), and favor non-maximal referents when minimal referents are cloned (`four_object_cloned_minimal_non_maximal_rate`), while penalizing cloned minimal tiers on three-tier scenes and restricting maximal-tier prior anchoring to complete prototypes explain why silent-prior listeners prefer unique intermediate referents over cloned minimal ones (`prior_unique_intermediate_vs_cloned_minimal_preference`) and unique minimal referents over incomplete maximal ones (`prior_unique_minimal_vs_maximal_tier_preference`).",
+    "source": "round 2 candidate 5 refine incumbent prototype_anchored_tier_qud_l2"
+   },
+   {
+    "name": "prototype_span_false_access_l2",
+    "hypothesis": "We refine `alternative_competition_cost_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_cost`, both with `LogNormal(0.0, 0.5)` priors), by extending false minimal lexical access (`sem_lex`) to both literal and pragmatic listeners while replacing the speaker's equivalence-class competition cost (`utt_cost`) and object priors (`word_prior`, `prior_choice`) with diagnostic incomplete-referent suppression, prototype-span anchoring, and clone-resolved scene priors. Specifically, in `L0`, `L1`, and `L2`, we pass `sem_lex` to `L0` (`L0[u: UTT, r: OBJ](sem_lex: ...)` instead of `lex: ...`, removing `lex` from `L1` and `L2` signatures); in `compute_speaker_terms`, we add `min_scene_cloned = jnp.max(is_min_fc * is_clone)`, `inter_scene_cloned = jnp.max(is_inter_scene * is_clone)`, `is_max_utt = jnp.where((real_lex > 0) & (fc[None, :] == max_true_fc) & (max_true_fc > min_true_fc), 1.0, 0.0)`, `max_cloned = jnp.max(is_max_utt * is_clone[None, :], axis=1, keepdims=True)`, `gap_utt = jnp.maximum(fc[None, :] - min_true_fc - 1.0, 0.0) / n_real_utt`, and `has_uniq_feat = jnp.max(jnp.where(jnp.sum(real_lex, axis=1, keepdims=True) == 1.0, real_lex, 0.0), axis=0)`; redefine `min_cloned = jnp.max(is_min_utt * is_clone[None, :], axis=1, keepdims=True)` (removing `(1.0 - jnp.max(is_inter_utt, axis=1, keepdims=True))`); replace `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_cost * (n_obj - min_cloned))` with `sem_lex = ctx.lex + is_false_min * jnp.where(jnp.sum(real_lex, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned))`; replace `(real_lex @ unique_sim) + (copy_count[None, :] - 1.0) * real_lex` with `(real_lex @ sim)`, `is_incomplete_utt * is_singleton[None, :] / n_real_utt` with `is_incomplete_utt * is_singleton[None, :] * (1.0 + is_max_utt * (1.0 - has_uniq_feat[None, :]) * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * (1.0 - max_cloned)) / n_real_utt`, and `- is_all_utt * min_cloned * is_singleton[None, :] / n_obj` with `- is_all_utt * (min_cloned + gap_utt) / n_obj` in `utt_cost` (dropping `unique_sim`); replace `is_clone * (1.0 - is_inter_scene) / n_obj` with `is_clone / n_obj` in `baseline_crowd`; remove `- is_all_feats * (max_fc - min_fc - 1.0) / (n_obj * n_real_utt)` from `word_prior`; and in `prior_choice` replace `(1.0 - 1.0 / n_obj) / (1.0 + is_singleton / n_obj)` with `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton)) / n_obj` and `(is_max_fc + is_all_feats * (has_inter_scene * is_singleton + is_clone / n_obj)) / n_obj` with `(is_max_fc * (1.0 - inter_scene_cloned) + is_all_feats * (has_inter_scene * is_singleton + min_scene_cloned + inter_scene_cloned)) / n_obj`. This single refinement explains why listeners on word trials intrude on literally false minimal-feature singletons under referential ambiguity (`false_minimal_singleton_choice_rate`), reject incomplete maximal referents lacking a scene-unique feature (`incomplete_max_referent_no_unique_feature_preference`), and balance cloned minimal referents against prototypes (`four_object_cloned_minimal_non_maximal_rate`), while on silent prior trials favoring unique intermediate-tier objects over cloned minimal objects (`prior_unique_intermediate_vs_cloned_minimal_preference`) and unique minimal-tier objects over non-prototype maximal-tier objects when intermediate tiers are cloned (`prior_unique_minimal_vs_maximal_tier_preference`).",
+    "source": "round 2 candidate 6 refine chosen"
+   }
+  ],
+  "ledger_entries": 50
+ },
+ {
+  "step": 3,
+  "round": 2,
+  "best_model": "contrastive_anchor_decision_l2",
+  "fit_best": "contrastive_anchor_decision_l2",
+  "n_params": {
+   "r1_c5": 6,
+   "r3_c1": 2,
+   "complexity_tier_qud_l2": 2,
+   "prototype_tier_confusion_l2": 2,
+   "counterfactual_omission_l2": 2,
+   "prototype_specificity_anchor_l2": 2,
+   "alternative_competition_cost_l2": 2,
+   "prototype_anchored_tier_qud_l2": 2,
+   "familiarity_prototype_tier_confusion_l2": 2,
+   "figure_ground_topicality_prior_l2": 2,
+   "attentional_encoding_bottleneck_l2": 2,
+   "noisy_graded_lexicon_l2": 2,
+   "sparse_singleton_prototype_qud_l2": 2,
+   "distinctive_tier_qud_l2": 2,
+   "prototype_span_false_access_l2": 2,
+   "diagnostic_prototype_contrast_heuristic": 2,
+   "contrastive_anchor_decision_l2": 2,
+   "holistic_diagnostic_qud_l2": 2,
+   "type_crowding_prototype_span_l2": 2,
+   "prototype_uniqueness_false_access_l2": 2,
+   "prototype_span_speaker_access_l2": 2
+  },
+  "parsimony_k": 1.0,
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "diagnostic_prototype_contrast_heuristic",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret referring expressions through a non-Bayesian diagnostic contrast and prototype-boundary heuristic rather than recursive speaker simulation. On word trials, listeners directly score candidate referents by comparing the heard feature's uniqueness against the referent's strongest unmentioned feature while discounting similarity-crowded, cloned, and incomplete upper-tier competitors in favor of minimal-complexity matches and complete all-feature prototypes (with low-rate lexical intrusion onto sparse minimal singletons). On silent prior trials, listeners directly select referents using the same figure-ground contrast between unique complexity-boundary anchors and crowded or intermediate-tier items."
+   },
+   {
+    "slot": 2,
+    "role": "explore",
+    "name": "contrastive_anchor_decision_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners infer speaker intent through depth-2 recursive reasoning over a confusion-averse speaker and convert those posterior beliefs into a response via a contrastive anchor decision rule. When selecting a referent, the listener's decision rule boosts complete complexity-boundary prototypes and unique upper-boundary referents against cloned minimal competitors, suppresses incomplete referents that lack a uniquely identifying feature, and allows low-rate decision intrusion onto a unique minimal-complexity singleton when it is the sole object excluded by an ambiguous word. On silent prior trials, listeners apply the same contrastive boundary decision rule to favor perceptually isolated singletons and maximal prototypes over duplicated items."
+   },
+   {
+    "slot": 3,
+    "role": "explore",
+    "name": "holistic_diagnostic_qud_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Speakers communicate under a holistic-prototype versus diagnostic-feature Question Under Discussion (QUD), selecting utterances to resolve either the scene's holistic all-features prototype or a target referent's diagnostic feature tier while avoiding similarity-based and non-unique incomplete competitor confusion, with low-probability false lexical access on sparse minimal singletons. Listeners reason recursively at depth 2 about this dual QUD goal, which explains why people intrude on literally false minimal-feature singletons under referential ambiguity, temper their selection of cloned minimal referents in favor of holistic prototypes, treat same-tier minimal referents symmetrically despite asymmetric overlap with cloned upper-tier distractors, and preserve support for intermediate-tier objects on silent prior displays with cloned tiers."
+   },
+   {
+    "slot": 4,
+    "role": "refine incumbent",
+    "name": "type_crowding_prototype_span_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine `prototype_span_false_access_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_cost`, both with `LogNormal(0.0, 0.5)` priors), by restoring type-normalized perceptual similarity and equivalence-class crowding from `alternative_competition_cost_l2` alongside distinctive-feature competition on incomplete referents from `distinctive_tier_qud_l2`, clone-adjusted prototype-span anchoring, and multi-tier false minimal lexical access. Specifically, in `compute_speaker_terms`, we add `unique_sim = sim / copy_count[None, :]` and `utt_has_uniq = jnp.max(is_incomplete_utt * has_uniq_feat[None, :], axis=1, keepdims=True)`; replace `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned))` with `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned - (1.0 - max_cloned) * jnp.where(max_true_fc > min_true_fc, 1.0, 0.0)))`; in `utt_cost`, replace `(real_lex @ sim)` with `(real_lex @ unique_sim) + (copy_count[None, :] - 1.0) * real_lex`, replace `is_incomplete_utt * is_singleton[None, :] * (1.0 + is_max_utt * (1.0 - has_uniq_feat[None, :]) * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * (1.0 - max_cloned)) / n_real_utt` with `is_incomplete_utt * is_singleton[None, :] * (1.0 / n_real_utt + (1.0 - has_uniq_feat[None, :]) * utt_has_uniq) + is_min_utt * is_singleton[None, :] * has_uniq_feat[None, :] * max_cloned / n_obj`, and replace `- is_all_utt * (min_cloned + gap_utt) / n_obj` with `- is_all_utt * (min_cloned + gap_utt) / (n_obj - min_cloned)`; and in `prior_choice`, replace `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton))` with `(n_obj - 1.0 - min_scene_cloned * (n_obj - 1.0) - inter_scene_cloned)`. Accounting for unique maximal-referent tier separation in `sem_lex`, normalizing prototype-span anchoring by the number of distinct literal referent types `(n_obj - min_cloned)` alongside type-normalized similarity and minimal-singleton diagnostic competition in `utt_cost`, and relaxing intermediate-tier suppression when either the minimal or intermediate tier is cloned in `prior_choice` explain why listeners intrude on literally false minimal singletons (`false_minimal_singleton_choice_rate`), temper selection of cloned minimal referents in favor of the prototype (`cloned_minimal_true_referent_choice_rate`), select intermediate-tier objects more often on cloned-tier silent prior trials (`prior_intermediate_tier_choice_rate`), and treat same-tier minimal referents more symmetrically (`equal_tier_minimal_referent_asymmetry`)."
+   },
+   {
+    "slot": 5,
+    "role": "refine incumbent",
+    "name": "prototype_uniqueness_false_access_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine `prototype_span_false_access_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_cost`, both with `LogNormal(0.0, 0.5)` priors), by boosting false minimal singleton lexical access (`sem_lex`) when competing multi-tier true referents are cloned (`has_true_clone`), extending incomplete-referent suppression to intermediate-tier referents lacking a unique feature when a competing incomplete referent has one (`utt_has_uniq`), and reducing the silent-prior penalty on unique intermediate-tier objects by `min_scene_cloned * is_singleton / n_obj` while boosting complete all-feature prototypes when intermediate tiers are unique (`has_inter_scene * is_singleton / n_real_utt`). Specifically, in `compute_speaker_terms`, we add `has_true_clone = jnp.max(jnp.where((real_lex > 0) & (max_true_fc > min_true_fc), is_clone[None, :], 0.0), axis=1, keepdims=True)` and `utt_has_uniq = jnp.max(is_incomplete_utt * has_uniq_feat[None, :], axis=1, keepdims=True)`; in `sem_lex`, we replace `jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned))` with `jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned - has_true_clone))`; in `utt_cost`, we replace `is_max_utt * (1.0 - has_uniq_feat[None, :]) * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * (1.0 - max_cloned)` with `(is_max_utt * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) + (1.0 - is_max_utt) * utt_has_uniq) * (1.0 - has_uniq_feat[None, :]) * (1.0 - max_cloned)`; in `word_prior`, we replace `baseline_crowd` with `baseline_crowd - is_all_feats * has_inter_scene * is_singleton / (n_obj * n_real_utt)`; and in `prior_choice`, we replace `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton))` with `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton)) * (1.0 - min_scene_cloned * is_singleton / n_obj)`. This refinement explains why listeners intrude on literally false minimal-feature singletons more often when competing multi-tier true referents are cloned (`false_minimal_singleton_choice_rate`), temper selection of cloned minimal referents against unique maximal prototypes (`cloned_minimal_true_referent_choice_rate`), and select unique intermediate-tier objects more often on silent prior trials when the minimal tier is cloned (`prior_intermediate_tier_choice_rate`)."
+   },
+   {
+    "slot": 6,
+    "role": "refine chosen",
+    "name": "prototype_span_speaker_access_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine `sparse_singleton_prototype_qud_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_qud`, both with `LogNormal(0.0, 0.5)` priors), by restricting false minimal lexical access (`sem_lex`) to the pragmatic speaker simulated in `L1` and `L2` (keeping `L0` strictly literal on `lex`) while incorporating diagnostic incomplete-referent suppression, uncrowded minimal-singleton equilibration, and clone-resolved prototype-span scene priors. Specifically, in `L0`, `L1`, and `L2`, we restore literal `lex` in `L0` (`L0[u: UTT, r: OBJ](lex: ...)` instead of `sem_lex: ...`, passing both `lex` and `sem_lex` to `L1` and `L2`); in `compute_qud_and_prior`, we add `is_singleton = 1.0 - is_clone`, `inter_scene_cloned = jnp.max(is_inter_scene * is_clone)`, `max_cloned = jnp.max(is_max_utt * is_clone[None, :], axis=1, keepdims=True)`, `has_uniq_feat = jnp.max(jnp.where(jnp.sum(real_lex, axis=1, keepdims=True) == 1.0, real_lex, 0.0), axis=0)`, and `two_min_singletons = jnp.where(jnp.sum(is_min_utt * is_singleton[None, :], axis=1, keepdims=True) > 1.0, 1.0, 0.0)`; replace `is_false_min` and `sem_lex` with `is_false_min = real_words * (1.0 - real_lex) * is_min_fc[None, :] * is_singleton[None, :] * jnp.where((min_fc > 0.0) & (min_fc < min_true_fc), 1.0, 0.0) * jnp.where(jnp.sum(real_lex, axis=1, keepdims=True) > 1.0, 1.0, 0.0)` and `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_qud * (n_obj - 1.0 - min_cloned - max_cloned))`; in `qud_cost`, replace `(real_lex @ sim)` with `((real_lex * (1.0 - two_min_singletons * is_min_utt * max_cloned)) @ sim)`, replace `is_incomplete_utt * (1.0 - is_clone[None, :]) / n_real_utt` with `is_incomplete_utt * is_singleton[None, :] * (1.0 + is_max_utt * (1.0 - has_uniq_feat[None, :]) * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * (1.0 - max_cloned)) / n_real_utt`, and replace `- is_all_utt * (min_cloned + gap_utt) / n_obj` with `- is_all_utt * (min_cloned + gap_utt * (1.0 + min_cloned / n_real_utt)) / n_obj`; and in `prior_choice`, replace `(n_obj - 1.0 - min_scene_cloned)` with `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton) - inter_scene_cloned)` and replace `(is_max_fc + is_all_feats * (has_inter_scene * (1.0 - is_clone) + min_scene_cloned))` with `(is_max_fc * (1.0 - inter_scene_cloned) + is_all_feats * (has_inter_scene * is_singleton + min_scene_cloned + inter_scene_cloned))`. Keeping `L0` literal while scaling speaker false-minimal access by `n_obj - 1.0 - min_cloned - max_cloned` prevents double-dilution on `E` while increasing false-minimal singleton intrusions on ambiguous word trials (`false_minimal_singleton_choice_rate`), strengthening prototype-span anchoring when minimal referents are cloned reduces over-selection of cloned minimal true referents (`cloned_minimal_true_referent_choice_rate`), equilibrating minimal singletons under cloned maximal competition eliminates artificial crowding asymmetry (`equal_tier_minimal_referent_asymmetry`), and reducing intermediate-tier prior suppression when intermediate objects are cloned increases intermediate-tier choices on silent trials (`prior_intermediate_tier_choice_rate`)."
+   }
+  ],
+  "critique": {
+   "status": "critiqued",
+   "incumbent": "prototype_span_false_access_l2",
+   "attempts": 1,
+   "dir": "/scratch/users/mcfrank/auto-psych/agent_trees/be1e85ca0b58aea3/repo/_runs/chain_0/experiment2/loop/round_3/critique",
+   "block": "exp2",
+   "n_statistics": 8,
+   "n_evaluated": 8,
+   "n_significant": 4,
+   "n_significant_fdr": 0
+  },
+  "admission_limit_sec": 1800,
+  "standing": {
+   "r1_c5": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20634.779023885727,
+      "behind": 91.32537078857422,
+      "dse": 51.82848202943156
+     },
+     "exp1": {
+      "elpd_cv": -3935.1972773075104,
+      "behind": 82.28268575668335,
+      "dse": 16.10335434176147
+     },
+     "exp2": {
+      "elpd_cv": -3689.3157896995544,
+      "behind": 59.12389063835144,
+      "dse": 16.93332820957514
+     }
+    },
+    "sel_elpd": -3689.3157896995544,
+    "sel_diff": 59.12389063835144,
+    "sel_dse": 16.93332820957514,
+    "cv_converged": true,
+    "guard_failures": [
+     "exp1"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "r3_c1": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20807.453936100006,
+      "behind": 264.0002830028534,
+      "dse": 52.23689782063231
+     },
+     "exp1": {
+      "elpd_cv": -3871.1682329177856,
+      "behind": 18.253641366958618,
+      "dse": 11.384806311754511
+     },
+     "exp2": {
+      "elpd_cv": -3682.8039264678955,
+      "behind": 52.612027406692505,
+      "dse": 14.017788785479205
+     }
+    },
+    "sel_elpd": -3682.8039264678955,
+    "sel_diff": 52.612027406692505,
+    "sel_dse": 14.017788785479205,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "complexity_tier_qud_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20693.413667678833,
+      "behind": 149.9600145816803,
+      "dse": 43.0788537092052
+     },
+     "exp1": {
+      "elpd_cv": -3862.3165850639343,
+      "behind": 9.4019935131073,
+      "dse": 7.581813749839602
+     },
+     "exp2": {
+      "elpd_cv": -3666.12402677536,
+      "behind": 35.932127714157104,
+      "dse": 10.96840019189907
+     }
+    },
+    "sel_elpd": -3666.12402677536,
+    "sel_diff": 35.932127714157104,
+    "sel_dse": 10.96840019189907,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_tier_confusion_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20773.99317932129,
+      "behind": 230.53952622413635,
+      "dse": 55.85708426423141
+     },
+     "exp1": {
+      "elpd_cv": -3861.6706187725067,
+      "behind": 8.756027221679688,
+      "dse": 7.8017900992194695
+     },
+     "exp2": {
+      "elpd_cv": -3677.8863525390625,
+      "behind": 47.6944534778595,
+      "dse": 13.594226819023547
+     }
+    },
+    "sel_elpd": -3677.8863525390625,
+    "sel_diff": 47.6944534778595,
+    "sel_dse": 13.594226819023547,
+    "cv_converged": true,
+    "guard_failures": [
+     "E"
+    ],
+    "eligible": false,
+    "trusted": true
+   },
+   "counterfactual_omission_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20690.151847839355,
+      "behind": 146.69819474220276,
+      "dse": 41.709943864572864
+     },
+     "exp1": {
+      "elpd_cv": -3862.1010360717773,
+      "behind": 9.186444520950317,
+      "dse": 7.659197142907255
+     },
+     "exp2": {
+      "elpd_cv": -3659.7692313194275,
+      "behind": 29.577332258224487,
+      "dse": 10.788282475568973
+     }
+    },
+    "sel_elpd": -3659.7692313194275,
+    "sel_diff": 29.577332258224487,
+    "sel_dse": 10.788282475568973,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_specificity_anchor_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20693.2094271183,
+      "behind": 149.75577402114868,
+      "dse": 42.49465198117006
+     },
+     "exp1": {
+      "elpd_cv": -3860.8985254764557,
+      "behind": 7.983933925628662,
+      "dse": 7.614107464288402
+     },
+     "exp2": {
+      "elpd_cv": -3661.013986825943,
+      "behind": 30.82208776473999,
+      "dse": 10.845800784706606
+     }
+    },
+    "sel_elpd": -3661.013986825943,
+    "sel_diff": 30.82208776473999,
+    "sel_dse": 10.845800784706606,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "alternative_competition_cost_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20690.343549728394,
+      "behind": 146.88989663124084,
+      "dse": 42.18460471494381
+     },
+     "exp1": {
+      "elpd_cv": -3862.049383163452,
+      "behind": 9.134791612625122,
+      "dse": 7.674808336633521
+     },
+     "exp2": {
+      "elpd_cv": -3658.385262489319,
+      "behind": 28.193363428115845,
+      "dse": 10.60296005362941
+     }
+    },
+    "sel_elpd": -3658.385262489319,
+    "sel_diff": 28.193363428115845,
+    "sel_dse": 10.60296005362941,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_anchored_tier_qud_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20661.371280431747,
+      "behind": 117.91762733459473,
+      "dse": 42.91761789996894
+     },
+     "exp1": {
+      "elpd_cv": -3861.983988046646,
+      "behind": 9.069396495819092,
+      "dse": 7.53074696370588
+     },
+     "exp2": {
+      "elpd_cv": -3650.4567761421204,
+      "behind": 20.26487708091736,
+      "dse": 10.585601708794007
+     }
+    },
+    "sel_elpd": -3650.4567761421204,
+    "sel_diff": 20.26487708091736,
+    "sel_dse": 10.585601708794007,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "familiarity_prototype_tier_confusion_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20703.05648303032,
+      "behind": 159.6028299331665,
+      "dse": 42.631090912128435
+     },
+     "exp1": {
+      "elpd_cv": -3862.685069322586,
+      "behind": 9.770477771759033,
+      "dse": 8.370143120755428
+     },
+     "exp2": {
+      "elpd_cv": -3659.282902956009,
+      "behind": 29.091003894805908,
+      "dse": 10.977465343397546
+     }
+    },
+    "sel_elpd": -3659.282902956009,
+    "sel_diff": 29.091003894805908,
+    "sel_dse": 10.977465343397546,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "figure_ground_topicality_prior_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20662.95255255699,
+      "behind": 119.49889945983887,
+      "dse": 43.91401892945032
+     },
+     "exp1": {
+      "elpd_cv": -3863.8564188480377,
+      "behind": 10.941827297210693,
+      "dse": 6.833392936637337
+     },
+     "exp2": {
+      "elpd_cv": -3639.866803407669,
+      "behind": 9.674904346466064,
+      "dse": 9.528205602160146
+     }
+    },
+    "sel_elpd": -3639.866803407669,
+    "sel_diff": 9.674904346466064,
+    "sel_dse": 9.528205602160146,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "attentional_encoding_bottleneck_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20662.291702985764,
+      "behind": 118.83804988861084,
+      "dse": 41.72381444880427
+     },
+     "exp1": {
+      "elpd_cv": -3863.172333717346,
+      "behind": 10.257742166519165,
+      "dse": 7.536423293420963
+     },
+     "exp2": {
+      "elpd_cv": -3648.4423139095306,
+      "behind": 18.250414848327637,
+      "dse": 10.674543897276095
+     }
+    },
+    "sel_elpd": -3648.4423139095306,
+    "sel_diff": 18.250414848327637,
+    "sel_dse": 10.674543897276095,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "noisy_graded_lexicon_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20637.314968824387,
+      "behind": 93.86131572723389,
+      "dse": 42.5592061246121
+     },
+     "exp1": {
+      "elpd_cv": -3863.2759256362915,
+      "behind": 10.361334085464478,
+      "dse": 7.680714724632312
+     },
+     "exp2": {
+      "elpd_cv": -3645.57337141037,
+      "behind": 15.38147234916687,
+      "dse": 10.586402405304117
+     }
+    },
+    "sel_elpd": -3645.57337141037,
+    "sel_diff": 15.38147234916687,
+    "sel_dse": 10.586402405304117,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "sparse_singleton_prototype_qud_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20687.476927757263,
+      "behind": 144.02327466011047,
+      "dse": 54.718265096531525
+     },
+     "exp1": {
+      "elpd_cv": -3861.4070987701416,
+      "behind": 8.492507219314575,
+      "dse": 6.020142314214569
+     },
+     "exp2": {
+      "elpd_cv": -3639.728005170822,
+      "behind": 9.53610610961914,
+      "dse": 8.755442169686408
+     }
+    },
+    "sel_elpd": -3639.728005170822,
+    "sel_diff": 9.53610610961914,
+    "sel_dse": 8.755442169686408,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "distinctive_tier_qud_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20655.3774600029,
+      "behind": 111.92380690574646,
+      "dse": 42.753794826866425
+     },
+     "exp1": {
+      "elpd_cv": -3854.7239248752594,
+      "behind": 1.809333324432373,
+      "dse": 8.911097998535064
+     },
+     "exp2": {
+      "elpd_cv": -3646.3160955905914,
+      "behind": 16.124196529388428,
+      "dse": 8.55546449076809
+     }
+    },
+    "sel_elpd": -3646.3160955905914,
+    "sel_diff": 16.124196529388428,
+    "sel_dse": 8.55546449076809,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_span_false_access_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20565.163480997086,
+      "behind": 21.70982789993286,
+      "dse": 12.996246392673646
+     },
+     "exp1": {
+      "elpd_cv": -3856.716080188751,
+      "behind": 3.8014886379241943,
+      "dse": 2.571223873746839
+     },
+     "exp2": {
+      "elpd_cv": -3639.3437638282776,
+      "behind": 9.151864767074585,
+      "dse": 5.804220420389572
+     }
+    },
+    "sel_elpd": -3639.3437638282776,
+    "sel_diff": 9.151864767074585,
+    "sel_dse": 5.804220420389572,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "diagnostic_prototype_contrast_heuristic": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20561.95062851906,
+      "behind": 18.496975421905518,
+      "dse": 20.787601384820306
+     },
+     "exp1": {
+      "elpd_cv": -3876.1451086997986,
+      "behind": 23.230517148971558,
+      "dse": 8.418279813373973
+     },
+     "exp2": {
+      "elpd_cv": -3631.3369987010956,
+      "behind": 1.1450996398925781,
+      "dse": 6.687032754857814
+     }
+    },
+    "sel_elpd": -3631.3369987010956,
+    "sel_diff": 1.1450996398925781,
+    "sel_dse": 6.687032754857814,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "contrastive_anchor_decision_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20543.453653097153,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -3854.2078878879547,
+      "behind": 1.2932963371276855,
+      "dse": 1.617380133656219
+     },
+     "exp2": {
+      "elpd_cv": -3630.191899061203,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": -3630.191899061203,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "holistic_diagnostic_qud_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20564.500346899033,
+      "behind": 21.046693801879883,
+      "dse": 12.810506527460982
+     },
+     "exp1": {
+      "elpd_cv": -3857.7617716789246,
+      "behind": 4.847180128097534,
+      "dse": 2.693949589409417
+     },
+     "exp2": {
+      "elpd_cv": -3638.2783896923065,
+      "behind": 8.086490631103516,
+      "dse": 6.16874745033388
+     }
+    },
+    "sel_elpd": -3638.2783896923065,
+    "sel_diff": 8.086490631103516,
+    "sel_dse": 6.16874745033388,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "type_crowding_prototype_span_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20548.764809846878,
+      "behind": 5.311156749725342,
+      "dse": 2.8395796662780035
+     },
+     "exp1": {
+      "elpd_cv": -3857.0497708320618,
+      "behind": 4.135179281234741,
+      "dse": 6.217392383152945
+     },
+     "exp2": {
+      "elpd_cv": -3630.8261013031006,
+      "behind": 0.634202241897583,
+      "dse": 3.6740353352127832
+     }
+    },
+    "sel_elpd": -3630.8261013031006,
+    "sel_diff": 0.634202241897583,
+    "sel_dse": 3.6740353352127832,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_uniqueness_false_access_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20592.77622771263,
+      "behind": 49.322574615478516,
+      "dse": 15.503431942551208
+     },
+     "exp1": {
+      "elpd_cv": -3852.914591550827,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp2": {
+      "elpd_cv": -3638.5422551631927,
+      "behind": 8.350356101989746,
+      "dse": 5.074709172468032
+     }
+    },
+    "sel_elpd": -3638.5422551631927,
+    "sel_diff": 8.350356101989746,
+    "sel_dse": 5.074709172468032,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_span_speaker_access_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20543.5863366127,
+      "behind": 0.13268351554870605,
+      "dse": 2.6979559929300816
+     },
+     "exp1": {
+      "elpd_cv": -3858.1086461544037,
+      "behind": 5.19405460357666,
+      "dse": 2.198485977136988
+     },
+     "exp2": {
+      "elpd_cv": -3634.471628665924,
+      "behind": 4.279729604721069,
+      "dse": 3.8191400098533967
+     }
+    },
+    "sel_elpd": -3634.471628665924,
+    "sel_diff": 4.279729604721069,
+    "sel_dse": 3.8191400098533967,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "r1_c5",
+    "hypothesis": "Refining rsa_l2_singleton_feat_color_valence_l0 by incorporating speaker competitor-confusion aversion from competitor_confusion_speaker into the depth-2 speaker without adding or removing any free parameters (retaining all six parameters: alpha, w_singleton, w_distinct, w_features, w_valence, and w_color). In rsa_l2_singleton_feat_color_valence_l0, when the minimal true referents are a duplicated pair, the depth-2 speaker under-selects the shared word for the duplicate pair relative to a richer singleton competitor that possesses an unused uniquely-identifying feature, causing the listener to over-predict choosing that richer competitor on word trials (such as exp1 unit41 and unit33, flagged by word_duplicated_two_feature_vs_unique_feat_competitor_rate in critiques.md). Here, while the literal listener L0 and depth-1 pragmatic listener L1 remain unchanged, the depth-2 speaker simulated inside L2 subtracts the competitor-confusion penalty for each real word and target referent (the sum of exponentially decaying perceptual similarity over other context objects that also satisfy that word) from the log depth-1 listener probability before scaling by rationality alpha.",
+    "source": "seed"
+   },
+   {
+    "name": "r3_c1",
+    "hypothesis": "Listeners interpret referring expressions through a non-Bayesian diagnostic sufficiency heuristic rather than recursive speaker simulation. On word trials, listeners directly score literal referents by penalizing the diagnosticity of their strongest unmentioned feature across distinct referent types alongside perceptual competitor crowding and partial-feature tier ambiguity, while rewarding minimal-complexity literal matches; this explains why people strongly favor unique single-feature referents over partial-feature competitors and avoid non-prototype maximal referents while retaining support for holistic all-feature prototypes against cloned minimal referents. On prior trials without an informative word, listeners anchor on unique maximal-complexity prototypes and perceptually isolated singletons while avoiding duplicated and intermediate-complexity items.",
+    "source": "seed"
+   },
+   {
+    "name": "complexity_tier_qud_l2",
+    "hypothesis": "Speakers communicate under a complexity-tier Question Under Discussion (QUD), selecting utterances to resolve both the target referent's complexity tier and its identity while avoiding confusion with visually similar or intermediate-tier competitors. Listeners jointly infer the speaker's target referent and complexity-tier goal at recursive depth 2, expecting unmarked reference to anchor on unique, extreme-complexity objects\u2014especially the maximal-feature prototype\u2014while suppressing ambiguous intermediate-tier items.",
+    "source": "seed"
+   },
+   {
+    "name": "prototype_tier_confusion_l2",
+    "hypothesis": "We refine `tier_competitor_confusion_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_confusion`, both with `LogNormal(0.0, 0.5)` priors), by extending complexity-tier confusion with incomplete-prototype penalty and complete-prototype anchoring on upper-tier literal referents alongside singleton uniqueness in the object priors. Specifically, in `confusion` we add `(is_non_all_max - is_all_utt * (min_cloned + gap_utt)) / n_obj`, penalizing upper-tier literal referents (`is_max_utt`) that lack at least one scene feature (`is_non_all_max`, where `fc < n_real_words`) while reducing confusion on complete all-features literal referents (`is_all_utt`, where `fc == n_real_words`) when the minimal-complexity literal tier is cloned (`min_cloned`) or separated by a multi-feature span (`gap_utt = max(fc - min_true_fc - 1, 0) / n_real_words`); in `word_prior` we subtract `is_singleton / (n_obj * n_real_words)` inside the `-w_confusion` weight; and in `prior_choice` we replace `-is_max_fc / n_obj` with `-(is_max_fc * (1.0 + is_singleton * inter_frac) + is_singleton) / n_obj` (where `inter_frac = sum(is_inter_scene) / n_obj`). Penalizing incomplete upper-tier literal referents and rewarding complete all-features prototypes explains why listeners on word trials reject partial-feature competitors in favor of minimal-feature referents (`unique_single_feature_referent_vs_partial_feature_competitor_rate`, `max_literal_referent_rate_in_three_referent_false_distractor_scenes`, and `cloned_min_referent_vs_distinct_max_competitors_rate`) yet select all-features prototypes against single-feature referents (`cloned_single_feature_referent_rate_against_unique_all_features_competitor` and `all_features_referent_rate_against_unique_single_feature_with_false_distractor`), while singleton and unique-maximum anchoring in the prior explains why listeners favor unique maximal-feature objects on three-tier prior displays (`prior_unique_max_feature_rate_in_four_object_three_tier_scenes`).",
+    "source": "seed"
+   },
+   {
+    "name": "counterfactual_omission_l2",
+    "hypothesis": "Speakers and listeners reason under counterfactual feature-omission and perceptual distinctiveness at recursive depth 2, where the literal listener evaluates candidate referents by discounting objects in proportion to their unmentioned diagnostic features rather than treating all literal matches equally. Speakers choose words to maximize literal and depth-1 listener recovery while avoiding similarity-based crowding among unique competitor types, equivalence-class redundancy, and intermediate-tier ambiguity, with low-rate false lexical access on sparse minimal-complexity singletons. Before hearing a word, listeners anchor on unique maximal-complexity prototypes and perceptually isolated objects while discounting intermediate-complexity items.",
+    "source": "round 1 candidate 1 explore"
+   },
+   {
+    "name": "prototype_specificity_anchor_l2",
+    "hypothesis": "Listeners and speakers reason at recursive depth 2 under prototype-anchored specificity: speakers choose utterances to maximize listener recovery while avoiding similarity-based competitor confusion, intermediate-complexity tier ambiguity, and redundant descriptions of duplicated minimal referents when a unique maximal-complexity prototype is available. Before hearing an informative word, and as a baseline communicative expectation, people anchor on unique maximal-complexity prototypes and perceptually isolated referents while discounting duplicated or intermediate-tier items; on displays where duplicated minimal-complexity referents compete against a unique all-features prototype (such as exp2 unit12, unit32, and unit35) or on two-tier prior displays (such as exp2 unit18 and unit21), this mechanism predicts substantially stronger selection of the maximal-complexity prototype than the incumbent's complexity-tier QUD model.",
+    "source": "round 1 candidate 2 explore"
+   },
+   {
+    "name": "alternative_competition_cost_l2",
+    "hypothesis": "Speakers choose words by trading off pragmatic informativeness against an utterance alternative-competition cost that reflects both competitor crowding among other objects satisfying the word and lexical rivalry from alternative unmentioned features on the target referent, while also allowing low-probability false lexical access on sparse minimal-complexity objects. Listeners invert this speaker at recursive depth 2 under a perceptual distinctiveness and complexity-boundary prior, explaining why people temper their preference for cloned minimal referents in favor of all-feature prototypes, occasionally intrude on literally false minimal-complexity objects, and treat same-tier minimal referents symmetrically despite asymmetric overlap with cloned higher-tier competitors.",
+    "source": "round 1 candidate 3 explore"
+   },
+   {
+    "name": "prototype_anchored_tier_qud_l2",
+    "hypothesis": "We refine `complexity_tier_qud_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_qud`, both with `LogNormal(0.0, 0.5)` priors), by replacing the unconditional all-features bonus in `word_prior` (`is_all_feats * (max_fc - min_fc - 1.0) / (n_obj * n_real_utt)`, so `word_prior` becomes `softmax_prior(-w_qud * baseline_confusion)`) with utterance-level complete-prototype QUD anchoring in `qud_cost` from `prototype_tier_confusion_l2` (`-is_all_utt * (min_cloned + gap_utt) / n_obj`, where `is_all_utt = is_max_utt * is_all_feats[None, :]`, `min_cloned = max(is_min_utt * is_clone[None, :], axis=1, keepdims=True)`, and `gap_utt = maximum(fc[None, :] - min_true_fc - 1.0, 0.0) / n_real_utt`) alongside clone-resolved scene priors (`baseline_confusion` uses `is_clone / n_obj` instead of `is_clone * (1.0 - is_inter_scene) / n_obj`, and `prior_choice` replaces `(n_obj - 1.0)` with `(n_obj - 1.0 - min_scene_cloned)` and `has_inter_scene * (1.0 - is_clone)` with `(has_inter_scene * (1.0 - is_clone) + min_scene_cloned)`, where `min_scene_cloned = max(is_min_fc * is_clone)` and `is_min_fc` marks `fc == min_fc` when `max_fc > min_fc`). Moving complete-prototype anchoring from the unconditional `word_prior` into `qud_cost` conditioned on cloned minimal-tier competitors (`min_cloned`) or multi-feature utterance spans (`gap_utt`) explains why listeners on word trials shift away from duplicated minimal-complexity referents toward the unique higher-complexity prototype (`cloned_minimal_true_choice_rate` in `critiques.md`) without over-predicting the rich referent in standard reference games on `E` where the minimal referent is a unique singleton (`min_cloned == 0` and `gap_utt == 0`). Extending clone-disfavoring to intermediate-tier displays and accounting for cloned minimal-tier distractors (`min_scene_cloned`) in `prior_choice` explains why listeners on silent prior trials select unique intermediate-tier objects more often (`prior_intermediate_tier_selection_rate`) and strongly favor unique all-features prototypes over duplicated empty objects on two-tier prior displays (`prior_two_tier_all_features_vs_empty_preference`).",
+    "source": "round 1 candidate 5 refine incumbent complexity_tier_qud_l2"
+   },
+   {
+    "name": "familiarity_prototype_tier_confusion_l2",
+    "hypothesis": "We refine `prototype_tier_confusion_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_confusion`, both with `LogNormal(0.0, 0.5)` priors), by gating the speaker's incomplete-prototype confusion penalty on unique upper-tier competitors without cloned minimal referents while integrating perceptual familiarity, grayscale contrast, endpoint clone confusion, and complete-prototype anchoring into the object priors. Specifically, we add `has_inter_scene = jnp.max(is_inter_scene)` and `is_all_feats = jnp.where((fc == n_real_words) & (max_fc > min_fc), 1.0, 0.0)`, and remove `inter_frac`; in `tier_utt` inside `confusion`, we replace `is_non_all_max` with `is_non_all_max * is_singleton[None, :] * (1.0 - min_cloned)` so that incomplete upper-tier literal referents incur confusion only when they are unique and the minimal literal tier is not cloned; in `baseline_confusion`, we add `(1.0 - is_singleton) * (1.0 - is_inter_scene) / n_obj + ctx.grayscale / n_obj`; in `word_prior`, we replace `is_singleton / (n_obj * n_real_words)` with `(is_singleton + is_all_feats * (max_fc - min_fc - 1.0)) / (n_obj * n_real_words)`; and in `prior_choice`, we replace `baseline_confusion + is_inter_scene - (is_max_fc * (1.0 + is_singleton * inter_frac) + is_singleton) / n_obj` with `baseline_confusion - ctx.familiarization + is_inter_scene * (1.0 - ctx.has_familiarization) * (1.0 - jnp.abs(ctx.valence)) * (n_obj - 1.0) / n_obj - (is_max_fc + is_all_feats * has_inter_scene * is_singleton) / n_obj`. Gating the incomplete-prototype penalty when minimal referents are cloned and strengthening complete-prototype anchoring explains why listeners on heard-word scenes with cloned minimal referents do not over-select the clones against a unique higher-complexity competitor (`cloned_minimal_true_choice_rate` in `critiques.md`), while familiarity- and valence-gated intermediate suppression and endpoint clone confusion on prior trials explain why listeners select intermediate-tier objects and prefer all-features prototypes over empty objects on two-tier displays (`prior_intermediate_tier_selection_rate` and `prior_two_tier_all_features_vs_empty_preference`).",
+    "source": "round 1 candidate 6 refine chosen"
+   },
+   {
+    "name": "figure_ground_topicality_prior_l2",
+    "hypothesis": "Listeners form baseline communicative expectations before hearing a word through a figure-ground topicality prior that weights each object by its perceptual distinctiveness, prototype completeness, and structural uniqueness within its complexity tier, while speakers reason recursively at depth 2 to maximize listener recovery and avoid referential competition. Because objects that are structurally isolated or anchor the scene's complexity boundaries stand out as natural discourse topics while duplicated or crowded intermediate items recede into the background, this prior directly governs silent trials and anchors pragmatic inference on word trials\u2014explaining why listeners favor unique intermediate referents over cloned minimal distractors, preserve balanced support for unique minimal singletons on prior displays, and strongly discount non-unique incomplete maximal competitors on word trials.",
+    "source": "round 2 candidate 1 explore"
+   },
+   {
+    "name": "attentional_encoding_bottleneck_l2",
+    "hypothesis": "Resource-limited listeners interpret referring expressions under bounded attentional encoding of the display: rather than maintaining perfect, uniform representations of all objects and their features, perceptual attention selectively sharpens unique complexity-boundary anchors (minimal-complexity singletons and complete all-feature prototypes) while compressing cloned or intermediate-tier competitors and allowing low-probability false feature attribution to unattended minimal singletons. Speakers and listeners reason recursively at depth 2 over this attentionally filtered display, penalizing utterances that leave unencoded features or suffer similarity- and clone-based attentional crowding, which explains why people occasionally select literally false minimal singletons, discount incomplete maximal competitors lacking unique features, treat same-tier minimal referents symmetrically despite asymmetric overlap with cloned distractors, and favor unique intermediate or minimal items over cloned minimal distractors on silent trials.",
+    "source": "round 2 candidate 2 explore"
+   },
+   {
+    "name": "noisy_graded_lexicon_l2",
+    "hypothesis": "Speakers and listeners reason pragmatically at recursive depth 2 under graded lexical specificity and noisy feature applicability: literal word applicability in the base listener softens on candidate referents carrying redundant unmentioned features without a uniquely identifying feature or competing unmentioned singleton features, while speaker word selection allows low-probability noisy lexical access on sparse minimal-complexity singletons alongside prototype-anchored tier and similarity competition. On silent prior displays and as a baseline communicative expectation, listeners anchor on perceptually isolated singletons and maximal-complexity prototypes while discounting cloned and intermediate-tier objects, explaining people's choices of false minimal singletons, preference against incomplete maximal referents lacking unique features, symmetric treatment of minimal referents, and balanced choices across minimal, intermediate, and maximal tiers.",
+    "source": "round 2 candidate 3 explore"
+   },
+   {
+    "name": "sparse_singleton_prototype_qud_l2",
+    "hypothesis": "We refine `prototype_anchored_tier_qud_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_qud`, both with `LogNormal(0.0, 0.5)` priors), by incorporating low-probability false lexical access on sparse minimal-complexity singletons from `alternative_competition_cost_l2` (`sem_lex = ctx.lex + is_false_min * jnp.exp(-w_qud * (n_obj - min_cloned))`, where `is_false_min = real_words * (1.0 - real_lex) * is_min_fc[None, :] * (1.0 - is_clone[None, :]) * jnp.where((min_fc > 0.0) & (min_fc < min_true_fc), 1.0, 0.0)`) into the speaker's lexical weights at `L1` and `L2`. Allowing the pragmatic speaker to occasionally apply an utterance to the scene's unique positive minimal-complexity object when it lacks the heard feature and all literal referents are strictly more complex explains why listeners intrude on literally false minimal-feature singletons more often than random lapse predicts (`false_minimal_singleton_choice_rate` in `critiques.md`) and reduces over-prediction of the unique maximal referent against cloned multi-feature minimal referents (`four_object_cloned_minimal_non_maximal_rate`).",
+    "source": "round 2 candidate 4 refine incumbent prototype_anchored_tier_qud_l2"
+   },
+   {
+    "name": "distinctive_tier_qud_l2",
+    "hypothesis": "We refine `prototype_anchored_tier_qud_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_qud`, both with `LogNormal(0.0, 0.5)` priors), by incorporating low-rate false lexical access on unique minimal-complexity objects from `counterfactual_omission_l2` alongside distinctive-feature competition on incomplete referents and complete-prototype prior anchoring. Specifically, in `L1` and `L2` we pass `sem_lex: ...` and replace `at(lex, u, r)` in the speaker's choice weight with `at(sem_lex, u, r)` (where `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_qud * (n_obj - min_cloned))` and `is_false_min = real_words * (1.0 - real_lex) * is_min_fc[None, :] * (1.0 - is_clone[None, :]) * jnp.where((min_fc > 0.0) & (min_fc < min_true_fc), 1.0, 0.0)`); in `qud_cost`, we replace `is_incomplete_utt * (1.0 - is_clone[None, :]) / n_real_utt` with `incomplete_penalty = is_incomplete_utt * ((1.0 - is_clone[None, :]) / n_real_utt + (1.0 - has_unique_feat[None, :]) * utt_has_unique)` (where `feat_ext = jnp.sum(real_lex, axis=1, keepdims=True)`, `has_unique_feat = jnp.max(jnp.where((real_lex > 0) & (feat_ext == 1.0), 1.0, 0.0), axis=0)`, and `utt_has_unique = jnp.max(is_incomplete_utt * has_unique_feat[None, :], axis=1, keepdims=True)`) and replace `(min_cloned + gap_utt)` with `(min_cloned + gap_utt * (1.0 - min_cloned))`; in `baseline_confusion`, we replace `is_clone / n_obj` with `is_clone * (1.0 + is_min_fc * has_inter_scene) / n_obj`; and in `prior_choice`, we replace `min_scene_cloned` inside the intermediate-tier penalty with `min_scene_cloned * (1.0 - is_clone)` and replace `is_max_fc` in the maximal-tier bonus with `is_max_fc * is_all_feats`. Allowing low-rate speaker access on literally false minimal singletons (`sem_lex`), penalizing incomplete referents lacking a scene-unique feature when a competing incomplete referent possesses one (`incomplete_penalty`), and preventing additive double-counting of `min_cloned` and `gap_utt` explain why listeners occasionally select false minimal singletons (`false_minimal_singleton_choice_rate`), reject non-unique incomplete maximal referents (`incomplete_max_referent_no_unique_feature_preference`), and favor non-maximal referents when minimal referents are cloned (`four_object_cloned_minimal_non_maximal_rate`), while penalizing cloned minimal tiers on three-tier scenes and restricting maximal-tier prior anchoring to complete prototypes explain why silent-prior listeners prefer unique intermediate referents over cloned minimal ones (`prior_unique_intermediate_vs_cloned_minimal_preference`) and unique minimal referents over incomplete maximal ones (`prior_unique_minimal_vs_maximal_tier_preference`).",
+    "source": "round 2 candidate 5 refine incumbent prototype_anchored_tier_qud_l2"
+   },
+   {
+    "name": "prototype_span_false_access_l2",
+    "hypothesis": "We refine `alternative_competition_cost_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_cost`, both with `LogNormal(0.0, 0.5)` priors), by extending false minimal lexical access (`sem_lex`) to both literal and pragmatic listeners while replacing the speaker's equivalence-class competition cost (`utt_cost`) and object priors (`word_prior`, `prior_choice`) with diagnostic incomplete-referent suppression, prototype-span anchoring, and clone-resolved scene priors. Specifically, in `L0`, `L1`, and `L2`, we pass `sem_lex` to `L0` (`L0[u: UTT, r: OBJ](sem_lex: ...)` instead of `lex: ...`, removing `lex` from `L1` and `L2` signatures); in `compute_speaker_terms`, we add `min_scene_cloned = jnp.max(is_min_fc * is_clone)`, `inter_scene_cloned = jnp.max(is_inter_scene * is_clone)`, `is_max_utt = jnp.where((real_lex > 0) & (fc[None, :] == max_true_fc) & (max_true_fc > min_true_fc), 1.0, 0.0)`, `max_cloned = jnp.max(is_max_utt * is_clone[None, :], axis=1, keepdims=True)`, `gap_utt = jnp.maximum(fc[None, :] - min_true_fc - 1.0, 0.0) / n_real_utt`, and `has_uniq_feat = jnp.max(jnp.where(jnp.sum(real_lex, axis=1, keepdims=True) == 1.0, real_lex, 0.0), axis=0)`; redefine `min_cloned = jnp.max(is_min_utt * is_clone[None, :], axis=1, keepdims=True)` (removing `(1.0 - jnp.max(is_inter_utt, axis=1, keepdims=True))`); replace `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_cost * (n_obj - min_cloned))` with `sem_lex = ctx.lex + is_false_min * jnp.where(jnp.sum(real_lex, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned))`; replace `(real_lex @ unique_sim) + (copy_count[None, :] - 1.0) * real_lex` with `(real_lex @ sim)`, `is_incomplete_utt * is_singleton[None, :] / n_real_utt` with `is_incomplete_utt * is_singleton[None, :] * (1.0 + is_max_utt * (1.0 - has_uniq_feat[None, :]) * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * (1.0 - max_cloned)) / n_real_utt`, and `- is_all_utt * min_cloned * is_singleton[None, :] / n_obj` with `- is_all_utt * (min_cloned + gap_utt) / n_obj` in `utt_cost` (dropping `unique_sim`); replace `is_clone * (1.0 - is_inter_scene) / n_obj` with `is_clone / n_obj` in `baseline_crowd`; remove `- is_all_feats * (max_fc - min_fc - 1.0) / (n_obj * n_real_utt)` from `word_prior`; and in `prior_choice` replace `(1.0 - 1.0 / n_obj) / (1.0 + is_singleton / n_obj)` with `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton)) / n_obj` and `(is_max_fc + is_all_feats * (has_inter_scene * is_singleton + is_clone / n_obj)) / n_obj` with `(is_max_fc * (1.0 - inter_scene_cloned) + is_all_feats * (has_inter_scene * is_singleton + min_scene_cloned + inter_scene_cloned)) / n_obj`. This single refinement explains why listeners on word trials intrude on literally false minimal-feature singletons under referential ambiguity (`false_minimal_singleton_choice_rate`), reject incomplete maximal referents lacking a scene-unique feature (`incomplete_max_referent_no_unique_feature_preference`), and balance cloned minimal referents against prototypes (`four_object_cloned_minimal_non_maximal_rate`), while on silent prior trials favoring unique intermediate-tier objects over cloned minimal objects (`prior_unique_intermediate_vs_cloned_minimal_preference`) and unique minimal-tier objects over non-prototype maximal-tier objects when intermediate tiers are cloned (`prior_unique_minimal_vs_maximal_tier_preference`).",
+    "source": "round 2 candidate 6 refine chosen"
+   },
+   {
+    "name": "diagnostic_prototype_contrast_heuristic",
+    "hypothesis": "Listeners interpret referring expressions through a non-Bayesian diagnostic contrast and prototype-boundary heuristic rather than recursive speaker simulation. On word trials, listeners directly score candidate referents by comparing the heard feature's uniqueness against the referent's strongest unmentioned feature while discounting similarity-crowded, cloned, and incomplete upper-tier competitors in favor of minimal-complexity matches and complete all-feature prototypes (with low-rate lexical intrusion onto sparse minimal singletons). On silent prior trials, listeners directly select referents using the same figure-ground contrast between unique complexity-boundary anchors and crowded or intermediate-tier items.",
+    "source": "round 3 candidate 1 explore"
+   },
+   {
+    "name": "contrastive_anchor_decision_l2",
+    "hypothesis": "Listeners infer speaker intent through depth-2 recursive reasoning over a confusion-averse speaker and convert those posterior beliefs into a response via a contrastive anchor decision rule. When selecting a referent, the listener's decision rule boosts complete complexity-boundary prototypes and unique upper-boundary referents against cloned minimal competitors, suppresses incomplete referents that lack a uniquely identifying feature, and allows low-rate decision intrusion onto a unique minimal-complexity singleton when it is the sole object excluded by an ambiguous word. On silent prior trials, listeners apply the same contrastive boundary decision rule to favor perceptually isolated singletons and maximal prototypes over duplicated items.",
+    "source": "round 3 candidate 2 explore"
+   },
+   {
+    "name": "holistic_diagnostic_qud_l2",
+    "hypothesis": "Speakers communicate under a holistic-prototype versus diagnostic-feature Question Under Discussion (QUD), selecting utterances to resolve either the scene's holistic all-features prototype or a target referent's diagnostic feature tier while avoiding similarity-based and non-unique incomplete competitor confusion, with low-probability false lexical access on sparse minimal singletons. Listeners reason recursively at depth 2 about this dual QUD goal, which explains why people intrude on literally false minimal-feature singletons under referential ambiguity, temper their selection of cloned minimal referents in favor of holistic prototypes, treat same-tier minimal referents symmetrically despite asymmetric overlap with cloned upper-tier distractors, and preserve support for intermediate-tier objects on silent prior displays with cloned tiers.",
+    "source": "round 3 candidate 3 explore"
+   },
+   {
+    "name": "type_crowding_prototype_span_l2",
+    "hypothesis": "We refine `prototype_span_false_access_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_cost`, both with `LogNormal(0.0, 0.5)` priors), by restoring type-normalized perceptual similarity and equivalence-class crowding from `alternative_competition_cost_l2` alongside distinctive-feature competition on incomplete referents from `distinctive_tier_qud_l2`, clone-adjusted prototype-span anchoring, and multi-tier false minimal lexical access. Specifically, in `compute_speaker_terms`, we add `unique_sim = sim / copy_count[None, :]` and `utt_has_uniq = jnp.max(is_incomplete_utt * has_uniq_feat[None, :], axis=1, keepdims=True)`; replace `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned))` with `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned - (1.0 - max_cloned) * jnp.where(max_true_fc > min_true_fc, 1.0, 0.0)))`; in `utt_cost`, replace `(real_lex @ sim)` with `(real_lex @ unique_sim) + (copy_count[None, :] - 1.0) * real_lex`, replace `is_incomplete_utt * is_singleton[None, :] * (1.0 + is_max_utt * (1.0 - has_uniq_feat[None, :]) * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * (1.0 - max_cloned)) / n_real_utt` with `is_incomplete_utt * is_singleton[None, :] * (1.0 / n_real_utt + (1.0 - has_uniq_feat[None, :]) * utt_has_uniq) + is_min_utt * is_singleton[None, :] * has_uniq_feat[None, :] * max_cloned / n_obj`, and replace `- is_all_utt * (min_cloned + gap_utt) / n_obj` with `- is_all_utt * (min_cloned + gap_utt) / (n_obj - min_cloned)`; and in `prior_choice`, replace `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton))` with `(n_obj - 1.0 - min_scene_cloned * (n_obj - 1.0) - inter_scene_cloned)`. Accounting for unique maximal-referent tier separation in `sem_lex`, normalizing prototype-span anchoring by the number of distinct literal referent types `(n_obj - min_cloned)` alongside type-normalized similarity and minimal-singleton diagnostic competition in `utt_cost`, and relaxing intermediate-tier suppression when either the minimal or intermediate tier is cloned in `prior_choice` explain why listeners intrude on literally false minimal singletons (`false_minimal_singleton_choice_rate`), temper selection of cloned minimal referents in favor of the prototype (`cloned_minimal_true_referent_choice_rate`), select intermediate-tier objects more often on cloned-tier silent prior trials (`prior_intermediate_tier_choice_rate`), and treat same-tier minimal referents more symmetrically (`equal_tier_minimal_referent_asymmetry`).",
+    "source": "round 3 candidate 4 refine incumbent prototype_span_false_access_l2"
+   },
+   {
+    "name": "prototype_uniqueness_false_access_l2",
+    "hypothesis": "We refine `prototype_span_false_access_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_cost`, both with `LogNormal(0.0, 0.5)` priors), by boosting false minimal singleton lexical access (`sem_lex`) when competing multi-tier true referents are cloned (`has_true_clone`), extending incomplete-referent suppression to intermediate-tier referents lacking a unique feature when a competing incomplete referent has one (`utt_has_uniq`), and reducing the silent-prior penalty on unique intermediate-tier objects by `min_scene_cloned * is_singleton / n_obj` while boosting complete all-feature prototypes when intermediate tiers are unique (`has_inter_scene * is_singleton / n_real_utt`). Specifically, in `compute_speaker_terms`, we add `has_true_clone = jnp.max(jnp.where((real_lex > 0) & (max_true_fc > min_true_fc), is_clone[None, :], 0.0), axis=1, keepdims=True)` and `utt_has_uniq = jnp.max(is_incomplete_utt * has_uniq_feat[None, :], axis=1, keepdims=True)`; in `sem_lex`, we replace `jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned))` with `jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned - has_true_clone))`; in `utt_cost`, we replace `is_max_utt * (1.0 - has_uniq_feat[None, :]) * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * (1.0 - max_cloned)` with `(is_max_utt * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) + (1.0 - is_max_utt) * utt_has_uniq) * (1.0 - has_uniq_feat[None, :]) * (1.0 - max_cloned)`; in `word_prior`, we replace `baseline_crowd` with `baseline_crowd - is_all_feats * has_inter_scene * is_singleton / (n_obj * n_real_utt)`; and in `prior_choice`, we replace `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton))` with `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton)) * (1.0 - min_scene_cloned * is_singleton / n_obj)`. This refinement explains why listeners intrude on literally false minimal-feature singletons more often when competing multi-tier true referents are cloned (`false_minimal_singleton_choice_rate`), temper selection of cloned minimal referents against unique maximal prototypes (`cloned_minimal_true_referent_choice_rate`), and select unique intermediate-tier objects more often on silent prior trials when the minimal tier is cloned (`prior_intermediate_tier_choice_rate`).",
+    "source": "round 3 candidate 5 refine incumbent prototype_span_false_access_l2"
+   },
+   {
+    "name": "prototype_span_speaker_access_l2",
+    "hypothesis": "We refine `sparse_singleton_prototype_qud_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_qud`, both with `LogNormal(0.0, 0.5)` priors), by restricting false minimal lexical access (`sem_lex`) to the pragmatic speaker simulated in `L1` and `L2` (keeping `L0` strictly literal on `lex`) while incorporating diagnostic incomplete-referent suppression, uncrowded minimal-singleton equilibration, and clone-resolved prototype-span scene priors. Specifically, in `L0`, `L1`, and `L2`, we restore literal `lex` in `L0` (`L0[u: UTT, r: OBJ](lex: ...)` instead of `sem_lex: ...`, passing both `lex` and `sem_lex` to `L1` and `L2`); in `compute_qud_and_prior`, we add `is_singleton = 1.0 - is_clone`, `inter_scene_cloned = jnp.max(is_inter_scene * is_clone)`, `max_cloned = jnp.max(is_max_utt * is_clone[None, :], axis=1, keepdims=True)`, `has_uniq_feat = jnp.max(jnp.where(jnp.sum(real_lex, axis=1, keepdims=True) == 1.0, real_lex, 0.0), axis=0)`, and `two_min_singletons = jnp.where(jnp.sum(is_min_utt * is_singleton[None, :], axis=1, keepdims=True) > 1.0, 1.0, 0.0)`; replace `is_false_min` and `sem_lex` with `is_false_min = real_words * (1.0 - real_lex) * is_min_fc[None, :] * is_singleton[None, :] * jnp.where((min_fc > 0.0) & (min_fc < min_true_fc), 1.0, 0.0) * jnp.where(jnp.sum(real_lex, axis=1, keepdims=True) > 1.0, 1.0, 0.0)` and `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_qud * (n_obj - 1.0 - min_cloned - max_cloned))`; in `qud_cost`, replace `(real_lex @ sim)` with `((real_lex * (1.0 - two_min_singletons * is_min_utt * max_cloned)) @ sim)`, replace `is_incomplete_utt * (1.0 - is_clone[None, :]) / n_real_utt` with `is_incomplete_utt * is_singleton[None, :] * (1.0 + is_max_utt * (1.0 - has_uniq_feat[None, :]) * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * (1.0 - max_cloned)) / n_real_utt`, and replace `- is_all_utt * (min_cloned + gap_utt) / n_obj` with `- is_all_utt * (min_cloned + gap_utt * (1.0 + min_cloned / n_real_utt)) / n_obj`; and in `prior_choice`, replace `(n_obj - 1.0 - min_scene_cloned)` with `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton) - inter_scene_cloned)` and replace `(is_max_fc + is_all_feats * (has_inter_scene * (1.0 - is_clone) + min_scene_cloned))` with `(is_max_fc * (1.0 - inter_scene_cloned) + is_all_feats * (has_inter_scene * is_singleton + min_scene_cloned + inter_scene_cloned))`. Keeping `L0` literal while scaling speaker false-minimal access by `n_obj - 1.0 - min_cloned - max_cloned` prevents double-dilution on `E` while increasing false-minimal singleton intrusions on ambiguous word trials (`false_minimal_singleton_choice_rate`), strengthening prototype-span anchoring when minimal referents are cloned reduces over-selection of cloned minimal true referents (`cloned_minimal_true_referent_choice_rate`), equilibrating minimal singletons under cloned maximal competition eliminates artificial crowding asymmetry (`equal_tier_minimal_referent_asymmetry`), and reducing intermediate-tier prior suppression when intermediate objects are cloned increases intermediate-tier choices on silent trials (`prior_intermediate_tier_choice_rate`).",
+    "source": "round 3 candidate 6 refine chosen"
+   }
+  ],
+  "ledger_entries": 56
+ },
+ {
+  "step": 4,
+  "round": 3,
+  "best_model": "contrastive_anchor_decision_l2",
+  "fit_best": "contrastive_anchor_decision_l2",
+  "n_params": {
+   "sparse_singleton_prototype_qud_l2": 2,
+   "prototype_span_false_access_l2": 2,
+   "diagnostic_prototype_contrast_heuristic": 2,
+   "contrastive_anchor_decision_l2": 2,
+   "holistic_diagnostic_qud_l2": 2,
+   "type_crowding_prototype_span_l2": 2,
+   "prototype_uniqueness_false_access_l2": 2,
+   "prototype_span_speaker_access_l2": 2
+  },
+  "parsimony_k": 1.0,
+  "events": [
+   {
+    "name": "contrastive_anchor_decision_l2",
+    "outcome": "kept",
+    "reason": "the best theory on E, the guard's reference there"
+   },
+   {
+    "name": "prototype_uniqueness_false_access_l2",
+    "outcome": "kept",
+    "reason": "the best theory on exp1, the guard's reference there"
+   },
+   {
+    "name": "r1_c5",
+    "outcome": "pruned",
+    "reason": "ineligible (exp1: 82.3 \u00b1 16.1)"
+   },
+   {
+    "name": "r3_c1",
+    "outcome": "pruned",
+    "reason": "ineligible (E: 264.0 \u00b1 52.2)"
+   },
+   {
+    "name": "prototype_tier_confusion_l2",
+    "outcome": "pruned",
+    "reason": "ineligible (E: 230.5 \u00b1 55.9)"
+   },
+   {
+    "name": "complexity_tier_qud_l2",
+    "outcome": "pruned",
+    "reason": "35.9 nats behind contrastive_anchor_decision_l2"
+   },
+   {
+    "name": "counterfactual_omission_l2",
+    "outcome": "pruned",
+    "reason": "29.6 nats behind contrastive_anchor_decision_l2"
+   },
+   {
+    "name": "prototype_specificity_anchor_l2",
+    "outcome": "pruned",
+    "reason": "30.8 nats behind contrastive_anchor_decision_l2"
+   },
+   {
+    "name": "alternative_competition_cost_l2",
+    "outcome": "pruned",
+    "reason": "28.2 nats behind contrastive_anchor_decision_l2"
+   },
+   {
+    "name": "familiarity_prototype_tier_confusion_l2",
+    "outcome": "pruned",
+    "reason": "29.1 nats behind contrastive_anchor_decision_l2"
+   },
+   {
+    "name": "prototype_anchored_tier_qud_l2",
+    "outcome": "retired",
+    "reason": "live-set cap"
+   },
+   {
+    "name": "attentional_encoding_bottleneck_l2",
+    "outcome": "retired",
+    "reason": "live-set cap"
+   },
+   {
+    "name": "distinctive_tier_qud_l2",
+    "outcome": "retired",
+    "reason": "live-set cap"
+   },
+   {
+    "name": "noisy_graded_lexicon_l2",
+    "outcome": "retired",
+    "reason": "live-set cap"
+   },
+   {
+    "name": "figure_ground_topicality_prior_l2",
+    "outcome": "retired",
+    "reason": "live-set cap"
+   }
+  ],
+  "critique": null,
+  "admission_limit_sec": 1800,
+  "standing": {
+   "sparse_singleton_prototype_qud_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20687.476927757263,
+      "behind": 144.02327466011047,
+      "dse": 54.718265096531525
+     },
+     "exp1": {
+      "elpd_cv": -3861.4070987701416,
+      "behind": 8.492507219314575,
+      "dse": 6.020142314214569
+     },
+     "exp2": {
+      "elpd_cv": -3639.728005170822,
+      "behind": 9.53610610961914,
+      "dse": 8.755442169686408
+     }
+    },
+    "sel_elpd": -3639.728005170822,
+    "sel_diff": 9.53610610961914,
+    "sel_dse": 8.755442169686408,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_span_false_access_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20565.163480997086,
+      "behind": 21.70982789993286,
+      "dse": 12.996246392673646
+     },
+     "exp1": {
+      "elpd_cv": -3856.716080188751,
+      "behind": 3.8014886379241943,
+      "dse": 2.571223873746839
+     },
+     "exp2": {
+      "elpd_cv": -3639.3437638282776,
+      "behind": 9.151864767074585,
+      "dse": 5.804220420389572
+     }
+    },
+    "sel_elpd": -3639.3437638282776,
+    "sel_diff": 9.151864767074585,
+    "sel_dse": 5.804220420389572,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "diagnostic_prototype_contrast_heuristic": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20561.95062851906,
+      "behind": 18.496975421905518,
+      "dse": 20.787601384820306
+     },
+     "exp1": {
+      "elpd_cv": -3876.1451086997986,
+      "behind": 23.230517148971558,
+      "dse": 8.418279813373973
+     },
+     "exp2": {
+      "elpd_cv": -3631.3369987010956,
+      "behind": 1.1450996398925781,
+      "dse": 6.687032754857814
+     }
+    },
+    "sel_elpd": -3631.3369987010956,
+    "sel_diff": 1.1450996398925781,
+    "sel_dse": 6.687032754857814,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "contrastive_anchor_decision_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20543.453653097153,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp1": {
+      "elpd_cv": -3854.2078878879547,
+      "behind": 1.2932963371276855,
+      "dse": 1.617380133656219
+     },
+     "exp2": {
+      "elpd_cv": -3630.191899061203,
+      "behind": 0.0,
+      "dse": 0.0
+     }
+    },
+    "sel_elpd": -3630.191899061203,
+    "sel_diff": 0.0,
+    "sel_dse": 0.0,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "holistic_diagnostic_qud_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20564.500346899033,
+      "behind": 21.046693801879883,
+      "dse": 12.810506527460982
+     },
+     "exp1": {
+      "elpd_cv": -3857.7617716789246,
+      "behind": 4.847180128097534,
+      "dse": 2.693949589409417
+     },
+     "exp2": {
+      "elpd_cv": -3638.2783896923065,
+      "behind": 8.086490631103516,
+      "dse": 6.16874745033388
+     }
+    },
+    "sel_elpd": -3638.2783896923065,
+    "sel_diff": 8.086490631103516,
+    "sel_dse": 6.16874745033388,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "type_crowding_prototype_span_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20548.764809846878,
+      "behind": 5.311156749725342,
+      "dse": 2.8395796662780035
+     },
+     "exp1": {
+      "elpd_cv": -3857.0497708320618,
+      "behind": 4.135179281234741,
+      "dse": 6.217392383152945
+     },
+     "exp2": {
+      "elpd_cv": -3630.8261013031006,
+      "behind": 0.634202241897583,
+      "dse": 3.6740353352127832
+     }
+    },
+    "sel_elpd": -3630.8261013031006,
+    "sel_diff": 0.634202241897583,
+    "sel_dse": 3.6740353352127832,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_uniqueness_false_access_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20592.77622771263,
+      "behind": 49.322574615478516,
+      "dse": 15.503431942551208
+     },
+     "exp1": {
+      "elpd_cv": -3852.914591550827,
+      "behind": 0.0,
+      "dse": 0.0
+     },
+     "exp2": {
+      "elpd_cv": -3638.5422551631927,
+      "behind": 8.350356101989746,
+      "dse": 5.074709172468032
+     }
+    },
+    "sel_elpd": -3638.5422551631927,
+    "sel_diff": 8.350356101989746,
+    "sel_dse": 5.074709172468032,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   },
+   "prototype_span_speaker_access_l2": {
+    "by_block": {
+     "E": {
+      "elpd_cv": -20543.5863366127,
+      "behind": 0.13268351554870605,
+      "dse": 2.6979559929300816
+     },
+     "exp1": {
+      "elpd_cv": -3858.1086461544037,
+      "behind": 5.19405460357666,
+      "dse": 2.198485977136988
+     },
+     "exp2": {
+      "elpd_cv": -3634.471628665924,
+      "behind": 4.279729604721069,
+      "dse": 3.8191400098533967
+     }
+    },
+    "sel_elpd": -3634.471628665924,
+    "sel_diff": 4.279729604721069,
+    "sel_dse": 3.8191400098533967,
+    "cv_converged": true,
+    "guard_failures": [],
+    "eligible": true,
+    "trusted": true
+   }
+  },
+  "live": [
+   {
+    "name": "sparse_singleton_prototype_qud_l2",
+    "hypothesis": "We refine `prototype_anchored_tier_qud_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_qud`, both with `LogNormal(0.0, 0.5)` priors), by incorporating low-probability false lexical access on sparse minimal-complexity singletons from `alternative_competition_cost_l2` (`sem_lex = ctx.lex + is_false_min * jnp.exp(-w_qud * (n_obj - min_cloned))`, where `is_false_min = real_words * (1.0 - real_lex) * is_min_fc[None, :] * (1.0 - is_clone[None, :]) * jnp.where((min_fc > 0.0) & (min_fc < min_true_fc), 1.0, 0.0)`) into the speaker's lexical weights at `L1` and `L2`. Allowing the pragmatic speaker to occasionally apply an utterance to the scene's unique positive minimal-complexity object when it lacks the heard feature and all literal referents are strictly more complex explains why listeners intrude on literally false minimal-feature singletons more often than random lapse predicts (`false_minimal_singleton_choice_rate` in `critiques.md`) and reduces over-prediction of the unique maximal referent against cloned multi-feature minimal referents (`four_object_cloned_minimal_non_maximal_rate`).",
+    "source": "round 2 candidate 4 refine incumbent prototype_anchored_tier_qud_l2"
+   },
+   {
+    "name": "prototype_span_false_access_l2",
+    "hypothesis": "We refine `alternative_competition_cost_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_cost`, both with `LogNormal(0.0, 0.5)` priors), by extending false minimal lexical access (`sem_lex`) to both literal and pragmatic listeners while replacing the speaker's equivalence-class competition cost (`utt_cost`) and object priors (`word_prior`, `prior_choice`) with diagnostic incomplete-referent suppression, prototype-span anchoring, and clone-resolved scene priors. Specifically, in `L0`, `L1`, and `L2`, we pass `sem_lex` to `L0` (`L0[u: UTT, r: OBJ](sem_lex: ...)` instead of `lex: ...`, removing `lex` from `L1` and `L2` signatures); in `compute_speaker_terms`, we add `min_scene_cloned = jnp.max(is_min_fc * is_clone)`, `inter_scene_cloned = jnp.max(is_inter_scene * is_clone)`, `is_max_utt = jnp.where((real_lex > 0) & (fc[None, :] == max_true_fc) & (max_true_fc > min_true_fc), 1.0, 0.0)`, `max_cloned = jnp.max(is_max_utt * is_clone[None, :], axis=1, keepdims=True)`, `gap_utt = jnp.maximum(fc[None, :] - min_true_fc - 1.0, 0.0) / n_real_utt`, and `has_uniq_feat = jnp.max(jnp.where(jnp.sum(real_lex, axis=1, keepdims=True) == 1.0, real_lex, 0.0), axis=0)`; redefine `min_cloned = jnp.max(is_min_utt * is_clone[None, :], axis=1, keepdims=True)` (removing `(1.0 - jnp.max(is_inter_utt, axis=1, keepdims=True))`); replace `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_cost * (n_obj - min_cloned))` with `sem_lex = ctx.lex + is_false_min * jnp.where(jnp.sum(real_lex, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned))`; replace `(real_lex @ unique_sim) + (copy_count[None, :] - 1.0) * real_lex` with `(real_lex @ sim)`, `is_incomplete_utt * is_singleton[None, :] / n_real_utt` with `is_incomplete_utt * is_singleton[None, :] * (1.0 + is_max_utt * (1.0 - has_uniq_feat[None, :]) * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * (1.0 - max_cloned)) / n_real_utt`, and `- is_all_utt * min_cloned * is_singleton[None, :] / n_obj` with `- is_all_utt * (min_cloned + gap_utt) / n_obj` in `utt_cost` (dropping `unique_sim`); replace `is_clone * (1.0 - is_inter_scene) / n_obj` with `is_clone / n_obj` in `baseline_crowd`; remove `- is_all_feats * (max_fc - min_fc - 1.0) / (n_obj * n_real_utt)` from `word_prior`; and in `prior_choice` replace `(1.0 - 1.0 / n_obj) / (1.0 + is_singleton / n_obj)` with `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton)) / n_obj` and `(is_max_fc + is_all_feats * (has_inter_scene * is_singleton + is_clone / n_obj)) / n_obj` with `(is_max_fc * (1.0 - inter_scene_cloned) + is_all_feats * (has_inter_scene * is_singleton + min_scene_cloned + inter_scene_cloned)) / n_obj`. This single refinement explains why listeners on word trials intrude on literally false minimal-feature singletons under referential ambiguity (`false_minimal_singleton_choice_rate`), reject incomplete maximal referents lacking a scene-unique feature (`incomplete_max_referent_no_unique_feature_preference`), and balance cloned minimal referents against prototypes (`four_object_cloned_minimal_non_maximal_rate`), while on silent prior trials favoring unique intermediate-tier objects over cloned minimal objects (`prior_unique_intermediate_vs_cloned_minimal_preference`) and unique minimal-tier objects over non-prototype maximal-tier objects when intermediate tiers are cloned (`prior_unique_minimal_vs_maximal_tier_preference`).",
+    "source": "round 2 candidate 6 refine chosen"
+   },
+   {
+    "name": "diagnostic_prototype_contrast_heuristic",
+    "hypothesis": "Listeners interpret referring expressions through a non-Bayesian diagnostic contrast and prototype-boundary heuristic rather than recursive speaker simulation. On word trials, listeners directly score candidate referents by comparing the heard feature's uniqueness against the referent's strongest unmentioned feature while discounting similarity-crowded, cloned, and incomplete upper-tier competitors in favor of minimal-complexity matches and complete all-feature prototypes (with low-rate lexical intrusion onto sparse minimal singletons). On silent prior trials, listeners directly select referents using the same figure-ground contrast between unique complexity-boundary anchors and crowded or intermediate-tier items.",
+    "source": "round 3 candidate 1 explore"
+   },
+   {
+    "name": "contrastive_anchor_decision_l2",
+    "hypothesis": "Listeners infer speaker intent through depth-2 recursive reasoning over a confusion-averse speaker and convert those posterior beliefs into a response via a contrastive anchor decision rule. When selecting a referent, the listener's decision rule boosts complete complexity-boundary prototypes and unique upper-boundary referents against cloned minimal competitors, suppresses incomplete referents that lack a uniquely identifying feature, and allows low-rate decision intrusion onto a unique minimal-complexity singleton when it is the sole object excluded by an ambiguous word. On silent prior trials, listeners apply the same contrastive boundary decision rule to favor perceptually isolated singletons and maximal prototypes over duplicated items.",
+    "source": "round 3 candidate 2 explore"
+   },
+   {
+    "name": "holistic_diagnostic_qud_l2",
+    "hypothesis": "Speakers communicate under a holistic-prototype versus diagnostic-feature Question Under Discussion (QUD), selecting utterances to resolve either the scene's holistic all-features prototype or a target referent's diagnostic feature tier while avoiding similarity-based and non-unique incomplete competitor confusion, with low-probability false lexical access on sparse minimal singletons. Listeners reason recursively at depth 2 about this dual QUD goal, which explains why people intrude on literally false minimal-feature singletons under referential ambiguity, temper their selection of cloned minimal referents in favor of holistic prototypes, treat same-tier minimal referents symmetrically despite asymmetric overlap with cloned upper-tier distractors, and preserve support for intermediate-tier objects on silent prior displays with cloned tiers.",
+    "source": "round 3 candidate 3 explore"
+   },
+   {
+    "name": "type_crowding_prototype_span_l2",
+    "hypothesis": "We refine `prototype_span_false_access_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_cost`, both with `LogNormal(0.0, 0.5)` priors), by restoring type-normalized perceptual similarity and equivalence-class crowding from `alternative_competition_cost_l2` alongside distinctive-feature competition on incomplete referents from `distinctive_tier_qud_l2`, clone-adjusted prototype-span anchoring, and multi-tier false minimal lexical access. Specifically, in `compute_speaker_terms`, we add `unique_sim = sim / copy_count[None, :]` and `utt_has_uniq = jnp.max(is_incomplete_utt * has_uniq_feat[None, :], axis=1, keepdims=True)`; replace `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned))` with `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned - (1.0 - max_cloned) * jnp.where(max_true_fc > min_true_fc, 1.0, 0.0)))`; in `utt_cost`, replace `(real_lex @ sim)` with `(real_lex @ unique_sim) + (copy_count[None, :] - 1.0) * real_lex`, replace `is_incomplete_utt * is_singleton[None, :] * (1.0 + is_max_utt * (1.0 - has_uniq_feat[None, :]) * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * (1.0 - max_cloned)) / n_real_utt` with `is_incomplete_utt * is_singleton[None, :] * (1.0 / n_real_utt + (1.0 - has_uniq_feat[None, :]) * utt_has_uniq) + is_min_utt * is_singleton[None, :] * has_uniq_feat[None, :] * max_cloned / n_obj`, and replace `- is_all_utt * (min_cloned + gap_utt) / n_obj` with `- is_all_utt * (min_cloned + gap_utt) / (n_obj - min_cloned)`; and in `prior_choice`, replace `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton))` with `(n_obj - 1.0 - min_scene_cloned * (n_obj - 1.0) - inter_scene_cloned)`. Accounting for unique maximal-referent tier separation in `sem_lex`, normalizing prototype-span anchoring by the number of distinct literal referent types `(n_obj - min_cloned)` alongside type-normalized similarity and minimal-singleton diagnostic competition in `utt_cost`, and relaxing intermediate-tier suppression when either the minimal or intermediate tier is cloned in `prior_choice` explain why listeners intrude on literally false minimal singletons (`false_minimal_singleton_choice_rate`), temper selection of cloned minimal referents in favor of the prototype (`cloned_minimal_true_referent_choice_rate`), select intermediate-tier objects more often on cloned-tier silent prior trials (`prior_intermediate_tier_choice_rate`), and treat same-tier minimal referents more symmetrically (`equal_tier_minimal_referent_asymmetry`).",
+    "source": "round 3 candidate 4 refine incumbent prototype_span_false_access_l2"
+   },
+   {
+    "name": "prototype_uniqueness_false_access_l2",
+    "hypothesis": "We refine `prototype_span_false_access_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_cost`, both with `LogNormal(0.0, 0.5)` priors), by boosting false minimal singleton lexical access (`sem_lex`) when competing multi-tier true referents are cloned (`has_true_clone`), extending incomplete-referent suppression to intermediate-tier referents lacking a unique feature when a competing incomplete referent has one (`utt_has_uniq`), and reducing the silent-prior penalty on unique intermediate-tier objects by `min_scene_cloned * is_singleton / n_obj` while boosting complete all-feature prototypes when intermediate tiers are unique (`has_inter_scene * is_singleton / n_real_utt`). Specifically, in `compute_speaker_terms`, we add `has_true_clone = jnp.max(jnp.where((real_lex > 0) & (max_true_fc > min_true_fc), is_clone[None, :], 0.0), axis=1, keepdims=True)` and `utt_has_uniq = jnp.max(is_incomplete_utt * has_uniq_feat[None, :], axis=1, keepdims=True)`; in `sem_lex`, we replace `jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned))` with `jnp.exp(-w_cost * (n_obj - min_cloned - max_cloned - has_true_clone))`; in `utt_cost`, we replace `is_max_utt * (1.0 - has_uniq_feat[None, :]) * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * (1.0 - max_cloned)` with `(is_max_utt * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) + (1.0 - is_max_utt) * utt_has_uniq) * (1.0 - has_uniq_feat[None, :]) * (1.0 - max_cloned)`; in `word_prior`, we replace `baseline_crowd` with `baseline_crowd - is_all_feats * has_inter_scene * is_singleton / (n_obj * n_real_utt)`; and in `prior_choice`, we replace `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton))` with `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton)) * (1.0 - min_scene_cloned * is_singleton / n_obj)`. This refinement explains why listeners intrude on literally false minimal-feature singletons more often when competing multi-tier true referents are cloned (`false_minimal_singleton_choice_rate`), temper selection of cloned minimal referents against unique maximal prototypes (`cloned_minimal_true_referent_choice_rate`), and select unique intermediate-tier objects more often on silent prior trials when the minimal tier is cloned (`prior_intermediate_tier_choice_rate`).",
+    "source": "round 3 candidate 5 refine incumbent prototype_span_false_access_l2"
+   },
+   {
+    "name": "prototype_span_speaker_access_l2",
+    "hypothesis": "We refine `sparse_singleton_prototype_qud_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_qud`, both with `LogNormal(0.0, 0.5)` priors), by restricting false minimal lexical access (`sem_lex`) to the pragmatic speaker simulated in `L1` and `L2` (keeping `L0` strictly literal on `lex`) while incorporating diagnostic incomplete-referent suppression, uncrowded minimal-singleton equilibration, and clone-resolved prototype-span scene priors. Specifically, in `L0`, `L1`, and `L2`, we restore literal `lex` in `L0` (`L0[u: UTT, r: OBJ](lex: ...)` instead of `sem_lex: ...`, passing both `lex` and `sem_lex` to `L1` and `L2`); in `compute_qud_and_prior`, we add `is_singleton = 1.0 - is_clone`, `inter_scene_cloned = jnp.max(is_inter_scene * is_clone)`, `max_cloned = jnp.max(is_max_utt * is_clone[None, :], axis=1, keepdims=True)`, `has_uniq_feat = jnp.max(jnp.where(jnp.sum(real_lex, axis=1, keepdims=True) == 1.0, real_lex, 0.0), axis=0)`, and `two_min_singletons = jnp.where(jnp.sum(is_min_utt * is_singleton[None, :], axis=1, keepdims=True) > 1.0, 1.0, 0.0)`; replace `is_false_min` and `sem_lex` with `is_false_min = real_words * (1.0 - real_lex) * is_min_fc[None, :] * is_singleton[None, :] * jnp.where((min_fc > 0.0) & (min_fc < min_true_fc), 1.0, 0.0) * jnp.where(jnp.sum(real_lex, axis=1, keepdims=True) > 1.0, 1.0, 0.0)` and `sem_lex = ctx.lex + is_false_min * jnp.exp(-w_qud * (n_obj - 1.0 - min_cloned - max_cloned))`; in `qud_cost`, replace `(real_lex @ sim)` with `((real_lex * (1.0 - two_min_singletons * is_min_utt * max_cloned)) @ sim)`, replace `is_incomplete_utt * (1.0 - is_clone[None, :]) / n_real_utt` with `is_incomplete_utt * is_singleton[None, :] * (1.0 + is_max_utt * (1.0 - has_uniq_feat[None, :]) * jnp.where(jnp.sum(is_max_utt, axis=1, keepdims=True) > 1.0, 1.0, 0.0) * (1.0 - max_cloned)) / n_real_utt`, and replace `- is_all_utt * (min_cloned + gap_utt) / n_obj` with `- is_all_utt * (min_cloned + gap_utt * (1.0 + min_cloned / n_real_utt)) / n_obj`; and in `prior_choice`, replace `(n_obj - 1.0 - min_scene_cloned)` with `(n_obj - 1.0 - min_scene_cloned * (1.0 + is_singleton) - inter_scene_cloned)` and replace `(is_max_fc + is_all_feats * (has_inter_scene * (1.0 - is_clone) + min_scene_cloned))` with `(is_max_fc * (1.0 - inter_scene_cloned) + is_all_feats * (has_inter_scene * is_singleton + min_scene_cloned + inter_scene_cloned))`. Keeping `L0` literal while scaling speaker false-minimal access by `n_obj - 1.0 - min_cloned - max_cloned` prevents double-dilution on `E` while increasing false-minimal singleton intrusions on ambiguous word trials (`false_minimal_singleton_choice_rate`), strengthening prototype-span anchoring when minimal referents are cloned reduces over-selection of cloned minimal true referents (`cloned_minimal_true_referent_choice_rate`), equilibrating minimal singletons under cloned maximal competition eliminates artificial crowding asymmetry (`equal_tier_minimal_referent_asymmetry`), and reducing intermediate-tier prior suppression when intermediate objects are cloned increases intermediate-tier choices on silent trials (`prior_intermediate_tier_choice_rate`).",
+    "source": "round 3 candidate 6 refine chosen"
+   }
+  ],
+  "ledger_entries": 69
+ }
+]

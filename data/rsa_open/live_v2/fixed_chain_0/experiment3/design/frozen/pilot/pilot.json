@@ -1,0 +1,29 @@
+{
+  "paradigm_sha256": "24c339dcbd15f37d22444fc4be8d112e8e213439b2a827a9192cfb2862b544f3",
+  "design_sha256": "e49b75cd64955840e92ebc653bbe34c8e18faa4bb053a4161d957f5e99477864",
+  "n_participants": 12,
+  "comprehension_first": 1.0,
+  "comprehension_final": 1.0,
+  "catch_pass": 1.0,
+  "practice_pass": 1.0,
+  "readable": 1.0,
+  "unreadable_examples": [],
+  "declared_minutes": 3.0,
+  "estimated_minutes": 2.8573961546864197,
+  "time_model_minutes": 5.410208333333332,
+  "time_calibration": 0.5281490062187538,
+  "time_calibration_basis": "3 choice experiment(s) on this campaign's page",
+  "legibility": {
+    "items": 0,
+    "legibility": null,
+    "illegible": [],
+    "unrecognised_bases": []
+  },
+  "data_parse": "ok",
+  "time_ratio": 0.9524653848954733,
+  "hourly_usd": 10.0,
+  "problems": [],
+  "warnings": [],
+  "passed": true,
+  "participant_model": "gemini-3.8-flash"
+}

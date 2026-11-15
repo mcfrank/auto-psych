@@ -1,0 +1,110 @@
+"""Asymmetric perspective-taking with attentional-focus discriminative audience design in production and recursive inference in comprehension."""
+
+import jax.numpy as jnp
+import numpyro.distributions as dist
+from memo import memo
+
+from src.rsa.memo_kit import EPS, at, softmax_prior, vec
+
+PARAMS = {
+    "alpha": dist.LogNormal(0.0, 1.0),
+    "w_salience": dist.Normal(0.0, 1.0),
+}
+
+
+@memo
+def L0[u: UTT, r: OBJ](lex: ...):
+    listener: knows(u)
+    listener: chooses(r in OBJ, wpp=at(lex, u, r))
+    return Pr[listener.r == r]
+
+
+@memo
+def L1[u: UTT, r: OBJ](alpha, lex: ..., prior: ...):
+    listener: thinks[
+        speaker: given(r in OBJ, wpp=vec(prior, r)),
+        speaker: chooses(
+            u in UTT,
+            wpp=at(lex, u, r) * exp(alpha * log(L0[u, r](lex) + {EPS})),
+        ),
+    ]
+    listener: observes [speaker.u] is u
+    listener: chooses(r in OBJ, wpp=Pr[speaker.r == r])
+    return Pr[listener.r == r]
+
+
+@memo
+def L2[u: UTT, r: OBJ](alpha, lex: ..., prior: ...):
+    listener: thinks[
+        speaker: given(r in OBJ, wpp=vec(prior, r)),
+        speaker: chooses(
+            u in UTT,
+            wpp=at(lex, u, r) * exp(alpha * log(L1[u, r](alpha, lex, prior) + {EPS})),
+        ),
+    ]
+    listener: observes [speaker.u] is u
+    listener: chooses(r in OBJ, wpp=Pr[speaker.r == r])
+    return Pr[listener.r == r]
+
+
+@memo
+def S1_disc[u: UTT, r: OBJ](alpha, focus_lex: ..., spec_lex: ..., ext_share: ...):
+    speaker: knows(r)
+    speaker: chooses(
+        u in UTT,
+        wpp=at(spec_lex, u, r)
+        * exp(alpha * log(L0[u, r](focus_lex) + {EPS}) - vec(ext_share, u)),
+    )
+    return Pr[speaker.u == u]
+
+
+def compute_representations(ctx, w_salience):
+    real_mask = (1.0 - ctx.is_sink)[:, None]
+    real_lex = ctx.lex * real_mask
+    diff = real_lex[:, :, None] - real_lex[:, None, :]
+    pair_dist = jnp.sum(diff * diff, axis=0)
+    is_singleton = jnp.where(jnp.sum(pair_dist <= EPS, axis=1) == 1, 1.0, 0.0)
+    distinct = jnp.mean(pair_dist, axis=1)
+
+    n_real = jnp.maximum(jnp.sum(1.0 - ctx.is_sink), 1.0)
+    fc_norm = ctx.feature_count / n_real
+    fc_dev = fc_norm - jnp.mean(fc_norm)
+    extremity = fc_dev * fc_dev / (fc_norm + 1.0 / n_real)
+
+    prior = softmax_prior(w_salience * (is_singleton + distinct + extremity))
+
+    n_utt = ctx.lex.shape[0]
+    n_obj = ctx.lex.shape[1]
+    ext_size = jnp.sum(real_lex, axis=1, keepdims=True)
+    denom_scale = jnp.maximum(n_utt, n_obj) * n_obj * n_obj
+    sem_noise = (ext_size * ext_size) / denom_scale
+    fc_safe = jnp.maximum(ctx.feature_count, 1.0)[None, :]
+    graded_true = ctx.lex / fc_safe
+    noisy_real = graded_true + sem_noise * (1.0 - ctx.lex)
+    soft_lex = jnp.where(ctx.is_sink[:, None] > 0, ctx.lex, noisy_real)
+
+    ext_safe = jnp.maximum(ext_size, 1.0)
+    ext_share = (ext_size[:, 0] / n_obj) * (1.0 - ctx.is_sink)
+    focus_lex = ctx.lex + graded_true
+    disc_odds = (n_obj + 1.0 - ext_safe) / ext_safe
+    spec_real = ctx.lex * disc_odds * disc_odds
+    spec_lex = jnp.where(ctx.is_sink[:, None] > 0, ctx.lex, spec_real)
+    true_avail = real_lex / (n_obj * fc_safe)
+    return soft_lex, prior, focus_lex, spec_lex, ext_share, true_avail, real_mask
+
+
+def listener(params, ctx):
+    soft_lex, prior, _, _, _, _, _ = compute_representations(ctx, params["w_salience"])
+    heard = L2(params["alpha"], soft_lex, prior)[ctx.utterance]
+    return jnp.where(ctx.is_prior > 0, prior, heard)
+
+
+def speaker(params, ctx):
+    _, _, focus_lex, spec_lex, ext_share, true_avail, real_mask = compute_representations(
+        ctx, params["w_salience"]
+    )
+    disc_probs = S1_disc(params["alpha"], focus_lex, spec_lex, ext_share)
+    raw_spk = (disc_probs + true_avail * (1.0 + L0(focus_lex))) * real_mask
+    spk_sum = jnp.sum(raw_spk, axis=0, keepdims=True)
+    uniform_real = real_mask / jnp.maximum(jnp.sum(real_mask), 1.0)
+    return jnp.where(spk_sum > EPS, raw_spk / jnp.maximum(spk_sum, EPS), uniform_real)
