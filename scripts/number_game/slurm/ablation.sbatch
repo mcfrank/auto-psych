@@ -29,7 +29,7 @@
 # MAX_PARALLEL, MAX_ATTEMPTS.
 set -euo pipefail
 export REPO="${REPO:-$HOME/auto-psych}"
-export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/ng_ablation_pooled}"
+export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/ng_ablation_nov26}"
 STAGE="${STAGE:-driver}"
 [[ "$STAGE" =~ ^(setup|driver|worker)$ ]] || { echo "ERROR: STAGE must be setup, driver or worker, not $STAGE" >&2; exit 1; }
 source "$REPO/scripts/_venv.sh"

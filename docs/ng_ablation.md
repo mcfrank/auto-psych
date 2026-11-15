@@ -1,14 +1,16 @@
 # Ablating the number-game final: how much of the final model is needed
 
-> **Status (2026-11-12): this is the October sweep's ablation, superseded.** The paper's
-> number-game runs are now the November sweep (`data/results/number_game_dataset-nov26/`,
-> from the 2016 paper's seeds; user decision 2026-11-12). Its ablation is not run yet: the
-> final to ablate is the November winner best on all runs pooled
-> (`data/paper/figure_data/number_game.json`, `pooled.best_model`, once the figure-data job
-> has run), which needs its own switchable rewrite in `src/number_game/ablation/final.py`.
-> Then `src/number_game/ablation/data.py` points at the November runs, and the result goes
-> to `data/results/number_game_dataset-nov26/analysis/ablation/`, where
-> `scripts/paper/ablation_figure.py` reads it. The rule below is unchanged.
+> **Status (2026-11-15): the November final is rewritten, not yet run.** The paper's
+> number-game runs are the November sweep (`data/results/number_game_dataset-nov26/`, from
+> the 2016 paper's seeds; user decision 2026-11-12). The final to ablate is the November
+> winner best on all runs pooled: run 2's `neighbourhood_doubt_three_example_memory`
+> (grouped-CV ELPD −12,805 on the 22,680 pooled responses, 135 ± 40 nats ahead of run 1's
+> winner; all its pooled fits converged; to be confirmed against the figure data's
+> `pooled.best_model`). Its switchable rewrite and mechanisms are in section 1, **the
+> mechanism split proposed and awaiting the user's approval**; the rule (section 2) is
+> unchanged. The result goes to `data/results/number_game_dataset-nov26/analysis/ablation/`,
+> where `scripts/paper/ablation_figure.py` reads it. The October final's mechanisms and its
+> elimination are in git history (before `c891612f`).
 
 2026-10-27. The number-game dataset run (`data/results/number_game_dataset-oct26/`) ended on
 `even_rule_digit_size_principle_counting`: a logistic model of P(yes) with 13 terms and 14
@@ -44,38 +46,49 @@ removed: `ng_full`, `ng_minus_parpre_even`. The variant code is shared with sr-o
 - with every mechanism on, the variant **is** the final: the same free parameters and shapes,
   and the same log density and `p_yes` at four jittered points (logp to 1e-10, `p_yes` to
   1e-12);
-- each mechanism at its neutral value (`NEUTRAL`: its weight at 0) gives exactly the model
-  without it, and away from that value it moves some prediction;
-- the full variant has the final's 14 parameters;
+- each mechanism at its neutral value (`NEUTRAL`) gives exactly the model without it, and
+  away from that value it moves some prediction;
+- the full variant has the final's 27 free parameters;
 - the full and the smallest variant meet the data contract.
 
-**`even_rule_digit_size_principle_counting`** (13 mechanisms). Every term of the logit is a
-mechanism, the intercept included. There is no core: a model only has to keep one term. With
-none, P(yes) is 0.5 on every item and there is nothing to fit. The final has no lapse or
-noise term (the intercept and the similarity gain calibrate it). It has no person-level
-parameters either: the run hid `participant_id`, so there is no person-level variation to
-step down.
+**Computed once per item.** The rewrite computes P(yes) once per distinct (example set,
+target) item and indexes each response to its item. The final computes it per response.
+The likelihood is the same per-response Bernoulli, so the log density and `p_yes` are the
+final's (the first test). The pooled data hold 2,139 items for 22,680 responses: a log
+density and its gradient take 4.2 ms instead of 44.7 ms (2026-11-15, one Apple-silicon
+core). The final's own pooled fold fits took 8.7–12.3 h on 4 cores at these settings (the
+figure data's pooled fits, 2026-11-15); a variant's should take about a tenth.
+
+**`neighbourhood_doubt_three_example_memory`** (23 mechanisms, 27 parameters). The core,
+never removed: a target is judged by the salience-weighted share of the examples' shared
+profile it has, through a logistic (`intercept`, `slope`). The cues' saliences are one
+Dirichlet simplex (`salience`), one component per cue kept. A cue's neutral value is its
+component at 0. The judgment is a ratio of salience-weighted sums, so the other cues' scale
+does not matter, and the model without the cue is that point with the rest renormalized.
+The final has no person-level parameters: the run hid `participant_id`.
 
 | mechanism | parameters | what it does | needs |
 |---|---|---|---|
-| `intercept` | intercept | a bias toward yes or no | |
-| `similarity` | gain | credit for the target's final-digit similarity to the examples | |
-| `parity` | s_parity | partial similarity for a shared parity without a shared last digit (off: last digits only) | `similarity` or `mutual_standard` |
-| `parity_preempt` | preempt | a shared final-digit rule pre-empts the parity credit | `parity` |
-| `mutual_standard` | standard | a penalty for the shortfall of the target's similarity below the examples' similarity to each other | |
-| `common_factor` | factor_boost | multiples of the examples' common factor (≥ 3, not a multiple of 5) | |
-| `round_factor` | round_boost | multiples of a round common factor (a multiple of 5) | |
-| `decade_band` | band_boost, band_width | familiarity for targets in or near the examples' decade band | |
-| `magnitude_preempt` | magnitude_preempt | an explicit rule (shared last digit, common factor ≥ 3) pre-empts the band credit | `decade_band` |
-| `counting` | count_boost | support for targets reached by counting up from one example | |
-| `count_step_cost` | step_cost | that support decays per extra step (off: every reach counts alike) | `counting` |
-| `size_principle` | size_strength | each confirming example beyond the second makes breaking a shared final-digit rule cost more | |
-| `even_rule` | even_rule_penalty | an all-even set rejects odd targets by an extra amount | |
+| `parity`, `prime`, `square_cube`, `power`, `multiple`, `last_digit`, `contains_digit`, `round_multiple` | a salience each | the property families the examples share, and whether the target has them (`multiple`: of 3–12 but 5 and 10; `round_multiple`: of 5 and 10; `power`: of 2–10) | |
+| `range_low`, `range_high` | a salience each; `band_width` (shared) | the target not below the smallest example / not above the largest, fading as a Gaussian of the gap | (one stays) |
+| `seed` | a salience | multiples of the smallest example, when every example is one | |
+| `progression` | a salience | the examples' arithmetic progression, continued | |
+| `span` | a salience; `span_width` | closeness to the examples' span | |
+| `retain` | retain (neutral 1) | a visible shared last digit down-weights every other cue | `last_digit` |
+| `recency`, `primacy` | recency, primacy (neutral 0) | with no shared last digit, the last / first example's last digit, relative to the last-digit cue | `last_digit` |
+| `doubt_single`, `doubt_multi` | doubt0, doubt_multi (neutral −1000: a doubt rate of 0 in float64); `random_yes` while either is on | rule-ambiguity doubt on one-example / multi-example sets: the target is judged by a flat "yes" rate instead | |
+| `doubt_rich`, `doubt_rich_multi` | doubt_rich, doubt_rich_multi (neutral 0) | that doubt rises with the number of rules every example fits | `doubt_single` / `doubt_multi` |
+| `parity_keep` | parity_keep (neutral 0) | the doubt's flat "yes" keeps the examples' shared parity | a doubt |
+| `doubt_band` | doubt_band_width (neutral ∞) | on multi-example sets the doubt's "yes" keeps their magnitude neighbourhood (the change run 2 ended on) | `doubt_multi` |
+| `memory_limit` | drop (neutral 0) | with four examples, one drops out of working memory; the judgment averages over which | |
 
-"Needs" works like person-level variation in sr-oct26: a modifier goes before the term it
-modifies. `parity` acts only through the similarity and the mutual standard, so it needs one
-of them. The band's width is part of `decade_band`: it has no value at which the band term
-is absent.
+"Needs" works like person-level variation in sr-oct26: a modifier goes before what it
+modifies. The last-digit modifiers act through the last-digit cue's salience: without it,
+the down-weighting of every cue is a common scale the ratio ignores. One range cue stays
+because every item has the range cues in the judgment's denominator, and no other cue
+guarantees a positive one. The band's and the span's widths are part of their cues: they
+have no value at which the cue is absent. 20 of the 23 mechanisms are removable at the start,
+so round 1 is 21 models × 5 folds = 105 fits.
 
 ## 2. The rule (fixed 2026-10-27, before any fit; the data changed to all runs pooled on 2026-11-04, after the run-1 elimination, nothing else)
 
@@ -114,7 +127,7 @@ total cost against the full final, with its SE: drops that each fall below 2 SE 
 
 **Where the settings differ from what the run used, and why.**
 - **5 folds, not the run's 4.** The run's folds served selection inside the loop. Here the
-  sr-oct26 rule (5 folds) applies, and the 241 example sets split into 5 equal folds.
+  sr-oct26 rule (5 folds) applies, and the 244 example sets split into 5 equal folds.
 - **Production NUTS, not the run's cheap `warm_start_nuts`** (200 tuning steps, 500 draws).
   Those settings were for selection inside the loop, not for a final analysis.
 - **The SE is clustered by example set.** The run's own comparison (`model_posterior.json`)
@@ -145,8 +158,8 @@ total cost against the full final, with its SE: drops that each fall below 2 SE 
    (`scripts/number_game/slurm/ablation.sbatch`, modelled on the sr-oct26 one).
    - **Setup:** builds the shared venv, stages the code once into `$WORK_ROOT/code`, and
      writes the three runs' pooled responses to `$WORK_ROOT/data/responses.csv`. `$WORK_ROOT`
-     is `$SCRATCH/auto-psych/ng_ablation_pooled` (the run-1 ablation's
-     `$SCRATCH/auto-psych/ng_ablation` holds other data and code; setup would refuse it). Every later job runs the staged code, so the checkout
+     is `$SCRATCH/auto-psych/ng_ablation_nov26` (the October ablations'
+     `ng_ablation_pooled` and `ng_ablation` hold other code; setup would refuse them). Every later job runs the staged code, so the checkout
      can move on. A setup on other code refuses.
    - **Driver** (1 core): replays the rule over the saved fits. It then submits the round's
      missing (model, fold) fits as one array of 5 fits per task (4 cores, 16 GB, ≤ 8 h,
@@ -157,16 +170,17 @@ total cost against the full final, with its SE: drops that each fall below 2 SE 
    - **Knobs:** `SEEDS`, `WORKER_PARTITION`, `WORKER_CPUS`, `WORKER_MEM`, `WORKER_TIME`,
      `TASKS_PER_JOB`, `MAX_PARALLEL`, `MAX_ATTEMPTS`.
 
-2. **Cost**, from the fit measured on run 1's data (~6 min on 4 cores), scaled by the
-   pooled data's 3× responses: expect ~20 min and ~1.3 core-hours a fit, not yet measured.
-   - Round 1 is 55 fits: (1 + 10) models × 5 folds. That is 11 array tasks of ~1.5 h, about
-     70 core-hours.
-   - Each later round costs one model fewer, plus any it newly opens (a term whose modifier
-     went). It runs until the rule stops. If every round dropped something down to one term,
-     85 models would be scored: 425 fits, about 550 core-hours. The run-1 elimination took
-     7 rounds.
-   - The wall time is set by the rounds, which run in order: up to 13, each ~1.5–2 h of
-     fitting plus queue waits. Expect one to two days.
+2. **Cost** of the November final, not yet measured on Sherlock: its own pooled fold fits
+   took ~11 h on 4 cores, and the per-item rewrite (section 1) makes a gradient ~10× cheaper,
+   so expect ~1–1.5 h and ~5 core-hours a fit. One fold fit of `ng_full` should be measured
+   before the chain, and `TASKS_PER_JOB`, `WORKER_TIME` and the per-attempt
+   `--time-limit-hours` set from it (the defaults assume ~20-minute fits).
+   - Round 1 is 105 fits: (1 + 20) models × 5 folds, about 500 core-hours.
+   - Each later round costs one model fewer, plus any it newly opens (a cue whose modifiers
+     went). It runs until the rule stops. If every round dropped something down to one cue
+     (22 rounds), 234 models would be scored: 1,170 fits, ~6,000 core-hours.
+   - The wall time is set by the rounds, which run in order: up to 22, each ~1.5–3 h of
+     fitting plus queue waits.
    - Smaller variants may sample faster or slower than the full model; the attempt records
      (`cv/<model>/fold<k>.json`, `seconds`) show it.
 
@@ -180,13 +194,13 @@ total cost against the full final, with its SE: drops that each fall below 2 SE 
      submit the same round twice.
 
 4. **Bring back** `elimination.json`, `summary.md`, `lean/` and `cv/*/*.json` to
-   `data/results/number_game_dataset-oct26/analysis/ablation/`:
+   `data/results/number_game_dataset-nov26/analysis/ablation/`:
 
    ```bash
-   SRC=shr:/scratch/users/<sunetid>/auto-psych/ng_ablation_pooled   # Sherlock's $SCRATCH
+   SRC=shr:/scratch/users/<sunetid>/auto-psych/ng_ablation_nov26   # Sherlock's $SCRATCH
    rsync -av --prune-empty-dirs --include='*/' --include='elimination.json' --include='summary.md' \
      --include='lean/**' --include='cv/*/*.json' --exclude='*' \
-     "$SRC/ng/" data/results/number_game_dataset-oct26/analysis/ablation/
+     "$SRC/ng/" data/results/number_game_dataset-nov26/analysis/ablation/
    ```
 
    These hold sums and per-fold summaries only; no response data. The `cv/*/*.npz` files hold
