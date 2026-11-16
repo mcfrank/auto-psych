@@ -630,7 +630,10 @@ decision with its reason, how it differs from main (§3), and every run in order
   memo twin; `src/rsa/viz/`: the campaign figures in `docs/auto_rsa/figures/`).
 - **`data/rsa/`** holds the runs' records, brought back from Sherlock:
   aggregates, model files, agent transcripts, never Prolific participant ids
-  or trial-level live data (`data/rsa/README.md`). Run directories named
+  (`data/rsa/README.md`). The live studies' trial data are shared
+  de-identified in `data/rsa_shared/` (keyed hash for Prolific ids, no free
+  text; `scripts/rsa/share_trials.py`); the key and the Prolific map stay on
+  Sherlock (`~/.auto-psych-private/`) and the PI's machine. Run directories named
   `private/` there hold only scores (`prospective.json`, `recovery.json`) and
   configs, not the cluster's private files.
 - **Cluster**: `scripts/rsa/slurm/` (each job stages its code once and records

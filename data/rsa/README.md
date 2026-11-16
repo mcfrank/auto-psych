@@ -2,8 +2,9 @@
 
 Every directory here is a record of a run in the RSA campaign (`docs/auto_rsa/CAMPAIGN_LOG.md`
 §4 lists them in order, with what each found). They hold aggregates, designs, model files,
-loop histories, reports and agent transcripts. They never hold Prolific participant ids or
-trial-level live data: those stayed on Sherlock, in each cell's `private/` directory. A
+loop histories, reports and agent transcripts. They never hold Prolific participant ids, which
+stay on Sherlock, in each cell's `private/` directory. The live studies' trial data are shared,
+de-identified, in `../rsa_shared/` (2026-11-15). A
 `private/` directory *here* holds only scores (`prospective.json`, `recovery.json`) and the
 run's `outer_config.json`.
 
