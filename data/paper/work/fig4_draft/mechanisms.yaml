@@ -1,0 +1,38 @@
+# Figure 4 draft: each ablated mechanism's readable name and kind. The kinds are a JUDGEMENT to check:
+#   person    - person-level variation in a parameter
+#   literature - an idea from a seed/literature account
+#   new       - introduced by the discovered model
+#   response  - the response process (lapse, attention to the task)
+subjective_randomness:
+  ideal_personal: [personal ideal alternation rate, person]
+  beta_personal: [personal sensitivity to alternation, person]
+  asymmetry: [over-alternation weighted apart, new]
+  imbalance: [heads/tails imbalance, literature]          # Kahneman & Tversky: local representativeness
+  imbalance_personal: [personal weight on imbalance, person]
+  longest_run: [longest run, literature]                  # Falk & Konold; Kahneman & Tversky
+  longest_run_personal: [personal weight on longest run, person]
+  final_run: [long final run (recency), new]
+  palindrome: [palindrome looks designed, literature]     # Griffiths et al.: regular generators
+  variety: [varied run lengths look random, new]
+  lopsided: [most lopsided stretch, new]
+  antisymmetry: [mirror-complement looks designed, new]
+  gain_personal: [personal pattern-detection gain, person]
+  lapse: [lapse (guessing), response]
+  lapse_personal: [personal lapse rate, person]
+rsa:
+  depth2: [second-order pragmatic listener, literature]   # RSA recursion (Frank & Goodman)
+  interior: [interior-match suppression, new]
+  avoidable: [avoidable-ambiguity cost, new]
+  confusion: [confusable-referent penalty, new]
+  singleton: ["salience: unique object", new]
+  distinct: ["salience: distinctive features", new]
+  features: ["salience: number of features", new]
+  typicality: ["salience: typicality", new]
+  valence: [framing shifts feature weight, new]
+  color: ["salience: colour", new]
+  attention: [attention gate, response]
+  popout: ["attention: pop-out", response]
+  load: ["attention: display load", response]
+  candidate: ["attention: number of matches", response]
+  inhibit_leak: [inattention captured by matches, response]
+  outlier: [solitary-foil outlier, new]
