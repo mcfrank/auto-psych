@@ -166,13 +166,21 @@ campaign the whole literature and its chain's experiments. The page outlines eve
 never saw. To make that visible on the literature, the report splits pragmods into `pragmods_trials` (plain) and
 `pragmods_prior` (the manipulated-prior experiments) from each trial's unit; the folds are unchanged, so no refit.
 
-**Complexity** (`src/rsa_open/complexity.py`): lines of code, AST nodes, Halstead volume and compressed bytes, all on the
-code without comments or docstrings, with parameters and hand-set numbers beside them. On the grid, whose complexity
+**Complexity** (`src/rsa_open/complexity.py`): lines of code, AST nodes, Halstead volume and compressed bytes, all on a
+theory's **active code**, with parameters and hand-set numbers beside them. Active code is the file without comments or
+docstrings, without dead code (helpers, assignments, imports nothing uses), and without switched-off mechanisms: the
+consolidation's variant files carry the whole superset and switch mechanisms off by fixing their weights at 0 or with
+`if "<mechanism>" in on` blocks, so they are partially evaluated (blocks resolved, zero weights substituted and
+simplified away, then dead code removed). A test checks that the pruned files predict exactly as the originals. Lines
+are counted in the author's layout; the other measures read one canonical layout, so formatting costs nothing. Numbers
+inside prior distributions are not counted as hand-set; numerical-safety sentinels (a mask of 999, a floor of 1e-15)
+are, as the loop's gate counts them. On the grid, whose complexity
 is known by construction, AST nodes, Halstead volume and compressed bytes rise every time an axis is switched on (161
 of 161 pairs); lines of code miss 33 (switching to graded meanings changes a line and adds none), so lines is the
 weakest measure (`tests/test_rsa_open_complexity.py`). The page plots fit against each measure with the grid's
 frontier, the best textbook score at each size, as the reference: no exchange rate between nats and code is chosen.
-The consolidation files carry the superset's switched-off code, so code size overstates them (drawn hollow).
+With only active code counted, the lean consolidation is a quarter smaller than the full superset (1,381 against
+1,807 AST nodes).
 
 **An early look** (the nine of the 31 already fitted on the committed literature in the stage-1 refit, same folds; not
 the Sherlock run): against the best grid theory, the 6-parameter seed gains +149 (2.8 SE), the fixed arm's second and

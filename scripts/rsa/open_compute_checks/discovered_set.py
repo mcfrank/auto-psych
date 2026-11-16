@@ -19,7 +19,7 @@ origin and **lineage**: the data the theorists who made it, or the loop that sel
   (`docs/auto_rsa/CONSOLIDATION.md`), each wrapped (`WRAPPER`: the closed model at lapse 0, the link's lapse
   in its place, as the port's rule (a); the port cannot read their `make()`-built PARAMS). Seen: the plain literature and all nine closed experiments
   (not the pre-registered final). Both files carry the superset's whole source with mechanisms switched on by a
-  footer, so code-size complexity overstates them (flagged).
+  footer; `src.rsa_open.complexity` measures only the switched-on mechanisms.
 - **open pilot 1** and **stage 1** (open and fixed arms): each experiment's incumbent, already in the open format.
   Seen: the whole literature block (the open campaign's E keeps every display) and the chain's experiments so far.
 
@@ -118,13 +118,11 @@ def entries() -> List[Dict]:
         name, path = write_variant(MECHANISMS, Path(tmp))
         out.append(dict(name=name, group="consolidation", origin=f"src.rsa.consolidate.variants.write_variant(all {len(MECHANISMS)} mechanisms)",
                         source=_consolidated(path.read_text()), rationale="The closed consolidation's superset: every mechanism switched on.",
-                        seen={"literature": "plain", "studies": [f"closed_c{c}e{x}" for c in range(3) for x in range(1, 4)]},
-                        whole_superset=True))
+                        seen={"literature": "plain", "studies": [f"closed_c{c}e{x}" for c in range(3) for x in range(1, 4)]}))
     for path in sorted(LEAN.glob("*.py")):
         out.append(dict(name=path.stem, group="consolidation", origin=str(path.relative_to(REPO)),
                         source=_consolidated(path.read_text()), rationale=_rationale(LEAN, path.stem) or "Backward elimination's survivor.",
-                        seen={"literature": "plain", "studies": [f"closed_c{c}e{x}" for c in range(3) for x in range(1, 4)]},
-                        whole_superset=True))
+                        seen={"literature": "plain", "studies": [f"closed_c{c}e{x}" for c in range(3) for x in range(1, 4)]}))
     for x in (1, 2):
         loop = OPEN_PILOT / f"experiment{x}/loop"
         name = _best(loop)
@@ -144,7 +142,7 @@ def entries() -> List[Dict]:
 
 
 def write(out_dir: Path = OUT) -> Path:
-    from src.rsa_open.complexity import hand_set_numbers
+    from src.rsa_open.complexity import measure
 
     out_dir.mkdir(parents=True, exist_ok=True)
     rows, seen_hash = [], {}
@@ -155,7 +153,7 @@ def write(out_dir: Path = OUT) -> Path:
         seen_hash[digest] = e["name"]
         (out_dir / f"{e['name']}.py").write_text(e["source"])
         rows.append({k: v for k, v in e.items() if k != "source"}
-                    | {"hand_set_numbers": hand_set_numbers(e["source"]), "sha256": digest})
+                    | {"hand_set_numbers": measure(e["source"])["hand_set_numbers"], "sha256": digest})
     (out_dir / "models_manifest.yaml").write_text(yaml.safe_dump({"models": rows}, sort_keys=False, width=120))
     print(f"[discovered] {len(rows)} theories -> {out_dir}")
     for g in dict.fromkeys(r["group"] for r in rows):

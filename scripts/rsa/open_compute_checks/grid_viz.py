@@ -139,8 +139,7 @@ def build(corpus: Path, grid_dir: Path, fits: Path, extra=()) -> Dict:
             row.update(depth=e["depth"], salience=e["salience"], kind=e["kind"] or "", semantics=e["semantics"],
                        cost=e["cost"])
         else:
-            row.update(rationale=e.get("rationale", ""), origin=e.get("origin", ""),
-                       whole_superset=bool(e.get("whole_superset")))
+            row.update(rationale=e.get("rationale", ""), origin=e.get("origin", ""))
         theories.append(row)
 
     displays: Dict[tuple, Dict] = {}

@@ -419,8 +419,7 @@ models:
     - closed_c2e1
     - closed_c2e2
     - closed_c2e3
-  whole_superset: true
-  hand_set_numbers: 20
+  hand_set_numbers: 11
   sha256: 5da811ce6f4748e812b73e4fef5837e1506a8cdfa7719775e9fdbc1121e6b5f0
 - name: cons_dup_sur_red_asp_int_comp_bind
   group: consolidation
@@ -438,8 +437,7 @@ models:
     - closed_c2e1
     - closed_c2e2
     - closed_c2e3
-  whole_superset: true
-  hand_set_numbers: 20
+  hand_set_numbers: 8
   sha256: 3802b92e35841b6f0d57efb548a1aaac127e3864dd22c57733c90938952d57b1
 - name: pilot1_e1_speaker_alternative_necessity_tom
   group: open pilot 1

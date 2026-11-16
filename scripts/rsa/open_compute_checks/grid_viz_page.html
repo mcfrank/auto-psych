@@ -172,7 +172,8 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
       <h2>Fit against complexity</h2>
       <p>Each theory's score against how much code its author wrote. Grey points are the grid and the grey line its
         frontier: the best textbook score reachable at each size. A theory above the line fits better than any
-        textbook theory as small. Complexity is measured on the code alone, without comments or docstrings.</p>
+        textbook theory as small. Complexity counts only a theory's active code: no comments or docstrings, no dead code,
+        and none of the consolidation's switched-off mechanisms.</p>
     </div>
     <div class="controls">
       <div class="control"><span class="label">Complexity</span><div class="chips" id="cx-chips" role="group" aria-label="Complexity measure"></div></div>
@@ -489,15 +490,13 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
     const draw = (t) => {
       const x = X(cxValue(t, m)), y = Y(yOf(t)), grid = isGrid(t);
       const color = grid ? css("--axis") : css(GCOLOR[t.group]);
-      const hollow = !grid && t.whole_superset;
-      const dot = el("circle", { cx: x, cy: y, r: grid ? 4 : 6, fill: hollow ? css("--surface") : color, stroke: hollow ? color : css("--surface"),
-        "stroke-width": hollow ? 2 : 1.5, tabindex: 0 }, svg);
+      const dot = el("circle", { cx: x, cy: y, r: grid ? 4 : 6, fill: color, stroke: css("--surface"), "stroke-width": 1.5, tabindex: 0 }, svg);
       if (yOf(t) < ylo) el("text", { x, y: y + 14, "text-anchor": "middle", "font-size": 9, fill: css("--muted"), text: `▼${fmt(yOf(t))}` }, svg);
       const vb = state.cxStudy === "pooled" ? t.vs_best : t.studies[state.cxStudy].vs_best;
       const rows = () => [["score", `${fmt(yOf(t))} nats over plain RSA`], ["against the best grid theory", fmt(vb)],
         ["Halstead volume", String(t.complexity.halstead_volume)], ["AST nodes", String(t.complexity.ast_nodes)], ["lines", String(t.complexity.lines)],
         ["compressed bytes", String(t.complexity.compressed_bytes)], ["parameters", `${t.complexity.n_params}${t.complexity.hand_set_numbers ? ` + ${t.complexity.hand_set_numbers} by hand` : ""}`],
-        ...(t.whole_superset ? [["note", "carries the superset's switched-off code"]] : []), ...(t.converged ? [] : [["fit", "did not converge"]])];
+        ...(t.converged ? [] : [["fit", "did not converge"]])];
       const on = (ev) => showTip(ev, short(t), rows(), grid ? "standard RSA grid" : t.group);
       dot.addEventListener("pointermove", on); dot.addEventListener("focus", on);
       dot.addEventListener("pointerleave", hideTip); dot.addEventListener("blur", hideTip);
@@ -510,7 +509,7 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
       const it = el("span", { class: "item" }, lg); const k = el("svg", { width: 12, height: 12, viewBox: "-6 -6 12 12" }, it);
       el("circle", { r: 5, fill: css(GCOLOR[g]) }, k); it.append(g);
     }
-    el("span", { class: "item", text: "hollow: consolidation files carry the superset's switched-off code, so code size overstates them" }, lg);
+    el("span", { class: "item", text: "complexity counts only active code: switched-off mechanisms and dead code are left out" }, lg);
   }
 
   // ---------- contrasts ----------
