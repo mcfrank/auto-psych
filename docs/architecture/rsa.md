@@ -26,6 +26,7 @@ decision and run); `LOOP_ALGORITHM.md` spells out the live loop.
   OSF) **and don't move `src/rsa/prereg/`** (the bundle hashes code by path).
   Its data are spent: nothing chosen after seeing them may be judged on them
   again (`docs/auto_rsa/CONSOLIDATION.md` §5).
-- `data/rsa/` holds run records: never Prolific IDs or trial-level live data.
+- `data/rsa/` holds run records: never Prolific IDs. The live trial data are in
+  `data/rsa_shared/`, de-identified (keyed hash for Prolific ids, no free text).
 - Cluster scripts: `scripts/rsa/slurm/`, live launchers `scripts/rsa/live/`.
 

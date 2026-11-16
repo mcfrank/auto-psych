@@ -1,0 +1,110 @@
+{
+ "studies": {
+  "closed_pilot": {
+   "experiment1": {
+    "submissions": 20,
+    "kept": null
+   },
+   "trial_rows": 320
+  },
+  "closed_c0": {
+   "experiment1": {
+    "submissions": 200,
+    "kept": 185
+   },
+   "experiment2": {
+    "submissions": 201,
+    "kept": 193
+   },
+   "experiment3": {
+    "submissions": 201,
+    "kept": 185
+   },
+   "trial_rows": 11438
+  },
+  "closed_c1": {
+   "experiment1": {
+    "submissions": 200,
+    "kept": 189
+   },
+   "experiment2": {
+    "submissions": 201,
+    "kept": 165
+   },
+   "experiment3": {
+    "submissions": 200,
+    "kept": 193
+   },
+   "trial_rows": 11419
+  },
+  "closed_c2": {
+   "experiment1": {
+    "submissions": 196,
+    "kept": 178
+   },
+   "experiment2": {
+    "submissions": 200,
+    "kept": 181
+   },
+   "experiment3": {
+    "submissions": 200,
+    "kept": 190
+   },
+   "trial_rows": 11324
+  },
+  "closed_final": {
+   "experiment1": {
+    "submissions": 1225,
+    "kept": 1108
+   },
+   "trial_rows": 23275
+  },
+  "open_pilot1": {
+   "experiment1": {
+    "submissions": 141,
+    "kept": 123
+   },
+   "experiment2": {
+    "submissions": 163,
+    "kept": 151
+   },
+   "experiment3": {
+    "submissions": 195,
+    "kept": 155
+   },
+   "trial_rows": 18987
+  },
+  "s1_open": {
+   "experiment1": {
+    "submissions": 201,
+    "kept": 190
+   },
+   "experiment2": {
+    "submissions": 200,
+    "kept": 157
+   },
+   "experiment3": {
+    "submissions": 252,
+    "kept": 228
+   },
+   "trial_rows": 23882
+  },
+  "s1_fixed": {
+   "experiment1": {
+    "submissions": 401,
+    "kept": 354
+   },
+   "experiment2": {
+    "submissions": 399,
+    "kept": 338
+   },
+   "experiment3": {
+    "submissions": 400,
+    "kept": 354
+   },
+   "trial_rows": 27099
+  }
+ },
+ "people": 4219,
+ "submissions": 5396
+}

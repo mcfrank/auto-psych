@@ -89,8 +89,10 @@ prior over the carried set).
 - Starting models are not protected: they are pruned like any model.
 - **RSA pre-registration:** never change the frozen files or move
   `src/rsa/prereg/` (list in `docs/architecture/rsa.md`).
-- Never commit Prolific IDs, trial-level live RSA data, or trial-level data from
-  an unlicensed or NC-ND source.
+- Never commit Prolific IDs, free text, or trial-level data from an unlicensed
+  or NC-ND source. Live RSA trial data are committed only de-identified, through
+  `scripts/rsa/share_trials.py` (`data/rsa_shared/`); its key and the Prolific
+  map stay on Sherlock and the PI's machine.
 - **Live runs recruit real people and spend real money:** double-gated
   (config **and** `--confirm-live-recruitment`); `scancel` does not stop a
   published Prolific study.
