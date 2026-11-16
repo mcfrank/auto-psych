@@ -144,6 +144,7 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
         from the first level to the second, for each source. Wins counts the pairs in which the second level fits better overall.</p>
     </div>
     <div class="controls">
+      <label class="check"><input type="checkbox" id="drop-unconv" checked> leave out pairs with a fit that did not converge</label>
       <label class="check"><input type="checkbox" id="with-d0"> include depth-0 pairs (the literal listener has no speaker, so salience and cost act differently there)</label>
     </div>
     <div class="card scroll-x"><svg id="contrasts" role="img" aria-label="Average change in fit for each modelling choice, by source"></svg></div>
@@ -242,7 +243,7 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
   const hideTip = () => { tip.hidden = true; };
 
   // ---------- state ----------
-  const state = { study: "pooled", a: null, b: ref, src: "all", word: "all", sort: "diff", shown: 30, withD0: false };
+  const state = { study: "pooled", a: null, b: ref, src: "all", word: "all", sort: "diff", shown: 30, withD0: false, dropUnconv: true };
   const best = [...T].sort((x, y) => y.pooled - x.pooled)[0];
   state.a = best.name;
 
@@ -359,6 +360,7 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
       const pairs = [];
       for (const x of T) if (from(x)) for (const y of T) if (to(y) && keep.every((a) => x[a] === y[a])) {
         if (!state.withD0 && axis !== "depth" && x.depth === 0) continue;
+        if (state.dropUnconv && !(x.converged && y.converged)) continue;
         pairs.push([x, y]);
       }
       if (!pairs.length) continue;
@@ -531,6 +533,7 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
   }
   document.getElementById("more").addEventListener("click", () => { state.shown += 30; renderDisplays(); });
   document.getElementById("table-view").addEventListener("toggle", (e) => { if (e.target.open) renderTable(); });
+  document.getElementById("drop-unconv").addEventListener("change", (e) => { state.dropUnconv = e.target.checked; drawContrasts(); });
   document.getElementById("with-d0").addEventListener("change", (e) => { state.withD0 = e.target.checked; drawContrasts(); });
 
   chips("study-chips", [["pooled", "All three, pooled"], ...B.studies.map((s) => [s.id, s.label])], "study", drawGrid);
