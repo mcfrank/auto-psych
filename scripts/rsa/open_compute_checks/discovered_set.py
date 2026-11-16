@@ -1,7 +1,7 @@
 """The seeds and discovered theories scored beside the standard-RSA grid (docs/auto_open/RSA_GRID.md, PI 2026-11-16).
 
     uv run python scripts/rsa/open_compute_checks/discovered_set.py            # writes data/rsa_open/grid/discovered/
-    uv run python scripts/rsa/open_compute_checks/discovered_set.py check      # gates and contracts, before any fit
+    uv run python scripts/rsa/open_compute_checks/discovered_set.py check [DIR NAME...]   # gates and contracts, before any fit
 
 Every theory as an open-format file (`PARAMS`, `listener`), with a `models_manifest.yaml` giving each one's group,
 origin and **lineage**: the data the theorists who made it, or the loop that selected it, had seen. The page marks each
@@ -165,7 +165,7 @@ def write(out_dir: Path = OUT) -> Path:
 
 
 
-def check(theory_dir: Path = OUT, n_pool: int = 60, n_lit: int = 80) -> None:
+def check(theory_dir: Path = OUT, only=(), n_pool: int = 60, n_lit: int = 80) -> None:
     """Before any fit: every theory passes the code and shape gates, loads, and meets the listener and speaker
     contracts (valid distributions, finite gradients) on displays from the design pool and the committed literature
     (pragmods' valence, familiarization and colour displays included). Raises on the first failure, naming it."""
@@ -192,6 +192,11 @@ def check(theory_dir: Path = OUT, n_pool: int = 60, n_lit: int = 80) -> None:
                 contexts += [group[i] for i in rng.choice(len(group), min(len(group), n_lit // 2), replace=False)]
     groups = group_by_shape(contexts)
     names = [e["name"] for e in yaml.safe_load((theory_dir / "models_manifest.yaml").read_text())["models"]]
+    if only:  # a subset by name (one process per theory keeps memo's compiled code from piling up)
+        unknown = sorted(set(only) - set(names))
+        if unknown:
+            raise ValueError(f"not in the manifest: {unknown}")
+        names = [n for n in names if n in only]
     for name in names:
         source = (theory_dir / f"{name}.py").read_text()
         problems = code_problems(source) + theory_shape_problems(source)
@@ -206,6 +211,6 @@ def check(theory_dir: Path = OUT, n_pool: int = 60, n_lit: int = 80) -> None:
 
 if __name__ == "__main__":
     if sys.argv[1:2] == ["check"]:
-        check(Path(sys.argv[2]) if len(sys.argv) > 2 else OUT)
+        check(Path(sys.argv[2]) if len(sys.argv) > 2 else OUT, only=tuple(sys.argv[3:]))
     else:
         write(Path(sys.argv[1]) if len(sys.argv) > 1 else OUT)

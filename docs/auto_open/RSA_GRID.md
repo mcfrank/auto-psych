@@ -156,8 +156,9 @@ closed campaign's 12 seeds that are not grid corners, each closed chain's best t
 ported mechanically by `src.rsa_open.port` and otherwise unchanged), the closed consolidation's superset and its
 backward-elimination survivor (wrapped: the closed model at lapse 0 with the link's lapse, as the port's rule (a)),
 open pilot 1's two incumbents and stage 1's six. `discovered_set.py check` runs the code and shape gates and the
-listener and speaker contracts on design-pool and literature displays before any fit (in progress at this commit:
-the first 15 passed). The closed theories keep their hand-set
+listener and speaker contracts on design-pool and literature displays before any fit (at this commit 20 of 31
+passed in one process, which then ran out of memory compiling; the rest are being checked one per process:
+`check DIR NAME`). The closed theories keep their hand-set
 numbers (the closed campaign had no rule against them); the manifest counts them.
 
 **Lineage.** Each theory records the data its makers had seen: the closed campaign's literature block (which left out
