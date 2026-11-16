@@ -4,7 +4,9 @@ grid theory, or report (docs/auto_open/RSA_GRID.md). No agents, no Prolific; the
     python scripts/rsa/open_compute_checks/rsa_grid.py corpus --studies studies.yaml --out corpus.json
     python -m src.rsa_open.grid grid/                        # the 66 theory files and their manifest
     python scripts/rsa/open_compute_checks/rsa_grid.py fit --corpus corpus.json --grid grid --index $i --out fits
-    python scripts/rsa/open_compute_checks/rsa_grid.py report --corpus corpus.json --grid grid --out fits
+    python scripts/rsa/open_compute_checks/rsa_grid.py report --corpus corpus.json --grid grid --out fits \
+        [--extra data/rsa_open/grid/discovered]               # seeds and discovered theories, fitted into fits/ too
+    (fit them with `fit --grid data/rsa_open/grid/discovered --index $i --out fits`)
 
 `studies.yaml` lists the studies (each path a copy, never the original):
 
@@ -35,6 +37,10 @@ sys.path.insert(0, str(REPO))
 import src.rsa_open  # noqa: E402,F401  (XLA's CPU pool size, before anything starts JAX)
 
 REFERENCE = "grid_d1_nosal_bool_nocost"  # plain RSA (rsa_l1)
+# pragmods' experiments that manipulate the prior (familiarization base rates, valence, colour salience, greyscale): the
+# closed campaign's literature block left them out (docs/auto_rsa/LOOP_ALGORITHM.md, E), so its theories never saw
+# them. Reported as their own study, `pragmods_prior`, split from each trial's unit (no refit: the folds are unchanged).
+PRIOR_MANIPULATIONS = {"E5_baserate", "E6_valence", "E7_color", "color_prior_rerun"}
 AXES = ("depth", "salience", "kind", "semantics", "cost")
 
 
@@ -116,18 +122,33 @@ def fit_one(corpus: Path, grid_dir: Path, index: int, out: Path, folds: int, war
     print(f"[grid fit] {name}: converged {cv.converged}, {(time.time() - t) / 60:.1f} min", flush=True)
 
 
+def study_labels(block) -> np.ndarray:
+    """Each trial's study: its source, with pragmods' prior-manipulation experiments as `pragmods_prior`."""
+    sources = np.asarray(b_sources(block), dtype=object)
+    for i, (s, u) in enumerate(zip(sources, block.units)):
+        if s == "pragmods_trials":
+            parts = str(u).split(":", 1)[-1].split("|")
+            if len(parts) > 1 and parts[1] in PRIOR_MANIPULATIONS:
+                sources[i] = "pragmods_prior"
+    return sources.astype(str)
+
+
+def b_sources(block):
+    return block.sources if block.sources else [block.name] * block.n
+
+
 def study_scores(lpd: Dict[str, np.ndarray], blocks) -> Dict[str, tuple]:
     """study -> (per-trial lpd, unit index) over every block, each study's trials only."""
     out = {}
     for b in blocks:
-        sources = np.asarray(b.sources) if b.sources else np.full(b.n, b.name)
+        sources = study_labels(b)
         for s in sorted(set(sources)):
             m = sources == s
             out[s] = (lpd[b.name][m], np.unique(np.asarray(b.units)[m], return_inverse=True)[1])
     return out
 
 
-def report(corpus: Path, grid_dir: Path, out: Path) -> Dict:
+def report(corpus: Path, grid_dir: Path, out: Path, extra=()) -> Dict:
     import yaml
 
     from src.models.clustered_se import cluster_dse
@@ -135,14 +156,23 @@ def report(corpus: Path, grid_dir: Path, out: Path) -> Dict:
 
     blocks = read_corpus(corpus)
     manifest = {e["name"]: e for e in yaml.safe_load((Path(grid_dir) / "models_manifest.yaml").read_text())["models"]}
+    extras = {}
+    for d in extra:  # seeds and discovered theories (discovered_set.py): scored, not in the axis contrasts
+        for e in yaml.safe_load((Path(d) / "models_manifest.yaml").read_text())["models"]:
+            if e["name"] in manifest or e["name"] in extras:
+                raise ValueError(f"{e['name']} is named twice")
+            extras[e["name"]] = e
+    done_extra = [n for n in extras if (out / f"{n}.npz").exists()]
     done = [n for n in manifest if (out / f"{n}.npz").exists()]
     if REFERENCE not in done:
         raise FileNotFoundError(f"{REFERENCE} (plain RSA) has no fit: the report is relative to it")
-    scores = {n: study_scores(dict(np.load(out / f"{n}.npz")), blocks) for n in done}
-    converged = {n: json.loads((out / f"{n}.json").read_text())["converged"] for n in done}
+    scores = {n: study_scores(dict(np.load(out / f"{n}.npz")), blocks) for n in done + done_extra}
+    converged = {n: json.loads((out / f"{n}.json").read_text())["converged"] for n in done + done_extra}
     studies = list(scores[REFERENCE])
-    result: Dict = {"studies": studies, "theories": {}, "axes": {}, "missing": sorted(set(manifest) - set(done))}
-    for n in done:
+    result: Dict = {"studies": studies, "theories": {}, "axes": {}, "reference": REFERENCE,
+                    "missing": sorted(set(manifest) - set(done)), "extra": done_extra,
+                    "missing_extra": sorted(set(extras) - set(done_extra))}
+    for n in done + done_extra:
         row = {"converged": converged[n], "pooled_vs_rsa": 0.0, "studies": {}}
         for s in studies:
             mine, units = scores[n][s]
@@ -178,7 +208,7 @@ def report(corpus: Path, grid_dir: Path, out: Path) -> Dict:
                                                    > sum(scores[x][s][0].sum() for s in studies))}
         result["axes"][axis] = contrasts
     (out / "grid_report.json").write_text(json.dumps(result, indent=1))
-    ranked = sorted(done, key=lambda n: -result["theories"][n]["pooled_vs_rsa"])
+    ranked = sorted(done + done_extra, key=lambda n: -result["theories"][n]["pooled_vs_rsa"])
     lines = ["| theory | pooled vs plain RSA | " + " | ".join(studies) + " |", "|---" * (len(studies) + 2) + "|"]
     for n in ranked:
         r = result["theories"][n]
@@ -207,6 +237,8 @@ def main(argv=None) -> None:
     ap.add_argument("--grid", type=Path)
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--index", type=int, default=0)
+    ap.add_argument("--extra", type=Path, action="append", default=[],
+                    help="report: a folder of further theories (discovered_set.py), fitted into the same --out")
     ap.add_argument("--folds", type=int, default=5)
     ap.add_argument("--warmup", type=int, default=1000)
     ap.add_argument("--samples", type=int, default=1000)
@@ -216,7 +248,7 @@ def main(argv=None) -> None:
     elif a.mode == "fit":
         fit_one(a.corpus, a.grid, a.index, a.out, a.folds, a.warmup, a.samples)
     else:
-        report(a.corpus, a.grid, a.out)
+        report(a.corpus, a.grid, a.out, a.extra)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,13 @@ display of the corpus's choice blocks, people against any two grid theories. Rea
 fitting.
 
     python scripts/rsa/open_compute_checks/grid_viz.py --corpus corpus.json --grid grid --fits fits \
-        --out data/rsa_open/grid/literature/grid_viz.html
+        [--extra data/rsa_open/grid/discovered] --out data/rsa_open/grid/literature/grid_viz.html
+
+**Seeds and discovered theories** (`--extra`, `discovered_set.py`) are scored against the best converged grid theory,
+per study, with each score marked seen or unseen from the theory's lineage, and every theory gets its code-size
+complexity (`src.rsa_open.complexity`) for the fit-against-complexity panel. A non-grid theory may see more of a display
+than its word structure (familiarization, valence, colour words); its prediction for a display is then the average over
+the display's trials, and `variant_sd` records the largest spread of its log probability within one display and class.
 
 **Displays.** A grid theory sees a display only through its words (the nameable features true of some object) and the
 word said, so trials are grouped by held-out unit and that structure, with objects and words reordered to one
@@ -17,6 +23,7 @@ The page holds aggregates only: counts per display and class, never trial rows o
 
 from __future__ import annotations
 
+import fnmatch
 import itertools
 import json
 import sys
@@ -30,8 +37,8 @@ import numpy as np
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
 TEMPLATE = Path(__file__).with_name("grid_viz_page.html")
-SOURCE_LABELS = {"mayn_demberg_2026": "Mayn & Demberg 2026", "pragmods_trials": "pragmods",
-                 "sikos_2021": "Sikos et al. 2021"}
+SOURCE_LABELS = {"mayn_demberg_2026": "Mayn & Demberg 2026", "pragmods_trials": "pragmods, plain",
+                 "pragmods_prior": "pragmods, prior manipulated", "sikos_2021": "Sikos et al. 2021"}
 
 
 def words_of(scene: Dict) -> List[int]:
@@ -56,15 +63,37 @@ def canonical(scene: Dict):
     return best
 
 
-def build(corpus: Path, grid_dir: Path, fits: Path) -> Dict:
+def theory_complexity(path: Path) -> Dict:
+    from src.rsa_open.complexity import measure
+
+    m = measure(path.read_text())
+    if m["n_params"] is None:  # PARAMS built by code (the consolidation's make()): count by loading
+        from src.rsa_open.fit import TheoryModel
+
+        m["n_params"] = len(TheoryModel(path, name=path.stem).params)
+    return m
+
+
+def build(corpus: Path, grid_dir: Path, fits: Path, extra=()) -> Dict:
     import yaml
 
     from src.rsa_open.loop.fitting import read_corpus
 
+    sys.path.insert(0, str(Path(__file__).parent))
+    from rsa_grid import study_labels
+
     report = json.loads((fits / "grid_report.json").read_text())
     manifest = yaml.safe_load((grid_dir / "models_manifest.yaml").read_text())["models"]
-    done = [e for e in manifest if e["name"] in report["theories"]]
+    for e in manifest:
+        e["group"], e["dir"] = "grid", grid_dir
+    extras = []
+    for d in extra:
+        for e in yaml.safe_load((Path(d) / "models_manifest.yaml").read_text())["models"]:
+            e["dir"] = Path(d)
+            extras.append(e)
+    done = [e for e in manifest + extras if e["name"] in report["theories"]]
     names = [e["name"] for e in done]
+    grid_names = {e["name"] for e in manifest}
     lpd = {n: dict(np.load(fits / f"{n}.npz")) for n in names}
     blocks = read_corpus(corpus)
     raw = json.loads(Path(corpus).read_text())["blocks"]
@@ -74,18 +103,48 @@ def build(corpus: Path, grid_dir: Path, fits: Path) -> Dict:
     ref = report.get("reference", "grid_d1_nosal_bool_nocost")
     units = np.unique(np.concatenate([[f"{b.name}:{u}" for u in b.units] for b in blocks]), return_inverse=True)[1]
     flat = {n: np.concatenate([lpd[n][b.name] for b in blocks]) for n in names}
+    labels = np.concatenate([study_labels(b) for b in blocks])
+    literature = set(np.concatenate([study_labels(b) for b in blocks if b.name == "E"])) if any(
+        b.name == "E" for b in blocks) else set()
+    # the best textbook theory: the converged grid theory with the highest pooled score
+    best_grid = max((n for n in names if n in grid_names and report["theories"][n]["converged"]),
+                    key=lambda n: report["theories"][n]["pooled_vs_rsa"])
+
+    def seen(e, study):
+        if e["group"] == "grid":
+            return None  # textbook theories: nobody discovered them
+        spec = e["seen"]
+        if study in literature:
+            return spec["literature"] == "all" or (spec["literature"] == "plain" and study != "pragmods_prior")
+        return any(fnmatch.fnmatch(study, pat) for pat in spec["studies"])
+
     theories = []
     for e in done:
-        r = report["theories"][e["name"]]
-        theories.append(dict(name=e["name"], depth=e["depth"], salience=e["salience"], kind=e["kind"] or "",
-                             semantics=e["semantics"], cost=e["cost"], converged=r["converged"],
-                             n_params=(e["depth"] >= 1) + (e["salience"] != "none") + (e["cost"] != "none"),
-                             pooled=r["pooled_vs_rsa"], elpd=float(flat[e["name"]].sum()),
-                             pooled_se=0.0 if e["name"] == ref else float(cluster_dse(flat[e["name"]], flat[ref], units)),
-                             studies={s: {"d": v["vs_rsa"], "se": v["se"], "elpd": v["elpd"]}
-                                      for s, v in r["studies"].items()}))
+        n = e["name"]
+        r = report["theories"][n]
+        row = dict(name=n, group=e["group"], converged=r["converged"],
+                   pooled=r["pooled_vs_rsa"], elpd=float(flat[n].sum()),
+                   pooled_se=0.0 if n == ref else float(cluster_dse(flat[n], flat[ref], units)),
+                   vs_best=float(flat[n].sum() - flat[best_grid].sum()),
+                   vs_best_se=0.0 if n == best_grid else float(cluster_dse(flat[n], flat[best_grid], units)),
+                   studies={}, complexity=theory_complexity(e["dir"] / f"{n}.py"))
+        for s, v in r["studies"].items():
+            m = labels == s
+            u = np.unique(units[m], return_inverse=True)[1]
+            row["studies"][s] = {"d": v["vs_rsa"], "se": v["se"], "elpd": v["elpd"],
+                                 "vs_best": float(flat[n][m].sum() - flat[best_grid][m].sum()),
+                                 "vs_best_se": 0.0 if n == best_grid else float(cluster_dse(flat[n][m], flat[best_grid][m], u)),
+                                 "seen": seen(e, s)}
+        if e["group"] == "grid":
+            row.update(depth=e["depth"], salience=e["salience"], kind=e["kind"] or "", semantics=e["semantics"],
+                       cost=e["cost"])
+        else:
+            row.update(rationale=e.get("rationale", ""), origin=e.get("origin", ""),
+                       whole_superset=bool(e.get("whole_superset")))
+        theories.append(row)
 
     displays: Dict[tuple, Dict] = {}
+    block_labels = {b.name: study_labels(b) for b in blocks}
     for b, rb in zip(blocks, raw):
         if b.link.name != "choice":
             continue
@@ -97,7 +156,7 @@ def build(corpus: Path, grid_dir: Path, fits: Path) -> Dict:
             classes = sorted(set(cols), key=cols.index)
             if gid not in displays:
                 parts = t["unit"].split(":", 1)[-1].split("|")
-                displays[gid] = dict(block=b.name, source=t["source"],
+                displays[gid] = dict(block=b.name, source=str(block_labels[b.name][i]),
                                      unit=" · ".join(x.replace("_", " ") for x in parts[1:3]) or parts[0],
                                      words=[scene["feature_names"][w] for w in word_order],
                                      said=None if scene["utterance"] is None else 0, item=scene.get("item") or "",
@@ -112,6 +171,8 @@ def build(corpus: Path, grid_dir: Path, fits: Path) -> Dict:
 
     out = []
     worst_sd, estimated = 0.0, 0
+    variant_sd: Dict[str, float] = {}  # a non-grid theory may see more than the word structure (familiarization,
+    # valence, colour words): its prediction for a display is then the average over the display's variants
     for gid, d in displays.items():
         rows, chosen = np.asarray(d.pop("trials")), np.asarray(d.pop("chosen"))
         k = len(d["classes"])
@@ -122,8 +183,12 @@ def build(corpus: Path, grid_dir: Path, fits: Path) -> Dict:
             for c in range(k):
                 m = chosen == c
                 if m.any():
-                    worst_sd = max(worst_sd, float(np.std(l[m])))
-                    p[c] = float(np.exp(l[m].mean()))
+                    sd = float(np.std(l[m]))
+                    if n in grid_names:
+                        worst_sd = max(worst_sd, sd)
+                    else:
+                        variant_sd[n] = max(variant_sd.get(n, 0.0), sd)
+                    p[c] = float(np.exp(l[m]).mean())
             missing = np.isnan(p)
             if missing.any():
                 p[missing] = max(0.0, 1.0 - np.nansum(p)) / missing.sum()
@@ -139,11 +204,15 @@ def build(corpus: Path, grid_dir: Path, fits: Path) -> Dict:
     out.sort(key=lambda d: (d["source"], d["unit"], -d["n"]))
     for j, d in enumerate(out):
         d["id"] = j
+    for t in theories:
+        t["variant_sd"] = round(variant_sd.get(t["name"], 0.0), 4)
     print(f"[grid viz] {len(names)} theories, {len(out)} displays "
           f"({estimated} with two or more classes nobody chose), worst within-class sd {worst_sd:.2g}")
-    total = len(manifest)
-    return dict(meta=dict(built=datetime.now(timezone.utc).strftime("%Y-%m-%d"), n_done=len(names), n_total=total,
-                          reference=ref,
+    return dict(meta=dict(built=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                          n_done=sum(n in grid_names for n in names), n_total=len(manifest),
+                          n_extra_done=sum(n not in grid_names for n in names), n_extra_total=len(extras),
+                          reference=ref, best_grid=best_grid,
+                          missing_extra=[dict(name=e["name"], group=e["group"]) for e in extras if e["name"] not in names],
                           trials=sum(b.n for b in blocks), units=sum(len(set(b.units)) for b in blocks),
                           missing=report["missing"]),
                 studies=[{"id": s, "label": SOURCE_LABELS.get(s, s)} for s in report["studies"]],
@@ -158,8 +227,9 @@ def main(argv=None) -> None:
     ap.add_argument("--grid", type=Path, required=True)
     ap.add_argument("--fits", type=Path, required=True)
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--extra", type=Path, action="append", default=[], help="seed/discovered theory folders")
     a = ap.parse_args(argv)
-    bundle = build(a.corpus, a.grid, a.fits)
+    bundle = build(a.corpus, a.grid, a.fits, a.extra)
     a.out.parent.mkdir(parents=True, exist_ok=True)
     data = json.dumps(bundle, separators=(",", ":")).replace("</", "<\\/")
     a.out.write_text(TEMPLATE.read_text().replace("__BUNDLE__", data))

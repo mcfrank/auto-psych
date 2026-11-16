@@ -59,6 +59,22 @@ No agents, no Prolific; copies of the data, never the originals; aggregates only
    grid_viz.html`, copied to `data/rsa_open/grid/all_studies/` (aggregates only; check its size, it grows with the
    displays: about 2 KB a display).
 
+5. **Seeds and discovered theories** (PI 2026-11-16), in the same corpus and fits folder, after `git pull` (the
+   theory files are committed in `data/rsa_open/grid/discovered/`, 31 of them; run `discovered_set.py check` first
+   unless the cloud session has reported it passing for all 31):
+   ```bash
+   python scripts/rsa/open_compute_checks/rsa_grid.py fit --corpus corpus.json \
+       --grid data/rsa_open/grid/discovered --index $i --out fits          # i = 0..30, one task each
+   python scripts/rsa/open_compute_checks/rsa_grid.py report --corpus corpus.json --grid grid --out fits \
+       --extra data/rsa_open/grid/discovered
+   python scripts/rsa/open_compute_checks/grid_viz.py --corpus corpus.json --grid grid --fits fits \
+       --extra data/rsa_open/grid/discovered --out grid_viz.html
+   ```
+   Some closed theories are much slower than the grid (chain 0's final has 17 parameters); give those tasks 2 days and
+   32 GB, and report any that time out or do not converge. The page's unseen marks need the corpus's study labels as in
+   step 1 (`closed_c0e1` … `closed_c2e3`, `closed_final`, `pilot1_exp*`, `s1_open_exp*`, `s1_fixed_exp*`). Copy the
+   report, the page and the per-theory jsons to `data/rsa_open/grid/all_studies/`.
+
 **Caveats for reading it.** The closed campaign's pre-registered data are spent for confirmatory claims
 (`docs/auto_rsa/CONSOLIDATION.md` §5): this is exploratory. Studies differ in paradigm and in trials per person, so the
 per-study columns matter as much as the pooled one. Stage 1's two chains share people.
@@ -116,7 +132,8 @@ What it says so far:
 
 **The page.** `data/rsa_open/grid/literature/grid_viz.html` (built by `scripts/rsa/open_compute_checks/grid_viz.py`
 from the fits; aggregates only) shows the grid as a heatmap per source, these contrasts computed live, scatter plots of predicted against observed
-choice shares for any four theories (r², plain and trial-weighted; RMSE; tooltips naming each display), and all 213
+choice shares for any four theories (r², plain and trial-weighted; RMSE; tooltips naming each display), the seeds
+and discovered theories against the best grid theory with seen/unseen marks, fit against complexity, and all 213
 displays with people's choices against any two grid theories, sorted by where they differ. It is the campaign's
 old model-report design (`src/rsa/report_template.html`) carried over. For the Sherlock run, build it from the
 all-studies fits the same way; display panels cover the choice blocks only.
@@ -131,3 +148,37 @@ converged neighbours (the top-listener versions score +10 to +14), so they are f
 the theories: a prior repeated through four levels makes the salience weight and alpha hard to separate. Counting them,
 depth 3 − 2 reads −46; without them, +7. On Sherlock, at 1,000 + 1,000, check whether they converge before reading
 that cell. Fits took 4-28 minutes each on this container.
+
+## Seeds, discovered theories and complexity (2026-11-16)
+
+**The set** (`scripts/rsa/open_compute_checks/discovered_set.py`, `data/rsa_open/grid/discovered/`, 31 theories): the
+closed campaign's 12 seeds that are not grid corners, each closed chain's best theory after each live experiment (9,
+ported mechanically by `src.rsa_open.port` and otherwise unchanged), the closed consolidation's superset and its
+backward-elimination survivor (wrapped: the closed model at lapse 0 with the link's lapse, as the port's rule (a)),
+open pilot 1's two incumbents and stage 1's six. `discovered_set.py check` runs the code and shape gates and the
+listener and speaker contracts on design-pool and literature displays before any fit (in progress at this commit:
+the first 15 passed). The closed theories keep their hand-set
+numbers (the closed campaign had no rule against them); the manifest counts them.
+
+**Lineage.** Each theory records the data its makers had seen: the closed campaign's literature block (which left out
+pragmods' familiarization, valence, colour and greyscale experiments), its chain's experiments so far, or for the open
+campaign the whole literature and its chain's experiments. The page outlines every score on data a theory's makers
+never saw. To make that visible on the literature, the report splits pragmods into `pragmods_trials` (plain) and
+`pragmods_prior` (the manipulated-prior experiments) from each trial's unit; the folds are unchanged, so no refit.
+
+**Complexity** (`src/rsa_open/complexity.py`): lines of code, AST nodes, Halstead volume and compressed bytes, all on the
+code without comments or docstrings, with parameters and hand-set numbers beside them. On the grid, whose complexity
+is known by construction, AST nodes, Halstead volume and compressed bytes rise every time an axis is switched on (161
+of 161 pairs); lines of code miss 33 (switching to graded meanings changes a line and adds none), so lines is the
+weakest measure (`tests/test_rsa_open_complexity.py`). The page plots fit against each measure with the grid's
+frontier, the best textbook score at each size, as the reference: no exchange rate between nats and code is chosen.
+The consolidation files carry the superset's switched-off code, so code size overstates them (drawn hollow).
+
+**An early look** (the nine of the 31 already fitted on the committed literature in the stage-1 refit, same folds; not
+the Sherlock run): against the best grid theory, the 6-parameter seed gains +149 (2.8 SE), the fixed arm's second and
+third incumbents +188 (2.3) and +126 (1.4), and the open arm's incumbents −8 to −47 (within 1 SE). The splits locate
+it: on the plain pragmods displays the fixed arm's theories gain +87 to +110 and the seed +50; on the manipulated-prior
+displays, which the seed's makers never saw, the seed gains +106 (2.4 SE) and the fixed theories +69 to +137; on Mayn &
+Demberg 2026 and Sikos every one of them is behind or level. On the frontier the seed sits well above the grid with about
+40% more code than the best grid theory (Halstead volume 4,717 against 3,315; 6 parameters against 2); the fixed
+theories are higher still at three to four times the best grid theory's code (7,511-13,186).

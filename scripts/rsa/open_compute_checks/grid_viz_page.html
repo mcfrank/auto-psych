@@ -16,6 +16,7 @@
   --up1: #dbe9fb; --up2: #a9cbf5; --up3: #6da7ec; --up4: #3987e5; --up5: #184f95;
   --dn1: #fbe3d6; --dn2: #f5bb9c; --dn3: #ee8f5f; --dn4: #d95926; --dn5: #943b14;
   --hatch: #d6d5cd;
+  --g-seed: #2a78d6; --g-closed: #eb6834; --g-consolidation: #1baf7a; --g-pilot: #8b5cf6; --g-s1open: #c2185b; --g-s1fixed: #a57c00;
   --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
@@ -29,6 +30,7 @@
     --up1: #1c2f4a; --up2: #1f4d86; --up3: #2a6bc0; --up4: #4f95e8; --up5: #9ec5f4;
     --dn1: #3f2418; --dn2: #7a3a1c; --dn3: #b24d22; --dn4: #e0733f; --dn5: #f5bb9c;
     --hatch: #3a3a37;
+    --g-seed: #3987e5; --g-closed: #e0733f; --g-consolidation: #22c08a; --g-pilot: #a78bfa; --g-s1open: #e2558f; --g-s1fixed: #d4a72c;
     color-scheme: dark;
   }
 }
@@ -41,6 +43,7 @@
   --up1: #1c2f4a; --up2: #1f4d86; --up3: #2a6bc0; --up4: #4f95e8; --up5: #9ec5f4;
   --dn1: #3f2418; --dn2: #7a3a1c; --dn3: #b24d22; --dn4: #e0733f; --dn5: #f5bb9c;
   --hatch: #3a3a37;
+  --g-seed: #3987e5; --g-closed: #e0733f; --g-consolidation: #22c08a; --g-pilot: #a78bfa; --g-s1open: #e2558f; --g-s1fixed: #d4a72c;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -86,6 +89,12 @@ label.check { display: inline-flex; gap: 6px; align-items: center; font-size: 13
 .ramp i { display: block; width: 22px; height: 10px; border-radius: 2px; }
 .summary { font-size: 14px; color: var(--ink-2); max-width: 80ch; }
 .summary b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.xtable td.cell-v { text-align: right; font-family: var(--font-data); border-radius: 4px; }
+.xtable td.unseen { box-shadow: inset 0 0 0 2px var(--ink); }
+.xtable td.name { white-space: normal; min-width: 220px; max-width: 340px; }
+.xtable .sub { color: var(--muted); font-size: 11px; }
+.xtable tr.missing td { color: var(--muted); font-style: italic; }
+.key-unseen { display: inline-block; width: 18px; height: 12px; border-radius: 3px; box-shadow: inset 0 0 0 2px var(--ink); }
 .scatters { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
 .scatter { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px; display: grid; gap: 6px; min-width: 0; }
 .scatter select { width: 100%; font-size: 12.5px; }
@@ -142,6 +151,35 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
     </div>
     <div class="card scroll-x"><svg id="grid" role="img" aria-label="Every grid theory's score against plain RSA"></svg></div>
     <div class="legend" id="grid-legend"></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Seeds and discovered theories</h2>
+      <p>The closed campaign's seeds and each chain's best theory, the closed consolidation, and the open campaign's
+        incumbents, scored against the best grid theory (<span id="best-grid-name"></span>) rather than plain RSA. A
+        cell outlined in black is a score on data the theory's makers never saw; the rest they had seen, so those
+        measure fit, not transfer.</p>
+    </div>
+    <div class="card scroll-x"><table class="xtable" id="xtable"></table></div>
+    <div class="legend"><span class="item"><span class="key-unseen"></span> data the theory's makers never saw</span>
+      <span class="item">nats against the best grid theory; in brackets, over the stimulus-clustered SE</span>
+      <span class="item">† did not converge</span></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Fit against complexity</h2>
+      <p>Each theory's score against how much code its author wrote. Grey points are the grid and the grey line its
+        frontier: the best textbook score reachable at each size. A theory above the line fits better than any
+        textbook theory as small. Complexity is measured on the code alone, without comments or docstrings.</p>
+    </div>
+    <div class="controls">
+      <div class="control"><span class="label">Complexity</span><div class="chips" id="cx-chips" role="group" aria-label="Complexity measure"></div></div>
+      <div class="control"><span class="label">Data</span><div class="chips" id="cx-study-chips" role="group" aria-label="Which data"></div></div>
+    </div>
+    <div class="card scroll-x"><svg id="frontier" role="img" aria-label="Fit against code complexity for every theory"></svg></div>
+    <div class="legend" id="frontier-legend"></div>
   </section>
 
   <section>
@@ -232,15 +270,18 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
   // ---------- naming ----------
   const SAL = [["none", ""], ["listener", "fc"], ["listener", "singleton"], ["shared", "fc"], ["shared", "singleton"]];
   const salLabel = (s, k) => s === "none" ? "no salience prior" : `${k === "fc" ? "feature-count" : "singleton"} prior, ${s === "listener" ? "top listener only" : "shared by every level"}`;
-  const short = (t) => `L${t.depth} · ${t.salience === "none" ? "no prior" : (t.kind === "fc" ? "feat-count" : "singleton") + (t.salience === "listener" ? " (top)" : " (shared)")} · ${t.semantics}${t.cost !== "none" ? " · cost" : ""}`;
-  const describe = (t) => `${t.depth === 0 ? "Literal listener" : `Depth-${t.depth} pragmatic listener`}, ${salLabel(t.salience, t.kind)}, ${t.semantics === "bool" ? "Boolean" : "graded"} meanings${t.cost !== "none" ? ", extension cost" : ""}`;
+  const isGrid = (t) => t.group === "grid";
+  const pretty = (n) => n.replace(/^(closed_c\de\d|pilot1_e\d|open\d|fixed\d)_/, "$1 · ").replaceAll("_", " ");
+  const short = (t) => !isGrid(t) ? pretty(t.name) : `L${t.depth} · ${t.salience === "none" ? "no prior" : (t.kind === "fc" ? "feat-count" : "singleton") + (t.salience === "listener" ? " (top)" : " (shared)")} · ${t.semantics}${t.cost !== "none" ? " · cost" : ""}`;
+  const describe = (t) => !isGrid(t) ? `${t.group}: ${(t.rationale || "").slice(0, 220)}${(t.rationale || "").length > 220 ? "…" : ""}` : `${t.depth === 0 ? "Literal listener" : `Depth-${t.depth} pragmatic listener`}, ${salLabel(t.salience, t.kind)}, ${t.semantics === "bool" ? "Boolean" : "graded"} meanings${t.cost !== "none" ? ", extension cost" : ""}`;
   const nameOf = (d, s, k, sem, c) => `grid_d${d}_${s === "none" ? "nosal" : (s === "listener" ? "lst" : "shr") + k}_${sem}_${c === "none" ? "nocost" : "cost"}`;
   const valid = (d, s, c) => !(d === 0 && (s === "shared" || c !== "none"));
 
   // ---------- header ----------
   const meta = document.getElementById("meta");
   for (const [k, v] of [["trials", B.meta.trials.toLocaleString()], ["held-out units", B.meta.units], ["sources", B.studies.length],
-    ["theories fitted", `${B.meta.n_done} of ${B.meta.n_total}`], ["built", B.meta.built]]) {
+    ["grid theories fitted", `${B.meta.n_done} of ${B.meta.n_total}`],
+    ["seeds and discovered fitted", `${B.meta.n_extra_done} of ${B.meta.n_extra_total}`], ["built", B.meta.built]]) {
     const s = el("span", {}, meta); s.append(`${k} `); el("b", { text: v }, s);
   }
   if (B.meta.n_done < B.meta.n_total) {
@@ -266,7 +307,10 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
 
   // ---------- state ----------
   const state = { study: "pooled", a: null, b: ref, src: "all", word: "all", sort: "diff", shown: 30, withD0: false, dropUnconv: true };
-  const best = [...T].sort((x, y) => y.pooled - x.pooled)[0];
+  const best = T[byName[B.meta.best_grid]];
+  const GROUPS = ["grid", "seed", "closed", "consolidation", "open pilot 1", "stage 1 open", "stage 1 fixed"];
+  const GT = T.filter(isGrid), XT = T.filter((t) => !isGrid(t));
+  const bestX = [...XT].sort((x, y) => y.pooled - x.pooled)[0];
   state.a = best.name;
 
   function score(t, study) { return study === "pooled" ? { d: t.pooled, se: t.pooled_se } : t.studies[study] && { d: t.studies[study].d, se: t.studies[study].se }; }
@@ -360,6 +404,115 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
     const sb = el("span", { class: "item" }, lg); el("span", { style: "display:inline-block;width:14px;height:10px;border:2.5px solid var(--b);border-radius:3px" }, sb); sb.append("theory B");
   }
 
+  // ---------- seeds and discovered ----------
+  const GCOLOR = { seed: "--g-seed", closed: "--g-closed", consolidation: "--g-consolidation", "open pilot 1": "--g-pilot",
+    "stage 1 open": "--g-s1open", "stage 1 fixed": "--g-s1fixed" };
+  function niceTicks(lo, hi, n) {
+    const span = hi - lo, raw = span / n, mag = 10 ** Math.floor(Math.log10(raw));
+    const stepv = [1, 2, 5, 10].map((k) => k * mag).find((k) => span / k <= n) || 10 * mag;
+    const out = [];
+    for (let v = Math.ceil(lo / stepv) * stepv; v <= hi + 1e-9; v += stepv) out.push(Math.round(v));
+    return out;
+  }
+  function drawXTable() {
+    document.getElementById("best-grid-name").textContent = short(best);
+    const t = document.getElementById("xtable"); t.replaceChildren();
+    const hr = el("tr", {}, el("thead", {}, t));
+    for (const [h, num] of [["theory"], ["parameters", 1], ["pooled", 1], ...B.studies.map((x) => [x.label, 1])]) el("th", { text: h, class: num ? "num" : undefined }, hr);
+    const body = el("tbody", {}, t);
+    const cell = (tr, v, se, unseen) => {
+      const td = el("td", { class: "cell-v" + (unseen ? " unseen" : "") }, tr);
+      const fill = css(step(v)); td.style.background = fill; td.style.color = inkOn(fill);
+      td.textContent = fmt(v) + (se ? ` (${fmt(v / se, 1)})` : "");
+      if (unseen) td.title = "data this theory's makers never saw";
+      return td;
+    };
+    for (const g of GROUPS.slice(1)) {
+      const ts = XT.filter((x) => x.group === g).sort((a, b) => b.vs_best - a.vs_best);
+      const miss = (B.meta.missing_extra || []).filter((m) => m.group === g);
+      if (!ts.length && !miss.length) continue;
+      const gr = el("tr", {}, body);
+      const gh = el("td", { colspan: 3 + B.studies.length, style: "padding-top: 14px; font-weight: 600" }, gr);
+      const k = el("svg", { width: 12, height: 12, viewBox: "-6 -6 12 12", style: "display:inline-block; vertical-align:-1px; margin-right:6px" }, gh);
+      el("circle", { r: 5, fill: css(GCOLOR[g]) }, k); gh.append(g);
+      for (const x of ts) {
+        const tr = el("tr", {}, body);
+        const nm = el("td", { class: "name" }, tr);
+        nm.append(short(x) + (x.converged ? "" : " †"));
+        if (x.rationale) el("div", { class: "sub", text: x.rationale.length > 140 ? x.rationale.slice(0, 139) + "…" : x.rationale }, nm);
+        el("td", { class: "num", text: `${x.complexity.n_params}${x.complexity.hand_set_numbers ? ` + ${x.complexity.hand_set_numbers} by hand` : ""}` }, tr);
+        cell(tr, x.vs_best, x.vs_best_se, false);
+        for (const st of B.studies) { const v = x.studies[st.id]; cell(tr, v.vs_best, v.vs_best_se, v.seen === false); }
+      }
+      for (const m of miss) {
+        const tr = el("tr", { class: "missing" }, body);
+        el("td", { class: "name", text: pretty(m.name) }, tr);
+        el("td", { colspan: 2 + B.studies.length, text: "not fitted yet" }, tr);
+      }
+    }
+  }
+
+  // ---------- complexity frontier ----------
+  const CX = [["halstead_volume", "Halstead volume", true], ["ast_nodes", "AST nodes", true], ["lines", "lines of code", true],
+    ["compressed_bytes", "compressed bytes", true], ["n_params", "parameters", false], ["params_all", "parameters + hand-set numbers", false]];
+  state.cx = "halstead_volume"; state.cxStudy = "pooled";
+  const cxValue = (t, m) => m === "params_all" ? t.complexity.n_params + t.complexity.hand_set_numbers : t.complexity[m];
+  function drawFrontier() {
+    const svg = document.getElementById("frontier"); svg.replaceChildren();
+    const [m, label, logScale] = CX.find((c) => c[0] === state.cx);
+    const yOf = (t) => state.cxStudy === "pooled" ? t.pooled : t.studies[state.cxStudy].d;
+    const W = 1000, H = 440, mg = { l: 70, r: 20, t: 16, b: 46 };
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", W); svg.setAttribute("height", H);
+    const xs = T.map((t) => cxValue(t, m)), ys = T.map(yOf);
+    const xlo = logScale ? Math.min(...xs) / 1.15 : -0.5, xhi = logScale ? Math.max(...xs) * 1.15 : Math.max(...xs) + 0.5;
+    const ylo = Math.max(Math.min(...ys), Math.min(-150, ...XT.map(yOf))) - 20, yhi = Math.max(...ys) + 30;
+    const fx = (v) => logScale ? Math.log(v) : v;
+    const X = (v) => mg.l + (fx(v) - fx(xlo)) / (fx(xhi) - fx(xlo)) * (W - mg.l - mg.r);
+    const Y = (v) => mg.t + (yhi - Math.max(v, ylo)) / (yhi - ylo) * (H - mg.t - mg.b);
+    for (const v of niceTicks(ylo, yhi, 6)) {
+      el("line", { x1: mg.l, x2: W - mg.r, y1: Y(v), y2: Y(v), stroke: css(v === 0 ? "--axis" : "--grid"), "stroke-width": v === 0 ? 1.5 : 1 }, svg);
+      el("text", { x: mg.l - 8, y: Y(v) + 3, "text-anchor": "end", "font-size": 10, fill: css("--muted"), text: v === 0 ? "RSA" : fmt(v) }, svg);
+    }
+    const xt = logScale ? [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000].filter((v) => v >= xlo && v <= xhi)
+      : Array.from({ length: Math.floor(xhi) + 1 }, (_, i) => i);
+    for (const v of xt) {
+      el("line", { x1: X(v), x2: X(v), y1: mg.t, y2: H - mg.b, stroke: css("--grid") }, svg);
+      el("text", { x: X(v), y: H - mg.b + 14, "text-anchor": "middle", "font-size": 10, fill: css("--muted"), text: v >= 1000 ? `${v / 1000}k` : String(v) }, svg);
+    }
+    el("text", { x: W - mg.r, y: H - 8, "text-anchor": "end", "font-size": 10, fill: css("--muted"), text: `${label}${logScale ? " (log scale)" : ""} →` }, svg);
+    el("text", { x: 14, y: mg.t + 4, "font-size": 10, fill: css("--muted"), transform: `rotate(-90 14 ${mg.t + 4})`, "text-anchor": "end", text: "nats over plain RSA →" }, svg);
+    // the grid's frontier: the best converged grid score at or below each size
+    const gpts = GT.filter((t) => t.converged).map((t) => [cxValue(t, m), yOf(t)]).sort((a, b) => a[0] - b[0] || b[1] - a[1]);
+    let run = -Infinity, path = "";
+    for (const [x, y] of gpts) if (y > run) { path += path ? ` H${X(x)} V${Y(y)}` : `M${X(x)},${Y(y)}`; run = y; }
+    if (path) el("path", { d: path + ` H${X(xhi)}`, fill: "none", stroke: css("--muted"), "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+    const draw = (t) => {
+      const x = X(cxValue(t, m)), y = Y(yOf(t)), grid = isGrid(t);
+      const color = grid ? css("--axis") : css(GCOLOR[t.group]);
+      const hollow = !grid && t.whole_superset;
+      const dot = el("circle", { cx: x, cy: y, r: grid ? 4 : 6, fill: hollow ? css("--surface") : color, stroke: hollow ? color : css("--surface"),
+        "stroke-width": hollow ? 2 : 1.5, tabindex: 0 }, svg);
+      if (yOf(t) < ylo) el("text", { x, y: y + 14, "text-anchor": "middle", "font-size": 9, fill: css("--muted"), text: `▼${fmt(yOf(t))}` }, svg);
+      const vb = state.cxStudy === "pooled" ? t.vs_best : t.studies[state.cxStudy].vs_best;
+      const rows = () => [["score", `${fmt(yOf(t))} nats over plain RSA`], ["against the best grid theory", fmt(vb)],
+        ["Halstead volume", String(t.complexity.halstead_volume)], ["AST nodes", String(t.complexity.ast_nodes)], ["lines", String(t.complexity.lines)],
+        ["compressed bytes", String(t.complexity.compressed_bytes)], ["parameters", `${t.complexity.n_params}${t.complexity.hand_set_numbers ? ` + ${t.complexity.hand_set_numbers} by hand` : ""}`],
+        ...(t.whole_superset ? [["note", "carries the superset's switched-off code"]] : []), ...(t.converged ? [] : [["fit", "did not converge"]])];
+      const on = (ev) => showTip(ev, short(t), rows(), grid ? "standard RSA grid" : t.group);
+      dot.addEventListener("pointermove", on); dot.addEventListener("focus", on);
+      dot.addEventListener("pointerleave", hideTip); dot.addEventListener("blur", hideTip);
+    };
+    GT.forEach(draw); XT.forEach(draw);
+    const lg = document.getElementById("frontier-legend"); lg.replaceChildren();
+    const gi = el("span", { class: "item" }, lg); const gk = el("svg", { width: 12, height: 12, viewBox: "-6 -6 12 12" }, gi);
+    el("circle", { r: 4, fill: css("--axis") }, gk); gi.append("grid theory");
+    for (const g of GROUPS.slice(1)) if (XT.some((t) => t.group === g)) {
+      const it = el("span", { class: "item" }, lg); const k = el("svg", { width: 12, height: 12, viewBox: "-6 -6 12 12" }, it);
+      el("circle", { r: 5, fill: css(GCOLOR[g]) }, k); it.append(g);
+    }
+    el("span", { class: "item", text: "hollow: consolidation files carry the superset's switched-off code, so code size overstates them" }, lg);
+  }
+
   // ---------- contrasts ----------
   const CONTRASTS = [
     ["depth", "1 − 0", (t) => t.depth === 0, (t) => t.depth === 1, ["depth"]],
@@ -380,7 +533,7 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
     for (const [axis, label, from, to, varies] of CONTRASTS) {
       const keep = AX.filter((a) => !varies.includes(a));
       const pairs = [];
-      for (const x of T) if (from(x)) for (const y of T) if (to(y) && keep.every((a) => x[a] === y[a])) {
+      for (const x of GT) if (from(x)) for (const y of GT) if (to(y) && keep.every((a) => x[a] === y[a])) {
         if (!state.withD0 && axis !== "depth" && x.depth === 0) continue;
         if (state.dropUnconv && !(x.converged && y.converged)) continue;
         pairs.push([x, y]);
@@ -438,7 +591,7 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
   // ---------- displays ----------
   // ---------- scatter plots ----------
   const lit = nameOf(0, "none", "", "bool", "none");
-  const SC_DEFAULT = [best.name, ref, nameOf(2, "none", "", "bool", "none"), lit].filter((n, i, a) => n in byName && a.indexOf(n) === i);
+  const SC_DEFAULT = [best.name, bestX ? bestX.name : nameOf(2, "none", "", "bool", "none"), ref, lit].filter((n, i, a) => n in byName && a.indexOf(n) === i);
   state.scatter = SC_DEFAULT.slice();
   state.scSrc = "all"; state.scWord = "all";
   let hot = null;
@@ -477,12 +630,11 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
     const pts = scatterPoints();
     const srcIdx = Object.fromEntries(B.studies.map((s, j) => [s.id, j]));
     const maxN = Math.max(1, ...pts.map((p) => p.d.n));
-    const sorted = [...T].sort((x, y) => x.depth - y.depth || y.pooled - x.pooled);
     state.scatter.forEach((name, slot) => {
       const ti = byName[name], t = T[ti];
       const card = el("div", { class: "scatter" }, box);
       const sel = el("select", { "aria-label": `Theory in scatter plot ${slot + 1}`, id: `sc-pick-${slot}` }, card);
-      for (const u of sorted) el("option", { value: u.name, text: `${short(u)}  (${fmt(u.pooled)})${u.name === ref ? " · plain RSA" : ""}${u.name === best.name ? " · best" : ""}${u.converged ? "" : " †"}` }, sel);
+      theoryOptions(sel);
       sel.value = name;
       sel.addEventListener("change", () => { state.scatter[slot] = sel.value; drawScatters(); });
       const xs = pts.map((p) => t ? d_pred(p, ti) : 0), ys = pts.map((p) => p.obs);
@@ -539,11 +691,19 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
   function syncPicks() {
     for (const [id, key] of [["pick-a", "a"], ["pick-b", "b"]]) document.getElementById(id).value = state[key];
   }
+  function theoryOptions(sel) {
+    for (const g of GROUPS) {
+      const ts = T.filter((t) => t.group === g);
+      if (!ts.length) continue;
+      const og = el("optgroup", { label: g === "grid" ? "standard RSA grid" : g }, sel);
+      ts.sort(g === "grid" ? (x, y) => x.depth - y.depth || y.pooled - x.pooled : (x, y) => y.pooled - x.pooled);
+      for (const t of ts) el("option", { value: t.name, text: `${short(t)}  (${fmt(t.pooled)})${t.name === ref ? " · plain RSA" : ""}${t.name === best.name ? " · best grid" : ""}${t.converged ? "" : " †"}` }, og);
+    }
+  }
   function fillPicks() {
-    const sorted = [...T].sort((x, y) => x.depth - y.depth || y.pooled - x.pooled);
     for (const [id, key] of [["pick-a", "a"], ["pick-b", "b"]]) {
       const s = document.getElementById(id); s.replaceChildren();
-      for (const t of sorted) el("option", { value: t.name, text: `${short(t)}  (${fmt(t.pooled)})${t.name === ref ? " · plain RSA" : ""}${t.converged ? "" : " †"}` }, s);
+      theoryOptions(s);
       s.value = state[key];
       s.addEventListener("change", () => { state[key] = s.value; state.shown = 30; drawGrid(); renderDisplays(); });
     }
@@ -664,7 +824,9 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
   chips("sort-chips", [["diff", "Biggest A–B difference"], ["a", "A ahead"], ["b", "B ahead"], ["n", "Most trials"]], "sort", () => { state.shown = 30; renderDisplays(); });
   chips("sc-src-chips", [["all", "All"], ...B.studies.map((s) => [s.id, s.label])], "scSrc", drawScatters);
   chips("sc-word-chips", [["all", "All"], ["word", "A word heard"], ["prior", "No word (prior)"]], "scWord", drawScatters);
-  fillPicks(); drawGrid(); drawContrasts(); drawScatters(); renderDisplays();
-  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { drawGrid(); drawContrasts(); drawScatters(); renderDisplays(); });
+  chips("cx-chips", CX.map((c) => [c[0], c[1]]), "cx", drawFrontier);
+  chips("cx-study-chips", [["pooled", "All, pooled"], ...B.studies.map((s) => [s.id, s.label])], "cxStudy", drawFrontier);
+  fillPicks(); drawGrid(); drawXTable(); drawFrontier(); drawContrasts(); drawScatters(); renderDisplays();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { drawGrid(); drawXTable(); drawFrontier(); drawContrasts(); drawScatters(); renderDisplays(); });
 })();
 </script>

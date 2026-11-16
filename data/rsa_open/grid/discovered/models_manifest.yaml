@@ -1,0 +1,606 @@
+models:
+- name: rsa_l1_salience
+  group: seed
+  origin: data/rsa_open/seeds/bar/rsa_l1_salience.py
+  rationale: Depth-1 RSA whose listener has a salience prior over objects (feature count, familiarization base rate) that
+    the simulated literal listener lacks.
+  seen:
+    literature: plain
+    studies: []
+  hand_set_numbers: 0
+  sha256: ea5e725d91a41fb2d59f026f5484c8d63b98cbe3230dc3f973932999b8746c19
+- name: rsa_l1_shared_prior
+  group: seed
+  origin: data/rsa_open/seeds/bar/rsa_l1_shared_prior.py
+  rationale: Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the
+    pragmatic listener.
+  seen:
+    literature: plain
+    studies: []
+  hand_set_numbers: 0
+  sha256: 213dc40c5c59cd300e4a17ba59beb6f2416492ca645354cbf5422608501b35d3
+- name: isolated_graded_costly_l3
+  group: seed
+  origin: data/rsa_open/seeds/bar/isolated_graded_costly_l3.py
+  rationale: Pragmatic listener at depth 3 with perceptual isolation, graded semantics, and utterance extension costs. Refines
+    isolated_graded_costly_l2 by increasing the recursion depth from depth 2 to depth 3. Listeners reason at depth 3, inverting
+    a speaker who simulates a depth-2 pragmatic listener. Visual pop-out is determined by an object's perceptual isolation
+    (minimum Hamming distance to any other context object), semantic applicability diminishes with additional competing features
+    (graded truth), and speakers evaluate communicative utility trade-offs with utterance extension costs proportional to
+    the fraction of display objects sharing each feature. On uninformative prior trials, choice follows the perceptual isolation
+    prior. A lapse parameter mixes in uniform guessing.
+  seen:
+    literature: plain
+    studies: []
+  hand_set_numbers: 0
+  sha256: a99322659f49ca9b5fabe8b8e4c16edf3b96b839c53c2eb044af38e4024e772e
+- name: familiar_isolated_graded_costly_l2
+  group: seed
+  origin: data/rsa_open/seeds/bar/familiar_isolated_graded_costly_l2.py
+  rationale: Pragmatic listener at depth 2 combining perceptual isolation, graded semantics, utterance extension costs, and
+    familiarization. Refines isolated_graded_costly_l2 by incorporating familiarization base-rate sensitivity into the shared
+    referent prior. Visual pop-out is determined by an object's perceptual isolation (minimum Hamming distance to any other
+    context object), semantic applicability diminishes with additional competing features (graded truth), speakers evaluate
+    communicative utility trade-offs with utterance extension costs proportional to the fraction of display objects sharing
+    each feature, and candidate referents are weighted by prior familiarization history. Listeners reason at depth 2, inverting
+    a speaker who anticipates a pragmatic listener. On uninformative prior trials, choice follows the integrated isolation
+    and familiarization prior. A lapse parameter mixes in uniform guessing.
+  seen:
+    literature: plain
+    studies: []
+  hand_set_numbers: 0
+  sha256: aee91f1e81f8240d4ca09c8ddea92661874eca83252138eea0707e52f9c213b8
+- name: rsa_l2_singleton_distinct_feat_color_l0
+  group: seed
+  origin: data/rsa_open/seeds/bar/rsa_l2_singleton_distinct_feat_color_l0.py
+  rationale: 'RSA pragmatic listener at depth 2 with singleton salience, contextual distinctiveness, visual feature complexity,
+    visual color contrast, and literal L0. Refining rsa_l2_singleton_distinct_features_l0 with the visual color contrast component
+    from rsa_l2_shared_color_prior: speakers and listeners reason at depth 2 (inverting a speaker who simulates a depth-1
+    pragmatic listener) with common knowledge of an object prior combining discrete visual singleton salience (favoring unique
+    objects with no duplicates in the scene), continuous contextual distinctiveness (favoring objects with greater feature
+    contrast relative to the rest of the display), visual feature complexity (weighting objects by total feature count), and
+    visual color contrast (favoring fully colored objects over desaturated grayscale distractors). Crucially, the foundational
+    simulated literal listener L0 operates purely on truth-conditional semantics without perceptual bias, preventing redundant
+    prior compounding across reasoning tiers. On prior trials with no informative word, choices are governed directly by the
+    combined perceptual prior. A lapse parameter mixes in uniform guessing.'
+  seen:
+    literature: plain
+    studies: []
+  hand_set_numbers: 0
+  sha256: d4315a1b4df789ee4c7a20abc2c19d15e375ccbf9151f36c84904407bc99465b
+- name: evaluative_prominence_l2
+  group: seed
+  origin: data/rsa_open/seeds/bar/evaluative_prominence_l2.py
+  rationale: 'Pragmatic listener at depth 2 with evaluative stance and visual prominence. Speakers select referents according
+    to evaluative prominence: the alignment between an object''s sensory visual prominence (chromatic vibrancy and visual
+    feature elaboration) and the speaker''s evaluative stance. Under positive framing (''favorite''), speakers seek objects
+    of high visual prominence; under negative framing (''least favorite''), this evaluative stance inverts toward minimal,
+    unadorned objects; and under neutral framing, choices follow a baseline positive orientation toward visual features and
+    chromatic pop-out. Listeners reason at depth 2, inverting a speaker who anticipates a pragmatic listener. On uninformative
+    prior trials, choices directly follow the evaluative prominence distribution. A lapse parameter mixes in uniform guessing.'
+  seen:
+    literature: plain
+    studies: []
+  hand_set_numbers: 0
+  sha256: 1fd6c9418daa805c379d28d0e46eb8bdefe30ab1de8d75041b3a52608b0241e9
+- name: lexical_preemption_heuristic
+  group: seed
+  origin: data/rsa_open/seeds/bar/lexical_preemption_heuristic.py
+  rationale: Lexical preemption heuristic listener. Listeners interpret referring expressions using a non-Bayesian lexical
+    preemption heuristic rather than recursive Theory of Mind. When hearing a word that applies to multiple referents, listeners
+    choose among candidate objects possessing that feature by penalizing candidates that possess unmentioned distinguishing
+    features that could have uniquely identified them in the context, favoring referents that lack an exclusive alternative
+    label. On uninformative trials without an informative word, listeners choose uniformly among available objects.
+  seen:
+    literature: plain
+    studies: []
+  hand_set_numbers: 0
+  sha256: dc53ca3e47d8b63789a027009042ef67e2df3c65cfda9a9dc2f5d32c066b829f
+- name: rsa_l2_singleton_feat_color_familiar_l0
+  group: seed
+  origin: data/rsa_open/seeds/bar/rsa_l2_singleton_feat_color_familiar_l0.py
+  rationale: 'RSA pragmatic listener at depth 2 with singleton salience, contextual distinctiveness, visual feature complexity,
+    visual color contrast, familiarization base rates, and literal L0. Refining rsa_l2_singleton_distinct_feat_color_l0 with
+    the familiarization base-rate component from rsa_l2_singleton_features_familiar_l0: speakers and listeners reason at depth
+    2 (inverting a speaker who simulates a depth-1 pragmatic listener) with common knowledge of an object prior combining
+    discrete visual singleton salience (favoring unique objects with no duplicates in the scene), continuous contextual distinctiveness
+    (favoring objects with greater feature contrast relative to the rest of the display), visual feature complexity (weighting
+    objects by total feature count), visual color contrast (favoring fully colored objects over desaturated grayscale distractors),
+    and experiential exposure frequency (favoring objects seen more frequently during familiarization). Crucially, the foundational
+    simulated literal listener L0 operates purely on truth-conditional semantics without perceptual or experiential bias,
+    preventing redundant prior compounding across reasoning tiers. On prior trials with no informative word, choices are governed
+    directly by the combined perceptual and experiential prior. A lapse parameter mixes in uniform guessing.'
+  seen:
+    literature: plain
+    studies: []
+  hand_set_numbers: 0
+  sha256: e633a323717144c7f0282f95629c18ef4cea06f60377b1c92d787c8376ff5960
+- name: rsa_l2_singleton_feat_color_valence_l0
+  group: seed
+  origin: data/rsa_open/seeds/bar/rsa_l2_singleton_feat_color_valence_l0.py
+  rationale: 'RSA pragmatic listener at depth 2 with singleton salience, contextual distinctiveness, visual feature complexity,
+    evaluative valence framing, visual color contrast, and literal L0. Refining rsa_l2_singleton_distinct_feat_color_l0 by
+    incorporating the evaluative valence framing component from polarity_congruence_listener: speakers and listeners reason
+    at depth 2 (inverting a speaker who simulates a depth-1 pragmatic listener) with common knowledge of an object prior combining
+    discrete visual singleton salience (favoring unique objects with no duplicates in the scene), continuous contextual distinctiveness
+    (favoring objects with greater feature contrast relative to the rest of the display), visual feature complexity modulated
+    by evaluative framing valence (favoring feature-rich items under neutral/positive framing but inverting to favor sparse,
+    featureless items when referring to a least favorite object), and visual color contrast (favoring fully colored objects
+    over desaturated grayscale distractors). Crucially, the foundational simulated literal listener L0 operates purely on
+    truth-conditional semantics without perceptual bias, preventing redundant prior compounding across reasoning tiers. On
+    prior trials with no informative word, choices are governed directly by the combined perceptual prior. A lapse parameter
+    mixes in uniform guessing.'
+  seen:
+    literature: plain
+    studies: []
+  hand_set_numbers: 0
+  sha256: ca7fe0f167a4c85532df55567d0cfe73c5632c5168f191670e9aaeb16cbe8a97
+- name: competitor_confusion_speaker
+  group: seed
+  origin: data/rsa_open/seeds/bar/competitor_confusion_speaker.py
+  rationale: Pragmatic listener reasoning about a competitor-confusion-averse speaker. Speakers in reference games actively
+    avoid referring expressions that are shared with visually similar or confusable distractors in the context. Candidate
+    words are penalized proportionally to their feature overlap with alternative referents that also satisfy the word. Pragmatic
+    listeners invert this confusion-averse speaker, expecting words to target referents whose competitors are visually distinct
+    rather than near-identical clones.
+  seen:
+    literature: plain
+    studies: []
+  hand_set_numbers: 0
+  sha256: ea936aacd3741d0d041f01a7b733a143673c6e9ad6683981d09483e6074f5676
+- name: softmax_surprisal_isolated_costly_l4
+  group: seed
+  origin: data/rsa_open/seeds/bar/softmax_surprisal_isolated_costly_l4.py
+  rationale: Pragmatic listener at depth 4 with perceptual isolation, feature surprisal prior, graded semantics, utterance
+    extension costs, and softmax belief choice rule.
+  seen:
+    literature: plain
+    studies: []
+  hand_set_numbers: 0
+  sha256: 284b0d1d389c0346227261699bfa2c06e5c37c698bcb4f81d57db21ccea37a0f
+- name: oddity_heuristic_listener
+  group: seed
+  origin: data/rsa_open/seeds/bar/oddity_heuristic_listener.py
+  rationale: Perceptual oddity heuristic listener. Listeners interpret referring expressions using a perceptual oddity heuristic
+    rather than recursive Theory of Mind. When hearing a word that applies to multiple referents, listeners select the contextually
+    unique singleton that lacks identical duplicates in the visual display. On uninformative trials without an informative
+    word, listeners spontaneously choose the unique singleton, defaulting to uniform choice when all items are distinct or
+    no oddity contrast exists. A lapse parameter captures random clicking.
+  seen:
+    literature: plain
+    studies: []
+  hand_set_numbers: 0
+  sha256: 63f2de498f2d6c59d829b3eb0855aa335980b92e742190431d7f3c041eb09225
+- name: closed_c0e1_candidate_load_codability_listener
+  group: closed
+  origin: data/rsa/live/live_rsa_c0/outputs/experiment1/model_loop/models/candidate_load_codability_listener.py
+  rationale: "Pragmatic listener at depth 2 with referential candidate load attentional capture, referential codability prior,\
+    \ expected communicative success, competitor confusion avoidance, and visual salience prior. Refining candidate_load_attention_listener\
+    \ by incorporating the referential codability component from referential_codability_listener: listeners expect speakers\
+    \ to refer to objects with high referential codability\u2014objects possessing distinguishing descriptive features that\
+    \ make them viable communicative targets in the scene context. Before hearing an informative word, listeners evaluate\
+    \ each referent by its communicative affordance, defined as the total discriminative capacity of the available expressions\
+    \ that describe it, elevating a priori expectations for distinguishable entities. This communicative affordance prior\
+    \ directly moderates overly aggressive scalar implicatures on two-object displays, suppresses choices of intermediate\
+    \ feature-count competitors on multi-match displays, and elevates choices of feature-rich objects on ubiquitous utterance\
+    \ and mumble displays. Differences from candidate_load_attention_listener: - Recursion depth remains depth 2 (choice_probs\
+    \ calls L_attention, which inverts a speaker simulating depth-1 listener L1). - Added parameter: w_codable (prior dist.Normal(0.0,\
+    \ 1.0)). - No parameters removed (retains alpha, logit_p_base, w_load, w_popout, w_candidate, w_singleton, w_distinct,\
+    \ w_features, w_valence, w_color, w_confusion, and lapse). - In choice_probs, added compute_codability(ctx) to compute\
+    \ contextual communicative affordance as the sum of inverse utterance extensions (real_lex / k_u) across true features,\
+    \ adding params[\"w_codable\"] * codability to the prior logits passed to softmax_prior."
+  seen:
+    literature: plain
+    studies:
+    - closed_c0e1
+  hand_set_numbers: 1
+  sha256: 6e13c7ce4bd8ff1161b95f5e07bbae565ea41c6e21ebb25464c8f5d95c43dd86
+- name: closed_c0e2_prototype_typicality_bounded_listener
+  group: closed
+  origin: data/rsa/live/live_rsa_c0/outputs/experiment2/model_loop/models/prototype_typicality_bounded_listener.py
+  rationale: 'Pragmatic listener at depth 2 under capacity-limited executive inhibitory control with contextual category typicality
+    and bounded speaker consideration. Refining prototype_typicality_listener by incorporating bounded speaker consideration
+    from bounded_consideration_speaker: speakers evaluate communicative alternatives probabilistically rather than exhaustively,
+    retrieving distinguishing alternative expressions with a bounded consideration rate and otherwise producing an unconsidered
+    true feature without communicative comparison. Pragmatic listeners invert this bounded-consideration speaker under capacity-limited
+    executive inhibitory control, recognizing that hearing an ambiguous word does not rule out feature-rich competitors whose
+    unique distinguishing words failed to enter the speaker''s consideration set. This directly moderates overly aggressive
+    scalar exclusion, elevates choices of maximal-feature candidates under ubiquitous and multi-match expressions (all_match_max_feature_choice_rate
+    and four_object_three_candidate_max_feature_rate), elevates selections of duplicated candidates under shared words (duplicate_matching_candidate_choice_rate),
+    and calibrates pragmatic target rates against all-feature competitors (four_object_target_vs_all_feature_rate). Differences
+    from prototype_typicality_listener: - Recursion depth remains depth 2 (choice_probs calls L_typical, which inverts a speaker
+    simulating depth-1 listener L1). - Added parameter: logit_p_consider (prior dist.Normal(1.0, 1.0)). - No parameters removed
+    (retains alpha, logit_p_base, w_load, w_popout, w_candidate, w_inhibit_leak, w_typical, w_singleton, w_distinct, w_features,
+    w_valence, w_color, w_confusion, and lapse). - Speaker utility in both S1 and S2: added an alternative consideration mode
+    choice (speaker: chooses(mode in MODES, wpp=p_consider if mode == 1 else (1.0 - p_consider))) where communicative utility
+    exp(alpha * L - w_confusion * at(confusion, u, r)) is evaluated when mode == 1, while mode == 0 selects true utterances
+    uniformly with weight 1.0. - In choice_probs: computed p_consider = jax.nn.sigmoid(params["logit_p_consider"]) and passed
+    p_consider to L_typical.'
+  seen:
+    literature: plain
+    studies:
+    - closed_c0e1
+    - closed_c0e2
+  hand_set_numbers: 2
+  sha256: 7068a815cbfc290b27b5fe577d0f685ab0b20e45d1da302824b824d20d7df9d7
+- name: closed_c0e3_boundary_avoidable_ambiguity_listener
+  group: closed
+  origin: data/rsa/live/live_rsa_c0/outputs/experiment3/model_loop/models/boundary_avoidable_ambiguity_listener.py
+  rationale: "Listeners interpret referring expressions through boundary polarization with avoidable ambiguity avoidance:\
+    \ when a referring expression matches multiple candidate referents that vary in feature complexity, evaluative attention\
+    \ anchors on the range extrema\u2014the minimal pragmatic target and the maximal category prototype\u2014while candidates\
+    \ located in the interior of the feature range suffer cognitive suppression due to lack of boundary contrast. When evaluating\
+    \ alternative referring expressions, listeners expect that speakers adhere to Gricean clarity by penalizing ambiguous\
+    \ expressions specifically when the ambiguity is avoidable\u2014that is, when the intended referent possessed an alternative\
+    \ distinguishing expression that would have uniquely identified it in context. Consequently, competitors that possessed\
+    \ uniquely distinguishing alternatives are decisively precluded under shared expressions, while minimal pragmatic targets\
+    \ and multi-feature candidates lacking distinguishing options are strongly favored. Refining boundary_polarization_listener\
+    \ by incorporating the avoidable ambiguity avoidance component from avoidable_ambiguity_speaker: speakers in reference\
+    \ games adhere to Gricean clarity by penalizing referentially ambiguous expressions specifically when the ambiguity is\
+    \ avoidable\u2014that is, when the intended referent possessed an alternative distinguishing expression that would have\
+    \ uniquely identified it in context. Pragmatic listeners invert this avoidable-ambiguity-sensitive speaker under boundary\
+    \ polarization, recognizing that hearing an ambiguous word provides strong evidence for referents that lacked distinguishing\
+    \ alternatives. This directly rectifies the observed under-selection of multi-feature pragmatic targets over all-feature\
+    \ competitors in four-object displays (four_object_multifeature_target_vs_all_feature_rate and four_object_two_feature_target_vs_three_feature_competitor_rate),\
+    \ the under-selection of pragmatic targets possessing unique alternative features (unique_alternative_target_choice_rate),\
+    \ and the over-selection of single-feature targets over three-feature competitors in two-object displays (two_object_one_feature_target_vs_three_feature_competitor_rate),\
+    \ while fully preserving range-frequency boundary polarization, capacity-limited executive attention, competitor confusion\
+    \ avoidance, and contrastive outlier pop-out. Differences from boundary_polarization_listener: - Recursion depth remains\
+    \ depth 2 (choice_probs calls L2, which inverts a speaker simulating depth-1 listener L1). - Added parameter: c_avoid\
+    \ (prior dist.Normal(0.0, 1.0)). - Removed parameters: None (retains alpha, w_interior, logit_p_base, w_load, w_popout,\
+    \ w_candidate, logit_p_outlier, w_inhibit_leak, w_typical, w_singleton, w_distinct, w_features, w_valence, w_color, w_confusion,\
+    \ and lapse with identical priors). - In choice_probs: added compute_avoidable(ctx) computing the contextual avoidable\
+    \ ambiguity matrix as avoidable = real_lex * ambiguity[:, None] * has_unique[None, :] where ambiguity = (k_u - 1.0) /\
+    \ jnp.maximum(1.0, n_obj - 1.0) * (1.0 - ctx.is_sink) and has_unique indicates whether the referent possesses any unique\
+    \ word with k_u == 1, scaled by params[\"c_avoid\"] as avoidable = params[\"c_avoid\"] * compute_avoidable(ctx), and passed\
+    \ avoidable to L2. - Speaker utility in both L1 and L2: added avoidable ambiguity penalty term - at(avoidable, u, r) inside\
+    \ communicative utility, evaluating as alpha * (L - w_interior * at(interior, u, r) - at(avoidable, u, r)) - w_confusion\
+    \ * at(confusion, u, r) (where L is L0 in L1 and L1 in L2)."
+  seen:
+    literature: plain
+    studies:
+    - closed_c0e1
+    - closed_c0e2
+    - closed_c0e3
+  hand_set_numbers: 7
+  sha256: f3f09b2b7311d6548ee6b95e15e30b517925493f944e604fba2284dc7e97c280
+- name: closed_c1e1_softmax_belief_listener
+  group: closed
+  origin: data/rsa/live/live_rsa_c1/outputs/experiment1/model_loop/models/softmax_belief_listener.py
+  rationale: Listeners evaluate candidate referents through pragmatic counterfactual reasoning, but rather than strictly matching
+    choice probabilities to posterior beliefs, they select their click via a bounded-precision softmax decision rule over
+    beliefs. When choosing among semantically valid referents, response sensitivity determines how strongly differences in
+    subjective belief translate into click probabilities, softening extreme pragmatic inferences and generating bounded, probabilistic
+    choice. On uninformative trials, choices likewise reflect this bounded softmax response rule applied over prior perceptual
+    and contextual expectations.
+  seen:
+    literature: plain
+    studies:
+    - closed_c1e1
+  hand_set_numbers: 0
+  sha256: 8a3a8b2c595f70d0149ded4a3350cf38e94e3d6a010c83b74721a305ed1d5545
+- name: closed_c1e2_contrastive_extremity_noisy_speaker
+  group: closed
+  origin: data/rsa/live/live_rsa_c1/outputs/experiment2/model_loop/models/contrastive_extremity_noisy_speaker.py
+  rationale: 'Pragmatic listeners reason at depth 1 about a similarity-contrast speaker under common knowledge of visual endpoint
+    extremity, but account for stochastic execution noise in the speaker''s feature articulation. Refining contrastive_extremity_speaker
+    by incorporating the stochastic transmission noise component from noisy_channel_speaker_l1: speakers evaluate message
+    informativeness through perceptual confusability decaying with visual feature distance and anchor referent expectations
+    at the scene''s complexity extremes, but occasionally slip when articulating true features. This transmission noise cushions
+    extreme likelihood ratios and directly addresses residual over-penalization of competitors in larger displays and feature
+    gaps, while preserving contrastive similarity reasoning and endpoint salience. Differences from source (contrastive_extremity_speaker):
+    - Recursion depth: depth 1 (choice_probs calls L1, unchanged from source). - Parameters added: epsilon (prior: dist.Beta(1.0,
+    5.0)), representing the probability of stochastic execution noise over applicable features. - Parameters removed: none.
+    - Other terms: In the simulated speaker at level L1, the speaker chooses an intended communicative feature m according
+    to contrastive similarity utility, but articulates an applicable feature u with stochastic execution noise epsilon.'
+  seen:
+    literature: plain
+    studies:
+    - closed_c1e1
+    - closed_c1e2
+  hand_set_numbers: 1
+  sha256: e97fbaabc221bf9ea671b5aca7b016375ba87d8b8f996cd9ca435ce594034777
+- name: closed_c1e3_feature_surprisal_ensemble_listener
+  group: closed
+  origin: data/rsa/live/live_rsa_c1/outputs/experiment3/model_loop/models/feature_surprisal_ensemble_listener.py
+  rationale: Visual scene expectations and communicative topic focus are governed by information-theoretic feature surprisal
+    and Gestalt type-token ensemble grouping. Human visual attention and communicative expectations prioritize candidate referents
+    according to the contextual surprisal of their present visual features, while identical objects form perceptual ensembles
+    whose collective attention is partitioned equally among individual members. The unadorned baseline object serves as the
+    contrastive ground of the visual scene while the maximally elaborated focal exemplar anchors topical prominence, compressing
+    intermediate-complexity items and preventing empty singletons from dominating feature-rich duplicate objects.
+  seen:
+    literature: plain
+    studies:
+    - closed_c1e1
+    - closed_c1e2
+    - closed_c1e3
+  hand_set_numbers: 2
+  sha256: 388b814e990ad573145204842e606ccb8960efddebb48d330f85ea51b53a5d2b
+- name: closed_c2e1_bounded_endpoint_prev_redundancy_l2
+  group: closed
+  origin: data/rsa/live/live_rsa_c2/outputs/experiment1/model_loop/models/bounded_endpoint_prev_redundancy_l2.py
+  rationale: 'We refine bounded_prevalence_redundancy_l2 by incorporating contextual end-point salience from endpoint_salience_l2
+    into the shared visual referent prior. In visual reference games, listeners structure their default expectations around
+    contextual end-point salience: perceptual attention spontaneously anchors at the boundaries of the scene''s feature complexity
+    distribution (the minimal baseline object and the maximal exemplar), while intermediate objects that fall strictly between
+    these poles are disfavored as unremarkable non-targets. This extremity prior directly rectifies the systematic overprediction
+    of intermediate-feature objects on unprompted mumble trials and boosts maximal competitor exemplars during reference resolution.
+    Differences from bounded_prevalence_redundancy_l2: - Recursion depth: Unchanged; choice_probs calls L2. - Parameters added:
+    w_endpoint (prior: dist.Normal(0.0, 1.0)). - Parameters removed: None. - Shared visual referent prior: Adds contextual
+    endpoint salience (w_endpoint * is_endpoint) to the perceptual prior, where is_endpoint flags objects possessing either
+    the minimum or maximum feature count in the display, disfavoring strictly intermediate objects. - All other terms: Bounded
+    capacity likelihood exponentiation (kappa) in L1 and L2, speaker contextual feature prevalence accessibility (w_prevalence)
+    and contextual feature redundancy discounting (w_redundancy) on speaker alternatives in S1 and S2, literal truth-conditional
+    semantics at L0, depth-2 RSA recursion, and uniform lapse mixing remain identical to bounded_prevalence_redundancy_l2.'
+  seen:
+    literature: plain
+    studies:
+    - closed_c2e1
+  hand_set_numbers: 0
+  sha256: 68ae4327906bb2d3ae61a82fd1640caf1a522bc09346bdb5eb4cc54b92f90ac1
+- name: closed_c2e2_competition_endpoint_binding_l2
+  group: closed
+  origin: data/rsa/live/live_rsa_c2/outputs/experiment2/model_loop/models/competition_endpoint_binding_l2.py
+  rationale: 'We refine endpoint_binding_uncertainty_lapse_l2 by incorporating lexical competition in speaker utterance production
+    from lexical_competition_speaker_l2 into communicative inference. When communicating about an object with multiple applicable
+    visual features, candidate labels compete for lexical retrieval and selection in the speaker''s lexicon, attenuating the
+    speaker''s communicative precision and increasing the production of shared or redundant expressions. Pragmatic listeners
+    invert this competition-bounded speaker via recursive Theory of Mind at depth 2, which softens recursive preemption penalties
+    against multi-featured competitor referents in two-object subset displays and cross-cutting contexts while preserving
+    extremity expectations, perceptual feature binding, and contextual lexical uncertainty. Differences from endpoint_binding_uncertainty_lapse_l2:
+    - Recursion depth: Unchanged; choice_probs calls L_choice, which marginalizes over depth-2 pragmatic listener L2. - Parameters
+    added: w_competition (prior: dist.LogNormal(-1.0, 1.0)). - Parameters removed: None. - Speaker utterance production /
+    lexical competition: In S1 and S2, the speaker''s communicative precision varies by referent feature complexity (alpha
+    = params["alpha"] / (1.0 + params["w_competition"] * jnp.maximum(ctx.feature_count - 1.0, 0.0))) from lexical_competition_speaker_l2,
+    attenuating speaker rationality when describing objects that possess multiple competing candidate labels. - Shared visual
+    referent prior: Unchanged; combines singleton salience (w_singleton), contextual distinctiveness (w_distinct), visual
+    feature count (w_features), featureless baseline ground salience (w_empty), contextual endpoint salience (w_endpoint *
+    is_endpoint), and color contrast (w_color). - Perceptual feature-binding mechanism: Unchanged; non-matching distractor
+    objects receive illusory conjunction probability scaling with relative visual feature complexity and prior salience (binding_weight
+    = is_false * (ctx.feature_count / max_fc) * prior, normalized as p_bind), mixed into the pragmatic interpretation as p_word
+    = (1.0 - effective_bind) * heard + effective_bind * p_bind. - Contextual lexical feature uncertainty: Unchanged; listeners
+    marginalize over alternative feature interpretations that co-occur in context with the uttered word via transition matrix
+    p_feat (weighted by beta) in L_choice. - Response choice lapse mechanism: Retains salience-captured attentional lapse
+    mixing (p_choice = (1.0 - lapse) * p_word + lapse * prior, returning prior on uninformative prior trials). - All other
+    terms: Capacity-limited inferential updating (kappa) at L1 and L2, contextual feature prevalence accessibility (w_prevalence)
+    and referential equivalence class size redundancy discounting (w_redundancy via compute_equivalence_class) on speaker
+    alternatives in S1 and S2, literal truth-conditional semantics at L0, and depth-2 RSA recursion remain identical to endpoint_binding_uncertainty_lapse_l2.'
+  seen:
+    literature: plain
+    studies:
+    - closed_c2e1
+    - closed_c2e2
+  hand_set_numbers: 0
+  sha256: 993a2f775f162d016d36b8b7b04cd596689c70a7b255fb4b346f0cbe8bf8f3a0
+- name: closed_c2e3_competition_endpoint_binding_lapse_l2
+  group: closed
+  origin: data/rsa/live/live_rsa_c2/outputs/experiment3/model_loop/models/competition_endpoint_binding_lapse_l2.py
+  rationale: 'We refine endpoint_binding_salience_lapse_l2 by incorporating lexical competition in speaker utterance production
+    from lexical_competition_speaker_l2 into communicative inference. When communicating about an object with multiple visual
+    features, candidate labels compete for lexical retrieval and selection in the speaker''s lexicon, attenuating the speaker''s
+    communicative precision and increasing the production of shared or redundant expressions. Pragmatic listeners invert this
+    competition-bounded speaker via recursive Theory of Mind at depth 2, which softens recursive preemption penalties against
+    multi-featured competitor referents, directly resolving the incumbent model''s overprediction of pragmatic targets in
+    two-object subset displays (two_object_subset_target_rate) and elevating simpler matching referents in cross-cutting displays
+    (non_nested_fewer_features_rate) while preserving contextual endpoint salience, perceptual feature binding, and salience-captured
+    attentional lapses. Differences from endpoint_binding_salience_lapse_l2: - Recursion depth: Unchanged; choice_probs calls
+    L2. - Parameters added: w_competition (prior: dist.LogNormal(-1.0, 1.0)). - Parameters removed: None. - Speaker utterance
+    production / lexical competition: In S1 and S2, the speaker''s communicative precision varies by referent feature complexity
+    (alpha = params["alpha"] / (1.0 + params["w_competition"] * jnp.maximum(ctx.feature_count - 1.0, 0.0))) from lexical_competition_speaker_l2,
+    replacing uniform rationality with competition-attenuated precision across candidate referents (passed as vector alpha:
+    ... and indexed via vec(alpha, r)). - All other terms: Contextual end-point salience (w_endpoint) in the shared visual
+    referent prior (alongside w_singleton, w_distinct, w_features, w_empty, and w_color), perceptual feature-binding noise
+    on non-matching distractors (w_binding), capacity-limited inferential updating (kappa) at L1 and L2, contextual feature
+    prevalence accessibility (w_prevalence) and referential equivalence class size redundancy discounting (w_redundancy via
+    compute_equivalence_class) on speaker alternatives in S1 and S2, literal truth-conditional semantics at L0, depth-2 RSA
+    recursion, and salience-captured attentional lapse mixing remain identical to endpoint_binding_salience_lapse_l2.'
+  seen:
+    literature: plain
+    studies:
+    - closed_c2e1
+    - closed_c2e2
+    - closed_c2e3
+  hand_set_numbers: 0
+  sha256: 6c0d0f9c45d819be084c2c4c1e05f5262b2e73e21d7ae9766ddd46640e35c067
+- name: cons_d2_dup_rich_emp_sur_red_asp_int_avo_comp_conf_bind_att
+  group: consolidation
+  origin: src.rsa.consolidate.variants.write_variant(all 13 mechanisms)
+  rationale: 'The closed consolidation''s superset: every mechanism switched on.'
+  seen:
+    literature: plain
+    studies:
+    - closed_c0e1
+    - closed_c0e2
+    - closed_c0e3
+    - closed_c1e1
+    - closed_c1e2
+    - closed_c1e3
+    - closed_c2e1
+    - closed_c2e2
+    - closed_c2e3
+  whole_superset: true
+  hand_set_numbers: 20
+  sha256: 5da811ce6f4748e812b73e4fef5837e1506a8cdfa7719775e9fdbc1121e6b5f0
+- name: cons_dup_sur_red_asp_int_comp_bind
+  group: consolidation
+  origin: data/rsa/consolidate/eliminate/lean/cons_dup_sur_red_asp_int_comp_bind.py
+  rationale: Backward elimination's survivor.
+  seen:
+    literature: plain
+    studies:
+    - closed_c0e1
+    - closed_c0e2
+    - closed_c0e3
+    - closed_c1e1
+    - closed_c1e2
+    - closed_c1e3
+    - closed_c2e1
+    - closed_c2e2
+    - closed_c2e3
+  whole_superset: true
+  hand_set_numbers: 20
+  sha256: 3802b92e35841b6f0d57efb548a1aaac127e3864dd22c57733c90938952d57b1
+- name: pilot1_e1_speaker_alternative_necessity_tom
+  group: open pilot 1
+  origin: data/rsa_open/live/open_chain_0/experiment1/loop/models/speaker_alternative_necessity_tom.py
+  rationale: "Speakers in reference games select expressions by evaluating candidate words against a target object's alternative\
+    \ naming options: narrow individuating features strongly inhibit choosing other words, partially diagnostic three-object\
+    \ features compete weakly, and universal scene-wide words serve as last-resort labels that are strongly suppressed for\
+    \ any referent possessing an alternative word whenever a unique sole-label referent in the display can only be named by\
+    \ the universal word. Listeners invert this alternative-constrained speaker across two levels of recursive reasoning while\
+    \ shifting toward direct alternative-necessity grounding (`L0`) on over-extended utterances\u2014distinguishing three-referent\
+    \ category filters that exclude a foil from four-referent universal labels\u2014and weighting pre-utterance topic salience\
+    \ by contrastive figure completeness when a universal feature anchors the scene background."
+  seen:
+    literature: all
+    studies:
+    - pilot1_exp1
+  hand_set_numbers: 27
+  sha256: 3646b5919432ddfb59a212e5106ee48471d607af6b65ad916b5aafa3d3935d9d
+- name: pilot1_e2_attentional_buffer_anchor_sampling
+  group: open pilot 1
+  origin: data/rsa_open/live/open_chain_0/experiment2/loop/models/attentional_buffer_anchor_sampling.py
+  rationale: "Listeners and speakers process multi-object displays under a resource-limited two-slot attentional buffer that\
+    \ anchors pre-utterance display scanning on polar figure-ground extremes\u2014complete multi-feature figures, negative-space\
+    \ blank oddballs, and unique singletons\u2014while compressing unanchored intermediate feature bundles and discounting\
+    \ redundant contrasts against blank ground foils. When a word's extension fits within the two-item buffer, listeners track\
+    \ both candidate referents with recursive pragmatic inference\u2014shielding complex singleton figures on non-minimal\
+    \ pairs while preserving sole-label priority for single-feature targets\u2014whereas when an expression overflows the\
+    \ buffer across three or more objects, inference falls back on approximate anchor sampling over minimal prototypes and\
+    \ singleton exemplars while suppressing unanchored same-tier distractors. Because a three-referent expression in a four-object\
+    \ scene overflows the two-item focal buffer while leaving one referent outside it, incomplete attentional inhibition leaks\
+    \ boundary support onto low-complexity excluded foils across both clone-bearing and clone-free displays."
+  seen:
+    literature: all
+    studies:
+    - pilot1_exp1
+    - pilot1_exp2
+  hand_set_numbers: 123
+  sha256: c4da405f5e2a1058bd7544faf739d5c05c1520923ce394be9bbb1432b36b7469
+- name: open1_extension_noisy_graded_semantics_l2
+  group: stage 1 open
+  origin: data/rsa_open/live_v2/open_chain_0/experiment1/loop/models/extension_noisy_graded_semantics_l2.py
+  rationale: 'Refining noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience)
+    and the same recursion depth (L2 calling L1, which calls L0), by scaling each real word''s semantic confusion noise on
+    false objects by the squared proportion of display objects in that word''s literal extension: defining ext_size = jnp.sum(real_lex,
+    axis=1, keepdims=True) and replacing sem_noise = 1.0 / (n_utt * n_obj) with sem_noise = (ext_size * ext_size) / (n_utt
+    * n_obj * n_obj), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real,
+    fc_norm, fc_dev, extremity, prior, fc_safe, graded_true, noisy_real, soft_lex, L0, L1, L2, listener, and speaker) unchanged.
+    Under uniform constant noise across utterances, depth-two pragmatic recursion suppresses false-alarm probabilities on
+    three-of-four valid-referent trials to nearly zero because two levels of speaker likelihood inversion amplify the ratio
+    between valid and false referents. Because a word that spans most of the display induces greater referential crowding
+    and feature-verification interference across objects than a word with a small extension, scaling semantic confusion by
+    the squared extension proportion explains why listeners make substantially more false-alarm choices when a heard word
+    applies to three of four objects than when it applies to two across E and exp1.'
+  seen:
+    literature: all
+    studies:
+    - s1_open_exp1
+  hand_set_numbers: 0
+  sha256: 8bf54ffb715371dbfa733c780258b127cfab1a549a65b37d2aac13747e9e3723
+- name: open2_l1_graded_semantics_l2
+  group: stage 1 open
+  origin: data/rsa_open/live_v2/open_chain_0/experiment2/loop/models/l1_graded_semantics_l2.py
+  rationale: Refining extension_noisy_graded_semantics_l2 with no parameters added or removed (retaining only alpha and w_salience)
+    and the same recursion depth (L2 calling L1, which calls L0), by using the literal truth-conditional lexicon ctx.lex in
+    L0 and in the L2 speaker while retaining the noisy graded lexicon soft_lex in the L1 speaker (updating L1 to take true_lex
+    and soft_lex, calling L0[u, r](true_lex) inside L1, and calling L2(params["alpha"], ctx.lex, soft_lex, prior) in listener
+    and speaker), while keeping all other terms (real_mask, real_lex, diff, pair_dist, is_singleton, distinct, n_real, fc_norm,
+    fc_dev, extremity, prior, n_utt, n_obj, ext_size, sem_noise, fc_safe, graded_true, noisy_real, soft_lex, listener, and
+    speaker) unchanged. In extension_noisy_graded_semantics_l2, passing soft_lex into L0, L1, and L2 compounds the 1/feature_count
+    feature-dilution penalty three times across recursion levels and assigns positive L2 probability to literally false referents;
+    restricting graded feature dilution and extension-crowding noise to the L1 speaker's lexical verification while keeping
+    L0 and L2 truth-conditional avoids over-penalizing multi-feature valid referents on ambiguous trials and restores exact
+    zero listener probability on literally false referents, closing both the valid-referent feature-count gap and the valid-versus-false
+    referent rating contrast on exp2.
+  seen:
+    literature: all
+    studies:
+    - s1_open_exp1
+    - s1_open_exp2
+  hand_set_numbers: 0
+  sha256: f334968e6f623ed973e101751680c592e16e13632773f9ff7fc0e22d3b028e7d
+- name: open3_complexity_gated_retrieval_decision_l2
+  group: stage 1 open
+  origin: data/rsa_open/live_v2/open_chain_0/experiment3/loop/models/complexity_gated_retrieval_decision_l2.py
+  rationale: 'Listeners and speakers map pragmatic beliefs into responses through a complexity-gated retrieval decision rule
+    rather than pure expected-utility maximization: when selecting a referring expression for a target object, a speaker combines
+    a specificity-and-cost-weighted pragmatic choice (whose extension penalty grows with the word''s extension share and the
+    target''s unmentioned feature load) with a structured feature-availability fallback weighted by both literal and feature-diluted
+    target recovery. In comprehension, listeners invert a depth-two graded-semantics speaker under a shared salience prior
+    favoring contextual singletons, distinctive objects, and complexity-extreme referents, with referential crowding noise
+    bounded by display size and attenuated at the top listener level by the word''s non-universal contrast. Grounding the
+    speaker''s decision rule in complexity-and-crowding-scaled extension cost and dual-recovery availability explains why
+    speakers strongly prefer the narrowest true feature (extension size 2) on multi-feature non-unique targets in exp3 while
+    preserving runner-up specificity gradation, competitor-complexity sensitivity, and comprehension accuracy across E, exp1,
+    and exp2.'
+  seen:
+    literature: all
+    studies:
+    - s1_open_exp1
+    - s1_open_exp2
+    - s1_open_exp3
+  hand_set_numbers: 0
+  sha256: 14fc779f91e3a8c57e630e00cae447b8ab8b0ea11a414613d714acab82a2554c
+- name: fixed1_prototype_tier_confusion_l2
+  group: stage 1 fixed
+  origin: data/rsa_open/live_v2/fixed_chain_0/experiment1/loop/models/prototype_tier_confusion_l2.py
+  rationale: We refine `tier_competitor_confusion_l2` while keeping recursion depth 2 (`L2` inverting a speaker who simulates
+    `L1`, which inverts a speaker simulating `L0`) and the exact same two free parameters (`alpha` and `w_confusion`, both
+    with `LogNormal(0.0, 0.5)` priors), by extending complexity-tier confusion with incomplete-prototype penalty and complete-prototype
+    anchoring on upper-tier literal referents alongside singleton uniqueness in the object priors. Specifically, in `confusion`
+    we add `(is_non_all_max - is_all_utt * (min_cloned + gap_utt)) / n_obj`, penalizing upper-tier literal referents (`is_max_utt`)
+    that lack at least one scene feature (`is_non_all_max`, where `fc < n_real_words`) while reducing confusion on complete
+    all-features literal referents (`is_all_utt`, where `fc == n_real_words`) when the minimal-complexity literal tier is
+    cloned (`min_cloned`) or separated by a multi-feature span (`gap_utt = max(fc - min_true_fc - 1, 0) / n_real_words`);
+    in `word_prior` we subtract `is_singleton / (n_obj * n_real_words)` inside the `-w_confusion` weight; and in `prior_choice`
+    we replace `-is_max_fc / n_obj` with `-(is_max_fc * (1.0 + is_singleton * inter_frac) + is_singleton) / n_obj` (where
+    `inter_frac = sum(is_inter_scene) / n_obj`). Penalizing incomplete upper-tier literal referents and rewarding complete
+    all-features prototypes explains why listeners on word trials reject partial-feature competitors in favor of minimal-feature
+    referents (`unique_single_feature_referent_vs_partial_feature_competitor_rate`, `max_literal_referent_rate_in_three_referent_false_distractor_scenes`,
+    and `cloned_min_referent_vs_distinct_max_competitors_rate`) yet select all-features prototypes against single-feature
+    referents (`cloned_single_feature_referent_rate_against_unique_all_features_competitor` and `all_features_referent_rate_against_unique_single_feature_with_false_distractor`),
+    while singleton and unique-maximum anchoring in the prior explains why listeners favor unique maximal-feature objects
+    on three-tier prior displays (`prior_unique_max_feature_rate_in_four_object_three_tier_scenes`).
+  seen:
+    literature: all
+    studies:
+    - s1_fixed_exp1
+  hand_set_numbers: 0
+  sha256: 51508d94d2e13f345ea0bc95fcce2b3e33570f347e6d969bc8e573d578a89873
+- name: fixed2_contrastive_anchor_decision_l2
+  group: stage 1 fixed
+  origin: data/rsa_open/live_v2/fixed_chain_0/experiment2/loop/models/contrastive_anchor_decision_l2.py
+  rationale: Listeners infer speaker intent through depth-2 recursive reasoning over a confusion-averse speaker and convert
+    those posterior beliefs into a response via a contrastive anchor decision rule. When selecting a referent, the listener's
+    decision rule boosts complete complexity-boundary prototypes and unique upper-boundary referents against cloned minimal
+    competitors, suppresses incomplete referents that lack a uniquely identifying feature, and allows low-rate decision intrusion
+    onto a unique minimal-complexity singleton when it is the sole object excluded by an ambiguous word. On silent prior trials,
+    listeners apply the same contrastive boundary decision rule to favor perceptually isolated singletons and maximal prototypes
+    over duplicated items.
+  seen:
+    literature: all
+    studies:
+    - s1_fixed_exp1
+    - s1_fixed_exp2
+  hand_set_numbers: 0
+  sha256: 43edf861b9d09cdb3ddf8e240040235b593a100a3eec66d655789b971796b32b
+- name: fixed3_sole_exclusion_shadowing_heuristic
+  group: stage 1 fixed
+  origin: data/rsa_open/live_v2/fixed_chain_0/experiment3/loop/models/sole_exclusion_shadowing_heuristic.py
+  rationale: "Listeners interpret referring expressions through a single-parameter non-Bayesian diagnostic feature-contrast\
+    \ heuristic rather than recursive Theory of Mind simulation. When a word is heard, listeners directly score candidate\
+    \ referents by divisive normalization across each object's competing features\u2014weighted by damped inverse scene extension,\
+    \ feature-overlap crowding, and lexical shadowing\u2014while allowing low-rate associative spillover onto a scene's sole\
+    \ excluded singleton distractor (whether minimal, non-minimal, or empty) and discounting multi-feature prototypes against\
+    \ unique minimal matches. On silent prior trials, listeners apply the same perceptual boundary contrast directly to favor\
+    \ isolated singletons and maximal prototypes over duplicated or intermediate-tier items."
+  seen:
+    literature: all
+    studies:
+    - s1_fixed_exp1
+    - s1_fixed_exp2
+    - s1_fixed_exp3
+  hand_set_numbers: 0
+  sha256: 8759b76f4100af14e70722226f36f506a354d7412dd530f569289a5fb5824c11
