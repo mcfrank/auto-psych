@@ -9,8 +9,10 @@ is more than 2 clustered SEs behind it on every live block: 4-5 SE on the fixed 
 the two finals are level (1.4 SE apart; the fixed arm's second incumbent leads). The exception is the open chain's
 dual-rating experiment (`open_exp2`), where no theory does much better than chance (at most 2.4 SE), the open arm's
 own final loses to plain RSA by 456 nats (2.5 SE), and the best theory is the fixed arm's *first* incumbent. The
-fixed arm's final, the winner on all three fixed blocks, **did not converge** and took five times longer than any other
-theory to fit; its R-hat and divergences are being recovered by a diagnostic re-fit (below).
+fixed arm's final, the winner on all three fixed blocks, **was flagged as not converged** and took five times longer
+than any other theory to fit. A diagnostic re-fit with the same settings converged in all five folds (below), so the
+flag most likely marks a chain that got stuck in the original run, not a theory that cannot be fitted. The re-fit
+did not save scores, so the original scores are what the tables show.
 
 ## The run
 
@@ -50,9 +52,22 @@ its ratio.
 **Not converged: `fixed3_sole_exclusion_shadowing_heuristic`**, the fixed arm's final, the only one of the 13. The fit
 record keeps only the flag (the loop's gate: more than 0.1% divergent transitions, R-hat above 1.05 or bulk ESS
 below 100 in any of the five fold fits), not the numbers. A diagnostic re-fit with the same data, folds, settings and
-seed, recording each fold's divergences, R-hat and ESS, is running on Sherlock (job 52525490, about 11 hours); its
-numbers will be added here. Until then, read its column as the score of an unconverged fit: its wins on the fixed
-blocks may be real or may be partly a sampling artifact.
+seed (job 52525490, 5.2 hours, on a different node) recorded each fold:
+
+| fold | divergent | max R-hat | min bulk ESS | warmup leapfrog steps | minutes |
+|---|---|---|---|---|---|
+| 0 | 0 | 1.003 | 4,321 | 29,052 | 30 |
+| 1 | 0 | 1.003 | 4,269 | 31,910 | 30 |
+| 2 | 0 | 1.002 | 4,297 | 25,275 | 26 |
+| 3 | 0 | 1.002 | 4,544 | 24,734 | 26 |
+| 4 | 0 | 1.002 | 4,703 | 376,866 | 190 |
+
+Every fold converged. Fold 4's warmup took 15 times the leapfrog steps of the others (3 of its 3.2 hours) before
+sampling normally. So the posterior has a region that is hard to adapt in, and the original run, whose fit took
+10.9 hours, probably had a chain fail to get out of it. NUTS on JAX is not bit-reproducible across CPU types, so the
+re-fit cannot reproduce or recover the original's numbers, and it did not save scores. The table's `fixed3` column is
+still the original, flagged fit. That it converges on a second attempt makes a sampling artifact behind its fixed-block
+wins less likely, but it does not rule one out: a converged re-fit's scores would settle it.
 
 ## 2. Each block's best theory, and the other arm's final
 
@@ -106,4 +121,5 @@ From `sacct` (elapsed) and the fit records; peak memory is the batch step's MaxR
 | fixed3_sole_exclusion_shadowing_heuristic | **10:53** | 6.7 |
 
 Memory is flat (6-7.4 GiB, dominated by the corpus and JAX); time ranges from 50 minutes to 2.3 hours except for
-`fixed3`, whose 10.9 hours go with its failure to converge (long trajectories in a difficult posterior).
+`fixed3`, whose 10.9 hours go with its failure to converge (long trajectories in a difficult posterior; the
+diagnostic re-fit took 5.2 hours, 3 of them in one fold's warmup).
