@@ -1,0 +1,156 @@
+{
+ "E": {
+  "best": "fixed2_contrastive_anchor_decision_l2",
+  "n_units": 422,
+  "ranking": [
+   "fixed2_contrastive_anchor_decision_l2",
+   "fixed3_sole_exclusion_shadowing_heuristic",
+   "open3_complexity_gated_retrieval_decision_l2",
+   "open1_extension_noisy_graded_semantics_l2"
+  ],
+  "vs_best": {
+   "open": {
+    "theory": "open3_complexity_gated_retrieval_decision_l2",
+    "diff": -101.71555233001709,
+    "se": 72.00195987847437
+   },
+   "fixed": {
+    "theory": "fixed3_sole_exclusion_shadowing_heuristic",
+    "diff": -13.383058547973633,
+    "se": 48.10244874338808
+   }
+  }
+ },
+ "open_exp1": {
+  "best": "open3_complexity_gated_retrieval_decision_l2",
+  "n_units": 50,
+  "ranking": [
+   "open3_complexity_gated_retrieval_decision_l2",
+   "open1_extension_noisy_graded_semantics_l2",
+   "fixed2_contrastive_anchor_decision_l2",
+   "fixed1_prototype_tier_confusion_l2"
+  ],
+  "vs_best": {
+   "open": {
+    "theory": "open3_complexity_gated_retrieval_decision_l2",
+    "diff": 0.0,
+    "se": 0.0
+   },
+   "fixed": {
+    "theory": "fixed3_sole_exclusion_shadowing_heuristic",
+    "diff": -102.11832523345947,
+    "se": 45.336492074716276
+   }
+  }
+ },
+ "open_exp2": {
+  "best": "fixed1_prototype_tier_confusion_l2",
+  "n_units": 50,
+  "ranking": [
+   "fixed1_prototype_tier_confusion_l2",
+   "rsa_l2_singleton_feat_color_valence_l0",
+   "fixed2_contrastive_anchor_decision_l2",
+   "open2_l1_graded_semantics_l2"
+  ],
+  "vs_best": {
+   "open": {
+    "theory": "open3_complexity_gated_retrieval_decision_l2",
+    "diff": -496.2710678577423,
+    "se": 182.83579298996256
+   },
+   "fixed": {
+    "theory": "fixed3_sole_exclusion_shadowing_heuristic",
+    "diff": -591.8690228462219,
+    "se": 265.2749039154319
+   }
+  }
+ },
+ "open_exp3": {
+  "best": "open3_complexity_gated_retrieval_decision_l2",
+  "n_units": 60,
+  "ranking": [
+   "open3_complexity_gated_retrieval_decision_l2",
+   "literal_listener",
+   "rsa_l1",
+   "softmax_surprisal_isolated_costly_l4"
+  ],
+  "vs_best": {
+   "open": {
+    "theory": "open3_complexity_gated_retrieval_decision_l2",
+    "diff": 0.0,
+    "se": 0.0
+   },
+   "fixed": {
+    "theory": "fixed3_sole_exclusion_shadowing_heuristic",
+    "diff": -875.2128098011017,
+    "se": 143.78049376951256
+   }
+  }
+ },
+ "fixed_exp1": {
+  "best": "fixed3_sole_exclusion_shadowing_heuristic",
+  "n_units": 52,
+  "ranking": [
+   "fixed3_sole_exclusion_shadowing_heuristic",
+   "fixed2_contrastive_anchor_decision_l2",
+   "fixed1_prototype_tier_confusion_l2",
+   "open3_complexity_gated_retrieval_decision_l2"
+  ],
+  "vs_best": {
+   "open": {
+    "theory": "open3_complexity_gated_retrieval_decision_l2",
+    "diff": -115.89751648902893,
+    "se": 27.178863601346965
+   },
+   "fixed": {
+    "theory": "fixed3_sole_exclusion_shadowing_heuristic",
+    "diff": 0.0,
+    "se": 0.0
+   }
+  }
+ },
+ "fixed_exp2": {
+  "best": "fixed3_sole_exclusion_shadowing_heuristic",
+  "n_units": 52,
+  "ranking": [
+   "fixed3_sole_exclusion_shadowing_heuristic",
+   "fixed2_contrastive_anchor_decision_l2",
+   "fixed1_prototype_tier_confusion_l2",
+   "rsa_l2_singleton_feat_color_valence_l0"
+  ],
+  "vs_best": {
+   "open": {
+    "theory": "open3_complexity_gated_retrieval_decision_l2",
+    "diff": -150.28743505477905,
+    "se": 34.99695221035935
+   },
+   "fixed": {
+    "theory": "fixed3_sole_exclusion_shadowing_heuristic",
+    "diff": 0.0,
+    "se": 0.0
+   }
+  }
+ },
+ "fixed_exp3": {
+  "best": "fixed3_sole_exclusion_shadowing_heuristic",
+  "n_units": 52,
+  "ranking": [
+   "fixed3_sole_exclusion_shadowing_heuristic",
+   "fixed2_contrastive_anchor_decision_l2",
+   "fixed1_prototype_tier_confusion_l2",
+   "softmax_surprisal_isolated_costly_l4"
+  ],
+  "vs_best": {
+   "open": {
+    "theory": "open3_complexity_gated_retrieval_decision_l2",
+    "diff": -247.93585228919983,
+    "se": 46.160036677658276
+   },
+   "fixed": {
+    "theory": "fixed3_sole_exclusion_shadowing_heuristic",
+    "diff": 0.0,
+    "se": 0.0
+   }
+  }
+ }
+}
