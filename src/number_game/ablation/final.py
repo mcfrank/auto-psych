@@ -5,13 +5,15 @@ arithmetic are the final's (``data/results/number_game_dataset-nov26/collected/
 run2/number_game/experiment3/model_loop/models/``), unchanged; only the
 switches are new.
 
-The core, never removed: a target is judged by the salience-weighted share of
-the examples' shared profile that it has (``num / den``), through a logistic
-(``intercept``, ``slope``), with the cues' saliences on a simplex
-(``salience``, one component per cue kept).
+The structure, which has no parameters of its own: a target is judged by the
+salience-weighted share of the examples' shared profile that it has
+(``num / den``), through a logistic, with the cues' saliences on a simplex
+(``salience``, one component per cue kept; with one cue, its salience is 1).
 
-The mechanisms (``MECHANISMS``):
+The mechanisms (``MECHANISMS``), every parameter in one of them:
 
+* ``intercept``: the logistic's offset (off: 0); ``slope``: its gain on the
+  share (off: 1).
 * the cues (``CUES``), each one component of ``salience``:
   - the property families the examples share: ``parity``, ``prime``,
     ``square_cube`` (squares and cubes), ``power`` (powers of 2-10),
@@ -61,7 +63,7 @@ FAMILIES = ("parity", "prime", "square_cube", "power", "multiple", "last_digit",
 RANGE = ("range_low", "range_high")
 CUES = (*FAMILIES, *RANGE, "seed", "progression", "span")  # the final's salience components, in its order
 MECHANISMS = (
-    *CUES, "retain", "recency", "primacy",
+    "intercept", "slope", *CUES, "retain", "recency", "primacy",
     "doubt_single", "doubt_rich", "doubt_multi", "doubt_rich_multi", "parity_keep", "doubt_band",
     "memory_limit",
 )
@@ -77,13 +79,15 @@ REQUIRES = {
 KEEP_ONE_OF = (RANGE,)
 # For variant names (``variants.variant_name``).
 SHORT = {
-    "parity": "par", "prime": "prime", "square_cube": "sq", "power": "pow", "multiple": "mult",
+    "intercept": "int", "slope": "slp", "parity": "par", "prime": "prime", "square_cube": "sq", "power": "pow", "multiple": "mult",
     "last_digit": "ld", "contains_digit": "cd", "round_multiple": "round", "range_low": "lo",
     "range_high": "hi", "seed": "seed", "progression": "prog", "span": "span", "retain": "ret",
     "recency": "rec", "primacy": "prim", "doubt_single": "d1", "doubt_rich": "dr1", "doubt_multi": "dm",
     "doubt_rich_multi": "drm", "parity_keep": "pk", "doubt_band": "dband", "memory_limit": "mem",
 }
 NEUTRAL = {
+    "intercept": {"intercept": 0.0},
+    "slope": {"slope": 1.0},
     **{cue: {"salience": "this cue's component at 0"} for cue in CUES},
     "retain": {"retain": 1.0},
     "recency": {"recency": 0.0},
@@ -214,8 +218,8 @@ def build(on):
         sh = [D[f"sh_{f}"] for f in range(N_FAM)]
         hit = [D[f"hit_{f}"] for f in range(N_FAM)]
 
-        intercept = pm.Normal("intercept", mu=-2.0, sigma=1.5)
-        slope = pm.HalfNormal("slope", sigma=5.0)
+        intercept = pm.Normal("intercept", mu=-2.0, sigma=1.5) if "intercept" in on else 0.0
+        slope = pm.HalfNormal("slope", sigma=5.0) if "slope" in on else 1.0
         if len(cues) > 1:
             salience_kept = pm.Dirichlet("salience", a=np.full(len(cues), 1.5))
             salience = {c: salience_kept[i] for i, c in enumerate(cues)}

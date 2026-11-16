@@ -6,9 +6,9 @@
 > winner best on all runs pooled: run 2's `neighbourhood_doubt_three_example_memory`
 > (grouped-CV ELPD −12,805 on the 22,680 pooled responses, 135 ± 40 nats ahead of run 1's
 > winner; all its pooled fits converged; to be confirmed against the figure data's
-> `pooled.best_model`). Its switchable rewrite and mechanisms are in section 1, **the
-> mechanism split proposed and awaiting the user's approval**; the rule (section 2) is
-> unchanged. The result goes to `data/results/number_game_dataset-nov26/analysis/ablation/`,
+> `pooled.best_model`). Its switchable rewrite and mechanisms are in section 1 (every
+> parameter in a removable mechanism, the intercept and slope included: user decision
+> 2026-11-15); the rule (section 2) is unchanged. The result goes to `data/results/number_game_dataset-nov26/analysis/ablation/`,
 > where `scripts/paper/ablation_figure.py` reads it. The October final's mechanisms and its
 > elimination are in git history (before `c891612f`).
 
@@ -59,16 +59,19 @@ density and its gradient take 4.2 ms instead of 44.7 ms (2026-11-15, one Apple-s
 core). The final's own pooled fold fits took 8.7–12.3 h on 4 cores at these settings (the
 figure data's pooled fits, 2026-11-15); a variant's should take about a tenth.
 
-**`neighbourhood_doubt_three_example_memory`** (23 mechanisms, 27 parameters). The core,
-never removed: a target is judged by the salience-weighted share of the examples' shared
-profile it has, through a logistic (`intercept`, `slope`). The cues' saliences are one
-Dirichlet simplex (`salience`), one component per cue kept. A cue's neutral value is its
+**`neighbourhood_doubt_three_example_memory`** (25 mechanisms, 27 parameters). Every
+parameter is in a removable mechanism (user decision 2026-11-15). What stays is the
+structure, which has no parameters: a target is judged by the salience-weighted share of the
+examples' shared profile it has, through a logistic. The cues' saliences are one Dirichlet
+simplex (`salience`), one component per cue kept; with one cue left, its salience is 1. A cue's neutral value is its
 component at 0. The judgment is a ratio of salience-weighted sums, so the other cues' scale
 does not matter, and the model without the cue is that point with the rest renormalized.
 The final has no person-level parameters: the run hid `participant_id`.
 
 | mechanism | parameters | what it does | needs |
 |---|---|---|---|
+| `intercept` | intercept (neutral 0) | the logistic's offset: a bias toward yes or no (without it, P(yes) ≥ 0.5 on every item) | |
+| `slope` | slope (neutral 1) | the logistic's gain on the share | |
 | `parity`, `prime`, `square_cube`, `power`, `multiple`, `last_digit`, `contains_digit`, `round_multiple` | a salience each | the property families the examples share, and whether the target has them (`multiple`: of 3–12 but 5 and 10; `round_multiple`: of 5 and 10; `power`: of 2–10) | |
 | `range_low`, `range_high` | a salience each; `band_width` (shared) | the target not below the smallest example / not above the largest, fading as a Gaussian of the gap | (one stays) |
 | `seed` | a salience | multiples of the smallest example, when every example is one | |
@@ -87,8 +90,9 @@ modifies. The last-digit modifiers act through the last-digit cue's salience: wi
 the down-weighting of every cue is a common scale the ratio ignores. One range cue stays
 because every item has the range cues in the judgment's denominator, and no other cue
 guarantees a positive one. The band's and the span's widths are part of their cues: they
-have no value at which the cue is absent. 20 of the 23 mechanisms are removable at the start,
-so round 1 is 21 models × 5 folds = 105 fits.
+have no value at which the cue is absent. 22 of the 25 mechanisms are removable at the start,
+so round 1 is 23 models × 5 folds = 115 fits. The smallest model is one range cue with its
+band width: 1 parameter.
 
 ## 2. The rule (fixed 2026-10-27, before any fit; the data changed to all runs pooled on 2026-11-04, after the run-1 elimination, nothing else)
 
@@ -175,11 +179,12 @@ total cost against the full final, with its SE: drops that each fall below 2 SE 
    so expect ~1–1.5 h and ~5 core-hours a fit. One fold fit of `ng_full` should be measured
    before the chain, and `TASKS_PER_JOB`, `WORKER_TIME` and the per-attempt
    `--time-limit-hours` set from it (the defaults assume ~20-minute fits).
-   - Round 1 is 105 fits: (1 + 20) models × 5 folds, about 500 core-hours.
+   - Round 1 is 115 fits: (1 + 22) models × 5 folds, about 600 core-hours.
    - Each later round costs one model fewer, plus any it newly opens (a cue whose modifiers
      went). It runs until the rule stops. If every round dropped something down to one cue
-     (22 rounds), 234 models would be scored: 1,170 fits, ~6,000 core-hours.
-   - The wall time is set by the rounds, which run in order: up to 22, each ~1.5–3 h of
+     (24 rounds), at most 301 models would be scored (295 in the order that opens the most
+     candidates): ~1,500 fits, ~7,500 core-hours.
+   - The wall time is set by the rounds, which run in order: up to 24, each ~1.5–3 h of
      fitting plus queue waits.
    - Smaller variants may sample faster or slower than the full model; the attempt records
      (`cv/<model>/fold<k>.json`, `seconds`) show it.

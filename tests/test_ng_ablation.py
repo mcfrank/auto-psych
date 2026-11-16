@@ -136,8 +136,8 @@ def test_each_mechanism_at_its_neutral_value_is_the_model_without_it(mechanism, 
 
 def test_a_modifier_goes_before_what_it_modifies_and_a_range_cue_stays():
     first = V.removals("ng", MECHANISMS)
-    assert {"retain", "recency", "primacy", "doubt_rich", "doubt_rich_multi", "parity_keep", "doubt_band",
-            "memory_limit", "range_low", "range_high", "parity", "span"} <= set(first)
+    assert {"intercept", "slope", "retain", "recency", "primacy", "doubt_rich", "doubt_rich_multi", "parity_keep",
+            "doubt_band", "memory_limit", "range_low", "range_high", "parity", "span"} <= set(first)
     assert not {"last_digit", "doubt_single", "doubt_multi"} & set(first)
     assert "last_digit" in V.removals("ng", set(MECHANISMS) - {"retain", "recency", "primacy"})
     # The last-digit modifiers act through the last-digit cue's salience.
@@ -158,6 +158,7 @@ def test_a_modifier_goes_before_what_it_modifies_and_a_range_cue_stays():
 def test_variant_files_are_self_contained_and_named_by_what_was_removed(tmp_path):
     name, path = V.write_variant("ng", set(MECHANISMS) - {"memory_limit", "primacy"}, tmp_path)
     assert name == "ng_minus_prim_mem"
+    assert V.variant_name("ng", set(MECHANISMS) - {"intercept", "slope"}) == "ng_minus_int_slp"
     assert "def build(on):" in path.read_text() and path.read_text().endswith("model = build(MECHANISMS_ON)\n")
     assert "# --- this variant (src.number_game.ablation.variants) ---" in path.read_text()
     with pytest.raises(ValueError, match="is not a model"):
@@ -182,6 +183,7 @@ def test_the_full_and_the_smallest_variant_meet_the_data_contract(tmp_path):
     while removable := V.removals("ng", smallest):
         smallest -= {removable[0]}
     assert smallest == {"range_high"}
+    assert V.size("ng", smallest) == {"population": 1, "person_vectors": 0}  # its band width
     pooled = tmp_path / "responses.csv"
     ng_data.main(ng_data.Args(out=pooled))
     for on in (MECHANISMS, smallest):
@@ -280,8 +282,8 @@ def test_the_rule_drops_free_mechanisms_cheapest_first_and_stops_at_a_costly_one
     assert record["lean"]["mechanisms"] == ["last_digit", "range_low"]
     assert record["lean"]["removed"] == ["seed", "recency", "memory_limit"]
     assert record["lean"]["cost_vs_start"] == pytest.approx(1.5 - 0.6)  # memory_limit cost 0.01 per response
-    # intercept, slope, band_width and two saliences (one free)
-    assert record["lean"]["size"] == {"population": 4, "person_vectors": 0}
+    # band_width and two saliences (one free); the intercept and slope are mechanisms too
+    assert record["lean"]["size"] == {"population": 2, "person_vectors": 0}
 
 
 def test_an_unconverged_candidate_is_never_dropped_and_an_unconverged_start_raises():
@@ -325,9 +327,9 @@ def test_plan_and_workers_run_the_elimination_to_a_lean_model(tmp_path):
     data.write_text("\n".join([lines[0]] + lines[1::4]) + "\n")
     # Small and well identified at these short settings (the two range cues alone are not:
     # their salience split and the band width trade off on a quarter of run 1's data).
-    start = ["parity", "range_high", "memory_limit"]
+    start = ["intercept", "slope", "range_high"]
     args = Args(final="ng", data=data, out=tmp_path / "ng", start=start, folds=2,
-                draws=300, tune=300, chains=2, target_accept=0.9, method="nuts", seeds=[1], time_limit_hours=0.5,
+                draws=300, tune=300, chains=2, target_accept=0.95, method="nuts", seeds=[1], time_limit_hours=0.5,
                 tasks_per_job=3)
     for _ in range(4):
         doc = plan(args)
