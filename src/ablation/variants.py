@@ -106,7 +106,9 @@ class Variants:
 
     def size(self, final: str, mechanisms: Iterable[str]) -> Dict[str, int]:
         """Free population-level scalars and person-level vectors (one entry per
-        participant slot; a final without slots has no person-level vectors)."""
+        participant slot). A final without slots has no person-level vectors:
+        each free entry of its variables (a simplex's too) is one population-level
+        parameter."""
         import numpy as np
 
         s = self.spec(final)
@@ -114,6 +116,8 @@ class Variants:
         point = model.initial_point()
         sizes = [int(np.prod(point[model.rvs_to_values[rv].name].shape)) for rv in model.free_RVs]
         slots = getattr(s, "MAX_PARTICIPANTS", None) or getattr(s, "N_SLOTS", None)
+        if not slots:
+            return {"population": sum(sizes), "person_vectors": 0}
         if any(n not in (1, slots) for n in sizes):
             raise ValueError(f"{final}: a free variable is neither a scalar nor one entry per slot ({sizes})")
         return {"population": sizes.count(1), "person_vectors": sizes.count(slots)}
