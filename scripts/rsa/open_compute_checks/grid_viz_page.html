@@ -86,6 +86,13 @@ label.check { display: inline-flex; gap: 6px; align-items: center; font-size: 13
 .ramp i { display: block; width: 22px; height: 10px; border-radius: 2px; }
 .summary { font-size: 14px; color: var(--ink-2); max-width: 80ch; }
 .summary b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.scatters { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.scatter { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px; display: grid; gap: 6px; min-width: 0; }
+.scatter select { width: 100%; font-size: 12.5px; }
+.scatter svg { width: 100%; height: auto; }
+.scatter .dot { cursor: default; }
+.scatter .stats { display: flex; justify-content: space-between; gap: 8px; font-family: var(--font-data); font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.scatter .stats b { color: var(--ink); font-weight: 500; }
 .panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 12px; }
 .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 10px 8px; display: grid; gap: 4px; min-width: 0; }
 .panel header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; font-size: 12px; }
@@ -149,6 +156,21 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
     </div>
     <div class="card scroll-x"><svg id="contrasts" role="img" aria-label="Average change in fit for each modelling choice, by source"></svg></div>
     <div class="legend" id="contrast-legend"></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Predictions against people</h2>
+      <p>One point per display and kind of object: a theory's out-of-fold predicted probability against the share of
+        people who chose that object. Points on the diagonal are predicted exactly; point area grows with the display's
+        trials. Hover a point to see where the display comes from; the same point lights up in every panel.</p>
+    </div>
+    <div class="controls">
+      <div class="control"><span class="label">Source</span><div class="chips" id="sc-src-chips" role="group" aria-label="Source for the scatter plots"></div></div>
+      <div class="control"><span class="label">Trials</span><div class="chips" id="sc-word-chips" role="group" aria-label="Word heard or not, for the scatter plots"></div></div>
+    </div>
+    <div class="scatters" id="scatters"></div>
+    <div class="legend" id="scatter-legend"></div>
   </section>
 
   <section>
@@ -414,6 +436,106 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
   }
 
   // ---------- displays ----------
+  // ---------- scatter plots ----------
+  const lit = nameOf(0, "none", "", "bool", "none");
+  const SC_DEFAULT = [best.name, ref, nameOf(2, "none", "", "bool", "none"), lit].filter((n, i, a) => n in byName && a.indexOf(n) === i);
+  state.scatter = SC_DEFAULT.slice();
+  state.scSrc = "all"; state.scWord = "all";
+  let hot = null;
+  function scatterPoints() {
+    const pts = [];
+    for (const d of B.displays) {
+      if (state.scSrc !== "all" && d.source !== state.scSrc) continue;
+      if (state.scWord === "word" ? d.said === null : state.scWord === "prior" ? d.said !== null : false) continue;
+      d.classes.forEach((c, i) => {
+        if (d.estimated && c.count === 0) return;  // its prediction is a share of a remainder, not exact
+        pts.push({ d, c, i, key: `${d.id}:${i}`, obs: c.count / d.n });
+      });
+    }
+    return pts;
+  }
+  function r2(xs, ys, ws) {
+    const n = xs.length; if (n < 3) return NaN;
+    ws = ws || xs.map(() => 1);
+    const W = ws.reduce((a, v) => a + v, 0);
+    const mx = xs.reduce((a, v, k) => a + ws[k] * v, 0) / W, my = ys.reduce((a, v, k) => a + ws[k] * v, 0) / W;
+    let sxy = 0, sxx = 0, syy = 0;
+    for (let k = 0; k < n; k++) { const a = xs[k] - mx, b = ys[k] - my; sxy += ws[k] * a * b; sxx += ws[k] * a * a; syy += ws[k] * b * b; }
+    return sxx && syy ? (sxy * sxy) / (sxx * syy) : NaN;
+  }
+  function setHot(key) {
+    hot = key;
+    document.querySelectorAll(".scatter .hl").forEach((g) => g.replaceChildren());
+    if (!key) return;
+    document.querySelectorAll(`.scatter .dot[data-key="${key}"]`).forEach((c) => {
+      const g = c.ownerSVGElement.querySelector(".hl");
+      el("circle", { cx: c.getAttribute("cx"), cy: c.getAttribute("cy"), r: +c.getAttribute("r") + 3, fill: "none", stroke: css("--ink"), "stroke-width": 2, "pointer-events": "none" }, g);
+    });
+  }
+  function drawScatters() {
+    const box = document.getElementById("scatters"); box.replaceChildren();
+    const pts = scatterPoints();
+    const srcIdx = Object.fromEntries(B.studies.map((s, j) => [s.id, j]));
+    const maxN = Math.max(1, ...pts.map((p) => p.d.n));
+    const sorted = [...T].sort((x, y) => x.depth - y.depth || y.pooled - x.pooled);
+    state.scatter.forEach((name, slot) => {
+      const ti = byName[name], t = T[ti];
+      const card = el("div", { class: "scatter" }, box);
+      const sel = el("select", { "aria-label": `Theory in scatter plot ${slot + 1}`, id: `sc-pick-${slot}` }, card);
+      for (const u of sorted) el("option", { value: u.name, text: `${short(u)}  (${fmt(u.pooled)})${u.name === ref ? " · plain RSA" : ""}${u.name === best.name ? " · best" : ""}${u.converged ? "" : " †"}` }, sel);
+      sel.value = name;
+      sel.addEventListener("change", () => { state.scatter[slot] = sel.value; drawScatters(); });
+      const xs = pts.map((p) => t ? d_pred(p, ti) : 0), ys = pts.map((p) => p.obs);
+      const wsum = pts.reduce((a, p) => a + p.d.n, 0);
+      const rmse = Math.sqrt(pts.reduce((a, p, k) => a + p.d.n * (xs[k] - ys[k]) ** 2, 0) / Math.max(1, wsum));
+      const st = el("div", { class: "stats" }, card);
+      const r2u = r2(xs, ys), r2w = r2(xs, ys, pts.map((p) => p.d.n));
+      const a = el("span", {}, st); a.append("r² "); el("b", { text: Number.isFinite(r2u) ? r2u.toFixed(3) : "–" }, a);
+      const aw = el("span", {}, st); aw.append("weighted "); el("b", { text: Number.isFinite(r2w) ? r2w.toFixed(3) : "–" }, aw);
+      const b = el("span", {}, st); b.append("RMSE "); el("b", { text: rmse.toFixed(3) }, b);
+      const W = 300, H = 300, m = { l: 34, r: 10, t: 10, b: 30 };
+      const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `${short(t)}: predicted against observed choice proportions` }, card);
+      const X = (v) => m.l + v * (W - m.l - m.r), Y = (v) => H - m.b - v * (H - m.t - m.b);
+      for (const v of [0, 0.25, 0.5, 0.75, 1]) {
+        el("line", { x1: X(v), x2: X(v), y1: Y(0), y2: Y(1), stroke: css(v === 0 ? "--axis" : "--grid") }, svg);
+        el("line", { x1: X(0), x2: X(1), y1: Y(v), y2: Y(v), stroke: css(v === 0 ? "--axis" : "--grid") }, svg);
+        if (v % 0.5 === 0) {
+          const lab = v === 0.5 ? ".5" : String(v);
+          el("text", { x: X(v), y: H - m.b + 14, "text-anchor": "middle", "font-size": 10, fill: css("--muted"), text: lab }, svg);
+          el("text", { x: m.l - 6, y: Y(v) + 3, "text-anchor": "end", "font-size": 10, fill: css("--muted"), text: lab }, svg);
+        }
+      }
+      el("line", { x1: X(0), y1: Y(0), x2: X(1), y2: Y(1), stroke: css("--axis"), "stroke-dasharray": "3 3" }, svg);
+      el("text", { x: X(1), y: H - 3, "text-anchor": "end", "font-size": 10, fill: css("--muted"), text: "predicted →" }, svg);
+      el("text", { x: 2, y: m.t + 2, "font-size": 10, fill: css("--muted"), transform: `rotate(-90 2 ${m.t + 2})`, "text-anchor": "end", text: "← people" }, svg);
+      const order = pts.map((p, k) => k).sort((p, q) => pts[q].d.n - pts[p].d.n);  // small points on top
+      for (const k of order) {
+        const p = pts[k], j = srcIdx[p.d.source] ?? 0;
+        const dot = el("circle", { class: "dot", "data-key": p.key, cx: X(xs[k]), cy: Y(ys[k]),
+          r: 2.2 + 5.5 * Math.sqrt(p.d.n / maxN), fill: css(`--st${j}`), "fill-opacity": 0.72, stroke: css("--surface"), "stroke-width": 1, tabindex: 0 }, svg);
+        const rows = () => {
+          const out = [["condition", p.d.unit.length > 40 ? p.d.unit.slice(0, 39) + "…" : p.d.unit],
+            ["word", p.d.said === null ? "none (prior question)" : `“${p.d.words[p.d.said]}”`],
+            ["people", `${p.obs.toFixed(2)}  (${p.c.count}/${p.d.n})`]];
+          for (const nm of state.scatter) out.push([short(T[byName[nm]]), d_pred(p, byName[nm]).toFixed(2)]);
+          return out;
+        };
+        const head = () => `${STUDY[p.d.source] || p.d.source} · ${p.d.words.filter((_, f) => p.c.features[f]).join(" + ") || "no word fits"}${p.c.copies > 1 ? ` ×${p.c.copies}` : ""}`;
+        const sub = () => `object ${p.i + 1} of ${p.d.classes.length}${p.d.item ? ` · example item: ${p.d.item.replaceAll("_", " ")}` : ""}`;
+        const on = (ev) => { setHot(p.key); showTip(ev, head(), rows(), sub()); };
+        dot.addEventListener("pointermove", on); dot.addEventListener("focus", on);
+        dot.addEventListener("pointerleave", () => { setHot(null); hideTip(); }); dot.addEventListener("blur", () => { setHot(null); hideTip(); });
+      }
+      el("g", { class: "hl" }, svg);
+    });
+    const lg = document.getElementById("scatter-legend"); lg.replaceChildren();
+    B.studies.forEach((s, j) => { const it = el("span", { class: "item" }, lg);
+      const k = el("svg", { width: 12, height: 12, viewBox: "-6 -6 12 12" }, it); el("circle", { r: 5, fill: css(`--st${j}`) }, k); it.append(s.label); });
+    el("span", { class: "item", text: `${pts.length} points from ${new Set(pts.map((p) => p.d.id)).size} displays; area ∝ trials` }, lg);
+    el("span", { class: "item", text: "r²: squared correlation over points, plain and weighted by trials; RMSE weighted by trials" }, lg);
+  }
+  const d_pred = (p, ti) => p.d.preds[ti][p.i];
+
   function syncPicks() {
     for (const [id, key] of [["pick-a", "a"], ["pick-b", "b"]]) document.getElementById(id).value = state[key];
   }
@@ -540,7 +662,9 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
   chips("src-chips", [["all", "All"], ...B.studies.map((s) => [s.id, s.label])], "src", () => { state.shown = 30; renderDisplays(); });
   chips("word-chips", [["all", "All"], ["word", "A word heard"], ["prior", "No word (prior)"]], "word", () => { state.shown = 30; renderDisplays(); });
   chips("sort-chips", [["diff", "Biggest A–B difference"], ["a", "A ahead"], ["b", "B ahead"], ["n", "Most trials"]], "sort", () => { state.shown = 30; renderDisplays(); });
-  fillPicks(); drawGrid(); drawContrasts(); renderDisplays();
-  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { drawGrid(); drawContrasts(); renderDisplays(); });
+  chips("sc-src-chips", [["all", "All"], ...B.studies.map((s) => [s.id, s.label])], "scSrc", drawScatters);
+  chips("sc-word-chips", [["all", "All"], ["word", "A word heard"], ["prior", "No word (prior)"]], "scWord", drawScatters);
+  fillPicks(); drawGrid(); drawContrasts(); drawScatters(); renderDisplays();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { drawGrid(); drawContrasts(); drawScatters(); renderDisplays(); });
 })();
 </script>

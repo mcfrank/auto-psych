@@ -115,7 +115,8 @@ What it says so far:
    ±16 nats of plain RSA).
 
 **The page.** `data/rsa_open/grid/literature/grid_viz.html` (built by `scripts/rsa/open_compute_checks/grid_viz.py`
-from the fits; aggregates only) shows the grid as a heatmap per source, these contrasts computed live, and all 213
+from the fits; aggregates only) shows the grid as a heatmap per source, these contrasts computed live, scatter plots of predicted against observed
+choice shares for any four theories (r², plain and trial-weighted; RMSE; tooltips naming each display), and all 213
 displays with people's choices against any two grid theories, sorted by where they differ. It is the campaign's
 old model-report design (`src/rsa/report_template.html`) carried over. For the Sherlock run, build it from the
 all-studies fits the same way; display panels cover the choice blocks only.
