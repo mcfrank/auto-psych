@@ -59,6 +59,8 @@ h2 { font-size: 18px; }
 .meta b { color: var(--ink); font-weight: 500; }
 .interim { display: inline-flex; gap: 6px; align-items: center; margin-top: 12px; padding: 4px 10px; border-radius: 999px;
   border: 1px solid var(--border); background: var(--surface); font-size: 12px; color: var(--ink-2); }
+.notes-top { display: grid; gap: 6px; margin-top: 12px; max-width: 86ch; }
+.notes-top p { margin: 0; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--ink-2); font-size: 13px; }
 .interim::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--b); }
 section { display: grid; gap: 14px; min-width: 0; }
 .section-head { display: grid; gap: 4px; }
@@ -132,12 +134,13 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
 <div class="wrap">
   <header>
     <div class="eyebrow">auto-psych · open RSA campaign · side study</div>
-    <h1>Standard RSA, compared on the reference-game literature</h1>
+    <h1 id="page-title">Standard RSA, compared on the reference-game literature</h1>
     <p class="lede">Sixty-six textbook rational-speech-act theories, crossed on recursion depth, where a salience prior enters,
       what makes an object salient, how literal word meanings are, and whether words cost. Each is fitted with grouped
       cross-validation; every number here is out-of-fold log predictive density, in nats, against plain RSA (depth 1, nothing else).</p>
     <div class="meta" id="meta"></div>
     <div id="interim"></div>
+    <div class="notes-top" id="notes-top"></div>
   </header>
 
   <section>
@@ -266,6 +269,21 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
   const fmt = (v, d = 0) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
   const T = B.theories, byName = Object.fromEntries(T.map((t, i) => [t.name, i]));
   const STUDY = Object.fromEntries(B.studies.map((s) => [s.id, s.label]));
+  // more than three studies: colour by family (literature, each campaign's chains), as many dots share a colour
+  const FAMILIES = [["literature", "--g-seed", "literature"], ["closed", "--g-closed", "closed campaign"], ["pilot1", "--g-pilot", "open pilot 1"],
+    ["s1_open", "--g-s1open", "stage 1 open"], ["s1_fixed", "--g-s1fixed", "stage 1 fixed"]];
+  const famOf = (id) => id.startsWith("closed_") ? "closed" : id.startsWith("pilot1_") ? "pilot1" : id.startsWith("s1_open") ? "s1_open" : id.startsWith("s1_fixed") ? "s1_fixed" : "literature";
+  const byFamily = B.studies.length > 3;
+  const studyColor = (id) => byFamily ? css(FAMILIES.find((f) => f[0] === famOf(id))[1]) : css(`--st${B.studies.findIndex((s) => s.id === id)}`);
+  function studyLegend(lg, ids) {
+    const items = byFamily ? FAMILIES.filter((f) => ids.some((id) => famOf(id) === f[0])).map((f) => [f[1], f[2]])
+      : ids.map((id) => [null, STUDY[id], id]);
+    for (const [tok, label, id] of items) {
+      const it = el("span", { class: "item" }, lg); const k = el("svg", { width: 12, height: 12, viewBox: "-6 -6 12 12" }, it);
+      el("circle", { r: 5, fill: tok ? css(tok) : studyColor(id) }, k); it.append(label);
+    }
+  }
+  const DISP_STUDIES = B.studies.filter((s) => B.displays.some((d) => d.source === s.id));
   const ref = B.meta.reference;
 
   // ---------- naming ----------
@@ -285,6 +303,8 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
     ["seeds and discovered fitted", `${B.meta.n_extra_done} of ${B.meta.n_extra_total}`], ["built", B.meta.built]]) {
     const s = el("span", {}, meta); s.append(`${k} `); el("b", { text: v }, s);
   }
+  if (B.studies.length > 3) document.getElementById("page-title").textContent = `Standard RSA and the discovered theories, on ${B.studies.length} reference-game studies`;
+  for (const note of B.meta.notes || []) el("p", { text: note }, document.getElementById("notes-top"));
   if (B.meta.n_done < B.meta.n_total) {
     const missingDepths = [...new Set(B.meta.missing.map((n) => n.match(/grid_d(\d)/)[1]))].sort();
     el("div", { class: "interim", text: `Interim: ${B.meta.n_total - B.meta.n_done} theories still fitting (depth ${missingDepths.join(", ")}); their cells are hatched` }, document.getElementById("interim"));
@@ -315,9 +335,15 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
   state.a = best.name;
 
   function score(t, study) { return study === "pooled" ? { d: t.pooled, se: t.pooled_se } : t.studies[study] && { d: t.studies[study].d, se: t.studies[study].se }; }
-  function step(v) {
-    const a = Math.abs(v), i = a < 10 ? 0 : a < 50 ? 1 : a < 150 ? 2 : a < 300 ? 3 : a < 450 ? 4 : 5;
-    return i === 0 ? "--mid" : `--${v > 0 ? "up" : "dn"}${i}`;
+  // colour steps scale with the values shown: about m/200, m/50, m/15, m/5 and m/2 of the largest |value| m,
+  // each rounded to one significant figure (the literature alone gives about 5, 20, 60, 200, 400)
+  const roundSig = (v) => { const e = 10 ** Math.floor(Math.log10(v)); return Math.max(1, Math.round(v / e) * e); };
+  const stepsFor = (vals) => { const m = Math.max(10, ...vals.map(Math.abs)); return [200, 50, 15, 5, 2].map((k) => roundSig(m / k)); };
+  let gridSteps = [10, 50, 150, 300, 450];
+  function step(v, th = gridSteps) {
+    const a = Math.abs(v), i = th.findIndex((t) => a < t);
+    const k = i === -1 ? 5 : i;
+    return k === 0 ? "--mid" : `--${v > 0 ? "up" : "dn"}${k}`;
   }
   function inkOn(color) {
     const m = color.match(/^#([0-9a-f]{6})$/i); if (!m) return css("--ink");
@@ -342,6 +368,7 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
     const pat = el("pattern", { id: "hatch", width: 6, height: 6, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, defs);
     el("rect", { width: 6, height: 6, fill: css("--surface") }, pat);
     el("line", { x1: 0, y1: 0, x2: 0, y2: 6, stroke: css("--hatch"), "stroke-width": 2.5 }, pat);
+    gridSteps = stepsFor(GT.map((t) => score(t, state.study)).filter(Boolean).map((x) => x.d));
     const cols = [["bool", "none"], ["bool", "extension"], ["graded", "none"], ["graded", "extension"]];
     const cw = 54, ch = 40, gapD = 18, left = 210, top = 58;
     const W = left + 4 * (4 * cw) + 3 * gapD + 6, H = top + SAL.length * ch + 8;
@@ -375,7 +402,7 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
           return;
         }
         const t = T[idx], sc = score(t, state.study);
-        const fill = css(step(sc.d));
+        const fill = css(step(sc.d, gridSteps));
         el("rect", { class: "box", x: x + 2, y: y + 2, width: cw - 4, height: ch - 4, rx: 4, fill, stroke: name === ref ? css("--ink") : "none", "stroke-width": name === ref ? 1.5 : 0 }, g);
         el("text", { x: x + cw / 2, y: y + ch / 2 + 4, "text-anchor": "middle", "font-size": 11.5, "font-weight": 500, fill: inkOn(fill), "pointer-events": "none",
           text: name === ref ? "RSA" : fmt(sc.d) + (t.converged ? "" : "†") }, g);
@@ -399,7 +426,7 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
     const ramp = el("span", { class: "ramp" }, r);
     for (const v of ["--dn5", "--dn4", "--dn3", "--dn2", "--dn1", "--mid", "--up1", "--up2", "--up3", "--up4", "--up5"]) el("i", { style: `background: var(${v})` }, ramp);
     r.append("better than plain RSA");
-    el("span", { class: "item", text: "steps at ±10, 50, 150, 300, 450 nats" }, lg);
+    el("span", { class: "item", text: `steps at ±${gridSteps.map((t) => t.toLocaleString()).join(", ")} nats` }, lg);
     el("span", { class: "item", text: "† did not converge" }, lg);
     const sa = el("span", { class: "item" }, lg); el("span", { style: "display:inline-block;width:14px;height:10px;border:2.5px solid var(--a);border-radius:3px" }, sa); sa.append("theory A below");
     const sb = el("span", { class: "item" }, lg); el("span", { style: "display:inline-block;width:14px;height:10px;border:2.5px solid var(--b);border-radius:3px" }, sb); sb.append("theory B");
@@ -421,9 +448,10 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
     const hr = el("tr", {}, el("thead", {}, t));
     for (const [h, num] of [["theory"], ["parameters", 1], ["pooled", 1], ...B.studies.map((x) => [x.label, 1])]) el("th", { text: h, class: num ? "num" : undefined }, hr);
     const body = el("tbody", {}, t);
+    const xSteps = stepsFor(XT.flatMap((x) => [x.vs_best, ...Object.values(x.studies).map((v) => v.vs_best)]));
     const cell = (tr, v, se, unseen) => {
       const td = el("td", { class: "cell-v" + (unseen ? " unseen" : "") }, tr);
-      const fill = css(step(v)); td.style.background = fill; td.style.color = inkOn(fill);
+      const fill = css(step(v, xSteps)); td.style.background = fill; td.style.color = inkOn(fill);
       td.textContent = fmt(v) + (se ? ` (${fmt(v / se, 1)})` : "");
       if (unseen) td.title = "data this theory's makers never saw";
       return td;
@@ -572,7 +600,7 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
       el("text", { x: left - 14, y: y + 4, "text-anchor": "end", "font-size": 12, fill: css("--ink"), "font-family": "var(--font-body)", text: r.label }, svg);
       const xs = B.studies.map((s) => x(r.per[s.id]));
       el("line", { x1: Math.min(...xs), x2: Math.max(...xs), y1: y, y2: y, stroke: css("--axis"), "stroke-width": 2, "stroke-linecap": "round" }, svg);
-      B.studies.forEach((s, j) => el("circle", { cx: x(r.per[s.id]), cy: y, r: 5.5, fill: css(`--st${j}`), stroke: css("--surface"), "stroke-width": 2 }, svg));
+      B.studies.forEach((s) => el("circle", { cx: x(r.per[s.id]), cy: y, r: byFamily ? 4.5 : 5.5, fill: studyColor(s.id), stroke: css("--surface"), "stroke-width": byFamily ? 1.5 : 2 }, svg));
       el("text", { x: W - right + 14, y: y + 4, "font-size": 12, fill: css("--ink"), text: fmt(r.pooled) }, svg);
       el("text", { x: W - 8, y: y + 4, "text-anchor": "end", "font-size": 12, fill: css("--ink-2"), text: `${r.wins}/${r.n}` }, svg);
       const hit = el("rect", { x: 0, y: y - rowH / 2, width: W, height: rowH, class: "hit", tabindex: 0 }, svg);
@@ -583,8 +611,7 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
       hit.addEventListener("pointerleave", hideTip); hit.addEventListener("blur", hideTip);
     });
     const lg = document.getElementById("contrast-legend"); lg.replaceChildren();
-    B.studies.forEach((s, j) => { const it = el("span", { class: "item" }, lg);
-      const k = el("svg", { width: 12, height: 12, viewBox: "-6 -6 12 12" }, it); el("circle", { r: 5, fill: css(`--st${j}`) }, k); it.append(s.label); });
+    studyLegend(lg, B.studies.map((s) => s.id));
   }
 
   // ---------- displays ----------
@@ -627,7 +654,6 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
   function drawScatters() {
     const box = document.getElementById("scatters"); box.replaceChildren();
     const pts = scatterPoints();
-    const srcIdx = Object.fromEntries(B.studies.map((s, j) => [s.id, j]));
     const maxN = Math.max(1, ...pts.map((p) => p.d.n));
     state.scatter.forEach((name, slot) => {
       const ti = byName[name], t = T[ti];
@@ -661,9 +687,9 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
       el("text", { x: 2, y: m.t + 2, "font-size": 10, fill: css("--muted"), transform: `rotate(-90 2 ${m.t + 2})`, "text-anchor": "end", text: "← people" }, svg);
       const order = pts.map((p, k) => k).sort((p, q) => pts[q].d.n - pts[p].d.n);  // small points on top
       for (const k of order) {
-        const p = pts[k], j = srcIdx[p.d.source] ?? 0;
+        const p = pts[k];
         const dot = el("circle", { class: "dot", "data-key": p.key, cx: X(xs[k]), cy: Y(ys[k]),
-          r: 2.2 + 5.5 * Math.sqrt(p.d.n / maxN), fill: css(`--st${j}`), "fill-opacity": 0.72, stroke: css("--surface"), "stroke-width": 1, tabindex: 0 }, svg);
+          r: 2.2 + 5.5 * Math.sqrt(p.d.n / maxN), fill: studyColor(p.d.source), "fill-opacity": 0.72, stroke: css("--surface"), "stroke-width": 1, tabindex: 0 }, svg);
         const rows = () => {
           const out = [["condition", p.d.unit.length > 40 ? p.d.unit.slice(0, 39) + "…" : p.d.unit],
             ["word", p.d.said === null ? "none (prior question)" : `“${p.d.words[p.d.said]}”`],
@@ -680,8 +706,7 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
       el("g", { class: "hl" }, svg);
     });
     const lg = document.getElementById("scatter-legend"); lg.replaceChildren();
-    B.studies.forEach((s, j) => { const it = el("span", { class: "item" }, lg);
-      const k = el("svg", { width: 12, height: 12, viewBox: "-6 -6 12 12" }, it); el("circle", { r: 5, fill: css(`--st${j}`) }, k); it.append(s.label); });
+    studyLegend(lg, DISP_STUDIES.map((s) => s.id));
     el("span", { class: "item", text: `${pts.length} points from ${new Set(pts.map((p) => p.d.id)).size} displays; area ∝ trials` }, lg);
     el("span", { class: "item", text: "r²: squared correlation over points, plain and weighted by trials; RMSE weighted by trials" }, lg);
   }
@@ -817,11 +842,11 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
   document.getElementById("drop-unconv").addEventListener("change", (e) => { state.dropUnconv = e.target.checked; drawContrasts(); });
   document.getElementById("with-d0").addEventListener("change", (e) => { state.withD0 = e.target.checked; drawContrasts(); });
 
-  chips("study-chips", [["pooled", "All three, pooled"], ...B.studies.map((s) => [s.id, s.label])], "study", drawGrid);
-  chips("src-chips", [["all", "All"], ...B.studies.map((s) => [s.id, s.label])], "src", () => { state.shown = 30; renderDisplays(); });
+  chips("study-chips", [["pooled", B.studies.length === 3 ? "All three, pooled" : `All ${B.studies.length}, pooled`], ...B.studies.map((s) => [s.id, s.label])], "study", drawGrid);
+  chips("src-chips", [["all", "All"], ...DISP_STUDIES.map((s) => [s.id, s.label])], "src", () => { state.shown = 30; renderDisplays(); });
   chips("word-chips", [["all", "All"], ["word", "A word heard"], ["prior", "No word (prior)"]], "word", () => { state.shown = 30; renderDisplays(); });
   chips("sort-chips", [["diff", "Biggest A–B difference"], ["a", "A ahead"], ["b", "B ahead"], ["n", "Most trials"]], "sort", () => { state.shown = 30; renderDisplays(); });
-  chips("sc-src-chips", [["all", "All"], ...B.studies.map((s) => [s.id, s.label])], "scSrc", drawScatters);
+  chips("sc-src-chips", [["all", "All"], ...DISP_STUDIES.map((s) => [s.id, s.label])], "scSrc", drawScatters);
   chips("sc-word-chips", [["all", "All"], ["word", "A word heard"], ["prior", "No word (prior)"]], "scWord", drawScatters);
   chips("cx-chips", CX.map((c) => [c[0], c[1]]), "cx", drawFrontier);
   chips("cx-study-chips", [["pooled", "All, pooled"], ...B.studies.map((s) => [s.id, s.label])], "cxStudy", drawFrontier);

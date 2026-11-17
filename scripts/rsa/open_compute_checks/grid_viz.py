@@ -3,7 +3,8 @@ display of the corpus's choice blocks, people against any two grid theories. Rea
 fitting.
 
     python scripts/rsa/open_compute_checks/grid_viz.py --corpus corpus.json --grid grid --fits fits \
-        [--extra data/rsa_open/grid/discovered] --out data/rsa_open/grid/literature/grid_viz.html
+        [--extra data/rsa_open/grid/discovered] [--note "..."] --out data/rsa_open/grid/literature/grid_viz.html
+    python scripts/rsa/open_compute_checks/grid_viz.py --rerender built.html [--note "..."] --out built.html
 
 **Seeds and discovered theories** (`--extra`, `discovered_set.py`) are scored against the best converged grid theory,
 per study, with each score marked seen or unseen from the theory's lineage, and every theory gets its code-size
@@ -37,8 +38,10 @@ import numpy as np
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
 TEMPLATE = Path(__file__).with_name("grid_viz_page.html")
-SOURCE_LABELS = {"mayn_demberg_2026": "Mayn & Demberg 2026", "pragmods_trials": "pragmods, plain",
+SOURCE_LABELS = {"mayn_demberg_2022": "Mayn & Demberg 2022", "mayn_demberg_2023": "Mayn & Demberg 2023",
+                 "mayn_demberg_2026": "Mayn & Demberg 2026", "pragmods_trials": "pragmods, plain",
                  "pragmods_prior": "pragmods, prior manipulated", "sikos_2021": "Sikos et al. 2021"}
+BUNDLE_OPEN = '<script id="bundle" type="application/json">'
 
 
 def words_of(scene: Dict) -> List[int]:
@@ -218,20 +221,43 @@ def build(corpus: Path, grid_dir: Path, fits: Path, extra=()) -> Dict:
                 theories=theories, contrasts=report["axes"], displays=out)
 
 
+def bundle_of(page: Path) -> Dict:
+    """The data a built page embeds (to re-render it with the current template, without the fits)."""
+    text = Path(page).read_text()
+    i = text.index(BUNDLE_OPEN) + len(BUNDLE_OPEN)
+    return json.loads(text[i:text.index("</script>", i)])
+
+
+def render(bundle: Dict, out: Path) -> None:
+    out.parent.mkdir(parents=True, exist_ok=True)
+    data = json.dumps(bundle, separators=(",", ":")).replace("</", "<\\/")
+    out.write_text(TEMPLATE.read_text().replace("__BUNDLE__", data))
+
+
 def main(argv=None) -> None:
     import argparse
 
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--corpus", type=Path, required=True)
-    ap.add_argument("--grid", type=Path, required=True)
-    ap.add_argument("--fits", type=Path, required=True)
+    ap.add_argument("--corpus", type=Path)
+    ap.add_argument("--grid", type=Path)
+    ap.add_argument("--fits", type=Path)
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--extra", type=Path, action="append", default=[], help="seed/discovered theory folders")
+    ap.add_argument("--note", action="append", default=[], help="a sentence shown at the top of the page (repeatable)")
+    ap.add_argument("--rerender", type=Path, help="a built page: re-render its data with the current template "
+                                                  "(no fits needed; --note replaces its notes)")
     a = ap.parse_args(argv)
-    bundle = build(a.corpus, a.grid, a.fits, a.extra)
-    a.out.parent.mkdir(parents=True, exist_ok=True)
-    data = json.dumps(bundle, separators=(",", ":")).replace("</", "<\\/")
-    a.out.write_text(TEMPLATE.read_text().replace("__BUNDLE__", data))
+    if a.rerender:
+        bundle = bundle_of(a.rerender)
+        for s in bundle["studies"]:
+            s["label"] = SOURCE_LABELS.get(s["id"], s["label"])
+    else:
+        if not (a.corpus and a.grid and a.fits):
+            raise SystemExit("--corpus, --grid and --fits are needed unless --rerender")
+        bundle = build(a.corpus, a.grid, a.fits, a.extra)
+    if a.note or not a.rerender:
+        bundle["meta"]["notes"] = a.note
+    render(bundle, a.out)
     print(f"[grid viz] wrote {a.out} ({a.out.stat().st_size / 1e6:.1f} MB)")
 
 

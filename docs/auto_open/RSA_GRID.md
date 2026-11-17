@@ -55,7 +55,9 @@ No agents, no Prolific; copies of the data, never the originals; aggregates only
    theory against plain RSA, pooled and per study with clustered SEs, and each axis's contrast (pairs of grid points
    that differ only on it), per study. Copy both to `data/rsa_open/grid/all_studies/` and write
    `docs/auto_open/RSA_GRID_REPORT.md`: the table, the axis contrasts, any theory that did not converge, and time.
-4. **Page:** `python scripts/rsa/open_compute_checks/grid_viz.py --corpus corpus.json --grid grid --fits fits --out
+4. **Page:** (the report now splits Sherlock's `pragmods` source too: the partial run of 11-16 left it whole, named
+   `pragmods` rather than `pragmods_trials`; `grid_viz.py --rerender page.html --note ...` re-renders a built page with
+   the current template, no fits needed) `python scripts/rsa/open_compute_checks/grid_viz.py --corpus corpus.json --grid grid --fits fits --out
    grid_viz.html`, copied to `data/rsa_open/grid/all_studies/` (aggregates only; check its size, it grows with the
    displays: about 2 KB a display).
 

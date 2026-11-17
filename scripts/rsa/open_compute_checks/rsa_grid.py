@@ -126,10 +126,9 @@ def study_labels(block) -> np.ndarray:
     """Each trial's study: its source, with pragmods' prior-manipulation experiments as `pragmods_prior`."""
     sources = np.asarray(b_sources(block), dtype=object)
     for i, (s, u) in enumerate(zip(sources, block.units)):
-        if s == "pragmods_trials":
+        if s in ("pragmods", "pragmods_trials"):  # the committed CSV names it pragmods_trials, Sherlock's copy pragmods
             parts = str(u).split(":", 1)[-1].split("|")
-            if len(parts) > 1 and parts[1] in PRIOR_MANIPULATIONS:
-                sources[i] = "pragmods_prior"
+            sources[i] = "pragmods_prior" if len(parts) > 1 and parts[1] in PRIOR_MANIPULATIONS else "pragmods_trials"
     return sources.astype(str)
 
 
