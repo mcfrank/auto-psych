@@ -13,8 +13,10 @@ campaigns hold. Each grid point is a self-contained theory file in the open camp
   looks like), each with one weight;
 - **semantics**: ``bool`` (the literal lexicon) or ``graded`` (a word is true of an object to 1 / its feature
   count: the less of an object a word describes, the less true it is; the open arm's recurring discovery);
-- **cost** (depth ≥ 1): ``none`` or ``extension`` (a word costs in proportion to the share of the scene's objects it
-  is true of, weight ``w_cost``, outside the rationality: utility alpha·log L - w_cost·share).
+- **no utterance cost.** Every utterance is one word, so there is no production cost to model. An earlier version
+  had a cost axis, a word's extension share with its own weight outside the rationality; it was a second knob on the
+  speaker's preference for specific words and traded off with recursion depth, so the PI removed it (2026-11-17).
+  Names keep their ``_nocost`` suffix so that every fit made before stays matched.
 
 A theory's speaker is the format's default, the one derived from its listener (`src.rsa_open.fit.TheoryModel`).
 On a prior trial (no word) a theory with salience gives its prior, one without a uniform choice, as the seeds do.
@@ -36,7 +38,6 @@ DEPTHS = (0, 1, 2, 3)
 SALIENCE = ("none", "listener", "shared")
 KINDS = ("fc", "singleton")
 SEMANTICS = ("bool", "graded")
-COSTS = ("none", "extension")
 
 
 @dataclass(frozen=True)
@@ -45,23 +46,21 @@ class GridPoint:
     salience: str = "none"
     kind: str = ""
     semantics: str = "bool"
-    cost: str = "none"
 
     def __post_init__(self) -> None:
-        if self.depth not in DEPTHS or self.salience not in SALIENCE or self.semantics not in SEMANTICS \
-                or self.cost not in COSTS:
+        if self.depth not in DEPTHS or self.salience not in SALIENCE or self.semantics not in SEMANTICS:
             raise ValueError(f"not a grid point: {self}")
         if (self.salience == "none") != (self.kind == ""):
             raise ValueError(f"a salience placement needs a kind, and only then: {self}")
         if self.kind and self.kind not in KINDS:
             raise ValueError(f"unknown salience kind {self.kind!r}")
-        if self.depth == 0 and (self.salience == "shared" or self.cost != "none"):
-            raise ValueError(f"at depth 0 salience is the listener's prior and there is no speaker to pay a cost: {self}")
+        if self.depth == 0 and self.salience == "shared":
+            raise ValueError(f"at depth 0 salience is the listener's prior; there is no level to share it with: {self}")
 
     @property
     def name(self) -> str:
         sal = "nosal" if self.salience == "none" else {"listener": "lst", "shared": "shr"}[self.salience] + self.kind
-        return f"grid_d{self.depth}_{sal}_{self.semantics}_{'cost' if self.cost != 'none' else 'nocost'}"
+        return f"grid_d{self.depth}_{sal}_{self.semantics}_nocost"  # the suffix keeps earlier fits matched
 
     @property
     def params(self) -> Dict[str, str]:
@@ -70,8 +69,6 @@ class GridPoint:
             out["alpha"] = "dist.LogNormal(0.0, 1.0)"
         if self.salience != "none":
             out["w_salience"] = "dist.Normal(0.0, 1.0)"
-        if self.cost != "none":
-            out["w_cost"] = "dist.Normal(0.0, 1.0)"
         return out
 
     def hypothesis(self) -> str:
@@ -80,19 +77,18 @@ class GridPoint:
                f"a salience prior ({self.kind_text()}) " +
                ("in the top listener only" if self.salience == "listener" else "shared by every level"))
         sem = "Boolean word meanings" if self.semantics == "bool" else "graded word meanings (1 / feature count)"
-        cost = "" if self.cost == "none" else ", and words costing in proportion to their extension"
-        return f"Grid point: {level} with {sal}, {sem}{cost}."
+        return f"Grid point: {level} with {sal}, {sem}."
 
     def kind_text(self) -> str:
         return {"fc": "feature count", "singleton": "singleton objects"}[self.kind]
 
 
 def all_points() -> List[GridPoint]:
-    """Every distinct grid point: 2 x 3 at depth 0, 2 x 5 x 2 at each of depths 1-3 (66)."""
+    """Every distinct grid point: 2 x 3 at depth 0, 2 x 5 at each of depths 1-3 (36)."""
     points = [GridPoint(0, sal, kind, sem) for sem in SEMANTICS
               for sal, kind in [("none", "")] + [("listener", k) for k in KINDS]]
-    for depth, sem, cost in itertools.product((1, 2, 3), SEMANTICS, COSTS):
-        points += [GridPoint(depth, sal, kind, sem, cost)
+    for depth, sem in itertools.product((1, 2, 3), SEMANTICS):
+        points += [GridPoint(depth, sal, kind, sem)
                    for sal, kind in [("none", "")] + [(s, k) for s in ("listener", "shared") for k in KINDS]]
     return points
 
@@ -104,19 +100,16 @@ def _level(k: int, p: GridPoint) -> str:
     shared = p.salience == "shared"
     top = k == p.depth
     with_prior = shared or (p.salience == "listener" and top)
-    cost = p.cost != "none"
     if k == 0:
         args = "lex: ..." + (", prior: ..." if with_prior else "")
         wpp = ("vec(prior, r) * " if with_prior else "") + "at(lex, u, r)"
         return (f"@memo\ndef L0[u: UTT, r: OBJ]({args}):\n"
                 f"    listener: knows(u)\n    listener: chooses(r in OBJ, wpp={wpp})\n    return Pr[listener.r == r]\n")
     inner_prior = shared  # the level below carries the prior only when it is common knowledge
-    inner_args = ("alpha, " if k - 1 >= 1 else "") + ("w_cost, " if cost and k - 1 >= 1 else "") + "lex" \
-        + (", prior" if inner_prior else "") + (", share" if cost and k - 1 >= 1 else "")
-    args = "alpha, " + ("w_cost, " if cost else "") + "lex: ..." + (", prior: ..." if with_prior else "") \
-        + (", share: ..." if cost else "")
+    inner_args = ("alpha, " if k - 1 >= 1 else "") + "lex" + (", prior" if inner_prior else "")
+    args = "alpha, lex: ..." + (", prior: ..." if with_prior else "")
     given = "vec(prior, r)" if with_prior else "1"
-    utility = f"exp(alpha * log(L{k - 1}[u, r]({inner_args}) + {{EPS}})" + (" - w_cost * vec(share, u)" if cost else "") + ")"
+    utility = f"exp(alpha * log(L{k - 1}[u, r]({inner_args}) + {{EPS}}))"
     return (f"@memo\ndef L{k}[u: UTT, r: OBJ]({args}):\n"
             f"    listener: thinks[\n"
             f"        speaker: given(r in OBJ, wpp={given}),\n"
@@ -131,12 +124,12 @@ def source(p: GridPoint) -> str:
     """The theory file of grid point ``p``."""
     if p.salience == "listener" and p.depth >= 2:
         # inner levels take no prior, the top one does: write the inner chain without it, then the top level
-        levels = [_level(k, GridPoint(p.depth, "none", "", p.semantics, p.cost)) for k in range(p.depth)]
+        levels = [_level(k, GridPoint(p.depth, "none", "", p.semantics)) for k in range(p.depth)]
         levels.append(_level(p.depth, p))
     else:
         levels = [_level(k, p) for k in range(p.depth + 1)]
     imports = ["EPS", "at"] + (["softmax_prior"] if p.salience != "none" else []) \
-        + (["vec"] if p.salience != "none" or p.cost != "none" else [])
+        + (["vec"] if p.salience != "none" else [])
     params = "".join(f'    "{k}": {v},\n' for k, v in p.params.items())
     lines = [f'"""{p.hypothesis()} Generated by src.rsa_open.grid (not an agent\'s theory)."""', "",
              "import jax.numpy as jnp", "import numpyro.distributions as dist", "from memo import memo", "",
@@ -156,19 +149,12 @@ def source(p: GridPoint) -> str:
             helpers += ["    diff = ctx.lex[:, :, None] - ctx.lex[:, None, :]",
                         "    alike = jnp.sum(jnp.abs(diff), axis=0) < EPS",
                         "    return jnp.where(jnp.sum(alike, axis=1) == 1, 1.0, 0.0)"]
-    if p.cost != "none":
-        helpers += ["", "", "def extension_share(ctx):",
-                    "    return jnp.sum(ctx.lex, axis=1) / ctx.lex.shape[1]"]
     call_args = []
     if p.depth >= 1:
         call_args.append('params["alpha"]')
-    if p.cost != "none":
-        call_args.append('params["w_cost"]')
     call_args.append("lexicon(ctx)")
     if p.salience != "none":
         call_args.append("prior")
-    if p.cost != "none":
-        call_args.append("extension_share(ctx)")
     listener = ["", "", "def listener(params, ctx):"]
     if p.salience != "none":
         listener.append('    prior = softmax_prior(params["w_salience"] * salience(ctx))')
@@ -189,7 +175,7 @@ def write_grid(out_dir: Path, points: List[GridPoint] = None) -> Path:
     for p in points or all_points():
         (out_dir / f"{p.name}.py").write_text(source(p), encoding="utf-8")
         entries.append(dict(name=p.name, rationale=p.hypothesis(), depth=p.depth, salience=p.salience,
-                            kind=p.kind or None, semantics=p.semantics, cost=p.cost))
+                            kind=p.kind or None, semantics=p.semantics))
     (out_dir / "models_manifest.yaml").write_text(yaml.safe_dump({"models": entries}, sort_keys=False))
     return out_dir
 

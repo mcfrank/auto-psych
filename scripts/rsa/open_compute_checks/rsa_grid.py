@@ -2,7 +2,7 @@
 grid theory, or report (docs/auto_open/RSA_GRID.md). No agents, no Prolific; the report is aggregates.
 
     python scripts/rsa/open_compute_checks/rsa_grid.py corpus --studies studies.yaml --out corpus.json
-    python -m src.rsa_open.grid grid/                        # the 66 theory files and their manifest
+    python -m src.rsa_open.grid grid/                        # the 36 theory files and their manifest
     python scripts/rsa/open_compute_checks/rsa_grid.py fit --corpus corpus.json --grid grid --index $i --out fits
     python scripts/rsa/open_compute_checks/rsa_grid.py report --corpus corpus.json --grid grid --out fits \
         [--extra data/rsa_open/grid/discovered]               # seeds and discovered theories, fitted into fits/ too
@@ -41,7 +41,7 @@ REFERENCE = "grid_d1_nosal_bool_nocost"  # plain RSA (rsa_l1)
 # closed campaign's literature block left them out (docs/auto_rsa/LOOP_ALGORITHM.md, E), so its theories never saw
 # them. Reported as their own study, `pragmods_prior`, split from each trial's unit (no refit: the folds are unchanged).
 PRIOR_MANIPULATIONS = {"E5_baserate", "E6_valence", "E7_color", "color_prior_rerun"}
-AXES = ("depth", "salience", "kind", "semantics", "cost")
+AXES = ("depth", "salience", "kind", "semantics")
 
 
 def build_corpus(studies_path: Path, out: Path) -> Path:
@@ -192,7 +192,7 @@ def report(corpus: Path, grid_dir: Path, out: Path, extra=()) -> Dict:
             e = manifest[n]
             groups.setdefault(tuple(e[a] for a in others), {})[level(e, axis)] = n
         order = ["0", "1", "2", "3", "none", "listener-fc", "listener-singleton", "shared-fc", "shared-singleton",
-                 "fc", "singleton", "bool", "graded", "extension"]  # a contrast reads (change) - (baseline)
+                 "fc", "singleton", "bool", "graded"]  # a contrast reads (change) - (baseline)
         levels = sorted({level(manifest[n], axis) for n in done}, key=lambda v: order.index(v) if v in order else 99)
         contrasts = {}
         for a, b in itertools.combinations(levels, 2):

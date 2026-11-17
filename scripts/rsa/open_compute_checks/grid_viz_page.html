@@ -135,8 +135,8 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
   <header>
     <div class="eyebrow">auto-psych · open RSA campaign · side study</div>
     <h1 id="page-title">Standard RSA, compared on the reference-game literature</h1>
-    <p class="lede">Sixty-six textbook rational-speech-act theories, crossed on recursion depth, where a salience prior enters,
-      what makes an object salient, how literal word meanings are, and whether words cost. Each is fitted with grouped
+    <p class="lede">Thirty-six textbook rational-speech-act theories, crossed on recursion depth, where a salience prior enters,
+      what makes an object salient, and how literal word meanings are. Each is fitted with grouped
       cross-validation; every number here is out-of-fold log predictive density, in nats, against plain RSA (depth 1, nothing else).</p>
     <div class="meta" id="meta"></div>
     <div id="interim"></div>
@@ -194,7 +194,7 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
     </div>
     <div class="controls">
       <label class="check"><input type="checkbox" id="drop-unconv" checked> leave out pairs with a fit that did not converge</label>
-      <label class="check"><input type="checkbox" id="with-d0"> include depth-0 pairs (the literal listener has no speaker, so salience and cost act differently there)</label>
+      <label class="check"><input type="checkbox" id="with-d0"> include depth-0 pairs (the literal listener has no speaker, so salience acts differently there)</label>
     </div>
     <div class="card scroll-x"><svg id="contrasts" role="img" aria-label="Average change in fit for each modelling choice, by source"></svg></div>
     <div class="legend" id="contrast-legend"></div>
@@ -291,10 +291,10 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
   const salLabel = (s, k) => s === "none" ? "no salience prior" : `${k === "fc" ? "feature-count" : "singleton"} prior, ${s === "listener" ? "top listener only" : "shared by every level"}`;
   const isGrid = (t) => t.group === "grid";
   const pretty = (n) => n.replace(/^(closed_c\de\d|pilot1_e\d|open\d|fixed\d)_/, "$1 · ").replaceAll("_", " ");
-  const short = (t) => !isGrid(t) ? pretty(t.name) : `L${t.depth} · ${t.salience === "none" ? "no prior" : (t.kind === "fc" ? "feat-count" : "singleton") + (t.salience === "listener" ? " (top)" : " (shared)")} · ${t.semantics}${t.cost !== "none" ? " · cost" : ""}`;
-  const describe = (t) => !isGrid(t) ? `${t.group}: ${(t.rationale || "").slice(0, 220)}${(t.rationale || "").length > 220 ? "…" : ""}` : `${t.depth === 0 ? "Literal listener" : `Depth-${t.depth} pragmatic listener`}, ${salLabel(t.salience, t.kind)}, ${t.semantics === "bool" ? "Boolean" : "graded"} meanings${t.cost !== "none" ? ", extension cost" : ""}`;
-  const nameOf = (d, s, k, sem, c) => `grid_d${d}_${s === "none" ? "nosal" : (s === "listener" ? "lst" : "shr") + k}_${sem}_${c === "none" ? "nocost" : "cost"}`;
-  const valid = (d, s, c) => !(d === 0 && (s === "shared" || c !== "none"));
+  const short = (t) => !isGrid(t) ? pretty(t.name) : `L${t.depth} · ${t.salience === "none" ? "no prior" : (t.kind === "fc" ? "feat-count" : "singleton") + (t.salience === "listener" ? " (top)" : " (shared)")} · ${t.semantics}`;
+  const describe = (t) => !isGrid(t) ? `${t.group}: ${(t.rationale || "").slice(0, 220)}${(t.rationale || "").length > 220 ? "…" : ""}` : `${t.depth === 0 ? "Literal listener" : `Depth-${t.depth} pragmatic listener`}, ${salLabel(t.salience, t.kind)}, ${t.semantics === "bool" ? "Boolean" : "graded"} meanings`;
+  const nameOf = (d, s, k, sem) => `grid_d${d}_${s === "none" ? "nosal" : (s === "listener" ? "lst" : "shr") + k}_${sem}_nocost`;
+  const valid = (d, s) => !(d === 0 && s === "shared");
 
   // ---------- header ----------
   const meta = document.getElementById("meta");
@@ -369,19 +369,17 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
     el("rect", { width: 6, height: 6, fill: css("--surface") }, pat);
     el("line", { x1: 0, y1: 0, x2: 0, y2: 6, stroke: css("--hatch"), "stroke-width": 2.5 }, pat);
     gridSteps = stepsFor(GT.map((t) => score(t, state.study)).filter(Boolean).map((x) => x.d));
-    const cols = [["bool", "none"], ["bool", "extension"], ["graded", "none"], ["graded", "extension"]];
-    const cw = 54, ch = 40, gapD = 18, left = 210, top = 58;
-    const W = left + 4 * (4 * cw) + 3 * gapD + 6, H = top + SAL.length * ch + 8;
+    const cols = ["bool", "graded"], nc = cols.length;
+    const cw = 64, ch = 40, gapD = 22, left = 210, top = 46;
+    const W = left + 4 * (nc * cw) + 3 * gapD + 6, H = top + SAL.length * ch + 8;
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", W); svg.setAttribute("height", H);
     for (let d = 0; d < 4; d++) {
-      const x0 = left + d * (4 * cw + gapD);
-      el("text", { x: x0 + 2 * cw, y: 14, "text-anchor": "middle", "font-size": 12, "font-weight": 500, fill: css("--ink"),
-        "font-family": "var(--font-body)", text: d === 0 ? "depth 0 · literal listener" : `depth ${d} · L${d}` }, svg);
-      el("line", { x1: x0 + 4, x2: x0 + 4 * cw - 4, y1: 21, y2: 21, stroke: css("--axis") }, svg);
-      cols.forEach(([sem, cost], j) => {
-        const cx = x0 + j * cw + cw / 2;
-        el("text", { x: cx, y: 36, "text-anchor": "middle", "font-size": 9.5, fill: css("--ink-2"), text: sem === "bool" ? "Boolean" : "graded" }, svg);
-        el("text", { x: cx, y: 48, "text-anchor": "middle", "font-size": 9.5, fill: css("--muted"), text: cost === "none" ? "no cost" : "cost" }, svg);
+      const x0 = left + d * (nc * cw + gapD);
+      el("text", { x: x0 + nc * cw / 2, y: 14, "text-anchor": "middle", "font-size": 12, "font-weight": 500, fill: css("--ink"),
+        "font-family": "var(--font-body)", text: d === 0 ? "depth 0 · literal" : `depth ${d} · L${d}` }, svg);
+      el("line", { x1: x0 + 4, x2: x0 + nc * cw - 4, y1: 21, y2: 21, stroke: css("--axis") }, svg);
+      cols.forEach((sem, j) => {
+        el("text", { x: x0 + j * cw + cw / 2, y: 36, "text-anchor": "middle", "font-size": 9.5, fill: css("--ink-2"), text: sem === "bool" ? "Boolean" : "graded" }, svg);
       });
     }
     SAL.forEach(([s, k], i) => {
@@ -389,15 +387,15 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
       const lab = s === "none" ? ["no salience prior", ""] : [`${k === "fc" ? "feature count" : "singleton"}`, s === "listener" ? "top listener's prior" : "shared by every level"];
       el("text", { x: left - 12, y: y + ch / 2 - (lab[1] ? 2 : -4), "text-anchor": "end", "font-size": 12, fill: css("--ink"), "font-family": "var(--font-body)", text: lab[0] }, svg);
       if (lab[1]) el("text", { x: left - 12, y: y + ch / 2 + 12, "text-anchor": "end", "font-size": 10.5, fill: css("--muted"), "font-family": "var(--font-body)", text: lab[1] }, svg);
-      for (let d = 0; d < 4; d++) cols.forEach(([sem, cost], j) => {
-        const x = left + d * (4 * cw + gapD) + j * cw;
-        if (!valid(d, s, cost)) return;
-        const name = nameOf(d, s, k, sem, cost), idx = byName[name];
+      for (let d = 0; d < 4; d++) cols.forEach((sem, j) => {
+        const x = left + d * (nc * cw + gapD) + j * cw;
+        if (!valid(d, s)) return;
+        const name = nameOf(d, s, k, sem), idx = byName[name];
         const g = el("g", { class: "cell" + (name === state.a ? " selected-a" : name === state.b ? " selected-b" : ""), tabindex: idx === undefined ? undefined : 0,
           role: idx === undefined ? undefined : "button", "aria-label": idx === undefined ? undefined : describe(T[idx]) }, svg);
         if (idx === undefined) {
           el("rect", { class: "box", x: x + 2, y: y + 2, width: cw - 4, height: ch - 4, rx: 4, fill: "url(#hatch)", stroke: css("--border") }, g);
-          g.addEventListener("pointermove", (ev) => showTip(ev, short({ depth: d, salience: s, kind: k, semantics: sem, cost }), [["status", "still fitting"]]));
+          g.addEventListener("pointermove", (ev) => showTip(ev, short({ group: "grid", depth: d, salience: s, kind: k, semantics: sem }), [["status", "still fitting"]]));
           g.addEventListener("pointerleave", hideTip);
           return;
         }
@@ -552,9 +550,8 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
     ["salience", "shared − top-listener prior", (t) => t.salience === "listener", (t) => t.salience === "shared", ["salience"]],
     ["salience", "singleton − feature count", (t) => t.kind === "fc", (t) => t.kind === "singleton", ["kind"]],
     ["meanings", "graded − Boolean", (t) => t.semantics === "bool", (t) => t.semantics === "graded", ["semantics"]],
-    ["cost", "extension cost − none", (t) => t.cost === "none", (t) => t.cost === "extension", ["cost"]],
   ];
-  const AX = ["depth", "salience", "kind", "semantics", "cost"];
+  const AX = ["depth", "salience", "kind", "semantics"];
   function contrastRows() {
     const rows = [];
     for (const [axis, label, from, to, varies] of CONTRASTS) {
@@ -616,8 +613,8 @@ td.num, th.num { text-align: right; font-family: var(--font-data); }
 
   // ---------- displays ----------
   // ---------- scatter plots ----------
-  const lit = nameOf(0, "none", "", "bool", "none");
-  const SC_DEFAULT = [best.name, bestX ? bestX.name : nameOf(2, "none", "", "bool", "none"), ref, lit].filter((n, i, a) => n in byName && a.indexOf(n) === i);
+  const lit = nameOf(0, "none", "", "bool");
+  const SC_DEFAULT = [best.name, bestX ? bestX.name : nameOf(2, "none", "", "bool"), ref, lit].filter((n, i, a) => n in byName && a.indexOf(n) === i);
   state.scatter = SC_DEFAULT.slice();
   state.scSrc = "all"; state.scWord = "all";
   let hot = null;

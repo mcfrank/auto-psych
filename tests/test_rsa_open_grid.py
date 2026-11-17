@@ -17,18 +17,29 @@ def _pool(n=40):
     return [pool[i] for i in np.linspace(0, len(pool) - 1, n).round().astype(int)]
 
 
-def test_the_grid_has_66_distinct_points():
+def test_the_grid_has_36_distinct_points():
     from src.rsa_open.grid import all_points
 
     points = all_points()
     names = [p.name for p in points]
-    assert len(points) == 66 and len(set(names)) == 66 and len(set(points)) == 66
+    assert len(points) == 36 and len(set(names)) == 36 and len(set(points)) == 36
     assert all(n.replace("_", "").isalnum() and n == n.lower() and len(n) <= 40 for n in names)
-    assert sum(p.depth == 0 for p in points) == 6 and all(sum(p.depth == d for p in points) == 20 for d in (1, 2, 3))
+    assert sum(p.depth == 0 for p in points) == 6 and all(sum(p.depth == d for p in points) == 10 for d in (1, 2, 3))
+    assert all(n.endswith("_nocost") for n in names)  # the suffix keeps fits made with the cost axis matched
+
+
+def test_there_is_no_cost_axis():
+    """Removed (PI 2026-11-17): with one-word utterances there is no production cost, and a free extension cost
+    traded off with recursion depth."""
+    from src.rsa_open.grid import GridPoint, all_points, source
+
+    with pytest.raises(TypeError):
+        GridPoint(1, cost="extension")
+    assert not any("w_cost" in source(p) or "extension_share" in source(p) for p in all_points())
 
 
 @pytest.mark.parametrize("bad", [dict(depth=4), dict(depth=1, salience="listener"), dict(depth=1, kind="fc"),
-                                 dict(depth=0, salience="shared", kind="fc"), dict(depth=0, cost="extension")])
+                                 dict(depth=0, salience="shared", kind="fc")])
 def test_impossible_points_are_refused(bad):
     from src.rsa_open.grid import GridPoint
 
@@ -84,8 +95,8 @@ def test_each_axis_changes_the_predictions(tmp_path):
     from src.rsa_open.grid import GridPoint, source
 
     contexts = _pool()
-    base = dict(depth=2, salience="shared", kind="fc", semantics="bool", cost="none")
-    params = {"alpha": 1.5, "w_salience": 0.7, "w_cost": 0.8}
+    base = dict(depth=2, salience="shared", kind="fc", semantics="bool")
+    params = {"alpha": 1.5, "w_salience": 0.7}
 
     def probs(**change):
         p = GridPoint(**(base | change))
@@ -94,8 +105,7 @@ def test_each_axis_changes_the_predictions(tmp_path):
         return _probs(path, {k: v for k, v in params.items() if k in p.params}, contexts)
 
     ref = probs()
-    for change in (dict(depth=3), dict(salience="listener"), dict(kind="singleton"), dict(semantics="graded"),
-                   dict(cost="extension")):
+    for change in (dict(depth=3), dict(salience="listener"), dict(kind="singleton"), dict(semantics="graded")):
         assert np.abs(probs(**change) - ref).max() > 1e-3, change
 
 

@@ -40,11 +40,10 @@ def test_every_measure_but_lines_rises_when_a_grid_axis_is_switched_on():
     m = {n: measure(source(p)) for n, p in points.items()}
     rises = {k: [0, 0] for k in MEASURES}
     for a, b in itertools.permutations(points.values(), 2):
-        changed = [ax for ax in ("depth", "salience", "kind", "semantics", "cost") if getattr(a, ax) != getattr(b, ax)]
+        changed = [ax for ax in ("depth", "salience", "kind", "semantics") if getattr(a, ax) != getattr(b, ax)]
         added = ((changed == ["depth"] and b.depth == a.depth + 1)
                  or (set(changed) <= {"salience", "kind"} and a.salience == "none" and b.salience != "none")
-                 or (changed == ["semantics"] and b.semantics == "graded")
-                 or (changed == ["cost"] and b.cost != "none"))
+                 or (changed == ["semantics"] and b.semantics == "graded"))
         if added:
             for k in MEASURES:
                 rises[k][0] += m[b.name][k] > m[a.name][k]

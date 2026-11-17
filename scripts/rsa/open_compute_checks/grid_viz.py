@@ -139,8 +139,7 @@ def build(corpus: Path, grid_dir: Path, fits: Path, extra=()) -> Dict:
                                  "vs_best_se": 0.0 if n == best_grid else float(cluster_dse(flat[n][m], flat[best_grid][m], u)),
                                  "seen": seen(e, s)}
         if e["group"] == "grid":
-            row.update(depth=e["depth"], salience=e["salience"], kind=e["kind"] or "", semantics=e["semantics"],
-                       cost=e["cost"])
+            row.update(depth=e["depth"], salience=e["salience"], kind=e["kind"] or "", semantics=e["semantics"])
         else:
             row.update(rationale=e.get("rationale", ""), origin=e.get("origin", ""))
         theories.append(row)
@@ -228,6 +227,34 @@ def bundle_of(page: Path) -> Dict:
     return json.loads(text[i:text.index("</script>", i)])
 
 
+def drop_cost_theories(bundle: Dict) -> Dict:
+    """A bundle built with the old 66-theory grid, without its 30 cost theories (the cost axis was removed, PI
+    2026-11-17): theories and every display's per-theory arrays filtered, the best grid theory chosen again among the
+    rest (converged, highest pooled score), and scores against it recomputed from the stored ELPDs. Their clustered
+    SEs need the per-trial scores, so they are left out (the page then shows no SE) until a rebuild from the fits."""
+    keep = [i for i, t in enumerate(bundle["theories"]) if not (t["group"] == "grid" and t.get("cost", "none") != "none")]
+    if len(keep) == len(bundle["theories"]):
+        return bundle
+    theories = [bundle["theories"][i] for i in keep]
+    for d in bundle["displays"]:
+        d["preds"] = [d["preds"][i] for i in keep]
+        d["lpd"] = [d["lpd"][i] for i in keep]
+    grid = [t for t in theories if t["group"] == "grid"]
+    best = max((t for t in grid if t["converged"]), key=lambda t: t["pooled"])
+    for t in theories:
+        t.pop("cost", None)
+        t["vs_best"] = t["elpd"] - best["elpd"]
+        t["vs_best_se"] = 0.0 if t is best else None
+        for s, v in t["studies"].items():
+            v["vs_best"] = v["elpd"] - best["studies"][s]["elpd"]
+            v["vs_best_se"] = 0.0 if t is best else None
+    meta = bundle["meta"]
+    meta.update(best_grid=best["name"], n_total=36, n_done=len(grid),
+                missing=[n for n in meta.get("missing", []) if n.endswith("_nocost")])
+    bundle["theories"] = theories
+    return bundle
+
+
 def render(bundle: Dict, out: Path) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     data = json.dumps(bundle, separators=(",", ":")).replace("</", "<\\/")
@@ -248,7 +275,7 @@ def main(argv=None) -> None:
                                                   "(no fits needed; --note replaces its notes)")
     a = ap.parse_args(argv)
     if a.rerender:
-        bundle = bundle_of(a.rerender)
+        bundle = drop_cost_theories(bundle_of(a.rerender))
         for s in bundle["studies"]:
             s["label"] = SOURCE_LABELS.get(s["id"], s["label"])
     else:
