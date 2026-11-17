@@ -125,3 +125,19 @@ def test_grid_theories_meet_the_listener_and_speaker_contracts(tmp_path):
         theory = TheoryModel(tmp_path / f"{p.name}.py")
         check_contract(theory, groups)
         check_speaker_contract(theory, groups)
+
+
+@pytest.mark.parametrize("source", ["pragmods_trials", "pragmods"])
+def test_report_splits_pragmods_prior_experiments_under_either_source_name(source):
+    """The committed CSV names pragmods' source `pragmods_trials`, Sherlock's copy `pragmods`; the report labels the
+    manipulated-prior experiments `pragmods_prior` and the rest `pragmods_trials` under both (the partial Sherlock run
+    of 11-16 left `pragmods` whole)."""
+    import sys
+    from types import SimpleNamespace
+
+    sys.path.insert(0, "scripts/rsa/open_compute_checks")
+    from rsa_grid import study_labels
+
+    block = SimpleNamespace(name="E", n=3, sources=(source, source, "sikos_2021"),
+                            units=(f"{source}:x|E5_baserate|1", f"{source}:x|E1_dv|2", "sikos_2021:y|z"))
+    assert list(study_labels(block)) == ["pragmods_prior", "pragmods_trials", "sikos_2021"]
