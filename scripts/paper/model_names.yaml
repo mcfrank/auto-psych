@@ -16,7 +16,7 @@ subjective_randomness:
   mild_symmetric_trick_coin_streak_weary: Streak-weary trick coin
 rsa:
   # starting models (the promoted seeds, each chain's share)
-  rsa_l1: RSA, depth 1
+  rsa_l1: RSA, depth 1 (Frank & Goodman, 2012)
   rsa_l2: RSA, depth 2
   # the best textbook model, Figure 2's zero (rsa.json's best_textbook)
   rsa_l1_shared_prior: RSA + shared prior
