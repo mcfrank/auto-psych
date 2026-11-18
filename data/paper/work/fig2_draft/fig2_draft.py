@@ -156,7 +156,7 @@ def incumbent_paths(domain, data):
 # --- drawing -----------------------------------------------------------------
 
 BY_RUN = False
-NG_TEST_SET = "unseen_example_sets"  # or "unseen_items" (--ng-unseen-items)
+NG_TEST_SET = "unseen_items"  # the (set, target) items no run drew; or "unseen_example_sets" (--ng-unseen-sets)
 RUN_COLORS = ["#08306b", "#2171b5", "#6baed6"]  # a panel's runs by their best model, best (darkest) first
 WIDTH = {"winner": 1.0, "seed": 1.0, "nonwinning": 2.6, "promoted": 1.8}
 CAPTION_ABOVE = {"number_game"}  # its strip reaches the zero line, its winners cross it: captions moved
@@ -350,5 +350,5 @@ def main():
 if __name__ == "__main__":
     import sys
     BY_RUN = "--by-run" in sys.argv
-    NG_TEST_SET = "unseen_items" if "--ng-unseen-items" in sys.argv else NG_TEST_SET
+    NG_TEST_SET = "unseen_example_sets" if "--ng-unseen-sets" in sys.argv else NG_TEST_SET
     main()
