@@ -156,21 +156,36 @@ complexity, and all 213 displays with people's choices against any two theories,
 the campaign's old model-report design (`src/rsa/report_template.html`) carried over. For the Sherlock run, build it
 from the all-studies fits the same way; display panels cover the choice blocks only.
 
-## Every study, partial (2026-11-17)
+## Every study: final (2026-11-18)
 
-Sherlock's partial run (`data/rsa_open/grid/all_studies/`, 82 of the 97 fits of the 66-theory grid and the 31 seed
-and discovered theories; 32 of the 36 cost-free grid theories), re-rendered here without the cost theories
-(`grid_viz.py --rerender`). 23 studies, 123,153 trials. Scores against the best grid theory are recomputed from the
-stored ELPDs; their clustered SEs need the per-trial scores and come with the final rebuild. Convergence flags on most
-theories come from one link of `pilot1_exp2` (the README there); the totals below leave that study out.
+The Sherlock run's write-up is `docs/auto_open/RSA_GRID_REPORT.md`; the data are in `data/rsa_open/grid/all_studies/`
+(36 grid theories and 27 of the 31 seed and discovered theories; four closed incumbents timed out at 48 hours). Against
+what the partial run of 11-17 suggested:
 
-- **The simplest theory wins outright:** depth 1, a singleton prior in the top listener only, Boolean meanings (2
-  parameters), +2,233 over plain RSA. A second level loses (−57, 3 of 9 pairs), graded meanings lose at depth 1 (−106,
-  0 of 5), and sharing the prior across levels makes no difference (−24). With the cost axis these all tied; without
-  it, the data prefer the simplest form.
-- **The best seed and discovered theories beat it by about 1,500 nats:** the consolidation superset +1,505, closed chain
-  1's second theory (`contrastive_extremity_noisy_speaker`, 9 parameters) +1,481, the fixed arm's second incumbent
-  +1,474, much of it on data their makers never saw (the closed pre-registered final, stage 1's fixed chain).
+- **Unchanged.**
+  - The best grid theory is the simplest with a salience prior: depth 1, singleton prior in the top listener, Boolean
+    meanings (+2,318 over plain RSA).
+  - Depth beyond 1 adds nothing; the converged pairs are level.
+  - Graded meanings hurt a depth-1 listener (−103, 0 of 5).
+  - Sharing the prior across levels makes no difference.
+  - The campaigns' best theories beat the best grid theory by about 1,500 nats: the consolidation superset, closed
+    chain 1's second incumbent, the fixed arm's second.
+- **Feature-count salience helps on all the data** (+420, 12 of 12 pairs), where on the literature it lost in every
+  pair.
+- **Open 3, the open arm's final, does not change the open arm's standing.** It is 544 nats behind the best grid
+  theory (−1.5 SE).
+  - It is the best theory on production (+584 against the best grid theory).
+  - It loses its own chain's two-rating experiment (−488), which open 2 had repaired.
+  - It loses open pilot 1's bets (−767).
+  - Each open incumbent fixes the latest paradigm and loses ground on another.
+- **The fixed arm's final (`fixed3`, 1 parameter, Halstead volume 13,021) is the best theory on 14 of the 24 study
+  columns,** 11 of them on data its makers never saw: the closed experiments, the closed final, Mayn & Demberg 2022,
+  plain pragmods. It is still only +906 over the best grid theory pooled, because it loses on stage 1's open
+  experiments (−768) and open pilot 1's bets (−389).
+- **All three of closed chain 2's theories** lose about 14,000 nats on open pilot 1's bets and nothing comparable
+  elsewhere.
+- **On production, a literal listener's derived speaker beats plain RSA by 347 nats.** RSA's derived speaker is the
+  weak part there.
 
 ## Seeds, discovered theories and complexity (2026-11-16)
 
