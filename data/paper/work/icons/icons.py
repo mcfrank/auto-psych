@@ -16,6 +16,10 @@ from scripts.paper.figures.style import INK, INK_2, setup_style  # noqa: E402
 OUT = here() / "data" / "paper" / "work" / "icons"
 DARK, MID, LIGHT = "#08306b", "#4292c6", "#c6dbef"  # the figures' blues
 GREY = "#bdbdbd"
+# every icon's thinker and thought cloud: one place and size, its contents set relative to the centre
+THINKER = (0.11, 0.15, 0.07)
+CX, CY = 0.45, 0.70
+CLOUD = {"cx": CX, "cy": CY, "w": 0.56, "h": 0.36, "trail": (0.12, 0.24), "z": 1}
 SPEAKER = "#d9d9d9"  # the speaker's fill; the listener is white, so the nested thoughts read
 
 
@@ -43,12 +47,12 @@ def randomness_icon(ax):
     pick = FancyBboxPatch((x0 - 0.058, 0.34 - 0.058), 7 * step + 0.116, 0.116,
                           boxstyle="round,pad=0,rounding_size=0.06", facecolor="none", edgecolor=MID, lw=1.1, zorder=4)
     ax.add_patch(pick)
-    _person(ax, 0.11, 0.15, 0.07)
+    _person(ax, *THINKER)
     # the thought: a fair coin, half heads and half tails
-    _cloud(ax, 0.42, 0.76, 0.42, 0.28, trail=(0.12, 0.24), z=1)
-    cx, cy, cr = 0.42, 0.76, 0.065
-    ax.add_patch(Wedge((cx, cy), cr, 90, 270, facecolor=DARK, edgecolor=DARK, lw=0.9, zorder=3))
-    ax.add_patch(Wedge((cx, cy), cr, 270, 90, facecolor="white", edgecolor=DARK, lw=0.9, zorder=3))
+    _cloud(ax, **CLOUD)
+    cr = 0.065
+    ax.add_patch(Wedge((CX, CY), cr, 90, 270, facecolor=DARK, edgecolor=DARK, lw=0.9, zorder=3))
+    ax.add_patch(Wedge((CX, CY), cr, 270, 90, facecolor="white", edgecolor=DARK, lw=0.9, zorder=3))
 
 
 def _cloud(ax, cx, cy, w, h, trail, z=1, lw=0.8):
@@ -88,7 +92,7 @@ def reference_icon(ax):
     said "hat"."""
     _blank(ax)
     # the scene: listener, the three faces, speaker with the utterance
-    _person(ax, 0.11, 0.15, 0.07)
+    _person(ax, *THINKER)
     _person(ax, 0.89, 0.15, 0.07, fill=SPEAKER)
     y, r = 0.13, 0.062
     for x, kw in ((0.32, {}), (0.5, {"glasses": True}), (0.68, {"glasses": True, "hat": True})):
@@ -105,10 +109,10 @@ def reference_icon(ax):
     ax.plot([0.83, 0.89, 0.89], [0.325, 0.25, 0.325], color=INK_2, lw=0.8, zorder=5, solid_joinstyle="round")
     ax.text(0.79, 0.38, "“glasses”", ha="center", va="center", fontsize=5.5, color=INK, zorder=6)
     # the listener thinks of the speaker, who thinks of a (literal) listener
-    _cloud(ax, 0.42, 0.7, 0.56, 0.36, trail=(0.12, 0.24), z=1)
-    _person(ax, 0.27, 0.66, 0.06, z=3, lw=0.8, fill=SPEAKER)
-    _cloud(ax, 0.5, 0.75, 0.26, 0.17, trail=(0.29, 0.7), z=3, lw=0.7)
-    _person(ax, 0.5, 0.76, 0.04, z=5, lw=0.7)
+    _cloud(ax, **CLOUD)
+    _person(ax, CX - 0.15, CY - 0.04, 0.06, z=3, lw=0.8, fill=SPEAKER)
+    _cloud(ax, CX + 0.08, CY + 0.05, 0.26, 0.17, trail=(CX - 0.13, CY), z=3, lw=0.7)
+    _person(ax, CX + 0.08, CY + 0.06, 0.04, z=5, lw=0.7)
 
 
 
@@ -153,16 +157,16 @@ def number_icon(ax):
     for k, n in enumerate((16, 8, 2, 64)):
         _card(ax, 0.3 + k * 0.13, 0.16, str(n), w=0.115)
     _card(ax, 0.88, 0.16, "32", edge=MID, color=DARK)
-    _person(ax, 0.1, 0.15, 0.07)
+    _person(ax, *THINKER)
     # the thought: candidate programs and how much each is believed
-    _cloud(ax, 0.47, 0.67, 0.62, 0.4, trail=(0.11, 0.25), z=1)
+    _cloud(ax, **CLOUD)
     rules = (("2ⁿ", 0.9, DARK, INK), ("2n", 0.1, LIGHT, INK_2))  # powers of two, even numbers
     for k, (rule, prob, bar, ink) in enumerate(rules):
-        y = 0.74 - k * 0.12
-        base = ax.text(0.29, y, "2" if rule == "2ⁿ" else rule, ha="left", va="center", fontsize=7, color=ink, zorder=4)
+        y = CY + 0.06 - k * 0.12
+        base = ax.text(CX - 0.17, y, "2" if rule == "2ⁿ" else rule, ha="left", va="center", fontsize=7, color=ink, zorder=4)
         if rule == "2ⁿ":  # the exponent, set by hand: a small raised n right after the 2
             ax.annotate("n", xy=(1, 0.75), xycoords=base, ha="left", va="center", fontsize=5, color=ink, zorder=4)
-        ax.add_patch(Rectangle((0.47, y - 0.035), 0.26 * prob, 0.06, facecolor=bar, edgecolor="none", zorder=4))
+        ax.add_patch(Rectangle((CX, y - 0.035), 0.22 * prob, 0.06, facecolor=bar, edgecolor="none", zorder=4))
 
 
 # --- stimulus-only versions, for panel titles: no people, thoughts or answer, in ink -----------
