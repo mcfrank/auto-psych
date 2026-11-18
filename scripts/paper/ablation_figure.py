@@ -33,7 +33,7 @@ from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.text import Text  # noqa: E402
 from pyprojroot import here  # noqa: E402
 
-from scripts.paper.figures import (  # noqa: E402
+from scripts.paper.figures.legacy import (  # noqa: E402
     COLOR_DISCOVERED,
     FULL_WIDTH_IN,
     INK,

@@ -14,8 +14,8 @@ from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.patches import Circle  # noqa: E402
 from pyprojroot import here  # noqa: E402
 
-from data.paper.work.fig2_draft.fig2_draft import INK, INK_2, TITLE_FONT, setup_style  # noqa: E402
-from data.paper.work.icons.icons import STIMULI  # noqa: E402
+from scripts.paper.figures.style import INK, INK_2, TITLE_FONT, setup_style  # noqa: E402
+from scripts.paper.figures.icons import STIMULI  # noqa: E402
 
 OUT = here() / "data" / "paper" / "work" / "fig3_draft"
 SEED, BEST, HUMAN = "#b3b3b3", "#2171b5", INK  # best seed, best discovered model, human data

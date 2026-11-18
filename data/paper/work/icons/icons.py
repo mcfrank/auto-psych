@@ -1,4 +1,5 @@
-"""Task icons for the paper's figures (draft). Each draws into an axes in [0, 1] x [0, 1].
+"""Draft task icons (throwaway; Figure 1?): each draws a task's scene into an axes in [0, 1] x [0, 1].
+The figures' title icons are scripts/paper/figures/icons.py.
 
 Run: uv run python -m data.paper.work.icons.icons
 """
@@ -9,7 +10,8 @@ import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import Circle, FancyBboxPatch, Polygon, Rectangle  # noqa: E402
 from pyprojroot import here  # noqa: E402
 
-from data.paper.work.fig2_draft.fig2_draft import INK, INK_2, setup_style  # noqa: E402
+from scripts.paper.figures.icons import _face  # noqa: E402
+from scripts.paper.figures.style import INK, INK_2, setup_style  # noqa: E402
 
 OUT = here() / "data" / "paper" / "work" / "icons"
 DARK, MID, LIGHT = "#08306b", "#4292c6", "#c6dbef"  # the figures' blues
@@ -47,18 +49,6 @@ def randomness_icon(ax):
     cx, cy, cr = 0.42, 0.76, 0.065
     ax.add_patch(Wedge((cx, cy), cr, 90, 270, facecolor=DARK, edgecolor=DARK, lw=0.9, zorder=3))
     ax.add_patch(Wedge((cx, cy), cr, 270, 90, facecolor="white", edgecolor=DARK, lw=0.9, zorder=3))
-
-
-def _face(ax, x, y, r, glasses=False, hat=False, color=MID):
-    """A face: a disc, with glasses (two rims and a bridge) and/or a hat."""
-    ax.add_patch(Circle((x, y), r, facecolor=color, edgecolor="none"))
-    if glasses:
-        for dx in (-0.42 * r, 0.42 * r):
-            ax.add_patch(Circle((x + dx, y + 0.12 * r), 0.3 * r, facecolor="white", edgecolor=INK, lw=0.9))
-        ax.plot([x - 0.12 * r, x + 0.12 * r], [y + 0.12 * r] * 2, color=INK, lw=0.9)
-    if hat:
-        ax.add_patch(Rectangle((x - 1.05 * r, y + 0.82 * r), 2.1 * r, 0.16 * r, facecolor=INK, edgecolor="none"))
-        ax.add_patch(Rectangle((x - 0.6 * r, y + 0.95 * r), 1.2 * r, 0.6 * r, facecolor=INK, edgecolor="none"))
 
 
 def _cloud(ax, cx, cy, w, h, trail, z=1, lw=0.8):
@@ -143,7 +133,7 @@ def reference_icon_compact(ax):
     _person(ax, 0.56, 0.8, 0.032, z=5, lw=0.7)
     y, r = 0.52, 0.055
     for x, kw in ((0.36, {"color": GREY}), (0.5, {"glasses": True}), (0.64, {"glasses": True, "hat": True, "color": GREY})):
-        _face(ax, x, y, r, **kw)
+        _face(ax, x, y, r, color=MID, **kw)
     for art in ax.patches[-8:]:
         art.set_zorder(max(art.get_zorder(), 3))
     for line in ax.lines[-2:]:
@@ -176,43 +166,6 @@ def number_icon(ax):
 
 
 # --- stimulus-only versions, for panel titles: no people, thoughts or answer, in ink -----------
-
-def _strip(ax, width):
-    """An axes [0, width] x [0, 1], equal aspect, no frame."""
-    ax.set_xlim(0, width)
-    ax.set_ylim(0, 1)
-    ax.set_aspect("equal")
-    ax.axis("off")
-
-
-def randomness_stimulus(ax):
-    """The two coin sequences, heads filled."""
-    _strip(ax, 2.6)
-    for y, seq in ((0.72, "HTHHTHTT"), (0.28, "HHHHTTTT")):
-        for i, c in enumerate(seq):
-            ax.add_patch(Circle((0.2 + i * 0.31, y), 0.12, facecolor=INK_2 if c == "H" else "white",
-                                edgecolor=INK_2, lw=0.6))
-
-
-def reference_stimulus(ax):
-    """The three faces."""
-    _strip(ax, 1.6)
-    for x, kw in ((0.25, {}), (0.8, {"glasses": True}), (1.35, {"glasses": True, "hat": True})):
-        _face(ax, x, 0.4, 0.21, color=GREY, **kw)
-
-
-def number_stimulus(ax):
-    """The example cards."""
-    _strip(ax, 2.3)
-    for k, n in enumerate(("16", "8", "2", "64")):
-        x = 0.27 + k * 0.58
-        ax.add_patch(FancyBboxPatch((x - 0.25, 0.25), 0.5, 0.5, boxstyle="round,pad=0,rounding_size=0.08",
-                                    facecolor="white", edgecolor=INK_2, lw=0.6))
-        ax.text(x, 0.5, n, ha="center", va="center", fontsize=4.5, color=INK)
-
-
-STIMULI = {"subjective_randomness": (randomness_stimulus, 2.6), "rsa": (reference_stimulus, 1.6),
-           "number_game": (number_stimulus, 2.3)}  # each icon and its width (its height is 1)
 
 
 def main():

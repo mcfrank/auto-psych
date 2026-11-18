@@ -1,7 +1,7 @@
 # The paper each starting model implements, per domain, for Figure 2's
 # labels; null for a starting model no paper proposed (reference games' seeds
 # promoted from the earlier agent sweep, data/rsa/live_seeds/promotion.json).
-# Every starting model must be listed: scripts/paper/figures.py raises on one
+# Every starting model must be listed: scripts/paper/figures raises on one
 # that is not. Drafted from each model's docstring (2026-10-21).
 subjective_randomness:
   falk_konold_dp: Falk & Konold, 1997
@@ -12,6 +12,7 @@ rsa:
   rsa_l1: Frank & Goodman, 2012
   # One more level of the same recursion (the pragmods "complex" game).
   rsa_l2: Frank & Goodman, 2012
+  rsa_l1_shared_prior: Frank & Goodman, 2012  # the best textbook model (Figure 2's zero)
   rsa_l2_singleton_distinct_feat_color_l0: null
   rsa_l2_singleton_feat_color_familiar_l0: null
   rsa_l2_singleton_feat_color_valence_l0: null
