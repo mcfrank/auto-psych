@@ -147,7 +147,7 @@ def place_bands(fig, bands, captions):
         per_pt = (hi - lo) / height_pt
         renderer, inv = fig.canvas.get_renderer(), ax.transData.inverted()
         right = inv.transform((ax.bbox.x1, 0))[0]
-        leader = {"arrowstyle": "-", "color": "#9a9a9a", "lw": 0.5, "shrinkA": 1, "shrinkB": 6}
+        leader = {"arrowstyle": "-", "color": "#9a9a9a", "lw": 0.5, "shrinkA": 1, "shrinkB": 3}
         for k, (text, x, y) in enumerate(sorted(top, key=lambda n: -n[1])):
             ax.annotate(text, (x, y), xytext=(x, hi - (k + 0.5) * LINE_PT * per_pt), ha="right", va="center",
                         fontsize=NAME_PT, color=INK, arrowprops={**leader, "relpos": (1, 0.5)},
@@ -158,7 +158,7 @@ def place_bands(fig, bands, captions):
             name = ax.text(x, yt, text, ha="left", va="center", fontsize=NAME_PT, color=INK_2, clip_on=False)
             for xp, yp in points:  # a leader to each of the name's models, all from just above its text
                 ax.annotate("", (xp, yp), xytext=(xp, yt + 0.5 * NAME_PT * per_pt), annotation_clip=False,
-                            arrowprops={**leader, "shrinkA": 0})
+                            arrowprops={**leader, "shrinkA": 2, "shrinkB": 6})  # clear of the seeds' bars
             box = name.get_window_extent(renderer)
             if box.x1 > ax.bbox.x1:  # past the panel's right edge: end the name there
                 shift = inv.transform((box.width, 0))[0] - inv.transform((0, 0))[0]
