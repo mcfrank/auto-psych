@@ -1,0 +1,16 @@
+{
+ "model": "ng_minus_prime_mult_seed",
+ "fold": 0,
+ "converged": true,
+ "has_lpd": true,
+ "attempts": [
+  {
+   "seed": 20261018,
+   "problems": [],
+   "problems_all": [],
+   "seconds": 1852
+  }
+ ],
+ "elpd": -2807.815232139536,
+ "seed": 20261018
+}

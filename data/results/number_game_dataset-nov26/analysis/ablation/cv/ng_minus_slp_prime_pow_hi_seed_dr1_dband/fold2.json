@@ -1,0 +1,28 @@
+{
+ "model": "ng_minus_slp_prime_pow_hi_seed_dr1_dband",
+ "fold": 2,
+ "converged": true,
+ "has_lpd": true,
+ "attempts": [
+  {
+   "seed": 20261018,
+   "problems": [
+    "max R-hat 1.499 > 1.05",
+    "min bulk ESS 8 < 100"
+   ],
+   "problems_all": [
+    "max R-hat 1.499 > 1.05",
+    "min bulk ESS 8 < 100"
+   ],
+   "seconds": 658
+  },
+  {
+   "seed": 6,
+   "problems": [],
+   "problems_all": [],
+   "seconds": 626
+  }
+ ],
+ "elpd": -2777.176253341924,
+ "seed": 6
+}
