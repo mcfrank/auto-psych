@@ -30,8 +30,11 @@ What each figure shows:
   the paired difference (names: `model_names.yaml`; the paper each starting
   model implements, or null: `seed_papers.yaml`), and the non-winning models
   (the other models live at the end and those pruned during the runs) as
-  one grey "search history" strip, each run's in the order it admitted them
-  (`pruned_order`, `others_order`). The best discovered models are named
+  one "search history" strip, each run's in the order it admitted them
+  (`pruned_order`, `others_order`), under a step line tracing the loop's own
+  incumbent (each `history.json` step's `best_model`, from the run
+  directories `--histories` names). Each run has its own shade, by its best
+  model (the best darkest), and so does its winner. The best discovered models are named
   at the top, the starting models at the bottom (by their paper, or their
   own name where seeds share one). Reference games are re-zeroed on the
   best textbook model (`best_textbook`), with the best promoted seed (the

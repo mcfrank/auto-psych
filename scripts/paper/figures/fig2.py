@@ -1,25 +1,30 @@
 """Figure 2 (``fig2_elpd``): per domain, every model's ΔELPD against the best seed model (the runs
 collapsed; ``data.forest_rows``), models across, left to right: the literature seeds (worst first), the
 promoted seeds (reference games), the other models the loop wrote (one strip, each run's in the order it
-admitted them) and the best discovered models (worst first), each named point with ±2 SE of the paired
-difference. Reference games are re-zeroed on the best textbook model, with the best promoted seed (the
-pre-registered bar) as a second line. Names sit in two bands, the winners' above and the seeds' below.
+admitted them, under a line tracing the loop's own choice, its incumbent, as it went) and the best
+discovered models (worst first). The runs are shaded by their best model, the best darkest. Named points
+carry ±2 SE of the paired difference. Reference games are re-zeroed on the best textbook model, with the
+best promoted seed (the pre-registered bar) as a second line. Names sit in two bands, the winners' above
+and the seeds' below.
 """
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.lines import Line2D
 from matplotlib.ticker import FuncFormatter, MaxNLocator
 
-from scripts.paper.figures.data import forest_rows
+from scripts.paper.figures.data import POOLED_VIEW, forest_rows
 from scripts.paper.figures.icons import add_title_icons
 from scripts.paper.figures.style import INK, INK_2, TITLE_FONT, panel_title, save, setup_style
 
-COLOR_DISCOVERED, COLOR_SEED, COLOR_PROMOTED, COLOR_OTHER = "#4C72B0", "#b3b3b3", "#3d3d3d", "#b3b3b3"
+COLOR_SEED, COLOR_PROMOTED = "#b3b3b3", "#3d3d3d"
+RUN_COLORS = ["#08306b", "#2171b5", "#6baed6"]  # a panel's runs by their best model, best (darkest) first
 SEED_LABEL = "#7a7a7a"  # the best seed line's label: darker than the line, to read
 WIDTH = {"winner": 1.0, "seed": 1.0, "nonwinning": 2.6, "promoted": 1.8}  # each column's width
 PENDING_WIDTH = 9.0  # a pending panel's
@@ -53,9 +58,47 @@ def rsa_vs_textbook(rows: List[Dict[str, Any]], data: Dict[str, Any], names: Dic
     seeds.append({"kind": "seed", "model": textbook["model"], "label": names[textbook["model"]],
                   "paper": papers[textbook["model"]], "diff": 0.0, "se": 0.0})
     rest = [r for r in out if r["kind"] != "seed"]
-    rest.append({"kind": "promoted", "label": "Promoted seeds",
-                 "values": [r["diff"] for r in out if r["kind"] == "seed" and r["model"] in promoted]})
+    promo = [r for r in out if r["kind"] == "seed" and r["model"] in promoted]
+    rest.append({"kind": "promoted", "label": "Promoted seeds", "values": [r["diff"] for r in promo],
+                 "models": [r["model"] for r in promo]})
     return rest + sorted(seeds, key=lambda r: -r["diff"])
+
+
+def load_history(template: str, run: str) -> List[Dict[str, Any]]:
+    """A run's steps, experiment by experiment (each experiment's ``model_loop/history.json``)."""
+    root = Path(template.format(run=run))
+    return [st for exp in (1, 2, 3)
+            for st in json.loads((root / f"experiment{exp}/model_loop/history.json").read_text())]
+
+
+def incumbent_paths(domain: str, rows: List[Dict[str, Any]], histories: List[List[Dict[str, Any]]]) -> List[list]:
+    """Per run (``histories`` in the domain's run order): the loop's own choice over time, as (progress
+    through the run's strip, the chosen model's value) at every step. The choice is each step's
+    ``best_model``; progress is the share of the run's strip models the loop had admitted by then (those
+    standing at the step or any before). A choice with no value in the figure is said and skipped."""
+    shared = {r["model"]: r["diff"] for r in rows if r["kind"] == "seed"}
+    for r in rows:
+        if r["kind"] == "promoted":
+            shared.update(zip(r["models"], r["values"]))
+    (strip,) = [r for r in rows if r["kind"] == "nonwinning"]
+    paths = []
+    for k, steps in enumerate(histories):
+        mine = [(m, v) for m, v, run in zip(strip["models"], strip["values"], strip["runs"]) if run == k]
+        ranked = [m for m, _ in mine]
+        value = {**shared, **dict(mine), **{r["model"]: r["diff"] for r in rows if r["kind"] == "winner" and r["run"] == k}}
+        seen, path, missing = set(), [], set()
+        for st in steps:
+            seen |= set(st.get("standing") or st.get("elpd_loo") or {})
+            if st["best_model"] not in value:
+                missing.add(st["best_model"])
+                continue
+            n_in = sum(m in seen for m in ranked)
+            path.append(((max(n_in, 1) - 1) / (len(ranked) - 1) if len(ranked) > 1 else 0.5, value[st["best_model"]]))
+        if missing:
+            print(f"[{domain}] run {k + 1}'s incumbents with no value in the figure, skipped: {sorted(missing)}",
+                  flush=True)
+        paths.append(path)
+    return paths
 
 
 def columns(rows):
@@ -115,9 +158,13 @@ def place_bands(fig, bands, captions):
         ax.set_ylim(lo, hi)
 
 
-def draw_panel(ax, domain, rows):
-    """One domain's columns; returns its name bands (top, bottom) and its strips' captions."""
+def draw_panel(ax, domain, rows, paths):
+    """One domain's columns, each run's incumbent ``paths`` over its strip; returns its name bands (top,
+    bottom) and its strips' captions."""
     rng = np.random.default_rng(0)
+    # Each run's shade is its rank by its best model: the best run darkest.
+    rank = {r["run"]: k for k, r in enumerate(sorted((r for r in rows if r["kind"] == "winner"),
+                                                     key=lambda r: -r["diff"]))}
     cols = columns(rows)
     widths = np.asarray([WIDTH[c["kind"]] for c in cols])
     xs = np.cumsum(widths) - widths / 2
@@ -142,9 +189,16 @@ def draw_panel(ax, domain, rows):
             if c["kind"] == "promoted":
                 ax.scatter(x + rng.uniform(-0.35, 0.35, len(vals)) * w, vals, s=4, color=COLOR_PROMOTED,
                            alpha=0.7, linewidths=0, zorder=2)
-            else:  # left to right in the order each run admitted them
-                ax.scatter(x + (np.asarray(c["progress"]) - 0.5) * 0.85 * w, vals, s=4, c=COLOR_OTHER,
-                           alpha=0.6, linewidths=0, zorder=2)
+            else:  # left to right in the order each run admitted them, under its incumbent's path
+                at, runs = x + (np.asarray(c["progress"]) - 0.5) * 0.85 * w, np.asarray(c["runs"])
+                for run in sorted(range(len(paths)), key=rank.get):  # the best run first
+                    path = paths[run]
+                    color, layer = RUN_COLORS[rank[run]], 3 - rank[run]  # the best run on top
+                    ax.scatter(at[runs == run], vals[runs == run], s=3, color=color, alpha=0.3, linewidths=0,
+                               zorder=2)
+                    px, py = zip(*path)
+                    ax.step(x + (np.asarray(px) - 0.5) * 0.85 * w, py, where="post", color=color, lw=1.1,
+                            zorder=2.5 + 0.1 * layer)
             if domain in CAPTION_ABOVE and c["kind"] == "nonwinning":
                 ax.annotate(STRIP_LABEL[c["kind"]], (x, vals.max()), xytext=(0, 4), textcoords="offset points",
                             ha="center", va="bottom", fontsize=CAPTION_PT, color=INK_2, style="italic")
@@ -153,7 +207,7 @@ def draw_panel(ax, domain, rows):
                                         textcoords="offset points", ha="center", va="top", fontsize=CAPTION_PT,
                                         color=INK_2, style="italic", linespacing=1.0))
             continue
-        color = COLOR_DISCOVERED if c["kind"] == "winner" else COLOR_SEED
+        color = RUN_COLORS[rank[c["run"]]] if c["kind"] == "winner" else COLOR_SEED
         half = 2 * (c["se"] or 0.0)
         if c["se"]:
             ax.plot([x, x], [c["diff"] - half, c["diff"] + half], color=color, lw=1.3,
@@ -172,12 +226,17 @@ def draw_panel(ax, domain, rows):
 
 
 def draw(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path, mock_domains: List[str],
-         names: Dict[str, Dict[str, str]], papers: Dict[str, Dict[str, Optional[str]]]) -> None:
+         names: Dict[str, Dict[str, str]], papers: Dict[str, Dict[str, Optional[str]]],
+         histories: Dict[str, str]) -> None:
     """``domain_data``: each domain's figure data (the number game's through
-    ``data.number_game_unseen_view``), ``None`` for a pending domain."""
+    ``data.number_game_unseen_view``), ``None`` for a pending domain; ``histories``: each domain's run
+    directory, ``{run}`` for the run."""
     rows = {d: forest_rows(d, data, names[d], papers[d]) for d, data in domain_data.items() if data is not None}
     if "rsa" in rows:
         rows["rsa"] = rsa_vs_textbook(rows["rsa"], domain_data["rsa"], names["rsa"], papers["rsa"])
+    paths = {d: incumbent_paths(d, rows[d], [load_history(histories[d], run) for run in (
+        domain_data[d]["pooled"]["runs"] if d in POOLED_VIEW else [r["run"] for r in domain_data[d]["runs"]])])
+        for d in rows}
     with plt.rc_context():
         setup_style()
         widths = [sum(WIDTH[r["kind"]] for r in rows[d]) if d in rows else PENDING_WIDTH for d in domain_data]
@@ -194,8 +253,14 @@ def draw(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path, mock_d
                 ax.text(0.5, 0.5, "results pending", transform=ax.transAxes, ha="center", va="center",
                         fontsize=CAPTION_PT, color=INK_2, style="italic")
                 continue
-            bands[ax], captions[ax] = draw_panel(ax, d, rows[d])
+            bands[ax], captions[ax] = draw_panel(ax, d, rows[d], paths[d])
         axes[0].set_ylabel("ΔELPD vs. best seed model (nats)")
         place_bands(fig, bands, captions)
+        # the runs' key: the leftmost panel's upper left, just below its band of names
+        key = [Line2D([], [], color=c, lw=1.1, label=f"{name} run")
+               for name, c in zip(["best", "second", "third"], RUN_COLORS)]
+        axes[0].legend(handles=key, loc="upper left", bbox_to_anchor=(0, axes[0].spines["left"].get_bounds()[1]),
+                       bbox_transform=axes[0].get_yaxis_transform(), frameon=False, fontsize=CAPTION_PT,
+                       handlelength=1.4, handletextpad=0.4, labelspacing=0.3, borderaxespad=0.4)
         add_title_icons(fig, axes, list(domain_data))
         save(fig, out_dir, "fig2_elpd")

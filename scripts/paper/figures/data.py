@@ -47,22 +47,27 @@ def forest_rows(domain: str, data: Dict[str, Any], names: Dict[str, str],
     (those live at the end and those pruned during the runs) as one strip, then the starting models (best
     first, each with the ``paper`` it implements or ``None``), each against the best starting model.
 
-    A labelled row has ``diff`` and ``se`` (``None``: no paired SE recorded). The strip has each model's
-    ``values`` and ``progress`` through its own run, 0 for the first it admitted to 1 for the last
+    A labelled row has ``diff`` and ``se`` (``None``: no paired SE recorded), a winner its ``run`` (its
+    index in the domain's run order). The strip has each model's ``values``, ``models`` (its name in its
+    run), ``runs`` and ``progress`` through its own run, 0 for the first it admitted to 1 for the last
     (``pruned_order`` and ``others_order``), so the collapsed runs overlay."""
     if domain in POOLED_VIEW:
         pooled = data["pooled"]
+        run_names = pooled["runs"]
         winners = {m: pooled["vs_best_seed"][m] for m in pooled["winner_runs"]}
+        winner_run = {m: run_names.index(run) for m, run in pooled["winner_runs"].items()}
         seeds = {m: pooled["vs_best_seed"][m] for m in pooled["elpd"] if m not in winners}
         every = {**pooled["pruned_during_run"], **pooled["others_at_end"]}
         order = {**pooled["pruned_order"], **pooled["others_order"]}
-        runs = [{label: v for label, v in every.items() if label.startswith(f"{run}{POOLED_LABEL_SEP}")}
-                for run in pooled["runs"]]
-        orders = [order] * len(runs)
+        runs = [{label.split(POOLED_LABEL_SEP, 1)[1]: v for label, v in every.items()
+                 if label.startswith(f"{run}{POOLED_LABEL_SEP}")} for run in run_names]
+        orders = [{label.split(POOLED_LABEL_SEP, 1)[1]: i for label, i in order.items()
+                   if label.startswith(f"{run}{POOLED_LABEL_SEP}")} for run in run_names]
     else:
         if len({r["best_seed"] for r in data["runs"]}) != 1:
             raise RuntimeError(f"{domain}: the runs are scored against different best starting models")
         winners = {r["best_model"]: r["vs_best_seed"][r["best_model"]] for r in data["runs"]}
+        winner_run = {r["best_model"]: k for k, r in enumerate(data["runs"])}
         seeds: Dict[str, Dict[str, Any]] = {}
         for r in data["runs"]:
             for m, v in r["vs_best_seed"].items():
@@ -73,10 +78,12 @@ def forest_rows(domain: str, data: Dict[str, Any], names: Dict[str, str],
                 seeds[m] = v
         runs = [{**r["pruned_during_run"], **r["others_at_end"]} for r in data["runs"]]
         orders = [{**r["pruned_order"], **r["others_order"]} for r in data["runs"]]
-    strip: Dict[str, List[float]] = {"values": [], "progress": []}
-    for models, order in zip(runs, orders):
+    strip: Dict[str, List[Any]] = {"values": [], "models": [], "runs": [], "progress": []}
+    for k, (models, order) in enumerate(zip(runs, orders)):
         ranked = sorted(models, key=lambda m: _lookup(order, domain, m, "the admission orders"))
         strip["values"] += [models[m] for m in ranked]
+        strip["models"] += ranked
+        strip["runs"] += [k] * len(ranked)
         strip["progress"] += [i / (len(ranked) - 1) if len(ranked) > 1 else 0.5 for i in range(len(ranked))]
 
     def rows(kind, values, **extra):
@@ -84,5 +91,5 @@ def forest_rows(domain: str, data: Dict[str, Any], names: Dict[str, str],
                 "diff": v["diff"], "se": v["se"], **{k: f(m) for k, f in extra.items()}} for m, v in values.items()]
         return sorted(out, key=lambda r: -r["diff"])
 
-    return [*rows("winner", winners), {"kind": "nonwinning", "label": "Non-winning models", **strip},
+    return [*rows("winner", winners, run=winner_run.get), {"kind": "nonwinning", "label": "Non-winning models", **strip},
             *rows("seed", seeds, paper=lambda m: _lookup(papers, domain, m, "seed_papers.yaml"))]

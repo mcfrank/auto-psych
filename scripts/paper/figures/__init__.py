@@ -46,6 +46,11 @@ class Args:
     ng_test_set: Literal["unseen_items", "unseen_example_sets"] = "unseen_items"
     """Which of its test sets Figure 2 draws: the (set, target) items no run drew, or the stricter
     example sets no run drew (11 sets, too few to separate the models)."""
+    histories: Dict[str, str] = field(default_factory=lambda: {
+        "subjective_randomness": str(here() / "data/results/human_experiment_sr-oct26/collected/{run}/subjective_randomness"),
+        "rsa": str(here() / "data/rsa/live/live_rsa_{run}/outputs"),
+        "number_game": str(here() / "data/results/number_game_dataset-nov26/collected/{run}/number_game")})
+    """Each domain's run directory (``{run}``: the run), whose experiments' histories Figure 2 traces."""
     figures: List[Literal["2", "3", "4"]] = field(default_factory=lambda: ["2", "3", "4"])
     """Which figures to draw."""
     domains: List[str] = field(default_factory=lambda: list(DOMAINS))
@@ -96,7 +101,7 @@ def main(args: Args) -> None:
             fig2_data["number_game"] = number_game_unseen_view(
                 domain_data["number_game"], json.loads(args.ng_unseen.read_text()), args.ng_test_set)
         fig2.draw(fig2_data, args.out_dir, args.mock_domains, {d: names[d] for d in drawn},
-                  {d: papers[d] for d in drawn})
+                  {d: papers[d] for d in drawn}, args.histories)
     if "3" in args.figures:
         fig3.draw_conditions(domain_data, args.out_dir, args.mock_domains)
     if "4" in args.figures:

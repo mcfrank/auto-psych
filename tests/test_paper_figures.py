@@ -73,8 +73,16 @@ def _setup(tmp_path, *, winner_in_spec="w", corrupt_sha=False):
     names.write_text(yaml.safe_dump({d: NAMES for d in ("subjective_randomness", "rsa")}))
     papers = tmp_path / "seed_papers.yaml"
     papers.write_text(yaml.safe_dump({d: PAPERS for d in ("subjective_randomness", "rsa")}))
+    # each run's history: its incumbent (best_model) at each step, and the models standing then
+    for run, models in (("r1", ["x", "w"]), ("r2", ["gone", "rival", "y", "w_b"])):
+        for exp in (1, 2, 3):
+            path = tmp_path / "history" / run / f"experiment{exp}/model_loop/history.json"
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps([{"best_model": models[-1], "standing": {m: 0 for m in models}}]))
+    histories = {d: str(tmp_path / "history" / "{run}") for d in ("subjective_randomness", "rsa")}
     return figures.Args(figure_data=data_dir, pseudocode=spec_dir, out_dir=tmp_path / "out",
-                        model_names=names, seed_papers=papers, pending_domains=["number_game"])
+                        model_names=names, seed_papers=papers, pending_domains=["number_game"],
+                        histories=histories)
 
 
 NAMES = {"w": "Winner one", "w_b": "Winner two", "s1": "Seed one", "s2": "Seed two", "s0": "Textbook"}
@@ -168,6 +176,9 @@ def test_the_non_winning_models_of_every_run_share_one_strip_in_admission_order(
     assert strip["kind"] == "nonwinning"
     # Run by run, in admission order: early, rival (live), late.
     assert strip["values"] == [0.0, 9.0, 4.0, -1.0, 10.0, 3.0]
+    assert strip["models"] == ["early_0", "rival", "late_0", "early_1", "rival", "late_1"]
+    assert strip["runs"] == [0, 0, 0, 1, 1, 1]
+    assert [(r["model"], r["run"]) for r in rows if r["kind"] == "winner"] == [("w_b", 1), ("w", 0)]
     # Each run's models from 0 (first admitted) to 1 (last).
     assert strip["progress"] == [0.0, 0.5, 1.0, 0.0, 0.5, 1.0]
 
@@ -211,6 +222,17 @@ def test_reference_games_are_drawn_against_the_best_textbook_model():
     (promoted,) = [r for r in rows if r["kind"] == "promoted"]
     assert promoted["values"] == [10.0]  # the best promoted seed: the pre-registered bar
     assert [r["se"] for r in rows if r["kind"] == "seed"] == [None, 0.0]  # the seeds' paired SEs dropped
+
+
+def test_each_runs_trajectory_is_its_incumbent_at_its_test_value_as_the_run_admits_models():
+    rows = figures.forest_rows("rsa", _domain_data("rsa"), NAMES, PAPERS)  # strip: gone, rival per run
+    steps = [{"best_model": "s1", "standing": {"s1": 0}},  # the seed, before any model is admitted
+             {"best_model": "rival", "standing": {"s1": 0, "gone": 0, "rival": 0}},
+             {"best_model": "w", "elpd_loo": {"rival": 0, "w": 0}}]
+    paths = fig2.incumbent_paths("rsa", rows, [steps, steps[:1]])
+    # (share of the run's strip admitted, the incumbent's value): s1 at 0, rival (+9) once both are in.
+    assert paths[0] == [(0.0, 0.0), (1.0, 9.0), (1.0, 12.0)]
+    assert paths[1] == [(0.0, 0.0)]
 
 
 def test_without_avenir_figure_2_uses_a_close_sans_serif(monkeypatch, capsys):
