@@ -203,13 +203,14 @@ def test_a_starting_model_not_in_seed_papers_raises():
         figures.forest_rows("rsa", _domain_data("rsa"), NAMES, {"s1": "Author, 1999"})
 
 
-def test_starting_models_are_named_by_their_paper_unless_another_seed_shares_it():
+def test_starting_models_are_named_by_their_paper_one_name_for_a_papers_models():
     def seed(model, paper):
         return {"kind": "seed", "model": model, "label": model.upper(), "diff": 0.0, "paper": paper}
 
-    columns = [seed("a", "Frank & Goodman, 2012"), seed("b", "Frank & Goodman, 2012"),
-               seed("c", "Hahn & Warren, 2009"), seed("d", None)]
-    assert [fig2.seed_label(c, columns) for c in columns] == ["A", "B", "Hahn & Warren (2009)", "D"]
+    columns = [seed("a", "Frank & Goodman, 2012"), seed("c", "Hahn & Warren, 2009"),
+               seed("b", "Frank & Goodman, 2012"), seed("d", None)]
+    assert fig2.seed_names(columns) == [("Frank & Goodman (2012)", ["a", "b"]), ("Hahn & Warren (2009)", ["c"]),
+                                        ("D", ["d"])]
 
 
 def test_reference_games_are_drawn_against_the_best_textbook_model():

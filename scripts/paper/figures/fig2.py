@@ -29,7 +29,6 @@ SEED_LABEL = "#7a7a7a"  # the best seed line's label: darker than the line, to r
 WIDTH = {"winner": 1.0, "seed": 1.0, "nonwinning": 2.6, "promoted": 1.8}  # each column's width
 PENDING_WIDTH = 9.0  # a pending panel's
 STRIP_LABEL = {"nonwinning": "search history", "promoted": "promoted\nseeds"}
-CAPTION_ABOVE = {"number_game"}  # its strip reaches the zero line, its winners cross it: captions moved
 NAME_PT = 4.5  # the models' names
 CAPTION_PT = 5.0  # the strips' captions and the lines' labels
 LINE_PT = 5.8  # one line of a name band
@@ -108,21 +107,23 @@ def columns(rows):
     return sorted(rows, key=lambda r: (order[r["kind"]], r.get("diff", 0)))
 
 
-def seed_label(r, cols):
-    """A seed by its paper ("Hahn & Warren (2009)"), by its own name where another seed shares the paper
-    (Frank & Goodman's RSA models) or there is none."""
-    papers = [c.get("paper") for c in cols if c["kind"] == "seed"]
-    if r["paper"] is None or papers.count(r["paper"]) > 1:
-        return r["label"]
-    return r["paper"].replace(", ", " (") + ")"
+def seed_names(cols):
+    """The seeds' names, each with its models: a paper's models under one name ("Hahn & Warren (2009)"),
+    a seed no paper proposed by its own."""
+    names: Dict[str, List[str]] = {}
+    for c in cols:
+        if c["kind"] == "seed":
+            names.setdefault(c["label"] if c["paper"] is None else c["paper"].replace(", ", " (") + ")",
+                             []).append(c["model"])
+    return list(names.items())
 
 
 def place_bands(fig, bands, captions):
     """Name the models in two bands, one line each, a thin leader to each point: the best discovered
-    models at the top (the best on the top line, each name ending at its column), the seeds and the strips
-    at the bottom (left to right from the bottom line, each name starting at its column). In that order no
-    leader crosses a name. Each panel's y range grows to fit its bands, and its captions above the bottom
-    one."""
+    models at the top (the best on the top line, each name ending at its column), the seeds at the bottom
+    (left to right from the bottom line, each name starting at its leftmost model's column, a leader to
+    each of its models). In that order no leader crosses a name. Each panel's y range grows to fit its
+    bands, and its strips' captions (``captions``: those hung below, those set above) between them."""
     fig.canvas.draw()
     for ax, (top, bottom) in bands.items():
         data_lo, data_hi = ax.get_ylim()
@@ -132,9 +133,13 @@ def place_bands(fig, bands, captions):
         t_pt, b_pt = len(top) * LINE_PT + 4, len(bottom) * LINE_PT + 4
         mid_pt = height_pt - t_pt - b_pt
         lo, hi = data_lo, data_hi
-        for caption in captions.get(ax, []):  # keep each caption (hung below its strip) above the band
+        below, above = captions[ax]
+        for caption in below:  # keep each caption hung below its strip above the bottom band
             r = (caption.get_window_extent().height * 72 / fig.dpi + 6) / mid_pt
             lo = min(lo, (caption.xy[1] - r * hi) / (1 - r))
+        for caption in above:  # and each set above its strip below the top one
+            r = (caption.get_window_extent().height * 72 / fig.dpi + 6) / mid_pt
+            hi = max(hi, (caption.xy[1] - r * lo) / (1 - r))
         span = (hi - lo) / mid_pt * height_pt
         lo, hi = lo - b_pt / height_pt * span, hi + t_pt / height_pt * span
         ax.set_ylim(lo, hi)
@@ -147,10 +152,14 @@ def place_bands(fig, bands, captions):
             ax.annotate(text, (x, y), xytext=(x, hi - (k + 0.5) * LINE_PT * per_pt), ha="right", va="center",
                         fontsize=NAME_PT, color=INK, arrowprops={**leader, "relpos": (1, 0.5)},
                         annotation_clip=False)
-        for k, (text, x, y) in enumerate(sorted(bottom, key=lambda n: n[1])):
+        for k, (text, points) in enumerate(sorted(bottom, key=lambda n: min(n[1]))):
             yt = lo + (k + 0.5) * LINE_PT * per_pt
+            (x, y), *rest = sorted(points)
             name = ax.annotate(text, (x, y), xytext=(x, yt), ha="left", va="center", fontsize=NAME_PT,
                                color=INK_2, annotation_clip=False, arrowprops={**leader, "relpos": (0, 0.5)})
+            for xr, yr in rest:  # the name's other models: a leader from its top
+                ax.annotate("", (xr, yr), xytext=(xr, yt + 0.5 * LINE_PT * per_pt), annotation_clip=False,
+                            arrowprops={**leader, "shrinkA": 0})
             box = name.get_window_extent(renderer)
             if box.x1 > ax.bbox.x1:  # past the panel's right edge: end the name there
                 shift = inv.transform((box.width, 0))[0] - inv.transform((0, 0))[0]
@@ -169,20 +178,15 @@ def draw_panel(ax, domain, rows, paths):
     widths = np.asarray([WIDTH[c["kind"]] for c in cols])
     xs = np.cumsum(widths) - widths / 2
     ax.axhline(0, color=COLOR_SEED, lw=0.8, ls=(0, (3, 2)), zorder=0)
-    if domain in CAPTION_ABOVE:  # the winners' bars cross the line at the right edge: end it at the strip's
-        strip_end = next(x + 0.425 * w for x, w, c in zip(xs, widths, cols) if c["kind"] == "nonwinning")
-        ax.annotate("best seed\nmodel", (strip_end, 0), xytext=(0, -1.5), textcoords="offset points",
-                    ha="right", va="top", fontsize=CAPTION_PT, color=SEED_LABEL, linespacing=1.0)
-    else:
-        ax.annotate("best seed model", (1, 0), xycoords=("axes fraction", "data"), xytext=(0, -1.5),
-                    textcoords="offset points", ha="right", va="top", fontsize=CAPTION_PT, color=SEED_LABEL)
+    ax.annotate("best seed model", (1, 0), xycoords=("axes fraction", "data"), xytext=(0, -1.5),
+                textcoords="offset points", ha="right", va="top", fontsize=CAPTION_PT, color=SEED_LABEL)
     promoted = [c for c in cols if c["kind"] == "promoted"]
     if promoted:  # the best promoted seed: the pre-registered bar
         bar = max(promoted[0]["values"])
         ax.axhline(bar, color=COLOR_PROMOTED, lw=0.8, ls=(0, (3, 2)), zorder=0)
         ax.annotate("best promoted seed", (0, bar), xycoords=("axes fraction", "data"), xytext=(2, 1.5),
                     textcoords="offset points", ha="left", va="bottom", fontsize=CAPTION_PT, color=COLOR_PROMOTED)
-    top, bottom, captions = [], [], []
+    top, low, below, above = [], {}, [], []
     for x, w, c in zip(xs, widths, cols):
         if c["kind"] in STRIP_LABEL:
             vals = np.asarray(c["values"], float)
@@ -199,13 +203,14 @@ def draw_panel(ax, domain, rows, paths):
                     px, py = zip(*path)
                     ax.step(x + (np.asarray(px) - 0.5) * 0.85 * w, py, where="post", color=color, lw=1.1,
                             zorder=2.5 + 0.1 * layer)
-            if domain in CAPTION_ABOVE and c["kind"] == "nonwinning":
-                ax.annotate(STRIP_LABEL[c["kind"]], (x, vals.max()), xytext=(0, 4), textcoords="offset points",
-                            ha="center", va="bottom", fontsize=CAPTION_PT, color=INK_2, style="italic")
-                continue
-            captions.append(ax.annotate(STRIP_LABEL[c["kind"]], (x, vals.min()), xytext=(0, -4),
-                                        textcoords="offset points", ha="center", va="top", fontsize=CAPTION_PT,
-                                        color=INK_2, style="italic", linespacing=1.0))
+            if c["kind"] == "nonwinning":  # above the search history and its paths
+                above.append(ax.annotate(STRIP_LABEL[c["kind"]], (x, vals.max()), xytext=(0, 4),
+                                         textcoords="offset points", ha="center", va="bottom", fontsize=CAPTION_PT,
+                                         color=INK_2, style="italic"))
+            else:
+                below.append(ax.annotate(STRIP_LABEL[c["kind"]], (x, vals.min()), xytext=(0, -4),
+                                         textcoords="offset points", ha="center", va="top", fontsize=CAPTION_PT,
+                                         color=INK_2, style="italic", linespacing=1.0))
             continue
         color = RUN_COLORS[rank[c["run"]]] if c["kind"] == "winner" else COLOR_SEED
         half = 2 * (c["se"] or 0.0)
@@ -216,13 +221,14 @@ def draw_panel(ax, domain, rows, paths):
         if c["kind"] == "winner":
             top.append((c["label"], x, c["diff"] + half))
         else:
-            bottom.append((seed_label(c, cols), x, c["diff"] - half))
+            low[c["model"]] = (x, c["diff"] - half)
     ax.set_xticks([])
     ax.spines["bottom"].set_visible(False)
     ax.set_xlim(0, xs[-1] + widths[-1] / 2)
     ax.yaxis.set_major_locator(MaxNLocator(4, steps=[1, 2, 2.5, 5, 10]))
     ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:+,.0f}".replace("-", "−") if v else "0"))
-    return (top, bottom), captions
+    bottom = [(text, [low[m] for m in models]) for text, models in seed_names(cols)]
+    return (top, bottom), (below, above)
 
 
 def draw(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path, mock_domains: List[str],
