@@ -154,11 +154,10 @@ def place_bands(fig, bands, captions):
                         annotation_clip=False)
         for k, (text, points) in enumerate(sorted(bottom, key=lambda n: min(n[1]))):
             yt = lo + (k + 0.5) * LINE_PT * per_pt
-            (x, y), *rest = sorted(points)
-            name = ax.annotate(text, (x, y), xytext=(x, yt), ha="left", va="center", fontsize=NAME_PT,
-                               color=INK_2, annotation_clip=False, arrowprops={**leader, "relpos": (0, 0.5)})
-            for xr, yr in rest:  # the name's other models: a leader from its top
-                ax.annotate("", (xr, yr), xytext=(xr, yt + 0.5 * LINE_PT * per_pt), annotation_clip=False,
+            x = min(points)[0]
+            name = ax.text(x, yt, text, ha="left", va="center", fontsize=NAME_PT, color=INK_2, clip_on=False)
+            for xp, yp in points:  # a leader to each of the name's models, all from just above its text
+                ax.annotate("", (xp, yp), xytext=(xp, yt + 0.5 * NAME_PT * per_pt), annotation_clip=False,
                             arrowprops={**leader, "shrinkA": 0})
             box = name.get_window_extent(renderer)
             if box.x1 > ax.bbox.x1:  # past the panel's right edge: end the name there
