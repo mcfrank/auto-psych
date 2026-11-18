@@ -24,12 +24,16 @@
 # Every job runs the staged code, so the checkout may move on. A preempted or requeued worker
 # loses only the attempt in flight: each attempt's record is saved when it ends.
 #
-# Knobs (environment): REPO, WORK_ROOT, SEEDS (space-separated sampler seeds, default the
-# module's), WORKER_PARTITION, WORKER_CPUS, WORKER_MEM, WORKER_TIME, TASKS_PER_JOB,
-# MAX_PARALLEL, MAX_ATTEMPTS.
+# Knobs (environment): FINAL (the final to ablate: ng, the default, or ew), REPO, WORK_ROOT,
+# SEEDS (space-separated sampler seeds, default the module's), WORKER_PARTITION, WORKER_CPUS,
+# WORKER_MEM, WORKER_TIME, TASKS_PER_JOB, TIME_LIMIT_HOURS (per sampling attempt, default the
+# module's), MAX_PARALLEL, MAX_ATTEMPTS.
 set -euo pipefail
+export FINAL="${FINAL:-ng}"
+[[ "$FINAL" =~ ^(ng|ew)$ ]] || { echo "ERROR: FINAL must be ng or ew, not $FINAL" >&2; exit 1; }
+if [[ "$FINAL" == ng ]]; then ABL=ng_abl; DEFAULT_ROOT=ng_ablation_nov26; else ABL="ng_abl_$FINAL"; DEFAULT_ROOT="ng_ablation_nov26_$FINAL"; fi
 export REPO="${REPO:-$HOME/auto-psych}"
-export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/ng_ablation_nov26}"
+export WORK_ROOT="${WORK_ROOT:-${SCRATCH:?}/auto-psych/$DEFAULT_ROOT}"
 STAGE="${STAGE:-driver}"
 [[ "$STAGE" =~ ^(setup|driver|worker)$ ]] || { echo "ERROR: STAGE must be setup, driver or worker, not $STAGE" >&2; exit 1; }
 source "$REPO/scripts/_venv.sh"
@@ -76,8 +80,9 @@ fi
 [[ -f "$WORK_ROOT/code_commit" && -d "$CODE/src" ]] || { echo "ERROR: no staged code in $CODE (STAGE=setup stages it)" >&2; exit 1; }
 cd "$CODE"
 read -r -a seeds <<< "${SEEDS:-}"
-ELIM=("$VENV_PY" -m src.number_game.ablation.eliminate --final ng --data "$DATA"
-      --out "$WORK_ROOT/ng" --tasks-per-job "$TASKS_PER_JOB" ${seeds[@]+--seeds "${seeds[@]}"})
+ELIM=("$VENV_PY" -m src.number_game.ablation.eliminate --final "$FINAL" --data "$DATA"
+      --out "$WORK_ROOT/$FINAL" --tasks-per-job "$TASKS_PER_JOB" ${seeds[@]+--seeds "${seeds[@]}"}
+      ${TIME_LIMIT_HOURS:+--time-limit-hours "$TIME_LIMIT_HOURS"})
 
 if [[ "$STAGE" == "worker" ]]; then
   exec "${ELIM[@]}" --mode worker --task "${SLURM_ARRAY_TASK_ID:?run as an array task}"
@@ -86,21 +91,21 @@ fi
 # --- driver -------------------------------------------------------------------------------
 echo "[driver] code $(cat "$WORK_ROOT/code_commit")"
 "${ELIM[@]}" --mode plan
-NEXT_JSON="$WORK_ROOT/ng/next.json"
+NEXT_JSON="$WORK_ROOT/$FINAL/next.json"
 read -r STATUS N ATTEMPT < <("$VENV_PY" -c 'import json, sys; d = json.load(open(sys.argv[1])); print(d["status"], len(d.get("tasks", [])), d.get("attempt", 0))' "$NEXT_JSON")
 if [[ "$STATUS" == "done" ]]; then
-  echo "[driver] elimination done: $WORK_ROOT/ng/elimination.json, summary.md, lean/"
+  echo "[driver] elimination done: $WORK_ROOT/$FINAL/elimination.json, summary.md, lean/"
   exit 0
 fi
 if (( ATTEMPT > MAX_ATTEMPTS )); then
-  echo "FATAL: this round's fits are still missing after $MAX_ATTEMPTS arrays (see $NEXT_JSON and $WORK_ROOT/logs/ng_abl_worker_*)" >&2
+  echo "FATAL: this round's fits are still missing after $MAX_ATTEMPTS arrays (see $NEXT_JSON and $WORK_ROOT/logs/${ABL}_worker_*)" >&2
   exit 1
 fi
 JOBS=$(( (N + TASKS_PER_JOB - 1) / TASKS_PER_JOB ))
 SELF="$CODE/scripts/number_game/slurm/ablation.sbatch"
-ARRAY=$(sbatch --parsable --job-name=ng_abl_worker --array="0-$((JOBS - 1))${MAX_PARALLEL:+%$MAX_PARALLEL}" \
+ARRAY=$(sbatch --parsable --job-name="${ABL}_worker" --array="0-$((JOBS - 1))${MAX_PARALLEL:+%$MAX_PARALLEL}" \
   --partition="$WORKER_PARTITION" --requeue --cpus-per-task="$WORKER_CPUS" --mem="$WORKER_MEM" --time="$WORKER_TIME" \
   -o "$WORK_ROOT/logs/%x_%A_%a.out" --export=ALL,STAGE=worker,REPO="$REPO",WORK_ROOT="$WORK_ROOT",TASKS_PER_JOB="$TASKS_PER_JOB" "$SELF")
-NEXT=$(sbatch --parsable --job-name=ng_abl_driver --dependency="afterany:$ARRAY" -o "$WORK_ROOT/logs/%x_%j.out" \
+NEXT=$(sbatch --parsable --job-name="${ABL}_driver" --dependency="afterany:$ARRAY" -o "$WORK_ROOT/logs/%x_%j.out" \
   --export=ALL,STAGE=driver,REPO="$REPO",WORK_ROOT="$WORK_ROOT",TASKS_PER_JOB="$TASKS_PER_JOB" "$SELF")
 echo "[driver] round needs $N fits in $JOBS array tasks (attempt $ATTEMPT): array $ARRAY on $WORKER_PARTITION; next driver $NEXT"

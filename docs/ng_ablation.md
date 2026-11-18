@@ -1,5 +1,27 @@
 # Ablating the number-game final: how much of the final model is needed
 
+> **Second final (2026-11-18): run 3's `exception_weighted_rule_rejection` (`ew`).** Figure 2 now
+> scores the number game on the items no run drew, and there run 3's winner is ahead of run 2's
+> (+23,500 vs +23,080 nats over the best seed; user decision 2026-11-18). The user asked for its
+> ablation too; run 2's (`ng`, below) continues. Same rule, data, folds, sampler and gate
+> (section 2); only the final differs.
+> - **Switchable rewrite:** `src/number_game/ablation/final_ew.py`, tests
+>   `tests/test_ng_ablation_ew.py` (the same checks as section 1's). One mechanism per parameter,
+>   14 in all, 56 free parameters (13 scalars and the 44 rule-set weights, 43 free on their
+>   simplex); none needs another, and one stays (a model with no parameters cannot be sampled). Each
+>   mechanism's neutral value is in the module's docstring.
+> - **`zero_split` is inert in the final:** it divides one weight between "ends in 0" and "contains
+>   digit 0", which are the same numbers in 1–100 (10, 20, …, 100), so it changes no prediction. The
+>   rule should drop it at no cost.
+> - **Cost:** a gradient is ~5× the `ng` rewrite's (25 ms vs 5 ms on the pooled data, one
+>   Apple-silicon core). The figure data's pooled fold fits of this final, at these sampler
+>   settings, took 4.7–8.4 h on 4 cores and peaked at 4.7–6.2 GB. So each array task fits one
+>   (model, fold), with 24 h per task and 16 h per sampling attempt. Round 1 is 15 models × 5 folds
+>   = 75 fits, ~1,600–2,500 core-hours; up to 14 rounds.
+> - **Running it:** `FINAL=ew TASKS_PER_JOB=1 WORKER_TIME=24:00:00 TIME_LIMIT_HOURS=16 bash
+>   scripts/number_game/slurm/submit_ablation.sh`. Work root `$SCRATCH/auto-psych/ng_ablation_nov26_ew`,
+>   job names `ng_abl_ew_*`, results under `$WORK_ROOT/ew/`.
+
 > **Status (2026-11-15): the November final is rewritten, not yet run.** The paper's
 > number-game runs are the November sweep (`data/results/number_game_dataset-nov26/`, from
 > the 2016 paper's seeds; user decision 2026-11-12). The final to ablate is the November

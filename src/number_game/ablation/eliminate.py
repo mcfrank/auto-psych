@@ -5,7 +5,7 @@
 
 The rule, ``plan`` and ``worker`` are `src.ablation.eliminate`'s, unchanged
 from the sr-oct26 ablation (docs/ng_ablation.md, fixed before any fit). What
-is the number game's: the final (`src.number_game.ablation.final`), the data
+is the number game's: the finals (`src.number_game.ablation.variants`: ``ng`` and ``ew``), the data
 (all three runs' 22,680 responses pooled, `src.number_game.ablation.data`), the CV unit
 and the SE's clusters (the example set: ``number_set``, the unit the run
 itself selected by), and that a worker array task fits ``tasks_per_job``
@@ -40,7 +40,7 @@ ABLATION = E.Ablation(variants=V.VARIANTS, cv_group=CV_GROUP, units=example_set_
 
 @dataclass
 class Args(E.Args):
-    final: Literal["ng"]
+    final: Literal["ng", "ew"]
     data: Path
     """All three runs' responses pooled (`src.number_game.ablation.data`); the CV folds are written beside them."""
     time_limit_hours: float = 3.0
