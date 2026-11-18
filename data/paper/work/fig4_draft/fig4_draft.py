@@ -30,7 +30,8 @@ def sources():
     sr = json.loads((here() / "data/paper/figure_data/subjective_randomness.json").read_text())["pooled"]
     run = sr["winner_runs"][sr["best_model"]]
     return {"subjective_randomness": here() / f"data/results/human_experiment_sr-oct26/analysis/results/ablation/{run}/elimination.json",
-            "rsa": here() / "data/rsa/c0_ablation/eliminate/elimination.json"}
+            "rsa": here() / "data/rsa/c0_ablation/eliminate/elimination.json",
+            "number_game": here() / "data/results/number_game_dataset-nov26/analysis/ablation/elimination.json"}
 
 
 def ladder(elimination):

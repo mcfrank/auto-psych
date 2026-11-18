@@ -36,3 +36,30 @@ rsa:
   candidate: ["attention: number of matches", response]
   inhibit_leak: [inattention captured by matches, response]
   outlier: [solitary-foil outlier, new]
+number_game:
+  # literature: the seeds' rule and interval hypotheses (Tenenbaum 2000; Bigelow & Piantadosi 2016)
+  intercept: [baseline "yes" rate, response]
+  slope: [decision gain, response]
+  parity: [odd / even, literature]
+  prime: [primes, literature]
+  square_cube: [squares and cubes, literature]
+  power: [powers of 2-10, literature]
+  multiple: [multiples of 3-12, literature]
+  last_digit: [shared last digit, literature]
+  contains_digit: [contains a shared digit, literature]   # Bigelow & Piantadosi only
+  round_multiple: [multiples of 5 and 10, literature]     # among the seeds' multiples; weighting them apart is new
+  range_low: [not below the smallest example, literature] # the seeds' intervals, here graded
+  range_high: [not above the largest example, literature]
+  seed: [multiples of the smallest example, new]
+  progression: [arithmetic progression continued, new]
+  span: [closeness to the examples' span, new]
+  retain: [a visible last digit dominates, new]
+  recency: [last example's last digit, new]
+  primacy: [first example's last digit, new]
+  doubt_single: [rule doubt (one example), new]
+  doubt_rich: ["more fitting rules, more doubt (one example)", new]
+  doubt_multi: [rule doubt (several examples), new]
+  doubt_rich_multi: ["more fitting rules, more doubt (several)", new]
+  parity_keep: [doubt keeps the parity, new]
+  doubt_band: [doubt keeps the magnitude band, new]
+  memory_limit: [one of four examples forgotten, new]
