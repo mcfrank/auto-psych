@@ -17,7 +17,7 @@ from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.ticker import FuncFormatter, MaxNLocator  # noqa: E402
 from pyprojroot import here  # noqa: E402
 
-from scripts.paper.figures import forest_rows, number_game_unseen_view  # noqa: E402
+from scripts.paper.figures import NG_TEST_SETS, forest_rows, number_game_unseen_view  # noqa: E402
 
 OUT = here() / "data" / "paper" / "work" / "fig2_draft"
 
@@ -60,15 +60,18 @@ TITLES = {"subjective_randomness": "Subjective randomness", "rsa": "Reference ga
 def subtitle(domain, data):
     return {"subjective_randomness": "LOO, all runs pooled · 23,104 trials",
             "rsa": "pre-registered held-out experiment · 14,404 trials",
-            "number_game": "held-out example sets · 15,090 responses"}[domain]
+            "number_game": f"{NG_TEST_SETS[NG_TEST_SET]} · {data['n_responses']:,} responses"}[domain]
 
 
 # --- data --------------------------------------------------------------------
 
 def load():
     fd = here() / "data" / "paper" / "figure_data"
-    # The number game's November figure data are not generated yet: its panel is drawn pending.
-    data = {d: json.loads((fd / f"{d}.json").read_text()) for d in TITLES if d != "number_game"}
+    data = {d: json.loads((fd / f"{d}.json").read_text()) for d in TITLES}
+    # The number game is scored on what no run drew (Figure 2's column; scripts/paper/figures.py).
+    unseen = json.loads((here() / "data/paper/number_game_unseen_items.json").read_text())
+    data["number_game"] = number_game_unseen_view(data["number_game"], unseen, NG_TEST_SET)
+    data["number_game"]["n_responses"] = unseen[NG_TEST_SET]["n_responses"]
     names = yaml.safe_load((here() / "scripts/paper/model_names.yaml").read_text())
     papers = yaml.safe_load((here() / "scripts/paper/seed_papers.yaml").read_text())
     return data, names, papers
@@ -101,8 +104,7 @@ def rsa_vs_textbook(rows, data):
 
 
 HISTORY = {"subjective_randomness": "data/results/human_experiment_sr-oct26/collected/{run}/subjective_randomness",
-           # The committed number-game figure data are the October sweep's (not yet regenerated from November).
-           "number_game": "data/results/number_game_dataset-oct26/collected/{run}/number_game",
+           "number_game": "data/results/number_game_dataset-nov26/collected/{run}/number_game",
            "rsa": "data/rsa/live/live_rsa_{run}/outputs"}
 
 
@@ -154,8 +156,10 @@ def incumbent_paths(domain, data):
 # --- drawing -----------------------------------------------------------------
 
 BY_RUN = False
+NG_TEST_SET = "unseen_example_sets"  # or "unseen_items" (--ng-unseen-items)
 RUN_COLORS = ["#08306b", "#2171b5", "#6baed6"]  # a panel's runs by their best model, best (darkest) first
 WIDTH = {"winner": 1.0, "seed": 1.0, "nonwinning": 2.6, "promoted": 1.8}
+CAPTION_ABOVE = {"number_game"}  # its strip reaches the zero line, its winners cross it: captions moved
 STRIP_LABEL = {"nonwinning": "search history", "promoted": "promoted\nseeds"}
 
 
@@ -238,8 +242,13 @@ def draw_panel(ax, domain, rows):
     widths = np.asarray([WIDTH[c["kind"]] for c in cols])
     xs = np.cumsum(widths) - widths / 2
     ax.axhline(0, color=COLOR_SEED, lw=0.8, ls=(0, (3, 2)), zorder=0)
-    ax.annotate("best seed model", (1, 0), xycoords=("axes fraction", "data"), xytext=(0, -1.5),
-                textcoords="offset points", ha="right", va="top", fontsize=CAPTION_PT, color=SEED_LABEL)
+    if domain in CAPTION_ABOVE:  # the winners' bars cross the line at the right edge: end it at the strip's
+        strip_end = next(x + 0.425 * w for x, w, c in zip(xs, widths, cols) if c["kind"] == "nonwinning")
+        ax.annotate("best seed\nmodel", (strip_end, 0), xytext=(0, -1.5), textcoords="offset points",
+                    ha="right", va="top", fontsize=CAPTION_PT, color=SEED_LABEL, linespacing=1.0)
+    else:
+        ax.annotate("best seed model", (1, 0), xycoords=("axes fraction", "data"), xytext=(0, -1.5),
+                    textcoords="offset points", ha="right", va="top", fontsize=CAPTION_PT, color=SEED_LABEL)
     promoted = [c for c in cols if c["kind"] == "promoted"]
     if promoted:  # the best promoted seed: the pre-registered bar
         bar = max(promoted[0]["values"])
@@ -266,6 +275,10 @@ def draw_panel(ax, domain, rows):
                     px, py = zip(*c["paths"][k])  # the loop's own choice at each step, at its test value
                     ax.step(x + (np.asarray(px) - 0.5) * 0.85 * w, py, where="post", color=RUN_COLORS[k],
                             lw=1.1, zorder=2.5 + 0.1 * layer)
+            if domain in CAPTION_ABOVE and c["kind"] == "nonwinning":
+                ax.annotate(STRIP_LABEL[c["kind"]], (x, vals.max()), xytext=(0, 4), textcoords="offset points",
+                            ha="center", va="bottom", fontsize=CAPTION_PT, color=INK_2, style="italic")
+                continue
             CAPTIONS.setdefault(ax, []).append(ax.annotate(STRIP_LABEL[c["kind"]], (x, vals.min()),
                         xytext=(0, -4), textcoords="offset points", ha="center", va="top",
                         fontsize=CAPTION_PT, color=INK_2, style="italic", linespacing=1.0))
@@ -337,4 +350,5 @@ def main():
 if __name__ == "__main__":
     import sys
     BY_RUN = "--by-run" in sys.argv
+    NG_TEST_SET = "unseen_items" if "--ng-unseen-items" in sys.argv else NG_TEST_SET
     main()
