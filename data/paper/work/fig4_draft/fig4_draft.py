@@ -28,7 +28,7 @@ WIDTH_IN, HEIGHT_IN, DPI = 7.0, 4.9, 600  # one row per domain; the saved figure
 # each panel's cues are named by what pushes its response this way (the fitted signs: mechanisms.yaml)
 DIRECTION = {"subjective_randomness": "what makes a sequence look less random",
              "rsa": "what makes an object more likely to be chosen",
-             "number_game": "how the number relates to the examples"}
+             "number_game": "patterns the number shares with the examples"}
 
 
 def sources():
