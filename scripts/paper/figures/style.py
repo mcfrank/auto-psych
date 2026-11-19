@@ -24,6 +24,7 @@ MOCK_MARK = " (MOCK DATA)"  # appended to a mock domain's titles
 INK, INK_2 = "#262626", "#595959"
 TITLE_FONT = {"family": "Avenir", "weight": "medium"}  # family: the font setup_style found
 FULL_WIDTH_IN = 7.2  # a two-column paper's text width
+DPI = 600  # the PNGs' resolution: PNAS's minimum for line art (the PDFs are vector)
 
 AVENIR_PATHS = [Path.home() / ".fonts" / "Avenir.ttc", Path("/System/Library/Fonts/Avenir.ttc"),
                 Path("/Library/Fonts/Avenir.ttc")]
@@ -80,5 +81,5 @@ def setup_style() -> None:
 def save(fig, out_dir: Path, name: str) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     for ext in ("pdf", "png"):
-        fig.savefig(out_dir / f"{name}.{ext}", dpi=300, bbox_inches="tight")
+        fig.savefig(out_dir / f"{name}.{ext}", dpi=DPI, bbox_inches="tight")
     plt.close(fig)

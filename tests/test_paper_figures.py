@@ -111,7 +111,7 @@ def test_figure_2_is_saved_at_pnas_full_width(tmp_path):
     args = _setup(tmp_path)
     args.figures = ["2"]
     figures.main(args)
-    width_in = Image.open(args.out_dir / "fig2_elpd.png").size[0] / 300
+    width_in = Image.open(args.out_dir / "fig2_elpd.png").size[0] / style.DPI
     assert width_in == pytest.approx(fig2.WIDTH_IN, abs=0.01) and fig2.WIDTH_IN == 7.0
 
 

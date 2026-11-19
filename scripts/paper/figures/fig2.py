@@ -21,7 +21,7 @@ from matplotlib.ticker import FuncFormatter, MaxNLocator
 
 from scripts.paper.figures.data import POOLED_VIEW, forest_rows
 from scripts.paper.figures.icons import add_title_icons
-from scripts.paper.figures.style import INK, INK_2, TITLE_FONT, panel_title, save, setup_style
+from scripts.paper.figures.style import DPI, INK, INK_2, TITLE_FONT, panel_title, save, setup_style
 
 COLOR_SEED, COLOR_PROMOTED = "#b3b3b3", "#3d3d3d"
 RUN_COLORS = ["#08306b", "#2171b5", "#6baed6"]  # a panel's runs by their best model, best (darkest) first
@@ -246,7 +246,7 @@ def draw(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path, mock_d
     widths = [sum(WIDTH[r["kind"]] for r in rows[d]) if d in rows else PENDING_WIDTH for d in domain_data]
 
     def figure(canvas_in):
-        fig, axes = plt.subplots(1, len(domain_data), figsize=(canvas_in, HEIGHT_IN), dpi=300,  # measured as saved
+        fig, axes = plt.subplots(1, len(domain_data), figsize=(canvas_in, HEIGHT_IN), dpi=DPI,  # measured as saved
                                  gridspec_kw={"wspace": 0.3, "width_ratios": widths})
         axes = np.atleast_1d(axes)
         bands, captions = {}, {}
@@ -278,7 +278,7 @@ def draw(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path, mock_d
         canvas = WIDTH_IN
         for _ in range(10):  # the tight box does not scale with the canvas (names are sized in points)
             fig, saved = figure(canvas)
-            if abs(saved - WIDTH_IN) < 0.5 / 300:  # half a pixel at 300 dpi
+            if abs(saved - WIDTH_IN) < 0.5 / DPI:  # half a pixel
                 break
             plt.close(fig)
             canvas += WIDTH_IN - saved
