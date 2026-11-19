@@ -33,10 +33,10 @@ rsa:
   color: ["colored", new]
   attention: ["attention gate", new]
   popout: ["word fits only that object", new]
-  load: ["small display", new]
-  candidate: ["word fits few objects", new]
+  load: ["few objects shown", new]
+  candidate: ["word fits few other objects", new]
   inhibit_leak: ["fits the word (when inattentive)", new]
-  outlier: ["lone foil", new]
+  outlier: ["only object the word misses", new]
 number_game:
   intercept: ["yes bias", new]
   slope: ["response sharpness", new]
