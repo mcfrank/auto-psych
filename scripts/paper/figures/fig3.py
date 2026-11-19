@@ -209,7 +209,7 @@ def draw(phenomena: Path, out_dir: Path) -> None:
     fig.canvas.draw()
     to_fig = fig.transFigure.inverted()
     for row, label in enumerate(ROWS):  # over the row's highest text (row A: the domains' titles)
-        y = title_y if row == 0 else gs[row, 0].get_position(fig).y1 + 0.025
+        y = title_y if row == 0 else gs[row, 0].get_position(fig).y1 + (0.035 if row == 1 else 0.025)  # (b) clear of the y axis title
         fig.text(0.005, y, label, fontdict=TITLE_FONT, fontsize=10, va="center")
     key = [Line2D([], [], color=HUMAN, marker="o", ms=3, lw=0, label="people (95% CI)"),
            Line2D([], [], color=SEED, lw=1.5, label="best starting model"),
