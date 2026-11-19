@@ -88,42 +88,11 @@ What each figure shows:
     scored on the same data as the rest of its column (`pruned_during_run`;
     one whose fit fails or does not converge is listed with the reason in
     `pruned_unscored` instead).
-- **Figure 3** (`fig3_conditions`): all runs' data pooled, each condition's
-  observed proportion against the prediction of the best discovered model and
-  of the best seed, both fitted on the pooled data (the figure data's
-  `pooled`).
-  - Subjective randomness: every run's winner and the seeds are fitted on the
-    three runs' final data together (each run's participants kept apart; the
-    collected runs hold no Prolific IDs, so a person in two runs counts as
-    two), every model at the same settings: `--pooled-draws` (1,500) draws per
-    chain, `--pooled-tune` (4,000), `--pooled-target-accept` (0.95),
-    `--pooled-random-seed` (20261018) and `--pooled-fit-method`
-    (`nuts_no_jitter`: every chain starts at the model's initial point; with
-    PyMC's jittered starts some chain, a different one at each seed tried,
-    started so far out that its step size fell to zero and it never moved). The
-    winner and the seed with the highest ELPD-LOO there are drawn; any winner
-    or seed whose fit did not converge, or whose PSIS-LOO is unreliable, stops
-    the script (which model is best is then not known). Conditions are
-    unordered sequence pairs.
-  - RSA: the fits on the pooled data in `data/rsa/viz/panels.json`; the best
-    model is the chain final with the highest held-out density, the best
-    starting model the textbook RSA model with the highest held-out density
-    (the pre-registration's `best_starting`, `rsa_l1_shared_prior`;
-    panels.json's `starting`), not the best promoted seed (panels.json
-    records no pooled ELPD). Conditions are (display, object class) cells.
-  - Number game: the three runs' final data pooled (22,680 responses; the
-    runs hide participant ids, so nothing is renumbered); the best model is
-    the winner and the best starting model the seed with the highest ELPD-CV
-    there. Conditions are (example set, target) cells, 9 responses per run
-    that drew the cell: 2,139 cells, 1,856 drawn by one run, 185 by two and
-    98 by all three (244 example sets).
-- **Figure 4** (`fig4_pseudocode`): hand-written annotated pseudocode of each
-  domain's Figure 3 model, `pseudocode/<domain>.yaml`. Each spec records its
-  model file's SHA-256, and the figure script refuses a spec whose model
-  changed or that is not Figure 3's best model. The number game's spec still
-  describes the October sweep's winner: it is rewritten once the November
-  figure data name the best model.
-
+- **Figure 3** (`fig3_phenomena`): six patterns in people's responses that the winning models predict
+  and every starting model (and their blend) misses, from `data/paper/figure_data/phenomena/` (its
+  README defines each pattern).
+- **Figure 4** (`fig4_ablation`): each domain winner's backward elimination on one scale, ELPD-CV vs.
+  the full model; every mechanism's name and origin are in `mechanisms.yaml`.
 - **Ablation figure** (`fig_ablation`, `uv run python -m scripts.paper.ablation_figure`,
   seconds): the backward elimination of each domain's overall winner, one
   panel each: the subjective-randomness final best on all runs pooled
@@ -146,7 +115,7 @@ What each figure shows:
   until that ablation's plan step is rerun (it replays the saved CVs, no fits).
 
 `figures --figures 2 3` draws only those figures (Figure 4 needs every
-drawn domain's pseudocode spec). `figures --mock-domains <domain> ...` marks those domains' titles "(MOCK
+drawn domain's data). `figures --mock-domains <domain> ...` marks those domains' titles "(MOCK
 DATA)", for drafting the figures' look from invented figure data.
 
 The number game is drawn as "results pending" until its figure data exist

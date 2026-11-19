@@ -1,10 +1,9 @@
 """The paper's Figures 2-4 (``scripts/paper/figures/``), drawn from the
-figure data that ``sr_figure_data.py`` and ``rsa_figure_data.py`` write and
-the hand-written pseudocode specs."""
+figure data that ``sr_figure_data.py`` and ``rsa_figure_data.py`` write, the
+phenomena tables (Figure 3) and the winners' backward eliminations (Figure 4)."""
 
 from __future__ import annotations
 
-import hashlib
 import json
 
 import numpy as np
@@ -12,7 +11,7 @@ import pytest
 import yaml
 
 from scripts.paper import figures
-from scripts.paper.figures import fig2, legacy, style
+from scripts.paper.figures import fig2, fig3, fig4, style
 
 
 def _domain_data(domain, winner="w", seed="s1"):
@@ -50,25 +49,15 @@ def _domain_data(domain, winner="w", seed="s1"):
     }
 
 
-def _setup(tmp_path, *, winner_in_spec="w", corrupt_sha=False):
+def _setup(tmp_path):
     data_dir = tmp_path / "figure_data"
     data_dir.mkdir()
-    spec_dir = tmp_path / "pseudocode"
-    spec_dir.mkdir()
     for domain in ("subjective_randomness", "rsa"):
         data = _domain_data(domain)
         if domain == "rsa":  # Figure 2's second line: the best textbook model
             data["best_textbook"] = {"model": "s0", "diff": -10.0}
             data["promoted_seeds"] = ["s1"]  # drawn in the promoted seeds' colour
         (data_dir / f"{domain}.json").write_text(json.dumps(data))
-        source = tmp_path / f"{domain}_model.py"
-        source.write_text("model = None\n")
-        sha = hashlib.sha256(source.read_bytes()).hexdigest()
-        (spec_dir / f"{domain}.yaml").write_text(yaml.safe_dump({
-            "domain": domain, "model": winner_in_spec, "source": str(source),
-            "sha256": "0" * 64 if corrupt_sha else sha, "title": f"{domain} title",
-            "lines": [{"code": "for each x:", "note": "a note"}, {"code": "  y = f(x)"}],
-        }, allow_unicode=True))
     names = tmp_path / "model_names.yaml"
     names.write_text(yaml.safe_dump({d: NAMES for d in ("subjective_randomness", "rsa")}))
     papers = tmp_path / "seed_papers.yaml"
@@ -80,7 +69,7 @@ def _setup(tmp_path, *, winner_in_spec="w", corrupt_sha=False):
             path.parent.mkdir(parents=True)
             path.write_text(json.dumps([{"best_model": models[-1], "standing": {m: 0 for m in models}}]))
     histories = {d: str(tmp_path / "history" / "{run}") for d in ("subjective_randomness", "rsa")}
-    return figures.Args(figure_data=data_dir, pseudocode=spec_dir, out_dir=tmp_path / "out",
+    return figures.Args(figure_data=data_dir, out_dir=tmp_path / "out",
                         model_names=names, seed_papers=papers, pending_domains=["number_game"],
                         histories=histories)
 
@@ -89,11 +78,19 @@ NAMES = {"w": "Winner one", "w_b": "Winner two", "s1": "Seed one", "s2": "Seed t
 PAPERS = {"s1": "Author & Other, 1999", "s2": None, "s0": "Frank & Goodman, 2012"}
 
 
-def test_all_three_figures_are_drawn_with_the_number_game_pending(tmp_path):
+def test_figure_2_is_drawn_with_the_number_game_pending(tmp_path):
     args = _setup(tmp_path)
+    args.figures = ["2"]
     figures.main(args)
     assert not (args.out_dir / "fig2_elpd_horizontal.png").exists()  # one layout of Figure 2
-    for name in ("fig2_elpd", "fig3_conditions", "fig4_pseudocode"):
+    for ext in ("pdf", "png"):
+        assert (args.out_dir / f"fig2_elpd.{ext}").stat().st_size > 0, ext
+
+
+def test_figures_3_and_4_are_drawn_from_the_phenomena_and_eliminations(tmp_path):
+    args = figures.Args(out_dir=tmp_path, figures=["3", "4"])
+    figures.main(args)
+    for name in ("fig3_phenomena", "fig4_ablation"):
         for ext in ("pdf", "png"):
             assert (args.out_dir / f"{name}.{ext}").stat().st_size > 0, (name, ext)
 
@@ -101,7 +98,6 @@ def test_all_three_figures_are_drawn_with_the_number_game_pending(tmp_path):
 def test_only_the_figures_asked_for_are_drawn(tmp_path):
     args = _setup(tmp_path)
     args.figures = ["2"]
-    (args.pseudocode / "rsa.yaml").unlink()  # Figure 4's specs are not read
     figures.main(args)
     assert sorted(p.name for p in args.out_dir.iterdir()) == ["fig2_elpd.pdf", "fig2_elpd.png"]
 
@@ -122,27 +118,25 @@ def test_a_missing_domain_that_is_not_pending_raises(tmp_path):
         figures.main(args)
 
 
-def test_pseudocode_whose_source_changed_raises(tmp_path):
-    with pytest.raises(RuntimeError, match="sha256"):
-        figures.main(_setup(tmp_path, corrupt_sha=True))
+def test_figure_3s_patterns_are_the_phenomena_readmes():
+    people = {(p.title, c): v["people"] for p in fig3.patterns(fig3.load(figures.Args().phenomena))
+              for c, v in p.rows.items()}
+    assert people[(fig3.MULTIPLES, "multiples")] == pytest.approx(0.63, abs=0.005)
+    assert people[(fig3.MULTIPLES, "other numbers")] == pytest.approx(0.50, abs=0.005)
+    assert [people[(fig3.SOFT_YES, c)] for c in ("keeps\nlast digit", "breaks\nlast digit", "breaks\nparity")] == \
+        pytest.approx([0.82, 0.11, 0.16], abs=0.005)
+    assert people[(fig3.VARIETY, "more varied")] == pytest.approx(0.63, abs=0.005)
+    assert people[(fig3.REVERSERS, "agree with the\nmajority < 55%")] == pytest.approx(0.13, abs=0.005)
+    assert [people[(fig3.MIDDLE, c)] for c in ("simplest", "middle", "richest")] == \
+        pytest.approx([0.64, 0.15, 0.19], abs=0.01)
 
 
-def test_pseudocode_of_another_model_than_the_pooled_best_model_raises(tmp_path):
-    with pytest.raises(RuntimeError, match="best model on the pooled data"):
-        figures.main(_setup(tmp_path, winner_in_spec="other"))
-
-
-def test_fit_statistics_weight_each_condition_by_its_trials():
-    observed = np.array([0.0, 1.0, 0.5])
-    predicted = np.array([0.0, 0.5, 0.5])
-    n = np.array([1, 3, 1])
-    r, rmse = legacy.weighted_fit_stats(observed, predicted, n)
-    assert rmse == pytest.approx(np.sqrt(3 * 0.25 / 5))
-    assert -1.0 <= r <= 1.0
-    r_unit, _ = legacy.weighted_fit_stats(observed, observed, n)
-    assert r_unit == pytest.approx(1.0)
-    r_flat, _ = legacy.weighted_fit_stats(observed, np.full(3, 0.5), n)
-    assert np.isnan(r_flat)
+def test_every_mechanism_figure_4_drops_or_keeps_has_a_name():
+    args = figures.Args()
+    names = yaml.safe_load(args.mechanisms.read_text())
+    for domain, path in fig4.sources(args.figure_data).items():
+        rounds = json.loads(path.read_text())["rounds"]
+        assert set(rounds[0]["mechanisms"]) <= set(names[domain]), domain
 
 
 def test_a_mock_domain_is_marked_mock_in_its_panel_title():

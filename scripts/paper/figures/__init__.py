@@ -5,8 +5,10 @@ per domain, written by ``sr_figure_data.py``, ``rsa_figure_data.py`` and ``numbe
   collapsed. The number game's column is its pooled models scored on the Bigelow & Piantadosi responses
   no run drew (``number_game_unseen_items.py``; ``--ng-test-set``). How each domain is scored is for the
   caption (the figure data's ``scoring``).
-- Figure 3 (``fig3.py``, ``fig3_conditions``) and Figure 4 (``fig4.py``, ``fig4_pseudocode``) keep the
-  figure data's cross-validated comparison (and, until they are redrawn, the earlier style: ``legacy.py``).
+- Figure 3 (``fig3.py``, ``fig3_phenomena``): six patterns the winners predict and every starting model
+  misses, from ``figure_data/phenomena/``.
+- Figure 4 (``fig4.py``, ``fig4_ablation``): each winner's backward elimination, its mechanisms named in
+  ``mechanisms.yaml``.
 
 The house style (``style.py``) is Avenir where installed. A domain listed in ``--pending-domains`` is drawn
 as a labelled placeholder; any other missing domain raises.
@@ -22,20 +24,23 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
 
+import matplotlib.pyplot as plt
 import yaml
 from pyprojroot import here
 
 from scripts.paper.figures import fig2, fig3, fig4
 from scripts.paper.figures.data import forest_rows, number_game_unseen_view  # noqa: F401  (the tests' API)
-from scripts.paper.figures.style import DOMAINS
+from scripts.paper.figures.style import DOMAINS, setup_style
 
 
 @dataclass
 class Args:
     figure_data: Path = here() / "data" / "paper" / "figure_data"
     """Directory with one ``<domain>.json`` per domain."""
-    pseudocode: Path = here() / "scripts" / "paper" / "pseudocode"
-    """Directory with one ``<domain>.yaml`` pseudocode spec per domain."""
+    phenomena: Path = here() / "data" / "paper" / "figure_data" / "phenomena"
+    """Figure 3's per-trial tables (its README defines the patterns)."""
+    mechanisms: Path = here() / "scripts" / "paper" / "mechanisms.yaml"
+    """Figure 4's name and origin of each winner's mechanisms, per domain."""
     model_names: Path = here() / "scripts" / "paper" / "model_names.yaml"
     """Human-readable names of the models Figure 2 labels, per domain."""
     seed_papers: Path = here() / "scripts" / "paper" / "seed_papers.yaml"
@@ -89,9 +94,6 @@ def main(args: Args) -> None:
     if unknown:
         raise ValueError(f"--mock-domains names domains that are not drawn: {unknown}")
     domain_data = load_domain_data(args)
-    if "4" in args.figures:  # its specs checked before anything is drawn
-        specs = {d: (None if data is None else fig4.load_pseudocode(args.pseudocode, d, data))
-                 for d, data in domain_data.items()}
     if "2" in args.figures:
         names = yaml.safe_load(args.model_names.read_text())
         papers = yaml.safe_load(args.seed_papers.read_text())
@@ -102,8 +104,10 @@ def main(args: Args) -> None:
                 domain_data["number_game"], json.loads(args.ng_unseen.read_text()), args.ng_test_set)
         fig2.draw(fig2_data, args.out_dir, args.mock_domains, {d: names[d] for d in drawn},
                   {d: papers[d] for d in drawn}, args.histories)
-    if "3" in args.figures:
-        fig3.draw_conditions(domain_data, args.out_dir, args.mock_domains)
-    if "4" in args.figures:
-        fig4.draw_pseudocode(specs, args.out_dir, args.mock_domains)
+    with plt.rc_context():
+        setup_style()
+        if "3" in args.figures:
+            fig3.draw(args.phenomena, args.out_dir)
+        if "4" in args.figures:
+            fig4.draw_ablation(args.figure_data, args.mechanisms, args.out_dir)
     print(f"wrote figure(s) {', '.join(args.figures)} to {args.out_dir}", flush=True)
