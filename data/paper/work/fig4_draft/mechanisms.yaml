@@ -1,55 +1,53 @@
-# Figure 4 draft: each ablated mechanism's readable name and kind. The kinds are a JUDGEMENT to check:
-#   person    - person-level variation in a parameter
-#   literature - an idea from a seed/literature account
-#   new       - introduced by the discovered model
-#   response  - the response process (lapse, attention to the task)
+# Figure 4: each ablated mechanism's readable name and its origin: the starting model whose code has it
+# ("in a starting model", the literature's), or new (no starting model has it; checked against the seeds'
+# code 2026-11-18). Reference games count only the textbook seeds (RSA depth 1, depth 2, shared prior), not
+# the promoted ones agents wrote. A mechanism whose key ends in _personal is person-level (fit per person).
 subjective_randomness:
-  ideal_personal: [personal ideal alternation rate, person]
-  beta_personal: [personal sensitivity to alternation, person]
+  ideal_personal: [personal ideal alternation rate, new]
+  beta_personal: [personal sensitivity to alternation, new]
   asymmetry: [over-alternation weighted apart, new]
-  imbalance: [heads/tails imbalance, literature]          # Kahneman & Tversky: local representativeness
-  imbalance_personal: [personal weight on imbalance, person]
-  longest_run: [longest run, literature]                  # Falk & Konold; Kahneman & Tversky
-  longest_run_personal: [personal weight on longest run, person]
+  imbalance: [heads/tails imbalance, local_representativeness]
+  imbalance_personal: [personal weight on imbalance, new]
+  longest_run: [longest run, new]
+  longest_run_personal: [personal weight on longest run, new]
   final_run: [long final run (recency), new]
-  palindrome: [palindrome looks designed, literature]     # Griffiths et al.: regular generators
+  palindrome: [palindrome looks designed, motif_stack]
   variety: [varied run lengths look random, new]
   lopsided: [most lopsided stretch, new]
-  antisymmetry: [mirror-complement looks designed, new]
-  gain_personal: [personal pattern-detection gain, person]
-  lapse: [lapse (guessing), response]
-  lapse_personal: [personal lapse rate, person]
+  antisymmetry: [mirror-complement looks designed, motif_stack]
+  gain_personal: [personal pattern-detection gain, new]
+  lapse: [lapse (guessing), new]
+  lapse_personal: [personal lapse rate, new]
 rsa:
-  depth2: [second-order pragmatic listener, literature]   # RSA recursion (Frank & Goodman)
+  depth2: [second-order pragmatic listener, rsa_l2]
   interior: [interior-match suppression, new]
   avoidable: [avoidable-ambiguity cost, new]
   confusion: [confusable-referent penalty, new]
   singleton: ["salience: unique object", new]
   distinct: ["salience: distinctive features", new]
-  features: ["salience: number of features", new]
+  features: ["salience: number of features", rsa_l1_shared_prior]
   typicality: ["salience: typicality", new]
   valence: [framing shifts feature weight, new]
   color: ["salience: colour", new]
-  attention: [attention gate, response]
-  popout: ["attention: pop-out", response]
-  load: ["attention: display load", response]
-  candidate: ["attention: number of matches", response]
-  inhibit_leak: [inattention captured by matches, response]
+  attention: [attention gate, new]
+  popout: ["attention: pop-out", new]
+  load: ["attention: display load", new]
+  candidate: ["attention: number of matches", new]
+  inhibit_leak: [inattention captured by matches, new]
   outlier: [solitary-foil outlier, new]
 number_game:
-  # literature: the seeds' rule and interval hypotheses (Tenenbaum 2000; Bigelow & Piantadosi 2016)
-  intercept: [baseline "yes" rate, response]
-  slope: [decision gain, response]
-  parity: [odd / even, literature]
-  prime: [primes, literature]
-  square_cube: [squares and cubes, literature]
-  power: [powers of 2-10, literature]
-  multiple: [multiples of 3-12, literature]
-  last_digit: [shared last digit, literature]
-  contains_digit: [contains a shared digit, literature]   # Bigelow & Piantadosi only
-  round_multiple: [multiples of 5 and 10, literature]     # among the seeds' multiples; weighting them apart is new
-  range_low: [not below the smallest example, literature] # the seeds' intervals, here graded
-  range_high: [not above the largest example, literature]
+  intercept: [baseline "yes" rate, new]
+  slope: [decision gain, new]
+  parity: [odd / even, tenenbaum_rules_similarity]
+  prime: [primes, tenenbaum_rules_similarity]
+  square_cube: [squares and cubes, tenenbaum_rules_similarity]
+  power: [powers of 2-10, tenenbaum_rules_similarity]
+  multiple: [multiples of 3-12, tenenbaum_rules_similarity]
+  last_digit: [shared last digit, tenenbaum_rules_similarity]
+  contains_digit: [contains a shared digit, bigelow_piantadosi_independent]
+  round_multiple: [multiples of 5 and 10, tenenbaum_rules_similarity]
+  range_low: [not below the smallest example, tenenbaum_rules_similarity]
+  range_high: [not above the largest example, tenenbaum_rules_similarity]
   seed: [multiples of the smallest example, new]
   progression: [arithmetic progression continued, new]
   span: [closeness to the examples' span, new]

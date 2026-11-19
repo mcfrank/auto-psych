@@ -20,9 +20,9 @@ from scripts.paper.figures.icons import STIMULI  # noqa: E402
 
 OUT = here() / "data" / "paper" / "work" / "fig4_draft"
 TITLES = {"subjective_randomness": "Subjective randomness", "rsa": "Reference games", "number_game": "Number game"}
-KIND_COLOR = {"new": "#08306b", "literature": "#6baed6", "person": "#9e9e9e", "response": "#d0d0d0"}
-KIND_LABEL = {"new": "new in the discovered model", "literature": "from the literature",
-              "person": "person-level variation", "response": "response process"}
+# colour: the mechanism's origin (mechanisms.yaml); marker: shared (one value) or person-level (fit per person)
+COLOR_NEW, COLOR_START = "#08306b", "#6baed6"
+MARKER = {False: "o", True: "D"}
 NAME_PT, SMALL = 5.0, 5.5
 
 
@@ -58,8 +58,9 @@ def draw(ax, domain, elimination, names):
     ax.axvline(0, color="#e0e0e0", lw=0.8, zorder=0)
     ax.axhspan(-0.5, n_dropped - 0.5, color="#f4f4f4", zorder=0, lw=0)
     for yi, r in zip(y, rows):
-        name, kind = names[r["mechanism"]]
-        color = KIND_COLOR[kind]
+        name, origin = names[r["mechanism"]]
+        color = COLOR_NEW if origin == "new" else COLOR_START
+        marker = MARKER[r["mechanism"].endswith("_personal")]
         ax.text(-0.02, yi, name, transform=ax.get_yaxis_transform(), ha="right", va="center", fontsize=NAME_PT,
                 color=INK if r["kept"] else INK_2)
         if r["cost"] is None:
@@ -68,9 +69,8 @@ def draw(ax, domain, elimination, names):
             continue
         ax.plot([r["cost"] - 2 * r["se"], r["cost"] + 2 * r["se"]], [yi, yi], color=color, lw=1.0, zorder=2,
                 solid_capstyle="butt")
-        ax.scatter([r["cost"]], [yi], s=12, color=color if r["kept"] else "white", edgecolors=color,
-                   linewidths=0.8, zorder=3)
-    ax.text(0.98, (n_dropped - 0.5) / len(rows) * 0 + 0.0, "", transform=ax.transAxes)
+        ax.scatter([r["cost"]], [yi], s=12 if marker == "o" else 9, marker=marker,
+                   color=color if r["kept"] else "white", edgecolors=color, linewidths=0.8, zorder=3)
     ax.text(0.97, 1 - (n_dropped / 2) / len(rows), "dropped", transform=ax.transAxes, ha="right", va="center",
             fontsize=NAME_PT, color=INK_2, style="italic")
     ax.set_ylim(len(rows) - 0.5, -0.5)
@@ -96,8 +96,12 @@ def main():
             ax.set_title(TITLES[d], fontdict=TITLE_FONT, pad=14)
             continue
         draw(ax, d, json.loads(src[d].read_text()), names[d])
-    key = [Line2D([], [], marker="o", lw=0, ms=3.5, color=KIND_COLOR[k], label=KIND_LABEL[k]) for k in KIND_COLOR]
-    key.append(Line2D([], [], marker="o", lw=0, ms=3.5, color="white", markeredgecolor=INK_2, label="dropped (cost when removed)"))
+    dot = {"lw": 0, "ms": 3.5}
+    key = [Line2D([], [], marker="o", color=COLOR_NEW, label="new in the discovered model", **dot),
+           Line2D([], [], marker="o", color=COLOR_START, label="in a starting model", **dot),
+           Line2D([], [], marker="o", color=INK_2, label="shared", **dot),
+           Line2D([], [], marker="D", color=INK_2, label="person-level (fit per person)", **{**dot, "ms": 3}),
+           Line2D([], [], marker="o", color="white", markeredgecolor=INK_2, label="dropped (cost when removed)", **dot)]
     fig.legend(handles=key, loc="upper center", ncol=5, frameon=False, fontsize=SMALL, bbox_to_anchor=(0.5, 0.0),
                handletextpad=0.2, columnspacing=1.0)
     fig.canvas.draw()
