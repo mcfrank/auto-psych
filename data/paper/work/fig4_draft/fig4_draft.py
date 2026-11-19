@@ -101,12 +101,9 @@ def main():
               Line2D([], [], marker="o", color=COLOR_START, label="from the literature", **dot)]
     level = [Line2D([], [], marker="o", color=INK_2, label="one value for everyone", **dot),
              Line2D([], [], marker="D", color=INK_2, label="fit per person", **{**dot, "ms": 3})]
-    # the origins' key under the whole figure; the levels' under subjective randomness, the only domain with
-    # person-level mechanisms
-    sr = axes[0].get_position()
-    for handles, x in ((origin, 0.5), (level, (sr.x0 + sr.x1) / 2)):
-        fig.legend(handles=handles, loc="upper center", ncol=2, frameon=False, fontsize=SMALL,
-                   bbox_to_anchor=(x, 0.0), handletextpad=0.2, columnspacing=1.6)
+    # one row, centred: the levels (grey shapes) first, then the origins (colours)
+    fig.legend(handles=level + origin, loc="upper center", ncol=4, frameon=False, fontsize=SMALL,
+               bbox_to_anchor=(0.5, 0.0), handletextpad=0.2, columnspacing=1.6)
     fig.canvas.draw()
     to_fig = fig.transFigure.inverted()
     for ax, d in zip(axes, TITLES):
