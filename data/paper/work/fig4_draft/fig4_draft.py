@@ -84,7 +84,7 @@ def draw(ax, elimination, names):
     ax.scatter([n[0]], [0], s=12, color=PATH, zorder=4)
     # the options at the end: every kept mechanism's removal, each at least 2 SE
     xo = lean_n - 1
-    ax.plot([lean_n, xo], [lean_y, lean_y], color="#c8c8c8", lw=0.6, ls=(0, (2, 2)), zorder=1)
+    ax.axhline(0, color="#b0b0b0", lw=0.6, ls=(0, (2, 2)), zorder=0)  # the full model
     labels = []
     for c, yo in zip(options, opt_y):
         name, color, marker = style_of(names, c["mechanism"])
