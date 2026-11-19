@@ -18,8 +18,8 @@ subjective_randomness:
   lopsided: ["lopsided stretch", new]
   antisymmetry: ["mirror-complement", motif_stack]
   gain_personal: ["pattern sensitivity", new]
-  lapse: ["lapses (shared)", new]
-  lapse_personal: ["lapses", new]
+  lapse: ["guessing rate (shared)", new]
+  lapse_personal: ["guessing rate", new]
 rsa:
   depth2: ["depth-2 reasoning", rsa_l2]
   interior: ["not in-between", new]
