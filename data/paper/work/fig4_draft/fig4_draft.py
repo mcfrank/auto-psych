@@ -24,11 +24,11 @@ COLOR_NEW, COLOR_START, PATH = "#08306b", "#6baed6", "#262626"
 NAME_PT, SMALL = 7.0, 7.0
 BREAK_IN, NAMES_IN = 0.06, 0.3  # the kept column's axis half-length, the names' offset (inches)
 LEFT, COLUMN, COLUMN_AT = 0.27, 0.1, 0.07  # shares of each axis: room for the first name, past the path, to the column  # PNAS: no text under 6 pt at the printed size
-WIDTH_IN, HEIGHT_IN, DPI = 7.0, 5.9, 600  # one row per domain  # the saved figure: PNAS's full width
+WIDTH_IN, HEIGHT_IN, DPI = 7.0, 4.9, 600  # one row per domain; the saved figure: PNAS's full width
 # each panel's cues are named by what pushes its response this way (the fitted signs: mechanisms.yaml)
 DIRECTION = {"subjective_randomness": "what makes a sequence look less random",
              "rsa": "what makes an object more likely to be chosen",
-             "number_game": "what makes a number belong with the examples"}
+             "number_game": "patterns the number shares with the examples"}
 
 
 def sources():
@@ -125,8 +125,8 @@ def draw(ax, elimination, names):
 
 
 def figure(canvas_in, names, src):
-    fig, axes = plt.subplots(3, 1, figsize=(canvas_in, HEIGHT_IN), dpi=DPI, gridspec_kw={"hspace": 0.55, "height_ratios": [0.8, 0.9, 1.1]})
-    fig.subplots_adjust(left=0.1, right=0.76, top=0.95, bottom=0.09)  # the options' names to the right
+    fig, axes = plt.subplots(3, 1, figsize=(canvas_in, HEIGHT_IN), dpi=DPI, gridspec_kw={"hspace": 0.62})
+    fig.subplots_adjust(left=0.1, right=0.76, top=0.95, bottom=0.1)  # the options' names to the right
     for ax, d in zip(axes, TITLES):
         draw(ax, json.loads(src[d].read_text()), names[d])
     for ax in axes:
