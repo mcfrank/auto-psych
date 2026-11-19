@@ -1,7 +1,7 @@
 """Figure 3 (``fig3_effects``), one column per domain, from ``data/paper/figure_data/phenomena/`` (its README
-defines the patterns): (A) each condition's observed proportion against the best starting model's prediction
+defines the patterns): (A) each condition's observed proportion against the best seed model's prediction
 and against the best winner's, with R² and RMSE (trial-weighted); (B) a classic effect that both capture; (C) a pattern only the winner
-captures. "Best" is the highest log-likelihood on these trials (the starting models' blend excluded)."""
+captures. "Best" is the highest log-likelihood on these trials (the seed models' blend excluded)."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from matplotlib.lines import Line2D
 from scripts.paper.figures.icons import STIMULI
 from scripts.paper.figures.style import INK, INK_2, TITLE_FONT, TITLES, save
 
-SEED, BEST, HUMAN = "#b3b3b3", "#2171b5", INK  # best starting model, best winner, people
+SEED, BEST, HUMAN = "#b3b3b3", "#2171b5", INK  # best seed model, best winner, people
 WIDTH_IN, HEIGHT_IN = 7.0, 5.0
 ORDER = ["subjective_randomness", "rsa", "number_game"]
 ROWS = ("(a)", "(b)", "(c)")
@@ -34,7 +34,7 @@ def load(phenomena: Path) -> Dict[str, pd.DataFrame]:
 
 
 def best(df: pd.DataFrame, domain: str) -> Dict[str, str]:
-    """The best starting model's and the best winner's columns, by log-likelihood."""
+    """The best seed model's and the best winner's columns, by log-likelihood."""
     def ll(c):
         p = df[c].clip(1e-9, 1 - 1e-9)
         if domain == "rsa":
@@ -212,7 +212,7 @@ def draw(phenomena: Path, out_dir: Path) -> None:
         y = title_y if row == 0 else gs[row, 0].get_position(fig).y1 + (0.035 if row == 1 else 0.025)  # (b) clear of the y axis title
         fig.text(0.005, y, label, fontdict=TITLE_FONT, fontsize=10, va="center")
     key = [Line2D([], [], color=HUMAN, marker="o", ms=3, lw=0, label="people (95% CI)"),
-           Line2D([], [], color=SEED, lw=1.5, label="best starting model"),
+           Line2D([], [], color=SEED, lw=1.5, label="best seed model"),
            Line2D([], [], color=BEST, lw=1.5, label="best winning model")]
     fig.legend(handles=key, loc="lower center", ncol=3, frameon=False, bbox_to_anchor=(0.5, 0.0))
     save(fig, out_dir, "fig3_effects")
