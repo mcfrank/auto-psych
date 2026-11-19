@@ -93,7 +93,7 @@ def draw(ax, elimination, names):
         labels.append((yo, name, color, yo))
     # the options' names in a column right of them, spread apart, a leader to each
     ax.set_ylim(lo - 0.03 * abs(lo), 0.03 * abs(lo))
-    ax.set_xlim(n[0] + 0.5 + 0.12 * (n[0] - xo), xo - 0.2)  # room left for the first step's name
+    ax.set_xlim(n[0] + 0.5 + 0.22 * (n[0] - xo), xo - 0.2)  # room left for the first step's name
     fig = ax.figure
     fig.canvas.draw()
     to_data = ax.transData.inverted()
