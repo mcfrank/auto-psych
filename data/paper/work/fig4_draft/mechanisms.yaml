@@ -12,7 +12,7 @@ subjective_randomness:
   imbalance_personal: ["imbalance weight", new]
   longest_run: ["longest run", new]
   longest_run_personal: ["longest-run weight", new]
-  final_run: ["short final run", new]
+  final_run: ["streak at the end", new]
   palindrome: ["palindrome", motif_stack]
   variety: ["uniform run lengths", new]
   lopsided: ["lopsided stretch", new]
