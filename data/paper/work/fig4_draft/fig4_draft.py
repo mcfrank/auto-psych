@@ -37,18 +37,10 @@ def sources():
             "number_game": here() / "data/results/number_game_dataset-nov26/analysis/ablation/elimination.json"}
 
 
-# The process mechanisms: how responses are made, not an answer to the panel's question (set in grey italic)
-PROCESS = {"ideal_personal", "beta_personal", "gain_personal", "lapse", "lapse_personal",  # subjective randomness
-           "depth2", "attention", "inhibit_leak",  # reference games
-           "intercept", "slope", "doubt_single", "doubt_multi", "doubt_rich", "doubt_rich_multi", "parity_keep",
-           "doubt_band", "memory_limit"}  # number game
-
-
 def style_of(names, m):
-    """A mechanism's name, its point's colour (its origin) and its name's style (process or not)."""
+    """A mechanism's name, its point's colour (its origin) and its name's style."""
     name, origin = names[m]
-    text = {"color": INK_2, "style": "italic"} if m in PROCESS else {"color": INK}
-    return name, (COLOR_NEW if origin == "new" else COLOR_START), text
+    return name, (COLOR_NEW if origin == "new" else COLOR_START), {"color": INK}
 
 
 def spread(ys, gap):
@@ -136,11 +128,9 @@ def figure(canvas_in, names, src):
                     ha="left", va="center", fontsize=NAME_PT, color=INK_2, style="italic")
     dot = {"lw": 0, "ms": 3.5}
     key = [Line2D([], [], marker="o", color=COLOR_NEW, label="new", **dot),
-           Line2D([], [], marker="o", color=COLOR_START, label="from the literature", **dot),
-           Line2D([], [], lw=0, label="process (how responses are made)")]
-    legend = fig.legend(handles=key, loc="upper center", ncol=3, frameon=False, fontsize=SMALL, bbox_to_anchor=(0.45, 0.04),
+           Line2D([], [], marker="o", color=COLOR_START, label="from the literature", **dot)]
+    fig.legend(handles=key, loc="upper center", ncol=2, frameon=False, fontsize=SMALL, bbox_to_anchor=(0.43, 0.04),
                handletextpad=0.2, columnspacing=1.6)
-    legend.get_texts()[-1].set(color=INK_2, style="italic")  # the process entry, in the process names' style
     add_title_icons(fig, axes, list(TITLES))
     return fig, None
 
