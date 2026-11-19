@@ -13,13 +13,13 @@ import numpy as np
 import pandas as pd
 from matplotlib.lines import Line2D
 
-from scripts.paper.figures.icons import add_title_icons
+from scripts.paper.figures.icons import STIMULI
 from scripts.paper.figures.style import INK, INK_2, TITLE_FONT, TITLES, save
 
 SEED, BEST, HUMAN = "#b3b3b3", "#2171b5", INK  # best starting model, best winner, people
 WIDTH_IN, HEIGHT_IN = 7.0, 5.6
 ORDER = ["subjective_randomness", "rsa", "number_game"]
-ROWS = ("(a) overall fit", "(b) a classic effect", "(c) a new effect")
+ROWS = ("(a)", "(b)", "(c)")
 DISTANCE_BANDS = ((0, 0), (1, 2), (3, 5), (6, 10), (11, 20), (21, 99))
 
 
@@ -176,7 +176,7 @@ def draw(phenomena: Path, out_dir: Path) -> None:
     # one grid for every row, so a domain's panels share a column: row (a)'s two scatterplots side by side,
     # rows (b) and (c) spanning both; a spacer column between domains
     gs = fig.add_gridspec(3, 8, width_ratios=[1, 1, 0.32, 1, 1, 0.32, 1, 1], height_ratios=[1.2, 1, 1],
-                          wspace=0.18, hspace=0.55, left=0.075, right=0.99, top=0.93, bottom=0.11)
+                          wspace=0.18, hspace=0.55, left=0.075, right=0.99, top=0.9, bottom=0.11)
     tops = []
     for k, d in enumerate(ORDER):
         cols = list(best(tables[d], d).values())
@@ -191,16 +191,26 @@ def draw(phenomena: Path, out_dir: Path) -> None:
             _effect(fig.add_subplot(gs[row, 3 * k:3 * k + 2]), table, cols, xlabel, ylabel, line)
     tops[0].set_ylabel("observed", labelpad=1)
     fig.canvas.draw()
-    for ax, d in zip(tops, ORDER):  # each domain's name centred over its pair of scatterplots
-        left, right = ax.get_position(), gs[0, ORDER.index(d) * 3 + 1].get_position(fig)
-        ax.set_title(TITLES[d], fontdict=TITLE_FONT, x=((left.x0 + right.x1) / 2 - left.x0) / left.width, pad=6)
+    r = fig.canvas.get_renderer()
+    to_fig = fig.transFigure.inverted()
+    title_y = tops[0].get_position().y1 + 0.035
+    for k, d in enumerate(ORDER):  # each domain's icon and name, together centred over its pair of scatterplots
+        centre = (gs[0, 3 * k].get_position(fig).x0 + gs[0, 3 * k + 1].get_position(fig).x1) / 2
+        t = fig.text(0, title_y, TITLES[d], fontdict=TITLE_FONT, va="center", ha="left")
+        box = t.get_window_extent(r)
+        (x0, y0), (x1, y1) = to_fig.transform((box.x0, box.y0)), to_fig.transform((box.x1, box.y1))
+        draw_icon, aspect = STIMULI[d]
+        h = 1.9 * (y1 - y0)
+        w = h * aspect * fig.get_figheight() / fig.get_figwidth()
+        gap = 0.008
+        left = centre - (w + gap + x1 - x0) / 2
+        draw_icon(fig.add_axes((left, title_y - h / 2, w, h)))
+        t.set_x(left + w + gap)
     fig.canvas.draw()
     to_fig = fig.transFigure.inverted()
     for row, label in enumerate(ROWS):  # over the row's highest text (row A: the domains' titles)
-        y = (to_fig.transform((0, tops[0].title.get_window_extent().y1))[1] if row == 0
-             else gs[row, 0].get_position(fig).y1 + 0.012)
+        y = title_y + 0.02 if row == 0 else gs[row, 0].get_position(fig).y1 + 0.012
         fig.text(0.005, y + 0.01, label, fontdict=TITLE_FONT, va="bottom")
-    add_title_icons(fig, tops, ORDER)
     key = [Line2D([], [], color=HUMAN, marker="o", ms=3, lw=0, label="people (95% CI)"),
            Line2D([], [], color=SEED, lw=1.5, label="best starting model"),
            Line2D([], [], color=BEST, lw=1.5, label="best winning model")]
