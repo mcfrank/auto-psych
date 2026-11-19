@@ -97,16 +97,12 @@ def main():
             continue
         draw(ax, d, json.loads(src[d].read_text()), names[d])
     dot = {"lw": 0, "ms": 3.5}
-    origin = [Line2D([], [], marker="o", color=COLOR_NEW, label="new", **dot),
-              Line2D([], [], marker="o", color=COLOR_START, label="from a starting model (literature)", **dot)]
-    level = [Line2D([], [], marker="o", color=INK_2, label="one value for everyone", **dot),
-             Line2D([], [], marker="D", color=INK_2, label="fit per person", **{**dot, "ms": 3})]
-    # the levels' key under subjective randomness (the only domain with person-level mechanisms), the origins'
-    # under the other two
-    for handles, (x0, x1) in ((level, (0, 1)), (origin, (1, len(axes)))):
-        mid = (axes[x0].get_position().x0 + axes[x1 - 1].get_position().x1) / 2
-        fig.legend(handles=handles, loc="upper center", ncol=2, frameon=False, fontsize=SMALL,
-                   bbox_to_anchor=(mid, 0.0), handletextpad=0.2, columnspacing=1.0)
+    key = [Line2D([], [], marker="o", color=COLOR_NEW, label="new", **dot),
+           Line2D([], [], marker="o", color=COLOR_START, label="from the literature", **dot),
+           Line2D([], [], marker="o", color=INK_2, label="one value for everyone", **dot),
+           Line2D([], [], marker="D", color=INK_2, label="fit per person", **{**dot, "ms": 3})]
+    fig.legend(handles=key, loc="upper center", ncol=4, frameon=False, fontsize=SMALL, bbox_to_anchor=(0.5, 0.0),
+               handletextpad=0.2, columnspacing=1.6)
     fig.canvas.draw()
     to_fig = fig.transFigure.inverted()
     for ax, d in zip(axes, TITLES):
