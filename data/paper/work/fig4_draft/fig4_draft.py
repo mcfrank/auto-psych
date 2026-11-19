@@ -22,7 +22,7 @@ from scripts.paper.figures.style import INK, INK_2, TITLE_FONT, TITLES, setup_st
 OUT = here() / "data" / "paper" / "work" / "fig4_draft"
 COLOR_NEW, COLOR_START, PATH = "#08306b", "#6baed6", "#262626"
 NAME_PT, SMALL = 7.0, 7.0  # PNAS: no text under 6 pt at the printed size
-WIDTH_IN, HEIGHT_IN, DPI = 7.0, 6.8, 600  # one row per domain  # the saved figure: PNAS's full width
+WIDTH_IN, HEIGHT_IN, DPI = 7.0, 5.6, 600  # one row per domain  # the saved figure: PNAS's full width
 GREY = "#dedede"  # the removals not taken
 
 
@@ -93,7 +93,7 @@ def draw(ax, elimination, names):
         labels.append((yo, name, color, yo))
     # the options' names in a column right of them, spread apart, a leader to each
     ax.set_ylim(lo - 0.03 * abs(lo), 0.03 * abs(lo))
-    ax.set_xlim(n[0] + 0.5 + 0.2 * (n[0] - xo), xo - 0.2)  # room left for the first step's name
+    ax.set_xlim(n[0] + 0.5 + 0.12 * (n[0] - xo), xo - 0.2)  # room left for the first step's name
     fig = ax.figure
     fig.canvas.draw()
     to_data = ax.transData.inverted()
@@ -114,8 +114,8 @@ def draw(ax, elimination, names):
 
 
 def figure(canvas_in, names, src):
-    fig, axes = plt.subplots(3, 1, figsize=(canvas_in, HEIGHT_IN), dpi=DPI, gridspec_kw={"hspace": 0.38})
-    fig.subplots_adjust(left=0.1, right=0.7, top=0.95, bottom=0.09)  # the options' names to the right
+    fig, axes = plt.subplots(3, 1, figsize=(canvas_in, HEIGHT_IN), dpi=DPI, gridspec_kw={"hspace": 0.42, "height_ratios": [0.8, 0.9, 1.1]})
+    fig.subplots_adjust(left=0.1, right=0.76, top=0.95, bottom=0.09)  # the options' names to the right
     for ax, d in zip(axes, TITLES):
         draw(ax, json.loads(src[d].read_text()), names[d])
     for ax in axes:
