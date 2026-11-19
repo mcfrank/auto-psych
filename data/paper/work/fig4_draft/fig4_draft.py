@@ -116,7 +116,7 @@ def draw(ax, elimination, names):
     ax.set_xticks(n + [xo], [str(v) for v in n] + ["kept"])
     ax.get_xticklabels()[-1].set(fontsize=SMALL + 0.5, color=INK)
     ax.tick_params(labelsize=SMALL, length=2, pad=1.5)
-    ax.set_xlabel("mechanisms in the model (each step drops one)", fontsize=SMALL + 0.5, labelpad=1)
+    ax.set_xlabel("mechanisms in the model", fontsize=SMALL + 0.5, labelpad=1)
     ax.spines["bottom"].set_bounds(n[0], lean_n)
     base = ax.get_xaxis_transform()  # x in data, y in axes fractions
     gap = BREAK_IN * per_in
