@@ -56,7 +56,7 @@ def draw(ax, domain, elimination, names):
     y = np.arange(len(rows))
     n_dropped = sum(not r["kept"] for r in rows)
     ax.axvline(0, color="#e0e0e0", lw=0.8, zorder=0)
-    ax.axhspan(-0.5, n_dropped - 0.5, color="#f4f4f4", zorder=0, lw=0)
+    ax.axhspan(-0.5, n_dropped - 0.5, color="#f4f4f4", zorder=-1, lw=0)  # under the zero line
     for yi, r in zip(y, rows):
         name, origin = names[r["mechanism"]]
         color = COLOR_NEW if origin == "new" else COLOR_START
