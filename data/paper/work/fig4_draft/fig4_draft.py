@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import yaml  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
-from matplotlib.patches import Rectangle  # noqa: E402
 from pyprojroot import here  # noqa: E402
 
 from scripts.paper.figures.icons import add_title_icons  # noqa: E402
@@ -75,13 +74,12 @@ def draw(ax, elimination, names):
     # the path, each step named by what it dropped
     ax.plot(n, y, color=PATH, lw=1.0, zorder=3)
     ax.errorbar(n, y, yerr=se, fmt="none", ecolor=PATH, elinewidth=0.6, zorder=3)
-    dropped = []  # the dropped mechanisms' names, for the band behind them
     for k in range(1, len(rounds)):
         gone = (set(rounds[k - 1]["mechanisms"]) - set(rounds[k]["mechanisms"])).pop()
         name, color, text = style_of(names, gone)
         ax.scatter([n[k]], [y[k]], s=12, color=color, linewidths=0, zorder=4)
-        dropped.append(ax.annotate(name, (n[k], y[k]), xytext=(-2, -5), textcoords="offset points", rotation=30,
-                                   fontsize=NAME_PT, ha="right", va="center", rotation_mode="anchor", **text))
+        ax.annotate(name, (n[k], y[k]), xytext=(-2, -5), textcoords="offset points", rotation=30,
+                    fontsize=NAME_PT, ha="right", va="center", rotation_mode="anchor", **text)
     ax.scatter([n[0]], [0], s=12, color=PATH, zorder=4)
     # the options at the end: every kept mechanism's removal, each at least 2 SE
     xo = lean_n - 1
@@ -99,16 +97,11 @@ def draw(ax, elimination, names):
     fig.canvas.draw()
     to_data = ax.transData.inverted()
     per_pt = abs(to_data.transform((0, 0))[1] - to_data.transform((0, NAME_PT * 1.35 * fig.dpi / 72))[1])
-    # the dropped: a grey band around their steps and every one of their names
-    r = fig.canvas.get_renderer()
-    boxes = [t.get_window_extent(r) for t in dropped]
-    (x0, y0), = to_data.transform([(min(b.x0 for b in boxes), min(b.y0 for b in boxes))])
-    pad = 0.4 * per_pt
-    # the axis runs from more mechanisms (left) to fewer: the band from left of the first name to just past the last drop
-    left, right, top = x0 + 0.15, lean_n - 0.4, 0.025 * abs(lo)
-    ax.add_patch(Rectangle((left, y0 - pad), right - left, top - y0 + pad, facecolor="#f2f2f2", edgecolor="none",
-                           zorder=-1, clip_on=False))
-    ax.text(right + 0.1, y0 - pad, "dropped", ha="right", va="bottom", fontsize=NAME_PT, color=INK_2, style="italic")
+    # what the path dropped and what the column kept, labelled above each
+    note = {"fontsize": NAME_PT, "color": INK_2, "style": "italic"}
+    # both on the x tick labels' line: "dropped" ends the path's, "kept" sits under the column
+    ax.annotate("kept", (xo, lo), xytext=(0, -9), textcoords="offset points", ha="center", va="top",
+                annotation_clip=False, **note)
     labels.sort(key=lambda t: -t[0])
     placed = spread([yo for yo, *_ in labels], per_pt)
     cap = ax.get_ylim()[1]  # never above the panel: push the top labels down, then their neighbours
@@ -120,7 +113,7 @@ def draw(ax, elimination, names):
                                                          "shrinkA": 1, "shrinkB": 3, "relpos": (0, 0.5)})
     ax.set_xticks(n)
     ax.tick_params(labelsize=SMALL, length=2, pad=1.5)
-    ax.set_xlabel("mechanisms in the model", fontsize=SMALL + 0.5, labelpad=1)
+    ax.set_xlabel("mechanisms in the model (each step drops one)", fontsize=SMALL + 0.5, labelpad=1)
     ax.spines["bottom"].set_bounds(n[0], lean_n)
 
 
