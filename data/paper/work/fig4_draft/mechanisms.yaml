@@ -3,21 +3,21 @@
 # code 2026-11-18). Reference games count only the textbook seeds (RSA depth 1, depth 2, shared prior), not
 # the promoted ones agents wrote. A mechanism whose key ends in _personal is person-level (fit per person).
 subjective_randomness:
-  ideal_personal: ["ideal alternation rate (per person)", new]
-  beta_personal: ["alternation sensitivity (per person)", new]
+  ideal_personal: ["ideal alternation rate", new]
+  beta_personal: ["alternation sensitivity", new]
   asymmetry: ["over- and under-alternation apart", new]
   imbalance: ["heads/tails imbalance", local_representativeness]
-  imbalance_personal: ["imbalance weight (per person)", new]
+  imbalance_personal: ["imbalance weight", new]
   longest_run: ["longest run", new]
-  longest_run_personal: ["longest-run weight (per person)", new]
+  longest_run_personal: ["longest-run weight", new]
   final_run: ["long final run", new]
   palindrome: ["palindromes look designed", motif_stack]
   variety: ["varied run lengths look random", new]
   lopsided: ["most lopsided stretch", new]
   antisymmetry: ["mirror-complements look designed", motif_stack]
-  gain_personal: ["pattern-detection gain (per person)", new]
+  gain_personal: ["pattern-detection gain", new]
   lapse: ["lapse (guessing)", new]
-  lapse_personal: ["lapse rate (per person)", new]
+  lapse_personal: ["lapse rate", new]
 rsa:
   depth2: ["depth-2 reasoning", rsa_l2]
   interior: ["interior-match suppression", new]
