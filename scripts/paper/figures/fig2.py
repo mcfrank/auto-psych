@@ -28,6 +28,7 @@ RUN_COLORS = ["#08306b", "#2171b5", "#6baed6"]  # a panel's runs by their best m
 SEED_LABEL = "#7a7a7a"  # the best seed line's label: darker than the line, to read
 WIDTH = {"winner": 1.0, "seed": 1.0, "nonwinning": 2.6, "promoted": 1.8}  # each column's width
 PENDING_WIDTH = 9.0  # a pending panel's
+WIDTH_IN, HEIGHT_IN = 7.0, 3.0  # the saved figure's width: PNAS's full (two-column) width, 17.8 cm
 STRIP_LABEL = {"nonwinning": "search history", "promoted": "promoted\nseeds"}
 NAME_PT = 4.5  # the models' names
 CAPTION_PT = 5.0  # the strips' captions and the lines' labels
@@ -242,10 +243,10 @@ def draw(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path, mock_d
     paths = {d: incumbent_paths(d, rows[d], [load_history(histories[d], run) for run in (
         domain_data[d]["pooled"]["runs"] if d in POOLED_VIEW else [r["run"] for r in domain_data[d]["runs"]])])
         for d in rows}
-    with plt.rc_context():
-        setup_style()
-        widths = [sum(WIDTH[r["kind"]] for r in rows[d]) if d in rows else PENDING_WIDTH for d in domain_data]
-        fig, axes = plt.subplots(1, len(domain_data), figsize=(7.2, 3.0),
+    widths = [sum(WIDTH[r["kind"]] for r in rows[d]) if d in rows else PENDING_WIDTH for d in domain_data]
+
+    def figure(canvas_in):
+        fig, axes = plt.subplots(1, len(domain_data), figsize=(canvas_in, HEIGHT_IN), dpi=300,  # measured as saved
                                  gridspec_kw={"wspace": 0.3, "width_ratios": widths})
         axes = np.atleast_1d(axes)
         bands, captions = {}, {}
@@ -268,4 +269,19 @@ def draw(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path, mock_d
                        bbox_transform=axes[0].get_yaxis_transform(), frameon=False, fontsize=CAPTION_PT,
                        handlelength=1.4, handletextpad=0.4, labelspacing=0.3, borderaxespad=0.4)
         add_title_icons(fig, axes, list(domain_data))
+        # the saved width: the tight box and savefig's padding either side
+        saved = fig.get_tightbbox(fig.canvas.get_renderer()).width + 2 * plt.rcParams["savefig.pad_inches"]
+        return fig, saved
+
+    with plt.rc_context():
+        setup_style()
+        canvas = WIDTH_IN
+        for _ in range(10):  # the tight box does not scale with the canvas (names are sized in points)
+            fig, saved = figure(canvas)
+            if abs(saved - WIDTH_IN) < 0.5 / 300:  # half a pixel at 300 dpi
+                break
+            plt.close(fig)
+            canvas += WIDTH_IN - saved
+        else:
+            raise RuntimeError(f"Figure 2 saves {saved:.3f} in wide, not {WIDTH_IN}")
         save(fig, out_dir, "fig2_elpd")

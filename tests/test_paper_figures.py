@@ -106,6 +106,15 @@ def test_only_the_figures_asked_for_are_drawn(tmp_path):
     assert sorted(p.name for p in args.out_dir.iterdir()) == ["fig2_elpd.pdf", "fig2_elpd.png"]
 
 
+def test_figure_2_is_saved_at_pnas_full_width(tmp_path):
+    from PIL import Image
+    args = _setup(tmp_path)
+    args.figures = ["2"]
+    figures.main(args)
+    width_in = Image.open(args.out_dir / "fig2_elpd.png").size[0] / 300
+    assert width_in == pytest.approx(fig2.WIDTH_IN, abs=0.01) and fig2.WIDTH_IN == 7.0
+
+
 def test_a_missing_domain_that_is_not_pending_raises(tmp_path):
     args = _setup(tmp_path)
     (args.figure_data / "rsa.json").unlink()
