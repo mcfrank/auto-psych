@@ -23,7 +23,7 @@ subjective_randomness:
 rsa:
   depth2: ["depth-2 reasoning", rsa_l2]
   interior: ["not in-between", new]
-  avoidable: ["a clearer word existed", new]
+  avoidable: ["has a word of its own", new]
   confusion: ["not confusable", new]
   singleton: ["unique", new]
   distinct: ["distinctive features", new]
@@ -32,9 +32,9 @@ rsa:
   valence: ["framing", new]
   color: ["colored", new]
   attention: ["attention gate", new]
-  popout: ["pop-out", new]
-  load: ["display load", new]
-  candidate: ["ambiguous word", new]
+  popout: ["single match raises attention", new]
+  load: ["busy display lowers attention", new]
+  candidate: ["ambiguous word lowers attention", new]
   inhibit_leak: ["inattentive picks fit the word", new]
   outlier: ["lone-foil outlier", new]
 number_game:
