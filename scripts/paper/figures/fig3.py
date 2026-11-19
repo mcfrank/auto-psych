@@ -17,9 +17,9 @@ from scripts.paper.figures.icons import add_title_icons
 from scripts.paper.figures.style import INK, INK_2, TITLE_FONT, TITLES, save
 
 SEED, BEST, HUMAN = "#b3b3b3", "#2171b5", INK  # best starting model, best winner, people
-WIDTH_IN, HEIGHT_IN = 7.0, 6.2
+WIDTH_IN, HEIGHT_IN = 7.0, 5.6
 ORDER = ["subjective_randomness", "rsa", "number_game"]
-ROWS = ("A  overall fit", "B  a classic effect", "C  a new effect")
+ROWS = ("(a) overall fit", "(b) a classic effect", "(c) a new effect")
 DISTANCE_BANDS = ((0, 0), (1, 2), (3, 5), (6, 10), (11, 20), (21, 99))
 
 
@@ -173,31 +173,32 @@ def draw(phenomena: Path, out_dir: Path) -> None:
     tables = load(phenomena)
     eff = effects(tables)
     fig = plt.figure(figsize=(WIDTH_IN, HEIGHT_IN))
-    # row A: each domain's two scatterplots side by side, a spacer column between domains; one y axis title
-    top = fig.add_gridspec(1, 8, width_ratios=[1, 1, 0.3, 1, 1, 0.3, 1, 1], wspace=0.18, left=0.08, right=0.99,
-                           top=0.92, bottom=0.67)
-    rest = fig.add_gridspec(2, 3, hspace=0.7, wspace=0.35, left=0.08, right=0.99, top=0.55, bottom=0.1)
+    # one grid for every row, so a domain's panels share a column: row (a)'s two scatterplots side by side,
+    # rows (b) and (c) spanning both; a spacer column between domains
+    gs = fig.add_gridspec(3, 8, width_ratios=[1, 1, 0.32, 1, 1, 0.32, 1, 1], height_ratios=[1.2, 1, 1],
+                          wspace=0.18, hspace=0.55, left=0.075, right=0.99, top=0.93, bottom=0.11)
     tops = []
     for k, d in enumerate(ORDER):
         cols = list(best(tables[d], d).values())
         cond = conditions(tables[d], d, cols)
-        a = [fig.add_subplot(top[0, 3 * k + j]) for j in (0, 1)]
+        a = [fig.add_subplot(gs[0, 3 * k + j]) for j in (0, 1)]
         _scatter(a[0], cond, cols[0], SEED, "best seed")
         _scatter(a[1], cond, cols[1], BEST, "best winner")
         for ax in a if k else a[1:]:
             ax.tick_params(labelleft=False)
         tops.append(a[0])
-        for row, (table, xlabel, ylabel, line) in zip((0, 1), eff[d]):
-            _effect(fig.add_subplot(rest[row, k]), table, cols, xlabel, ylabel, line)
+        for row, (table, xlabel, ylabel, line) in zip((1, 2), eff[d]):
+            _effect(fig.add_subplot(gs[row, 3 * k:3 * k + 2]), table, cols, xlabel, ylabel, line)
     tops[0].set_ylabel("observed", labelpad=1)
     fig.canvas.draw()
-    for ax, d in zip(tops, ORDER):  # each domain's name over its pair of scatterplots
-        ax.set_title(TITLES[d], fontdict=TITLE_FONT, x=0.45, ha="left", pad=8)  # its icon left of it
+    for ax, d in zip(tops, ORDER):  # each domain's name centred over its pair of scatterplots
+        left, right = ax.get_position(), gs[0, ORDER.index(d) * 3 + 1].get_position(fig)
+        ax.set_title(TITLES[d], fontdict=TITLE_FONT, x=((left.x0 + right.x1) / 2 - left.x0) / left.width, pad=6)
     fig.canvas.draw()
     to_fig = fig.transFigure.inverted()
     for row, label in enumerate(ROWS):  # over the row's highest text (row A: the domains' titles)
         y = (to_fig.transform((0, tops[0].title.get_window_extent().y1))[1] if row == 0
-             else rest[row - 1, 0].get_position(fig).y1 + 0.03)
+             else gs[row, 0].get_position(fig).y1 + 0.012)
         fig.text(0.005, y + 0.01, label, fontdict=TITLE_FONT, va="bottom")
     add_title_icons(fig, tops, ORDER)
     key = [Line2D([], [], color=HUMAN, marker="o", ms=3, lw=0, label="people (95% CI)"),
