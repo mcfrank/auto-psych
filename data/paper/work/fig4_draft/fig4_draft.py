@@ -22,7 +22,7 @@ from scripts.paper.figures.style import INK, INK_2, TITLE_FONT, TITLES, setup_st
 OUT = here() / "data" / "paper" / "work" / "fig4_draft"
 COLOR_NEW, COLOR_START, PATH = "#08306b", "#6baed6", "#262626"
 NAME_PT, SMALL = 7.0, 7.0  # PNAS: no text under 6 pt at the printed size
-WIDTH_IN, HEIGHT_IN, DPI = 7.0, 7.8, 600  # one row per domain  # the saved figure: PNAS's full width
+WIDTH_IN, HEIGHT_IN, DPI = 7.0, 6.8, 600  # one row per domain  # the saved figure: PNAS's full width
 GREY = "#dedede"  # the removals not taken
 
 
@@ -37,6 +37,24 @@ def sources():
 def style_of(names, m):
     name, origin = names[m]
     return name, (COLOR_NEW if origin == "new" else COLOR_START), ("D" if m.endswith("_personal") else "o")
+
+
+def spread(ys, gap):
+    """Label heights for points at ``ys`` (top first): each as near its point as it can be with at least
+    ``gap`` between neighbours; a run of crowded labels is centred on its points."""
+    groups = []  # runs of labels pushed together: (their points, the top label's height)
+    for y in ys:
+        groups.append([[y], y])
+        while len(groups) > 1 and groups[-2][1] - gap * len(groups[-2][0]) < groups[-1][1]:
+            pts, _ = groups.pop()
+            groups[-1][0] += pts
+        for g in groups[-1:]:  # centre the run on its points
+            g[1] = np.mean(g[0]) + gap * (len(g[0]) - 1) / 2
+        while len(groups) > 1 and groups[-2][1] - gap * len(groups[-2][0]) < groups[-1][1]:
+            pts, _ = groups.pop()
+            groups[-1][0] += pts
+            groups[-1][1] = np.mean(groups[-1][0]) + gap * (len(groups[-1][0]) - 1) / 2
+    return [top - gap * k for pts, top in groups for k in range(len(pts))]
 
 
 def draw(ax, elimination, names):
@@ -62,7 +80,7 @@ def draw(ax, elimination, names):
         name, color, marker = style_of(names, gone)
         ax.scatter([n[k]], [y[k]], s=12 if marker == "o" else 9, marker=marker, color=color, linewidths=0, zorder=4)
         ax.annotate(name, (n[k], y[k]), xytext=(-2, -5), textcoords="offset points", rotation=30, fontsize=NAME_PT,
-                    color=INK_2, ha="right", va="center", rotation_mode="anchor")  # hung below its step
+                    color=INK, ha="right", va="center", rotation_mode="anchor")  # hung below its step
     ax.scatter([n[0]], [0], s=12, color=PATH, zorder=4)
     # the options at the end: every kept mechanism's removal, each at least 2 SE
     xo = lean_n - 1
@@ -75,15 +93,17 @@ def draw(ax, elimination, names):
         labels.append((yo, name, color, yo))
     # the options' names in a column right of them, spread apart, a leader to each
     ax.set_ylim(lo - 0.03 * abs(lo), 0.03 * abs(lo))
-    ax.set_xlim(n[0] + 0.5 + 0.14 * (n[0] - xo), xo - 0.2)  # room left for the first step's name
+    ax.set_xlim(n[0] + 0.5 + 0.2 * (n[0] - xo), xo - 0.2)  # room left for the first step's name
     fig = ax.figure
     fig.canvas.draw()
     to_data = ax.transData.inverted()
     per_pt = abs(to_data.transform((0, 0))[1] - to_data.transform((0, NAME_PT * 1.35 * fig.dpi / 72))[1])
-    placed = []
-    for yo, name, color, at in sorted(labels, key=lambda t: -t[0]):
-        yt = min(yo, placed[-1] - per_pt) if placed else yo
-        placed.append(yt)
+    labels.sort(key=lambda t: -t[0])
+    placed = spread([yo for yo, *_ in labels], per_pt)
+    cap = ax.get_ylim()[1]  # never above the panel: push the top labels down, then their neighbours
+    for k, yt in enumerate(placed):
+        placed[k] = min(yt, cap if k == 0 else placed[k - 1] - per_pt)
+    for (yo, name, color, at), yt in zip(labels, placed):
         ax.annotate(name, (xo, at), xytext=(xo - 0.6, yt), ha="left", va="center", fontsize=NAME_PT, color=INK,
                     annotation_clip=False, arrowprops={"arrowstyle": "-", "color": "#b0b0b0", "lw": 0.4,
                                                          "shrinkA": 1, "shrinkB": 3, "relpos": (0, 0.5)})
@@ -94,8 +114,8 @@ def draw(ax, elimination, names):
 
 
 def figure(canvas_in, names, src):
-    fig, axes = plt.subplots(3, 1, figsize=(canvas_in, HEIGHT_IN), dpi=DPI, gridspec_kw={"hspace": 0.55})
-    fig.subplots_adjust(left=0.1, right=0.7, top=0.95, bottom=0.1)  # the options' names to the right
+    fig, axes = plt.subplots(3, 1, figsize=(canvas_in, HEIGHT_IN), dpi=DPI, gridspec_kw={"hspace": 0.38})
+    fig.subplots_adjust(left=0.1, right=0.7, top=0.95, bottom=0.09)  # the options' names to the right
     for ax, d in zip(axes, TITLES):
         draw(ax, json.loads(src[d].read_text()), names[d])
     for ax in axes:
