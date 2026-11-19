@@ -1,6 +1,6 @@
 """Figure 3 (``fig3_effects``), one column per domain, from ``data/paper/figure_data/phenomena/`` (its README
 defines the patterns): (A) each condition's observed proportion against the best starting model's prediction
-and against the best winner's, with R²; (B) a classic effect that both capture; (C) a pattern only the winner
+and against the best winner's, with R² and RMSE (trial-weighted); (B) a classic effect that both capture; (C) a pattern only the winner
 captures. "Best" is the highest log-likelihood on these trials (the starting models' blend excluded)."""
 
 from __future__ import annotations
@@ -141,12 +141,15 @@ def effects(tables: Dict[str, pd.DataFrame]):
 def _scatter(ax, cond, col, color, label):
     ax.plot([0, 1], [0, 1], color="#e0e0e0", lw=0.8, zorder=0)
     ax.scatter(cond[col], cond.observed, s=4 + 12 * np.sqrt(cond.n / cond.n.max()), color=color, alpha=0.25,
-               linewidths=0, zorder=1)
-    ax.text(0.97, 0.04, f"$R^2$ = {r2(cond.observed, cond[col], cond.n):.2f}", transform=ax.transAxes, ha="right",
-            va="bottom")
-    ax.set(xlim=(0, 1), ylim=(0, 1), xticks=[0, 0.5, 1], yticks=[0, 0.5, 1])
+               linewidths=0, clip_on=False, zorder=1)
+    rmse = np.sqrt(np.average((cond.observed - cond[col]) ** 2, weights=cond.n))
+    ax.text(0.04, 0.97, f"$R^2$ = {r2(cond.observed, cond[col], cond.n):.2f}\nRMSE = {rmse:.3f}",
+            transform=ax.transAxes, ha="left", va="top", fontsize=6, zorder=5,
+            bbox={"fc": "white", "ec": "none", "alpha": 0.85, "pad": 1})
+    ax.set(xlim=(-0.02, 1.02), ylim=(-0.02, 1.02))
+    ax.set_xticks([0, 0.5, 1], ["0", "0.5", "1"])
+    ax.set_yticks([0, 0.5, 1], ["0", "0.5", "1"])
     ax.set_xlabel(label, labelpad=1)
-    ax.set_aspect("equal")
 
 
 def _effect(ax, table, cols, xlabel, ylabel, line):
@@ -170,26 +173,31 @@ def draw(phenomena: Path, out_dir: Path) -> None:
     tables = load(phenomena)
     eff = effects(tables)
     fig = plt.figure(figsize=(WIDTH_IN, HEIGHT_IN))
-    gs = fig.add_gridspec(3, 6, hspace=0.55, wspace=1.1, left=0.08, right=0.98, top=0.93, bottom=0.1)
+    # row A: each domain's two scatterplots side by side, a spacer column between domains; one y axis title
+    top = fig.add_gridspec(1, 8, width_ratios=[1, 1, 0.3, 1, 1, 0.3, 1, 1], wspace=0.18, left=0.08, right=0.99,
+                           top=0.92, bottom=0.67)
+    rest = fig.add_gridspec(2, 3, hspace=0.7, wspace=0.35, left=0.08, right=0.99, top=0.55, bottom=0.1)
     tops = []
     for k, d in enumerate(ORDER):
         cols = list(best(tables[d], d).values())
         cond = conditions(tables[d], d, cols)
-        a = [fig.add_subplot(gs[0, 2 * k + j]) for j in (0, 1)]
+        a = [fig.add_subplot(top[0, 3 * k + j]) for j in (0, 1)]
         _scatter(a[0], cond, cols[0], SEED, "best seed")
         _scatter(a[1], cond, cols[1], BEST, "best winner")
-        a[0].set_ylabel("observed", labelpad=1)
+        for ax in a if k else a[1:]:
+            ax.tick_params(labelleft=False)
         tops.append(a[0])
-        for row, (table, xlabel, ylabel, line) in zip((1, 2), eff[d]):
-            _effect(fig.add_subplot(gs[row, 2 * k:2 * k + 2]), table, cols, xlabel, ylabel, line)
+        for row, (table, xlabel, ylabel, line) in zip((0, 1), eff[d]):
+            _effect(fig.add_subplot(rest[row, k]), table, cols, xlabel, ylabel, line)
+    tops[0].set_ylabel("observed", labelpad=1)
     fig.canvas.draw()
     for ax, d in zip(tops, ORDER):  # each domain's name over its pair of scatterplots
-        ax.set_title(TITLES[d], fontdict=TITLE_FONT, x=0.75, ha="left", pad=8)  # its icon left of it
+        ax.set_title(TITLES[d], fontdict=TITLE_FONT, x=0.45, ha="left", pad=8)  # its icon left of it
     fig.canvas.draw()
     to_fig = fig.transFigure.inverted()
     for row, label in enumerate(ROWS):  # over the row's highest text (row A: the domains' titles)
         y = (to_fig.transform((0, tops[0].title.get_window_extent().y1))[1] if row == 0
-             else gs[row, 0].get_position(fig).y1 + 0.03)
+             else rest[row - 1, 0].get_position(fig).y1 + 0.03)
         fig.text(0.005, y + 0.01, label, fontdict=TITLE_FONT, va="bottom")
     add_title_icons(fig, tops, ORDER)
     key = [Line2D([], [], color=HUMAN, marker="o", ms=3, lw=0, label="people (95% CI)"),
