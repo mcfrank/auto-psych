@@ -24,6 +24,10 @@ COLOR_NEW, COLOR_START, PATH = "#08306b", "#6baed6", "#262626"
 NAME_PT, SMALL = 7.0, 7.0  # PNAS: no text under 6 pt at the printed size
 WIDTH_IN, HEIGHT_IN, DPI = 7.0, 5.6, 600  # one row per domain  # the saved figure: PNAS's full width
 GREY = "#dedede"  # the removals not taken
+# each panel's cues are named by what pushes its response this way (the fitted signs: mechanisms.yaml)
+DIRECTION = {"subjective_randomness": "cues make a sequence look less random",
+             "rsa": "cues make an object more likely to be chosen",
+             "number_game": "cues make a \u201cyes\u201d more likely"}
 
 
 def sources():
@@ -124,7 +128,9 @@ def figure(canvas_in, names, src):
     fig.canvas.draw()
     r = fig.canvas.get_renderer()
     for ax, d in zip(axes, TITLES):
-        ax.set_title(TITLES[d], fontdict=TITLE_FONT, pad=8, x=0.12, ha="left")  # the icon goes left of it
+        title = ax.set_title(TITLES[d], fontdict=TITLE_FONT, pad=8, x=0.12, ha="left")  # the icon goes left of it
+        ax.annotate(DIRECTION[d], (1, 0.5), xycoords=title, xytext=(8, 0), textcoords="offset points",
+                    ha="left", va="center", fontsize=NAME_PT, color=INK_2, style="italic")
     dot = {"lw": 0, "ms": 3.5}
     key = [Line2D([], [], marker="o", color=INK_2, label="one value for everyone", **dot),
            Line2D([], [], marker="D", color=INK_2, label="fit per person", **{**dot, "ms": 3}),

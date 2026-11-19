@@ -1,32 +1,34 @@
 # Figure 4: each ablated mechanism's readable name and its origin: the starting model whose code has it
 # ("in a starting model", the literature's), or new (no starting model has it; checked against the seeds'
 # code 2026-11-18). Reference games count only the textbook seeds (RSA depth 1, depth 2, shared prior), not
-# the promoted ones agents wrote. A mechanism whose key ends in _personal is person-level (fit per person).
+# the promoted ones agents wrote. Each cue is named in its panel's direction (DIRECTION in fig4_draft.py; signs
+# from the winners' pooled fits, data/paper/parameter_summaries/; the number game's cues are positive by construction).
+# A mechanism whose key ends in _personal is person-level (fit per person).
 subjective_randomness:
   ideal_personal: ["ideal alternation rate", new]
   beta_personal: ["alternation sensitivity", new]
-  asymmetry: ["alternation asymmetry", new]
+  asymmetry: ["over-alternation", new]
   imbalance: ["heads/tails imbalance", local_representativeness]
   imbalance_personal: ["imbalance weight", new]
   longest_run: ["longest run", new]
   longest_run_personal: ["longest-run weight", new]
-  final_run: ["long final run", new]
+  final_run: ["short final run", new]
   palindrome: ["palindrome", motif_stack]
-  variety: ["varied run lengths", new]
-  lopsided: ["most lopsided stretch", new]
+  variety: ["uniform run lengths", new]
+  lopsided: ["lopsided stretch", new]
   antisymmetry: ["mirror-complement", motif_stack]
   gain_personal: ["pattern-detection gain", new]
   lapse: ["lapse", new]
   lapse_personal: ["lapse rate", new]
 rsa:
   depth2: ["depth-2 reasoning", rsa_l2]
-  interior: ["in-between objects avoided", new]
+  interior: ["not in-between", new]
   avoidable: ["avoidable ambiguity", new]
-  confusion: ["confusability", new]
+  confusion: ["not confusable", new]
   singleton: ["unique object", new]
   distinct: ["distinctive features", new]
-  features: ["number of features", rsa_l1_shared_prior]
-  typicality: ["typicality", new]
+  features: ["more features", rsa_l1_shared_prior]
+  typicality: ["atypical object", new]
   valence: ["framing", new]
   color: ["colour", new]
   attention: ["attention gate", new]
