@@ -21,8 +21,9 @@ from scripts.paper.figures.style import INK, INK_2, TITLE_FONT, TITLES, setup_st
 
 OUT = here() / "data" / "paper" / "work" / "fig4_draft"
 COLOR_NEW, COLOR_START, PATH = "#08306b", "#6baed6", "#262626"
-NAME_PT, SMALL = 5.0, 5.5
-CLIP = 3.0  # the axis reaches CLIP x the deepest of the path and the median option; options past it are arrowed
+NAME_PT, SMALL = 7.0, 7.0  # PNAS: no text under 6 pt at the printed size
+WIDTH_IN, HEIGHT_IN, DPI = 7.0, 7.8, 600  # one row per domain  # the saved figure: PNAS's full width
+GREY = "#dedede"  # the removals not taken
 
 
 def sources():
@@ -47,13 +48,12 @@ def draw(ax, elimination, names):
     lean_n, lean_y = n[-1], y[-1]
     options = sorted(rounds[-1]["candidates"], key=lambda c: -c["elpd_cv"])
     opt_y = np.array([c["elpd_cv"] - base for c in options])
-    lo = CLIP * min(y.min() - 1, np.median(opt_y))
+    lo = min(y.min(), opt_y.min())
     # the removals not taken, each round
     for k, r in enumerate(rounds[:-1]):
         gone = (set(r["mechanisms"]) - set(rounds[k + 1]["mechanisms"])).pop()
         ys = [c["elpd_cv"] - base for c in r["candidates"] if c["mechanism"] != gone]
-        ys = [v for v in ys if v >= lo]  # those past the axis are left out
-        ax.scatter([n[k] - 1] * len(ys), ys, s=3, color="#c8c8c8", linewidths=0, zorder=1)
+        ax.scatter([n[k] - 1] * len(ys), ys, s=2.5, color=GREY, linewidths=0, zorder=1)
     # the path, each step named by what it dropped
     ax.plot(n, y, color=PATH, lw=1.0, zorder=3)
     ax.errorbar(n, y, yerr=se, fmt="none", ecolor=PATH, elinewidth=0.6, zorder=3)
@@ -61,8 +61,8 @@ def draw(ax, elimination, names):
         gone = (set(rounds[k - 1]["mechanisms"]) - set(rounds[k]["mechanisms"])).pop()
         name, color, marker = style_of(names, gone)
         ax.scatter([n[k]], [y[k]], s=12 if marker == "o" else 9, marker=marker, color=color, linewidths=0, zorder=4)
-        ax.annotate(name, (n[k], y[k]), xytext=(1, 4), textcoords="offset points", rotation=70, fontsize=NAME_PT,
-                    color=INK_2, ha="left", va="bottom", rotation_mode="anchor")
+        ax.annotate(name, (n[k], y[k]), xytext=(-2, -5), textcoords="offset points", rotation=30, fontsize=NAME_PT,
+                    color=INK_2, ha="right", va="center", rotation_mode="anchor")  # hung below its step
     ax.scatter([n[0]], [0], s=12, color=PATH, zorder=4)
     # the options at the end: every kept mechanism's removal, each at least 2 SE
     xo = lean_n - 1
@@ -70,62 +70,59 @@ def draw(ax, elimination, names):
     labels = []
     for c, yo in zip(options, opt_y):
         name, color, marker = style_of(names, c["mechanism"])
-        if yo < lo:  # off the axis: an arrow at its foot, with its value
-            ax.annotate("", (xo, lo), xytext=(xo, lo * 0.93), arrowprops={"arrowstyle": "-|>", "color": color, "lw": 0.8})
-            labels.append((lo, f"{name} ({yo:,.0f})".replace("-", "−"), color, lo))
-            continue
         ax.errorbar([xo], [yo], yerr=[c["se_vs_start"]], fmt="none", ecolor=color, elinewidth=0.6, zorder=2)
         ax.scatter([xo], [yo], s=12 if marker == "o" else 9, marker=marker, color=color, linewidths=0, zorder=4)
         labels.append((yo, name, color, yo))
     # the options' names in a column right of them, spread apart, a leader to each
-    ax.set_ylim(lo * 1.05, max(se.max(), 1) * 3)
-    ax.set_xlim(n[0] + 0.6, xo - 0.3)
+    ax.set_ylim(lo - 0.03 * abs(lo), 0.03 * abs(lo))
+    ax.set_xlim(n[0] + 0.5 + 0.14 * (n[0] - xo), xo - 0.2)  # room left for the first step's name
     fig = ax.figure
     fig.canvas.draw()
     to_data = ax.transData.inverted()
-    per_pt = abs(to_data.transform((0, 0))[1] - to_data.transform((0, NAME_PT * 1.3 * fig.dpi / 72))[1])
+    per_pt = abs(to_data.transform((0, 0))[1] - to_data.transform((0, NAME_PT * 1.35 * fig.dpi / 72))[1])
     placed = []
     for yo, name, color, at in sorted(labels, key=lambda t: -t[0]):
         yt = min(yo, placed[-1] - per_pt) if placed else yo
         placed.append(yt)
-        ax.annotate(name, (xo, at), xytext=(xo - 0.9, yt), ha="left", va="center", fontsize=NAME_PT, color=INK,
+        ax.annotate(name, (xo, at), xytext=(xo - 0.6, yt), ha="left", va="center", fontsize=NAME_PT, color=INK,
                     annotation_clip=False, arrowprops={"arrowstyle": "-", "color": "#b0b0b0", "lw": 0.4,
                                                          "shrinkA": 1, "shrinkB": 3, "relpos": (0, 0.5)})
-    ax.axhline(0, color="#e0e0e0", lw=0.8, zorder=0)
-    ax.set_xticks(n + [xo])
-    ax.set_xticklabels([str(v) for v in n] + [""])
+    ax.set_xticks(n)
     ax.tick_params(labelsize=SMALL, length=2, pad=1.5)
     ax.set_xlabel("mechanisms in the model", fontsize=SMALL + 0.5, labelpad=1)
     ax.spines["bottom"].set_bounds(n[0], lean_n)
-    depends = [names[m][0] for m in rounds[-1]["mechanisms"] if m not in {c["mechanism"] for c in options}]
-    if depends:
-        ax.text(0, -0.17, "others depend on:\n" + ",\n".join(depends), transform=ax.transAxes, fontsize=NAME_PT,
-                color=INK_2, style="italic", va="top")
 
 
-def main():
-    setup_style()
-    names = yaml.safe_load((OUT / "mechanisms.yaml").read_text())
-    src = sources()
-    # each panel as wide as its rounds, plus room for the options' names
-    ratios = [len(json.loads(src[d].read_text())["rounds"]) + 3 for d in TITLES]
-    fig, axes = plt.subplots(1, 3, figsize=(7.2, 3.4), gridspec_kw={"wspace": 1.3, "width_ratios": ratios})
+def figure(canvas_in, names, src):
+    fig, axes = plt.subplots(3, 1, figsize=(canvas_in, HEIGHT_IN), dpi=DPI, gridspec_kw={"hspace": 0.55})
+    fig.subplots_adjust(left=0.1, right=0.7, top=0.95, bottom=0.1)  # the options' names to the right
     for ax, d in zip(axes, TITLES):
         draw(ax, json.loads(src[d].read_text()), names[d])
-        ax.set_title(TITLES[d], fontdict=TITLE_FONT, pad=62)  # above the steps' names
-    axes[0].set_ylabel("ELPD-CV vs. the full model (nats)", fontsize=SMALL + 0.5)
+    for ax in axes:
+        ax.set_ylabel("ELPD-CV vs. full model (nats)", fontsize=SMALL)
+    # the titles, level, just above the tallest of the steps' names
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+    for ax, d in zip(axes, TITLES):
+        ax.set_title(TITLES[d], fontdict=TITLE_FONT, pad=8, x=0.12, ha="left")  # the icon goes left of it
     dot = {"lw": 0, "ms": 3.5}
     key = [Line2D([], [], marker="o", color=INK_2, label="one value for everyone", **dot),
            Line2D([], [], marker="D", color=INK_2, label="fit per person", **{**dot, "ms": 3}),
            Line2D([], [], marker="o", color=COLOR_NEW, label="new", **dot),
            Line2D([], [], marker="o", color=COLOR_START, label="from the literature", **dot),
-           Line2D([], [], marker="o", color="#c8c8c8", label="removals not taken", **{**dot, "ms": 2.5})]
-    fig.legend(handles=key, loc="upper center", ncol=5, frameon=False, fontsize=SMALL, bbox_to_anchor=(0.5, -0.1),
+           Line2D([], [], marker="o", color=GREY, label="removals not taken", **{**dot, "ms": 2.5})]
+    fig.legend(handles=key, loc="upper center", ncol=5, frameon=False, fontsize=SMALL, bbox_to_anchor=(0.45, 0.04),
                handletextpad=0.2, columnspacing=1.6)
     add_title_icons(fig, axes, list(TITLES))
-    for ext in ("png", "pdf"):
-        fig.savefig(OUT / f"fig4_draft.{ext}", dpi=300, bbox_inches="tight")
+    return fig, None
 
+
+def main():
+    setup_style()
+    names = yaml.safe_load((OUT / "mechanisms.yaml").read_text())
+    fig, _ = figure(WIDTH_IN, names, sources())
+    for ext in ("png", "pdf"):  # uncropped: the canvas is the saved size, PNAS's full width
+        fig.savefig(OUT / f"fig4_draft.{ext}", dpi=DPI)
 
 if __name__ == "__main__":
     main()
