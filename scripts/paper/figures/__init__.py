@@ -5,8 +5,8 @@ per domain, written by ``sr_figure_data.py``, ``rsa_figure_data.py`` and ``numbe
   collapsed. The number game's column is its pooled models scored on the Bigelow & Piantadosi responses
   no run drew (``number_game_unseen_items.py``; ``--ng-test-set``). How each domain is scored is for the
   caption (the figure data's ``scoring``).
-- Figure 3 (``fig3.py``, ``fig3_phenomena``): six patterns the winners predict and every starting model
-  misses, from ``figure_data/phenomena/``.
+- Figure 3 (``fig3.py``, ``fig3_effects``): overall fit, a classic effect and a new one, from
+  ``figure_data/phenomena/``.
 - Figure 4 (``fig4.py``, ``fig4_ablation``): each winner's backward elimination, its mechanisms named in
   ``mechanisms.yaml``.
 

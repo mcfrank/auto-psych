@@ -90,7 +90,7 @@ def test_figure_2_is_drawn_with_the_number_game_pending(tmp_path):
 def test_figures_3_and_4_are_drawn_from_the_phenomena_and_eliminations(tmp_path):
     args = figures.Args(out_dir=tmp_path, figures=["3", "4"])
     figures.main(args)
-    for name in ("fig3_phenomena", "fig4_ablation"):
+    for name in ("fig3_effects", "fig4_ablation"):
         for ext in ("pdf", "png"):
             assert (args.out_dir / f"{name}.{ext}").stat().st_size > 0, (name, ext)
 
@@ -118,17 +118,18 @@ def test_a_missing_domain_that_is_not_pending_raises(tmp_path):
         figures.main(args)
 
 
-def test_figure_3s_patterns_are_the_phenomena_readmes():
-    people = {(p.title, c): v["people"] for p in fig3.patterns(fig3.load(figures.Args().phenomena))
-              for c, v in p.rows.items()}
-    assert people[(fig3.MULTIPLES, "multiples")] == pytest.approx(0.63, abs=0.005)
-    assert people[(fig3.MULTIPLES, "other numbers")] == pytest.approx(0.50, abs=0.005)
-    assert [people[(fig3.SOFT_YES, c)] for c in ("keeps\nlast digit", "breaks\nlast digit", "breaks\nparity")] == \
-        pytest.approx([0.82, 0.11, 0.16], abs=0.005)
-    assert people[(fig3.VARIETY, "more varied")] == pytest.approx(0.63, abs=0.005)
-    assert people[(fig3.REVERSERS, "agree with the\nmajority < 55%")] == pytest.approx(0.13, abs=0.005)
-    assert [people[(fig3.MIDDLE, c)] for c in ("simplest", "middle", "richest")] == \
-        pytest.approx([0.64, 0.15, 0.19], abs=0.01)
+def test_figure_3s_best_winner_fits_each_domains_conditions_better_than_its_best_seed():
+    tables = fig3.load(figures.Args().phenomena)
+    for d, df in tables.items():
+        best = fig3.best(df, d)
+        cond = fig3.conditions(df, d, list(best.values()))
+        assert fig3.r2(cond.observed, cond[best["winner"]], cond.n) > fig3.r2(cond.observed, cond[best["seed"]], cond.n), d
+
+
+def test_figure_3s_new_effects_are_the_phenomena_readmes():
+    eff = fig3.effects(fig3.load(figures.Args().phenomena))
+    assert eff["number_game"][1][0].observed.round(2).tolist() == [0.63, 0.50]
+    assert eff["rsa"][1][0].observed.round(2).tolist() == [0.64, 0.15, 0.19]
 
 
 def test_every_mechanism_figure_4_drops_or_keeps_has_a_name():

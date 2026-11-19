@@ -88,9 +88,9 @@ What each figure shows:
     scored on the same data as the rest of its column (`pruned_during_run`;
     one whose fit fails or does not converge is listed with the reason in
     `pruned_unscored` instead).
-- **Figure 3** (`fig3_phenomena`): six patterns in people's responses that the winning models predict
-  and every starting model (and their blend) misses, from `data/paper/figure_data/phenomena/` (its
-  README defines each pattern).
+- **Figure 3** (`fig3_effects`): per domain, from `data/paper/figure_data/phenomena/`: (A) each
+  condition's observed proportion against the best starting model and the best winner, with R²; (B) a
+  classic effect both capture; (C) a pattern only the winner captures.
 - **Figure 4** (`fig4_ablation`): each domain winner's backward elimination on one scale, ELPD-CV vs.
   the full model; every mechanism's name and origin are in `mechanisms.yaml`.
 - **Ablation figure** (`fig_ablation`, `uv run python -m scripts.paper.ablation_figure`,
