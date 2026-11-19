@@ -25,9 +25,9 @@ NAME_PT, SMALL = 7.0, 7.0  # PNAS: no text under 6 pt at the printed size
 WIDTH_IN, HEIGHT_IN, DPI = 7.0, 5.6, 600  # one row per domain  # the saved figure: PNAS's full width
 GREY = "#dedede"  # the removals not taken
 # each panel's cues are named by what pushes its response this way (the fitted signs: mechanisms.yaml)
-DIRECTION = {"subjective_randomness": "cues make a sequence look less random",
-             "rsa": "cues make an object more likely to be chosen",
-             "number_game": "cues make a \u201cyes\u201d more likely"}
+DIRECTION = {"subjective_randomness": "cues: what makes a sequence look less random",
+             "rsa": "cues: what makes an object more likely to be chosen",
+             "number_game": "cues: what makes a \u201cyes\u201d more likely (the target is \u2026)"}
 
 
 def sources():
