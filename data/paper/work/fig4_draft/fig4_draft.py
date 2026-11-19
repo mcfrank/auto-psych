@@ -37,9 +37,18 @@ def sources():
             "number_game": here() / "data/results/number_game_dataset-nov26/analysis/ablation/elimination.json"}
 
 
+# The process mechanisms: how responses are made, not an answer to the panel's question (set in grey italic)
+PROCESS = {"ideal_personal", "beta_personal", "gain_personal", "lapse", "lapse_personal",  # subjective randomness
+           "depth2", "attention", "inhibit_leak",  # reference games
+           "intercept", "slope", "doubt_single", "doubt_multi", "doubt_rich", "doubt_rich_multi", "parity_keep",
+           "doubt_band", "memory_limit"}  # number game
+
+
 def style_of(names, m):
+    """A mechanism's name, its point's colour (its origin) and its name's style (process or not)."""
     name, origin = names[m]
-    return name, (COLOR_NEW if origin == "new" else COLOR_START), ("D" if m.endswith("_personal") else "o")
+    text = {"color": INK_2, "style": "italic"} if m in PROCESS else {"color": INK}
+    return name, (COLOR_NEW if origin == "new" else COLOR_START), text
 
 
 def spread(ys, gap):
@@ -75,20 +84,20 @@ def draw(ax, elimination, names):
     ax.errorbar(n, y, yerr=se, fmt="none", ecolor=PATH, elinewidth=0.6, zorder=3)
     for k in range(1, len(rounds)):
         gone = (set(rounds[k - 1]["mechanisms"]) - set(rounds[k]["mechanisms"])).pop()
-        name, color, marker = style_of(names, gone)
-        ax.scatter([n[k]], [y[k]], s=12 if marker == "o" else 9, marker=marker, color=color, linewidths=0, zorder=4)
+        name, color, text = style_of(names, gone)
+        ax.scatter([n[k]], [y[k]], s=12, color=color, linewidths=0, zorder=4)
         ax.annotate(name, (n[k], y[k]), xytext=(-2, -5), textcoords="offset points", rotation=30, fontsize=NAME_PT,
-                    color=INK, ha="right", va="center", rotation_mode="anchor")  # hung below its step
+                    ha="right", va="center", rotation_mode="anchor", **text)  # hung below its step
     ax.scatter([n[0]], [0], s=12, color=PATH, zorder=4)
     # the options at the end: every kept mechanism's removal, each at least 2 SE
     xo = lean_n - 1
     ax.axhline(0, color="#b0b0b0", lw=0.6, ls=(0, (2, 2)), zorder=0)  # the full model
     labels = []
     for c, yo in zip(options, opt_y):
-        name, color, marker = style_of(names, c["mechanism"])
+        name, color, text = style_of(names, c["mechanism"])
         ax.errorbar([xo], [yo], yerr=[c["se_vs_start"]], fmt="none", ecolor=color, elinewidth=0.6, zorder=2)
-        ax.scatter([xo], [yo], s=12 if marker == "o" else 9, marker=marker, color=color, linewidths=0, zorder=4)
-        labels.append((yo, name, color, yo))
+        ax.scatter([xo], [yo], s=12, color=color, linewidths=0, zorder=4)
+        labels.append((yo, name, text, yo))
     # the options' names in a column right of them, spread apart, a leader to each
     ax.set_ylim(lo - 0.03 * abs(lo), 0.03 * abs(lo))
     ax.set_xlim(n[0] + 0.5 + 0.3 * (n[0] - xo), xo - 0.2)  # room left for the first step's name
@@ -101,8 +110,8 @@ def draw(ax, elimination, names):
     cap = ax.get_ylim()[1]  # never above the panel: push the top labels down, then their neighbours
     for k, yt in enumerate(placed):
         placed[k] = min(yt, cap if k == 0 else placed[k - 1] - per_pt)
-    for (yo, name, color, at), yt in zip(labels, placed):
-        ax.annotate(name, (xo, at), xytext=(xo - 0.6, yt), ha="left", va="center", fontsize=NAME_PT, color=INK,
+    for (yo, name, text, at), yt in zip(labels, placed):
+        ax.annotate(name, (xo, at), xytext=(xo - 0.6, yt), ha="left", va="center", fontsize=NAME_PT, **text,
                     annotation_clip=False, arrowprops={"arrowstyle": "-", "color": "#b0b0b0", "lw": 0.4,
                                                          "shrinkA": 1, "shrinkB": 3, "relpos": (0, 0.5)})
     ax.set_xticks(n)
@@ -126,12 +135,12 @@ def figure(canvas_in, names, src):
         ax.annotate(DIRECTION[d], (1, 0.5), xycoords=title, xytext=(8, 0), textcoords="offset points",
                     ha="left", va="center", fontsize=NAME_PT, color=INK_2, style="italic")
     dot = {"lw": 0, "ms": 3.5}
-    key = [Line2D([], [], marker="o", color=INK_2, label="one value for everyone", **dot),
-           Line2D([], [], marker="D", color=INK_2, label="fit per person", **{**dot, "ms": 3}),
-           Line2D([], [], marker="o", color=COLOR_NEW, label="new", **dot),
-           Line2D([], [], marker="o", color=COLOR_START, label="from the literature", **dot)]
-    fig.legend(handles=key, loc="upper center", ncol=4, frameon=False, fontsize=SMALL, bbox_to_anchor=(0.45, 0.04),
+    key = [Line2D([], [], marker="o", color=COLOR_NEW, label="new", **dot),
+           Line2D([], [], marker="o", color=COLOR_START, label="from the literature", **dot),
+           Line2D([], [], lw=0, label="process (how responses are made)")]
+    legend = fig.legend(handles=key, loc="upper center", ncol=3, frameon=False, fontsize=SMALL, bbox_to_anchor=(0.45, 0.04),
                handletextpad=0.2, columnspacing=1.6)
+    legend.get_texts()[-1].set(color=INK_2, style="italic")  # the process entry, in the process names' style
     add_title_icons(fig, axes, list(TITLES))
     return fig, None
 
