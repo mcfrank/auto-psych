@@ -22,7 +22,7 @@ from scripts.paper.figures.style import INK, INK_2, TITLE_FONT, TITLES, setup_st
 OUT = here() / "data" / "paper" / "work" / "fig4_draft"
 COLOR_NEW, COLOR_START, PATH = "#08306b", "#6baed6", "#262626"
 NAME_PT, SMALL = 7.0, 7.0
-JITTER_IN, BREAK_IN, NAMES_IN = 0.035, 0.06, 0.3  # the kept points' spread, the break's half-gap, the names' offset
+BREAK_IN, NAMES_IN = 0.06, 0.3  # the kept column's axis half-length, the names' offset (inches)
 LEFT, COLUMN, COLUMN_AT = 0.27, 0.1, 0.07  # shares of each axis: room for the first name, past the path, to the column  # PNAS: no text under 6 pt at the printed size
 WIDTH_IN, HEIGHT_IN, DPI = 7.0, 5.9, 600  # one row per domain  # the saved figure: PNAS's full width
 # each panel's cues are named by what pushes its response this way (the fitted signs: mechanisms.yaml)
@@ -92,12 +92,11 @@ def draw(ax, elimination, names):
     ax.set_xlim(n[0] + LEFT * span, lean_n - COLUMN * span)  # room left for the first step's name
     per_in = abs(np.diff(ax.get_xlim())[0]) / (ax.get_position().width * ax.figure.get_figwidth())  # steps per inch
     labels = []
-    jitter = np.random.default_rng(0).uniform(-1, 1, len(options)) * JITTER_IN * per_in  # fixed: the same every run
-    for c, yo, dx in zip(options, opt_y, jitter):
+    for c, yo in zip(options, opt_y):
         name, color, text = style_of(names, c["mechanism"])
-        ax.errorbar([xo + dx], [yo], yerr=[c["se_vs_start"]], fmt="none", ecolor=color, elinewidth=0.6, zorder=2)
-        ax.scatter([xo + dx], [yo], s=12, color=color, linewidths=0, zorder=4)
-        labels.append((yo, name, text, (xo + dx, yo)))
+        ax.errorbar([xo], [yo], yerr=[c["se_vs_start"]], fmt="none", ecolor=color, elinewidth=0.6, zorder=2)
+        ax.scatter([xo], [yo], s=12, color=color, linewidths=0, zorder=4)
+        labels.append((yo, name, text, (xo, yo)))
     # the options' names in a column right of them, spread apart, a leader to each
     ax.set_ylim(lo - 0.03 * abs(lo), 0.03 * abs(lo))
     fig = ax.figure
@@ -113,7 +112,7 @@ def draw(ax, elimination, names):
         ax.annotate(name, at, xytext=(xo - NAMES_IN * per_in, yt), ha="left", va="center", fontsize=NAME_PT, **text,
                     annotation_clip=False, arrowprops={"arrowstyle": "-", "color": "#b0b0b0", "lw": 0.4,
                                                          "shrinkA": 1, "shrinkB": 3, "relpos": (0, 0.5)})
-    # the x axis: the path's counts, a break, then "kept" under the kept column on its own stretch of axis
+    # the x axis: the path's counts, a gap, then "kept" under the kept column on its own stretch of axis
     ax.set_xticks(n + [xo], [str(v) for v in n] + ["kept"])
     ax.get_xticklabels()[-1].set(fontsize=SMALL + 0.5, color=INK)
     ax.tick_params(labelsize=SMALL, length=2, pad=1.5)
@@ -123,8 +122,6 @@ def draw(ax, elimination, names):
     gap = BREAK_IN * per_in
     ax.plot([xo + 2 * gap, xo - 2 * gap], [0, 0], transform=base, color=ax.spines["bottom"].get_edgecolor(),
             lw=ax.spines["bottom"].get_linewidth(), clip_on=False, solid_capstyle="butt")
-    for xb in (lean_n - gap, xo + 2 * gap):  # the break: a short slash at each end of the gap
-        ax.plot([xb + 0.3 * gap, xb - 0.3 * gap], [-0.03, 0.03], transform=base, color=INK_2, lw=0.6, clip_on=False)
 
 
 def figure(canvas_in, names, src):
