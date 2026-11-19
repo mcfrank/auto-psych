@@ -21,8 +21,10 @@ from scripts.paper.figures.style import INK, INK_2, TITLE_FONT, TITLES, setup_st
 
 OUT = here() / "data" / "paper" / "work" / "fig4_draft"
 COLOR_NEW, COLOR_START, PATH = "#08306b", "#6baed6", "#262626"
-NAME_PT, SMALL = 7.0, 7.0  # PNAS: no text under 6 pt at the printed size
-WIDTH_IN, HEIGHT_IN, DPI = 7.0, 5.6, 600  # one row per domain  # the saved figure: PNAS's full width
+NAME_PT, SMALL = 7.0, 7.0
+JITTER_IN, BREAK_IN, NAMES_IN = 0.035, 0.06, 0.3  # the kept points' spread, the break's half-gap, the names' offset
+LEFT, COLUMN, COLUMN_AT = 0.27, 0.1, 0.07  # shares of each axis: room for the first name, past the path, to the column  # PNAS: no text under 6 pt at the printed size
+WIDTH_IN, HEIGHT_IN, DPI = 7.0, 5.9, 600  # one row per domain  # the saved figure: PNAS's full width
 # each panel's cues are named by what pushes its response this way (the fitted signs: mechanisms.yaml)
 DIRECTION = {"subjective_randomness": "what makes a sequence look less random",
              "rsa": "what makes an object more likely to be chosen",
@@ -82,43 +84,51 @@ def draw(ax, elimination, names):
                     fontsize=NAME_PT, ha="right", va="center", rotation_mode="anchor", **text)
     ax.scatter([n[0]], [0], s=12, color=PATH, zorder=4)
     # the options at the end: every kept mechanism's removal, each at least 2 SE
-    xo = lean_n - 1
+    # the kept column a fixed distance past the path (in inches, the same in every panel): the panels' widths are
+    # equal, so a fixed share of each one's span is the same length
+    span = (n[0] - lean_n) / (1 - LEFT - COLUMN)  # the axis's span, in steps
+    xo = lean_n - COLUMN_AT * span
     ax.axhline(0, color="#b0b0b0", lw=0.6, ls=(0, (2, 2)), zorder=0)  # the full model
+    ax.set_xlim(n[0] + LEFT * span, lean_n - COLUMN * span)  # room left for the first step's name
+    per_in = abs(np.diff(ax.get_xlim())[0]) / (ax.get_position().width * ax.figure.get_figwidth())  # steps per inch
     labels = []
-    for c, yo in zip(options, opt_y):
+    jitter = np.random.default_rng(0).uniform(-1, 1, len(options)) * JITTER_IN * per_in  # fixed: the same every run
+    for c, yo, dx in zip(options, opt_y, jitter):
         name, color, text = style_of(names, c["mechanism"])
-        ax.errorbar([xo], [yo], yerr=[c["se_vs_start"]], fmt="none", ecolor=color, elinewidth=0.6, zorder=2)
-        ax.scatter([xo], [yo], s=12, color=color, linewidths=0, zorder=4)
-        labels.append((yo, name, text, yo))
+        ax.errorbar([xo + dx], [yo], yerr=[c["se_vs_start"]], fmt="none", ecolor=color, elinewidth=0.6, zorder=2)
+        ax.scatter([xo + dx], [yo], s=12, color=color, linewidths=0, zorder=4)
+        labels.append((yo, name, text, (xo + dx, yo)))
     # the options' names in a column right of them, spread apart, a leader to each
     ax.set_ylim(lo - 0.03 * abs(lo), 0.03 * abs(lo))
-    ax.set_xlim(n[0] + 0.5 + 0.3 * (n[0] - xo), xo - 0.2)  # room left for the first step's name
     fig = ax.figure
     fig.canvas.draw()
     to_data = ax.transData.inverted()
     per_pt = abs(to_data.transform((0, 0))[1] - to_data.transform((0, NAME_PT * 1.35 * fig.dpi / 72))[1])
-    # what the path dropped and what the column kept, labelled above each
-    note = {"fontsize": NAME_PT, "color": INK_2, "style": "italic"}
-    # both on the x tick labels' line: "dropped" ends the path's, "kept" sits under the column
-    ax.annotate("kept", (xo, lo), xytext=(0, -9), textcoords="offset points", ha="center", va="top",
-                annotation_clip=False, **note)
     labels.sort(key=lambda t: -t[0])
     placed = spread([yo for yo, *_ in labels], per_pt)
     cap = ax.get_ylim()[1]  # never above the panel: push the top labels down, then their neighbours
     for k, yt in enumerate(placed):
         placed[k] = min(yt, cap if k == 0 else placed[k - 1] - per_pt)
     for (yo, name, text, at), yt in zip(labels, placed):
-        ax.annotate(name, (xo, at), xytext=(xo - 0.6, yt), ha="left", va="center", fontsize=NAME_PT, **text,
+        ax.annotate(name, at, xytext=(xo - NAMES_IN * per_in, yt), ha="left", va="center", fontsize=NAME_PT, **text,
                     annotation_clip=False, arrowprops={"arrowstyle": "-", "color": "#b0b0b0", "lw": 0.4,
                                                          "shrinkA": 1, "shrinkB": 3, "relpos": (0, 0.5)})
-    ax.set_xticks(n)
+    # the x axis: the path's counts, a break, then "kept" under the kept column on its own stretch of axis
+    ax.set_xticks(n + [xo], [str(v) for v in n] + ["kept"])
+    ax.get_xticklabels()[-1].set(fontsize=SMALL + 0.5, color=INK)
     ax.tick_params(labelsize=SMALL, length=2, pad=1.5)
     ax.set_xlabel("mechanisms in the model (each step drops one)", fontsize=SMALL + 0.5, labelpad=1)
     ax.spines["bottom"].set_bounds(n[0], lean_n)
+    base = ax.get_xaxis_transform()  # x in data, y in axes fractions
+    gap = BREAK_IN * per_in
+    ax.plot([xo + 2 * gap, xo - 2 * gap], [0, 0], transform=base, color=ax.spines["bottom"].get_edgecolor(),
+            lw=ax.spines["bottom"].get_linewidth(), clip_on=False, solid_capstyle="butt")
+    for xb in (lean_n - gap, xo + 2 * gap):  # the break: a short slash at each end of the gap
+        ax.plot([xb + 0.3 * gap, xb - 0.3 * gap], [-0.03, 0.03], transform=base, color=INK_2, lw=0.6, clip_on=False)
 
 
 def figure(canvas_in, names, src):
-    fig, axes = plt.subplots(3, 1, figsize=(canvas_in, HEIGHT_IN), dpi=DPI, gridspec_kw={"hspace": 0.42, "height_ratios": [0.8, 0.9, 1.1]})
+    fig, axes = plt.subplots(3, 1, figsize=(canvas_in, HEIGHT_IN), dpi=DPI, gridspec_kw={"hspace": 0.55, "height_ratios": [0.8, 0.9, 1.1]})
     fig.subplots_adjust(left=0.1, right=0.76, top=0.95, bottom=0.09)  # the options' names to the right
     for ax, d in zip(axes, TITLES):
         draw(ax, json.loads(src[d].read_text()), names[d])
