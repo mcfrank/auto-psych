@@ -1,6 +1,6 @@
 """Draft of Figure 4 (throwaway): per domain, the backward elimination of the winning model on one scale,
 ELPD-CV against the full model. The line is the model kept after each round (each step named by the
-mechanism it dropped); faint dots are the removals not taken that round; at the end, every remaining
+mechanism it dropped); at the end, every remaining
 removal (each kept mechanism), all of which cost at least 2 SE, so the elimination stopped.
 
 Run: uv run python -m data.paper.work.fig4_draft.fig4_draft
@@ -23,7 +23,6 @@ OUT = here() / "data" / "paper" / "work" / "fig4_draft"
 COLOR_NEW, COLOR_START, PATH = "#08306b", "#6baed6", "#262626"
 NAME_PT, SMALL = 7.0, 7.0  # PNAS: no text under 6 pt at the printed size
 WIDTH_IN, HEIGHT_IN, DPI = 7.0, 5.6, 600  # one row per domain  # the saved figure: PNAS's full width
-GREY = "#dedede"  # the removals not taken
 # each panel's cues are named by what pushes its response this way (the fitted signs: mechanisms.yaml)
 DIRECTION = {"subjective_randomness": "what makes a sequence look less random",
              "rsa": "what makes an object more likely to be chosen",
@@ -71,11 +70,6 @@ def draw(ax, elimination, names):
     options = sorted(rounds[-1]["candidates"], key=lambda c: -c["elpd_cv"])
     opt_y = np.array([c["elpd_cv"] - base for c in options])
     lo = min(y.min(), opt_y.min())
-    # the removals not taken, each round
-    for k, r in enumerate(rounds[:-1]):
-        gone = (set(r["mechanisms"]) - set(rounds[k + 1]["mechanisms"])).pop()
-        ys = [c["elpd_cv"] - base for c in r["candidates"] if c["mechanism"] != gone]
-        ax.scatter([n[k] - 1] * len(ys), ys, s=2.5, color=GREY, linewidths=0, zorder=1)
     # the path, each step named by what it dropped
     ax.plot(n, y, color=PATH, lw=1.0, zorder=3)
     ax.errorbar(n, y, yerr=se, fmt="none", ecolor=PATH, elinewidth=0.6, zorder=3)
@@ -135,9 +129,8 @@ def figure(canvas_in, names, src):
     key = [Line2D([], [], marker="o", color=INK_2, label="one value for everyone", **dot),
            Line2D([], [], marker="D", color=INK_2, label="fit per person", **{**dot, "ms": 3}),
            Line2D([], [], marker="o", color=COLOR_NEW, label="new", **dot),
-           Line2D([], [], marker="o", color=COLOR_START, label="from the literature", **dot),
-           Line2D([], [], marker="o", color=GREY, label="removals not taken", **{**dot, "ms": 2.5})]
-    fig.legend(handles=key, loc="upper center", ncol=5, frameon=False, fontsize=SMALL, bbox_to_anchor=(0.45, 0.04),
+           Line2D([], [], marker="o", color=COLOR_START, label="from the literature", **dot)]
+    fig.legend(handles=key, loc="upper center", ncol=4, frameon=False, fontsize=SMALL, bbox_to_anchor=(0.45, 0.04),
                handletextpad=0.2, columnspacing=1.6)
     add_title_icons(fig, axes, list(TITLES))
     return fig, None
