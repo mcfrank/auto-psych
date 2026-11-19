@@ -64,13 +64,13 @@ def draw(ax, domain, elimination, names):
         ax.text(-0.02, yi, name, transform=ax.get_yaxis_transform(), ha="right", va="center", fontsize=NAME_PT,
                 color=INK if r["kept"] else INK_2)
         if r["cost"] is None:
-            ax.text(0.02, yi, "needed by others", transform=ax.get_yaxis_transform(), ha="left", va="center",
+            ax.text(0.02, yi, "others depend on it", transform=ax.get_yaxis_transform(), ha="left", va="center",
                     fontsize=NAME_PT - 0.5, color=INK_2, style="italic")
             continue
         ax.plot([r["cost"] - 2 * r["se"], r["cost"] + 2 * r["se"]], [yi, yi], color=color, lw=1.0, zorder=2,
                 solid_capstyle="butt")
         ax.scatter([r["cost"]], [yi], s=12 if marker == "o" else 9, marker=marker,
-                   color=color if r["kept"] else "white", edgecolors=color, linewidths=0.8, zorder=3)
+                   color=color, linewidths=0, zorder=3)
     ax.text(0.97, 1 - (n_dropped / 2) / len(rows), "dropped", transform=ax.transAxes, ha="right", va="center",
             fontsize=NAME_PT, color=INK_2, style="italic")
     ax.set_ylim(len(rows) - 0.5, -0.5)
@@ -97,12 +97,11 @@ def main():
             continue
         draw(ax, d, json.loads(src[d].read_text()), names[d])
     dot = {"lw": 0, "ms": 3.5}
-    key = [Line2D([], [], marker="o", color=COLOR_NEW, label="new in the discovered model", **dot),
-           Line2D([], [], marker="o", color=COLOR_START, label="in a starting model", **dot),
-           Line2D([], [], marker="o", color=INK_2, label="shared", **dot),
-           Line2D([], [], marker="D", color=INK_2, label="person-level (fit per person)", **{**dot, "ms": 3}),
-           Line2D([], [], marker="o", color="white", markeredgecolor=INK_2, label="dropped (cost when removed)", **dot)]
-    fig.legend(handles=key, loc="upper center", ncol=5, frameon=False, fontsize=SMALL, bbox_to_anchor=(0.5, 0.0),
+    key = [Line2D([], [], marker="o", color=COLOR_NEW, label="new", **dot),
+           Line2D([], [], marker="o", color=COLOR_START, label="from a starting model (literature)", **dot),
+           Line2D([], [], marker="o", color=INK_2, label="one value for everyone", **dot),
+           Line2D([], [], marker="D", color=INK_2, label="fit per person", **{**dot, "ms": 3})]
+    fig.legend(handles=key, loc="upper center", ncol=4, frameon=False, fontsize=SMALL, bbox_to_anchor=(0.5, 0.0),
                handletextpad=0.2, columnspacing=1.0)
     fig.canvas.draw()
     to_fig = fig.transFigure.inverted()
