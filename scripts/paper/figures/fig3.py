@@ -14,8 +14,6 @@ import json
 import numpy as np
 import pandas as pd
 from matplotlib.lines import Line2D
-from matplotlib.offsetbox import AnnotationBbox, OffsetImage
-from pyprojroot import here
 
 from scripts.paper.figures.icons import STIMULI
 from scripts.paper.figures.style import INK, INK_2, TITLE_FONT, TITLES, save
@@ -123,77 +121,85 @@ def effects(tables: Dict[str, pd.DataFrame]):
 
 # --- row (b): each classic effect as its original paper drew it ----------------------------------------------
 
+SR_LENGTH = 8  # the commonest sequence length (79% of trials): alternation counts compare only within a length
+
+
 def classic_sr(ax, sr, cols):
-    """Falk & Konold (1997): how random a sequence looks against its probability of alternation, peaking
-    above a fair coin's 0.5. Each sequence's chance of being chosen, over every pair it was in."""
+    """Falk & Konold (1997): how random a sequence looks against its number of alternations, peaking above a
+    fair coin's average. Each length-8 sequence's chance of being chosen, over every pair it was in."""
     both = pd.concat([pd.DataFrame({"seq": sr.sequence_a, "y": sr.y, **{c: sr[c] for c in cols}}),
                       pd.DataFrame({"seq": sr.sequence_b, "y": 1 - sr.y, **{c: 1 - sr[c] for c in cols}})])
-    alt = both.seq.map(lambda q: sum(a != b for a, b in zip(q, q[1:])) / (len(q) - 1))
-    t = groups(both.assign(band=(alt * 5).round() / 5), "band", cols)  # finer bins hold few sequences each
-    ax.axvline(0.5, color="#b0b0b0", lw=0.6, ls=(0, (2, 2)), zorder=0)
+    both = both[both.seq.str.len() == SR_LENGTH]
+    t = groups(both.assign(alt=both.seq.map(lambda q: sum(a != b for a, b in zip(q, q[1:])))), "alt", cols)
+    fair = (SR_LENGTH - 1) / 2
+    ax.axvline(fair, color="#b0b0b0", lw=0.6, ls=(0, (2, 2)), zorder=0)
     for c, color in zip(cols, (SEED, BEST)):
         ax.plot(t.index, t[c], color=color, lw=1.3, zorder=2)
     ax.errorbar(t.index, t.observed, yerr=t.ci, fmt="o", color=HUMAN, ms=3, elinewidth=0.8, zorder=3)
-    ax.text(0.51, 0.03, "fair coin", transform=ax.get_xaxis_transform(), fontsize=6, color=INK_2)
-    ax.set(xlim=(-0.04, 1.04), ylim=(0, 0.8), xticks=[0, 0.2, 0.4, 0.6, 0.8, 1])
+    ax.text(fair + 0.1, 0.03, "fair coin", transform=ax.get_xaxis_transform(), fontsize=6, color=INK_2)
+    ax.set(xlim=(-0.3, SR_LENGTH - 0.7), ylim=(0, 0.8), xticks=range(SR_LENGTH))
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.0%}"))
-    ax.set_xlabel("probability of alternation", labelpad=1)
+    ax.set_xlabel(f"alternations in {SR_LENGTH} flips", labelpad=1)
     ax.set_ylabel("chosen as more random", labelpad=1)
 
 
 RSA_DISPLAY = 70  # the Frank & Goodman (2012) game: a word ("ornaments") fits two of three objects
-RSA_IMAGES = here() / "src/pipelines/outer_loop/projects/rsa_reference/experiment/images"
-
-
-def _referent(item, features, base):
-    """An object as the experiment drew it: its base image with each of its features' overlays on top."""
-    from PIL import Image
-    im = Image.open(RSA_IMAGES / f"{item}-base{base}.png").convert("RGBA")
-    for f in features:
-        im = Image.alpha_composite(im, Image.open(RSA_IMAGES / f"{item}-{f}.png").convert("RGBA"))
-    return np.asarray(im)
+FACE_FEATURES = ("glasses", "hat")  # the display's two features, drawn as the house icons' (icons._face)
 
 
 def classic_rsa(ax, rsa, cols, trials):
-    """Frank & Goodman (2012): one display, the share choosing each object. People pick the object whose
-    only feature is the word's: a speaker would have named the other object's second feature."""
+    """Frank & Goodman (2012): one display, the share choosing each object (people, the best seed, the best
+    winner). People pick the object whose only feature is the word's: a speaker would have named the other
+    object's second feature. The objects are drawn schematically, their two features as glasses and a hat."""
+    from scripts.paper.figures.icons import _face
     d = rsa[rsa.display == RSA_DISPLAY].sort_values("choice_class")
-    names = json.loads(trials.loc[trials.display == RSA_DISPLAY, "feature_names"].iloc[0])
     objects = json.loads(d.objects.iloc[0])
     o = (d.observed_count / d.n_trials).to_numpy()
     x = np.arange(len(d))
-    for c, color in zip(cols, (SEED, BEST)):
-        for xi, v in zip(x, d[c]):
-            ax.plot([xi - 0.25, xi + 0.25], [v, v], color=color, lw=1.8, solid_capstyle="butt", zorder=2)
-    ax.errorbar(x, o, yerr=1.96 * np.sqrt(o * (1 - o) / d.n_trials), fmt="o", color=HUMAN, ms=3, elinewidth=0.8,
+    w = 0.26
+    ax.bar(x - w, o, w, color=HUMAN, zorder=2)
+    ax.errorbar(x - w, o, yerr=1.96 * np.sqrt(o * (1 - o) / d.n_trials), fmt="none", ecolor=INK_2, elinewidth=0.7,
                 zorder=3)
-    for xi, members in zip(x, d.member_objects):  # the class's object, drawn under its tick
-        feats = [f.replace("-", "_") for f, on in zip(names, objects[json.loads(members)[0]]) if on]
-        img = OffsetImage(_referent("christmas_tree", feats, xi % 3 + 1), zoom=0.13)
-        ax.add_artist(AnnotationBbox(img, (xi, 0), xybox=(0, -22), xycoords=("data", "axes fraction"),
-                                     boxcoords="offset points", frameon=False, annotation_clip=False))
+    for dx, c, color in ((0, cols[0], SEED), (w, cols[1], BEST)):
+        ax.bar(x + dx, d[c], w, color=color, zorder=2)
+    ax.set(xlim=(-0.6, len(x) - 0.4), ylim=(0, 1))
     ax.set_xticks(x, [""] * len(x))
     ax.tick_params(axis="x", length=0)
-    ax.set(xlim=(-0.5, len(x) - 0.5), ylim=(0, 1))
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.0%}"))
     ax.set_ylabel("chosen", labelpad=1)
-    ax.text(0.02, 0.98, f'the word: “{names[0]}”', transform=ax.transAxes, va="top", fontsize=6.5)
+    fig = ax.figure
+    for xi, members in zip(x, d.member_objects):  # each object's face under its bars
+        on = dict(zip(FACE_FEATURES, map(bool, objects[json.loads(members)[0]])))
+        x0 = fig.transFigure.inverted().transform(ax.transData.transform((xi, 0)))[0]
+        y0 = ax.get_position().y0
+        icon = fig.add_axes((x0 - 0.02, y0 - 0.055, 0.04, 0.045))
+        icon.set(xlim=(-1, 1), ylim=(-1, 1.6), aspect="equal")
+        icon.axis("off")
+        _face(icon, 0, 0, 0.75, **on)
+    ax.text(0.98, 0.96, f"the word: “{FACE_FEATURES[0]}”", transform=ax.transAxes, ha="right", va="top",
+            fontsize=6.5)
 
 
 NG_SET = "80,70,90,100"  # Tenenbaum (2000)'s rule-like profile: the set asked about the most targets
 
 
-def classic_ng(ax, ng, cols):
-    """Tenenbaum (2000): the generalization profile, P(yes) for each target from 1 to 100 given one example
-    set; for a rule-like set, a spike at each number the rule fits."""
+def classic_ng(cell, fig, ng, cols):
+    """Tenenbaum (2000): the generalization profile, P(yes) for each target from 1 to 100 given one example set,
+    people's and each model's as its own histogram; for a rule-like set, a spike at each number the rule fits."""
     t = groups(ng[ng.number_set == NG_SET], "target", cols)
-    ax.bar(t.index, t.observed, width=1.2, color=HUMAN, zorder=2)
-    for c, color in zip(cols, (SEED, BEST)):
-        ax.scatter(t.index, t[c], s=5, color=color, linewidths=0, zorder=3)
-    ax.set(xlim=(0, 101), ylim=(0, 1.05), xticks=[1, 25, 50, 75, 100])
-    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.0%}"))
-    ax.set_xlabel("target, after " + ", ".join(sorted(NG_SET.split(","), key=int)), labelpad=1)
-    ax.set_ylabel("said yes", labelpad=1)
+    axes = cell.subgridspec(3, 1, hspace=0.25).subplots(sharex=True)
+    for ax, (c, color, label) in zip(axes, (("observed", HUMAN, "people"), (cols[0], SEED, "best seed"),
+                                            (cols[1], BEST, "best winner"))):
+        ax.bar(t.index, t[c], width=1.0, color=color)
+        ax.set(xlim=(0, 101), ylim=(0, 1), yticks=[0, 1])
+        ax.text(1.0, 0.95, label, transform=ax.transAxes, ha="right", va="top", fontsize=6)
+    for ax in axes[:-1]:
+        ax.tick_params(axis="x", length=0)
+        ax.set_yticks([0, 1], ["", "1"])  # a 0 here would touch the 1 below
+    axes[1].set_ylabel("said yes", labelpad=1)
+    axes[-1].set(xticks=[1, 25, 50, 75, 100])
+    axes[-1].set_xlabel("target, after " + ", ".join(sorted(NG_SET.split(","), key=int)), labelpad=1)
+    return axes[0]
 
 
 def _scatter(ax, cond, col, color, label):
@@ -245,11 +251,14 @@ def draw(phenomena: Path, out_dir: Path) -> None:
         for ax in a if k else a[1:]:
             ax.tick_params(labelleft=False)
         tops.append(a[0])
-        ax = fig.add_subplot(gs[1, 3 * k:3 * k + 2])
-        if d == "rsa":
-            classic_rsa(ax, tables[d], cols, tables["rsa_trials"])
+        if d == "number_game":
+            classic_ng(gs[1, 3 * k:3 * k + 2], fig, tables[d], cols)
         else:
-            {"subjective_randomness": classic_sr, "number_game": classic_ng}[d](ax, tables[d], cols)
+            ax = fig.add_subplot(gs[1, 3 * k:3 * k + 2])
+            if d == "rsa":
+                rsa_ax = ax  # its icons are placed once the layout is final
+            else:
+                classic_sr(ax, tables[d], cols)
         _effect(fig.add_subplot(gs[2, 3 * k:3 * k + 2]), *eff[d][:1], cols, *eff[d][1:])
     tops[0].set_ylabel("observed", labelpad=1)
     fig.canvas.draw()
@@ -268,6 +277,7 @@ def draw(phenomena: Path, out_dir: Path) -> None:
         left = centre - (w + gap + x1 - x0) / 2
         draw_icon(fig.add_axes((left, title_y - h / 2, w, h)))
         t.set_x(left + w + gap)
+    classic_rsa(rsa_ax, tables["rsa"], list(best(tables["rsa"], "rsa").values()), tables["rsa_trials"])
     fig.canvas.draw()
     to_fig = fig.transFigure.inverted()
     for row, label in enumerate(ROWS):  # over the row's highest text (row A: the domains' titles)
