@@ -1,7 +1,7 @@
 """Figure 3 (``fig3_effects``), one column per domain, from ``data/paper/figure_data/phenomena/`` (its README
 defines the patterns): (A) each condition's observed proportion against the best seed model's prediction
 and against the best winner's, with R² and RMSE (trial-weighted); (B) a classic effect that both capture; (C) a pattern only the winner
-captures. "Best" is the highest log-likelihood on these trials (the seed models' blend excluded)."""
+captures. "Best" is the highest log-likelihood on these trials (among the original seed models: not RSA's promoted seeds, nor the seeds' blend)."""
 
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ def best(df: pd.DataFrame, domain: str) -> Dict[str, str]:
         return (df.y * np.log(p) + (1 - df.y) * np.log(1 - p)).sum()
     pick = lambda cs: max(cs, key=ll)  # noqa: E731
     cols = [c for c in df if c.startswith("p_") and c != "p_seed_blend_cv"]
-    return {"seed": pick([c for c in cols if "seed_" in c or "promoted_" in c]),
+    return {"seed": pick([c for c in cols if "seed_" in c]),  # the original seeds, not RSA's promoted ones
             "winner": pick([c for c in cols if "win_" in c or "final_" in c])}
 
 
