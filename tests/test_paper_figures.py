@@ -1,6 +1,6 @@
 """The paper's Figures 2-4 (``scripts/paper/figures/``), drawn from the
 figure data that ``sr_figure_data.py`` and ``rsa_figure_data.py`` write, the
-phenomena tables (Figure 3) and the winners' backward eliminations (Figure 4)."""
+conditions' reference-game displays (Figure 3) and the winners' backward eliminations (Figure 4)."""
 
 from __future__ import annotations
 
@@ -87,7 +87,7 @@ def test_figure_2_is_drawn_with_the_number_game_pending(tmp_path):
         assert (args.out_dir / f"fig2_elpd.{ext}").stat().st_size > 0, ext
 
 
-def test_figures_3_and_4_are_drawn_from_the_phenomena_and_eliminations(tmp_path):
+def test_figures_3_and_4_are_drawn_from_the_figure_data_and_eliminations(tmp_path):
     args = figures.Args(out_dir=tmp_path, figures=["3", "4"])
     figures.main(args)
     for name in ("fig3_effects", "fig4_ablation"):
@@ -118,19 +118,29 @@ def test_a_missing_domain_that_is_not_pending_raises(tmp_path):
         figures.main(args)
 
 
+def _fig3_tables():
+    args = figures.Args()
+    return fig3.load(args.figure_data, args.rsa_displays)
+
+
 def test_figure_3s_best_winner_fits_each_domains_conditions_better_than_its_best_seed():
-    tables = fig3.load(figures.Args().phenomena)
-    for d in fig3.ORDER:
-        df = tables[d]
-        best = fig3.best(df, d)
-        cond = fig3.conditions(df, d, list(best.values()))
-        assert fig3.r2(cond.observed, cond[best["winner"]], cond.n) > fig3.r2(cond.observed, cond[best["seed"]], cond.n), d
+    for d, cond in _fig3_tables().items():
+        assert fig3.r2(cond.observed, cond.best_model, cond.n) > fig3.r2(cond.observed, cond.best_seed, cond.n), d
 
 
-def test_figure_3s_new_effects_are_the_phenomena_readmes():
-    eff = fig3.effects(fig3.load(figures.Args().phenomena))
-    assert eff["number_game"][0].observed.round(2).tolist() == [0.63, 0.50]
-    assert eff["rsa"][0].observed.round(2).tolist() == [0.64, 0.15, 0.19]
+def test_figure_3s_reference_games_are_the_preregistered_experiments_only():
+    assert set(_fig3_tables()["rsa"].dataset) == {"prereg"}
+
+
+def test_in_figure_3s_reference_game_people_pick_the_object_with_only_the_words_feature():
+    d = fig3.reference_game(_fig3_tables()["rsa"])
+    only_word = [k for k, cls in zip(d.index, d.choice_classes) if fig3.GAME[cls.index(k)] == [1, 0]]
+    assert d.observed.idxmax() == only_word[0]
+
+
+def test_figure_3s_alternation_curve_peaks_above_a_fair_coins_rate():
+    t = fig3.alternation_curve(_fig3_tables()["subjective_randomness"])
+    assert t.observed.idxmax() > (fig3.SR_LENGTH - 1) / 2
 
 
 def test_every_mechanism_figure_4_drops_or_keeps_has_a_name():

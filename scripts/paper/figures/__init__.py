@@ -5,8 +5,8 @@ per domain, written by ``sr_figure_data.py``, ``rsa_figure_data.py`` and ``numbe
   collapsed. The number game's column is its pooled models scored on the Bigelow & Piantadosi responses
   no run drew (``number_game_unseen_items.py``; ``--ng-test-set``). How each domain is scored is for the
   caption (the figure data's ``scoring``).
-- Figure 3 (``fig3.py``, ``fig3_effects``): overall fit, a classic effect and a new one, from
-  ``figure_data/phenomena/``.
+- Figure 3 (``fig3.py``, ``fig3_effects``): overall fit, a classic effect and a new one, from the figure
+  data's conditions.
 - Figure 4 (``fig4.py``, ``fig4_ablation``): each winner's backward elimination, its mechanisms named in
   ``mechanisms.yaml``.
 
@@ -37,8 +37,8 @@ from scripts.paper.figures.style import DOMAINS, setup_style
 class Args:
     figure_data: Path = here() / "data" / "paper" / "figure_data"
     """Directory with one ``<domain>.json`` per domain."""
-    phenomena: Path = here() / "data" / "paper" / "figure_data" / "phenomena"
-    """Figure 3's per-trial tables (its README defines the patterns)."""
+    rsa_displays: Path = here() / "data" / "rsa" / "viz" / "panel_displays.json"
+    """What each reference-game display showed (``scripts/paper/rsa_panel_displays.py``): Figure 3's games."""
     mechanisms: Path = here() / "scripts" / "paper" / "mechanisms.yaml"
     """Figure 4's name and origin of each winner's mechanisms, per domain."""
     model_names: Path = here() / "scripts" / "paper" / "model_names.yaml"
@@ -107,7 +107,7 @@ def main(args: Args) -> None:
     with plt.rc_context():
         setup_style()
         if "3" in args.figures:
-            fig3.draw(args.phenomena, args.out_dir)
+            fig3.draw(args.figure_data, args.rsa_displays, args.out_dir)
         if "4" in args.figures:
             fig4.draw_ablation(args.figure_data, args.mechanisms, args.out_dir)
     print(f"wrote figure(s) {', '.join(args.figures)} to {args.out_dir}", flush=True)

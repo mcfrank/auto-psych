@@ -88,9 +88,10 @@ What each figure shows:
     scored on the same data as the rest of its column (`pruned_during_run`;
     one whose fit fails or does not converge is listed with the reason in
     `pruned_unscored` instead).
-- **Figure 3** (`fig3_effects`): per domain, from `data/paper/figure_data/phenomena/`: (A) each
-  condition's observed proportion against the best starting model and the best winner, with R²; (B) a
-  classic effect both capture; (C) a pattern only the winner captures.
+- **Figure 3** (`fig3_effects`): per domain, from the figure data's `conditions` (pooled best model and
+  best seed): (a) observed against predicted, with R² and RMSE; (b) the classic effect as its original paper
+  drew it; (c) a new effect only the winner captures. Reference games use the pre-registered experiment,
+  their displays from `data/rsa/viz/panel_displays.json`. The number game's (b) and every (c) are pending.
 - **Figure 4** (`fig4_ablation`): each domain winner's backward elimination on one scale, ELPD-CV vs.
   the full model; every mechanism's name and origin are in `mechanisms.yaml`.
 - **Ablation figure** (`fig_ablation`, `uv run python -m scripts.paper.ablation_figure`,
