@@ -36,7 +36,7 @@ def sources(figure_data: Path):
     run = sr["winner_runs"][sr["best_model"]]
     return {"subjective_randomness": here() / f"data/results/human_experiment_sr-oct26/analysis/results/ablation/{run}/elimination.json",
             "rsa": here() / "data/rsa/c0_ablation/eliminate/elimination.json",
-            "number_game": here() / "data/results/number_game_dataset-nov26/analysis/ablation/elimination.json"}
+            "number_game": here() / "data/results/number_game_dataset-nov26/analysis/ablation_ew/elimination.json"}
 
 
 def style_of(names, m):
@@ -98,7 +98,8 @@ def draw(ax, elimination, names):
         ax.scatter([xo], [yo], s=12, color=color, linewidths=0, zorder=4)
         labels.append((yo, name, text, (xo, yo)))
     # the options' names in a column right of them, spread apart, a leader to each
-    ax.set_ylim(lo - 0.03 * abs(lo), 0.03 * abs(lo))
+    hi = max(0.0, y.max())  # a removal can improve the fit: the path can rise above the full model
+    ax.set_ylim(lo - 0.03 * (hi - lo), hi + 0.03 * (hi - lo))
     fig = ax.figure
     fig.canvas.draw()
     to_data = ax.transData.inverted()
