@@ -120,7 +120,8 @@ def test_a_missing_domain_that_is_not_pending_raises(tmp_path):
 
 def test_figure_3s_best_winner_fits_each_domains_conditions_better_than_its_best_seed():
     tables = fig3.load(figures.Args().phenomena)
-    for d, df in tables.items():
+    for d in fig3.ORDER:
+        df = tables[d]
         best = fig3.best(df, d)
         cond = fig3.conditions(df, d, list(best.values()))
         assert fig3.r2(cond.observed, cond[best["winner"]], cond.n) > fig3.r2(cond.observed, cond[best["seed"]], cond.n), d
@@ -128,8 +129,8 @@ def test_figure_3s_best_winner_fits_each_domains_conditions_better_than_its_best
 
 def test_figure_3s_new_effects_are_the_phenomena_readmes():
     eff = fig3.effects(fig3.load(figures.Args().phenomena))
-    assert eff["number_game"][1][0].observed.round(2).tolist() == [0.63, 0.50]
-    assert eff["rsa"][1][0].observed.round(2).tolist() == [0.64, 0.15, 0.19]
+    assert eff["number_game"][0].observed.round(2).tolist() == [0.63, 0.50]
+    assert eff["rsa"][0].observed.round(2).tolist() == [0.64, 0.15, 0.19]
 
 
 def test_every_mechanism_figure_4_drops_or_keeps_has_a_name():
