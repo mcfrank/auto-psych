@@ -144,15 +144,27 @@ def classic_sr(ax, sr, cols):
 
 
 RSA_DISPLAY = 70  # the Frank & Goodman (2012) game: a word ("ornaments") fits two of three objects
-FACE_FEATURES = ("glasses", "hat")  # the display's two features, drawn as the house icons' (icons._face)
+def _tree(ax, ornaments, lights):
+    """A Christmas tree in the house icons' style (icons.py): a grey tree, ornaments as open rings, lights as
+    small dark dots."""
+    from matplotlib.patches import Circle, Polygon, Rectangle
+    from scripts.paper.figures.icons import GREY
+    ax.add_patch(Rectangle((-0.12, -1.0), 0.24, 0.3, facecolor=INK_2, edgecolor="none"))
+    ax.add_patch(Polygon([(-0.8, -0.7), (0.8, -0.7), (0, 1.0)], facecolor=GREY, edgecolor="none"))
+    if ornaments:
+        for x, y in ((-0.35, -0.45), (0.3, -0.35), (0.0, 0.05), (-0.12, 0.5)):
+            ax.add_patch(Circle((x, y), 0.11, facecolor="white", edgecolor=INK, lw=0.6))
+    if lights:
+        for x, y in ((-0.55, -0.6), (-0.2, -0.15), (0.25, 0.1), (0.5, -0.6), (0.12, 0.55), (-0.3, 0.2)):
+            ax.add_patch(Circle((x, y), 0.06, facecolor=INK, edgecolor="none"))
 
 
 def classic_rsa(ax, rsa, cols, trials):
     """Frank & Goodman (2012): one display, the share choosing each object (people, the best seed, the best
     winner). People pick the object whose only feature is the word's: a speaker would have named the other
-    object's second feature. The objects are drawn schematically, their two features as glasses and a hat."""
-    from scripts.paper.figures.icons import _face
+    object's second feature."""
     d = rsa[rsa.display == RSA_DISPLAY].sort_values("choice_class")
+    names = json.loads(trials.loc[trials.display == RSA_DISPLAY, "feature_names"].iloc[0])
     objects = json.loads(d.objects.iloc[0])
     o = (d.observed_count / d.n_trials).to_numpy()
     x = np.arange(len(d))
@@ -162,43 +174,42 @@ def classic_rsa(ax, rsa, cols, trials):
                 zorder=3)
     for dx, c, color in ((0, cols[0], SEED), (w, cols[1], BEST)):
         ax.bar(x + dx, d[c], w, color=color, zorder=2)
+    feats = [[f for f, on in zip(names, objects[json.loads(m)[0]]) if on] for m in d.member_objects]
+    ax.set_xticks(x, ["\n+ ".join(f) for f in feats], fontsize=6, va="top")
+    ax.tick_params(axis="x", length=0, pad=22)
     ax.set(xlim=(-0.6, len(x) - 0.4), ylim=(0, 1))
-    ax.set_xticks(x, [""] * len(x))
-    ax.tick_params(axis="x", length=0)
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.0%}"))
     ax.set_ylabel("chosen", labelpad=1)
     fig = ax.figure
-    for xi, members in zip(x, d.member_objects):  # each object's face under its bars
-        on = dict(zip(FACE_FEATURES, map(bool, objects[json.loads(members)[0]])))
+    for xi, f in zip(x, feats):  # each object, drawn under its bars
         x0 = fig.transFigure.inverted().transform(ax.transData.transform((xi, 0)))[0]
-        y0 = ax.get_position().y0
-        icon = fig.add_axes((x0 - 0.02, y0 - 0.055, 0.04, 0.045))
-        icon.set(xlim=(-1, 1), ylim=(-1, 1.6), aspect="equal")
+        icon = fig.add_axes((x0 - 0.02, ax.get_position().y0 - 0.05, 0.04, 0.045))
+        icon.set(xlim=(-1, 1), ylim=(-1.05, 1.05), aspect="equal")
         icon.axis("off")
-        _face(icon, 0, 0, 0.75, **on)
-    ax.text(0.98, 0.96, f"the word: “{FACE_FEATURES[0]}”", transform=ax.transAxes, ha="right", va="top",
+        _tree(icon, "ornaments" in f, "lights" in f)
+    ax.text(0.98, 0.96, f"the word: \u201c{names[0]}\u201d", transform=ax.transAxes, ha="right", va="top",
             fontsize=6.5)
 
 
-NG_SET = "80,70,90,100"  # Tenenbaum (2000)'s rule-like profile: the set asked about the most targets
+NG_SETS = ("100", "80,70,90,100")  # one example, then more: the data's richest such chain (10, 45 targets)
 
 
 def classic_ng(cell, fig, ng, cols):
-    """Tenenbaum (2000): the generalization profile, P(yes) for each target from 1 to 100 given one example set,
-    people's and each model's as its own histogram; for a rule-like set, a spike at each number the rule fits."""
-    t = groups(ng[ng.number_set == NG_SET], "target", cols)
-    axes = cell.subgridspec(3, 1, hspace=0.25).subplots(sharex=True)
-    for ax, (c, color, label) in zip(axes, (("observed", HUMAN, "people"), (cols[0], SEED, "best seed"),
-                                            (cols[1], BEST, "best winner"))):
-        ax.bar(t.index, t[c], width=1.0, color=color)
-        ax.set(xlim=(0, 101), ylim=(0, 1), yticks=[0, 1])
-        ax.text(1.0, 0.95, label, transform=ax.transAxes, ha="right", va="top", fontsize=6)
-    for ax in axes[:-1]:
-        ax.tick_params(axis="x", length=0)
-        ax.set_yticks([0, 1], ["", "1"])  # a 0 here would touch the 1 below
-    axes[1].set_ylabel("said yes", labelpad=1)
+    """Tenenbaum (2000): the generalization profile, P(yes) for each target from 1 to 100, sharpening as the
+    examples grow from one (broad) to several fitting a rule (a spike at each number it fits). People, the best
+    seed and the best winner side by side at each target."""
+    axes = cell.subgridspec(len(NG_SETS), 1, hspace=0.45).subplots(sharex=True)
+    for ax, ex in zip(axes, NG_SETS):
+        t = groups(ng[ng.number_set == ex], "target", cols)
+        for dx, c, color in ((-0.9, "observed", HUMAN), (0, cols[0], SEED), (0.9, cols[1], BEST)):
+            ax.bar(t.index + dx, t[c], width=0.9, color=color)
+        ax.set(xlim=(0, 102), ylim=(0, 1), yticks=[0, 0.5, 1])
+        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.0%}"))
+        ax.set_title("examples: " + ", ".join(sorted(ex.split(","), key=int)), fontsize=6, loc="left", pad=2)
+    axes[0].tick_params(axis="x", length=0)
     axes[-1].set(xticks=[1, 25, 50, 75, 100])
-    axes[-1].set_xlabel("target, after " + ", ".join(sorted(NG_SET.split(","), key=int)), labelpad=1)
+    axes[-1].set_xlabel("target", labelpad=1)
+    axes[0].set_ylabel("said yes", labelpad=1, y=-0.2)
     return axes[0]
 
 
