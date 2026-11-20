@@ -1,0 +1,16 @@
+{
+ "model": "ew_minus_exc_lam_size",
+ "fold": 3,
+ "converged": true,
+ "has_lpd": true,
+ "attempts": [
+  {
+   "seed": 20261018,
+   "problems": [],
+   "problems_all": [],
+   "seconds": 13032
+  }
+ ],
+ "elpd": -2678.9412388958694,
+ "seed": 20261018
+}
