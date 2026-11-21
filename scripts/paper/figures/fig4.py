@@ -33,7 +33,7 @@ NAMES_IN, NAME_PITCH = 0.3, 1.15  # the kept names' offset from their column (in
 LEFT, RIGHT, TICK_DEG = 0.04, 0.04, 35  # shares of the path's axis before the first step and past the last; the step names' angle  # PNAS: no text under 6 pt at the printed size
 PATH_IN, KEPT_IN, GAP_IN = 3.25, 0.5, 0.82  # widths: the path's axes, the kept column's, between them (inches)
 LEFT_PAD, TOP_PAD, LEGEND_PAD, ROW_GAP = 0.1, 0.01, 0.0, 0.06  # figure shares (left, top, the legend's), inches between rows
-ICON_OVER, ONE_LINE = 0.5, 14  # how far each title's icon reaches over it (title heights); the longest one-line step name
+ICON_OVER, ONE_LINE, KEPT_DOWN = 0.5, 14, 0.8  # how far each title's icon reaches over it (title heights); the longest one-line step name; the share of the step names' height the kept column extends down
 WIDTH_IN, HEIGHT_IN = 7.0, 4.6  # one row per domain; the saved figure: PNAS's full width
 # each panel's cues are named by what pushes its response this way (the fitted signs: mechanisms.yaml)
 DIRECTION = {"subjective_randomness": "what makes a sequence look less random",
@@ -194,7 +194,9 @@ def stack_rows(fig, grid):
     for (ax, kept_ax), a, b in zip(grid, above, below):
         y0 = (top - a - height) / H
         ax.set_position((x0, y0, PATH_IN / WIDTH_IN, height / H))
-        kept_ax.set_position((x0 + (PATH_IN + GAP_IN) / WIDTH_IN, y0, KEPT_IN / WIDTH_IN, height / H))
+        # the kept column also takes the height the path's step names use: its names run longer than the path
+        kept_ax.set_position((x0 + (PATH_IN + GAP_IN) / WIDTH_IN, y0 - KEPT_DOWN * b / H, KEPT_IN / WIDTH_IN,
+                              (height + KEPT_DOWN * b) / H))
         top -= a + height + b + ROW_GAP * fig.dpi
 
 
