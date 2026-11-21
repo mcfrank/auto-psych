@@ -135,8 +135,9 @@ def reference_game(rsa: pd.DataFrame) -> pd.DataFrame:
 
 
 # Stiller, Goodman & Frank (2015)'s names for the three objects, and what each is in our display
-GAME_ROLES = {(0, 1): ("distractor", "the word\ndoesn't fit"), (1, 0): ("one-feature", "only the\nword's feature"),
-              (1, 1): ("two-feature", "the word's\n+ another")}
+GAME_ROLES = {(0, 1): ("distractor", "doesn't fit\nthe word"),
+              (1, 0): ("one-feature", "contains only\nthe word's\nfeature"),
+              (1, 1): ("two-feature", "contains the\nword's feature\n+ another")}
 
 
 def classic_rsa(ax, rsa):
