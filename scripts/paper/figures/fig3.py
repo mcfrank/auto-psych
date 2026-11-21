@@ -107,18 +107,19 @@ def alternation_curve(sr: pd.DataFrame) -> pd.DataFrame:
 
 
 def classic_sr(ax, sr):
-    """Falk & Konold (1997): how random a sequence looks against its number of alternations, peaking above a
-    fair coin's average."""
+    """Falk & Konold (1997, Figure 1): how random a sequence looks against its probability of alternation,
+    P(A) = alternations / (length - 1), peaking above a fair coin's 0.5. Our measure: each length-8 sequence's
+    share of choices as the more random of a pair (79% of trials are length 8; P(A) compares within a length)."""
     t = alternation_curve(sr)
-    fair = (SR_LENGTH - 1) / 2
-    ax.axvline(fair, color="#b0b0b0", lw=0.6, ls=(0, (2, 2)), zorder=0)
+    pa = t.index / (SR_LENGTH - 1)
+    ax.axvline(0.5, color="#b0b0b0", lw=0.6, ls=(0, (2, 2)), zorder=0)
     for c, color in zip(MODELS, (SEED, BEST)):
-        ax.plot(t.index, t[c], color=color, lw=1.3, zorder=2)
-    ax.errorbar(t.index, t.observed, yerr=t.ci, fmt="o", color=HUMAN, ms=3, elinewidth=0.8, zorder=3)
-    ax.text(fair + 0.1, 0.03, "fair coin", transform=ax.get_xaxis_transform(), fontsize=6, color=INK_2)
-    ax.set(xlim=(-0.3, SR_LENGTH - 0.7), ylim=(0, 0.8), xticks=range(SR_LENGTH))
+        ax.plot(pa, t[c], color=color, lw=1.3, zorder=2)
+    ax.errorbar(pa, t.observed, yerr=t.ci, fmt="o", color=HUMAN, ms=3, elinewidth=0.8, zorder=3)
+    ax.text(0.515, 0.03, "fair coin", transform=ax.get_xaxis_transform(), fontsize=6, color=INK_2)
+    ax.set(xlim=(-0.04, 1.04), ylim=(0, 0.8), xticks=[0, 0.2, 0.4, 0.6, 0.8, 1])
     ax.yaxis.set_major_formatter(PCT)
-    ax.set_xlabel(f"alternations in {SR_LENGTH} flips", labelpad=1)
+    ax.set_xlabel(f"probability of alternation ({SR_LENGTH} flips)", labelpad=1)
     ax.set_ylabel("chosen as more random", labelpad=1)
 
 
