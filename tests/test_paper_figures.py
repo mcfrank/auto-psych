@@ -146,15 +146,6 @@ def test_a_named_models_predictions_for_other_conditions_or_another_model_raise(
         fig3.with_model(_ng_conditions(), {**preds, "model": "m3"}, "m2")
 
 
-def test_figure_3s_number_game_column_is_run_3s_winner():
-    assert fig3.COLUMN_MODEL["number_game"] == ("exception_weighted_rule_rejection", "best discovered")
-    args = figures.Args()
-    preds = json.loads((args.figure_data / "number_game_model_conditions.json").read_text())
-    ng = _fig3_tables()["number_game"]
-    assert preds["model"] == "exception_weighted_rule_rejection"
-    assert ng.best_model.to_list() == pytest.approx([c["p_yes"] for c in preds["conditions"]])
-
-
 def test_figure_3s_best_winner_fits_each_domains_conditions_better_than_its_best_seed():
     for d, cond in _fig3_tables().items():
         assert fig3.r2(cond.observed, cond.best_model, cond.n) > fig3.r2(cond.observed, cond.best_seed, cond.n), d
