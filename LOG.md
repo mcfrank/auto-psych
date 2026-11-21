@@ -29,3 +29,7 @@ Entry format (newest at the bottom):
 - Note: two test modules fail at collection on `paper-figures`, independent of this change:
   `tests/test_paper_ablation_figure.py` imports the removed `scripts.paper.figures.legacy`, and
   `tests/test_paper_recovery_figures.py` needs `plotnine`, which the uv env (`--group dev`) lacks.
+- Follow-up (2026-11-20): Name the steps of a path with rotated x tick labels (two balanced lines at most),
+  not annotations hanging below the points, so the y range fits only the data. Then place the rows from their
+  measured tick-label and title extents (`stack_rows` in fig4.py), because the room the names need differs
+  by domain. Evidence: the number-game path went from the top ~quarter of its panel to filling it.

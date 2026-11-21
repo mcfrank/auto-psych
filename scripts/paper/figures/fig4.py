@@ -1,10 +1,11 @@
 """Figure 4 (``fig4_ablation``): per domain, the backward elimination of the winning model, on two axes.
-Left, the path: ELPD-CV against the full model of the model kept after each round (each step named by the
-mechanism it dropped), its bar ±1 SE of the difference from the previous round's model, the SE the stopping
-rule judged that drop by. Right, the kept column: every removal from the final model (each kept mechanism),
-ELPD-CV against the final model with ±1 SE of that difference; the cheapest costs at least 2 SE, so the
-elimination stopped. Each SE is the stimulus-clustered SE the elimination stored (``se`` of each candidate in
-``src/ablation/eliminate.py``). Each mechanism's name and origin (new, or the starting model whose code had
+Left, the path: ELPD-CV against the full model of the model kept after each round (each step's x tick named
+by the mechanism it dropped), its bar ±1 SE of the difference from the previous round's model, the SE the
+stopping rule judged that drop by. Right, the kept column: every removal from the final model (each kept
+mechanism), ELPD-CV against the final model with ±1 SE of that difference; the cheapest costs at least 2 SE,
+so the elimination stopped. Each SE is the one the elimination stored (``se`` of each candidate in
+``src/ablation/eliminate.py``), clustered by the domain's CV unit: a sequence (subjective randomness), a
+display or condition (reference games), an example set (number game). Each mechanism's name and origin (new, or the starting model whose code had
 it) are in ``scripts/paper/mechanisms.yaml``.
 """
 
@@ -26,8 +27,10 @@ from scripts.paper.figures.style import DPI, INK, INK_2, TITLE_FONT, TITLES
 COLOR_NEW, COLOR_START, PATH = "#08306b", "#6baed6", "#262626"
 NAME_PT, SMALL = 7.0, 7.0
 NAMES_IN = 0.3  # the kept names' offset from their column (inches)
-LEFT, RIGHT = 0.3, 0.04  # shares of the path's axis: room for the first name, past the last step  # PNAS: no text under 6 pt at the printed size
+LEFT, RIGHT, TICK_DEG = 0.04, 0.04, 35  # shares of the path's axis before the first step and past the last; the step names' angle  # PNAS: no text under 6 pt at the printed size
 PATH_IN, KEPT_IN, GAP_IN = 3.25, 0.5, 0.82  # widths: the path's axes, the kept column's, between them (inches)
+LEFT_PAD, TOP_PAD, LEGEND_PAD, ROW_GAP = 0.1, 0.01, 0.05, 0.06  # figure shares (left, top, the legend's), inches between rows
+ICON_OVER, ONE_LINE = 0.5, 14  # how far each title's icon reaches over it (title heights); the longest one-line step name
 WIDTH_IN, HEIGHT_IN = 7.0, 4.9  # one row per domain; the saved figure: PNAS's full width
 # each panel's cues are named by what pushes its response this way (the fitted signs: mechanisms.yaml)
 DIRECTION = {"subjective_randomness": "what makes a sequence look less random",
@@ -96,6 +99,15 @@ def per_inch(ax, axis=0):
     return span / (pos.width * fig.get_figwidth() if axis == 0 else pos.height * fig.get_figheight())
 
 
+def two_lines(name):
+    """A long name broken in two at the space nearest its middle."""
+    spaces = [i for i, ch in enumerate(name) if ch == " "]
+    if len(name) <= ONE_LINE or not spaces:
+        return name
+    at = min(spaces, key=lambda i: abs(i - len(name) / 2))
+    return name[:at] + "\n" + name[at + 1:]
+
+
 def draw_path(ax, path, names):
     """The elimination path: ELPD-CV vs. the full model, each step's bar ±1 SE of its difference from the
     previous round's model (the SE its drop was judged by)."""
@@ -104,31 +116,23 @@ def draw_path(ax, path, names):
     se = np.array([p["se"] or 0.0 for p in path])
     ax.plot(n, y, color=PATH, lw=1.0, zorder=3)
     ax.errorbar(n[1:], y[1:], yerr=se[1:], fmt="none", ecolor=PATH, elinewidth=0.6, zorder=3)
-    notes = []
-    for p in path[1:]:  # each step named by what it dropped
-        name, color, text = style_of(names, p["dropped"])
+    for p in path[1:]:
+        _, color, _ = style_of(names, p["dropped"])
         ax.scatter([p["n"]], [p["y"]], s=12, color=color, linewidths=0, zorder=4)
-        notes.append(ax.annotate(name, (p["n"], p["y"]), xytext=(-2, -5), textcoords="offset points", rotation=30,
-                                 fontsize=NAME_PT, ha="right", va="center", rotation_mode="anchor", **text))
     ax.scatter([n[0]], [0], s=12, color=PATH, zorder=4)
     ax.axhline(0, color="#b0b0b0", lw=0.6, ls=(0, (2, 2)), zorder=0)  # the full model
     span = (n[0] - n[-1]) / (1 - LEFT - RIGHT)  # the axis's span, in steps
-    ax.set_xlim(n[0] + LEFT * span, n[-1] - RIGHT * span)  # room left for the first step's name
+    ax.set_xlim(n[0] + LEFT * span, n[-1] - RIGHT * span)
     lo, hi = min(0.0, (y - se).min()), max(0.0, (y + se).max())  # a removal can improve the fit: the path can rise above the full model
-    lo, hi = lo - 0.03 * (hi - lo), hi + 0.03 * (hi - lo)
-    # room below for the names hanging under their points: a name reaching a share f of the axes' height
-    # below its point at y fits when (y - lo) / (hi - lo) >= f, i.e. lo <= (y - f hi) / (1 - f)
-    renderer = ax.figure.canvas.get_renderer()
-    height = ax.get_window_extent(renderer).height
-    for p, note in zip(path[1:], notes):
-        f = (ax.transData.transform((p["n"], p["y"]))[1] - note.get_window_extent(renderer).y0) / height
-        lo = min(lo, (p["y"] - f * hi) / (1 - f))
-    ax.set_ylim(lo, hi)
-    ax.set_xticks(n, [str(v) for v in n])
-    ax.tick_params(labelsize=SMALL, length=2, pad=1.5)
-    ax.set_xlabel("mechanisms in the model", fontsize=SMALL + 0.5, labelpad=1)
+    ax.set_ylim(lo - 0.05 * (hi - lo), hi + 0.05 * (hi - lo))
+    # each step's tick named by the mechanism it dropped, in its origin's colour
+    ax.set_xticks(n, ["full model"] + [two_lines(style_of(names, p["dropped"])[0]) for p in path[1:]])
+    ax.tick_params(labelsize=NAME_PT, length=2, pad=1.5)
+    for p, tick in zip(path, ax.get_xticklabels()):
+        tick.set(rotation=TICK_DEG, ha="right", va="top", rotation_mode="anchor", multialignment="right", linespacing=1.0,
+                 color=INK if p["dropped"] is None else style_of(names, p["dropped"])[1])
     ax.spines["bottom"].set_bounds(n[0], n[-1])
-    ax.set_ylabel("ELPD-CV vs. full model (nats)", fontsize=SMALL)
+    ax.set_ylabel("ELPD-CV vs.\nfull model (nats)", fontsize=SMALL)
 
 
 def draw_kept(ax, kept, names):
@@ -163,28 +167,48 @@ def draw_kept(ax, kept, names):
     ax.get_xticklabels()[0].set(fontsize=SMALL + 0.5, color=INK)
     ax.tick_params(labelsize=SMALL, length=2, pad=1.5)
     ax.spines["bottom"].set_bounds(-0.25, 0.25)
-    ax.set_ylabel("ELPD-CV vs. final model (nats)", fontsize=SMALL)
+    ax.set_ylabel("ELPD-CV vs.\nfinal model (nats)", fontsize=SMALL)
+
+
+def stack_rows(fig, grid):
+    """Place the rows top to bottom, each path axes with room above for its title (and icon) and below for
+    its step names and x label, which differ by domain; the axes share the height left over."""
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    H = fig.get_figheight() * fig.dpi
+    above, below = [], []
+    for ax in grid[:, 0]:
+        box = ax.get_window_extent(renderer)
+        title = ax.title.get_window_extent(renderer)
+        above.append(title.y1 + ICON_OVER * title.height - box.y1)  # the icon is taller than the title
+        below.append(box.y0 - ax.xaxis.get_tightbbox(renderer).y0)
+    room = H * (1 - TOP_PAD - LEGEND_PAD) - sum(above) - sum(below) - ROW_GAP * fig.dpi * (len(above) - 1)
+    height = room / len(above)
+    top = H * (1 - TOP_PAD)
+    x0 = LEFT_PAD
+    for (ax, kept_ax), a, b in zip(grid, above, below):
+        y0 = (top - a - height) / H
+        ax.set_position((x0, y0, PATH_IN / WIDTH_IN, height / H))
+        kept_ax.set_position((x0 + (PATH_IN + GAP_IN) / WIDTH_IN, y0, KEPT_IN / WIDTH_IN, height / H))
+        top -= a + height + b + ROW_GAP * fig.dpi
 
 
 def draw_ablation(figure_data: Path, mechanisms: Path, out_dir: Path) -> None:
     names = yaml.safe_load(mechanisms.read_text())
     src = sources(figure_data)
     # each domain a row: the path and the kept column side by side, each with its own y axis
-    fig, grid = plt.subplots(3, 2, figsize=(WIDTH_IN, HEIGHT_IN), dpi=DPI,
-                             gridspec_kw={"hspace": 0.62, "width_ratios": [PATH_IN, KEPT_IN],
-                                          "wspace": GAP_IN / ((PATH_IN + KEPT_IN) / 2)})
-    left = 0.1  # the kept names to the right
-    fig.subplots_adjust(left=left, right=left + (PATH_IN + GAP_IN + KEPT_IN) / WIDTH_IN, top=0.95, bottom=0.1)
+    fig, grid = plt.subplots(3, 2, figsize=(WIDTH_IN, HEIGHT_IN), dpi=DPI)
     axes = grid[:, 0]
-    for (ax, kept_ax), d in zip(grid, TITLES):
-        path, kept = ablation_points(json.loads(src[d].read_text()))
-        draw_path(ax, path, names[d])
-        draw_kept(kept_ax, kept, names[d])
-    fig.canvas.draw()
+    points = {d: ablation_points(json.loads(src[d].read_text())) for d in TITLES}
     for ax, d in zip(axes, TITLES):
+        draw_path(ax, points[d][0], names[d])
         title = ax.set_title(TITLES[d], fontdict=TITLE_FONT, pad=8, x=0.12, ha="left")  # the icon goes left of it
         ax.annotate(DIRECTION[d], (1, 0.5), xycoords=title, xytext=(8, 0), textcoords="offset points",
                     ha="left", va="center", fontsize=NAME_PT, color=INK_2, style="italic")
+    axes[-1].set_xlabel("mechanism removed, in order", fontsize=SMALL + 0.5, labelpad=1)  # the same in every row
+    stack_rows(fig, grid)
+    for kept_ax, d in zip(grid[:, 1], TITLES):  # its names are spread in inches: drawn once the rows are placed
+        draw_kept(kept_ax, points[d][1], names[d])
     dot = {"lw": 0, "ms": 3.5}
     key = [Line2D([], [], marker="o", color=COLOR_NEW, label="new", **dot),
            Line2D([], [], marker="o", color=COLOR_START, label="from the literature", **dot)]
