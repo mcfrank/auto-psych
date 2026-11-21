@@ -67,3 +67,17 @@ Entry format (newest at the bottom):
     hspace rather than shrinking fonts. Pre-existing failures on main (macOS): `os.sched_getaffinity` in
     `src/models/pymc_inference.py` breaks 24 tests in information_criteria / rsa_chain_models /
     sr_figure_data, and `test_paper_recovery_figures.py` needs plotnine.
+
+- 2026-11-21 (fig3-new-effects): Fig. 3's number-game column now shows run 3's winner
+  (`fig3.COLUMN_MODEL`), from `figure_data/number_game_model_conditions.json`
+  (`scripts/paper/number_game_model_conditions.py`).
+  - Lesson: to reuse one model's cluster fit locally, compute its cache fingerprint with the repo's own
+    `fit_fingerprint` (rebuild the same model directory, pooled responses and resolved settings), then copy
+    only that `.nc` file and read it with `load_cached_fit`, which never samples. Why: the cache holds one
+    file per training split (full data plus each CV fold), and file size cannot tell them apart. Evidence:
+    the computed fingerprints matched the files on Sherlock for both run 2's winner (6345f7dc…) and run 3's
+    (90b1b6b7…).
+  - Lesson: PyTensor 2.38 adds `-ld64` on macOS ≥ 15, and the current Xcode linker rejects it ("library 'd64'
+    not found"). Its Python backend (`cxx=`) runs far too slowly for posterior predictives (>30 min,
+    unfinished). Fix it in the environment, not the code: set `PYTENSOR_FLAGS="cxx=<wrapper>,blas__ldflags="`,
+    where the wrapper is a clang++ script that drops `-ld64` (46 s). Evidence: this task.
