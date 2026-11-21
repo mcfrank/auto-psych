@@ -123,36 +123,38 @@ def classic_sr(ax, sr):
     ax.set_ylabel("chosen as more random", labelpad=1)
 
 
-GAME = [[0, 1], [1, 0], [1, 1]]  # Frank & Goodman (2012)'s game: the word (feature 0) fits two of three objects
+GAME = [[0, 1], [1, 0], [1, 1]]  # the ad-hoc implicature game: the word (feature 0) fits two of three objects
 
 
 def reference_game(rsa: pd.DataFrame) -> pd.DataFrame:
-    """The pre-registered display with Frank & Goodman's structure, one row per object (its class's share)."""
+    """The pre-registered display with the ad-hoc implicature game's structure, one row per object (its class's share)."""
     d = rsa[rsa.objects.map(lambda o: o == GAME) & (rsa.utterance == 0)]
     if d.display.nunique() != 1:
-        raise RuntimeError(f"{d.display.nunique()} pre-registered displays have Frank & Goodman's structure, not 1")
+        raise RuntimeError(f"{d.display.nunique()} pre-registered displays have the ad-hoc implicature game's structure, not 1")
     return d.sort_values("cls").set_index("cls")
 
 
+# Stiller, Goodman & Frank (2015)'s names for the three objects, and what each is in our display
+GAME_ROLES = {(0, 1): ("distractor", "the word\ndoesn't fit"), (1, 0): ("one-feature", "only the\nword's feature"),
+              (1, 1): ("two-feature", "the word's\n+ another")}
+
+
 def classic_rsa(ax, rsa):
-    """Frank & Goodman (2012): one display, the share choosing each object. People pick the object with only the
-    word's feature: a speaker would have named the other object's second feature. The pictures and words varied
-    across participants; the display's structure did not."""
+    """Ad-hoc implicature (Stiller, Goodman & Frank, 2015; Frank & Goodman, 2012): of the two objects the word
+    fits, people pick the one-feature object, since a speaker would have named the two-feature one's other
+    feature. One pre-registered display; its pictures and words varied across participants."""
     d = reference_game(rsa)
     x = np.arange(len(d))
-    w = 0.26
+    roles = [GAME_ROLES[tuple(GAME[classes.index(cls)])] for cls, classes in zip(d.index, d.choice_classes)]
+    for c, color in zip(MODELS, (SEED, BEST)):
+        ax.plot(x, d[c], color=color, lw=1.3, zorder=2)
     o = d.observed.to_numpy()
-    ax.bar(x - w, o, w, color=HUMAN, zorder=2)
-    ax.errorbar(x - w, o, yerr=1.96 * np.sqrt(o * (1 - o) / d.n), fmt="none", ecolor=INK_2, elinewidth=0.7, zorder=3)
-    for dx, c, color in ((0, MODELS[0], SEED), (w, MODELS[1], BEST)):
-        ax.bar(x + dx, d[c], w, color=color, zorder=2)
-    labels = []
-    for cls, classes in zip(d.index, d.choice_classes):  # each class by its object's features
-        has = GAME[classes.index(cls)]
-        labels.append("both" if all(has) else "only the\nword's feature" if has[0] else "only the\nother feature")
-    ax.set_xticks(x, labels, fontsize=6, va="top")
-    ax.tick_params(axis="x", length=0)
-    ax.set(xlim=(-0.6, len(x) - 0.4), ylim=(0, 1))
+    ax.errorbar(x, o, yerr=1.96 * np.sqrt(o * (1 - o) / d.n), fmt="o", color=HUMAN, ms=3, elinewidth=0.8, zorder=3)
+    ax.set_xticks(x, [name for name, _ in roles])
+    for xi, (_, what) in zip(x, roles):  # each role's description, smaller, under its name
+        ax.annotate(what, (xi, 0), xycoords=("data", "axes fraction"), xytext=(0, -17), textcoords="offset points",
+                    ha="center", va="top", fontsize=5.5, color=INK_2, annotation_clip=False)
+    ax.set(xlim=(-0.5, len(x) - 0.5), ylim=(0, 1))
     ax.yaxis.set_major_formatter(PCT)
     ax.set_ylabel("chosen", labelpad=1)
 
