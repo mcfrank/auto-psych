@@ -39,7 +39,7 @@ rsa:
   outlier: ["only object the word misses", new]
 number_game:  # run 3's winner, exception_weighted_rule_rejection (src/number_game/ablation/final_ew.py)
   exception: ["a rule-breaking example counts heavily", new]
-  rules_vs_ranges: ["rules favored over ranges", bigelow_piantadosi_independent]
+  rules_vs_ranges: ["rules vs. ranges", bigelow_piantadosi_independent]
   rule_prior: ["some rules favored from the start", bigelow_piantadosi_independent]
   zero_split: ["ends in 0 vs. contains a 0", bigelow_piantadosi_independent]
   tempering: ["how much the examples count", new]
