@@ -4,9 +4,9 @@ by the mechanism it dropped), its bar ±1 SE of the difference from the previous
 stopping rule judged that drop by. Right, the kept column: every removal from the final model (each kept
 mechanism), ELPD-CV against the final model with ±1 SE of that difference; the cheapest costs at least 2 SE,
 so the elimination stopped. Each SE is the one the elimination stored (``se`` of each candidate in
-``src/ablation/eliminate.py``), clustered by the domain's CV unit: a sequence (subjective randomness), a
-display or condition (reference games), an example set (number game). Each mechanism's name and origin (new, or the starting model whose code had
-it) are in ``scripts/paper/mechanisms.yaml``.
+``src/ablation/eliminate.py``), clustered by the domain's CV unit: an unordered pair of sequences (subjective
+randomness), a display or condition (reference games), an example set (number game). Each mechanism's name
+and origin (new, or the starting model whose code had it) are in ``scripts/paper/mechanisms.yaml``.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from scripts.paper.figures.style import DPI, INK, INK_2, TITLE_FONT, TITLES
 
 COLOR_NEW, COLOR_START, PATH = "#08306b", "#6baed6", "#262626"
 NAME_PT, SMALL = 7.0, 7.0
-NAMES_IN = 0.3  # the kept names' offset from their column (inches)
+NAMES_IN, NAME_PITCH = 0.3, 1.15  # the kept names' offset from their column (inches), their spacing (line heights)
 LEFT, RIGHT, TICK_DEG = 0.04, 0.04, 35  # shares of the path's axis before the first step and past the last; the step names' angle  # PNAS: no text under 6 pt at the printed size
 PATH_IN, KEPT_IN, GAP_IN = 3.25, 0.5, 0.82  # widths: the path's axes, the kept column's, between them (inches)
 LEFT_PAD, TOP_PAD, LEGEND_PAD, ROW_GAP = 0.1, 0.01, 0.05, 0.06  # figure shares (left, top, the legend's), inches between rows
@@ -125,12 +125,12 @@ def draw_path(ax, path, names):
     ax.set_xlim(n[0] + LEFT * span, n[-1] - RIGHT * span)
     lo, hi = min(0.0, (y - se).min()), max(0.0, (y + se).max())  # a removal can improve the fit: the path can rise above the full model
     ax.set_ylim(lo - 0.05 * (hi - lo), hi + 0.05 * (hi - lo))
-    # each step's tick named by the mechanism it dropped, in its origin's colour
+    # each step's tick named by the mechanism it dropped
     ax.set_xticks(n, ["full model"] + [two_lines(style_of(names, p["dropped"])[0]) for p in path[1:]])
     ax.tick_params(labelsize=NAME_PT, length=2, pad=1.5)
-    for p, tick in zip(path, ax.get_xticklabels()):
+    for tick in ax.get_xticklabels():  # in ink: the points carry the origin's colour
         tick.set(rotation=TICK_DEG, ha="right", va="top", rotation_mode="anchor", multialignment="right", linespacing=1.0,
-                 color=INK if p["dropped"] is None else style_of(names, p["dropped"])[1])
+                 color=INK)
     ax.spines["bottom"].set_bounds(n[0], n[-1])
     ax.set_ylabel("ELPD-CV vs.\nfull model (nats)", fontsize=SMALL)
 
@@ -152,7 +152,7 @@ def draw_kept(ax, kept, names):
         ax.scatter([xo], [k["y"]], s=12, color=color, linewidths=0, zorder=4)
         labels.append((k["y"], name, text))
     # the names in a column right of the axes, spread apart, a leader to each
-    per_pt = per_inch(ax, 1) * NAME_PT * 1.35 / 72
+    per_pt = per_inch(ax, 1) * NAME_PT * NAME_PITCH / 72
     labels.sort(key=lambda t: -t[0])
     placed = spread([yo for yo, *_ in labels], per_pt)
     cap = ax.get_ylim()[1]  # never above the panel: push the top labels down, then their neighbours
@@ -163,8 +163,10 @@ def draw_kept(ax, kept, names):
         ax.annotate(name, (xo, yo), xytext=(xt, yt), ha="left", va="center", fontsize=NAME_PT, **text,
                     annotation_clip=False, arrowprops={"arrowstyle": "-", "color": "#b0b0b0", "lw": 0.4,
                                                          "shrinkA": 1, "shrinkB": 3, "relpos": (0, 0.5)})
-    ax.set_xticks([xo], ["kept"])
-    ax.get_xticklabels()[0].set(fontsize=SMALL + 0.5, color=INK)
+    # "kept" heads the column: the names never rise above the axes, so no leader crosses it
+    ax.set_xticks([])
+    ax.annotate("kept", (xo, 1), xycoords=("data", "axes fraction"), xytext=(0, 4), textcoords="offset points",
+                ha="center", va="bottom", fontsize=SMALL + 0.5, color=INK)
     ax.tick_params(labelsize=SMALL, length=2, pad=1.5)
     ax.spines["bottom"].set_bounds(-0.25, 0.25)
     ax.set_ylabel("ELPD-CV vs.\nfinal model (nats)", fontsize=SMALL)

@@ -33,3 +33,8 @@ Entry format (newest at the bottom):
   not annotations hanging below the points, so the y range fits only the data. Then place the rows from their
   measured tick-label and title extents (`stack_rows` in fig4.py), because the room the names need differs
   by domain. Evidence: the number-game path went from the top ~quarter of its panel to filling it.
+- Follow-up (2026-11-20): Figure 4 no longer has a mechanism-count x axis. Each path tick names the mechanism
+  that step dropped (the first reads "full model"), and the x title appears only on the bottom row. Full-model
+  counts for the caption: subjective randomness 15, reference games 16, number game 14. Name labels are in ink;
+  only the points carry the new/literature colour (light-blue 7 pt text reads poorly). "kept" heads the column,
+  above it, so leaders to names hanging below short axes never cross it.
