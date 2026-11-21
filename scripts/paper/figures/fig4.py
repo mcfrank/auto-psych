@@ -175,7 +175,7 @@ def draw_kept(ax, kept, names):
     ax.set_ylabel("ELPD-CV vs. model\nafter removals (nats)", fontsize=SMALL)
 
 
-def stack_rows(fig, grid):
+def stack_rows(fig, grid, n_kept):
     """Place the rows top to bottom, each path axes with room above for its title (and icon) and below for
     its step names and x label, which differ by domain; the axes share the height left over."""
     fig.canvas.draw()
@@ -191,12 +191,14 @@ def stack_rows(fig, grid):
     height = room / len(above)
     top = H * (1 - TOP_PAD)
     x0 = LEFT_PAD
-    for (ax, kept_ax), a, b in zip(grid, above, below):
+    for (ax, kept_ax), a, b, k in zip(grid, above, below, n_kept):
         y0 = (top - a - height) / H
         ax.set_position((x0, y0, PATH_IN / WIDTH_IN, height / H))
         # the kept column also takes the height the path's step names use: its names run longer than the path
-        kept_ax.set_position((x0 + (PATH_IN + GAP_IN) / WIDTH_IN, y0 - KEPT_DOWN * b / H, KEPT_IN / WIDTH_IN,
-                              (height + KEPT_DOWN * b) / H))
+        need = k * NAME_PT * NAME_PITCH * fig.dpi / 72 - height  # only as far as its names need
+        down = min(KEPT_DOWN * b, max(KEPT_DOWN * b / 2, need))  # at least half the stretch: a short column still spreads
+        kept_ax.set_position((x0 + (PATH_IN + GAP_IN) / WIDTH_IN, y0 - down / H, KEPT_IN / WIDTH_IN,
+                              (height + down) / H))
         top -= a + height + b + ROW_GAP * fig.dpi
 
 
@@ -213,7 +215,7 @@ def draw_ablation(figure_data: Path, mechanisms: Path, out_dir: Path) -> None:
         ax.annotate(DIRECTION[d], (1, 0.5), xycoords=title, xytext=(8, 0), textcoords="offset points",
                     ha="left", va="center", fontsize=NAME_PT, color=INK_2, style="italic")
     axes[-1].set_xlabel("mechanism removed, in order", fontsize=SMALL + 0.5, labelpad=1)  # the same in every row
-    stack_rows(fig, grid)
+    stack_rows(fig, grid, [len(points[d][1]) for d in TITLES])
     for kept_ax, d in zip(grid[:, 1], TITLES):  # its names are spread in inches: drawn once the rows are placed
         draw_kept(kept_ax, points[d][1], names[d])
     dot = {"lw": 0, "ms": 3.5}
