@@ -90,30 +90,18 @@ What each figure shows:
     `pruned_unscored` instead).
 - **Figure 3** (`fig3_effects`): per domain, from the figure data's `conditions` (pooled best model and
   best seed): (a) observed against predicted, with R² and RMSE; (b) the classic effect as its original paper
-  drew it; (c) a new effect only the winner captures. Reference games use the pre-registered experiment,
-  their displays from `data/rsa/viz/panel_displays.json`. The number game's (b) and every (c) are pending.
-- **Figure 4** (`fig4_ablation`): each domain winner's backward elimination on one scale, ELPD-CV vs.
-  the full model; every mechanism's name and origin are in `mechanisms.yaml`.
-- **Ablation figure** (`fig_ablation`, `uv run python -m scripts.paper.ablation_figure`,
-  seconds): the backward elimination of each domain's overall winner, one
-  panel each: the subjective-randomness final best on all runs pooled
-  (Figure 3's, `pooled.best_model`; its elimination in `docs/sr_ablation.md`),
-  chain 0's reference-game final, the best on the pre-registered test
-  (`data/rsa/c0_ablation/eliminate/`, `docs/auto_rsa/ABLATION_C0.md`; it
-  replaces the consolidation's superset elimination), and the number-game
-  November sweep's final best on all three runs' data pooled
-  (`data/results/number_game_dataset-nov26/analysis/ablation/`,
-  `docs/ng_ablation.md`; Figure 3's best). That elimination is not run yet
-  (its final is chosen by the pooled comparison), so until it is committed
-  draw the panel as pending: `ablation_figure --pending-domains number_game`;
-  without that a missing record raises. Each panel is the path of the model kept
-  after each round: its grouped-CV ELPD against the full model's, by its
-  number of mechanisms, each step named by the mechanism it dropped, with ±1
-  clustered SE of the model's own ELPD-CV (`elpd_se`); the path's last step,
-  grey and dashed, is the removal that stopped the elimination (≥ 2 SEs of
-  its paired comparison). `elpd_se` is recorded since the elimination began
-  recording it: an older `elimination.json` lacks it, and the figure stops
-  until that ablation's plan step is rerun (it replays the saved CVs, no fits).
+  drew it; (c) a new effect only the winner captures (exploratory, chosen after the fact): the flat rate of
+  choosing an all-heads/all-tails sequence by its rival's switch rate, the share choosing the sparsest, middle
+  and richest object a word fits, and yes to new numbers keeping or breaking a shared final digit by number
+  of examples. Reference games use the pre-registered experiment, their displays from
+  `data/rsa/viz/panel_displays.json`. The number game's column shows run 3's winner, not the pooled best
+  (`fig3.COLUMN_MODEL`), from `figure_data/number_game_model_conditions.json`: its posterior-mean predictions
+  from the figure data's pooled fit, read from a copy of that fit's cache file
+  (`number_game_model_conditions.py`). The number game's (b) is pending.
+- **Figure 4** (`fig4_ablation`): each domain winner's backward elimination on two axes: the path as
+  ELPD-CV vs. the full model, each step ±1 SE of its difference from the previous round's model, and the
+  kept column as each removal's ELPD-CV vs. the final model, ±1 SE of that difference (the SEs the
+  stopping rule used); every mechanism's name and origin are in `mechanisms.yaml`.
 
 `figures --figures 2 3` draws only those figures (Figure 4 needs every
 drawn domain's data). `figures --mock-domains <domain> ...` marks those domains' titles "(MOCK
