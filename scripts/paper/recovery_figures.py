@@ -3,11 +3,14 @@ and the reference games' own.
 
 - All domains (``fig_recovery``): one row per domain, one panel per held-out
   ground truth, each domain's runs as the mean ± SEM of the best model's RMSE
-  to the ground truth at every scoring step, against the best other seed's
-  (dotted, its SEM shaded). Subjective randomness: the final recovery sweep's
-  summary over its repeats (``data/results/final_recovery/holdout_combined.csv``;
-  4-5 runs per ground truth). Number game and reference games: their three
-  and two repeats below.
+  to the ground truth at every scoring step (each run a thin translucent line
+  behind it), against the best other seed's (dotted, its SEM shaded). Subjective randomness: the final recovery sweep's
+  five repeats (``data/results/final_recovery/run<r>/<ground truth>/``), every
+  cell required; the best model at each position aligned by experiment
+  (``aggregate_holdout_trajectories``), against the ELPD-best other seed fitted
+  to all of the cell's data (``fitted_baseline.elpd_best_rmse``), as in the
+  number game. Number game and reference games: their three and two repeats
+  below.
 
 - Number game (``fig_recovery_number_game``): one panel per held-out ground
   truth of the November sweep (``data/results/number_game_recovery-nov26/``,
@@ -65,10 +68,13 @@ from plotnine import (
 )
 from pyprojroot import here
 
+from src.subjective_randomness.reporting import aggregate_holdout_trajectories
+from src.subjective_randomness.sweep_cells import survey_sweep
+
 BEST_COLOR = "#1B9E77"  # ColorBrewer Dark2, as the other paper figures
 SEED_COLOR = "#D95F02"
 NG_GT_NAMES = {
-    "tenenbaum_rules_similarity": "Ground truth: Tenenbaum (2000)",
+    "tenenbaum_rules_similarity": "Ground truth: Tenenbaum (1999)",
     "bigelow_piantadosi_mixture": "Ground truth: Bigelow & Piantadosi, mixture",
     "bigelow_piantadosi_independent": "Ground truth: Bigelow & Piantadosi, independent",
 }
@@ -88,12 +94,13 @@ ALIEN_GT_NAMES = {
 COMBINED_NG_NAMES = {gt: name.removeprefix("Ground truth: ") for gt, name in NG_GT_NAMES.items()}
 SERIES = {"best": "best model", "fitted_baseline": "best other seed model"}
 STEPS_PER_EXPERIMENT = 6
+SR_REPEATS = 5
 
 
 @dataclass
 class Args:
-    sr_csv: Path = here() / "data/results/final_recovery/holdout_combined.csv"
-    """The subjective-randomness final recovery's summary over its repeats."""
+    sr_root: Path = here() / "data/results/final_recovery"
+    """The subjective-randomness final recovery (``run<r>/<ground truth>/holdout.json``)."""
     ng_root: Path = here() / "data/results/number_game_recovery-nov26"
     """The number-game recovery sweep (``run<r>/<ground truth>/holdout.{json,csv}``)."""
     rsa_trajectory: Path = here() / "data/paper/rsa_recovery_trajectory.json"
@@ -101,6 +108,31 @@ class Args:
     alien_root: Path = here() / "data/results/final_recovery/impossible"
     """The alien recovery cells (``run1/<ground truth>/holdout.{json,csv}``)."""
     out_dir: Path = here() / "data/paper/figures"
+
+
+def subjective_randomness_frame(root: Path) -> pd.DataFrame:
+    """One row per (ground truth, series, position): ``mean``, ``err`` (SEM)
+    and ``n`` of the RMSE to the ground truth over every repeat's cell."""
+    survey = survey_sweep(root, n_repeats=SR_REPEATS, gt_models=list(SR_GT_NAMES))
+    unfinished = {**survey.partial, **survey.missing}
+    if unfinished:
+        raise RuntimeError(f"{root}: unfinished recovery cells: {unfinished}")
+    labels = sorted(survey.complete)
+    results = [json.loads((survey.complete[label] / "holdout.json").read_text()) for label in labels]
+    aggregated = aggregate_holdout_trajectories(results, metric="rmse", error="sem", labels=labels)
+    baseline = pd.Series([result["gt_runs"][0]["fitted_baseline"]["elpd_best_rmse"] for result in results])
+    gts = pd.Series([label.split("/")[1] for label in labels])
+    rows = []
+    for panel in aggregated["gt_models"]:
+        if panel["excluded"]:
+            raise RuntimeError(f"{panel['gt_model']}: cells left out of points: {panel['excluded']}")
+        seed = baseline[gts == panel["gt_model"]]
+        for point in panel["best"]:
+            common = dict(gt=panel["gt_model"], step=point["x"])
+            rows.append(dict(common, series="best model", mean=point["mean"], err=point["err"], n=point["n"]))
+            rows.append(dict(common, series="best other seed model", mean=seed.mean(),
+                             err=seed.std(ddof=1) / len(seed) ** 0.5, n=len(seed)))
+    return pd.DataFrame(rows)
 
 
 def number_game_frame(root: Path) -> pd.DataFrame:
@@ -247,29 +279,51 @@ def _over_repeats(df: pd.DataFrame, domain: str) -> pd.DataFrame:
     return out.drop(columns="gt")
 
 
-def combined_frame(sr_csv: Path, ng_root: Path, rsa_trajectory: Path) -> pd.DataFrame:
-    """One row per (panel, series, step): ``mean`` and ``err`` (SEM) of the
-    RMSE to the ground truth over the domain's ``n`` runs."""
-    sr = pd.read_csv(sr_csv)
-    sr = sr[(sr["metric"] == "rmse") & sr["series"].isin(list(SERIES))]
-    sr = pd.DataFrame(dict(panel=[_panel(DOMAINS[0], SR_GT_NAMES[g]) for g in sr["gt_model"]],
-                           series=sr["series"].map(SERIES).values, step=sr["position"].values,
-                           mean=sr["mean"].values, err=sr["err"].values, n=sr["n"].values))
-    out = pd.concat([sr, _over_repeats(number_game_frame(ng_root), DOMAINS[1]),
-                     _over_repeats(rsa_frame(rsa_trajectory), DOMAINS[2])], ignore_index=True)
-    order = ([_panel(DOMAINS[0], v) for v in SR_GT_NAMES.values()]
-             + [_panel(DOMAINS[1], v) for v in COMBINED_NG_NAMES.values()]
-             + [_panel(DOMAINS[2], v) for v in RSA_GT_NAMES.values()])
-    out["panel"] = pd.Categorical(out["panel"], categories=order)
+def _panel_order() -> list:
+    return ([_panel(DOMAINS[0], v) for v in SR_GT_NAMES.values()]
+            + [_panel(DOMAINS[1], v) for v in COMBINED_NG_NAMES.values()]
+            + [_panel(DOMAINS[2], v) for v in RSA_GT_NAMES.values()])
+
+
+def combined_runs_frame(sr_root: Path, ng_root: Path, rsa_trajectory: Path) -> pd.DataFrame:
+    """One row per (panel, run, step): that run's best model's RMSE to the ground truth."""
+    sr = [dict(panel=_panel(DOMAINS[0], name), run=run.name, step=step, rmse=rmse)
+          for run in sorted(sr_root.glob("run*")) for gt, name in SR_GT_NAMES.items()
+          for step, rmse in pd.read_csv(run / gt / "holdout.csv")[["global_step", "rmse"]].itertuples(index=False)]
+    parts = [pd.DataFrame(sr)]
+    for domain, df in [(DOMAINS[1], number_game_frame(ng_root)), (DOMAINS[2], rsa_frame(rsa_trajectory))]:
+        best = df[df["series"] == "best model"]
+        parts.append(pd.DataFrame(dict(
+            panel=[_panel(domain, str(g).removeprefix("Ground truth: ")) for g in best["gt"]],
+            run=best["repeat"].values, step=best["step"].values, rmse=best["rmse"].values)))
+    out = pd.concat(parts, ignore_index=True)
+    out["panel"] = pd.Categorical(out["panel"], categories=_panel_order())
     return out
 
 
-def _domain_row(df: pd.DataFrame, domain: str, last: bool) -> ggplot:
-    """One domain's panels, titled by the domain, each by its ground truth."""
+def combined_frame(sr_root: Path, ng_root: Path, rsa_trajectory: Path) -> pd.DataFrame:
+    """One row per (panel, series, step): ``mean`` and ``err`` (SEM) of the
+    RMSE to the ground truth over the domain's ``n`` runs."""
+    sr = subjective_randomness_frame(sr_root)
+    sr = sr.assign(panel=[_panel(DOMAINS[0], SR_GT_NAMES[g]) for g in sr["gt"]]).drop(columns="gt")
+    out = pd.concat([sr, _over_repeats(number_game_frame(ng_root), DOMAINS[1]),
+                     _over_repeats(rsa_frame(rsa_trajectory), DOMAINS[2])], ignore_index=True)
+    out["panel"] = pd.Categorical(out["panel"], categories=_panel_order())
+    return out
+
+
+def _in_domain(df: pd.DataFrame, domain: str) -> pd.DataFrame:
+    """A combined frame's rows of one domain, with its ground truth as ``gt``."""
     df = df[df["panel"].astype(str).str.startswith(domain + "\n")].copy()
     df["gt"] = pd.Categorical(df["panel"].astype(str).str.split("\n").str[1],
                               categories=[str(p).split("\n")[1] for p in df["panel"].cat.categories
                                           if str(p).startswith(domain + "\n")])
+    return df
+
+
+def _domain_row(df: pd.DataFrame, runs: pd.DataFrame, domain: str, last: bool) -> ggplot:
+    """One domain's panels, titled by the domain, each by its ground truth."""
+    df, runs = _in_domain(df, domain), _in_domain(runs, domain)
     best = df[df["series"] == "best model"]
     seed = df[df["series"] == "best other seed model"]
     zero = pd.DataFrame(dict(gt=pd.Categorical(df["gt"].cat.categories, categories=df["gt"].cat.categories),
@@ -277,6 +331,8 @@ def _domain_row(df: pd.DataFrame, domain: str, last: bool) -> ggplot:
     plot = (
         ggplot(df, aes("step", "mean", color="series", linetype="series"))
         + geom_blank(aes("step", "mean"), data=zero, inherit_aes=False)
+        + geom_line(aes("step", "rmse", group="run"), data=runs, inherit_aes=False, color=BEST_COLOR,
+                    size=0.5, alpha=0.5)
         + geom_ribbon(aes(ymin="mean - err", ymax="mean + err"), data=seed.dropna(subset=["err"]),
                       fill=SEED_COLOR, alpha=0.15, color="none", show_legend=False)
         + geom_line(data=seed, size=0.8)
@@ -301,15 +357,16 @@ def _domain_row(df: pd.DataFrame, domain: str, last: bool) -> ggplot:
     return plot
 
 
-def combined_plot(df: pd.DataFrame):
-    rows = [_domain_row(df, domain, last=domain == DOMAINS[-1]) for domain in DOMAINS]
+def combined_plot(df: pd.DataFrame, runs: pd.DataFrame):
+    rows = [_domain_row(df, runs, domain, last=domain == DOMAINS[-1]) for domain in DOMAINS]
     return (rows[0] / rows[1] / rows[2]) + theme(figure_size=(10, 8.5))
 
 
 def main(args: Args) -> None:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     for name, plot in [
-        ("fig_recovery", combined_plot(combined_frame(args.sr_csv, args.ng_root, args.rsa_trajectory))),
+        ("fig_recovery", combined_plot(combined_frame(args.sr_root, args.ng_root, args.rsa_trajectory),
+                                       combined_runs_frame(args.sr_root, args.ng_root, args.rsa_trajectory))),
         ("fig_recovery_number_game", number_game_plot(number_game_frame(args.ng_root))),
         ("fig_recovery_rsa", rsa_plot(rsa_frame(args.rsa_trajectory))),
         ("fig_recovery_alien", alien_plot(alien_frame(args.alien_root))),
