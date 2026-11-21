@@ -52,3 +52,32 @@ Entry format (newest at the bottom):
   did what the stashed draft edits did (November number-game data, unseen-items test set, per-run
   colours, number-game row (a) in Fig 3); the drafts and fig3_conditions.* were deleted on main.
   Only the Tenenbaum 1999 citation in seed_papers.yaml was new; applied it and regenerated Fig 2.
+
+- 2026-11-21 (fig3-new-effects): Figure 3 row (c) built from the figure data's `conditions`, not from a
+  trial-level export. Lesson: a pattern defined on trials can usually be recomputed from condition-level
+  tables (observed proportion, n, per-condition predictions) by weighting each condition by its n; do that
+  rather than re-adding a trial export, and check that the totals (trials, displays, sets) match the audit
+  that first defined the pattern before trusting the plot.
+  - Why: the conditions are the figure's single source of truth, so every row of a column then uses the same
+    best model and best seed; re-deriving from them also caught nothing new to tune, since the audit's
+    definitions reproduced its numbers (SR 2,524 trials, 11.8/13.0/22.7%; RG 32 displays, 1,475 trials).
+  - Evidence: branch `fig3-new-effects`, `scripts/paper/figures/fig3.py` (`streak_choices`, `match_roles`,
+    `digit_confidence`), tests in `tests/test_paper_figures.py`.
+  - Note: panel titles inside a row with a row title need extra vertical room; lift the row title and widen
+    hspace rather than shrinking fonts. Pre-existing failures on main (macOS): `os.sched_getaffinity` in
+    `src/models/pymc_inference.py` breaks 24 tests in information_criteria / rsa_chain_models /
+    sr_figure_data, and `test_paper_recovery_figures.py` needs plotnine.
+
+- 2026-11-21 (fig3-new-effects): Fig. 3's number-game column now shows run 3's winner
+  (`fig3.COLUMN_MODEL`), from `figure_data/number_game_model_conditions.json`
+  (`scripts/paper/number_game_model_conditions.py`).
+  - Lesson: to reuse one model's cluster fit locally, compute its cache fingerprint with the repo's own
+    `fit_fingerprint` (rebuild the same model directory, pooled responses and resolved settings), then copy
+    only that `.nc` file and read it with `load_cached_fit`, which never samples. Why: the cache holds one
+    file per training split (full data plus each CV fold), and file size cannot tell them apart. Evidence:
+    the computed fingerprints matched the files on Sherlock for both run 2's winner (6345f7dc…) and run 3's
+    (90b1b6b7…).
+  - Lesson: PyTensor 2.38 adds `-ld64` on macOS ≥ 15, and the current Xcode linker rejects it ("library 'd64'
+    not found"). Its Python backend (`cxx=`) runs far too slowly for posterior predictives (>30 min,
+    unfinished). Fix it in the environment, not the code: set `PYTENSOR_FLAGS="cxx=<wrapper>,blas__ldflags="`,
+    where the wrapper is a clang++ script that drops `-ld64` (46 s). Evidence: this task.

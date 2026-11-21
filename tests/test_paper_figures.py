@@ -124,6 +124,37 @@ def _fig3_tables():
     return fig3.load(args.figure_data, args.rsa_displays)
 
 
+def _ng_conditions():
+    import pandas as pd
+    return pd.DataFrame({"number_set": ["2,4", "2,4"], "target": [6, 7], "n": [10, 12], "observed": [0.9, 0.1],
+                         "best_model": [0.8, 0.2], "best_seed": [0.99, 0.01]})
+
+
+def test_figure_3_swaps_in_a_named_models_predictions_for_the_same_conditions():
+    preds = {"model": "m3", "conditions": [{"number_set": "2,4", "target": 7, "n": 12, "observed": 0.1, "p_yes": 0.3},
+                                            {"number_set": "2,4", "target": 6, "n": 10, "observed": 0.9, "p_yes": 0.7}]}
+    t = fig3.with_model(_ng_conditions(), preds, "m3")
+    assert t.best_model.to_list() == [0.7, 0.3] and t.best_seed.to_list() == [0.99, 0.01]
+
+
+def test_a_named_models_predictions_for_other_conditions_or_another_model_raise():
+    preds = {"model": "m3", "conditions": [{"number_set": "2,4", "target": 6, "n": 10, "observed": 0.9, "p_yes": 0.7},
+                                            {"number_set": "2,4", "target": 8, "n": 12, "observed": 0.1, "p_yes": 0.3}]}
+    with pytest.raises(RuntimeError, match="conditions"):
+        fig3.with_model(_ng_conditions(), preds, "m3")
+    with pytest.raises(RuntimeError, match="m2"):
+        fig3.with_model(_ng_conditions(), {**preds, "model": "m3"}, "m2")
+
+
+def test_figure_3s_number_game_column_is_run_3s_winner():
+    assert fig3.COLUMN_MODEL["number_game"] == ("exception_weighted_rule_rejection", "run 3 winner")
+    args = figures.Args()
+    preds = json.loads((args.figure_data / "number_game_model_conditions.json").read_text())
+    ng = _fig3_tables()["number_game"]
+    assert preds["model"] == "exception_weighted_rule_rejection"
+    assert ng.best_model.to_list() == pytest.approx([c["p_yes"] for c in preds["conditions"]])
+
+
 def test_figure_3s_best_winner_fits_each_domains_conditions_better_than_its_best_seed():
     for d, cond in _fig3_tables().items():
         assert fig3.r2(cond.observed, cond.best_model, cond.n) > fig3.r2(cond.observed, cond.best_seed, cond.n), d
@@ -142,6 +173,66 @@ def test_in_figure_3s_reference_game_people_pick_the_object_with_only_the_words_
 def test_figure_3s_alternation_curve_peaks_above_a_fair_coins_rate():
     t = fig3.alternation_curve(_fig3_tables()["subjective_randomness"])
     assert t.observed.idxmax() > (fig3.SR_LENGTH - 1) / 2
+
+
+def _preds(observed):
+    return {"observed": observed, "best_seed": observed, "best_model": observed}
+
+
+def test_figure_3s_streak_choices_are_of_the_one_constant_sequence_by_its_rivals_switch_rate():
+    import pandas as pd
+    sr = pd.DataFrame({
+        "pair": [["HHHHH", "HTHTT"], ["THTHH", "TTTTT"],  # kept: the constant sequence first, then second
+                 ["HHHH", "HTHT"], ["HHHHH", "TTTTT"], ["HTHTH", "HHTTH"]],  # too short; both; neither
+        "n": [10, 30, 5, 5, 5], **_preds([0.2, 0.9, 0.5, 0.5, 0.5])})
+    t = fig3.streak_choices(sr)
+    assert len(t) == 1 and t.n.iloc[0] == 40
+    assert t.switch_rate.iloc[0] == pytest.approx(0.75)  # 3 switches in 4
+    assert t.observed.iloc[0] == pytest.approx((10 * 0.2 + 30 * 0.1) / 40)  # the second's chosen 1 - 0.9
+
+
+def test_in_figure_3_people_choose_a_constant_sequence_at_a_flat_rate_the_best_seed_does_not():
+    t = fig3.streak_choices(_fig3_tables()["subjective_randomness"])
+    assert np.ptp(t.observed) < 0.06 and np.ptp(t.best_model) < 0.06 and np.ptp(t.best_seed) > 0.15
+
+
+def test_figure_3s_reference_game_roles_are_shares_of_the_sparsest_middle_and_richest_match():
+    import pandas as pd
+    rows = []
+    for display, objects, classes, n, observed in (
+            (0, [[1, 0, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]], [0, 1, 2, 3], 10, [0.5, 0.2, 0.2, 0.1]),
+            (1, [[1, 0], [1, 1], [0, 1]], [0, 1, 2], 50, [0.6, 0.3, 0.1]),  # two feature counts: no middle
+            (2, [[1, 0, 0], [1, 1, 0], [1, 1, 0], [1, 1, 1]], [0, 1, 1, 2], 30, [0.7, 0.1, 0.2])):
+        for cls, o in enumerate(observed):
+            rows.append({"display": display, "cls": cls, "n": n, "objects": objects, "utterance": 0.0,
+                         "choice_classes": classes, **_preds(o)})
+    t = fig3.match_roles(pd.DataFrame(rows))
+    assert list(t.index) == list(fig3.ROLES) and (t.n == 40).all()
+    assert t.observed.to_list() == pytest.approx([(5 + 21) / 40, (2 + 3) / 40, (2 + 6) / 40])
+
+
+def test_in_figure_3_people_pass_over_the_middle_candidate():
+    t = fig3.match_roles(_fig3_tables()["rsa"])
+    for c in ("observed", "best_model"):
+        assert t[c]["middle"] < t[c]["richest"] < t[c]["sparsest"], c
+    assert t.best_seed["middle"] > t.best_seed["richest"]
+
+
+def test_figure_3s_digit_confidence_is_yes_to_non_examples_of_sets_sharing_a_final_digit():
+    import pandas as pd
+    ng = pd.DataFrame({
+        "number_set": ["13,23", "13,23", "13,23", "13,24", "7", "3,13,23", "5,15,25"],
+        "target": [33, 23, 34, 33, 17, 43, 35],  # keeps; an example; breaks; no shared digit; one example
+        "n": [10, 10, 10, 10, 10, 10, 30], **_preds([0.8, 1.0, 0.1, 0.5, 0.5, 0.9, 0.5])})
+    t = fig3.digit_confidence(ng)
+    assert list(t.index) == [(False, 2), (True, 2), (True, 3)]
+    assert t.observed.to_list() == pytest.approx([0.1, 0.8, (9 + 15) / 40])
+    assert t.n.to_list() == [10, 10, 40]
+
+
+def test_in_figure_3_the_best_seed_is_near_certain_of_a_shared_final_digit_and_people_are_not():
+    t = fig3.digit_confidence(_fig3_tables()["number_game"]).loc[True]
+    assert t.best_seed[4] > 0.99 and t.observed[4] < 0.9 and abs(t.best_model[4] - t.observed[4]) < 0.1
 
 
 def test_every_mechanism_figure_4_drops_or_keeps_has_a_name():
