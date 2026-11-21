@@ -6,7 +6,9 @@ From Figure 3's own condition tables (``scripts.paper.figures.fig3.load``: the s
 list of stimulus features per domain (``FEATURES``, written before looking), the conditions are split by each
 feature's value, and each value's *excess* advantage is its advantage minus its trials' share of the domain's
 total, with the stimulus-clustered SE of Figure 2 (``cluster_dse``; clusters: the pair, the example set, the
-display). Values are ranked by excess / SE; the top value per domain is row (c)'s pattern. Exploratory: the search
+display). Among values whose excess is at least ``MIN_Z`` SEs, they are ranked by effect size, how much closer the
+discovered model's predictions are to people's than the seed's, condition by condition (``effect``); the top value per domain is row (c)'s
+pattern. Exploratory: the search
 uses all the data the models were fit on.
 
     uv run python -m scripts.paper.fig3_patterns
@@ -108,6 +110,7 @@ def _rsa(c):
             "objects the word fits": str(len(fits)), "identical copies": "yes" if len(members) > 1 else "no"}
 
 
+MIN_Z = 2.0  # a value counts only if its excess is at least this many clustered SEs
 FEATURES: Dict[str, Callable] = {"subjective_randomness": _sr, "number_game": _ng, "rsa": _rsa}
 
 
@@ -132,8 +135,14 @@ def rank(cond: pd.DataFrame, domain: str) -> pd.DataFrame:
             w = cond.n.to_numpy(dtype=float)[m]
             rows.append({"feature": f, "value": v, "trials": int(w.sum()), "excess": float(excess.sum()),
                          "se": se, "z": float(excess.sum() / se) if se > 0 else 0.0,
-                         **{k: float(np.average(cond[k][m], weights=w)) for k in ("observed", "best_seed", "best_model")}})
-    return pd.DataFrame(rows).sort_values("z", ascending=False).reset_index(drop=True)
+                         **{k: float(np.average(cond[k][m], weights=w)) for k in ("observed", "best_seed", "best_model")},
+                         # effect size: how much closer the discovered model is to people than the seed, condition by
+                         # condition (a group's mean would cancel out: a pair's probability is for an arbitrary side)
+                         "effect": float(np.average((cond.observed[m] - cond.best_seed[m]).abs()
+                                                    - (cond.observed[m] - cond.best_model[m]).abs(), weights=w))})
+    r = pd.DataFrame(rows)
+    r["reliable"] = r.z >= MIN_Z
+    return r.sort_values(["reliable", "effect"], ascending=False).reset_index(drop=True)
 
 
 def main(args: Args) -> Dict[str, list]:

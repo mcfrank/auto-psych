@@ -1,6 +1,19 @@
 {
  "subjective_randomness": [
   {
+   "feature": "sequence length",
+   "value": "2",
+   "trials": 484,
+   "excess": 12.182612147448454,
+   "se": 5.886287011869967,
+   "z": 2.069659893050009,
+   "observed": 0.5227272727272727,
+   "best_seed": 0.5287746540610139,
+   "best_model": 0.5184757021282681,
+   "effect": 0.1034108527137395,
+   "reliable": true
+  },
+  {
    "feature": "a pure streak in the pair",
    "value": "one",
    "trials": 3968,
@@ -9,7 +22,9 @@
    "z": 2.6263838496216962,
    "observed": 0.5221774193548387,
    "best_seed": 0.5316486080432783,
-   "best_model": 0.5187027943022327
+   "best_model": 0.5187027943022327,
+   "effect": 0.08890849349257961,
+   "reliable": true
   },
   {
    "feature": "difference in switches",
@@ -20,29 +35,9 @@
    "z": 2.401857158939687,
    "observed": 0.49427753934191704,
    "best_seed": 0.49449104487379836,
-   "best_model": 0.49509411988555396
-  },
-  {
-   "feature": "sequence length",
-   "value": "2",
-   "trials": 484,
-   "excess": 12.182612147448454,
-   "se": 5.886287011869967,
-   "z": 2.069659893050009,
-   "observed": 0.5227272727272727,
-   "best_seed": 0.5287746540610139,
-   "best_model": 0.5184757021282681
-  },
-  {
-   "feature": "sequence length",
-   "value": "4",
-   "trials": 760,
-   "excess": 11.836067511628787,
-   "se": 8.178954136007958,
-   "z": 1.4471370440286904,
-   "observed": 0.4618421052631579,
-   "best_seed": 0.49418395419434635,
-   "best_model": 0.47423795603566754
+   "best_model": 0.49509411988555396,
+   "effect": 0.07053252276455031,
+   "reliable": true
   },
   {
    "feature": "sequence length",
@@ -53,51 +48,22 @@
    "z": 0.8131447326685681,
    "observed": 0.5083240843507214,
    "best_seed": 0.5296434860721287,
-   "best_model": 0.5177479899768226
-  },
-  {
-   "feature": "difference in switches",
-   "value": "0",
-   "trials": 3378,
-   "excess": 14.629630683799974,
-   "se": 22.389778317185133,
-   "z": 0.6534066785543425,
-   "observed": 0.4798697454114861,
-   "best_seed": 0.4938227376333344,
-   "best_model": 0.4814024188335103
-  },
-  {
-   "feature": "a symmetric sequence",
-   "value": "yes",
-   "trials": 17882,
-   "excess": 24.5878549055048,
-   "se": 53.075952018845115,
-   "z": 0.46325791568985236,
-   "observed": 0.4939604071132983,
-   "best_seed": 0.49960334372921783,
-   "best_model": 0.4957297181551543
-  },
-  {
-   "feature": "longest run in the pair",
-   "value": "5+",
-   "trials": 10223,
-   "excess": 18.788820694477398,
-   "se": 47.02329177879818,
-   "z": 0.3995641305347509,
-   "observed": 0.4818546414946689,
-   "best_seed": 0.4888237142317815,
-   "best_model": 0.4823208955770341
+   "best_model": 0.5177479899768226,
+   "effect": 0.07200646373723257,
+   "reliable": false
   },
   {
    "feature": "sequence length",
-   "value": "3",
-   "trials": 1203,
-   "excess": 3.0611128686385327,
-   "se": 9.719967350727652,
-   "z": 0.3149303653174692,
-   "observed": 0.6076475477971738,
-   "best_seed": 0.5803676831013138,
-   "best_model": 0.5878497218429231
+   "value": "4",
+   "trials": 760,
+   "excess": 11.836067511628787,
+   "se": 8.178954136007958,
+   "z": 1.4471370440286904,
+   "observed": 0.4618421052631579,
+   "best_seed": 0.49418395419434635,
+   "best_model": 0.47423795603566754,
+   "effect": 0.07074506980392953,
+   "reliable": false
   },
   {
    "feature": "longest run in the pair",
@@ -108,40 +74,48 @@
    "z": 0.15276442904915713,
    "observed": 0.48554913294797686,
    "best_seed": 0.4980340846013158,
-   "best_model": 0.4982551435564299
+   "best_model": 0.4982551435564299,
+   "effect": 0.06122745443838488,
+   "reliable": false
   },
   {
-   "feature": "sequence length",
-   "value": "5",
-   "trials": 600,
-   "excess": -2.1894293667097813,
-   "se": 7.5359898795725995,
-   "z": -0.2905297647286588,
-   "observed": 0.36833333333333335,
-   "best_seed": 0.45169222812898624,
-   "best_model": 0.41301511946038316
+   "feature": "difference in switches",
+   "value": "0",
+   "trials": 3378,
+   "excess": 14.629630683799974,
+   "se": 22.389778317185133,
+   "z": 0.6534066785543425,
+   "observed": 0.4798697454114861,
+   "best_seed": 0.4938227376333344,
+   "best_model": 0.4814024188335103,
+   "effect": 0.054706718858501285,
+   "reliable": false
+  },
+  {
+   "feature": "a symmetric sequence",
+   "value": "yes",
+   "trials": 17882,
+   "excess": 24.5878549055048,
+   "se": 53.075952018845115,
+   "z": 0.46325791568985236,
+   "observed": 0.4939604071132983,
+   "best_seed": 0.49960334372921783,
+   "best_model": 0.4957297181551543,
+   "effect": 0.05418849463656414,
+   "reliable": false
   },
   {
    "feature": "longest run in the pair",
-   "value": "1-2",
-   "trials": 4861,
-   "excess": -8.412889185190256,
-   "se": 18.65827097560843,
-   "z": -0.4508932899617682,
-   "observed": 0.4854968113556881,
-   "best_seed": 0.49146602775152703,
-   "best_model": 0.48530430951033193
-  },
-  {
-   "feature": "longest run in the pair",
-   "value": "3",
-   "trials": 4733,
-   "excess": -13.053882087877199,
-   "se": 20.85356445939831,
-   "z": -0.6259784562630999,
-   "observed": 0.5151066976547645,
-   "best_seed": 0.5158854335385638,
-   "best_model": 0.5166470821945115
+   "value": "5+",
+   "trials": 10223,
+   "excess": 18.788820694477398,
+   "se": 47.02329177879818,
+   "z": 0.3995641305347509,
+   "observed": 0.4818546414946689,
+   "best_seed": 0.4888237142317815,
+   "best_model": 0.4823208955770341,
+   "effect": 0.05338751866027475,
+   "reliable": false
   },
   {
    "feature": "sequence length",
@@ -152,29 +126,35 @@
    "z": -0.8029007063832745,
    "observed": 0.48475844613183666,
    "best_seed": 0.488349705316454,
-   "best_model": 0.4863337056290583
+   "best_model": 0.4863337056290583,
+   "effect": 0.048881245136615965,
+   "reliable": false
   },
   {
-   "feature": "a symmetric sequence",
-   "value": "no",
-   "trials": 5222,
-   "excess": -24.587854905504805,
-   "se": 21.95086232411623,
-   "z": -1.1201316168108555,
-   "observed": 0.476254308693987,
-   "best_seed": 0.4846951344213613,
-   "best_model": 0.4803231024243358
+   "feature": "longest run in the pair",
+   "value": "1-2",
+   "trials": 4861,
+   "excess": -8.412889185190256,
+   "se": 18.65827097560843,
+   "z": -0.4508932899617682,
+   "observed": 0.4854968113556881,
+   "best_seed": 0.49146602775152703,
+   "best_model": 0.48530430951033193,
+   "effect": 0.048454284569907774,
+   "reliable": false
   },
   {
-   "feature": "difference in switches",
-   "value": "2",
-   "trials": 3612,
-   "excess": -23.18408218548945,
-   "se": 15.396084322695076,
-   "z": -1.5058427649239512,
-   "observed": 0.53156146179402,
-   "best_seed": 0.5440392128058145,
-   "best_model": 0.5364359889361121
+   "feature": "longest run in the pair",
+   "value": "3",
+   "trials": 4733,
+   "excess": -13.053882087877199,
+   "se": 20.85356445939831,
+   "z": -0.6259784562630999,
+   "observed": 0.5151066976547645,
+   "best_seed": 0.5158854335385638,
+   "best_model": 0.5166470821945115,
+   "effect": 0.045014023652009474,
+   "reliable": false
   },
   {
    "feature": "a pure streak in the pair",
@@ -185,7 +165,61 @@
    "z": -2.1518433092488882,
    "observed": 0.4825226754362701,
    "best_seed": 0.4887256213704552,
-   "best_model": 0.48656306015589523
+   "best_model": 0.48656306015589523,
+   "effect": 0.044705323194507686,
+   "reliable": false
+  },
+  {
+   "feature": "a symmetric sequence",
+   "value": "no",
+   "trials": 5222,
+   "excess": -24.587854905504805,
+   "se": 21.95086232411623,
+   "z": -1.1201316168108555,
+   "observed": 0.476254308693987,
+   "best_seed": 0.4846951344213613,
+   "best_model": 0.4803231024243358,
+   "effect": 0.04339797704925365,
+   "reliable": false
+  },
+  {
+   "feature": "sequence length",
+   "value": "3",
+   "trials": 1203,
+   "excess": 3.0611128686385327,
+   "se": 9.719967350727652,
+   "z": 0.3149303653174692,
+   "observed": 0.6076475477971738,
+   "best_seed": 0.5803676831013138,
+   "best_model": 0.5878497218429231,
+   "effect": 0.04209796316153732,
+   "reliable": false
+  },
+  {
+   "feature": "difference in switches",
+   "value": "2",
+   "trials": 3612,
+   "excess": -23.18408218548945,
+   "se": 15.396084322695076,
+   "z": -1.5058427649239512,
+   "observed": 0.53156146179402,
+   "best_seed": 0.5440392128058145,
+   "best_model": 0.5364359889361121,
+   "effect": 0.04124104604808208,
+   "reliable": false
+  },
+  {
+   "feature": "sequence length",
+   "value": "5",
+   "trials": 600,
+   "excess": -2.1894293667097813,
+   "se": 7.5359898795725995,
+   "z": -0.2905297647286588,
+   "observed": 0.36833333333333335,
+   "best_seed": 0.45169222812898624,
+   "best_model": 0.41301511946038316,
+   "effect": 0.03785663736245698,
+   "reliable": false
   },
   {
    "feature": "difference in switches",
@@ -196,7 +230,9 @@
    "z": -5.4341522798419994,
    "observed": 0.46491782553729455,
    "best_seed": 0.4729286939000042,
-   "best_model": 0.4684119533586419
+   "best_model": 0.4684119533586419,
+   "effect": 0.027122262142645875,
+   "reliable": false
   },
   {
    "feature": "sequence length",
@@ -207,7 +243,9 @@
    "z": -24.646154780356817,
    "observed": 0.4691358024691358,
    "best_seed": 0.42710470110501497,
-   "best_model": 0.431111646903174
+   "best_model": 0.431111646903174,
+   "effect": 0.004006945798159015,
+   "reliable": false
   },
   {
    "feature": "a pure streak in the pair",
@@ -218,32 +256,12 @@
    "z": -165.3446007922957,
    "observed": 0.5335689045936396,
    "best_seed": 0.499855717672444,
-   "best_model": 0.5
+   "best_model": 0.5,
+   "effect": 1.6031369728429634e-05,
+   "reliable": false
   }
  ],
  "rsa": [
-  {
-   "feature": "identical copies",
-   "value": "no",
-   "trials": 34985,
-   "excess": 1011.6027833028315,
-   "se": 140.78194460041314,
-   "z": 7.185600299627222,
-   "observed": 0.3303701586394169,
-   "best_seed": 0.29718143129912816,
-   "best_model": 0.3290779920251536
-  },
-  {
-   "feature": "the object",
-   "value": "doesn't fit the word",
-   "trials": 11864,
-   "excess": 164.98326863392515,
-   "se": 34.30040449893448,
-   "z": 4.809951108274838,
-   "observed": 0.028742414025623737,
-   "best_seed": 0.014273913351314902,
-   "best_model": 0.01969319049224545
-  },
   {
    "feature": "query",
    "value": "no word",
@@ -253,40 +271,9 @@
    "z": 3.5685118230210784,
    "observed": 0.39790280753185253,
    "best_seed": 0.39790281610102607,
-   "best_model": 0.39790280662983424
-  },
-  {
-   "feature": "objects the word fits",
-   "value": "3",
-   "trials": 11200,
-   "excess": 137.08211340574792,
-   "se": 39.026066350502525,
-   "z": 3.5125782899711275,
-   "observed": 0.31,
-   "best_seed": 0.30999994598214287,
-   "best_model": 0.3100000034821429
-  },
-  {
-   "feature": "objects shown",
-   "value": "4",
-   "trials": 28007,
-   "excess": 199.63997246281167,
-   "se": 70.48823503051983,
-   "z": 2.8322453013098148,
-   "observed": 0.30838718891705647,
-   "best_seed": 0.30838712425465065,
-   "best_model": 0.3083872021280394
-  },
-  {
-   "feature": "the object",
-   "value": "fewest features",
-   "trials": 7273,
-   "excess": 213.33848917165687,
-   "se": 88.28587146271376,
-   "z": 2.4164510769059717,
-   "observed": 0.6044273339749759,
-   "best_seed": 0.5495317285851781,
-   "best_model": 0.5994247331225078
+   "best_model": 0.39790280662983424,
+   "effect": 0.09927323756906076,
+   "reliable": true
   },
   {
    "feature": "objects the word fits",
@@ -297,84 +284,74 @@
    "z": 2.2483317471840922,
    "observed": 0.3394629305312318,
    "best_seed": 0.33946290221833036,
-   "best_model": 0.33946285201401055
-  },
-  {
-   "feature": "objects shown",
-   "value": "3",
-   "trials": 9691,
-   "excess": -70.37238655627603,
-   "se": 31.871081578663407,
-   "z": -2.2080325822198614,
-   "observed": 0.373129707976473,
-   "best_seed": 0.37312981931689193,
-   "best_model": 0.3731296838303581
-  },
-  {
-   "feature": "the object",
-   "value": "most features",
-   "trials": 7139,
-   "excess": -185.04703373525587,
-   "se": 80.9202276743023,
-   "z": -2.286783404516062,
-   "observed": 0.26642386888920017,
-   "best_seed": 0.31252977293738615,
-   "best_model": 0.2824968412942989
-  },
-  {
-   "feature": "query",
-   "value": "a word",
-   "trials": 32943,
-   "excess": -181.25255461489255,
-   "se": 59.92770981967194,
-   "z": -3.0245199618056215,
-   "observed": 0.33011565431199347,
-   "best_seed": 0.33011562978477976,
-   "best_model": 0.33011565868318005
-  },
-  {
-   "feature": "the object",
-   "value": "in between",
-   "trials": 1560,
-   "excess": -195.24866229613264,
-   "se": 23.36591871053014,
-   "z": -8.3561303415877,
-   "observed": 0.1391025641025641,
-   "best_seed": 0.2715147006410257,
-   "best_model": 0.11859372243589743
-  },
-  {
-   "feature": "objects shown",
-   "value": "2",
-   "trials": 4114,
-   "excess": -129.2675859065357,
-   "se": 10.701379047154541,
-   "z": -12.079525950527609,
-   "observed": 0.5228488089450656,
-   "best_seed": 0.5228488089450656,
-   "best_model": 0.5228488089450656
-  },
-  {
-   "feature": "the object",
-   "value": "all fitting alike",
-   "trials": 5107,
-   "excess": -179.27861638908607,
-   "se": 13.743798696684943,
-   "z": -13.044327870745718,
-   "observed": 0.7869590757783435,
-   "best_seed": 0.793850840023497,
-   "best_model": 0.7989020738202469
+   "best_model": 0.33946285201401055,
+   "effect": 0.08081843549328663,
+   "reliable": true
   },
   {
    "feature": "objects the word fits",
-   "value": "1",
-   "trials": 6669,
-   "excess": -174.7677782478035,
-   "se": 11.632595642096188,
-   "z": -15.023970885341496,
-   "observed": 0.37082021292547607,
-   "best_seed": 0.3708202712550607,
-   "best_model": 0.37082030319388215
+   "value": "3",
+   "trials": 11200,
+   "excess": 137.08211340574792,
+   "se": 39.026066350502525,
+   "z": 3.5125782899711275,
+   "observed": 0.31,
+   "best_seed": 0.30999994598214287,
+   "best_model": 0.3100000034821429,
+   "effect": 0.05344851767857142,
+   "reliable": true
+  },
+  {
+   "feature": "objects shown",
+   "value": "4",
+   "trials": 28007,
+   "excess": 199.63997246281167,
+   "se": 70.48823503051983,
+   "z": 2.8322453013098148,
+   "observed": 0.30838718891705647,
+   "best_seed": 0.30838712425465065,
+   "best_model": 0.3083872021280394,
+   "effect": 0.04982584900203521,
+   "reliable": true
+  },
+  {
+   "feature": "the object",
+   "value": "fewest features",
+   "trials": 7273,
+   "excess": 213.33848917165687,
+   "se": 88.28587146271376,
+   "z": 2.4164510769059717,
+   "observed": 0.6044273339749759,
+   "best_seed": 0.5495317285851781,
+   "best_model": 0.5994247331225078,
+   "effect": 0.049368735872404784,
+   "reliable": true
+  },
+  {
+   "feature": "identical copies",
+   "value": "no",
+   "trials": 34985,
+   "excess": 1011.6027833028315,
+   "se": 140.78194460041314,
+   "z": 7.185600299627222,
+   "observed": 0.3303701586394169,
+   "best_seed": 0.29718143129912816,
+   "best_model": 0.3290779920251536,
+   "effect": 0.02892310215806774,
+   "reliable": true
+  },
+  {
+   "feature": "the object",
+   "value": "doesn't fit the word",
+   "trials": 11864,
+   "excess": 164.98326863392515,
+   "se": 34.30040449893448,
+   "z": 4.809951108274838,
+   "observed": 0.028742414025623737,
+   "best_seed": 0.014273913351314902,
+   "best_model": 0.01969319049224545,
+   "effect": 0.006342745954147,
+   "reliable": true
   },
   {
    "feature": "identical copies",
@@ -385,7 +362,87 @@
    "z": -18.971000037211624,
    "observed": 0.41687417606562177,
    "best_seed": 0.5869498892632196,
-   "best_model": 0.42349591108832574
+   "best_model": 0.42349591108832574,
+   "effect": 0.1133638844294712,
+   "reliable": false
+  },
+  {
+   "feature": "the object",
+   "value": "in between",
+   "trials": 1560,
+   "excess": -195.24866229613264,
+   "se": 23.36591871053014,
+   "z": -8.3561303415877,
+   "observed": 0.1391025641025641,
+   "best_seed": 0.2715147006410257,
+   "best_model": 0.11859372243589743,
+   "effect": 0.0754935564102564,
+   "reliable": false
+  },
+  {
+   "feature": "the object",
+   "value": "most features",
+   "trials": 7139,
+   "excess": -185.04703373525587,
+   "se": 80.9202276743023,
+   "z": -2.286783404516062,
+   "observed": 0.26642386888920017,
+   "best_seed": 0.31252977293738615,
+   "best_model": 0.2824968412942989,
+   "effect": 0.03812263216136714,
+   "reliable": false
+  },
+  {
+   "feature": "objects shown",
+   "value": "3",
+   "trials": 9691,
+   "excess": -70.37238655627603,
+   "se": 31.871081578663407,
+   "z": -2.2080325822198614,
+   "observed": 0.373129707976473,
+   "best_seed": 0.37312981931689193,
+   "best_model": 0.3731296838303581,
+   "effect": 0.03745597740171293,
+   "reliable": false
+  },
+  {
+   "feature": "query",
+   "value": "a word",
+   "trials": 32943,
+   "excess": -181.25255461489255,
+   "se": 59.92770981967194,
+   "z": -3.0245199618056215,
+   "observed": 0.33011565431199347,
+   "best_seed": 0.33011562978477976,
+   "best_model": 0.33011565868318005,
+   "effect": 0.02748248866223477,
+   "reliable": false
+  },
+  {
+   "feature": "the object",
+   "value": "all fitting alike",
+   "trials": 5107,
+   "excess": -179.27861638908607,
+   "se": 13.743798696684943,
+   "z": -13.044327870745718,
+   "observed": 0.7869590757783435,
+   "best_seed": 0.793850840023497,
+   "best_model": 0.7989020738202469,
+   "effect": 0.015883894850205596,
+   "reliable": false
+  },
+  {
+   "feature": "objects shown",
+   "value": "2",
+   "trials": 4114,
+   "excess": -129.2675859065357,
+   "se": 10.701379047154541,
+   "z": -12.079525950527609,
+   "observed": 0.5228488089450656,
+   "best_seed": 0.5228488089450656,
+   "best_model": 0.5228488089450656,
+   "effect": 0.00664840495867768,
+   "reliable": false
   },
   {
    "feature": "objects the word fits",
@@ -396,7 +453,22 @@
    "z": -23.68740575972316,
    "observed": 0.32340315934065933,
    "best_seed": 0.3234031168440934,
-   "best_model": 0.32340313976648355
+   "best_model": 0.32340313976648355,
+   "effect": 0.0023863081215659302,
+   "reliable": false
+  },
+  {
+   "feature": "objects the word fits",
+   "value": "1",
+   "trials": 6669,
+   "excess": -174.7677782478035,
+   "se": 11.632595642096188,
+   "z": -15.023970885341496,
+   "observed": 0.37082021292547607,
+   "best_seed": 0.3708202712550607,
+   "best_model": 0.37082030319388215,
+   "effect": 0.00030777462887988856,
+   "reliable": false
   }
  ],
  "number_game": [
@@ -409,7 +481,9 @@
    "z": 2.901502115300472,
    "observed": 0.8231884057971014,
    "best_seed": 0.9308523443363343,
-   "best_model": 0.8378225403787667
+   "best_model": 0.8378225403787667,
+   "effect": 0.029039145402432794,
+   "reliable": true
   },
   {
    "feature": "the number is an example",
@@ -420,18 +494,9 @@
    "z": 2.443920450098948,
    "observed": 0.746031746031746,
    "best_seed": 0.8373895226500193,
-   "best_model": 0.7314866430914686
-  },
-  {
-   "feature": "after one example, the number is",
-   "value": "a multiple",
-   "trials": 1323,
-   "excess": 46.6598949321804,
-   "se": 27.17927543756687,
-   "z": 1.7167453576664393,
-   "observed": 0.6258503401360545,
-   "best_seed": 0.43237526250458536,
-   "best_model": 0.5599557443650409
+   "best_model": 0.7314866430914686,
+   "effect": 0.02342082027988182,
+   "reliable": true
   },
   {
    "feature": "after one example, the number is",
@@ -442,106 +507,22 @@
    "z": 1.6604180555504788,
    "observed": 0.5648148148148148,
    "best_seed": 0.39965361133581034,
-   "best_model": 0.518426858865244
+   "best_model": 0.518426858865244,
+   "effect": 0.1051369895987855,
+   "reliable": false
   },
   {
-   "feature": "number of examples",
-   "value": "4",
-   "trials": 7218,
-   "excess": 137.8612176891695,
-   "se": 135.44932617520988,
-   "z": 1.0178065966222656,
-   "observed": 0.39068994181213634,
-   "best_seed": 0.42742532476980677,
-   "best_model": 0.4120849461408604
-  },
-  {
-   "feature": "number of examples",
-   "value": "3",
-   "trials": 5877,
-   "excess": 65.23541217921778,
-   "se": 99.66890151938038,
-   "z": 0.6545212316454888,
-   "observed": 0.36379104985536836,
-   "best_seed": 0.3672170436048129,
-   "best_model": 0.3540573750210803
-  },
-  {
-   "feature": "examples share parity; the number",
-   "value": "keeps it",
-   "trials": 7812,
-   "excess": 45.58716275690742,
-   "se": 120.32267835957249,
-   "z": 0.3788742353347111,
-   "observed": 0.5094726062467998,
-   "best_seed": 0.5663356668311749,
-   "best_model": 0.5236858648380489
-  },
-  {
-   "feature": "distance outside the examples' range",
-   "value": "11+",
-   "trials": 9009,
-   "excess": 15.538270598618322,
-   "se": 83.68629285758895,
-   "z": 0.18567282727005466,
-   "observed": 0.3785103785103785,
-   "best_seed": 0.32735542371470855,
-   "best_model": 0.3830394773183717
-  },
-  {
-   "feature": "distance outside the examples' range",
-   "value": "inside",
-   "trials": 10026,
-   "excess": 13.835485001933698,
-   "se": 140.03759084657003,
-   "z": 0.09879836491254929,
-   "observed": 0.42210253341312587,
-   "best_seed": 0.45324510126515066,
-   "best_model": 0.4161547033264002
-  },
-  {
-   "feature": "the number is a multiple of 10",
-   "value": "yes",
-   "trials": 3186,
-   "excess": 5.630145775895823,
-   "se": 60.48599404536903,
-   "z": 0.09308180951234415,
-   "observed": 0.4268675455116133,
-   "best_seed": 0.41163154343951747,
-   "best_model": 0.43021216410300617
-  },
-  {
-   "feature": "the number is a multiple of 10",
-   "value": "no",
-   "trials": 19494,
-   "excess": -5.630145775895869,
-   "se": 165.17438028807277,
-   "z": -0.0340860717387079,
-   "observed": 0.39278752436647174,
-   "best_seed": 0.3906439809583635,
-   "best_model": 0.39187846375743085
-  },
-  {
-   "feature": "the number is an example",
-   "value": "no",
-   "trials": 22113,
-   "excess": -89.04497204313104,
-   "se": 172.9054971697025,
-   "z": -0.5149921402194378,
-   "observed": 0.3886401664179442,
-   "best_seed": 0.3822128161198426,
-   "best_model": 0.3886936101246629
-  },
-  {
-   "feature": "distance outside the examples' range",
-   "value": "1-10",
-   "trials": 3645,
-   "excess": -29.37375560055203,
-   "se": 49.46277588733287,
-   "z": -0.5938557849535185,
-   "observed": 0.3772290809327846,
-   "best_seed": 0.3932212523101318,
-   "best_model": 0.3804567957771836
+   "feature": "after one example, the number is",
+   "value": "a multiple",
+   "trials": 1323,
+   "excess": 46.6598949321804,
+   "se": 27.17927543756687,
+   "z": 1.7167453576664393,
+   "observed": 0.6258503401360545,
+   "best_seed": 0.43237526250458536,
+   "best_model": 0.5599557443650409,
+   "effect": 0.09066275749569316,
+   "reliable": false
   },
   {
    "feature": "number of examples",
@@ -552,29 +533,100 @@
    "z": -0.6787680795593057,
    "observed": 0.5445517981749866,
    "best_seed": 0.40578480524127847,
-   "best_model": 0.5057925254165538
+   "best_model": 0.5057925254165538,
+   "effect": 0.05216618482522059,
+   "reliable": false
   },
   {
-   "feature": "examples share parity; the number",
-   "value": "breaks it",
-   "trials": 5256,
-   "excess": -79.57786577933655,
-   "se": 84.55690112252402,
-   "z": -0.9411161563741227,
-   "observed": 0.15658295281582954,
-   "best_seed": 0.1601462490310073,
-   "best_model": 0.17441048630170852
+   "feature": "distance outside the examples' range",
+   "value": "1-10",
+   "trials": 3645,
+   "excess": -29.37375560055203,
+   "se": 49.46277588733287,
+   "z": -0.5938557849535185,
+   "observed": 0.3772290809327846,
+   "best_seed": 0.3932212523101318,
+   "best_model": 0.3804567957771836,
+   "effect": 0.03510150503176786,
+   "reliable": false
   },
   {
-   "feature": "after one example, the number is",
-   "value": "other",
-   "trials": 2187,
-   "excess": -87.86713814344014,
-   "se": 28.96660026922914,
-   "z": -3.0333949212804345,
-   "observed": 0.49336991312299955,
-   "best_seed": 0.3903047699985835,
-   "best_model": 0.4717792859589564
+   "feature": "the number is a multiple of 10",
+   "value": "no",
+   "trials": 19494,
+   "excess": -5.630145775895869,
+   "se": 165.17438028807277,
+   "z": -0.0340860717387079,
+   "observed": 0.39278752436647174,
+   "best_seed": 0.3906439809583635,
+   "best_model": 0.39187846375743085,
+   "effect": 0.03299664566345726,
+   "reliable": false
+  },
+  {
+   "feature": "number of examples",
+   "value": "3",
+   "trials": 5877,
+   "excess": 65.23541217921778,
+   "se": 99.66890151938038,
+   "z": 0.6545212316454888,
+   "observed": 0.36379104985536836,
+   "best_seed": 0.3672170436048129,
+   "best_model": 0.3540573750210803,
+   "effect": 0.03294364132297479,
+   "reliable": false
+  },
+  {
+   "feature": "the number is an example",
+   "value": "no",
+   "trials": 22113,
+   "excess": -89.04497204313104,
+   "se": 172.9054971697025,
+   "z": -0.5149921402194378,
+   "observed": 0.3886401664179442,
+   "best_seed": 0.3822128161198426,
+   "best_model": 0.3886936101246629,
+   "effect": 0.032722226023709486,
+   "reliable": false
+  },
+  {
+   "feature": "distance outside the examples' range",
+   "value": "11+",
+   "trials": 9009,
+   "excess": 15.538270598618322,
+   "se": 83.68629285758895,
+   "z": 0.18567282727005466,
+   "observed": 0.3785103785103785,
+   "best_seed": 0.32735542371470855,
+   "best_model": 0.3830394773183717,
+   "effect": 0.03214334971080583,
+   "reliable": false
+  },
+  {
+   "feature": "distance outside the examples' range",
+   "value": "inside",
+   "trials": 10026,
+   "excess": 13.835485001933698,
+   "se": 140.03759084657003,
+   "z": 0.09879836491254929,
+   "observed": 0.42210253341312587,
+   "best_seed": 0.45324510126515066,
+   "best_model": 0.4161547033264002,
+   "effect": 0.03185136303366618,
+   "reliable": false
+  },
+  {
+   "feature": "the number is a multiple of 10",
+   "value": "yes",
+   "trials": 3186,
+   "excess": 5.630145775895823,
+   "se": 60.48599404536903,
+   "z": 0.09308180951234415,
+   "observed": 0.4268675455116133,
+   "best_seed": 0.41163154343951747,
+   "best_model": 0.43021216410300617,
+   "effect": 0.029387815002368138,
+   "reliable": false
   },
   {
    "feature": "number of examples",
@@ -585,7 +637,61 @@
    "z": -3.1072675459515677,
    "observed": 0.34647550776583036,
    "best_seed": 0.37061394750259197,
-   "best_model": 0.35332436309503934
+   "best_model": 0.35332436309503934,
+   "effect": 0.02701086719961838,
+   "reliable": false
+  },
+  {
+   "feature": "examples share parity; the number",
+   "value": "keeps it",
+   "trials": 7812,
+   "excess": 45.58716275690742,
+   "se": 120.32267835957249,
+   "z": 0.3788742353347111,
+   "observed": 0.5094726062467998,
+   "best_seed": 0.5663356668311749,
+   "best_model": 0.5236858648380489,
+   "effect": 0.026888327927203283,
+   "reliable": false
+  },
+  {
+   "feature": "number of examples",
+   "value": "4",
+   "trials": 7218,
+   "excess": 137.8612176891695,
+   "se": 135.44932617520988,
+   "z": 1.0178065966222656,
+   "observed": 0.39068994181213634,
+   "best_seed": 0.42742532476980677,
+   "best_model": 0.4120849461408604,
+   "effect": 0.02641015981220864,
+   "reliable": false
+  },
+  {
+   "feature": "after one example, the number is",
+   "value": "other",
+   "trials": 2187,
+   "excess": -87.86713814344014,
+   "se": 28.96660026922914,
+   "z": -3.0333949212804345,
+   "observed": 0.49336991312299955,
+   "best_seed": 0.3903047699985835,
+   "best_model": 0.4717792859589564,
+   "effect": 0.023646450269150524,
+   "reliable": false
+  },
+  {
+   "feature": "examples share parity; the number",
+   "value": "breaks it",
+   "trials": 5256,
+   "excess": -79.57786577933655,
+   "se": 84.55690112252402,
+   "z": -0.9411161563741227,
+   "observed": 0.15658295281582954,
+   "best_seed": 0.1601462490310073,
+   "best_model": 0.17441048630170852,
+   "effect": 0.01763071640242936,
+   "reliable": false
   },
   {
    "feature": "examples share a last digit; the number",
@@ -596,7 +702,9 @@
    "z": -3.8367171041890065,
    "observed": 0.11228689006466784,
    "best_seed": 0.1175813080833895,
-   "best_model": 0.13632886589196538
+   "best_model": 0.13632886589196538,
+   "effect": -0.0028399788201459537,
+   "reliable": false
   }
  ]
 }
