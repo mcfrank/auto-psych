@@ -321,14 +321,14 @@ def classic_ng(cell, fig, profiles):
 
 # What is not yet as it should be, drawn on the panel in red until it is fixed: (row, domain) -> what is missing.
 # Rows (a) and (b) should use Figure 2's split; row (c)'s patterns should come from a reproducible search.
-LOO = "IN-SAMPLE: needs leave-one-out\npredictions (from the Sherlock fits)"
-UNSEEN = "IN-SAMPLE: needs predictions for the\nitems no run drew (Sherlock fits)"
+LOO = "IN-SAMPLE: needs Figure 2's split,\nleave-one-out predictions (Sherlock fits)"
+UNSEEN = "IN-SAMPLE: needs Figure 2's split,\npredictions for the items no run drew (Sherlock fits)"
 SEARCH = "TO REDO: patterns from a reproducible\nsearch over the figure data"
 TO_FIX = {(0, "subjective_randomness"): LOO, (0, "number_game"): UNSEEN,
           (1, "subjective_randomness"): LOO,
-          (1, "number_game"): "MODELS PENDING: predictions for every number\n(people: only the numbers no run drew)",
-          (2, "subjective_randomness"): SEARCH + "\n" + LOO.split(": ")[0].lower(),
-          (2, "rsa"): SEARCH, (2, "number_game"): SEARCH + "\n" + UNSEEN.split(": ")[0].lower()}
+          (1, "number_game"): "MODELS PENDING, Figure 2's split: predictions for\nevery number no run drew (people: those numbers only)",
+          (2, "subjective_randomness"): SEARCH + "\nin-sample: needs Figure 2's split",
+          (2, "rsa"): SEARCH, (2, "number_game"): SEARCH + "\nin-sample: needs Figure 2's split"}
 FIX_RED = "#c62828"
 
 
