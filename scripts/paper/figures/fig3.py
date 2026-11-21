@@ -32,7 +32,7 @@ MODELS = ("best_seed", "best_model")
 # Its predictions, of the same kind as the figure data's, are in ``<domain>_model_conditions.json``
 # (``scripts/paper/number_game_model_conditions.py``). The number game shows run 3's winner, the best on
 # unseen items (Fig. 2) and the model Fig. 4 ablates; the pooled CV best is run 2's.
-COLUMN_MODEL = {"number_game": ("exception_weighted_rule_rejection", "run 3 winner")}
+COLUMN_MODEL = {"number_game": ("exception_weighted_rule_rejection", "best discovered")}
 SR_LENGTH = 8  # the commonest sequence length: alternation counts compare only within a length
 PCT = plt.FuncFormatter(lambda v, _: f"{v:.0%}")
 
@@ -316,7 +316,7 @@ def classic_ng(cell, fig, profiles):
     axes[0].text(1, 1.02, "models: pending", transform=axes[0].transAxes, ha="right", va="bottom", fontsize=6,
                  color=INK_2, style="italic")
     axes[-1].set(xticks=[1, 25, 50, 75, 100])
-    axes[-1].set_xlabel("number asked about", labelpad=1)
+    axes[-1].set_xlabel("number queried", labelpad=1)
     axes[0].set_ylabel("said yes", labelpad=1, y=-0.25)
 
 
@@ -331,7 +331,7 @@ def draw(figure_data: Path, displays: Path, ng_dataset: Path, out_dir: Path) -> 
     for k, d in enumerate(ORDER):
         a = [fig.add_subplot(gs[0, 3 * k + j]) for j in (0, 1)]
         _scatter(a[0], tables[d], MODELS[0], SEED, "best seed")
-        _scatter(a[1], tables[d], MODELS[1], BEST, COLUMN_MODEL.get(d, (None, "best winner"))[1])
+        _scatter(a[1], tables[d], MODELS[1], BEST, COLUMN_MODEL.get(d, (None, "best discovered"))[1])
         for ax in a if k else a[1:]:
             ax.tick_params(labelleft=False)
         tops.append(a[0])
