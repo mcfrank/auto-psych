@@ -1,5 +1,6 @@
 """Figure 3 (``fig3_effects``), one column per domain, from the figure data (``<domain>.json``'s ``conditions``:
-each condition's observed proportion and the pooled best model's and best seed's predictions):
+each condition's observed proportion and the pooled best model's and best seed's predictions; a column whose
+model is not the pooled best, ``COLUMN_MODEL``, takes that model's predictions from ``<domain>_model_conditions.json``):
 (a) observed against each model's prediction, with trial-weighted R² and RMSE; (b) the domain's classic effect,
 drawn as its original paper drew it, which both models capture; (c) a new effect only the winner captures.
 Row (c) is exploratory: its patterns were chosen after the fact (``streak_choices``, ``match_roles``,
@@ -27,6 +28,11 @@ ORDER = ["subjective_randomness", "rsa", "number_game"]
 ROWS = ("(a)", "(b)", "(c)")
 ROW_TITLES = (None, "Classic effect captured by both models", "New effect captured by our model")
 MODELS = ("best_seed", "best_model")
+# A column's model when it is not the pooled best (the figure data's ``best_model``): its name and axis label.
+# Its predictions, of the same kind as the figure data's, are in ``<domain>_model_conditions.json``
+# (``scripts/paper/number_game_model_conditions.py``). The number game shows run 3's winner, the best on
+# unseen items (Fig. 2) and the model Fig. 4 ablates; the pooled CV best is run 2's.
+COLUMN_MODEL = {"number_game": ("exception_weighted_rule_rejection", "run 3 winner")}
 SR_LENGTH = 8  # the commonest sequence length: alternation counts compare only within a length
 PCT = plt.FuncFormatter(lambda v, _: f"{v:.0%}")
 
@@ -40,7 +46,23 @@ def load(figure_data: Path, displays: Path) -> Dict[str, pd.DataFrame]:
     if len(shown) != rsa.display.max() + 1 or (shown.n.to_numpy()[rsa.display] != rsa.n).any():
         raise RuntimeError(f"{displays} does not describe the figure data's reference-game displays")
     out["rsa"] = rsa[rsa.dataset == "prereg"].join(shown[["objects", "utterance", "choice_classes"]], on="display")
+    for d, (model, _) in COLUMN_MODEL.items():
+        out[d] = with_model(out[d], json.loads((figure_data / f"{d}_model_conditions.json").read_text()), model)
     return out
+
+
+def with_model(cond: pd.DataFrame, preds: dict, model: str) -> pd.DataFrame:
+    """The conditions with ``best_model`` replaced by ``model``'s predictions (``preds``: its per-condition
+    ``p_yes``), which must cover exactly the same conditions."""
+    if preds["model"] != model:
+        raise RuntimeError(f"the predictions are {preds['model']!r}'s, not {model!r}'s")
+    key = ["number_set", "target", "n"]
+    p = pd.DataFrame(preds["conditions"])
+    both = cond.reset_index().merge(p, on=key, how="outer", suffixes=("", "_p"), indicator=True)
+    if (both._merge != "both").any() or not np.allclose(both.observed, both.observed_p):
+        raise RuntimeError(f"{model!r}'s predictions are for other conditions than the figure data's")
+    both = both.set_index("index").loc[cond.index]
+    return cond.assign(best_model=both.p_yes.to_numpy())
 
 
 def r2(o, p, n) -> float:
@@ -269,7 +291,7 @@ def draw(figure_data: Path, displays: Path, out_dir: Path) -> None:
     for k, d in enumerate(ORDER):
         a = [fig.add_subplot(gs[0, 3 * k + j]) for j in (0, 1)]
         _scatter(a[0], tables[d], MODELS[0], SEED, "best seed")
-        _scatter(a[1], tables[d], MODELS[1], BEST, "best winner")
+        _scatter(a[1], tables[d], MODELS[1], BEST, COLUMN_MODEL.get(d, (None, "best winner"))[1])
         for ax in a if k else a[1:]:
             ax.tick_params(labelleft=False)
         tops.append(a[0])
@@ -305,6 +327,6 @@ def draw(figure_data: Path, displays: Path, out_dir: Path) -> None:
             fig.text(x1 + 0.008, y, ROW_TITLES[row], fontdict=TITLE_FONT, fontsize=8.5, va="center")
     key = [Line2D([], [], color=HUMAN, marker="o", ms=3, lw=0, label="people (95% CI)"),
            Line2D([], [], color=SEED, lw=1.5, label="best seed model"),
-           Line2D([], [], color=BEST, lw=1.5, label="best winning model")]
+           Line2D([], [], color=BEST, lw=1.5, label="winning model")]
     fig.legend(handles=key, loc="lower center", ncol=3, frameon=False, bbox_to_anchor=(0.5, 0.0))
     save(fig, out_dir, "fig3_effects")

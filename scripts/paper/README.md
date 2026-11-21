@@ -94,7 +94,10 @@ What each figure shows:
   choosing an all-heads/all-tails sequence by its rival's switch rate, the share choosing the sparsest, middle
   and richest object a word fits, and yes to new numbers keeping or breaking a shared final digit by number
   of examples. Reference games use the pre-registered experiment, their displays from
-  `data/rsa/viz/panel_displays.json`. The number game's (b) is pending.
+  `data/rsa/viz/panel_displays.json`. The number game's column shows run 3's winner, not the pooled best
+  (`fig3.COLUMN_MODEL`), from `figure_data/number_game_model_conditions.json`: its posterior-mean predictions
+  from the figure data's pooled fit, read from a copy of that fit's cache file
+  (`number_game_model_conditions.py`). The number game's (b) is pending.
 - **Figure 4** (`fig4_ablation`): each domain winner's backward elimination on two axes: the path as
   ELPD-CV vs. the full model, each step ±1 SE of its difference from the previous round's model, and the
   kept column as each removal's ELPD-CV vs. the final model, ±1 SE of that difference (the SEs the
