@@ -146,15 +146,18 @@ def classic_rsa(ax, rsa):
     d = reference_game(rsa)
     x = np.arange(len(d))
     roles = [GAME_ROLES[tuple(GAME[classes.index(cls)])] for cls, classes in zip(d.index, d.choice_classes)]
-    for c, color in zip(MODELS, (SEED, BEST)):
-        ax.plot(x, d[c], color=color, lw=1.3, zorder=2)
+    w = 0.26
     o = d.observed.to_numpy()
-    ax.errorbar(x, o, yerr=1.96 * np.sqrt(o * (1 - o) / d.n), fmt="o", color=HUMAN, ms=3, elinewidth=0.8, zorder=3)
+    ax.bar(x - w, o, w, color=HUMAN, zorder=2)
+    ax.errorbar(x - w, o, yerr=1.96 * np.sqrt(o * (1 - o) / d.n), fmt="none", ecolor=INK_2, elinewidth=0.7, zorder=3)
+    for dx, c, color in ((0, MODELS[1], BEST), (w, MODELS[0], SEED)):  # people, the discovered model, the seed
+        ax.bar(x + dx, d[c], w, color=color, zorder=2)
     ax.set_xticks(x, [name for name, _ in roles])
+    ax.tick_params(axis="x", length=0)
     for xi, (_, what) in zip(x, roles):  # each role's description, smaller, under its name
         ax.annotate(what, (xi, 0), xycoords=("data", "axes fraction"), xytext=(0, -17), textcoords="offset points",
                     ha="center", va="top", fontsize=5.5, color=INK_2, annotation_clip=False)
-    ax.set(xlim=(-0.5, len(x) - 0.5), ylim=(0, 1))
+    ax.set(xlim=(-0.6, len(x) - 0.4), ylim=(0, 1))
     ax.yaxis.set_major_formatter(PCT)
     ax.set_ylabel("chosen", labelpad=1)
 
@@ -257,7 +260,7 @@ def new_rsa(ax, rsa):
     w = 0.26
     ax.bar(x - w, t.observed, w, color=HUMAN, zorder=2)
     ax.errorbar(x - w, t.observed, yerr=t.ci, fmt="none", ecolor=INK_2, elinewidth=0.7, zorder=3)
-    for dx, c, color in ((0, MODELS[0], SEED), (w, MODELS[1], BEST)):
+    for dx, c, color in ((0, MODELS[1], BEST), (w, MODELS[0], SEED)):  # people, the discovered model, the seed
         ax.bar(x + dx, t[c], w, color=color, zorder=2)
     ax.set_xticks(x, ["fewest\nfeatures", "in\nbetween", "most\nfeatures"], fontsize=6, va="top")
     ax.tick_params(axis="x", length=0)
@@ -283,7 +286,41 @@ def new_ng(ax, ng):
     _panel_title(ax, "Graded confidence in a shared digit")
 
 
-def draw(figure_data: Path, displays: Path, out_dir: Path) -> None:
+NG_SETS = ("100", "80, 70, 90, 100")  # one example, then four that fit a rule (as the dataset writes them)
+
+
+def ng_profiles(dataset: Path) -> Dict[str, pd.Series]:
+    """Tenenbaum (2000)'s generalization profiles: people's share of yes for every target 1-100 after each of
+    ``NG_SETS``, from the whole Bigelow & Piantadosi (2016) dataset (every set was asked about all 100)."""
+    d = pd.read_csv(dataset, usecols=["set", "target", "rating"])
+    d["set"] = d.set.str.replace("_", ",")
+    out = {}
+    for ex in NG_SETS:
+        x = d[d.set == ex].groupby("target").rating.mean()
+        if len(x) != 100:
+            raise RuntimeError(f"{dataset}: set {ex!r} was asked about {len(x)} targets, not 100")
+        out[ex] = x
+    return out
+
+
+def classic_ng(cell, fig, profiles):
+    """Each set's profile as its own histogram, people's bars in black; the models' bars are pending (their
+    predictions for every target need the pooled fits)."""
+    axes = cell.subgridspec(len(profiles), 1, hspace=0.5).subplots(sharex=True)
+    for ax, (ex, yes) in zip(axes, profiles.items()):
+        ax.bar(yes.index, yes, width=0.8, color=HUMAN)
+        ax.set(xlim=(0, 101), ylim=(0, 1), yticks=[0, 1])
+        ax.yaxis.set_major_formatter(PCT)
+        ax.set_title("examples: " + ex, fontsize=6, loc="left", pad=2)
+    axes[0].tick_params(axis="x", length=0)
+    axes[0].text(1, 1.02, "models: pending", transform=axes[0].transAxes, ha="right", va="bottom", fontsize=6,
+                 color=INK_2, style="italic")
+    axes[-1].set(xticks=[1, 25, 50, 75, 100])
+    axes[-1].set_xlabel("number asked about", labelpad=1)
+    axes[0].set_ylabel("said yes", labelpad=1, y=-0.25)
+
+
+def draw(figure_data: Path, displays: Path, ng_dataset: Path, out_dir: Path) -> None:
     tables = load(figure_data, displays)
     fig = plt.figure(figsize=(WIDTH_IN, HEIGHT_IN))
     # one grid for every row, so a domain's panels share a column: row (a)'s two scatterplots side by side,
@@ -298,9 +335,11 @@ def draw(figure_data: Path, displays: Path, out_dir: Path) -> None:
         for ax in a if k else a[1:]:
             ax.tick_params(labelleft=False)
         tops.append(a[0])
-        b = fig.add_subplot(gs[1, 3 * k:3 * k + 2])
-        {"subjective_randomness": classic_sr, "rsa": classic_rsa,
-         "number_game": lambda ax, _: _pending(ax, "generalization profiles")}[d](b, tables[d])
+        if d == "number_game":
+            classic_ng(gs[1, 3 * k:3 * k + 2], fig, ng_profiles(ng_dataset))
+        else:
+            {"subjective_randomness": classic_sr, "rsa": classic_rsa}[d](fig.add_subplot(gs[1, 3 * k:3 * k + 2]),
+                                                                       tables[d])
         {"subjective_randomness": new_sr, "rsa": new_rsa, "number_game": new_ng}[d](
             fig.add_subplot(gs[2, 3 * k:3 * k + 2]), tables[d])
     tops[0].set_ylabel("observed", labelpad=1)
@@ -330,6 +369,6 @@ def draw(figure_data: Path, displays: Path, out_dir: Path) -> None:
             fig.text(x1 + 0.008, y, ROW_TITLES[row], fontdict=TITLE_FONT, fontsize=8.5, va="center")
     key = [Line2D([], [], color=HUMAN, marker="o", ms=3, lw=0, label="people (95% CI)"),
            Line2D([], [], color=SEED, lw=1.5, label="best seed model"),
-           Line2D([], [], color=BEST, lw=1.5, label="winning model")]
+           Line2D([], [], color=BEST, lw=1.5, label="best discovered model")]
     fig.legend(handles=key, loc="lower center", ncol=3, frameon=False, bbox_to_anchor=(0.5, 0.0))
     save(fig, out_dir, "fig3_effects")

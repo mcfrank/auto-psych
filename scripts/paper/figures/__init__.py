@@ -39,6 +39,8 @@ class Args:
     """Directory with one ``<domain>.json`` per domain."""
     rsa_displays: Path = here() / "data" / "rsa" / "viz" / "panel_displays.json"
     """What each reference-game display showed (``scripts/paper/rsa_panel_displays.py``): Figure 3's games."""
+    ng_dataset: Path = here() / "data" / "number-game" / "human experiment" / "numbergame_data.csv"
+    """The whole Bigelow & Piantadosi (2016) dataset (gitignored): Figure 3's generalization profiles."""
     mechanisms: Path = here() / "scripts" / "paper" / "mechanisms.yaml"
     """Figure 4's name and origin of each winner's mechanisms, per domain."""
     model_names: Path = here() / "scripts" / "paper" / "model_names.yaml"
@@ -107,7 +109,7 @@ def main(args: Args) -> None:
     with plt.rc_context():
         setup_style()
         if "3" in args.figures:
-            fig3.draw(args.figure_data, args.rsa_displays, args.out_dir)
+            fig3.draw(args.figure_data, args.rsa_displays, args.ng_dataset, args.out_dir)
         if "4" in args.figures:
             fig4.draw_ablation(args.figure_data, args.mechanisms, args.out_dir)
     print(f"wrote figure(s) {', '.join(args.figures)} to {args.out_dir}", flush=True)
