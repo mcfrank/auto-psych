@@ -34,7 +34,7 @@ LEFT, RIGHT, TICK_DEG = 0.04, 0.04, 35  # shares of the path's axis before the f
 PATH_IN, KEPT_IN, GAP_IN = 3.25, 0.5, 0.82  # widths: the path's axes, the kept column's, between them (inches)
 LEFT_PAD, TOP_PAD, LEGEND_PAD, ROW_GAP = 0.1, 0.01, 0.05, 0.06  # figure shares (left, top, the legend's), inches between rows
 ICON_OVER, ONE_LINE = 0.5, 14  # how far each title's icon reaches over it (title heights); the longest one-line step name
-WIDTH_IN, HEIGHT_IN = 7.0, 4.9  # one row per domain; the saved figure: PNAS's full width
+WIDTH_IN, HEIGHT_IN = 7.0, 4.6  # one row per domain; the saved figure: PNAS's full width
 # each panel's cues are named by what pushes its response this way (the fitted signs: mechanisms.yaml)
 DIRECTION = {"subjective_randomness": "what makes a sequence look less random",
              "rsa": "what makes an object more likely to be chosen",
@@ -172,7 +172,7 @@ def draw_kept(ax, kept, names):
                 ha="center", va="bottom", fontsize=SMALL + 0.5, color=INK)
     ax.tick_params(labelsize=SMALL, length=2, pad=1.5)
     ax.spines["bottom"].set_bounds(-0.25, 0.25)
-    ax.set_ylabel("ELPD-CV vs.\nfinal model (nats)", fontsize=SMALL)
+    ax.set_ylabel("ELPD-CV vs. model\nafter removals (nats)", fontsize=SMALL)
 
 
 def stack_rows(fig, grid):
