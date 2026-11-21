@@ -2,7 +2,7 @@
 # and every best discovered model, per domain. Drafted from each model's
 # docstring (2026-10-20; the starting models' authors moved to
 # seed_papers.yaml 2026-10-21) and kept to about 30 characters so each fits on one
-# line beside its panel; edit freely. scripts/paper/figures.py raises if a
+# line beside its panel; edit freely. scripts/paper/figures raises if a
 # labelled model has no name here.
 subjective_randomness:
   # starting models (the literature seeds)
@@ -16,8 +16,10 @@ subjective_randomness:
   mild_symmetric_trick_coin_streak_weary: Streak-weary trick coin
 rsa:
   # starting models (the promoted seeds, each chain's share)
-  rsa_l1: RSA, depth 1
+  rsa_l1: RSA, depth 1 (Frank & Goodman, 2012)
   rsa_l2: RSA, depth 2
+  # the best textbook model, Figure 2's zero (rsa.json's best_textbook)
+  rsa_l1_shared_prior: RSA + shared prior
   rsa_l2_singleton_distinct_feat_color_l0: RSA-2 + salience, distinctiveness
   rsa_l2_singleton_feat_color_familiar_l0: RSA-2 + salience, familiarity
   rsa_l2_singleton_feat_color_valence_l0: RSA-2 + salience, valence

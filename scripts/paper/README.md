@@ -24,21 +24,22 @@ it to four decimals).
 
 What each figure shows:
 
-- **Figure 2**, in two layouts of the same comparison: `fig2_elpd` (models
-  across, ELPD up) and `fig2_elpd_horizontal` (a forest plot: one row per
-  model, ELPD across). Per domain, each model's ELPD (a dashed line marks
-  the best starting model's), the runs collapsed: the best discovered
-  models and the starting models as points with ±2 SE of the paired
-  difference (names: `model_names.yaml`; the paper each starting model
-  implements, or null: `seed_papers.yaml`), and the non-winning models
+- **Figure 2** (`fig2_elpd`, `figures/fig2.py`): per domain, each model's
+  ΔELPD against the best starting model (dashed), the runs collapsed: the
+  best discovered models and the starting models as points with ±2 SE of
+  the paired difference (names: `model_names.yaml`; the paper each starting
+  model implements, or null: `seed_papers.yaml`), and the non-winning models
   (the other models live at the end and those pruned during the runs) as
-  one strip, each run's in the order it admitted them (`pruned_order`,
-  `others_order`); every model the loop wrote is coloured by its run
-  (`RUN_COLORS`). The vertical layout
-  names the best discovered models at the top and, at the bottom, the
-  starting models a paper proposed (by the paper) and the best starting
-  model; the horizontal one names every row. A point whose paired SE
-  is not computed yet is drawn hollow, a strip not scored yet "pending".
+  one "search history" strip, each run's in the order it admitted them
+  (`pruned_order`, `others_order`), under a step line tracing the loop's own
+  incumbent (each `history.json` step's `best_model`, from the run
+  directories `--histories` names). Each run has its own shade, by its best
+  model (the best darkest), and so does its winner. The best discovered models are named
+  at the top, the starting models at the bottom (by their paper, or their
+  own name where seeds share one). Reference games are re-zeroed on the
+  best textbook model (`best_textbook`), with the best promoted seed (the
+  pre-registered bar) as a second line. The house style is Avenir where
+  installed (`figures/style.py`; else the closest sans serif, said so).
   Subjective randomness and the number game are drawn from all runs pooled
   (each run is scored on its own data); reference games from every chain on
   the pre-registered test. The per-run records below are still written.
@@ -73,8 +74,9 @@ What each figure shows:
     is stimulus-clustered ((set, target) cells). Figure 2 draws instead the
     pooled models' log predictive density on held-out responses
     (`data/paper/number_game_unseen_items.json`, `number_game_unseen_items.py`):
-    by default on the Bigelow & Piantadosi example sets no run drew
-    (`figures.py --ng-test-set unseen_items` draws every item no run drew), the winners and seeds from their pooled fits, the
+    by default on every (set, target) item no run drew (`figures
+    --ng-test-set unseen_example_sets` draws the stricter example sets no run
+    drew: 11 sets, too few to separate the models), the winners and seeds from their pooled fits, the
     non-winning models from their all-data pooled fits at the runs' settings
     (scored in shards on Sherlock:
     `STRIP_SHARDS=22 sbatch --array=0-21 scripts/paper/number_game_unseen_items.sbatch`,
@@ -86,42 +88,14 @@ What each figure shows:
     scored on the same data as the rest of its column (`pruned_during_run`;
     one whose fit fails or does not converge is listed with the reason in
     `pruned_unscored` instead).
-- **Figure 3** (`fig3_conditions`): all runs' data pooled, each condition's
-  observed proportion against the prediction of the best discovered model and
-  of the best seed, both fitted on the pooled data (the figure data's
-  `pooled`).
-  - Subjective randomness: every run's winner and the seeds are fitted on the
-    three runs' final data together (each run's participants kept apart; the
-    collected runs hold no Prolific IDs, so a person in two runs counts as
-    two), every model at the same settings: `--pooled-draws` (1,500) draws per
-    chain, `--pooled-tune` (4,000), `--pooled-target-accept` (0.95),
-    `--pooled-random-seed` (20261018) and `--pooled-fit-method`
-    (`nuts_no_jitter`: every chain starts at the model's initial point; with
-    PyMC's jittered starts some chain, a different one at each seed tried,
-    started so far out that its step size fell to zero and it never moved). The
-    winner and the seed with the highest ELPD-LOO there are drawn; any winner
-    or seed whose fit did not converge, or whose PSIS-LOO is unreliable, stops
-    the script (which model is best is then not known). Conditions are
-    unordered sequence pairs.
-  - RSA: the fits on the pooled data in `data/rsa/viz/panels.json`; the best
-    model is the chain final with the highest held-out density, the best
-    starting model the textbook RSA model with the highest held-out density
-    (the pre-registration's `best_starting`, `rsa_l1_shared_prior`;
-    panels.json's `starting`), not the best promoted seed (panels.json
-    records no pooled ELPD). Conditions are (display, object class) cells.
-  - Number game: the three runs' final data pooled (22,680 responses; the
-    runs hide participant ids, so nothing is renumbered); the best model is
-    the winner and the best starting model the seed with the highest ELPD-CV
-    there. Conditions are (example set, target) cells, 9 responses per run
-    that drew the cell: 2,139 cells, 1,856 drawn by one run, 185 by two and
-    98 by all three (244 example sets).
-- **Figure 4** (`fig4_pseudocode`): hand-written annotated pseudocode of each
-  domain's Figure 3 model, `pseudocode/<domain>.yaml`. Each spec records its
-  model file's SHA-256, and the figure script refuses a spec whose model
-  changed or that is not Figure 3's best model. The number game's spec still
-  describes the October sweep's winner: it is rewritten once the November
-  figure data name the best model.
-
+- **Figure 3** (`fig3_effects`): per domain, from the figure data's `conditions` (pooled best model and
+  best seed): (a) observed against predicted, with R² and RMSE; (b) the classic effect as its original paper
+  drew it; (c) a new effect only the winner captures. Reference games use the pre-registered experiment,
+  their displays from `data/rsa/viz/panel_displays.json`. The number game's (b) and every (c) are pending.
+- **Figure 4** (`fig4_ablation`): each domain winner's backward elimination on two axes: the path as
+  ELPD-CV vs. the full model, each step ±1 SE of its difference from the previous round's model, and the
+  kept column as each removal's ELPD-CV vs. the final model, ±1 SE of that difference (the SEs the
+  stopping rule used); every mechanism's name and origin are in `mechanisms.yaml`.
 - **Ablation figure** (`fig_ablation`, `uv run python -m scripts.paper.ablation_figure`,
   seconds): the backward elimination of each domain's overall winner, one
   panel each: the subjective-randomness final best on all runs pooled
@@ -143,7 +117,8 @@ What each figure shows:
   recording it: an older `elimination.json` lacks it, and the figure stops
   until that ablation's plan step is rerun (it replays the saved CVs, no fits).
 
-`figures.py --mock-domains <domain> ...` marks those domains' titles "(MOCK
+`figures --figures 2 3` draws only those figures (Figure 4 needs every
+drawn domain's data). `figures --mock-domains <domain> ...` marks those domains' titles "(MOCK
 DATA)", for drafting the figures' look from invented figure data.
 
 The number game is drawn as "results pending" until its figure data exist
