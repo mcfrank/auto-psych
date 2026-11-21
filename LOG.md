@@ -52,3 +52,18 @@ Entry format (newest at the bottom):
   did what the stashed draft edits did (November number-game data, unseen-items test set, per-run
   colours, number-game row (a) in Fig 3); the drafts and fig3_conditions.* were deleted on main.
   Only the Tenenbaum 1999 citation in seed_papers.yaml was new; applied it and regenerated Fig 2.
+
+- 2026-11-21 (fig3-new-effects): Figure 3 row (c) built from the figure data's `conditions`, not from a
+  trial-level export. Lesson: a pattern defined on trials can usually be recomputed from condition-level
+  tables (observed proportion, n, per-condition predictions) by weighting each condition by its n; do that
+  rather than re-adding a trial export, and check that the totals (trials, displays, sets) match the audit
+  that first defined the pattern before trusting the plot.
+  - Why: the conditions are the figure's single source of truth, so every row of a column then uses the same
+    best model and best seed; re-deriving from them also caught nothing new to tune, since the audit's
+    definitions reproduced its numbers (SR 2,524 trials, 11.8/13.0/22.7%; RG 32 displays, 1,475 trials).
+  - Evidence: branch `fig3-new-effects`, `scripts/paper/figures/fig3.py` (`streak_choices`, `match_roles`,
+    `digit_confidence`), tests in `tests/test_paper_figures.py`.
+  - Note: panel titles inside a row with a row title need extra vertical room; lift the row title and widen
+    hspace rather than shrinking fonts. Pre-existing failures on main (macOS): `os.sched_getaffinity` in
+    `src/models/pymc_inference.py` breaks 24 tests in information_criteria / rsa_chain_models /
+    sr_figure_data, and `test_paper_recovery_figures.py` needs plotnine.
