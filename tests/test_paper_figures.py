@@ -4,6 +4,7 @@ conditions' reference-game displays (Figure 3) and the winners' backward elimina
 
 from __future__ import annotations
 
+import itertools
 import json
 
 import numpy as np
@@ -303,3 +304,42 @@ def test_an_unseen_strip_missing_a_model_raises():
 
 def test_the_number_game_is_titled_number_game():
     assert style.panel_title("number_game", mock_domains=[]) == "Number game"
+
+
+def _elimination():
+    """Four mechanisms, two dropped: a (cost 1, se 2 vs the full model), then b (cost 3, se 1.5 vs the model
+    without a), then the stop. Each round's se_vs_start differs from its step's se, so the test tells them apart."""
+    def cand(m, elpd, cur, se, se_vs_start):
+        return {"mechanism": m, "elpd_cv": elpd, "cost": cur - elpd, "se": se, "se_vs_start": se_vs_start}
+    return {"rounds": [
+        {"mechanisms": ["a", "b", "c", "d"], "elpd_cv": -100.0, "se_vs_start": 0.0,
+         "candidates": [cand("a", -101.0, -100.0, 2.0, 2.0), cand("b", -110.0, -100.0, 5.0, 5.0)]},
+        {"mechanisms": ["b", "c", "d"], "elpd_cv": -101.0, "se_vs_start": 2.0,
+         "candidates": [cand("b", -104.0, -101.0, 1.5, 6.0), cand("c", -140.0, -101.0, 8.0, 9.0)]},
+        {"mechanisms": ["c", "d"], "elpd_cv": -104.0, "se_vs_start": 6.0,
+         "candidates": [cand("c", -130.0, -104.0, 9.0, 12.0), cand("d", -120.0, -104.0, 7.0, 10.0)]},
+    ]}
+
+
+def test_figure_4s_path_bars_are_the_stopping_rules_se_vs_the_previous_round():
+    path, _ = fig4.ablation_points(_elimination())
+    assert [p["n"] for p in path] == [4, 3, 2]
+    assert [p["y"] for p in path] == [0.0, -1.0, -4.0]  # ELPD-CV vs. the full model
+    assert [p["dropped"] for p in path] == [None, "a", "b"]
+    assert [p["se"] for p in path] == [None, 2.0, 1.5]  # each drop's own se, not se_vs_start (2.0, 6.0)
+
+
+def test_figure_4s_kept_column_is_each_removal_vs_the_final_model():
+    _, kept = fig4.ablation_points(_elimination())
+    assert [k["mechanism"] for k in kept] == ["d", "c"]  # cheapest removal first
+    assert [k["y"] for k in kept] == [-16.0, -26.0]  # zero: the final model
+    assert [k["se"] for k in kept] == [7.0, 9.0]  # the stopping rule's se vs the final model
+
+
+def test_figure_4_shows_each_domains_stopping_rule():
+    """Every drawn step cost under 2 of its SEs; the kept column's cheapest removal costs at least 2."""
+    for domain, path in fig4.sources(figures.Args().figure_data).items():
+        steps, kept = fig4.ablation_points(json.loads(path.read_text()))
+        for prev, step in itertools.pairwise(steps):
+            assert prev["y"] - step["y"] < 2 * step["se"], (domain, step["dropped"])
+        assert -kept[0]["y"] >= 2 * kept[0]["se"], domain

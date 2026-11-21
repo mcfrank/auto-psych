@@ -92,8 +92,10 @@ What each figure shows:
   best seed): (a) observed against predicted, with R² and RMSE; (b) the classic effect as its original paper
   drew it; (c) a new effect only the winner captures. Reference games use the pre-registered experiment,
   their displays from `data/rsa/viz/panel_displays.json`. The number game's (b) and every (c) are pending.
-- **Figure 4** (`fig4_ablation`): each domain winner's backward elimination on one scale, ELPD-CV vs.
-  the full model; every mechanism's name and origin are in `mechanisms.yaml`.
+- **Figure 4** (`fig4_ablation`): each domain winner's backward elimination on two axes: the path as
+  ELPD-CV vs. the full model, each step ±1 SE of its difference from the previous round's model, and the
+  kept column as each removal's ELPD-CV vs. the final model, ±1 SE of that difference (the SEs the
+  stopping rule used); every mechanism's name and origin are in `mechanisms.yaml`.
 - **Ablation figure** (`fig_ablation`, `uv run python -m scripts.paper.ablation_figure`,
   seconds): the backward elimination of each domain's overall winner, one
   panel each: the subjective-randomness final best on all runs pooled
