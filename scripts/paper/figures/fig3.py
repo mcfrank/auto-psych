@@ -2,8 +2,10 @@
 each condition's observed proportion and the pooled best model's and best seed's predictions):
 (a) observed against each model's prediction, with trial-weighted R² and RMSE; (b) the domain's classic effect,
 drawn as its original paper drew it, which both models capture; (c) a new effect only the winner captures.
-Reference games use the pre-registered experiment's displays (``data/rsa/viz/panel_displays.json`` says what
-each showed). Panels whose data are not in yet are drawn as pending."""
+Row (c) is exploratory: its patterns were chosen after the fact (``streak_choices``, ``match_roles``,
+``digit_confidence``). Reference games use the pre-registered experiment's displays
+(``data/rsa/viz/panel_displays.json`` says what each showed). Panels whose data are not in yet are drawn as
+pending."""
 
 from __future__ import annotations
 
@@ -132,13 +134,137 @@ def classic_rsa(ax, rsa):
     ax.set_ylabel("chosen", labelpad=1)
 
 
+# --- row (c): exploratory, patterns chosen after the fact ---------------------------------------------------
+
+def _weighted(g, extra=()) -> pd.DataFrame:
+    """Each group's trial-weighted mean of the observed and predicted proportions, its trials and people's
+    binomial 95% CI."""
+    t = pd.DataFrame({c: g.apply(lambda d: np.average(d[c], weights=d.n), include_groups=False)
+                      for c in ("observed", *MODELS, *extra)})
+    t["n"] = g.n.sum()
+    t["ci"] = 1.96 * np.sqrt(t.observed * (1 - t.observed) / t.n)
+    return t
+
+
+SWITCH_BINS = [0, 0.2, 0.4, 0.6, 0.8, 1]
+
+
+def streak_choices(sr: pd.DataFrame) -> pd.DataFrame:
+    """Pairs in which exactly one sequence (of 5 or more flips) is all heads or all tails: the chance of choosing
+    it as more random, by the other sequence's switch rate (switches / (length - 1)), binned; each bin's
+    trial-weighted mean switch rate."""
+    first, second = sr.pair.str[0], sr.pair.str[1]
+    const = [s.map(lambda q: len(set(q)) == 1) for s in (first, second)]
+    keep = (const[0] ^ const[1]) & (first.str.len() >= 5)
+    d, a = sr[keep], const[0][keep]
+    rival = np.where(a, second[keep], first[keep])
+    t = pd.DataFrame({c: np.where(a, d[c], 1 - d[c]) for c in ("observed", *MODELS)}, index=d.index)
+    t["n"] = d.n
+    t["switch_rate"] = [sum(x != y for x, y in zip(q, q[1:])) / (len(q) - 1) for q in rival]
+    return _weighted(t.groupby(pd.cut(t.switch_rate, SWITCH_BINS, include_lowest=True), observed=True),
+                     ["switch_rate"])
+
+
+ROLES = ("sparsest", "middle", "richest")
+
+
+def _role(objects, utterance, classes, cls) -> str:
+    """The class's object among those the word fits, by number of features, when they have three or more
+    different numbers of features ('other' otherwise)."""
+    if pd.isna(utterance):
+        return "other"
+    fits = [sum(o) for o in objects if o[int(utterance)]]
+    obj = objects[classes.index(cls)]
+    if len(set(fits)) < 3 or not obj[int(utterance)]:
+        return "other"
+    return ROLES[0] if sum(obj) == min(fits) else ROLES[2] if sum(obj) == max(fits) else ROLES[1]
+
+
+def match_roles(rsa: pd.DataFrame) -> pd.DataFrame:
+    """Displays whose word fits objects with three or more different numbers of features: the share choosing
+    the sparsest, a middle and the richest object it fits, averaged over displays weighting each by its trials."""
+    d = rsa.assign(role=[_role(*r) for r in zip(rsa.objects, rsa.utterance, rsa.choice_classes, rsa.cls)])
+    d = d[d.role != "other"]
+    per = d.groupby(["display", "role"]).agg({"n": "first", **{c: "sum" for c in ("observed", *MODELS)}})
+    return _weighted(per.reset_index().groupby("role")).loc[list(ROLES)]
+
+
+def digit_confidence(ng: pd.DataFrame) -> pd.DataFrame:
+    """Example sets of two or more numbers that all end in the same digit: the chance of 'yes' to a target that
+    is not an example, by whether it keeps that final digit and by the number of examples."""
+    ex = ng.number_set.map(lambda s: [int(v) for v in s.split(",")])
+    shared = ex.map(lambda e: len(e) >= 2 and len({v % 10 for v in e}) == 1)
+    new = pd.Series([t not in e for t, e in zip(ng.target, ex)], index=ng.index)
+    d = ng[shared & new].copy()
+    d["keeps"] = [t % 10 == e[0] % 10 for t, e in zip(d.target, ex[d.index])]
+    d["examples"] = ex[d.index].map(len)
+    return _weighted(d.groupby(["keeps", "examples"]))
+
+
+def _panel_title(ax, text):
+    ax.set_title(text, fontsize=7, color=INK, pad=3)
+
+
+def _models_and_people(ax, x, t, **people):
+    for c, color in zip(MODELS, (SEED, BEST)):
+        ax.plot(x, t[c], color=color, lw=1.3, marker="o", ms=1.8, zorder=2)
+    ax.errorbar(x, t.observed, yerr=t.ci, fmt="o", color=HUMAN, ms=3, elinewidth=0.8, zorder=3, **people)
+
+
+def new_sr(ax, sr):
+    """Pairs with one all-heads or all-tails sequence: people choose it at about the same rate whatever its
+    rival; the best seed chooses it less as the rival alternates more."""
+    t = streak_choices(sr)
+    _models_and_people(ax, t.switch_rate, t)
+    ax.set(xlim=(0, 1), ylim=(0, 0.4), xticks=[0, 0.25, 0.5, 0.75, 1])
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:g}"))
+    ax.yaxis.set_major_formatter(PCT)
+    ax.set_xlabel("other sequence's switch rate", labelpad=1)
+    ax.set_ylabel("all heads/tails chosen", labelpad=1)
+    _panel_title(ax, "All heads or all tails: a flat rate")
+
+
+def new_rsa(ax, rsa):
+    """Displays whose word fits objects with three or more numbers of features: people rarely choose one in
+    the middle."""
+    t = match_roles(rsa)
+    x = np.arange(len(t))
+    w = 0.26
+    ax.bar(x - w, t.observed, w, color=HUMAN, zorder=2)
+    ax.errorbar(x - w, t.observed, yerr=t.ci, fmt="none", ecolor=INK_2, elinewidth=0.7, zorder=3)
+    for dx, c, color in ((0, MODELS[0], SEED), (w, MODELS[1], BEST)):
+        ax.bar(x + dx, t[c], w, color=color, zorder=2)
+    ax.set_xticks(x, ["fewest\nfeatures", "in\nbetween", "most\nfeatures"], fontsize=6, va="top")
+    ax.tick_params(axis="x", length=0)
+    ax.set(xlim=(-0.6, len(x) - 0.4), ylim=(0, 0.8))
+    ax.yaxis.set_major_formatter(PCT)
+    ax.set_ylabel("chosen", labelpad=1)
+    ax.set_xlabel("object the word fits", labelpad=1)
+    _panel_title(ax, "The middle candidate is passed over")
+
+
+def new_ng(ax, ng):
+    """Example sets sharing a final digit: people's yes to targets that keep it grows slowly with more examples;
+    the best seed becomes nearly certain."""
+    t = digit_confidence(ng)
+    for keeps, label in ((True, "keeps the\nfinal digit"), (False, "breaks it")):
+        d = t.loc[keeps]
+        _models_and_people(ax, d.index, d)
+        ax.text(d.index[-1] + 0.15, d.observed.iloc[-1], label, fontsize=6, color=INK_2, va="center")
+    ax.set(xlim=(1.8, 4.9), ylim=(0, 1.02), xticks=[2, 3, 4])
+    ax.yaxis.set_major_formatter(PCT)
+    ax.set_xlabel("examples sharing a final digit", labelpad=1)
+    ax.set_ylabel("yes to a new number", labelpad=1)
+    _panel_title(ax, "Graded confidence in a shared digit")
+
+
 def draw(figure_data: Path, displays: Path, out_dir: Path) -> None:
     tables = load(figure_data, displays)
     fig = plt.figure(figsize=(WIDTH_IN, HEIGHT_IN))
     # one grid for every row, so a domain's panels share a column: row (a)'s two scatterplots side by side,
     # rows (b) and (c) spanning both; a spacer column between domains
     gs = fig.add_gridspec(3, 8, width_ratios=[1, 1, 0.32, 1, 1, 0.32, 1, 1], height_ratios=[1.2, 1, 1],
-                          wspace=0.18, hspace=0.68, left=0.075, right=0.99, top=0.9, bottom=0.11)
+                          wspace=0.18, hspace=0.78, left=0.075, right=0.99, top=0.9, bottom=0.11)
     tops = []
     for k, d in enumerate(ORDER):
         a = [fig.add_subplot(gs[0, 3 * k + j]) for j in (0, 1)]
@@ -150,7 +276,8 @@ def draw(figure_data: Path, displays: Path, out_dir: Path) -> None:
         b = fig.add_subplot(gs[1, 3 * k:3 * k + 2])
         {"subjective_randomness": classic_sr, "rsa": classic_rsa,
          "number_game": lambda ax, _: _pending(ax, "generalization profiles")}[d](b, tables[d])
-        _pending(fig.add_subplot(gs[2, 3 * k:3 * k + 2]), "new effect")
+        {"subjective_randomness": new_sr, "rsa": new_rsa, "number_game": new_ng}[d](
+            fig.add_subplot(gs[2, 3 * k:3 * k + 2]), tables[d])
     tops[0].set_ylabel("observed", labelpad=1)
     fig.canvas.draw()
     r = fig.canvas.get_renderer()
@@ -169,7 +296,8 @@ def draw(figure_data: Path, displays: Path, out_dir: Path) -> None:
         draw_icon(fig.add_axes((left, title_y - h / 2, w, h)))
         t.set_x(left + w + gap)
     for row, label in enumerate(ROWS):
-        y = title_y if row == 0 else gs[row, 0].get_position(fig).y1 + 0.035  # clear of the y axis titles
+        # clear of the y axis titles, and in (c) of the panel titles
+        y = title_y if row == 0 else gs[row, 0].get_position(fig).y1 + (0.035, 0.035, 0.052)[row]
         t = fig.text(0.005, y, label, fontdict=TITLE_FONT, fontsize=10, va="center")
         if ROW_TITLES[row]:  # just right of the letter
             fig.canvas.draw()

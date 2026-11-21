@@ -144,6 +144,66 @@ def test_figure_3s_alternation_curve_peaks_above_a_fair_coins_rate():
     assert t.observed.idxmax() > (fig3.SR_LENGTH - 1) / 2
 
 
+def _preds(observed):
+    return {"observed": observed, "best_seed": observed, "best_model": observed}
+
+
+def test_figure_3s_streak_choices_are_of_the_one_constant_sequence_by_its_rivals_switch_rate():
+    import pandas as pd
+    sr = pd.DataFrame({
+        "pair": [["HHHHH", "HTHTT"], ["THTHH", "TTTTT"],  # kept: the constant sequence first, then second
+                 ["HHHH", "HTHT"], ["HHHHH", "TTTTT"], ["HTHTH", "HHTTH"]],  # too short; both; neither
+        "n": [10, 30, 5, 5, 5], **_preds([0.2, 0.9, 0.5, 0.5, 0.5])})
+    t = fig3.streak_choices(sr)
+    assert len(t) == 1 and t.n.iloc[0] == 40
+    assert t.switch_rate.iloc[0] == pytest.approx(0.75)  # 3 switches in 4
+    assert t.observed.iloc[0] == pytest.approx((10 * 0.2 + 30 * 0.1) / 40)  # the second's chosen 1 - 0.9
+
+
+def test_in_figure_3_people_choose_a_constant_sequence_at_a_flat_rate_the_best_seed_does_not():
+    t = fig3.streak_choices(_fig3_tables()["subjective_randomness"])
+    assert np.ptp(t.observed) < 0.06 and np.ptp(t.best_model) < 0.06 and np.ptp(t.best_seed) > 0.15
+
+
+def test_figure_3s_reference_game_roles_are_shares_of_the_sparsest_middle_and_richest_match():
+    import pandas as pd
+    rows = []
+    for display, objects, classes, n, observed in (
+            (0, [[1, 0, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]], [0, 1, 2, 3], 10, [0.5, 0.2, 0.2, 0.1]),
+            (1, [[1, 0], [1, 1], [0, 1]], [0, 1, 2], 50, [0.6, 0.3, 0.1]),  # two feature counts: no middle
+            (2, [[1, 0, 0], [1, 1, 0], [1, 1, 0], [1, 1, 1]], [0, 1, 1, 2], 30, [0.7, 0.1, 0.2])):
+        for cls, o in enumerate(observed):
+            rows.append({"display": display, "cls": cls, "n": n, "objects": objects, "utterance": 0.0,
+                         "choice_classes": classes, **_preds(o)})
+    t = fig3.match_roles(pd.DataFrame(rows))
+    assert list(t.index) == list(fig3.ROLES) and (t.n == 40).all()
+    assert t.observed.to_list() == pytest.approx([(5 + 21) / 40, (2 + 3) / 40, (2 + 6) / 40])
+
+
+def test_in_figure_3_people_pass_over_the_middle_candidate():
+    t = fig3.match_roles(_fig3_tables()["rsa"])
+    for c in ("observed", "best_model"):
+        assert t[c]["middle"] < t[c]["richest"] < t[c]["sparsest"], c
+    assert t.best_seed["middle"] > t.best_seed["richest"]
+
+
+def test_figure_3s_digit_confidence_is_yes_to_non_examples_of_sets_sharing_a_final_digit():
+    import pandas as pd
+    ng = pd.DataFrame({
+        "number_set": ["13,23", "13,23", "13,23", "13,24", "7", "3,13,23", "5,15,25"],
+        "target": [33, 23, 34, 33, 17, 43, 35],  # keeps; an example; breaks; no shared digit; one example
+        "n": [10, 10, 10, 10, 10, 10, 30], **_preds([0.8, 1.0, 0.1, 0.5, 0.5, 0.9, 0.5])})
+    t = fig3.digit_confidence(ng)
+    assert list(t.index) == [(False, 2), (True, 2), (True, 3)]
+    assert t.observed.to_list() == pytest.approx([0.1, 0.8, (9 + 15) / 40])
+    assert t.n.to_list() == [10, 10, 40]
+
+
+def test_in_figure_3_the_best_seed_is_near_certain_of_a_shared_final_digit_and_people_are_not():
+    t = fig3.digit_confidence(_fig3_tables()["number_game"]).loc[True]
+    assert t.best_seed[4] > 0.99 and t.observed[4] < 0.9 and abs(t.best_model[4] - t.observed[4]) < 0.1
+
+
 def test_every_mechanism_figure_4_drops_or_keeps_has_a_name():
     args = figures.Args()
     names = yaml.safe_load(args.mechanisms.read_text())
