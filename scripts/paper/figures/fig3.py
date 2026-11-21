@@ -194,30 +194,6 @@ def streak_choices(sr: pd.DataFrame) -> pd.DataFrame:
                      ["switch_rate"])
 
 
-ROLES = ("sparsest", "middle", "richest")
-
-
-def _role(objects, utterance, classes, cls) -> str:
-    """The class's object among those the word fits, by number of features, when they have three or more
-    different numbers of features ('other' otherwise)."""
-    if pd.isna(utterance):
-        return "other"
-    fits = [sum(o) for o in objects if o[int(utterance)]]
-    obj = objects[classes.index(cls)]
-    if len(set(fits)) < 3 or not obj[int(utterance)]:
-        return "other"
-    return ROLES[0] if sum(obj) == min(fits) else ROLES[2] if sum(obj) == max(fits) else ROLES[1]
-
-
-def match_roles(rsa: pd.DataFrame) -> pd.DataFrame:
-    """Displays whose word fits objects with three or more different numbers of features: the share choosing
-    the sparsest, a middle and the richest object it fits, averaged over displays weighting each by its trials."""
-    d = rsa.assign(role=[_role(*r) for r in zip(rsa.objects, rsa.utterance, rsa.choice_classes, rsa.cls)])
-    d = d[d.role != "other"]
-    per = d.groupby(["display", "role"]).agg({"n": "first", **{c: "sum" for c in ("observed", *MODELS)}})
-    return _weighted(per.reset_index().groupby("role")).loc[list(ROLES)]
-
-
 def digit_confidence(ng: pd.DataFrame) -> pd.DataFrame:
     """Example sets of two or more numbers that all end in the same digit: the chance of 'yes' to a target that
     is not an example, by whether it keeps that final digit and by the number of examples."""
@@ -253,10 +229,27 @@ def new_sr(ax, sr):
     _panel_title(ax, "All heads or all tails: a flat rate")
 
 
+def no_word_roles(rsa: pd.DataFrame) -> pd.DataFrame:
+    """No-word queries ("which one is the speaker talking about?") on displays whose objects differ in how many
+    features they have: the chance of choosing one object, by its feature count among the display's (a class's
+    share divided by its copies), weighted by trials; people's binomial 95% CI."""
+    rows = []
+    for c in rsa[rsa.utterance.isna()].itertuples():
+        counts = [sum(o) for o in c.objects]
+        if min(counts) == max(counts):
+            continue
+        members = [i for i, k in enumerate(c.choice_classes) if k == c.cls]
+        f = counts[members[0]]
+        role = "fewest" if f == min(counts) else "most" if f == max(counts) else "in between"
+        rows.append({"role": role, "n": c.n, **{k: getattr(c, k) / len(members) for k in ("observed", *MODELS)}})
+    t = _weighted(pd.DataFrame(rows).groupby("role")).loc[["fewest", "in between", "most"]]
+    t["ci"] = 1.96 * np.sqrt(t.observed * (1 - t.observed) / t.n)
+    return t
+
+
 def new_rsa(ax, rsa):
-    """Displays whose word fits objects with three or more numbers of features: people rarely choose one in
-    the middle."""
-    t = match_roles(rsa)
+    """With no word to go on, people pick the object with the most features, more than the seed predicts."""
+    t = no_word_roles(rsa)
     x = np.arange(len(t))
     w = 0.26
     ax.bar(x - w, t.observed, w, color=HUMAN, zorder=2)
@@ -265,11 +258,11 @@ def new_rsa(ax, rsa):
         ax.bar(x + dx, t[c], w, color=color, zorder=2)
     ax.set_xticks(x, ["fewest\nfeatures", "in\nbetween", "most\nfeatures"], fontsize=6, va="top")
     ax.tick_params(axis="x", length=0)
-    ax.set(xlim=(-0.6, len(x) - 0.4), ylim=(0, 0.8))
+    ax.set(xlim=(-0.6, len(x) - 0.4), ylim=(0, 0.6))
     ax.yaxis.set_major_formatter(PCT)
-    ax.set_ylabel("chosen", labelpad=1)
-    ax.set_xlabel("object the word fits", labelpad=1)
-    _panel_title(ax, "The middle candidate is passed over")
+    ax.set_ylabel("chosen (per object)", labelpad=1)
+    ax.set_xlabel("object, with no word given", labelpad=1)
+    _panel_title(ax, "With no word, the richest object is picked")
 
 
 def new_ng(ax, ng):
@@ -323,12 +316,23 @@ def classic_ng(cell, fig, profiles):
 # Rows (a) and (b) should use Figure 2's split; row (c)'s patterns should come from a reproducible search.
 LOO = "IN-SAMPLE: needs Figure 2's split,\nleave-one-out predictions (Sherlock fits)"
 UNSEEN = "IN-SAMPLE: needs Figure 2's split,\npredictions for the items no run drew (Sherlock fits)"
-SEARCH = "TO REDO: patterns from a reproducible\nsearch over the figure data"
 TO_FIX = {(0, "subjective_randomness"): LOO, (0, "number_game"): UNSEEN,
           (1, "subjective_randomness"): LOO,
-          (1, "number_game"): "MODELS PENDING, Figure 2's split: predictions for\nevery number no run drew (people: those numbers only)",
-          (2, "subjective_randomness"): SEARCH + "\nin-sample: needs Figure 2's split",
-          (2, "rsa"): SEARCH, (2, "number_game"): SEARCH + "\nin-sample: needs Figure 2's split"}
+          (1, "number_game"): "MODELS PENDING, Figure 2's split: predictions for\nevery number no run drew (people: those numbers only)"}
+# Row (c): per domain, the search's candidate (scripts/paper/fig3_patterns.py) with the clearest behavioural reading
+ROW_C = {"subjective_randomness": ("a pure streak in the pair", "one"), "rsa": ("query", "no word"),
+         "number_game": ("examples share a last digit; the number", "keeps it")}
+
+
+def check_row_c(patterns: Path) -> None:
+    """Each of ``ROW_C`` must be one of the search's candidates."""
+    found = json.loads(patterns.read_text())
+    for d, pick in ROW_C.items():
+        candidates = [(r["feature"], r["value"]) for r in found[d] if r["candidate"]]
+        if pick not in candidates:
+            raise RuntimeError(f"{d}: row (c)'s pattern {pick} is not one of the search's candidates {candidates}")
+
+
 FIX_RED = "#c62828"
 
 
@@ -341,6 +345,7 @@ def _flag(fig, cell, text):
 
 
 def draw(figure_data: Path, displays: Path, ng_dataset: Path, out_dir: Path) -> None:
+    check_row_c(figure_data / "fig3_patterns.json")
     tables = load(figure_data, displays)
     fig = plt.figure(figsize=(WIDTH_IN, HEIGHT_IN))
     # one grid for every row, so a domain's panels share a column: row (a)'s two scatterplots side by side,

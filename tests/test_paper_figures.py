@@ -187,26 +187,18 @@ def test_in_figure_3_people_choose_a_constant_sequence_at_a_flat_rate_the_best_s
     assert np.ptp(t.observed) < 0.06 and np.ptp(t.best_model) < 0.06 and np.ptp(t.best_seed) > 0.15
 
 
-def test_figure_3s_reference_game_roles_are_shares_of_the_sparsest_middle_and_richest_match():
-    import pandas as pd
-    rows = []
-    for display, objects, classes, n, observed in (
-            (0, [[1, 0, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]], [0, 1, 2, 3], 10, [0.5, 0.2, 0.2, 0.1]),
-            (1, [[1, 0], [1, 1], [0, 1]], [0, 1, 2], 50, [0.6, 0.3, 0.1]),  # two feature counts: no middle
-            (2, [[1, 0, 0], [1, 1, 0], [1, 1, 0], [1, 1, 1]], [0, 1, 1, 2], 30, [0.7, 0.1, 0.2])):
-        for cls, o in enumerate(observed):
-            rows.append({"display": display, "cls": cls, "n": n, "objects": objects, "utterance": 0.0,
-                         "choice_classes": classes, **_preds(o)})
-    t = fig3.match_roles(pd.DataFrame(rows))
-    assert list(t.index) == list(fig3.ROLES) and (t.n == 40).all()
-    assert t.observed.to_list() == pytest.approx([(5 + 21) / 40, (2 + 3) / 40, (2 + 6) / 40])
+def test_in_figure_3_with_no_word_people_pick_the_richest_object_more_than_the_seed_predicts():
+    t = fig3.no_word_roles(_fig3_tables()["rsa"])
+    assert list(t.index) == ["fewest", "in between", "most"]
+    assert t.observed.idxmax() == "most" and t.observed["most"] > t.best_seed["most"]
 
 
-def test_in_figure_3_people_pass_over_the_middle_candidate():
-    t = fig3.match_roles(_fig3_tables()["rsa"])
-    for c in ("observed", "best_model"):
-        assert t[c]["middle"] < t[c]["richest"] < t[c]["sparsest"], c
-    assert t.best_seed["middle"] > t.best_seed["richest"]
+def test_figure_3s_row_c_patterns_are_candidates_of_the_search(tmp_path):
+    fig3.check_row_c(figures.Args().figure_data / "fig3_patterns.json")
+    found = {d: [{"feature": "f", "value": "v", "candidate": True}] for d in fig3.ROW_C}
+    (tmp_path / "p.json").write_text(json.dumps(found))
+    with pytest.raises(RuntimeError, match="not one of the search's candidates"):
+        fig3.check_row_c(tmp_path / "p.json")
 
 
 def test_figure_3s_digit_confidence_is_yes_to_non_examples_of_sets_sharing_a_final_digit():
