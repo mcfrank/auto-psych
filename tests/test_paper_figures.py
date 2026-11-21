@@ -147,7 +147,7 @@ def test_a_named_models_predictions_for_other_conditions_or_another_model_raise(
 
 
 def test_figure_3s_number_game_column_is_run_3s_winner():
-    assert fig3.COLUMN_MODEL["number_game"] == ("exception_weighted_rule_rejection", "run 3 winner")
+    assert fig3.COLUMN_MODEL["number_game"] == ("exception_weighted_rule_rejection", "best discovered")
     args = figures.Args()
     preds = json.loads((args.figure_data / "number_game_model_conditions.json").read_text())
     ng = _fig3_tables()["number_game"]
