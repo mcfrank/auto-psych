@@ -38,3 +38,8 @@ Entry format (newest at the bottom):
   counts for the caption: subjective randomness 15, reference games 16, number game 14. Name labels are in ink;
   only the points carry the new/literature colour (light-blue 7 pt text reads poorly). "kept" heads the column,
   above it, so leaders to names hanging below short axes never cross it.
+- Follow-up (2026-11-20): Encode the same thing with the same colour in every figure. Fig 4 now uses Figs 2-3's
+  scheme: blue `BEST` (#2171b5) for what auto-psych discovered, seed grey `SEED` (#b3b3b3) for what came from the
+  literature, both imported from fig3.py. The path line and all error bars are INK_2 and the full model is an
+  INK square. Why: two shades of one blue on a near-black line made the light points read as glitches. Ben
+  rejected filled/hollow (A) and blue/orange (B) variants.

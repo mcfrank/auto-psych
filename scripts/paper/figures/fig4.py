@@ -21,10 +21,13 @@ import yaml
 from matplotlib.lines import Line2D
 from pyprojroot import here
 
+from scripts.paper.figures.fig3 import BEST, SEED
 from scripts.paper.figures.icons import add_title_icons
 from scripts.paper.figures.style import DPI, INK, INK_2, TITLE_FONT, TITLES
 
-COLOR_NEW, COLOR_START, PATH = "#08306b", "#6baed6", "#262626"
+# Figures 2 and 3's colours: blue for what auto-psych discovered, seed grey for what came from the literature;
+# the path and every error bar in a neutral that is neither
+COLOR_NEW, COLOR_START, PATH = BEST, SEED, INK_2
 NAME_PT, SMALL = 7.0, 7.0
 NAMES_IN, NAME_PITCH = 0.3, 1.15  # the kept names' offset from their column (inches), their spacing (line heights)
 LEFT, RIGHT, TICK_DEG = 0.04, 0.04, 35  # shares of the path's axis before the first step and past the last; the step names' angle  # PNAS: no text under 6 pt at the printed size
@@ -119,7 +122,7 @@ def draw_path(ax, path, names):
     for p in path[1:]:
         _, color, _ = style_of(names, p["dropped"])
         ax.scatter([p["n"]], [p["y"]], s=12, color=color, linewidths=0, zorder=4)
-    ax.scatter([n[0]], [0], s=12, color=PATH, zorder=4)
+    ax.scatter([n[0]], [0], s=12, color=INK, marker="s", linewidths=0, zorder=4)
     ax.axhline(0, color="#b0b0b0", lw=0.6, ls=(0, (2, 2)), zorder=0)  # the full model
     span = (n[0] - n[-1]) / (1 - LEFT - RIGHT)  # the axis's span, in steps
     ax.set_xlim(n[0] + LEFT * span, n[-1] - RIGHT * span)
@@ -148,7 +151,7 @@ def draw_kept(ax, kept, names):
     labels = []
     for k in kept:
         name, color, text = style_of(names, k["mechanism"])
-        ax.errorbar([xo], [k["y"]], yerr=[k["se"]], fmt="none", ecolor=color, elinewidth=0.6, zorder=2)
+        ax.errorbar([xo], [k["y"]], yerr=[k["se"]], fmt="none", ecolor=PATH, elinewidth=0.6, zorder=2)
         ax.scatter([xo], [k["y"]], s=12, color=color, linewidths=0, zorder=4)
         labels.append((k["y"], name, text))
     # the names in a column right of the axes, spread apart, a leader to each
