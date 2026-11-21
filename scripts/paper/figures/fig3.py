@@ -314,11 +314,30 @@ def classic_ng(cell, fig, profiles):
         ax.yaxis.set_major_formatter(PCT)
         ax.set_title("examples: " + ex, fontsize=6, loc="left", pad=2)
     axes[0].tick_params(axis="x", length=0)
-    axes[0].text(1, 1.02, "models: pending", transform=axes[0].transAxes, ha="right", va="bottom", fontsize=6,
-                 color=INK_2, style="italic")
     axes[-1].set(xticks=[1, 25, 50, 75, 100])
     axes[-1].set_xlabel("number queried", labelpad=1)
     axes[0].set_ylabel("said yes", labelpad=1, y=-0.25)
+
+
+# What is not yet as it should be, drawn on the panel in red until it is fixed: (row, domain) -> what is missing.
+# Rows (a) and (b) should use Figure 2's split; row (c)'s patterns should come from a reproducible search.
+LOO = "IN-SAMPLE: needs leave-one-out\npredictions (from the Sherlock fits)"
+UNSEEN = "IN-SAMPLE: needs predictions for the\nitems no run drew (Sherlock fits)"
+SEARCH = "TO REDO: patterns from a reproducible\nsearch over the figure data"
+TO_FIX = {(0, "subjective_randomness"): LOO, (0, "number_game"): UNSEEN,
+          (1, "subjective_randomness"): LOO,
+          (1, "number_game"): "MODELS PENDING: predictions for every number\n(people: only the numbers no run drew)",
+          (2, "subjective_randomness"): SEARCH + "\n" + LOO.split(": ")[0].lower(),
+          (2, "rsa"): SEARCH, (2, "number_game"): SEARCH + "\n" + UNSEEN.split(": ")[0].lower()}
+FIX_RED = "#c62828"
+
+
+def _flag(fig, cell, text):
+    """A red note over a panel that is not yet as it should be."""
+    box = cell.get_position(fig)
+    fig.text((box.x0 + box.x1) / 2, (box.y0 + box.y1) / 2, text, ha="center", va="center", fontsize=6.5,
+             color=FIX_RED, weight="bold", zorder=10,
+             bbox={"fc": "white", "ec": FIX_RED, "lw": 0.8, "alpha": 0.9, "boxstyle": "round,pad=0.3"})
 
 
 def draw(figure_data: Path, displays: Path, ng_dataset: Path, out_dir: Path) -> None:
@@ -344,6 +363,9 @@ def draw(figure_data: Path, displays: Path, ng_dataset: Path, out_dir: Path) -> 
         {"subjective_randomness": new_sr, "rsa": new_rsa, "number_game": new_ng}[d](
             fig.add_subplot(gs[2, 3 * k:3 * k + 2]), tables[d])
     tops[0].set_ylabel("observed", labelpad=1)
+    for (row, d), text in TO_FIX.items():
+        k = ORDER.index(d)
+        _flag(fig, gs[row, 3 * k:3 * k + 2], text)
     fig.canvas.draw()
     r = fig.canvas.get_renderer()
     to_fig = fig.transFigure.inverted()
