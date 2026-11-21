@@ -43,3 +43,12 @@ Entry format (newest at the bottom):
   literature, both imported from fig3.py. The path line and all error bars are INK_2 and the full model is an
   INK square. Why: two shades of one blue on a near-black line made the light points read as glitches. Ben
   rejected filled/hollow (A) and blue/orange (B) variants.
+
+- 2026-11-20 (hub): merged paper-figures + fig4-stopping-rule-se into main (9ee01d66); removed the
+  obsolete `scripts/paper/ablation_figure.py` and its test (0c07c3c3), superseded by
+  `scripts/paper/figures/fig4.py`. Lesson: when a branch deletes a module, grep for importers
+  (`git grep <module>`) before merging; dead importers break test collection on main.
+- 2026-11-20 (hub): resolved the pre-merge stash against merged main. Main's figure package already
+  did what the stashed draft edits did (November number-game data, unseen-items test set, per-run
+  colours, number-game row (a) in Fig 3); the drafts and fig3_conditions.* were deleted on main.
+  Only the Tenenbaum 1999 citation in seed_papers.yaml was new; applied it and regenerated Fig 2.
