@@ -32,7 +32,7 @@ NAME_PT, SMALL = 7.0, 7.0
 NAMES_IN, NAME_PITCH = 0.3, 1.15  # the kept names' offset from their column (inches), their spacing (line heights)
 LEFT, RIGHT, TICK_DEG = 0.04, 0.04, 35  # shares of the path's axis before the first step and past the last; the step names' angle  # PNAS: no text under 6 pt at the printed size
 PATH_IN, KEPT_IN, GAP_IN = 3.25, 0.5, 0.82  # widths: the path's axes, the kept column's, between them (inches)
-LEFT_PAD, TOP_PAD, LEGEND_PAD, ROW_GAP = 0.1, 0.01, 0.05, 0.06  # figure shares (left, top, the legend's), inches between rows
+LEFT_PAD, TOP_PAD, LEGEND_PAD, ROW_GAP = 0.1, 0.01, 0.0, 0.06  # figure shares (left, top, the legend's), inches between rows
 ICON_OVER, ONE_LINE = 0.5, 14  # how far each title's icon reaches over it (title heights); the longest one-line step name
 WIDTH_IN, HEIGHT_IN = 7.0, 4.6  # one row per domain; the saved figure: PNAS's full width
 # each panel's cues are named by what pushes its response this way (the fitted signs: mechanisms.yaml)
@@ -217,8 +217,11 @@ def draw_ablation(figure_data: Path, mechanisms: Path, out_dir: Path) -> None:
     dot = {"lw": 0, "ms": 3.5}
     key = [Line2D([], [], marker="o", color=COLOR_NEW, label="new", **dot),
            Line2D([], [], marker="o", color=COLOR_START, label="from the literature", **dot)]
-    fig.legend(handles=key, loc="upper center", ncol=2, frameon=False, fontsize=SMALL, bbox_to_anchor=(0.43, 0.04),
-               handletextpad=0.2, columnspacing=1.6)
+    fig.canvas.draw()  # the key on the x label's line, under the kept column: no line of its own
+    label = axes[-1].xaxis.label.get_window_extent()
+    y = fig.transFigure.inverted().transform((0, (label.y0 + label.y1) / 2))[1]
+    fig.legend(handles=key, loc="center left", ncol=2, frameon=False, fontsize=SMALL,
+               bbox_to_anchor=(grid[-1, 1].get_position().x0, y), handletextpad=0.2, columnspacing=1.6)
     add_title_icons(fig, axes, list(TITLES))
     out_dir.mkdir(parents=True, exist_ok=True)
     for ext in ("pdf", "png"):  # uncropped: the canvas is the saved size, PNAS's full width
