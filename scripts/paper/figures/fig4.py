@@ -27,7 +27,7 @@ WIDTH_IN, HEIGHT_IN = 7.0, 4.9  # one row per domain; the saved figure: PNAS's f
 # each panel's cues are named by what pushes its response this way (the fitted signs: mechanisms.yaml)
 DIRECTION = {"subjective_randomness": "what makes a sequence look less random",
              "rsa": "what makes an object more likely to be chosen",
-             "number_game": "patterns the number shares with the examples"}
+             "number_game": "what shapes which concepts the learner believes"}
 
 
 def sources(figure_data: Path):
