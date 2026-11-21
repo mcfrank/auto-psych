@@ -6,7 +6,7 @@ From Figure 3's own condition tables (``scripts.paper.figures.fig3.load``: the s
 list of stimulus features per domain (``FEATURES``, written before looking), the conditions are split by each
 feature's value, and each value's *excess* advantage is its advantage minus its trials' share of the domain's
 total, with the stimulus-clustered SE of Figure 2 (``cluster_dse``; clusters: the pair, the example set, the
-display). Among values whose excess is at least ``MIN_Z`` SEs, they are ranked by effect size, how much closer the
+display). Among values whose excess is at least ``MIN_Z`` SEs and that cover at least ``MIN_SHARE`` of the trials, they are ranked by effect size, how much closer the
 discovered model's predictions are to people's than the seed's, condition by condition (``effect``); the top value per domain is row (c)'s
 pattern. Exploratory: the search
 uses all the data the models were fit on.
@@ -111,6 +111,7 @@ def _rsa(c):
 
 
 MIN_Z = 2.0  # a value counts only if its excess is at least this many clustered SEs
+MIN_SHARE = 0.05  # ... and it covers at least this share of the domain's trials (not a marginal effect)
 FEATURES: Dict[str, Callable] = {"subjective_randomness": _sr, "number_game": _ng, "rsa": _rsa}
 
 
@@ -141,7 +142,8 @@ def rank(cond: pd.DataFrame, domain: str) -> pd.DataFrame:
                          "effect": float(np.average((cond.observed[m] - cond.best_seed[m]).abs()
                                                     - (cond.observed[m] - cond.best_model[m]).abs(), weights=w))})
     r = pd.DataFrame(rows)
-    r["reliable"] = r.z >= MIN_Z
+    r["share"] = r.trials / cond.n.sum()
+    r["reliable"] = (r.z >= MIN_Z) & (r.share >= MIN_SHARE)
     return r.sort_values(["reliable", "effect"], ascending=False).reset_index(drop=True)
 
 
