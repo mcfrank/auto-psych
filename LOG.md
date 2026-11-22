@@ -81,3 +81,28 @@ Entry format (newest at the bottom):
     not found"). Its Python backend (`cxx=`) runs far too slowly for posterior predictives (>30 min,
     unfinished). Fix it in the environment, not the code: set `PYTENSOR_FLAGS="cxx=<wrapper>,blas__ldflags="`,
     where the wrapper is a clang++ script that drops `-ld64` (46 s). Evidence: this task.
+
+## 2026-11-21: Figure 3 rows (a) and (b) on Figure 2's split
+- Lesson: For a binary outcome, a trial's PSIS-LOO predictive probability needs no posterior-predictive pass:
+  P_loo(y=1) is exp(loo_i) when y=1 and 1 - exp(loo_i) when y=0, so the pointwise `loo_i` that gave the ELPD
+  also give held-out per-condition predictions that sum back to exactly that ELPD.
+- Why: Figure 3's subjective-randomness panels needed LOO predictions from Sherlock's cached pooled fits; this
+  took 2 min per job and its summed log density equals Figure 2's ELPD-LOO to 1e-6 by construction.
+- Lesson: When exporting held-out predictions to pair with an existing score, store each condition's summed log
+  predictive density next to its mean prediction, and test that the conditions sum to the published score. That
+  one test pins model, fit, split and row alignment together. Separately check row alignment against an
+  independent quantity (here, in-sample P(left) from the log-likelihood vs the figure data's, within 0.001).
+- Why: `tests/test_paper_figures.py` ties `*_heldout_conditions.json` to Figure 2's ELPD-LOO and to
+  `number_game_unseen_items.json`'s lpd (reproduced to 1e-9 with the same draws and seed).
+- Lesson: To run branch code on Sherlock without touching the shared checkout, rsync `src/`, `scripts/`,
+  `pyproject.toml` and the needed figure-data files into `$SCRATCH/.../code` and symlink gitignored data
+  (`data/number-game`) from `~/auto-psych`. Fit-cache fingerprints depend only on model source, responses
+  bytes and sampler settings, not on the code version, so cached fits load from any copy.
+- Lesson: On macOS the fast suite shows ~230 PyTensor `CompileError` failures unless
+  `PYTENSOR_FLAGS="cxx=<clang++ wrapper dropping -ld64>,blas__ldflags="` is set (see the earlier 2026-11-21 entry on
+  this branch). They come from the environment, not the code.
+- Note: the number game's held-out set has 23,360 items, and a scatter at fixed alpha turns into a solid block.
+  `fig3._scatter` now caps each point's alpha at 250 / n points, which leaves SR and RSA unchanged. Of the 100
+  numbers, the four-example profile ("80,70,90,100") keeps only 55 (runs drew 45) and "100" keeps 90.
+- Evidence: branch `fig3-heldout`, `scripts/paper/fig3_heldout_conditions.py` (+ `.sbatch`), Sherlock
+  `$SCRATCH/auto-psych/fig3_heldout/` (jobs 53258041, 53258042).
