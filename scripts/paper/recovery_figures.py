@@ -63,7 +63,6 @@ SEED_LS, BOUNDARY = (0, (3, 2)), "#dcdcdc"
 MARKERS = {"repeat 1": "o", "repeat 2": "^", "repeat 3": "s"}  # a repeat's points, where repeats are drawn apart
 XLABEL, YLABEL = "inner loop iteration", "RMSE vs. ground truth"
 
-SEED_COLOR = "#D95F02"
 NG_GT_NAMES = {
     "tenenbaum_rules_similarity": "Ground truth: Tenenbaum (1999)",
     "bigelow_piantadosi_mixture": "Ground truth: Bigelow & Piantadosi, mixture",
