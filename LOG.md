@@ -81,3 +81,20 @@ Entry format (newest at the bottom):
     not found"). Its Python backend (`cxx=`) runs far too slowly for posterior predictives (>30 min,
     unfinished). Fix it in the environment, not the code: set `PYTENSOR_FLAGS="cxx=<wrapper>,blas__ldflags="`,
     where the wrapper is a clang++ script that drops `-ld64` (46 s). Evidence: this task.
+
+- 2026-11-21 (recovery-figs-style): the SI recovery figures (`scripts/paper/recovery_figures.py`) now use
+  Figures 2-4's matplotlib house style, not plotnine.
+  - Lesson: to restyle a figure without touching its data, keep the frame-building functions byte-identical,
+    dump their frames to CSV before and after (`cmp`), and tag each plotted line with a `gid`
+    ("best", "seed", "run") so tests can compare every line's x/y against the frame. Why: it proves "same data"
+    mechanically, and the gids also let a test pin the palette. Evidence: commit 446dae5d,
+    `tests/test_paper_recovery_figures.py`.
+  - Lesson: with `sharey=True`, set y limits once, after every panel is drawn. Calling
+    `ax.set_ylim(bottom=0)` per panel freezes the top at the first panel's data and silently clips the
+    others (the number game's third panel lost its top). Why: `set_ylim` turns off autoscaling for every
+    shared sibling. A test that every plotted value lies inside its panel's y range catches it.
+  - Note: `MaxNLocator(5, steps=[1, 2, 5, 10])` keeps free-scale tick labels short (no "0.025") so they stay
+    clear of the panel to the left. The main figures' style needs Avenir (macOS ships it). The SI captions
+    still say "dashed orange line" (now grey dashed). The combined figure still says "Number sequence
+    generalization" where Figures 2-4 say "Number game". `test_paper_figures.py::test_figures_3_and_4_...`
+    fails on `paper-figures` before this change too (a missing data file).
