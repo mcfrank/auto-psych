@@ -1,12 +1,16 @@
-"""Figure 3 (``fig3_effects``), one column per domain, from the figure data (``<domain>.json``'s ``conditions``:
-each condition's observed proportion and the pooled best model's and best seed's predictions; a column whose
-model is not the pooled best, ``COLUMN_MODEL``, takes that model's predictions from ``<domain>_model_conditions.json``):
-(a) observed against each model's prediction, with trial-weighted R² and RMSE; (b) the domain's classic effect,
-drawn as its original paper drew it, which both models capture; (c) a new effect only the winner captures.
-Row (c) is exploratory: its patterns were chosen after the fact (``streak_choices``, ``match_roles``,
-``digit_confidence``). Reference games use the pre-registered experiment's displays
-(``data/rsa/viz/panel_displays.json`` says what each showed). Panels whose data are not in yet are drawn as
-pending."""
+"""Figure 3 (``fig3_effects``), one column per domain: (a) observed against each model's prediction, with
+trial-weighted R² and RMSE; (b) the domain's classic effect, drawn as its original paper drew it, which both
+models capture; (c) a new effect only the winner captures.
+
+Rows (a) and (b) use Figure 2's split (``load_heldout``: ``<domain>_heldout_conditions.json``, written by
+``scripts/paper/fig3_heldout_conditions.py``): subjective randomness' leave-one-out (PSIS-LOO) predictions on all
+runs pooled, the number game's predictions for the items no run drew (people's data restricted to those items),
+and reference games' pre-registered test (``data/rsa/viz/panel_displays.json`` says what each display showed).
+Row (c) is exploratory: its patterns were chosen after the fact (``streak_choices``, ``no_word_roles``,
+``digit_confidence``), from the in-sample predictions the search ranked (``load``: the figure data's
+``conditions``, each condition's observed proportion and the pooled best model's and best seed's posterior-mean
+predictions; a column whose model is not the pooled best, ``COLUMN_MODEL``, takes that model's from
+``<domain>_model_conditions.json``)."""
 
 from __future__ import annotations
 
@@ -51,6 +55,24 @@ def load(figure_data: Path, displays: Path) -> Dict[str, pd.DataFrame]:
     return out
 
 
+HELDOUT = "{}_heldout_conditions.json"  # rows (a) and (b): Figure 2's split, per domain
+
+
+def load_heldout(figure_data: Path) -> Dict[str, pd.DataFrame]:
+    """Rows (a) and (b)'s conditions on Figure 2's split for subjective randomness and the number game, of each
+    column's models: the figure data's best seed and its best model, or the column's ``COLUMN_MODEL``. (Reference
+    games' conditions are the pre-registered test already.)"""
+    out = {}
+    for d in ("subjective_randomness", "number_game"):
+        pooled = json.loads((figure_data / f"{d}.json").read_text())["pooled"]
+        held = json.loads((figure_data / HELDOUT.format(d)).read_text())
+        want = {"best_model": COLUMN_MODEL.get(d, (pooled["best_model"],))[0], "best_seed": pooled["best_seed"]}
+        if held["models"] != want:
+            raise RuntimeError(f"{d}'s held-out predictions are {held['models']}'s, not the column's {want}")
+        out[d] = pd.DataFrame(held["conditions"])
+    return out
+
+
 def with_model(cond: pd.DataFrame, preds: dict, model: str) -> pd.DataFrame:
     """The conditions with ``best_model`` replaced by ``model``'s predictions (``preds``: its per-condition
     ``p_yes``), which must cover exactly the same conditions."""
@@ -77,9 +99,14 @@ def _pending(ax, what):
             style="italic")
 
 
+SCATTER_INK = 250  # a scatterplot's total opacity budget: each point's alpha is at most this over the points
+
+
 def _scatter(ax, cond, col, color, label):
     ax.plot([0, 1], [0, 1], color="#e0e0e0", lw=0.8, zorder=0)
-    ax.scatter(cond[col], cond.observed, s=4 + 12 * np.sqrt(cond.n / cond.n.max()), color=color, alpha=0.25,
+    # fainter where there are many conditions (the number game's 23,360 held-out items), so density shows
+    ax.scatter(cond[col], cond.observed, s=4 + 12 * np.sqrt(cond.n / cond.n.max()), color=color,
+               alpha=min(0.25, SCATTER_INK / len(cond)),
                linewidths=0, clip_on=False, zorder=1)
     rmse = np.sqrt(np.average((cond.observed - cond[col]) ** 2, weights=cond.n))
     ax.text(0.04, 0.97, f"$R^2$ = {r2(cond.observed, cond[col], cond.n):.2f}\nRMSE = {rmse:.3f}",
@@ -280,32 +307,33 @@ def new_ng(ax, ng):
     _panel_title(ax, "Graded confidence in a shared digit")
 
 
-NG_SETS = ("100", "80, 70, 90, 100")  # one example, then four that fit a rule (as the dataset writes them)
+NG_SETS = ("100", "80,70,90,100")  # one example, then four that fit a rule (as the figure data write them)
 
 
-def ng_profiles(dataset: Path) -> Dict[str, pd.Series]:
-    """Tenenbaum (2000)'s generalization profiles: people's share of yes for every target 1-100 after each of
-    ``NG_SETS``, from the whole Bigelow & Piantadosi (2016) dataset (every set was asked about all 100)."""
-    d = pd.read_csv(dataset, usecols=["set", "target", "rating"])
-    d["set"] = d.set.str.replace("_", ",")
+def ng_profiles(ng: pd.DataFrame, sets=NG_SETS) -> Dict[str, pd.DataFrame]:
+    """Tenenbaum (2000)'s generalization profiles: per example set of ``sets``, people's share of yes and each
+    model's P(yes) for every target 1-100 that ``ng`` has (Figure 2's split: the items no run drew), NaN for the
+    others."""
     out = {}
-    for ex in NG_SETS:
-        x = d[d.set == ex].groupby("target").rating.mean()
-        if len(x) != 100:
-            raise RuntimeError(f"{dataset}: set {ex!r} was asked about {len(x)} targets, not 100")
-        out[ex] = x
+    for ex in sets:
+        d = ng[ng.number_set == ex]
+        if d.empty:
+            raise RuntimeError(f"no conditions for example set {ex!r}")
+        out[ex] = d.set_index("target")[["observed", *MODELS]].reindex(range(1, 101))
     return out
 
 
 def classic_ng(cell, fig, profiles):
-    """Each set's profile as its own histogram, people's bars in black; the models' bars are pending (their
-    predictions for every target need the pooled fits)."""
+    """Each set's profile as its own histogram over the numbers no run drew: people's bars in black, each model's
+    P(yes) a tick on the same number."""
     axes = cell.subgridspec(len(profiles), 1, hspace=0.5).subplots(sharex=True)
-    for ax, (ex, yes) in zip(axes, profiles.items()):
-        ax.bar(yes.index, yes, width=0.8, color=HUMAN)
+    for ax, (ex, p) in zip(axes, profiles.items()):
+        ax.bar(p.index, p.observed, width=0.8, color=HUMAN)
+        for c, color in zip(MODELS, (SEED, BEST)):
+            ax.plot(p.index, p[c], ls="none", marker="_", ms=2.6, mew=1.0, color=color, zorder=3)
         ax.set(xlim=(0, 101), ylim=(0, 1), yticks=[0, 1])
         ax.yaxis.set_major_formatter(PCT)
-        ax.set_title("examples: " + ex, fontsize=6, loc="left", pad=2)
+        ax.set_title("examples: " + ex.replace(",", ", "), fontsize=6, loc="left", pad=2)
     axes[0].tick_params(axis="x", length=0)
     axes[-1].set(xticks=[1, 25, 50, 75, 100])
     axes[-1].set_xlabel("number queried", labelpad=1)
@@ -313,12 +341,7 @@ def classic_ng(cell, fig, profiles):
 
 
 # What is not yet as it should be, drawn on the panel in red until it is fixed: (row, domain) -> what is missing.
-# Rows (a) and (b) should use Figure 2's split; row (c)'s patterns should come from a reproducible search.
-LOO = "IN-SAMPLE: needs Figure 2's split,\nleave-one-out predictions (Sherlock fits)"
-UNSEEN = "IN-SAMPLE: needs Figure 2's split,\npredictions for the items no run drew (Sherlock fits)"
-TO_FIX = {(0, "subjective_randomness"): LOO, (0, "number_game"): UNSEEN,
-          (1, "subjective_randomness"): LOO,
-          (1, "number_game"): "MODELS PENDING, Figure 2's split: predictions for\nevery number no run drew (people: those numbers only)"}
+TO_FIX: Dict[tuple, str] = {}
 # Row (c): per domain, the search's candidate (scripts/paper/fig3_patterns.py) with the clearest behavioural reading
 ROW_C = {"subjective_randomness": ("a pure streak in the pair", "one"), "rsa": ("query", "no word"),
          "number_game": ("examples share a last digit; the number", "keeps it")}
@@ -344,9 +367,10 @@ def _flag(fig, cell, text):
              bbox={"fc": "white", "ec": FIX_RED, "lw": 0.8, "alpha": 0.9, "boxstyle": "round,pad=0.3"})
 
 
-def draw(figure_data: Path, displays: Path, ng_dataset: Path, out_dir: Path) -> None:
+def draw(figure_data: Path, displays: Path, out_dir: Path) -> None:
     check_row_c(figure_data / "fig3_patterns.json")
-    tables = load(figure_data, displays)
+    tables = load(figure_data, displays)  # in sample: row (c), as its search ranked them
+    held = {**tables, **load_heldout(figure_data)}  # Figure 2's split: rows (a) and (b)
     fig = plt.figure(figsize=(WIDTH_IN, HEIGHT_IN))
     # one grid for every row, so a domain's panels share a column: row (a)'s two scatterplots side by side,
     # rows (b) and (c) spanning both; a spacer column between domains
@@ -355,16 +379,16 @@ def draw(figure_data: Path, displays: Path, ng_dataset: Path, out_dir: Path) -> 
     tops = []
     for k, d in enumerate(ORDER):
         a = [fig.add_subplot(gs[0, 3 * k + j]) for j in (0, 1)]
-        _scatter(a[0], tables[d], MODELS[0], SEED, "best seed")
-        _scatter(a[1], tables[d], MODELS[1], BEST, COLUMN_MODEL.get(d, (None, "best discovered"))[1])
+        _scatter(a[0], held[d], MODELS[0], SEED, "best seed")
+        _scatter(a[1], held[d], MODELS[1], BEST, COLUMN_MODEL.get(d, (None, "best discovered"))[1])
         for ax in a if k else a[1:]:
             ax.tick_params(labelleft=False)
         tops.append(a[0])
         if d == "number_game":
-            classic_ng(gs[1, 3 * k:3 * k + 2], fig, ng_profiles(ng_dataset))
+            classic_ng(gs[1, 3 * k:3 * k + 2], fig, ng_profiles(held[d]))
         else:
             {"subjective_randomness": classic_sr, "rsa": classic_rsa}[d](fig.add_subplot(gs[1, 3 * k:3 * k + 2]),
-                                                                       tables[d])
+                                                                       held[d])
         {"subjective_randomness": new_sr, "rsa": new_rsa, "number_game": new_ng}[d](
             fig.add_subplot(gs[2, 3 * k:3 * k + 2]), tables[d])
     tops[0].set_ylabel("observed", labelpad=1)

@@ -1,9 +1,9 @@
 """Figure 3 row (c)'s exploratory search: in which stimuli does the best discovered model's advantage over the best
 seed concentrate?
 
-From Figure 3's own condition tables (``scripts.paper.figures.fig3.load``: the same models and predictions as rows
-(a) and (b)), each condition's advantage is the discovered model's log-likelihood minus the seed's. For a fixed
-list of stimulus features per domain (``FEATURES``, written before looking), the conditions are split by each
+From Figure 3's in-sample condition tables (``scripts.paper.figures.fig3.load``: the same models as rows (a) and
+(b), which show Figure 2's held-out predictions instead), each condition's advantage is the discovered model's
+log-likelihood minus the seed's. For a fixed list of stimulus features per domain (``FEATURES``, written before looking), the conditions are split by each
 feature's value, and each value's *excess* advantage is its advantage minus its trials' share of the domain's
 total, with the stimulus-clustered SE of Figure 2 (``cluster_dse``; clusters: the pair, the example set, the
 display). The candidates are the ``CANDIDATES`` values with the largest effect size (how much closer the discovered model's

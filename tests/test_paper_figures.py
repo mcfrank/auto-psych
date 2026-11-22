@@ -201,6 +201,52 @@ def test_figure_3s_row_c_patterns_are_candidates_of_the_search(tmp_path):
         fig3.check_row_c(tmp_path / "p.json")
 
 
+def test_figure_3_flags_no_panel():
+    assert fig3.TO_FIX == {}
+
+
+def _heldout_tables():
+    return fig3.load_heldout(figures.Args().figure_data)
+
+
+def test_figure_3s_subjective_randomness_rows_a_and_b_are_figure_2s_leave_one_out():
+    pooled = json.loads((figures.Args().figure_data / "subjective_randomness.json").read_text())["pooled"]
+    t = _heldout_tables()["subjective_randomness"]
+    assert t.n.sum() == pooled["n_trials"]
+    for role in fig3.MODELS:  # each pair's summed loo_i: together, Figure 2's ELPD-LOO
+        assert t[f"{role}_lpd"].sum() == pytest.approx(pooled["elpd"][pooled[role]], abs=1e-6), role
+
+
+def test_figure_3s_number_game_rows_a_and_b_are_figure_2s_unseen_items():
+    test = json.loads(figures.Args().ng_unseen.read_text())["unseen_items"]
+    t = _heldout_tables()["number_game"]
+    assert len(t) == test["n_items"] and t.n.sum() == test["n_responses"]
+    names = {"best_model": fig3.COLUMN_MODEL["number_game"][0], "best_seed": test["best_seed"]}
+    for role, name in names.items():
+        assert t[f"{role}_lpd"].sum() == pytest.approx(test["models"][name]["lpd"], rel=1e-9), role
+
+
+def test_figure_3s_held_out_predictions_must_be_of_the_columns_models(tmp_path):
+    args = figures.Args()
+    for path in args.figure_data.glob("*.json"):
+        (tmp_path / path.name).write_text(path.read_text())
+    p = tmp_path / "subjective_randomness_heldout_conditions.json"
+    held = json.loads(p.read_text())
+    held["models"]["best_seed"] = "another_seed"
+    p.write_text(json.dumps(held))
+    with pytest.raises(RuntimeError, match="another_seed"):
+        fig3.load_heldout(tmp_path)
+
+
+def test_figure_3s_generalization_profiles_show_only_the_held_out_numbers():
+    import pandas as pd
+    targets = [t for t in range(1, 101) if t != 50]  # 50 was drawn by a run
+    ng = pd.DataFrame({"number_set": "100", "target": targets, "n": 10, **_preds([0.3] * len(targets))})
+    p = fig3.ng_profiles(ng, ("100",))["100"]
+    assert list(p.index) == list(range(1, 101))
+    assert np.isnan(p.observed[50]) and np.isnan(p.best_model[50]) and p.observed.notna().sum() == 99
+
+
 def test_figure_3s_digit_confidence_is_yes_to_non_examples_of_sets_sharing_a_final_digit():
     import pandas as pd
     ng = pd.DataFrame({

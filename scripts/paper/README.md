@@ -88,16 +88,23 @@ What each figure shows:
     scored on the same data as the rest of its column (`pruned_during_run`;
     one whose fit fails or does not converge is listed with the reason in
     `pruned_unscored` instead).
-- **Figure 3** (`fig3_effects`): per domain, from the figure data's `conditions` (pooled best model and
-  best seed): (a) observed against predicted, with R² and RMSE; (b) the classic effect as its original paper
-  drew it; (c) a new effect only the winner captures (exploratory, chosen after the fact): the flat rate of
+- **Figure 3** (`fig3_effects`): per domain, the pooled best model and best seed: (a) observed against
+  predicted, with R² and RMSE; (b) the classic effect as its original paper drew it; both on Figure 2's split
+  (`figure_data/<domain>_heldout_conditions.json`, `fig3_heldout_conditions.py`, run on Sherlock from the
+  figure data's pooled fit caches: `DOMAIN=subjective-randomness|number-game FIT_WORK_DIR=<figure data work dir>
+  sbatch scripts/paper/fig3_heldout_conditions.sbatch`, ~30 min, 32 GB): subjective randomness' PSIS-LOO
+  P(left) per trial (the pairs' summed `loo_i` are Figure 2's ELPD-LOO), the number game's predictions and
+  people's data on the items no run drew (their summed lpd are `number_game_unseen_items.json`'s), so its (b)
+  profiles show only the numbers no run drew for that set; reference games' pre-registered test. (c) a new
+  effect only the winner captures (exploratory, chosen after the fact, from the figure data's in-sample
+  `conditions`, as `fig3_patterns.py` ranked them): the flat rate of
   choosing an all-heads/all-tails sequence by its rival's switch rate, the share choosing the sparsest, middle
   and richest object a word fits, and yes to new numbers keeping or breaking a shared final digit by number
   of examples. Reference games use the pre-registered experiment, their displays from
   `data/rsa/viz/panel_displays.json`. The number game's column shows run 3's winner, not the pooled best
   (`fig3.COLUMN_MODEL`), from `figure_data/number_game_model_conditions.json`: its posterior-mean predictions
   from the figure data's pooled fit, read from a copy of that fit's cache file
-  (`number_game_model_conditions.py`). The number game's (b) is pending.
+  (`number_game_model_conditions.py`); on Figure 2's split, `number_game_heldout_conditions.json` holds that model's.
 - **Figure 4** (`fig4_ablation`): each domain winner's backward elimination on two axes: the path as
   ELPD-CV vs. the full model, each step ±1 SE of its difference from the previous round's model, and the
   kept column as each removal's ELPD-CV vs. the final model, ±1 SE of that difference (the SEs the
