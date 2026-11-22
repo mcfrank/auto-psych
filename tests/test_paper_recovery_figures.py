@@ -7,10 +7,14 @@ from __future__ import annotations
 import json
 import math
 
+import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
+from matplotlib.colors import to_hex
+from matplotlib.figure import Figure
 
 from scripts.paper import recovery_figures as rf
+from scripts.paper.figures import fig3, style
 
 
 @pytest.fixture(scope="module")
@@ -110,8 +114,8 @@ def test_the_alien_baseline_is_the_recorded_elpd_best_seed_among_trusted_fits():
     assert seed["rmse"].iloc[0] == pytest.approx(0.2118, abs=1e-4)
 
 
-def test_the_alien_figure_draws():
-    rf.alien_plot(rf.alien_frame(rf.Args().alien_root)).draw()
+def test_the_alien_figure_draws(styled):
+    rf.alien_plot(rf.alien_frame(rf.Args().alien_root))
 
 
 @pytest.fixture(scope="module")
@@ -138,5 +142,105 @@ def test_the_runs_average_to_the_plotted_best_model_mean(frame, runs):
     assert best["runs_mean"].to_list() == pytest.approx(best["mean"].to_list())
 
 
-def test_the_combined_figure_draws(frame, runs):
-    rf.combined_plot(frame, runs).draw()
+def test_the_combined_figure_draws(frame, runs, styled):
+    rf.combined_plot(frame, runs)
+
+
+# --- the main figures' house style (scripts/paper/figures/style.py), the data as before -------------------
+
+
+@pytest.fixture
+def styled():
+    with plt.rc_context():
+        style.setup_style()
+        yield
+    plt.close("all")
+
+
+@pytest.fixture
+def figures(frame, runs, styled):
+    args = rf.Args()
+    ng, rsa, alien = rf.number_game_frame(args.ng_root), rf.rsa_frame(args.rsa_trajectory), rf.alien_frame(args.alien_root)
+    return {"combined": (rf.combined_plot(frame, runs), frame),
+            "number_game": (rf.number_game_plot(ng), ng),
+            "rsa": (rf.rsa_plot(rsa), rsa),
+            "alien": (rf.alien_plot(alien), alien)}
+
+
+def _data_axes(fig):
+    """The panels (not the domains' icons, which have no frame)."""
+    return [ax for ax in fig.axes if ax.axison]
+
+
+def test_the_recovery_figures_are_matplotlib_in_the_paper_style(figures):
+    for name, (fig, _) in figures.items():
+        assert isinstance(fig, Figure), name
+        assert fig.get_figwidth() == fig3.WIDTH_IN, name  # PNAS's full width, as Figures 2-4
+        assert fig._suptitle is None, name  # no figure titles: the caption describes
+        for ax in _data_axes(fig):
+            assert not ax.spines["top"].get_visible() and not ax.spines["right"].get_visible(), name
+            assert not any(line.get_visible() for line in ax.get_xgridlines() + ax.get_ygridlines()), name
+            assert ax.title.get_fontfamily()[0] == style.TITLE_FONT["family"], name
+
+
+def test_the_recovery_figures_use_the_main_figures_palette(figures):
+    """Blue for the loop's best (discovered) model, seed grey for the best seed, as in Figures 2-4."""
+    for name, (fig, _) in figures.items():
+        colours = {gid: set() for gid in ("best", "run", "seed")}
+        for ax in _data_axes(fig):
+            for line in ax.get_lines():
+                if line.get_gid() in colours:
+                    colours[line.get_gid()].add(to_hex(line.get_color()))
+        assert colours["best"] == {to_hex(fig3.BEST)}, name
+        assert colours["seed"] == {to_hex(fig3.SEED)}, name
+        assert colours["run"] <= {to_hex(fig3.BEST)}, name
+
+
+def _plotted(fig, gid):
+    """Each panel's (title, on one line; x; y) of its lines with this gid."""
+    return [(ax.get_title().replace("\n", " "), list(line.get_xdata()), list(line.get_ydata()))
+            for ax in _data_axes(fig) for line in ax.get_lines() if line.get_gid() == gid]
+
+
+def test_the_combined_figure_plots_the_frames_values(figures, runs):
+    fig, frame = figures["combined"]
+    for gid, series in (("best", "best model"), ("seed", "best other seed model")):
+        lines = _plotted(fig, gid)
+        assert len(lines) == 9
+        for title, x, y in lines:
+            want = frame[(frame["series"] == series) & (frame["panel"].astype(str).str.endswith("\n" + title))]
+            assert x == want["step"].to_list() and y == pytest.approx(want["mean"].to_list()), (gid, title)
+    assert len(_plotted(fig, "run")) == len(runs.groupby(["panel", "run"], observed=True))
+    for title, x, y in _plotted(fig, "run"):
+        mine = runs[runs["panel"].astype(str).str.endswith("\n" + title)]
+        assert any(x == r["step"].to_list() and y == pytest.approx(r["rmse"].to_list())
+                   for _, r in mine.groupby("run")), title
+
+
+def test_the_per_repeat_figures_plot_the_frames_values(figures):
+    for name in ("number_game", "rsa", "alien"):
+        fig, df = figures[name]
+        best = df[df["series"] == "best model"]
+        groups = best.groupby(["gt", "repeat"] if "repeat" in df else ["gt"], observed=True)
+        lines = _plotted(fig, "best")
+        assert len(lines) == len(groups), name
+        for title, x, y in lines:
+            assert any(str(key[0]) == title and x == g["step"].to_list() and y == pytest.approx(g["rmse"].to_list())
+                       for key, g in groups), (name, title)
+        seed = df[df["series"] != "best model"]
+        for title, x, y in _plotted(fig, "seed"):
+            values = set(seed[seed["gt"].astype(str) == title]["rmse"].round(12))
+            if name == "rsa":  # one line per panel, the repeats' mean (they share the step-0 seed)
+                values = {round(seed[seed["gt"] == title]["rmse"].mean(), 12)}
+            assert set(pd.Series(y).round(12)) <= values and len(set(y)) == 1, (name, title)
+
+
+def test_no_plotted_value_is_cut_off_by_its_panels_y_range(figures):
+    """Shared y axes are limited once every panel is drawn, so no panel's data runs off the top."""
+    for name, (fig, _) in figures.items():
+        for ax in _data_axes(fig):
+            lo, hi = ax.get_ylim()
+            assert lo == 0, name
+            for line in ax.get_lines():
+                if line.get_gid() in ("best", "seed", "run"):
+                    assert max(line.get_ydata()) <= hi, (name, ax.get_title())
