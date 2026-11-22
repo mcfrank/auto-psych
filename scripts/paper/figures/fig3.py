@@ -6,7 +6,7 @@ Rows (a) and (b) use Figure 2's split (``load_heldout``: ``<domain>_heldout_cond
 ``scripts/paper/fig3_heldout_conditions.py``): subjective randomness' leave-one-out (PSIS-LOO) predictions on all
 runs pooled, the number game's predictions for the items no run drew (people's data restricted to those items),
 and reference games' pre-registered test (``data/rsa/viz/panel_displays.json`` says what each display showed).
-Row (c) is exploratory: its patterns were chosen after the fact (``streak_choices``, ``no_word_roles``,
+Row (c) is exploratory: its patterns were chosen after the fact (``streak_choices``, ``fits_three_roles``,
 ``digit_confidence``), from the in-sample predictions the search ranked (``load``: the figure data's
 ``conditions``, each condition's observed proportion and the pooled best model's and best seed's posterior-mean
 predictions; a column whose model is not the pooled best, ``COLUMN_MODEL``, takes that model's from
@@ -25,6 +25,7 @@ from matplotlib.lines import Line2D
 
 from scripts.paper.figures.icons import STIMULI
 from scripts.paper.figures.style import INK, INK_2, TITLE_FONT, TITLES, save
+from src.models.clustered_se import cluster_dse
 
 SEED, BEST, HUMAN = "#b3b3b3", "#2171b5", INK  # best seed model, best winner, people
 WIDTH_IN, HEIGHT_IN = 7.0, 5.4
@@ -256,40 +257,49 @@ def new_sr(ax, sr):
     _panel_title(ax, "All heads or all tails: a flat rate")
 
 
-def no_word_roles(rsa: pd.DataFrame) -> pd.DataFrame:
-    """No-word queries ("which one is the speaker talking about?") on displays whose objects differ in how many
-    features they have: the chance of choosing one object, by its feature count among the display's (a class's
-    share divided by its copies), weighted by trials; people's binomial 95% CI."""
-    rows = []
-    for c in rsa[rsa.utterance.isna()].itertuples():
-        counts = [sum(o) for o in c.objects]
-        if min(counts) == max(counts):
-            continue
-        members = [i for i, k in enumerate(c.choice_classes) if k == c.cls]
-        f = counts[members[0]]
-        role = "fewest" if f == min(counts) else "most" if f == max(counts) else "in between"
-        rows.append({"role": role, "n": c.n, **{k: getattr(c, k) / len(members) for k in ("observed", *MODELS)}})
-    t = _weighted(pd.DataFrame(rows).groupby("role")).loc[["fewest", "in between", "most"]]
-    t["ci"] = 1.96 * np.sqrt(t.observed * (1 - t.observed) / t.n)
-    return t
+FITS_THREE_ROLES = ("doesn't fit the word", "fewest features", "in between", "most features")
+
+
+def fits_three_roles(rsa: pd.DataFrame) -> pd.DataFrame:
+    """Displays where the word fits exactly three objects (``ROW_C``): each object's chance of being chosen (its
+    class's share over its copies), by its role in the search's terms (``fig3_patterns._rsa``), averaged over
+    objects weighted by their display's trials; each role's displays' trials and people's 95% CI clustered by
+    display. Displays whose fitting objects all have as many features ("all fitting alike") are left out: 7
+    displays, each such object at about a third for people and both models."""
+    from scripts.paper.fig3_patterns import FEATURES  # it imports this module
+
+    feature, value = ROW_C["rsa"]
+    feats = pd.DataFrame([FEATURES["rsa"](c) for c in rsa.itertuples()], index=rsa.index)
+    d = rsa[feats[feature] == value].assign(role=feats["the object"])
+    d = d[d.role.isin(FITS_THREE_ROLES)]
+    copies = np.array([list(c.choice_classes).count(c.cls) for c in d.itertuples()])
+    d = d.assign(w=d.n * copies, **{k: d[k] / copies for k in ("observed", *MODELS)})  # each copy one object
+    rows = {}
+    for role, g in d.groupby("role"):
+        t = {k: float(np.average(g[k], weights=g.w)) for k in ("observed", *MODELS)}
+        resid = g.w * (g.observed - t["observed"])
+        se = cluster_dse(resid, np.zeros(len(g)), pd.factorize(g.display)[0]) / g.w.sum()
+        rows[role] = {**t, "trials": int(g.drop_duplicates("display").n.sum()), "ci": 1.96 * se}
+    return pd.DataFrame(rows).T.loc[list(FITS_THREE_ROLES)].astype({"trials": int})
 
 
 def new_rsa(ax, rsa):
-    """With no word to go on, people pick the object with the most features, more than the seed predicts."""
-    t = no_word_roles(rsa)
+    """When the word fits three objects, people pick the one with the fewest features; the seed spreads its choices
+    to the one in between."""
+    t = fits_three_roles(rsa)
     x = np.arange(len(t))
     w = 0.26
     ax.bar(x - w, t.observed, w, color=HUMAN, zorder=2)
     ax.errorbar(x - w, t.observed, yerr=t.ci, fmt="none", ecolor=INK_2, elinewidth=0.7, zorder=3)
     for dx, c, color in ((0, MODELS[1], BEST), (w, MODELS[0], SEED)):  # people, the discovered model, the seed
         ax.bar(x + dx, t[c], w, color=color, zorder=2)
-    ax.set_xticks(x, ["fewest\nfeatures", "in\nbetween", "most\nfeatures"], fontsize=6, va="top")
+    ax.set_xticks(x, ["doesn't\nfit", "fewest\nfeatures", "in\nbetween", "most\nfeatures"], fontsize=6, va="top")
     ax.tick_params(axis="x", length=0)
     ax.set(xlim=(-0.6, len(x) - 0.4), ylim=(0, 0.6))
     ax.yaxis.set_major_formatter(PCT)
     ax.set_ylabel("chosen (per object)", labelpad=1)
-    ax.set_xlabel("object, with no word given", labelpad=1)
-    _panel_title(ax, "With no word, the richest object is picked")
+    ax.set_xlabel("object, when the word fits three", labelpad=1)
+    _panel_title(ax, "Word fits three: fewest features wins")
 
 
 def new_ng(ax, ng):
@@ -343,7 +353,7 @@ def classic_ng(cell, fig, profiles):
 # What is not yet as it should be, drawn on the panel in red until it is fixed: (row, domain) -> what is missing.
 TO_FIX: Dict[tuple, str] = {}
 # Row (c): per domain, the search's candidate (scripts/paper/fig3_patterns.py) with the clearest behavioural reading
-ROW_C = {"subjective_randomness": ("a pure streak in the pair", "one"), "rsa": ("query", "no word"),
+ROW_C = {"subjective_randomness": ("a pure streak in the pair", "one"), "rsa": ("objects the word fits", "3"),
          "number_game": ("examples share a last digit; the number", "keeps it")}
 
 
