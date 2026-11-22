@@ -163,3 +163,17 @@ Entry format (newest at the bottom):
   numbers, the four-example profile ("80,70,90,100") keeps only 55 (runs drew 45) and "100" keeps 90.
 - Evidence: branch `fig3-heldout`, `scripts/paper/fig3_heldout_conditions.py` (+ `.sbatch`), Sherlock
   `$SCRATCH/auto-psych/fig3_heldout/` (jobs 53258041, 53258042).
+## 2026-11-21: Figure 3 row (c) reference games: "word fits 3 objects" replaces "no word"
+- Lesson: when a figure panel shows a group that a search picked, select the group with the search's own
+  feature function (`fig3_patterns.FEATURES`, imported lazily inside the function because that module imports
+  `fig3`), keyed by `ROW_C`. Don't copy the definition. Why: the panel then can't drift from what
+  `check_row_c` validates. Evidence: `fig3.fits_three_roles`, branch `fig3c-rsa-fits3`.
+- Lesson: the search's `trials` column sums `n` over class rows, and every class row carries its display's
+  `n`. So it counts a display once per class: 11,200 for "fits 3" against 3,472 real trials over 75 displays.
+  Report trials from unique displays.
+- Lesson: in a group with a fixed number of fitting objects, the mean choice rate is fixed by construction
+  (about 1/3). Plot how choices split across object roles instead. Count each identical copy as one object:
+  rate = class share / copies, weighted by n x copies.
+- Note: the earlier reference-game panels in Fig. 3 use binomial CIs. This panel clusters by display instead,
+  using `cluster_dse` on the weighted residuals, because objects in one display share trials. Binomial CIs
+  would be about half as wide for "fewest features" (0.017 vs 0.043).

@@ -187,10 +187,48 @@ def test_in_figure_3_people_choose_a_constant_sequence_at_a_flat_rate_the_best_s
     assert np.ptp(t.observed) < 0.06 and np.ptp(t.best_model) < 0.06 and np.ptp(t.best_seed) > 0.15
 
 
-def test_in_figure_3_with_no_word_people_pick_the_richest_object_more_than_the_seed_predicts():
-    t = fig3.no_word_roles(_fig3_tables()["rsa"])
-    assert list(t.index) == ["fewest", "in between", "most"]
-    assert t.observed.idxmax() == "most" and t.observed["most"] > t.best_seed["most"]
+def test_figure_3s_reference_game_pattern_is_the_word_fitting_three_objects():
+    assert fig3.ROW_C["rsa"] == ("objects the word fits", "3")
+
+
+def _rsa_display(display, objects, utterance, classes, n, observed):
+    return [{"display": display, "cls": k, "n": n, "objects": objects, "utterance": utterance,
+             "choice_classes": classes, **_preds(o)} for k, o in enumerate(observed)]
+
+
+def test_figure_3s_fits_three_roles_are_per_object_trial_weighted_and_clustered_by_display():
+    import pandas as pd
+    rsa = pd.DataFrame(
+        _rsa_display(0, [[1, 0, 0], [1, 1, 0], [1, 1, 1], [0, 1, 0]], 0.0, [0, 1, 2, 3], 10, [0.5, 0.3, 0.1, 0.1])
+        + _rsa_display(1, [[1, 0], [1, 0], [1, 1], [0, 1]], 0.0, [0, 0, 1, 2], 30, [0.6, 0.3, 0.1])  # two copies
+        + _rsa_display(2, [[1, 1], [1, 1], [1, 1]], 0.0, [0, 0, 0], 5, [1.0])  # all fitting alike: not shown
+        + _rsa_display(3, [[1, 0], [1, 1], [0, 1]], 0.0, [0, 1, 2], 7, [0.8, 0.1, 0.1])  # the word fits two
+        + _rsa_display(4, [[1, 0], [1, 1], [0, 1]], float("nan"), [0, 1, 2], 7, [0.2, 0.5, 0.3]))  # no word
+    t = fig3.fits_three_roles(rsa)
+    assert list(t.index) == ["doesn't fit the word", "fewest features", "in between", "most features"]
+    assert t.trials.to_dict() == {"doesn't fit the word": 40, "fewest features": 40, "in between": 10,
+                                  "most features": 40}
+    # fewest features: display 0's object (0.5, 10 trials) and display 1's two copies (0.6 / 2 each, 30 trials)
+    m = (10 * 0.5 + 2 * 30 * 0.3) / 70
+    assert t.observed["fewest features"] == pytest.approx(m)
+    assert t.observed["in between"] == pytest.approx(0.3)
+    se = np.sqrt((10 * (0.5 - m)) ** 2 + (2 * 30 * (0.3 - m)) ** 2) / 70  # each display one cluster
+    assert t.ci["fewest features"] == pytest.approx(1.96 * se)
+
+
+def test_in_figure_3_when_the_word_fits_three_objects_the_seed_overrates_the_in_between_one():
+    import pandas as pd
+    from scripts.paper import fig3_patterns
+    rsa = _fig3_tables()["rsa"]
+    t = fig3.fits_three_roles(rsa)
+    feats = pd.DataFrame([fig3_patterns._rsa(c) for c in rsa.itertuples()], index=rsa.index)
+    group = rsa[feats["objects the word fits"] == "3"]
+    alike = rsa[(feats["objects the word fits"] == "3") & (feats["the object"] == "all fitting alike")]
+    assert t.trials.max() == group.drop_duplicates("display").n.sum() - alike.drop_duplicates("display").n.sum()
+    assert t.observed.idxmax() == "fewest features"
+    near = (t.best_model - t.observed).abs() <= t.ci
+    assert near.drop("doesn't fit the word").all()
+    assert t.best_seed["in between"] - t.observed["in between"] > 2 * t.ci["in between"]
 
 
 def test_figure_3s_row_c_patterns_are_candidates_of_the_search(tmp_path):
