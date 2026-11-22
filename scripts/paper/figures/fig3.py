@@ -32,7 +32,7 @@ MODELS = ("best_seed", "best_model")
 # Its predictions, of the same kind as the figure data's, are in ``<domain>_model_conditions.json``
 # (``scripts/paper/number_game_model_conditions.py``). The number game shows run 3's winner, the best on
 # unseen items (Fig. 2) and the model Fig. 4 ablates; the pooled CV best is run 2's.
-COLUMN_MODEL = {"number_game": ("exception_weighted_rule_rejection", "run 3 winner")}
+COLUMN_MODEL = {"number_game": ("exception_weighted_rule_rejection", "best discovered")}
 SR_LENGTH = 8  # the commonest sequence length: alternation counts compare only within a length
 PCT = plt.FuncFormatter(lambda v, _: f"{v:.0%}")
 
@@ -107,50 +107,57 @@ def alternation_curve(sr: pd.DataFrame) -> pd.DataFrame:
 
 
 def classic_sr(ax, sr):
-    """Falk & Konold (1997): how random a sequence looks against its number of alternations, peaking above a
-    fair coin's average."""
+    """Falk & Konold (1997, Figure 1): how random a sequence looks against its probability of alternation,
+    P(A) = alternations / (length - 1), peaking above a fair coin's 0.5. Our measure: each length-8 sequence's
+    share of choices as the more random of a pair (79% of trials are length 8; P(A) compares within a length)."""
     t = alternation_curve(sr)
-    fair = (SR_LENGTH - 1) / 2
-    ax.axvline(fair, color="#b0b0b0", lw=0.6, ls=(0, (2, 2)), zorder=0)
+    pa = t.index / (SR_LENGTH - 1)
+    ax.axvline(0.5, color="#b0b0b0", lw=0.6, ls=(0, (2, 2)), zorder=0)
     for c, color in zip(MODELS, (SEED, BEST)):
-        ax.plot(t.index, t[c], color=color, lw=1.3, zorder=2)
-    ax.errorbar(t.index, t.observed, yerr=t.ci, fmt="o", color=HUMAN, ms=3, elinewidth=0.8, zorder=3)
-    ax.text(fair + 0.1, 0.03, "fair coin", transform=ax.get_xaxis_transform(), fontsize=6, color=INK_2)
-    ax.set(xlim=(-0.3, SR_LENGTH - 0.7), ylim=(0, 0.8), xticks=range(SR_LENGTH))
+        ax.plot(pa, t[c], color=color, lw=1.3, zorder=2)
+    ax.errorbar(pa, t.observed, yerr=t.ci, fmt="o", color=HUMAN, ms=3, elinewidth=0.8, zorder=3)
+    ax.text(0.515, 0.03, "fair coin", transform=ax.get_xaxis_transform(), fontsize=6, color=INK_2)
+    ax.set(xlim=(-0.04, 1.04), ylim=(0, 0.8), xticks=[0, 0.2, 0.4, 0.6, 0.8, 1])
     ax.yaxis.set_major_formatter(PCT)
-    ax.set_xlabel(f"alternations in {SR_LENGTH} flips", labelpad=1)
+    ax.set_xlabel(f"probability of alternation ({SR_LENGTH} flips)", labelpad=1)
     ax.set_ylabel("chosen as more random", labelpad=1)
 
 
-GAME = [[0, 1], [1, 0], [1, 1]]  # Frank & Goodman (2012)'s game: the word (feature 0) fits two of three objects
+GAME = [[0, 1], [1, 0], [1, 1]]  # the ad-hoc implicature game: the word (feature 0) fits two of three objects
 
 
 def reference_game(rsa: pd.DataFrame) -> pd.DataFrame:
-    """The pre-registered display with Frank & Goodman's structure, one row per object (its class's share)."""
+    """The pre-registered display with the ad-hoc implicature game's structure, one row per object (its class's share)."""
     d = rsa[rsa.objects.map(lambda o: o == GAME) & (rsa.utterance == 0)]
     if d.display.nunique() != 1:
-        raise RuntimeError(f"{d.display.nunique()} pre-registered displays have Frank & Goodman's structure, not 1")
+        raise RuntimeError(f"{d.display.nunique()} pre-registered displays have the ad-hoc implicature game's structure, not 1")
     return d.sort_values("cls").set_index("cls")
 
 
+# Stiller, Goodman & Frank (2015)'s names for the three objects, and what each is in our display
+GAME_ROLES = {(0, 1): ("distractor", "doesn't fit\nthe word"),
+              (1, 0): ("one-feature", "contains only\nthe word's\nfeature"),
+              (1, 1): ("two-feature", "contains the\nword's feature\n+ another")}
+
+
 def classic_rsa(ax, rsa):
-    """Frank & Goodman (2012): one display, the share choosing each object. People pick the object with only the
-    word's feature: a speaker would have named the other object's second feature. The pictures and words varied
-    across participants; the display's structure did not."""
+    """Ad-hoc implicature (Stiller, Goodman & Frank, 2015; Frank & Goodman, 2012): of the two objects the word
+    fits, people pick the one-feature object, since a speaker would have named the two-feature one's other
+    feature. One pre-registered display; its pictures and words varied across participants."""
     d = reference_game(rsa)
     x = np.arange(len(d))
+    roles = [GAME_ROLES[tuple(GAME[classes.index(cls)])] for cls, classes in zip(d.index, d.choice_classes)]
     w = 0.26
     o = d.observed.to_numpy()
     ax.bar(x - w, o, w, color=HUMAN, zorder=2)
     ax.errorbar(x - w, o, yerr=1.96 * np.sqrt(o * (1 - o) / d.n), fmt="none", ecolor=INK_2, elinewidth=0.7, zorder=3)
-    for dx, c, color in ((0, MODELS[0], SEED), (w, MODELS[1], BEST)):
+    for dx, c, color in ((0, MODELS[1], BEST), (w, MODELS[0], SEED)):  # people, the discovered model, the seed
         ax.bar(x + dx, d[c], w, color=color, zorder=2)
-    labels = []
-    for cls, classes in zip(d.index, d.choice_classes):  # each class by its object's features
-        has = GAME[classes.index(cls)]
-        labels.append("both" if all(has) else "only the\nword's feature" if has[0] else "only the\nother feature")
-    ax.set_xticks(x, labels, fontsize=6, va="top")
+    ax.set_xticks(x, [name for name, _ in roles])
     ax.tick_params(axis="x", length=0)
+    for xi, (_, what) in zip(x, roles):  # each role's description, smaller, under its name
+        ax.annotate(what, (xi, 0), xycoords=("data", "axes fraction"), xytext=(0, -17), textcoords="offset points",
+                    ha="center", va="top", fontsize=5.5, color=INK_2, annotation_clip=False)
     ax.set(xlim=(-0.6, len(x) - 0.4), ylim=(0, 1))
     ax.yaxis.set_major_formatter(PCT)
     ax.set_ylabel("chosen", labelpad=1)
@@ -185,30 +192,6 @@ def streak_choices(sr: pd.DataFrame) -> pd.DataFrame:
     t["switch_rate"] = [sum(x != y for x, y in zip(q, q[1:])) / (len(q) - 1) for q in rival]
     return _weighted(t.groupby(pd.cut(t.switch_rate, SWITCH_BINS, include_lowest=True), observed=True),
                      ["switch_rate"])
-
-
-ROLES = ("sparsest", "middle", "richest")
-
-
-def _role(objects, utterance, classes, cls) -> str:
-    """The class's object among those the word fits, by number of features, when they have three or more
-    different numbers of features ('other' otherwise)."""
-    if pd.isna(utterance):
-        return "other"
-    fits = [sum(o) for o in objects if o[int(utterance)]]
-    obj = objects[classes.index(cls)]
-    if len(set(fits)) < 3 or not obj[int(utterance)]:
-        return "other"
-    return ROLES[0] if sum(obj) == min(fits) else ROLES[2] if sum(obj) == max(fits) else ROLES[1]
-
-
-def match_roles(rsa: pd.DataFrame) -> pd.DataFrame:
-    """Displays whose word fits objects with three or more different numbers of features: the share choosing
-    the sparsest, a middle and the richest object it fits, averaged over displays weighting each by its trials."""
-    d = rsa.assign(role=[_role(*r) for r in zip(rsa.objects, rsa.utterance, rsa.choice_classes, rsa.cls)])
-    d = d[d.role != "other"]
-    per = d.groupby(["display", "role"]).agg({"n": "first", **{c: "sum" for c in ("observed", *MODELS)}})
-    return _weighted(per.reset_index().groupby("role")).loc[list(ROLES)]
 
 
 def digit_confidence(ng: pd.DataFrame) -> pd.DataFrame:
@@ -246,23 +229,40 @@ def new_sr(ax, sr):
     _panel_title(ax, "All heads or all tails: a flat rate")
 
 
+def no_word_roles(rsa: pd.DataFrame) -> pd.DataFrame:
+    """No-word queries ("which one is the speaker talking about?") on displays whose objects differ in how many
+    features they have: the chance of choosing one object, by its feature count among the display's (a class's
+    share divided by its copies), weighted by trials; people's binomial 95% CI."""
+    rows = []
+    for c in rsa[rsa.utterance.isna()].itertuples():
+        counts = [sum(o) for o in c.objects]
+        if min(counts) == max(counts):
+            continue
+        members = [i for i, k in enumerate(c.choice_classes) if k == c.cls]
+        f = counts[members[0]]
+        role = "fewest" if f == min(counts) else "most" if f == max(counts) else "in between"
+        rows.append({"role": role, "n": c.n, **{k: getattr(c, k) / len(members) for k in ("observed", *MODELS)}})
+    t = _weighted(pd.DataFrame(rows).groupby("role")).loc[["fewest", "in between", "most"]]
+    t["ci"] = 1.96 * np.sqrt(t.observed * (1 - t.observed) / t.n)
+    return t
+
+
 def new_rsa(ax, rsa):
-    """Displays whose word fits objects with three or more numbers of features: people rarely choose one in
-    the middle."""
-    t = match_roles(rsa)
+    """With no word to go on, people pick the object with the most features, more than the seed predicts."""
+    t = no_word_roles(rsa)
     x = np.arange(len(t))
     w = 0.26
     ax.bar(x - w, t.observed, w, color=HUMAN, zorder=2)
     ax.errorbar(x - w, t.observed, yerr=t.ci, fmt="none", ecolor=INK_2, elinewidth=0.7, zorder=3)
-    for dx, c, color in ((0, MODELS[0], SEED), (w, MODELS[1], BEST)):
+    for dx, c, color in ((0, MODELS[1], BEST), (w, MODELS[0], SEED)):  # people, the discovered model, the seed
         ax.bar(x + dx, t[c], w, color=color, zorder=2)
     ax.set_xticks(x, ["fewest\nfeatures", "in\nbetween", "most\nfeatures"], fontsize=6, va="top")
     ax.tick_params(axis="x", length=0)
-    ax.set(xlim=(-0.6, len(x) - 0.4), ylim=(0, 0.8))
+    ax.set(xlim=(-0.6, len(x) - 0.4), ylim=(0, 0.6))
     ax.yaxis.set_major_formatter(PCT)
-    ax.set_ylabel("chosen", labelpad=1)
-    ax.set_xlabel("object the word fits", labelpad=1)
-    _panel_title(ax, "The middle candidate is passed over")
+    ax.set_ylabel("chosen (per object)", labelpad=1)
+    ax.set_xlabel("object, with no word given", labelpad=1)
+    _panel_title(ax, "With no word, the richest object is picked")
 
 
 def new_ng(ax, ng):
@@ -280,7 +280,72 @@ def new_ng(ax, ng):
     _panel_title(ax, "Graded confidence in a shared digit")
 
 
-def draw(figure_data: Path, displays: Path, out_dir: Path) -> None:
+NG_SETS = ("100", "80, 70, 90, 100")  # one example, then four that fit a rule (as the dataset writes them)
+
+
+def ng_profiles(dataset: Path) -> Dict[str, pd.Series]:
+    """Tenenbaum (2000)'s generalization profiles: people's share of yes for every target 1-100 after each of
+    ``NG_SETS``, from the whole Bigelow & Piantadosi (2016) dataset (every set was asked about all 100)."""
+    d = pd.read_csv(dataset, usecols=["set", "target", "rating"])
+    d["set"] = d.set.str.replace("_", ",")
+    out = {}
+    for ex in NG_SETS:
+        x = d[d.set == ex].groupby("target").rating.mean()
+        if len(x) != 100:
+            raise RuntimeError(f"{dataset}: set {ex!r} was asked about {len(x)} targets, not 100")
+        out[ex] = x
+    return out
+
+
+def classic_ng(cell, fig, profiles):
+    """Each set's profile as its own histogram, people's bars in black; the models' bars are pending (their
+    predictions for every target need the pooled fits)."""
+    axes = cell.subgridspec(len(profiles), 1, hspace=0.5).subplots(sharex=True)
+    for ax, (ex, yes) in zip(axes, profiles.items()):
+        ax.bar(yes.index, yes, width=0.8, color=HUMAN)
+        ax.set(xlim=(0, 101), ylim=(0, 1), yticks=[0, 1])
+        ax.yaxis.set_major_formatter(PCT)
+        ax.set_title("examples: " + ex, fontsize=6, loc="left", pad=2)
+    axes[0].tick_params(axis="x", length=0)
+    axes[-1].set(xticks=[1, 25, 50, 75, 100])
+    axes[-1].set_xlabel("number queried", labelpad=1)
+    axes[0].set_ylabel("said yes", labelpad=1, y=-0.25)
+
+
+# What is not yet as it should be, drawn on the panel in red until it is fixed: (row, domain) -> what is missing.
+# Rows (a) and (b) should use Figure 2's split; row (c)'s patterns should come from a reproducible search.
+LOO = "IN-SAMPLE: needs Figure 2's split,\nleave-one-out predictions (Sherlock fits)"
+UNSEEN = "IN-SAMPLE: needs Figure 2's split,\npredictions for the items no run drew (Sherlock fits)"
+TO_FIX = {(0, "subjective_randomness"): LOO, (0, "number_game"): UNSEEN,
+          (1, "subjective_randomness"): LOO,
+          (1, "number_game"): "MODELS PENDING, Figure 2's split: predictions for\nevery number no run drew (people: those numbers only)"}
+# Row (c): per domain, the search's candidate (scripts/paper/fig3_patterns.py) with the clearest behavioural reading
+ROW_C = {"subjective_randomness": ("a pure streak in the pair", "one"), "rsa": ("query", "no word"),
+         "number_game": ("examples share a last digit; the number", "keeps it")}
+
+
+def check_row_c(patterns: Path) -> None:
+    """Each of ``ROW_C`` must be one of the search's candidates."""
+    found = json.loads(patterns.read_text())
+    for d, pick in ROW_C.items():
+        candidates = [(r["feature"], r["value"]) for r in found[d] if r["candidate"]]
+        if pick not in candidates:
+            raise RuntimeError(f"{d}: row (c)'s pattern {pick} is not one of the search's candidates {candidates}")
+
+
+FIX_RED = "#c62828"
+
+
+def _flag(fig, cell, text):
+    """A red note over a panel that is not yet as it should be."""
+    box = cell.get_position(fig)
+    fig.text((box.x0 + box.x1) / 2, (box.y0 + box.y1) / 2, text, ha="center", va="center", fontsize=6.5,
+             color=FIX_RED, weight="bold", zorder=10,
+             bbox={"fc": "white", "ec": FIX_RED, "lw": 0.8, "alpha": 0.9, "boxstyle": "round,pad=0.3"})
+
+
+def draw(figure_data: Path, displays: Path, ng_dataset: Path, out_dir: Path) -> None:
+    check_row_c(figure_data / "fig3_patterns.json")
     tables = load(figure_data, displays)
     fig = plt.figure(figsize=(WIDTH_IN, HEIGHT_IN))
     # one grid for every row, so a domain's panels share a column: row (a)'s two scatterplots side by side,
@@ -291,16 +356,21 @@ def draw(figure_data: Path, displays: Path, out_dir: Path) -> None:
     for k, d in enumerate(ORDER):
         a = [fig.add_subplot(gs[0, 3 * k + j]) for j in (0, 1)]
         _scatter(a[0], tables[d], MODELS[0], SEED, "best seed")
-        _scatter(a[1], tables[d], MODELS[1], BEST, COLUMN_MODEL.get(d, (None, "best winner"))[1])
+        _scatter(a[1], tables[d], MODELS[1], BEST, COLUMN_MODEL.get(d, (None, "best discovered"))[1])
         for ax in a if k else a[1:]:
             ax.tick_params(labelleft=False)
         tops.append(a[0])
-        b = fig.add_subplot(gs[1, 3 * k:3 * k + 2])
-        {"subjective_randomness": classic_sr, "rsa": classic_rsa,
-         "number_game": lambda ax, _: _pending(ax, "generalization profiles")}[d](b, tables[d])
+        if d == "number_game":
+            classic_ng(gs[1, 3 * k:3 * k + 2], fig, ng_profiles(ng_dataset))
+        else:
+            {"subjective_randomness": classic_sr, "rsa": classic_rsa}[d](fig.add_subplot(gs[1, 3 * k:3 * k + 2]),
+                                                                       tables[d])
         {"subjective_randomness": new_sr, "rsa": new_rsa, "number_game": new_ng}[d](
             fig.add_subplot(gs[2, 3 * k:3 * k + 2]), tables[d])
     tops[0].set_ylabel("observed", labelpad=1)
+    for (row, d), text in TO_FIX.items():
+        k = ORDER.index(d)
+        _flag(fig, gs[row, 3 * k:3 * k + 2], text)
     fig.canvas.draw()
     r = fig.canvas.get_renderer()
     to_fig = fig.transFigure.inverted()
@@ -327,6 +397,6 @@ def draw(figure_data: Path, displays: Path, out_dir: Path) -> None:
             fig.text(x1 + 0.008, y, ROW_TITLES[row], fontdict=TITLE_FONT, fontsize=8.5, va="center")
     key = [Line2D([], [], color=HUMAN, marker="o", ms=3, lw=0, label="people (95% CI)"),
            Line2D([], [], color=SEED, lw=1.5, label="best seed model"),
-           Line2D([], [], color=BEST, lw=1.5, label="winning model")]
+           Line2D([], [], color=BEST, lw=1.5, label="best discovered model")]
     fig.legend(handles=key, loc="lower center", ncol=3, frameon=False, bbox_to_anchor=(0.5, 0.0))
     save(fig, out_dir, "fig3_effects")

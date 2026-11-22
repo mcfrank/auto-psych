@@ -4,7 +4,7 @@ and the reference games' own.
 - All domains (``fig_recovery``): one row per domain, one panel per held-out
   ground truth, each domain's runs as the mean ± SEM of the best model's RMSE
   to the ground truth at every scoring step (each run a thin translucent line
-  behind it), against the best other seed's (dotted, its SEM shaded). Subjective randomness: the final recovery sweep's
+  behind it), against the best other seed's (grey, dashed, its SEM shaded). Subjective randomness: the final recovery sweep's
   five repeats (``data/results/final_recovery/run<r>/<ground truth>/``), every
   cell required; the best model at each position aligned by experiment
   (``aggregate_holdout_trajectories``), against the ELPD-best other seed fitted
@@ -30,6 +30,9 @@ and the reference games' own.
   among those with reliable PSIS-LOO fitted to all of the cell's data (the
   cell's recorded ``elpd_best_rmse``, as in the subjective-randomness summary).
 
+Drawn in Figures 2-4's house style (matplotlib, ``scripts/paper/figures/style.py``): blue for the loop's
+best model, seed grey for the best seed, Avenir, open axes, PNAS's full width.
+
 Usage:
     uv run python -m scripts.paper.recovery_figures
 """
@@ -40,39 +43,26 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pandas as pd
 import tyro
-from plotnine import (
-    aes,
-    annotate,
-    element_blank,
-    geom_blank,
-    geom_linerange,
-    geom_ribbon,
-    element_text,
-    facet_wrap,
-    geom_hline,
-    geom_line,
-    geom_point,
-    geom_segment,
-    geom_vline,
-    ggplot,
-    labs,
-    scale_color_manual,
-    scale_linetype_manual,
-    scale_x_continuous,
-    scale_x_log10,
-    scale_y_continuous,
-    theme,
-    theme_minimal,
-)
+from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
+from matplotlib.ticker import MaxNLocator
 from pyprojroot import here
 
+from scripts.paper.figures.fig3 import BEST, SEED, WIDTH_IN
+from scripts.paper.figures.icons import STIMULI
+from scripts.paper.figures.style import DPI, INK, INK_2, TITLE_FONT, setup_style
 from src.subjective_randomness.reporting import aggregate_holdout_trajectories
 from src.subjective_randomness.sweep_cells import survey_sweep
 
-BEST_COLOR = "#1B9E77"  # ColorBrewer Dark2, as the other paper figures
-SEED_COLOR = "#D95F02"
+# Figures 2-4's house style: blue (``BEST``) for the loop's best model, seed grey (``SEED``) for the best seed,
+# dashed as Figure 2's best-seed line; the experiments' boundaries in a neutral lighter than the seed grey
+SEED_LS, BOUNDARY = (0, (3, 2)), "#dcdcdc"
+MARKERS = {"repeat 1": "o", "repeat 2": "^", "repeat 3": "s"}  # a repeat's points, where repeats are drawn apart
+XLABEL, YLABEL = "inner loop iteration", "RMSE vs. ground truth"
+
 NG_GT_NAMES = {
     "tenenbaum_rules_similarity": "Ground truth: Tenenbaum (1999)",
     "bigelow_piantadosi_mixture": "Ground truth: Bigelow & Piantadosi, mixture",
@@ -155,31 +145,68 @@ def number_game_frame(root: Path) -> pd.DataFrame:
     return out
 
 
-def number_game_plot(df: pd.DataFrame) -> ggplot:
+def _style_panel(ax, title: str) -> None:
+    """A panel as in Figures 2-4 (open axes, no grid: ``setup_style``), its title in the panel-title size."""
+    ax.set_title(title, fontsize=7, color=INK, pad=3)
+
+
+def _boundaries(ax, n_steps: int) -> None:
+    """Dotted lines between the experiments (six scoring steps each)."""
+    for k in range(1, n_steps // STEPS_PER_EXPERIMENT):
+        ax.axvline(k * STEPS_PER_EXPERIMENT - 0.5, color=BOUNDARY, lw=0.7, ls=(0, (1, 1.5)), zorder=0)
+
+
+def _key(fig, handles, ncol: int) -> None:
+    fig.legend(handles=handles, loc="lower center", ncol=ncol, frameon=False, bbox_to_anchor=(0.5, 0.0),
+               handlelength=2.2, columnspacing=1.6)
+
+
+def _series_key(seed_label: str, marker: str = "o") -> list:
+    return [Line2D([], [], color=BEST, lw=1.2, marker=marker, ms=2.5, label="best model"),
+            Line2D([], [], color=SEED, lw=1.2, ls=SEED_LS, label=seed_label)]
+
+
+def _repeat_key(repeats) -> list:
+    return [Line2D([], [], color=INK_2, lw=0, marker=MARKERS[r], ms=3, label=r) for r in repeats]
+
+
+def _save(fig: Figure, out_dir: Path, name: str) -> None:
+    """Uncropped, as Figure 4: the canvas is the saved size, PNAS's full width."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for ext in ("pdf", "png"):
+        path = out_dir / f"{name}.{ext}"
+        fig.savefig(path, dpi=DPI)
+        print(f"wrote {path}")
+    plt.close(fig)
+
+
+def number_game_plot(df: pd.DataFrame) -> Figure:
     n_steps = int(df["step"].max()) + 1
-    boundaries = [k * STEPS_PER_EXPERIMENT - 0.5 for k in range(1, n_steps // STEPS_PER_EXPERIMENT)]
-    best = df[df["series"] == "best model"]
-    seed = df[df["series"] == "best other seed model"]
-    plot = (
-        ggplot(df, aes("step", "rmse", color="series", linetype="series"))
-        + geom_vline(xintercept=boundaries, linetype="dotted", color="grey", size=0.8)
-        + geom_line(aes(group="repeat"), data=seed, size=0.8)
-        + geom_line(aes(group="repeat"), data=best, size=0.8)
-        + geom_point(aes(shape="repeat"), data=best, size=1.6)
-        + facet_wrap("gt", nrow=1)
-        + scale_color_manual(values={"best model": BEST_COLOR, "best other seed model": SEED_COLOR})
-        + scale_linetype_manual(values={"best model": "solid", "best other seed model": "dotted"})
-        + scale_x_continuous(breaks=list(range(n_steps)))
-        + scale_y_continuous(limits=(0, None))
-        + labs(x="inner loop iteration", y="RMSE vs. ground truth", color="", linetype="", shape="")
-        + theme_minimal()
-        + theme(legend_position="bottom", panel_grid_minor=element_blank(),
-                strip_text=element_text(size=10), figure_size=(12, 3.4))
-    )
-    for k in range(n_steps // STEPS_PER_EXPERIMENT):
-        plot += annotate("text", x=k * STEPS_PER_EXPERIMENT - 0.3, y=df["rmse"].max() * 1.05,
-                         label=f"exp. {k + 1}", ha="left", size=8, color="#555555")
-    return plot
+    gts = list(df["gt"].cat.categories)
+    fig, axes = plt.subplots(1, len(gts), figsize=(WIDTH_IN, 2.3), sharey=True)
+    fig.subplots_adjust(left=0.075, right=0.99, top=0.84, bottom=0.3, wspace=0.08)
+    top = df["rmse"].max() * 1.05
+    for ax, gt in zip(axes, gts):
+        _boundaries(ax, n_steps)
+        cell = df[df["gt"] == gt]
+        for repeat, d in cell.groupby("repeat"):
+            seed = d[d["series"] == "best other seed model"]
+            ax.plot(seed["step"], seed["rmse"], color=SEED, lw=1.0, ls=SEED_LS, gid="seed", zorder=1)
+        for repeat, d in cell.groupby("repeat"):
+            best = d[d["series"] == "best model"]
+            ax.plot(best["step"], best["rmse"], color=BEST, lw=1.0, marker=MARKERS[repeat], ms=2.5,
+                    gid="best", zorder=2)
+        for k in range(n_steps // STEPS_PER_EXPERIMENT):
+            ax.text(k * STEPS_PER_EXPERIMENT - 0.3, top, f"exp. {k + 1}", ha="left", va="bottom",
+                    fontsize=5.5, color=INK_2)
+        ax.set_xticks(range(0, n_steps, 3))
+        ax.set_xticks(range(n_steps), minor=True)
+        ax.set_xlabel(XLABEL)
+        _style_panel(ax, gt.replace(": ", ":\n"))  # on one line, the longest is wider than its panel
+    axes[0].set_ylim(0, top * 1.1)  # shared: room for the experiments' labels over every panel's data
+    axes[0].set_ylabel(YLABEL)
+    _key(fig, _series_key("best other seed model") + _repeat_key(sorted(df["repeat"].unique())), ncol=5)
+    return fig
 
 
 def rsa_frame(path: Path) -> pd.DataFrame:
@@ -202,26 +229,24 @@ def rsa_frame(path: Path) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def rsa_plot(df: pd.DataFrame) -> ggplot:
-    best = df[df["series"] == "best model"]
-    # The repeats share their data and step-0 best seed, so one line per panel (their mean).
-    seed = (df[df["series"] == "best other seed model"]
-            .groupby(["gt", "series", "step"], as_index=False, observed=True)["rmse"].mean())
-    return (
-        ggplot(df, aes("step", "rmse", color="series", linetype="series"))
-        + geom_line(data=seed, size=0.8)
-        + geom_line(aes(group="repeat"), data=best, size=0.8)
-        + geom_point(aes(shape="repeat"), data=best, size=2)
-        + facet_wrap("gt", nrow=1)
-        + scale_color_manual(values={"best model": BEST_COLOR, "best other seed model": SEED_COLOR})
-        + scale_linetype_manual(values={"best model": "solid", "best other seed model": "dotted"})
-        + scale_x_continuous(breaks=sorted(df["step"].unique()))
-        + scale_y_continuous(limits=(0, None))
-        + labs(x="inner loop iteration", y="RMSE vs. ground truth", color="", linetype="", shape="")
-        + theme_minimal()
-        + theme(legend_position="bottom", panel_grid_minor=element_blank(),
-                strip_text=element_text(size=10), figure_size=(7, 3.2))
-    )
+def rsa_plot(df: pd.DataFrame) -> Figure:
+    gts = sorted(df["gt"].unique())
+    fig, axes = plt.subplots(1, len(gts), figsize=(WIDTH_IN, 2.3), sharey=True)
+    fig.subplots_adjust(left=0.075, right=0.99, top=0.9, bottom=0.3, wspace=0.08)
+    for ax, gt in zip(axes, gts):
+        cell = df[df["gt"] == gt]
+        # The repeats share their data and step-0 best seed, so one line per panel (their mean).
+        seed = cell[cell["series"] == "best other seed model"].groupby("step", as_index=False)["rmse"].mean()
+        ax.plot(seed["step"], seed["rmse"], color=SEED, lw=1.0, ls=SEED_LS, gid="seed", zorder=1)
+        for repeat, d in cell[cell["series"] == "best model"].groupby("repeat"):
+            ax.plot(d["step"], d["rmse"], color=BEST, lw=1.0, marker=MARKERS[repeat], ms=3, gid="best", zorder=2)
+        ax.set_xticks(sorted(df["step"].unique()))
+        ax.set_xlabel(XLABEL)
+        _style_panel(ax, gt)
+    axes[0].set_ylabel(YLABEL)
+    axes[0].set_ylim(bottom=0)  # shared: set once every panel's data is in
+    _key(fig, _series_key("best other seed model") + _repeat_key(sorted(df["repeat"].unique())), ncol=4)
+    return fig
 
 
 def alien_frame(root: Path) -> pd.DataFrame:
@@ -241,27 +266,22 @@ def alien_frame(root: Path) -> pd.DataFrame:
     return out
 
 
-def alien_plot(df: pd.DataFrame) -> ggplot:
-    best = df[df["series"] == "best model"]
-    seed = df[df["series"] == "best seed model"]
-    return (
-        ggplot(df, aes("step", "rmse", color="series", linetype="series"))
-        + geom_vline(xintercept=[STEPS_PER_EXPERIMENT - 0.5, 2 * STEPS_PER_EXPERIMENT - 0.5],
-                     linetype="dotted", color="grey", size=0.6)
-        + geom_line(data=seed, size=0.8)
-        + geom_line(data=best, size=0.8)
-        + geom_point(data=best, size=1.4)
-        + facet_wrap("gt", nrow=1)
-        + scale_color_manual(values={"best model": BEST_COLOR, "best seed model": SEED_COLOR},
-                             breaks=["best model", "best seed model"])
-        + scale_linetype_manual(values={"best model": "solid", "best seed model": "dotted"},
-                                breaks=["best model", "best seed model"])
-        + scale_y_continuous(limits=(0, None))
-        + labs(x="inner loop iteration", y="RMSE vs. ground truth", color="", linetype="")
-        + theme_minimal()
-        + theme(legend_position="bottom", panel_grid_minor=element_blank(),
-                strip_text=element_text(size=9), figure_size=(10, 3))
-    )
+def alien_plot(df: pd.DataFrame) -> Figure:
+    gts = list(df["gt"].cat.categories)
+    fig, axes = plt.subplots(1, len(gts), figsize=(WIDTH_IN, 2.1), sharey=True)
+    fig.subplots_adjust(left=0.075, right=0.99, top=0.89, bottom=0.31, wspace=0.08)
+    for ax, gt in zip(axes, gts):
+        cell = df[df["gt"] == gt]
+        _boundaries(ax, int(df["step"].max()) + 1)
+        seed, best = cell[cell["series"] == "best seed model"], cell[cell["series"] == "best model"]
+        ax.plot(seed["step"], seed["rmse"], color=SEED, lw=1.0, ls=SEED_LS, gid="seed", zorder=1)
+        ax.plot(best["step"], best["rmse"], color=BEST, lw=1.0, marker="o", ms=2.2, gid="best", zorder=2)
+        ax.set_xlabel(XLABEL)
+        _style_panel(ax, gt)
+    axes[0].set_ylabel(YLABEL)
+    axes[0].set_ylim(bottom=0)  # shared: set once every panel's data is in
+    _key(fig, _series_key("best seed model"), ncol=2)
+    return fig
 
 
 DOMAINS = ("Subjective randomness", "Number sequence generalization", "Reference games")
@@ -321,60 +341,81 @@ def _in_domain(df: pd.DataFrame, domain: str) -> pd.DataFrame:
     return df
 
 
-def _domain_row(df: pd.DataFrame, runs: pd.DataFrame, domain: str, last: bool) -> ggplot:
-    """One domain's panels, titled by the domain, each by its ground truth."""
+DOMAIN_ICONS = dict(zip(DOMAINS, ("subjective_randomness", "number_game", "rsa")))  # icons.STIMULI's keys
+GRID_COLUMNS = 12  # each row's panels span an equal share of these (4, 3 and 2 panels)
+
+
+def _domain_row(axes, df: pd.DataFrame, runs: pd.DataFrame, domain: str) -> None:
+    """One domain's panels, each titled by its ground truth: every run thin behind the best model's mean
+    ± SEM, against the best other seed's mean (its SEM shaded)."""
     df, runs = _in_domain(df, domain), _in_domain(runs, domain)
-    best = df[df["series"] == "best model"]
-    seed = df[df["series"] == "best other seed model"]
-    zero = pd.DataFrame(dict(gt=pd.Categorical(df["gt"].cat.categories, categories=df["gt"].cat.categories),
-                             step=0, mean=0.0))
-    plot = (
-        ggplot(df, aes("step", "mean", color="series", linetype="series"))
-        + geom_blank(aes("step", "mean"), data=zero, inherit_aes=False)
-        + geom_line(aes("step", "rmse", group="run"), data=runs, inherit_aes=False, color=BEST_COLOR,
-                    size=0.5, alpha=0.5)
-        + geom_ribbon(aes(ymin="mean - err", ymax="mean + err"), data=seed.dropna(subset=["err"]),
-                      fill=SEED_COLOR, alpha=0.15, color="none", show_legend=False)
-        + geom_line(data=seed, size=0.8)
-        + geom_linerange(aes(ymin="mean - err", ymax="mean + err"), data=best.dropna(subset=["err"]), size=0.5,
-                         show_legend=False)
-        + geom_line(data=best, size=0.8)
-        + geom_point(data=best, size=1.4)
-        + facet_wrap("gt", nrow=1, scales="free")
-        + scale_color_manual(values={"best model": BEST_COLOR, "best other seed model": SEED_COLOR},
-                             breaks=list(SERIES.values()))
-        + scale_linetype_manual(values={"best model": "solid", "best other seed model": "dotted"},
-                                breaks=list(SERIES.values()))
-        + labs(title=domain, x="inner loop iteration" if last else "", y="RMSE vs. ground truth",
-               color="", linetype="")
-        + theme_minimal()
-        + theme(legend_position="bottom" if last else "none", panel_grid_minor=element_blank(),
-                strip_text=element_text(size=9), plot_title=element_text(size=11, ha="left"))
-    )
-    if domain != "Reference games":  # three experiments of six scoring steps
-        plot += geom_vline(xintercept=[STEPS_PER_EXPERIMENT - 0.5, 2 * STEPS_PER_EXPERIMENT - 0.5],
-                           linetype="dotted", color="grey", size=0.6)
-    return plot
+    for ax, gt in zip(axes, df["gt"].cat.categories):
+        cell, mine = df[df["gt"] == gt], runs[runs["gt"] == gt]
+        if domain != "Reference games":  # three experiments of six scoring steps
+            _boundaries(ax, int(cell["step"].max()) + 1)
+        for _, run in mine.groupby("run"):
+            ax.plot(run["step"], run["rmse"], color=BEST, lw=0.5, alpha=0.35, gid="run", zorder=1)
+        seed, best = cell[cell["series"] == "best other seed model"], cell[cell["series"] == "best model"]
+        ax.fill_between(seed["step"], seed["mean"] - seed["err"], seed["mean"] + seed["err"], color=SEED,
+                        alpha=0.3, lw=0, zorder=1)
+        ax.plot(seed["step"], seed["mean"], color=SEED, lw=1.0, ls=SEED_LS, gid="seed", zorder=2)
+        ax.vlines(best["step"], best["mean"] - best["err"], best["mean"] + best["err"], color=BEST, lw=0.6,
+                  zorder=3)
+        ax.plot(best["step"], best["mean"], color=BEST, lw=1.2, marker="o", ms=2.2, gid="best", zorder=3)
+        if domain == "Reference games":
+            ax.set_xticks(sorted(cell["step"].unique()))
+        _style_panel(ax, str(gt))
+        ax.set_ylim(bottom=0)  # each panel its own scale
+        ax.yaxis.set_major_locator(MaxNLocator(5, steps=[1, 2, 5, 10]))  # short labels, clear of the panel to the left
+    axes[0].set_ylabel(YLABEL)
 
 
-def combined_plot(df: pd.DataFrame, runs: pd.DataFrame):
-    rows = [_domain_row(df, runs, domain, last=domain == DOMAINS[-1]) for domain in DOMAINS]
-    return (rows[0] / rows[1] / rows[2]) + theme(figure_size=(10, 8.5))
+def _domain_title(fig: Figure, ax, domain: str) -> None:
+    """The domain's stimulus icon at the row's left edge and its name beside it, above the panel titles."""
+    fig.canvas.draw()
+    to_fig = fig.transFigure.inverted()
+    y = to_fig.transform((0, ax.title.get_window_extent().y1))[1] + 0.022
+    x0 = ax.get_position().x0
+    t = fig.text(x0, y, domain, fontdict=TITLE_FONT, va="center", ha="left")
+    box = t.get_window_extent()
+    h = 1.9 * (to_fig.transform((0, box.y1))[1] - to_fig.transform((0, box.y0))[1])
+    draw, aspect = STIMULI[DOMAIN_ICONS[domain]]
+    w = h * aspect * fig.get_figheight() / fig.get_figwidth()
+    draw(fig.add_axes((x0, y - h / 2, w, h)))
+    t.set_x(x0 + w + 0.01)
+
+
+def combined_plot(df: pd.DataFrame, runs: pd.DataFrame) -> Figure:
+    fig = plt.figure(figsize=(WIDTH_IN, 6.4))
+    grid = fig.add_gridspec(len(DOMAINS), GRID_COLUMNS, left=0.075, right=0.99, top=0.93, bottom=0.11,
+                            hspace=0.72, wspace=1.5)
+    rows = []
+    for k, domain in enumerate(DOMAINS):
+        n = _in_domain(df, domain)["gt"].cat.categories.size
+        span = GRID_COLUMNS // n
+        axes = [fig.add_subplot(grid[k, j * span:(j + 1) * span]) for j in range(n)]
+        _domain_row(axes, df, runs, domain)
+        rows.append(axes)
+    for ax in rows[-1]:
+        ax.set_xlabel(XLABEL)
+    for axes, domain in zip(rows, DOMAINS):
+        _domain_title(fig, axes[0], domain)
+    _key(fig, _series_key("best other seed model"), ncol=2)
+    return fig
 
 
 def main(args: Args) -> None:
-    args.out_dir.mkdir(parents=True, exist_ok=True)
-    for name, plot in [
-        ("fig_recovery", combined_plot(combined_frame(args.sr_root, args.ng_root, args.rsa_trajectory),
-                                       combined_runs_frame(args.sr_root, args.ng_root, args.rsa_trajectory))),
-        ("fig_recovery_number_game", number_game_plot(number_game_frame(args.ng_root))),
-        ("fig_recovery_rsa", rsa_plot(rsa_frame(args.rsa_trajectory))),
-        ("fig_recovery_alien", alien_plot(alien_frame(args.alien_root))),
-    ]:
-        for ext in ("pdf", "png"):
-            path = args.out_dir / f"{name}.{ext}"
-            plot.save(path, dpi=200, verbose=False)
-            print(f"wrote {path}")
+    with plt.rc_context():  # Figures 2-4's fonts and axes; the PDF's fonts embedded on saving
+        setup_style()
+        for name, draw in [
+            ("fig_recovery", lambda: combined_plot(combined_frame(args.sr_root, args.ng_root, args.rsa_trajectory),
+                                                   combined_runs_frame(args.sr_root, args.ng_root,
+                                                                       args.rsa_trajectory))),
+            ("fig_recovery_number_game", lambda: number_game_plot(number_game_frame(args.ng_root))),
+            ("fig_recovery_rsa", lambda: rsa_plot(rsa_frame(args.rsa_trajectory))),
+            ("fig_recovery_alien", lambda: alien_plot(alien_frame(args.alien_root))),
+        ]:
+            _save(draw(), args.out_dir, name)
 
 
 if __name__ == "__main__":

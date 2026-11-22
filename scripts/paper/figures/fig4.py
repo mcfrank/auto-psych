@@ -32,13 +32,13 @@ NAME_PT, SMALL = 7.0, 7.0
 NAMES_IN, NAME_PITCH = 0.3, 1.15  # the kept names' offset from their column (inches), their spacing (line heights)
 LEFT, RIGHT, TICK_DEG = 0.04, 0.04, 35  # shares of the path's axis before the first step and past the last; the step names' angle  # PNAS: no text under 6 pt at the printed size
 PATH_IN, KEPT_IN, GAP_IN = 3.25, 0.5, 0.82  # widths: the path's axes, the kept column's, between them (inches)
-LEFT_PAD, TOP_PAD, LEGEND_PAD, ROW_GAP = 0.1, 0.01, 0.05, 0.06  # figure shares (left, top, the legend's), inches between rows
-ICON_OVER, ONE_LINE = 0.5, 14  # how far each title's icon reaches over it (title heights); the longest one-line step name
-WIDTH_IN, HEIGHT_IN = 7.0, 4.9  # one row per domain; the saved figure: PNAS's full width
+LEFT_PAD, TOP_PAD, LEGEND_PAD, ROW_GAP = 0.1, 0.01, 0.0, 0.06  # figure shares (left, top, the legend's), inches between rows
+ICON_OVER, ONE_LINE, KEPT_DOWN = 0.5, 14, 0.8  # how far each title's icon reaches over it (title heights); the longest one-line step name; the share of the step names' height the kept column extends down
+WIDTH_IN, HEIGHT_IN = 7.0, 4.6  # one row per domain; the saved figure: PNAS's full width
 # each panel's cues are named by what pushes its response this way (the fitted signs: mechanisms.yaml)
 DIRECTION = {"subjective_randomness": "what makes a sequence look less random",
              "rsa": "what makes an object more likely to be chosen",
-             "number_game": "patterns the number shares with the examples"}
+             "number_game": "what shapes which concepts the learner believes"}
 
 
 def sources(figure_data: Path):
@@ -172,10 +172,10 @@ def draw_kept(ax, kept, names):
                 ha="center", va="bottom", fontsize=SMALL + 0.5, color=INK)
     ax.tick_params(labelsize=SMALL, length=2, pad=1.5)
     ax.spines["bottom"].set_bounds(-0.25, 0.25)
-    ax.set_ylabel("ELPD-CV vs.\nfinal model (nats)", fontsize=SMALL)
+    ax.set_ylabel("ELPD-CV vs. model\nafter removals (nats)", fontsize=SMALL)
 
 
-def stack_rows(fig, grid):
+def stack_rows(fig, grid, n_kept):
     """Place the rows top to bottom, each path axes with room above for its title (and icon) and below for
     its step names and x label, which differ by domain; the axes share the height left over."""
     fig.canvas.draw()
@@ -191,10 +191,14 @@ def stack_rows(fig, grid):
     height = room / len(above)
     top = H * (1 - TOP_PAD)
     x0 = LEFT_PAD
-    for (ax, kept_ax), a, b in zip(grid, above, below):
+    for (ax, kept_ax), a, b, k in zip(grid, above, below, n_kept):
         y0 = (top - a - height) / H
         ax.set_position((x0, y0, PATH_IN / WIDTH_IN, height / H))
-        kept_ax.set_position((x0 + (PATH_IN + GAP_IN) / WIDTH_IN, y0, KEPT_IN / WIDTH_IN, height / H))
+        # the kept column also takes the height the path's step names use: its names run longer than the path
+        need = k * NAME_PT * NAME_PITCH * fig.dpi / 72 - height  # only as far as its names need
+        down = min(KEPT_DOWN * b, max(KEPT_DOWN * b / 2, need))  # at least half the stretch: a short column still spreads
+        kept_ax.set_position((x0 + (PATH_IN + GAP_IN) / WIDTH_IN, y0 - down / H, KEPT_IN / WIDTH_IN,
+                              (height + down) / H))
         top -= a + height + b + ROW_GAP * fig.dpi
 
 
@@ -211,14 +215,17 @@ def draw_ablation(figure_data: Path, mechanisms: Path, out_dir: Path) -> None:
         ax.annotate(DIRECTION[d], (1, 0.5), xycoords=title, xytext=(8, 0), textcoords="offset points",
                     ha="left", va="center", fontsize=NAME_PT, color=INK_2, style="italic")
     axes[-1].set_xlabel("mechanism removed, in order", fontsize=SMALL + 0.5, labelpad=1)  # the same in every row
-    stack_rows(fig, grid)
+    stack_rows(fig, grid, [len(points[d][1]) for d in TITLES])
     for kept_ax, d in zip(grid[:, 1], TITLES):  # its names are spread in inches: drawn once the rows are placed
         draw_kept(kept_ax, points[d][1], names[d])
     dot = {"lw": 0, "ms": 3.5}
     key = [Line2D([], [], marker="o", color=COLOR_NEW, label="new", **dot),
            Line2D([], [], marker="o", color=COLOR_START, label="from the literature", **dot)]
-    fig.legend(handles=key, loc="upper center", ncol=2, frameon=False, fontsize=SMALL, bbox_to_anchor=(0.43, 0.04),
-               handletextpad=0.2, columnspacing=1.6)
+    fig.canvas.draw()  # the key on the x label's line, under the kept column: no line of its own
+    label = axes[-1].xaxis.label.get_window_extent()
+    y = fig.transFigure.inverted().transform((0, (label.y0 + label.y1) / 2))[1]
+    fig.legend(handles=key, loc="center left", ncol=2, frameon=False, fontsize=SMALL,
+               bbox_to_anchor=(grid[-1, 1].get_position().x0, y), handletextpad=0.2, columnspacing=1.6)
     add_title_icons(fig, axes, list(TITLES))
     out_dir.mkdir(parents=True, exist_ok=True)
     for ext in ("pdf", "png"):  # uncropped: the canvas is the saved size, PNAS's full width
