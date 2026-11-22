@@ -81,3 +81,45 @@ Entry format (newest at the bottom):
     not found"). Its Python backend (`cxx=`) runs far too slowly for posterior predictives (>30 min,
     unfinished). Fix it in the environment, not the code: set `PYTENSOR_FLAGS="cxx=<wrapper>,blas__ldflags="`,
     where the wrapper is a clang++ script that drops `-ld64` (46 s). Evidence: this task.
+
+- 2026-11-21 (pre-submission review, round 4; `paper/pre_submission_review_2026-11-21.md`):
+  - Compile a copy of the Overleaf clone, never the clone itself. It tracks `auto-psych.aux` and
+    `supporting-info.aux`, and its `latexmkrc` spawns a nested `latexmk` on the other document
+    without `-outdir`, so a build inside the clone dirties it. Building the SI before the main
+    file resolves the `xr` cross-references.
+  - Where the numbers live:
+    - Fig. 2: `data/paper/figure_data/*.json` (`pooled`, `runs`). The number-game panel is
+      `number_game_unseen_items.json`, using whichever test set
+      `scripts/paper/figures/__init__.py` `ng_test_set` selects (default `unseen_items`).
+    - Table S2: `data/paper/tables/information_criteria_table.tex` and
+      `data/paper/information_criteria.json`.
+    - Ablations: the three `elimination.json` paths in `scripts/paper/figures/fig4.py`
+      `sources()`.
+    - Reference-game parameters: `data/paper/parameter_summaries/rsa_finals/parameters.csv`.
+    - Preregistration: `docs/auto_rsa/PREREG_RESULT_REPORT.md`.
+  - Byte-compare `figures/*.pdf` in the clone with `data/paper/figures/` before reading numbers
+    off a figure. Fig. 3 in the manuscript was the deleted `fig3_draft`, not main's
+    `fig3_effects`.
+  - When a figure's data switch (as the number-game test set did on 2026-11-20), check its
+    caption and the SI table that describes it, which can be left behind.
+  - Crossref rate-limits bursts (HTTP 429). Retry with backoff. arXiv's API (`export.arxiv.org`,
+    https) is a quick check for arXiv-only references.
+
+- 2026-11-21 (pre-submission review, round 5; `paper/pre_submission_review_2026-11-21b.md`):
+  - A full compile of the copy needs the SI to finish: the SI's UTF-8 listing errors stop
+    `latexmk`, which leaves the SI citations undefined. Run `bibtex supporting-info` and then
+    `pdflatex` twice by hand.
+  - The Overleaf figure files can change on Overleaf without changing the code: `fig4_ablation.pdf`
+    was relabelled there this round. Re-run the byte comparison on every round, not just once.
+  - When a footnote or bug note appears, find the bug in `paper/results_update.md` (M-items) or the
+    `CAMPAIGN_C*_REPORT.md` files and check which domain and run it belongs to. This round's
+    PSIS-LOO bug note (subjective randomness) was placed in the reference-games section.
+  - Fig. 3 data sources: `scripts/paper/figures/fig3.py` `load()` (reference games use prereg
+    rows only; the number game uses `number_game_model_conditions.json` for run 3's winner). Its
+    helpers (`digit_confidence`, `match_roles`, `streak_choices`, `r2`) recompute every Fig. 3
+    and number-game text number with `.venv/bin/python` from the repository root. Row (c) is
+    exploratory by its own docstring.
+  - The "best" number-game model differs by criterion: run 3 on unseen items, run 2 on pooled CV,
+    AIC, BIC and BF. Check which one any new text means.
+  - Fig. 4 mechanism labels map to `elimination.json` names in round order. For example, RG "has a
+    word of its own" = `avoidable`.
