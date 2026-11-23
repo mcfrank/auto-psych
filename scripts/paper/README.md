@@ -46,9 +46,9 @@ What each figure shows:
   directories `--histories` names). Each run has its own shade, by its best
   model (the best darkest), and so does its winner. The best discovered models are named
   at the top, the starting models at the bottom (by their paper, or their
-  own name where seeds share one). Reference games are re-zeroed on the
-  best textbook model (`best_textbook`), with the best promoted seed (the
-  pre-registered bar) as a second line. The house style is Avenir where
+  own name where seeds share one). Reference games' zero is the best
+  promoted seed (the pre-registered bar, labelled so), with a lighter line
+  at the best textbook model (`best_textbook`). The house style is Avenir where
   installed (`figures/style.py`; else the closest sans serif, said so).
   Subjective randomness and the number game are drawn from all runs pooled
   (each run is scored on its own data); reference games from every chain on
@@ -73,7 +73,7 @@ What each figure shows:
     and SE are the pre-registered test's. The seeds drawn are the five
     textbook RSA models, where the campaign started (`seed:<name>` in
     the pre-registered analysis; `rsa.json`'s `textbook`), each once, by its
-    lpd difference from the best of them (no SE). The campaign's "chains"
+    lpd difference from the best promoted seed (no SE). The campaign's "chains"
     are its runs.
   - Number game: ELPD from grouped cross-validation (4 folds of whole
     example sets, the runs' own criterion and settings, from their

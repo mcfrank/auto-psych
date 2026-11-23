@@ -204,7 +204,7 @@ def test_a_chain_starting_model_the_test_did_not_score_raises(tmp_path):
 
 
 def test_the_best_textbook_model_is_recorded_against_the_best_promoted_seed(tmp_path):
-    # Figure 2 re-zeroes reference games on it; the best promoted seed (this file's zero) is its second line.
+    # Figure 2 draws a line at it; its zero is the best promoted seed, this file's zero.
     data = _run(tmp_path, _prereg(), _panels())
 
     assert data["best_textbook"] == {"model": "s1", "diff": -10.0}

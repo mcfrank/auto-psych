@@ -3,9 +3,9 @@ collapsed; ``data.forest_rows``), models across, left to right: the literature s
 reference games, all five textbook models), the promoted seeds (reference games), the other models the loop
 wrote (one strip, each run's in the order it admitted them, under a line tracing the loop's own choice, its
 incumbent, as it went) and the best discovered models (worst first). The runs are shaded by their best
-model, the best darkest. Named points carry ±2 SE of the paired difference. Reference games are re-zeroed on
-the best textbook model, with the best promoted seed (the pre-registered bar) as a second line. Names sit in
-two bands, the winners' above and the seeds' below.
+model, the best darkest. Named points carry ±2 SE of the paired difference. Reference games' zero is the best
+promoted seed (the pre-registered bar), so the winners' SEs, the pre-registered test's, match it; a lighter
+line marks the best textbook model. Names sit in two bands, the winners' above and the seeds' below.
 """
 
 from __future__ import annotations
@@ -26,6 +26,7 @@ from scripts.paper.figures.style import DPI, INK, INK_2, TITLE_FONT, panel_title
 COLOR_SEED, COLOR_PROMOTED = "#b3b3b3", "#3d3d3d"
 RUN_COLORS = ["#08306b", "#2171b5", "#6baed6"]  # a panel's runs by their best model, best (darkest) first
 SEED_LABEL = "#7a7a7a"  # the best seed line's label: darker than the line, to read
+COLOR_TEXTBOOK = "#d9d9d9"  # reference games' best textbook seed line: lighter than the zero's
 WIDTH = {"winner": 1.0, "seed": 1.0, "nonwinning": 2.6, "promoted": 1.8}  # each column's width
 PENDING_WIDTH = 9.0  # a pending panel's
 WIDTH_IN, HEIGHT_IN = 7.0, 3.0  # the saved figure's width: PNAS's full (two-column) width, 17.8 cm
@@ -35,30 +36,19 @@ CAPTION_PT = 5.0  # the strips' captions and the lines' labels
 LINE_PT = 5.8  # one line of a name band
 
 
-def rsa_vs_textbook(rows: List[Dict[str, Any]], data: Dict[str, Any], names: Dict[str, str],
-                    papers: Dict[str, Optional[str]]) -> List[Dict[str, Any]]:
-    """Re-zero reference games on the best textbook seed (``best_textbook``): every value shifted. The
-    winners keep the SE of the pre-registered test (paired with the best promoted seed, whose line the
-    figure draws). The seeds are exactly the textbook models (``textbook``), each once and without an SE:
-    they replace the chains' own seed rows, so ``rsa_l1`` and ``rsa_l2``, which every chain started from, are
-    not drawn twice. The promoted seeds are collected into one strip."""
-    textbook = data["best_textbook"]
-    shift = -textbook["diff"]
-    out = []
-    for r in rows:
-        r = dict(r)
-        if r["kind"] == "winner":
-            r["diff"] += shift
-        elif r["kind"] == "nonwinning":
-            r["values"] = [v + shift for v in r["values"]]
-        else:
-            r.update(diff=r["diff"] + shift, se=None)
-        out.append(r)
+def rsa_seed_rows(rows: List[Dict[str, Any]], data: Dict[str, Any], names: Dict[str, str],
+                  papers: Dict[str, Optional[str]]) -> List[Dict[str, Any]]:
+    """Reference games' seeds: every value stays against the best promoted seed (the pre-registered bar,
+    the zero of ``rsa.json``'s differences), so the winners' SEs, the pre-registered test's, match the
+    zero. The seeds are exactly the textbook models (``textbook``), each once and without an SE: they
+    replace the chains' own seed rows, so ``rsa_l1`` and ``rsa_l2``, which every chain started from, are not
+    drawn twice; the best of them (``best_textbook``) is marked ``best``, for its line. The promoted seeds are
+    collected into one strip, its best at 0."""
     promoted = set(data["promoted_seeds"])
-    seeds = [{"kind": "seed", "model": m, "label": names[m], "paper": papers[m], "diff": d + shift,
-              "se": 0.0 if m == textbook["model"] else None} for m, d in data["textbook"].items()]
-    rest = [r for r in out if r["kind"] != "seed"]
-    promo = [r for r in out if r["kind"] == "seed" and r["model"] in promoted]
+    seeds = [{"kind": "seed", "model": m, "label": names[m], "paper": papers[m], "diff": d, "se": None,
+              "best": m == data["best_textbook"]["model"]} for m, d in data["textbook"].items()]
+    rest = [r for r in rows if r["kind"] != "seed"]
+    promo = [r for r in rows if r["kind"] == "seed" and r["model"] in promoted]
     rest.append({"kind": "promoted", "label": "Promoted seeds", "values": [r["diff"] for r in promo],
                  "models": [r["model"] for r in promo]})
     return rest + sorted(seeds, key=lambda r: -r["diff"])
@@ -177,15 +167,20 @@ def draw_panel(ax, domain, rows, paths):
     cols = columns(rows)
     widths = np.asarray([WIDTH[c["kind"]] for c in cols])
     xs = np.cumsum(widths) - widths / 2
+    # Reference games' zero is the best promoted seed (the pre-registered bar); a lighter line marks the
+    # best textbook seed (the seed row marked ``best``).
+    promoted = any(c["kind"] == "promoted" for c in cols)
     ax.axhline(0, color=COLOR_SEED, lw=0.8, ls=(0, (3, 2)), zorder=0)
-    ax.annotate("best seed model", (1, 0), xycoords=("axes fraction", "data"), xytext=(0, -1.5),
-                textcoords="offset points", ha="right", va="top", fontsize=CAPTION_PT, color=SEED_LABEL)
-    promoted = [c for c in cols if c["kind"] == "promoted"]
-    if promoted:  # the best promoted seed: the pre-registered bar
-        bar = max(promoted[0]["values"])
-        ax.axhline(bar, color=COLOR_PROMOTED, lw=0.8, ls=(0, (3, 2)), zorder=0)
-        ax.annotate("best promoted seed", (0, bar), xycoords=("axes fraction", "data"), xytext=(2, 1.5),
-                    textcoords="offset points", ha="left", va="bottom", fontsize=CAPTION_PT, color=COLOR_PROMOTED)
+    if promoted:  # both labels at the left, above their lines, clear of the search history at the right
+        ax.annotate("best promoted seed", (0, 0), xycoords=("axes fraction", "data"), xytext=(2, 1.5),
+                    textcoords="offset points", ha="left", va="bottom", fontsize=CAPTION_PT, color=SEED_LABEL)
+        (textbook,) = [c["diff"] for c in cols if c["kind"] == "seed" and c.get("best")]
+        ax.axhline(textbook, color=COLOR_TEXTBOOK, lw=0.8, ls=(0, (3, 2)), zorder=0)
+        ax.annotate("best textbook seed", (0, textbook), xycoords=("axes fraction", "data"), xytext=(2, 1.5),
+                    textcoords="offset points", ha="left", va="bottom", fontsize=CAPTION_PT, color=SEED_LABEL)
+    else:
+        ax.annotate("best seed model", (1, 0), xycoords=("axes fraction", "data"), xytext=(0, -1.5),
+                    textcoords="offset points", ha="right", va="top", fontsize=CAPTION_PT, color=SEED_LABEL)
     top, low, below, above = [], {}, [], []
     for x, w, c in zip(xs, widths, cols):
         if c["kind"] in STRIP_LABEL:
@@ -239,7 +234,7 @@ def draw(domain_data: Dict[str, Optional[Dict[str, Any]]], out_dir: Path, mock_d
     directory, ``{run}`` for the run."""
     rows = {d: forest_rows(d, data, names[d], papers[d]) for d, data in domain_data.items() if data is not None}
     if "rsa" in rows:
-        rows["rsa"] = rsa_vs_textbook(rows["rsa"], domain_data["rsa"], names["rsa"], papers["rsa"])
+        rows["rsa"] = rsa_seed_rows(rows["rsa"], domain_data["rsa"], names["rsa"], papers["rsa"])
     paths = {d: incumbent_paths(d, rows[d], [load_history(histories[d], run) for run in (
         domain_data[d]["pooled"]["runs"] if d in POOLED_VIEW else [r["run"] for r in domain_data[d]["runs"]])])
         for d in rows}

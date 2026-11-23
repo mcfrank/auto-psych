@@ -16,7 +16,7 @@ Read from the campaign's aggregates in the repository; nothing is fitted.
   where the promotion campaign started) are recorded apart from the chains,
   each as its ``lpd`` difference from the same bar (``textbook``; no paired
   SE), with the best of them (``best_textbook``): Figure 2 draws them as the
-  reference games' seeds, re-zeroed on the best. Two of them (``rsa_l1``,
+  reference games' seeds, a line at the best. Two of them (``rsa_l1``,
   ``rsa_l2``) were also promoted, so they are also every chain's starting
   models. Each chain's other models live at the end and the models it
   removed come from ``--chain-models`` (``rsa_chain_models.py``, a Sherlock
@@ -33,9 +33,9 @@ Read from the campaign's aggregates in the repository; nothing is fitted.
 
 The output has the same schema as ``sr_figure_data.py``'s; each run's
 ``best_seed`` (the zero of the file's differences) is the best promoted seed,
-the pre-registered bar, which Figure 2 draws as its second line; Figure 2
-re-zeroes on the best textbook model (``best_textbook``), which is also the
-``pooled`` ``best_seed`` (Figure 3's).
+the pre-registered bar, which is also Figure 2's zero; Figure 2 draws a line
+at the best textbook model (``best_textbook``), which is also the ``pooled``
+``best_seed`` (Figure 3's).
 
 Usage:
     uv run python -m scripts.paper.rsa_figure_data
@@ -262,13 +262,13 @@ def main(args: Args) -> None:
                     "(the pre-registered bar)"
                 ),
                 "runs": runs,
-                # Figure 2's zero: the best textbook model against the best promoted seed.
+                # Figure 2's lighter line: the best textbook model against the best promoted seed.
                 "best_textbook": {
                     "model": best_textbook,
                     "diff": _lpds(prereg, TEXTBOOK_PREFIX)[best_textbook]
                     - _lpds(prereg, PROMOTED_PREFIX)[best_promoted],
                 },
-                # Figure 2's reference-game seeds: every textbook model against the zero.
+                # Figure 2's reference-game seeds: every textbook model against the best promoted seed.
                 "textbook": {m: v - _lpds(prereg, PROMOTED_PREFIX)[best_promoted]
                              for m, v in _lpds(prereg, TEXTBOOK_PREFIX).items()},
                 # The seeds auto-psych promoted, Figure 2's own colour; a textbook

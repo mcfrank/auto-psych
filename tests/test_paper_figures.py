@@ -57,7 +57,7 @@ def _setup(tmp_path):
     data_dir.mkdir()
     for domain in ("subjective_randomness", "rsa"):
         data = _domain_data(domain)
-        if domain == "rsa":  # Figure 2's zero: the best textbook model
+        if domain == "rsa":  # Figure 2's line at the best textbook model
             data["best_textbook"] = {"model": "s0", "diff": -10.0}
             data["promoted_seeds"] = ["s1"]  # drawn in the promoted seeds' colour
             data["textbook"] = {"s0": -10.0, "s2": -8.0}  # the seeds drawn
@@ -430,17 +430,40 @@ def test_starting_models_are_named_by_their_paper_one_name_for_a_papers_models()
                                         ("D", ["d"])]
 
 
-def test_reference_games_are_drawn_against_the_best_textbook_model():
+def test_reference_games_are_drawn_against_the_best_promoted_seed():
+    # The zero is the best promoted seed (s1, the pre-registered bar), the zero of rsa.json's differences,
+    # so no value is shifted.
     data = {**_domain_data("rsa"), "best_textbook": {"model": "s0", "diff": -10.0}, "promoted_seeds": ["s1"],
             "textbook": {"s0": -10.0, "s2": -8.0}}
-    rows = fig2.rsa_vs_textbook(figures.forest_rows("rsa", data, NAMES, PAPERS), data, NAMES, PAPERS)
-    # Every value shifted by the textbook model's +10; the promoted seed (s1) leaves the seeds' columns.
-    assert [(r["kind"], r["label"], r["diff"]) for r in rows if r["kind"] in ("winner", "seed")] == [
-        ("winner", "Winner two", 23.0), ("winner", "Winner one", 22.0),
-        ("seed", "Seed two", 2.0), ("seed", "Textbook", 0.0)]
+    rows = fig2.rsa_seed_rows(figures.forest_rows("rsa", data, NAMES, PAPERS), data, NAMES, PAPERS)
+    # Each winner at its pre-registered test's difference and SE (vs_best_seed), which share the zero.
+    assert [(r["kind"], r["label"], r["diff"], r["se"]) for r in rows if r["kind"] == "winner"] == [
+        ("winner", "Winner two", 13.0, 3.0), ("winner", "Winner one", 12.0, 3.0)]
+    # Each textbook seed at its difference from the best promoted seed (textbook), without an SE.
+    assert [(r["model"], r["diff"], r["se"]) for r in rows if r["kind"] == "seed"] == [
+        ("s2", -8.0, None), ("s0", -10.0, None)]
     (promoted,) = [r for r in rows if r["kind"] == "promoted"]
-    assert promoted["values"] == [10.0]  # the best promoted seed: the pre-registered bar
-    assert [r["se"] for r in rows if r["kind"] == "seed"] == [None, 0.0]  # the seeds' paired SEs dropped
+    assert promoted["values"] == [0.0]  # the best promoted seed is the zero
+    (strip,) = [r for r in rows if r["kind"] == "nonwinning"]
+    assert sorted(strip["values"]) == [-5.0, -4.0, 9.0, 10.0]  # the search history unshifted
+
+
+def test_reference_games_zero_line_is_the_best_promoted_seed_with_a_line_at_the_best_textbook_seed():
+    import matplotlib.pyplot as plt
+
+    data = {**_domain_data("rsa"), "best_textbook": {"model": "s0", "diff": -10.0}, "promoted_seeds": ["s1"],
+            "textbook": {"s0": -10.0, "s2": -8.0}}
+    rows = fig2.rsa_seed_rows(figures.forest_rows("rsa", data, NAMES, PAPERS), data, NAMES, PAPERS)
+    fig, (rg, sr) = plt.subplots(1, 2)
+    fig2.draw_panel(rg, "rsa", rows, [[(0.0, 9.0)], [(0.0, 10.0)]])  # each run's incumbent path
+    sr_rows = figures.forest_rows("subjective_randomness", _domain_data("subjective_randomness"), NAMES, PAPERS)
+    fig2.draw_panel(sr, "subjective_randomness", sr_rows, [[(0.0, 9.0)], [(0.0, 10.0)]])
+    lines = lambda ax: sorted(ln.get_ydata()[0] for ln in ax.lines if ln.get_linestyle() == "--")  # the dashed lines
+    labels = lambda ax: [t.get_text() for t in ax.texts if t.get_text().startswith("best")]
+    assert lines(rg) == [-10.0, 0.0]  # the best textbook seed and the zero
+    assert labels(rg) == ["best promoted seed", "best textbook seed"]
+    assert lines(sr) == [0.0] and labels(sr) == ["best seed model"]  # the other domains as before
+    plt.close(fig)
 
 
 def test_reference_games_seeds_are_exactly_the_textbook_models_each_drawn_once():
@@ -450,18 +473,19 @@ def test_reference_games_seeds_are_exactly_the_textbook_models_each_drawn_once()
     data = {**_domain_data("rsa"), "best_textbook": {"model": "s0", "diff": -10.0}, "promoted_seeds": ["s1"],
             "textbook": textbook}
     names, papers = {**NAMES, "t_low": "Low", "t_mid": "Mid"}, {**PAPERS, "t_low": None, "t_mid": None}
-    rows = fig2.rsa_vs_textbook(figures.forest_rows("rsa", data, names, papers), data, names, papers)
+    rows = fig2.rsa_seed_rows(figures.forest_rows("rsa", data, names, papers), data, names, papers)
     seeds = [r for r in rows if r["kind"] == "seed"]
-    # each once, at its difference from the best textbook model, best first
+    # each once, at its difference from the best promoted seed, best first
     assert [(r["model"], r["label"], r["diff"]) for r in seeds] == [
-        ("s2", "Seed two", 2.0), ("s0", "Textbook", 0.0), ("t_mid", "Mid", -0.5), ("t_low", "Low", -613.0)]
-    assert [r["se"] for r in seeds] == [None, 0.0, None, None]  # the seeds' SEs dropped
+        ("s2", "Seed two", -8.0), ("s0", "Textbook", -10.0), ("t_mid", "Mid", -10.5), ("t_low", "Low", -623.0)]
+    assert [r["se"] for r in seeds] == [None, None, None, None]  # the seeds' SEs dropped (none is the zero)
+    assert [r["best"] for r in seeds] == [False, True, False, False]  # best_textbook, for its line
     assert [r["paper"] for r in seeds] == [None, "Frank & Goodman, 2012", None, None]
     # the winners and the promoted seeds' strip as before
-    assert [(r["label"], r["diff"]) for r in rows if r["kind"] == "winner"] == [("Winner two", 23.0),
-                                                                                ("Winner one", 22.0)]
+    assert [(r["label"], r["diff"]) for r in rows if r["kind"] == "winner"] == [("Winner two", 13.0),
+                                                                                ("Winner one", 12.0)]
     (promoted,) = [r for r in rows if r["kind"] == "promoted"]
-    assert promoted["values"] == [10.0]
+    assert promoted["values"] == [0.0]
 
 
 def test_each_runs_trajectory_is_its_incumbent_at_its_test_value_as_the_run_admits_models():
