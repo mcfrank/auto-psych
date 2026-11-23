@@ -110,12 +110,12 @@ What each figure shows:
   people's data on the items no run drew (their summed lpd are `number_game_unseen_items.json`'s), so its (b)
   profiles show only the numbers no run drew for that set; reference games' pre-registered test. (c) a new
   effect only the winner captures (exploratory, chosen after the fact, as `fig3_patterns.py` ranked them),
-  on row (a)'s held-out predictions (`fig3.load_heldout`: subjective randomness' PSIS-LOO, the number game's items
-  no run drew; reference games' pre-registered test): the flat rate of
+  on row (a)'s held-out predictions (subjective randomness' PSIS-LOO and the number game's items no run drew, from
+  `fig3.load_heldout`; reference games' pre-registered test, from `fig3.load`): the flat rate of
   choosing an all-heads/all-tails sequence by its rival's switch rate, the share choosing the sparsest, middle
-  and richest object a word fits, and, after a single example, yes to the example's factors and to
-  other numbers (neither the example, a multiple nor a factor; the search's roles, the example and its multiples
-  left out). Reference games use the pre-registered experiment, their displays from
+  and richest object a word fits, and, after a single example, yes to two kinds of number: the example's
+  factors, and "other" numbers (neither the example, nor one of its multiples or factors). The panel leaves out the
+  example itself and its multiples. Reference games use the pre-registered experiment, their displays from
   `data/rsa/viz/panel_displays.json`. The number game's column shows run 3's winner, not the pooled best
   (`fig3.COLUMN_MODEL`), from `figure_data/number_game_model_conditions.json`: its posterior-mean predictions
   from the figure data's pooled fit, read from a copy of that fit's cache file
