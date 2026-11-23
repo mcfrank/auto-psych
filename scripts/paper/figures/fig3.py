@@ -10,7 +10,8 @@ Row (b) shows the full-data fit on all the data: subjective randomness' in-sampl
 on every item, seen and unseen (``all_items``), and reference games' pre-registered test as in row (a).
 Row (c) shows where row (a)'s held-out advantage concentrates, on row (a)'s predictions: each pattern
 (``streak_choices``, ``fits_three_roles``, ``one_example_roles``) is a candidate of the search over a fixed list of
-stimulus features (``scripts/paper/fig3_patterns.py``), chosen by hand for its reading. ``load`` gives the figure
+stimulus features (``scripts/paper/fig3_patterns.py``), chosen by hand for its reading; the number game's panel draws
+only two of ``one_example_roles``' four roles, the factors and "other" (``NG_SHOWN_ROLES``). ``load`` gives the figure
 data's in-sample ``conditions``, each condition's observed proportion and the pooled best model's and best seed's
 posterior-mean predictions; a column whose model is not the pooled best, ``COLUMN_MODEL``, takes that model's from
 ``<domain>_model_conditions.json``."""
@@ -329,14 +330,19 @@ def new_rsa(ax, rsa):
     _panel_title(ax, "The word fits three objects")
 
 
+NG_SHOWN_ROLES = ("a factor", "other")  # of ``ONE_EXAMPLE_ROLES``: the factor effect against the search's baseline
+
+
 def new_ng(ax, ng):
-    """After one example, people often say yes to its factors; the best seed rarely does."""
-    _role_bars(ax, one_example_roles(ng), ["the same\nnumber", "multiple", "factor", "other"])
-    ax.set_ylim(0, 1)
+    """After one example, people often say yes to its factors; the best seed rarely does. Only the factors and
+    "other" (the search's numbers that are neither the example, a multiple nor a factor) are drawn,
+    ``NG_SHOWN_ROLES``, their rows of ``one_example_roles`` unchanged; y from 0 to 60%, as reference games'."""
+    _role_bars(ax, one_example_roles(ng).loc[list(NG_SHOWN_ROLES)], ["factor", "other"])
+    ax.set_ylim(0, 0.6)
     ax.yaxis.set_major_formatter(PCT)
     ax.set_ylabel("said yes", labelpad=1)
     ax.set_xlabel("queried number, relative to the example", labelpad=1)
-    _panel_title(ax, "After a single example")
+    _panel_title(ax, "Factors of a single example")
 
 
 NG_SETS = ("100", "80,70,90,100")  # one example, then four that fit a rule (as the figure data write them)

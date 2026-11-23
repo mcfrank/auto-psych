@@ -317,6 +317,22 @@ def test_figure_3s_one_example_roles_are_trial_weighted_and_clustered_by_example
     assert t.ci["a factor"] == pytest.approx(1.96 * se)
 
 
+def test_figure_3s_number_game_row_c_panel_shows_only_factors_and_other():
+    import matplotlib.pyplot as plt
+    ng = _heldout_tables()["number_game"]
+    t = fig3.one_example_roles(ng).loc[["a factor", "other"]]  # the four-role computation, unchanged
+    fig, ax = plt.subplots()
+    fig3.new_ng(ax, ng)
+    assert [x.get_text() for x in ax.get_xticklabels()] == ["factor", "other"]
+    heights = np.array([p.get_height() for p in ax.patches]).reshape(3, 2)  # people, discovered, seed
+    np.testing.assert_allclose(heights, t[["observed", "best_model", "best_seed"]].to_numpy(float).T)
+    (bars,) = [c for c in ax.containers if getattr(c, "has_yerr", False)]
+    seg = bars.lines[2][0].get_segments()
+    np.testing.assert_allclose([s[1, 1] - s[0, 1] for s in seg], 2 * t.ci.to_numpy(float))
+    assert "factor" in ax.get_title().lower()
+    plt.close(fig)
+
+
 def test_in_figure_3_after_one_example_the_seed_underrates_its_factors_on_held_out_items():
     t = fig3.one_example_roles(_heldout_tables()["number_game"]).loc["a factor"]
     assert t.observed - t.best_seed > 2 * t.ci
