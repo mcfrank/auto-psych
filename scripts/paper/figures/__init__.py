@@ -1,6 +1,10 @@
-"""The paper's Figures 2-4, one column (or row) per domain, from the figure data (one ``<domain>.json``
-per domain, written by ``sr_figure_data.py``, ``rsa_figure_data.py`` and ``number_game_figure_data.py``).
+"""The paper's Figures 1-4. Figure 1 is drawn by hand (``fig1.html``); Figures 2-4, one column (or row) per
+domain, from the figure data (one ``<domain>.json`` per domain, written by ``sr_figure_data.py``,
+``rsa_figure_data.py`` and ``number_game_figure_data.py``).
 
+- Figure 1 (``fig1.py``, ``fig1_loops``): the framework's two loops and the three domains, printed from
+  ``fig1.html`` by Playwright's Chromium (``uv run playwright install chromium`` once). Not in the default
+  set: draw it with ``--figures 1``, where Avenir and Menlo are installed (it refuses to substitute fonts).
 - Figure 2 (``fig2.py``, ``fig2_elpd``): every model's ΔELPD against the best seed model, the runs
   collapsed. The number game's column is its pooled models scored on the Bigelow & Piantadosi responses
   no run drew (``number_game_unseen_items.py``; ``--ng-test-set``). How each domain is scored is for the
@@ -14,7 +18,8 @@ The house style (``style.py``) is Avenir where installed. A domain listed in ``-
 as a labelled placeholder; any other missing domain raises.
 
 Usage:
-    uv run python -m scripts.paper.figures
+    uv run python -m scripts.paper.figures               # Figures 2-4
+    uv run python -m scripts.paper.figures --figures 1   # Figure 1
 """
 
 from __future__ import annotations
@@ -28,7 +33,7 @@ import matplotlib.pyplot as plt
 import yaml
 from pyprojroot import here
 
-from scripts.paper.figures import fig2, fig3, fig4
+from scripts.paper.figures import fig1, fig2, fig3, fig4
 from scripts.paper.figures.data import forest_rows, number_game_unseen_view  # noqa: F401  (the tests' API)
 from scripts.paper.figures.style import DOMAINS, setup_style
 
@@ -56,8 +61,9 @@ class Args:
         "rsa": str(here() / "data/rsa/live/live_rsa_{run}/outputs"),
         "number_game": str(here() / "data/results/number_game_dataset-nov26/collected/{run}/number_game")})
     """Each domain's run directory (``{run}``: the run), whose experiments' histories Figure 2 traces."""
-    figures: List[Literal["2", "3", "4"]] = field(default_factory=lambda: ["2", "3", "4"])
-    """Which figures to draw."""
+    figures: List[Literal["1", "2", "3", "4"]] = field(default_factory=lambda: ["2", "3", "4"])
+    """Which figures to draw. Figure 1 is drawn only when named (``--figures 1``): it needs Playwright's
+    Chromium and the Avenir and Menlo fonts (macOS)."""
     domains: List[str] = field(default_factory=lambda: list(DOMAINS))
     pending_domains: List[str] = field(default_factory=list)
     """Domains drawn as a 'pending' placeholder (their data are not in yet)."""
@@ -94,6 +100,8 @@ def main(args: Args) -> None:
     if unknown:
         raise ValueError(f"--mock-domains names domains that are not drawn: {unknown}")
     domain_data = load_domain_data(args)
+    if "1" in args.figures:
+        fig1.draw(args.out_dir)
     if "2" in args.figures:
         names = yaml.safe_load(args.model_names.read_text())
         papers = yaml.safe_load(args.seed_papers.read_text())

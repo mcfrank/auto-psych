@@ -6,13 +6,15 @@ from __future__ import annotations
 
 import itertools
 import json
+from collections import Counter
+from pathlib import Path
 
 import numpy as np
 import pytest
 import yaml
 
 from scripts.paper import figures
-from scripts.paper.figures import fig2, fig3, fig4, style
+from scripts.paper.figures import fig1, fig2, fig3, fig4, style
 
 
 def _domain_data(domain, winner="w", seed="s1"):
@@ -597,3 +599,99 @@ def test_figure_4s_title_icons_clear_their_axes_labels(tmp_path, monkeypatch):
     for icon in icons:
         box = icon.get_window_extent(renderer)
         assert not [b for b in labels if b.overlaps(box)], icon
+
+
+# Fig. 1 prints as a figure* at width=\textwidth (auto-psych.tex), 512 TeX pt in pnas-new.cls
+FIG1_PRINT_PT = 512 / 72.27 * 72  # its printed width in PDF points (510.09)
+# The text of the figure as first made (my-papers/auto-psych-pnas/figures/auto-psych-fig1.pdf, which has no
+# source), as pypdf extracts it; pypdf ran "</>" into the "vs" after it there, so they are split here.
+FIG1_REFERENCE_TEXT = """(a) </> vs vs vs Outer loop lab-in-the-loop Inner loop Box’s loop model registry cognitive models
+design experiment maximize information gain deploy experiment run online study human data theorize
+propose model as code critique run posterior predictive checks evaluate model fit compute ELPD sampled observed
+×T def model(): a = n_switches(s) return w*a {subject_1: {trial_1: {stim: [HHTH, THTH], ... response: left} ...
+subject_2:{... }} (b) Subjective randomness Which sequence is more random? Reference games
+Which one is the speaker referring to? “glasses” Number game Would the same program generate 32?
+16 8 2 64 32 2n 2n"""
+
+
+def _chromium_installed():
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as p:
+        return Path(p.chromium.executable_path).exists()
+
+
+needs_chromium = pytest.mark.skipif(
+    not _chromium_installed(), reason="Figure 1 needs Playwright's Chromium: uv run playwright install chromium")
+
+
+def _fig1_missing_tokens(pdf):
+    """The original figure's tokens the PDF lacks, counted (a token it has fewer times than the original is
+    missing that many times). Whole whitespace-separated tokens of pypdf's layout-mode text."""
+    from pypdf import PdfReader
+    text = PdfReader(pdf).pages[0].extract_text(extraction_mode="layout")
+    return Counter(FIG1_REFERENCE_TEXT.split()) - Counter(text.split())
+
+
+def _draw_fig1_from(html, out, monkeypatch):
+    """Draw Figure 1 from another copy of its source."""
+    source = out / "fig1.html"
+    source.write_text(html)
+    monkeypatch.setattr(fig1, "SOURCE", source)
+    figures.main(figures.Args(out_dir=out, figures=["1"]))
+
+
+@pytest.fixture(scope="module")
+def figure_1(tmp_path_factory):
+    if not _chromium_installed():
+        pytest.skip("Figure 1 needs Playwright's Chromium: uv run playwright install chromium")
+    out = tmp_path_factory.mktemp("fig1")
+    figures.main(figures.Args(out_dir=out, figures=["1"]))
+    return out
+
+
+def test_figure_1_is_drawn_only_when_asked_for():
+    assert figures.Args().figures == ["2", "3", "4"]
+
+
+def test_figure_1_is_drawn_as_pdf_and_png(figure_1):
+    for ext in ("pdf", "png"):
+        assert (figure_1 / f"fig1_loops.{ext}").stat().st_size > 0, ext
+
+
+def test_all_of_figure_1s_text_prints_at_6_to_12_pt(figure_1):
+    """PNAS: no text under 6 pt (or over 12) at the printed size, the human data's JSON included."""
+    width, spans = _pdf_font_sizes(figure_1 / "fig1_loops.pdf")
+    printed = [(size * FIG1_PRINT_PT / width, text) for size, text in spans]
+    assert {"{subject_1:", "(a)", "×T", "16"} <= {text.strip() for _, text in printed}  # all of it is measured
+    assert [(pt, text) for pt, text in printed if not 6 <= pt <= 12] == []
+
+
+def test_figure_1_has_all_of_the_text_of_the_figure_as_first_made(figure_1):
+    """Same words as the original figure, each at least as many times (the three "vs", both "2n")."""
+    assert _fig1_missing_tokens(figure_1 / "fig1_loops.pdf") == Counter()
+
+
+@needs_chromium
+def test_figure_1s_text_check_counts_repeated_and_short_tokens(tmp_path, monkeypatch):
+    """A figure that lost one of its three "vs", or the card "8", fails the check."""
+    html = fig1.SOURCE.read_text()
+    damaged = html.replace('>vs</text>', '></text>', 1).replace('>8</text>', '></text>', 1)
+    assert damaged.count('>vs</text>') == 2 and '>8</text>' not in damaged
+    _draw_fig1_from(damaged, tmp_path, monkeypatch)
+    assert _fig1_missing_tokens(tmp_path / "fig1_loops.pdf") == Counter({"vs": 1, "8": 1})
+
+
+@needs_chromium
+def test_figure_1_is_not_drawn_without_its_fonts(tmp_path, monkeypatch):
+    """Where Avenir Heavy is missing, Chromium would substitute another font: the figure is not written."""
+    html = fig1.SOURCE.read_text().replace('local("Avenir-Heavy"), local("Avenir Heavy")', 'local("No-Such-Font")')
+    html = html.replace('"Fig1 Avenir", "Avenir", "Avenir Next", "Helvetica Neue"', '"Fig1 Avenir", "Helvetica Neue"')
+    with pytest.raises(RuntimeError, match="Avenir-Heavy"):
+        _draw_fig1_from(html, tmp_path, monkeypatch)
+    assert not list(tmp_path.glob("fig1_loops.*"))
+
+
+def test_figure_1_is_the_original_figures_size(figure_1):
+    from pypdf import PdfReader
+    box = PdfReader(figure_1 / "fig1_loops.pdf").pages[0].mediabox
+    assert (float(box.width), float(box.height)) == pytest.approx((505.92, 214.08), abs=0.5)

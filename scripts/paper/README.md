@@ -1,4 +1,4 @@
-# Paper figures 2-4
+# Paper figures 1-4
 
 Each step writes files the next reads. The three fitting steps run on
 Sherlock, each as a chain of jobs: setup, an array of shards scoring the
@@ -12,6 +12,7 @@ run), then the assembly.
 | RSA chain models | `bash scripts/paper/submit_rsa_chain_models.sh` | `data/rsa/prereg/chain_models_lpd.json` (sums only) | 224 numpyro fits on the pooled data (28 shards of 8) |
 | RSA data | `uv run python -m scripts.paper.rsa_figure_data` (anywhere) | `data/paper/figure_data/rsa.json` | seconds: reads aggregates, the chain models' sums included (`--chain-models None` leaves them out) |
 | figures | `uv run python -m scripts.paper.figures` (anywhere) | `data/paper/figures/fig{2,3,4}_*.{pdf,png}` | seconds |
+| Figure 1 | `uv run python -m scripts.paper.figures --figures 1` (macOS: needs Avenir and Menlo, and Playwright's Chromium, installed once with `uv run playwright install chromium`) | `data/paper/figures/fig1_loops.{pdf,png}` | about a second |
 
 Every array task writes one record per model and skips models whose record
 is current, so resubmitting a submitter redoes only what is missing; the
@@ -24,6 +25,15 @@ it to four decimals).
 
 What each figure shows:
 
+- **Figure 1** (`fig1_loops`, `figures/fig1.py`): the framework diagram, (a) the outer
+  lab-in-the-loop and the inner Box's loop, (b) the three domains. It is drawn by hand, not from
+  data: the source is `figures/fig1.html`, an inline SVG (user unit = PDF point, page 505.92 x
+  214.08 pt, the original figure's size) that `fig1.py` prints to PDF with Playwright's Chromium (live
+  Avenir and Menlo text, from the system) and screenshots to a 600 dpi PNG. Edit the HTML and rerun
+  `figures --figures 1`; it is not in the default set. Where Avenir or Menlo is missing (Linux,
+  Sherlock) it raises and writes nothing rather than substitute a font. All its text prints at 6-12 pt
+  at `\textwidth` (checked by `tests/test_paper_figures.py`, with its words, counted, against the
+  original's; those tests skip where Playwright's Chromium is not installed).
 - **Figure 2** (`fig2_elpd`, `figures/fig2.py`): per domain, each model's
   ΔELPD against the best starting model (dashed), the runs collapsed: the
   best discovered models and the starting models as points with ±2 SE of
