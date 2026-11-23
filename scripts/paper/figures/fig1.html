@@ -1,0 +1,392 @@
+<!doctype html>
+<!--
+Fig. 1 of the PNAS paper: (a) the framework's two loops, (b) the three domains.
+Printed to data/paper/figures/fig1_loops.{pdf,png} by scripts/paper/figures/fig1.py
+(uv run python -m scripts.paper.figures --figures 1).
+
+Units: the SVG's user unit is the PDF point, and the page is the original figure's size, 505.92 x 214.08 pt.
+The paper prints the figure at \textwidth (510.09 pt), so printed size = font-size x 1.0082. PNAS wants
+6-12 pt text, so no font-size here is under 6.05 or over 11.9 (tests/test_paper_figures.py checks).
+Text is live text. The Prolific logo and the people, robot and plot pictograms are vector paths taken from
+the original figure (figures/auto-psych-fig1.pdf in the Overleaf project); the rest is redrawn to match it.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Fig. 1</title>
+<style>
+  @font-face { font-family: "Fig1 Avenir"; font-weight: 400; font-style: normal; src: local("Avenir-Book"), local("Avenir Book"); }
+  @font-face { font-family: "Fig1 Avenir"; font-weight: 400; font-style: italic; src: local("Avenir-BookOblique"), local("Avenir Book Oblique"); }
+  @font-face { font-family: "Fig1 Avenir"; font-weight: 500; font-style: normal; src: local("Avenir-Medium"), local("Avenir Medium"); }
+  @font-face { font-family: "Fig1 Avenir"; font-weight: 800; font-style: normal; src: local("Avenir-Heavy"), local("Avenir Heavy"); }
+  @page { size: 505.92pt 214.08pt; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  svg { display: block; width: 505.92pt; height: 214.08pt; }
+
+  text { font-family: "Fig1 Avenir", "Avenir", "Avenir Next", "Helvetica Neue", sans-serif; fill: #262626; }
+  .mono { font-family: "Menlo", "DejaVu Sans Mono", monospace; font-size: 6.05px; white-space: pre; }
+  .panel { font-weight: 800; font-size: 11.5px; }
+  .loop { font-size: 8.4975px; }
+  .loop .name { font-weight: 800; }
+  .loop .alias { font-style: italic; }
+  .outer { fill: #08306b; }
+  .inner { fill: #2171b5; }
+  .title { font-weight: 500; font-size: 6.795px; text-anchor: middle; }
+  .title.agent { font-weight: 800; fill: #2171b5; }
+  .grey { fill: #595959; }
+  .sub { font-size: 6.05px; text-anchor: middle; }
+  .small { font-size: 6.05px; }
+  .mid { text-anchor: middle; }
+  .end { text-anchor: end; }
+  .blue-text { fill: #2171b5; }
+  .navy-text { fill: #08306b; }
+  .times { font-weight: 800; font-size: 6.05px; text-anchor: middle; fill: #595959; }
+  .domain { font-weight: 500; font-size: 7.995px; }
+  .question { font-style: italic; font-size: 6.9975px; fill: #595959; }
+  .rule { font-size: 7.6px; }
+  .rule .sup { font-size: 6.05px; }
+
+  .outer-box { fill: #f4f7fb; stroke: #08306b; stroke-width: 1.27; }
+  .inner-box { fill: #e6eff8; stroke: #9ecae1; stroke-width: 1.27; }
+  .step { fill: #fff; stroke: #000; stroke-width: 0.63; }
+  .step-grey { fill: #eee; }
+  .step-blue { fill: #e6eff8; }
+  .code-box { fill: none; stroke: #000; stroke-width: 0.63; }
+  .arrow { stroke: #000; stroke-width: 0.63; fill: none; marker-end: url(#head); }
+  .loop-line { stroke: #000; stroke-width: 0.63; fill: none; marker-end: url(#head); }
+  .times-ring { fill: #fff; stroke: #595959; stroke-width: 0.76; }
+
+  .card { fill: #fff; stroke: #808080; stroke-width: 0.76; }
+  .card-line { fill: #d9d9d9; }
+  .window { fill: none; stroke: #8c8c8c; stroke-width: 0.84; }
+  .titlebar { fill: #8c8c8c; }
+  .titlebar-dot { fill: #d9d9d9; }
+  .row-highlight { fill: #deebf7; }
+  .pill { fill: #fff; stroke: #8c8c8c; stroke-width: 0.53; }
+  .bar { fill: #c6dbef; }
+  .bar-best { fill: #08306b; }
+  .hist { fill: #4292c6; }
+  .hist-axis { stroke: #0a0a0a; stroke-width: 0.63; }
+  .observed { stroke: #5b5b5b; stroke-width: 0.63; stroke-dasharray: 0.85 1.55 1.56 1.55 1.56 1.55 1.56 1.55 1.56 1.55 0.85; }
+  .plot-dots { fill: #262626; }
+
+  .coin-h { fill: #08306b; stroke: #08306b; stroke-width: 0.82; }
+  .coin-t { fill: #fff; stroke: #08306b; stroke-width: 0.82; }
+  .coin-h.small, .coin-t.small { stroke-width: 0.44; }
+  .seq-highlight, .choice-highlight { fill: none; stroke: #4292c6; stroke-width: 1.0; }
+  .cloud-outline { fill: #fff; stroke: #595959; stroke-width: 1.45; }
+  .cloud-outline.thin { stroke-width: 1.27; }
+  .cloud-fill { fill: #fff; stroke: none; }
+  .bubble { fill: #fff; stroke: #595959; stroke-width: 0.725; }
+  .person { fill: #fff; stroke: #595959; stroke-width: 0.82; }
+  .person.other { fill: #d9d9d9; }
+  .person.imagined { fill: #d9d9d9; stroke-width: 0.73; }
+  .person.imagined-inner { stroke-width: 0.63; }
+  .face { fill: #bdbdbd; }
+  .lens { fill: #fff; stroke: #262626; stroke-width: 0.82; }
+  .hat { fill: #262626; }
+  .speech { fill: #fff; stroke: #595959; stroke-width: 0.73; }
+  .speech-tail-fill { fill: #fff; }
+  .speech-tail { fill: none; stroke: #595959; stroke-width: 0.73; }
+  .num-card { fill: #fff; stroke: #595959; stroke-width: 0.73; }
+  .num-card.query { stroke: #4292c6; }
+  .rule-bar { fill: #08306b; }
+  .rule-bar.weak { fill: #c6dbef; }
+</style>
+
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 505.92 214.08">
+  <defs>
+    <marker id="head" markerUnits="userSpaceOnUse" viewBox="0 0 3.56 4.12" markerWidth="3.56" markerHeight="4.12"
+            refX="2.6" refY="2.06" orient="auto"><path d="M 0 0 L 3.56 2.06 L 0 4.12 Z" fill="#000"/></marker>
+    <g id="cloud-sr">
+      <circle cx="483.83" cy="20.19" r="4.46"/>
+      <circle cx="481.67" cy="14.57" r="4.51"/>
+      <circle cx="475.69" cy="10.25" r="4.46"/>
+      <circle cx="467.26" cy="8.19" r="4.46"/>
+      <circle cx="458.32" cy="8.89" r="4.46"/>
+      <circle cx="450.89" cy="12.16" r="4.46"/>
+      <circle cx="446.72" cy="17.33" r="4.51"/>
+      <circle cx="446.72" cy="23.1" r="4.51"/>
+      <circle cx="450.89" cy="28.22" r="4.46"/>
+      <circle cx="458.32" cy="31.54" r="4.46"/>
+      <circle cx="467.26" cy="32.24" r="4.46"/>
+      <circle cx="475.69" cy="30.18" r="4.46"/>
+      <circle cx="481.67" cy="25.81" r="4.51"/>
+    </g>
+    <g id="cloud-ref">
+      <circle cx="483.83" cy="93.65" r="4.46"/>
+      <circle cx="481.67" cy="88.03" r="4.51"/>
+      <circle cx="475.69" cy="83.66" r="4.46"/>
+      <circle cx="467.26" cy="81.65" r="4.46"/>
+      <circle cx="458.32" cy="82.36" r="4.46"/>
+      <circle cx="450.94" cy="85.62" r="4.51"/>
+      <circle cx="446.72" cy="90.74" r="4.51"/>
+      <circle cx="446.72" cy="96.52" r="4.51"/>
+      <circle cx="450.94" cy="101.64" r="4.51"/>
+      <circle cx="458.32" cy="104.95" r="4.46"/>
+      <circle cx="467.26" cy="105.66" r="4.46"/>
+      <circle cx="475.69" cy="103.6" r="4.46"/>
+      <circle cx="481.67" cy="99.28" r="4.51"/>
+    </g>
+    <g id="cloud-ref-inner">
+      <circle cx="479.11" cy="90.29" r="1.99"/>
+      <circle cx="478.1" cy="87.63" r="1.99"/>
+      <circle cx="475.34" cy="85.57" r="1.94"/>
+      <circle cx="471.42" cy="84.62" r="1.94"/>
+      <circle cx="467.31" cy="84.92" r="1.94"/>
+      <circle cx="463.84" cy="86.47" r="1.99"/>
+      <circle cx="461.88" cy="88.93" r="1.94"/>
+      <circle cx="461.88" cy="91.65" r="1.94"/>
+      <circle cx="463.84" cy="94.06" r="1.99"/>
+      <circle cx="467.31" cy="95.61" r="1.94"/>
+      <circle cx="471.42" cy="95.96" r="1.94"/>
+      <circle cx="475.34" cy="95.01" r="1.94"/>
+      <circle cx="478.1" cy="92.95" r="1.99"/>
+    </g>
+    <g id="cloud-ng">
+      <circle cx="485.23" cy="167.07" r="4.46"/>
+      <circle cx="483.07" cy="161.44" r="4.51"/>
+      <circle cx="477.1" cy="157.13" r="4.46"/>
+      <circle cx="468.66" cy="155.07" r="4.46"/>
+      <circle cx="459.72" cy="155.77" r="4.46"/>
+      <circle cx="452.29" cy="159.08" r="4.46"/>
+      <circle cx="448.12" cy="164.21" r="4.51"/>
+      <circle cx="448.12" cy="169.98" r="4.51"/>
+      <circle cx="452.29" cy="175.1" r="4.46"/>
+      <circle cx="459.72" cy="178.37" r="4.46"/>
+      <circle cx="468.66" cy="179.07" r="4.46"/>
+      <circle cx="477.1" cy="177.06" r="4.46"/>
+      <circle cx="483.07" cy="172.69" r="4.51"/>
+    </g>
+  </defs>
+
+  <!-- ================= (a) the framework ================= -->
+  <text class="panel" x="3" y="14">(a)</text>
+  <rect class="outer-box" x="23.64" y="3.64" width="309.31" height="208.54" rx="10.2"/>
+  <text class="loop outer" x="29.96" y="16.17"><tspan class="name">Outer loop</tspan> <tspan class="alias" dx="2">lab-in-the-loop</tspan></text>
+
+  <!-- the outer loop's steps; the human data box is wide (and the row tall) enough for its JSON at 6.05 pt -->
+  <rect class="step step-grey" x="30.28" y="28.87" width="51.72" height="68.05" rx="4.66"/>
+  <rect class="step" x="90.44" y="28.87" width="82.35" height="68.05" rx="4.66"/>
+  <rect class="step" x="181.23" y="28.87" width="72.31" height="68.05" rx="4.66"/>
+  <rect class="step step-grey" x="261.98" y="28.87" width="61.26" height="68.05" rx="4.66"/>
+  <line class="arrow" x1="82.51" y1="60.41" x2="89.02" y2="60.41"/>
+  <line class="arrow" x1="173.3" y1="60.41" x2="179.81" y2="60.41"/>
+  <line class="arrow" x1="254.04" y1="60.41" x2="260.55" y2="60.41"/>
+  <line class="arrow" x1="57.88" y1="107.97" x2="57.88" y2="98.34"/>
+
+  <!-- model registry: a stack of model cards -->
+  <text class="title grey" x="56.15" y="36.48">model registry</text>
+  <text class="sub" x="56.15" y="44.21">cognitive models</text>
+  <rect class="card" x="39.29" y="60.92" width="37.59" height="21.68" rx="2.12" style="stroke: #c8c8c8; stroke-width: 0.51"/>
+  <rect class="card" x="37.37" y="62.84" width="37.59" height="21.68" rx="2.12" style="stroke: #b0b0b0; stroke-width: 0.51"/>
+  <rect class="card" x="35.44" y="64.77" width="37.59" height="21.68" rx="2.12"/>
+  <rect class="card-line" x="38.33" y="69.59" width="29.4" height="1.93" rx="0.85"/>
+  <rect class="card-line" x="38.33" y="74.41" width="26.01" height="1.93" rx="0.85"/>
+  <rect class="card-line" x="38.33" y="79.23" width="20.49" height="1.93" rx="0.85"/>
+
+  <!-- design experiment: a browser window ranking candidate experiments (pairs of coin sequences) -->
+  <text class="title" x="131.62" y="36.48">design experiment</text>
+  <text class="sub" x="131.62" y="44.21">maximize information gain</text>
+  <rect class="window" x="95.46" y="55.17" width="72.31" height="33.86" rx="2.38"/>
+  <path class="titlebar" d="M 95.46 60.26 V 57.55 A 2.38 2.38 0 0 1 97.84 55.17 H 165.39 A 2.38 2.38 0 0 1 167.77 57.55 V 60.26 Z"/>
+  <circle class="titlebar-dot" cx="98.25" cy="57.8" r="0.85"/>
+  <circle class="titlebar-dot" cx="102.21" cy="57.8" r="0.85"/>
+  <circle class="titlebar-dot" cx="106.18" cy="57.8" r="0.85"/>
+  <rect class="row-highlight" x="97.05" y="71.65" width="69.14" height="7.67" rx="1.59"/>
+  <rect class="pill" x="98.48" y="63.73" width="16.81" height="5.46" rx="1.58"/>
+  <circle class="coin-h small" cx="100.86" cy="66.46" r="1.15"/><circle class="coin-t small" cx="103.87" cy="66.46" r="1.15"/><circle class="coin-h small" cx="106.88" cy="66.46" r="1.15"/><circle class="coin-h small" cx="109.9" cy="66.46" r="1.15"/><circle class="coin-t small" cx="112.91" cy="66.46" r="1.15"/>
+  <rect class="pill" x="123.89" y="63.73" width="16.81" height="5.46" rx="1.58"/>
+  <circle class="coin-h small" cx="126.27" cy="66.46" r="1.15"/><circle class="coin-h small" cx="129.28" cy="66.46" r="1.15"/><circle class="coin-h small" cx="132.29" cy="66.46" r="1.15"/><circle class="coin-h small" cx="135.3" cy="66.46" r="1.15"/><circle class="coin-t small" cx="138.32" cy="66.46" r="1.15"/>
+  <rect class="bar" x="142.26" y="64.99" width="8.49" height="2.93"/>
+  <rect class="pill" x="98.48" y="72.74" width="16.81" height="5.46" rx="1.58"/>
+  <circle class="coin-h small" cx="100.86" cy="75.48" r="1.15"/><circle class="coin-t small" cx="103.87" cy="75.48" r="1.15"/><circle class="coin-h small" cx="106.88" cy="75.48" r="1.15"/><circle class="coin-t small" cx="109.9" cy="75.48" r="1.15"/><circle class="coin-h small" cx="112.91" cy="75.48" r="1.15"/>
+  <rect class="pill" x="123.89" y="72.74" width="16.81" height="5.46" rx="1.58"/>
+  <circle class="coin-h small" cx="126.27" cy="75.48" r="1.15"/><circle class="coin-h small" cx="129.28" cy="75.48" r="1.15"/><circle class="coin-t small" cx="132.29" cy="75.48" r="1.15"/><circle class="coin-h small" cx="135.3" cy="75.48" r="1.15"/><circle class="coin-h small" cx="138.32" cy="75.48" r="1.15"/>
+  <rect class="bar-best" x="142.26" y="74.01" width="19.88" height="2.93"/>
+  <rect class="pill" x="98.48" y="81.78" width="16.81" height="5.46" rx="1.58"/>
+  <circle class="coin-h small" cx="100.86" cy="84.51" r="1.15"/><circle class="coin-h small" cx="103.87" cy="84.51" r="1.15"/><circle class="coin-h small" cx="106.88" cy="84.51" r="1.15"/><circle class="coin-h small" cx="109.9" cy="84.51" r="1.15"/><circle class="coin-h small" cx="112.91" cy="84.51" r="1.15"/>
+  <rect class="pill" x="123.89" y="81.78" width="16.81" height="5.46" rx="1.58"/>
+  <circle class="coin-h small" cx="126.27" cy="84.51" r="1.15"/><circle class="coin-t small" cx="129.28" cy="84.51" r="1.15"/><circle class="coin-t small" cx="132.29" cy="84.51" r="1.15"/><circle class="coin-h small" cx="135.3" cy="84.51" r="1.15"/><circle class="coin-t small" cx="138.32" cy="84.51" r="1.15"/>
+  <rect class="bar" x="142.26" y="83.05" width="11.75" height="2.93"/>
+  <text class="mono grey end" x="165.16" y="65.38">&lt;/&gt;</text>
+  <text class="small grey mid" x="119.59" y="67.91">vs</text>
+  <text class="small grey mid" x="119.59" y="76.93">vs</text>
+  <text class="small grey mid" x="119.59" y="85.97">vs</text>
+
+  <!-- deploy experiment: Prolific and participants (paths from the original) -->
+  <text class="title" x="217.39" y="36.48">deploy experiment</text>
+  <text class="sub" x="217.39" y="44.21">run online study</text>
+  <g transform="translate(217.39 70.3) scale(0.97) translate(-231.85 -66.29)">
+    <path fill="#000000" d="M 211.60 65.55 L 211.08 65.55 C 211.03 65.55 210.98 65.51 210.98 65.45 L 210.98 62.97 C 210.98 62.91 211.02 62.86 211.08 62.86 L 211.61 62.86 C 212.52 62.86 213.17 63.23 213.17 64.18 C 213.17 65.13 212.49 65.55 211.60 65.55 M 212.18 62.26 L 209.46 62.26 C 209.35 62.26 209.29 62.38 209.37 62.45 C 209.56 62.62 209.81 62.91 209.81 63.31 L 209.81 67.70 C 209.81 68.10 209.56 68.39 209.37 68.56 C 209.29 68.63 209.35 68.75 209.46 68.75 L 211.32 68.75 C 211.43 68.75 211.49 68.63 211.41 68.56 C 211.23 68.39 210.98 68.10 210.98 67.71 L 210.98 66.29 C 210.98 66.24 211.02 66.19 211.08 66.19 L 211.99 66.19 C 213.34 66.19 214.42 65.57 214.42 64.17 C 214.42 62.77 213.56 62.27 212.18 62.27Z M 212.18 62.26"/>
+    <path fill="#000000" d="M 217.42 64.31 C 216.91 64.31 216.48 64.72 216.28 65.39 L 216.28 65.11 L 216.21 64.36 C 216.20 64.29 216.11 64.24 216.05 64.28 L 214.69 65.06 C 214.64 65.09 214.63 65.16 214.66 65.20 C 214.67 65.23 214.69 65.24 214.72 65.25 L 214.88 65.27 C 215.06 65.30 215.19 65.45 215.20 65.63 L 215.20 67.71 C 215.20 68.11 214.98 68.39 214.82 68.56 C 214.75 68.63 214.80 68.75 214.89 68.75 L 216.58 68.75 C 216.68 68.75 216.73 68.64 216.66 68.57 C 216.50 68.39 216.28 68.11 216.28 67.72 L 216.28 66.40 C 216.32 65.77 216.56 65.31 216.77 65.31 C 216.99 65.31 217.05 65.74 217.52 65.74 C 217.99 65.74 218.15 65.42 218.15 65.04 C 218.15 64.66 217.79 64.32 217.42 64.32Z M 217.42 64.31"/>
+    <path fill="#000000" d="M 221.53 66.59 C 221.53 65.63 221.31 64.76 220.51 64.76 C 219.71 64.75 219.49 65.62 219.49 66.59 C 219.49 67.55 219.71 68.40 220.51 68.40 C 221.32 68.40 221.53 67.55 221.53 66.59 M 220.51 64.33 C 221.93 64.33 222.78 65.31 222.79 66.58 C 222.79 67.98 221.87 68.81 220.51 68.83 C 219.15 68.82 218.24 67.99 218.24 66.60 C 218.24 65.21 219.17 64.33 220.51 64.33"/>
+    <path fill="#000000" d="M 225.04 68.55 C 224.88 68.39 224.65 68.11 224.65 67.70 L 224.65 62.16 C 224.65 62.08 224.57 62.03 224.49 62.07 L 223.05 62.85 C 222.98 62.89 222.99 63.00 223.06 63.02 L 223.21 63.03 C 223.40 63.05 223.56 63.20 223.56 63.40 L 223.56 67.71 C 223.56 68.11 223.34 68.39 223.17 68.55 C 223.11 68.63 223.16 68.74 223.25 68.74 L 224.95 68.74 C 225.06 68.74 225.10 68.63 225.03 68.55Z M 225.04 68.55"/>
+    <path fill="#000000" d="M 227.73 68.55 C 227.56 68.39 227.32 68.13 227.32 67.72 L 227.32 64.37 C 227.32 64.29 227.23 64.24 227.17 64.28 L 225.74 65.06 C 225.72 65.07 225.71 65.09 225.70 65.10 C 225.66 65.16 225.71 65.24 225.78 65.25 L 225.89 65.26 C 226.08 65.27 226.23 65.43 226.24 65.62 L 226.24 67.71 C 226.24 68.13 226.00 68.39 225.83 68.56 C 225.76 68.63 225.81 68.75 225.91 68.75 L 227.65 68.75 C 227.75 68.75 227.80 68.63 227.73 68.56Z M 227.73 68.55"/>
+    <path fill="#000000" d="M 233.16 68.55 C 233.00 68.39 232.75 68.13 232.75 67.70 L 232.75 64.53 C 232.75 64.47 232.71 64.42 232.65 64.42 L 230.10 64.42 C 230.07 64.42 230.03 64.40 230.01 64.38 C 229.75 63.96 229.49 63.51 229.49 63.12 C 229.49 62.73 229.78 62.44 230.16 62.44 C 230.53 62.44 230.72 62.80 230.78 63.15 C 230.84 63.53 231.15 63.69 231.50 63.69 C 231.85 63.69 232.16 63.45 232.16 63.01 C 232.16 62.32 231.46 61.94 230.71 61.94 C 229.47 61.94 228.77 62.54 228.77 63.60 C 228.77 64.67 228.82 64.03 228.84 64.31 C 228.84 64.37 228.80 64.42 228.74 64.42 L 228.30 64.42 C 228.25 64.42 228.19 64.46 228.19 64.53 L 228.19 64.89 C 228.19 64.95 228.24 65.00 228.30 65.00 L 228.77 65.00 C 228.83 65.00 228.88 65.04 228.88 65.10 L 228.88 67.70 C 228.88 68.12 228.64 68.39 228.47 68.55 C 228.40 68.62 228.46 68.74 228.55 68.74 L 230.29 68.74 C 230.39 68.74 230.44 68.62 230.37 68.55 C 230.21 68.39 229.97 68.12 229.96 67.71 L 229.96 65.10 C 229.96 65.04 230.01 65.00 230.07 65.00 L 231.56 65.00 C 231.61 65.00 231.66 65.04 231.66 65.10 L 231.66 67.70 C 231.66 68.11 231.42 68.38 231.26 68.55 C 231.19 68.62 231.24 68.74 231.34 68.74 L 233.07 68.74 C 233.17 68.74 233.22 68.62 233.15 68.55Z M 233.16 68.55"/>
+    <path fill="#000000" d="M 237.13 67.42 C 237.21 67.34 237.33 67.42 237.30 67.52 C 237.08 68.30 236.29 68.83 235.53 68.83 C 234.26 68.83 233.41 67.92 233.41 66.72 C 233.41 65.53 234.37 64.33 235.73 64.33 C 237.10 64.33 237.33 64.85 237.33 65.58 C 237.33 66.31 237.08 66.38 236.59 66.38 C 236.10 66.38 235.93 66.08 235.93 65.64 C 235.93 65.20 236.02 65.25 236.19 65.10 C 236.25 65.05 236.23 64.96 236.17 64.93 C 236.03 64.87 235.85 64.84 235.62 64.84 C 234.94 64.84 234.42 65.44 234.42 66.22 C 234.42 67.32 235.01 67.92 235.90 67.92 C 236.80 67.92 236.80 67.77 237.13 67.42"/>
+    <path fill="#000000" d="M 226.84 62.05 C 227.22 62.05 227.53 62.36 227.53 62.74 C 227.53 63.12 227.22 63.42 226.84 63.42 C 226.46 63.42 226.16 63.12 226.16 62.74 C 226.16 62.36 226.46 62.05 226.84 62.05"/>
+    <path fill="#000000" d="M 206.91 68.12 C 206.91 67.95 206.90 67.79 206.89 67.63 C 206.88 67.55 206.80 67.50 206.73 67.51 C 205.60 67.73 204.48 67.95 203.36 68.19 C 203.20 68.22 203.13 68.01 203.27 67.93 C 204.29 67.42 205.67 66.73 206.46 66.32 C 206.53 66.28 206.56 66.21 206.53 66.14 C 206.52 66.13 206.51 66.11 206.51 66.09 L 206.51 66.08 C 206.51 66.08 206.50 66.07 206.50 66.07 C 206.49 66.04 206.47 66.01 206.46 65.98 C 206.46 65.97 206.45 65.96 206.44 65.95 C 206.43 65.92 206.42 65.89 206.41 65.86 C 206.40 65.85 206.39 65.84 206.39 65.84 C 206.37 65.80 206.36 65.78 206.35 65.75 C 206.35 65.74 206.34 65.73 206.33 65.72 C 206.32 65.69 206.30 65.66 206.29 65.64 C 206.28 65.62 206.28 65.62 206.27 65.60 L 206.22 65.53 C 206.22 65.51 206.22 65.50 206.21 65.49 C 206.19 65.47 206.18 65.44 206.16 65.42 C 206.15 65.41 206.15 65.40 206.14 65.38 C 206.13 65.36 206.11 65.33 206.10 65.31 C 206.09 65.30 206.08 65.28 206.07 65.27 C 206.06 65.26 206.06 65.26 206.05 65.24 C 206.05 65.24 206.05 65.24 206.05 65.24 C 206.04 65.22 206.02 65.20 206.01 65.18 C 205.97 65.11 205.88 65.11 205.82 65.15 C 204.85 65.91 203.88 66.68 202.93 67.44 C 202.91 67.46 202.89 67.47 202.88 67.47 C 202.79 67.46 202.73 67.35 202.79 67.26 C 203.47 66.21 204.37 64.85 204.85 64.10 C 204.89 64.04 204.88 63.96 204.82 63.92 C 204.80 63.90 204.78 63.89 204.76 63.88 C 204.76 63.88 204.76 63.87 204.75 63.87 C 204.48 63.66 204.18 63.49 203.87 63.35 C 203.80 63.31 203.71 63.35 203.68 63.42 C 203.17 64.64 202.67 65.86 202.20 67.07 C 202.17 67.12 202.13 67.15 202.08 67.15 C 202.02 67.14 201.97 67.08 201.98 67.00 C 202.13 65.69 202.22 64.37 202.34 63.05 C 202.35 62.98 202.29 62.91 202.22 62.90 C 202.18 62.90 202.17 62.89 202.13 62.89 L 202.12 62.89 C 202.07 62.89 202.03 62.88 201.98 62.88 L 201.38 62.88 C 201.34 62.88 201.29 62.89 201.24 62.89 L 201.23 62.89 C 201.20 62.89 201.19 62.90 201.14 62.90 C 201.07 62.91 201.02 62.98 201.02 63.05 C 201.14 64.37 201.24 65.69 201.38 67.00 C 201.39 67.08 201.34 67.14 201.28 67.15 C 201.23 67.15 201.19 67.12 201.17 67.07 C 200.69 65.85 200.19 64.64 199.68 63.42 C 199.65 63.35 199.56 63.32 199.50 63.35 C 199.18 63.49 198.88 63.67 198.61 63.87 C 198.61 63.87 198.60 63.87 198.60 63.88 C 198.58 63.89 198.56 63.90 198.54 63.92 C 198.49 63.96 198.47 64.04 198.51 64.10 C 199.00 64.84 199.89 66.21 200.58 67.26 C 200.63 67.35 200.57 67.46 200.48 67.47 C 200.47 67.47 200.45 67.46 200.43 67.44 C 199.48 66.68 198.52 65.91 197.55 65.15 C 197.48 65.11 197.39 65.11 197.35 65.18 C 197.34 65.20 197.33 65.22 197.32 65.24 C 197.32 65.24 197.32 65.24 197.31 65.24 C 197.30 65.26 197.30 65.26 197.29 65.27 C 197.28 65.28 197.28 65.30 197.27 65.31 C 197.25 65.33 197.24 65.36 197.22 65.38 C 197.21 65.39 197.21 65.40 197.20 65.42 C 197.19 65.44 197.17 65.47 197.15 65.49 C 197.15 65.50 197.14 65.51 197.14 65.53 L 197.09 65.60 C 197.08 65.62 197.08 65.62 197.07 65.64 C 197.06 65.66 197.05 65.69 197.03 65.72 C 197.03 65.73 197.02 65.74 197.01 65.75 C 197.00 65.78 196.99 65.80 196.97 65.84 C 196.97 65.84 196.96 65.85 196.96 65.86 C 196.94 65.89 196.93 65.92 196.92 65.95 C 196.91 65.96 196.91 65.97 196.90 65.98 C 196.89 66.01 196.88 66.04 196.86 66.07 C 196.86 66.07 196.86 66.08 196.86 66.08 L 196.86 66.09 L 196.83 66.14 C 196.81 66.21 196.83 66.28 196.90 66.32 C 197.69 66.73 199.07 67.42 200.09 67.93 C 200.24 68.01 200.16 68.22 200.00 68.19 C 198.89 67.95 197.76 67.73 196.64 67.51 C 196.56 67.50 196.48 67.55 196.48 67.63 C 196.46 67.79 196.45 67.95 196.45 68.12 C 196.45 68.29 196.45 68.12 196.45 68.12 L 196.45 68.13 C 196.45 68.29 196.46 68.44 196.48 68.59 L 196.48 68.62 C 196.48 68.69 196.54 68.74 196.61 68.74 L 200.19 68.74 C 200.56 68.74 200.91 68.55 201.10 68.23 L 201.42 67.70 C 201.48 67.59 201.59 67.54 201.69 67.54 C 201.80 67.54 201.91 67.59 201.97 67.70 L 202.29 68.23 C 202.48 68.55 202.82 68.74 203.20 68.74 L 206.77 68.74 C 206.84 68.74 206.90 68.69 206.91 68.62 L 206.91 68.59 C 206.93 68.44 206.94 68.28 206.94 68.13 L 206.94 68.12Z M 206.91 68.12"/>
+    <path fill="#262626" d="M 253.04 75.05 C 253.04 71.15 256.21 67.98 260.12 67.98 C 264.03 67.98 267.20 71.15 267.20 75.05"/>
+    <path fill="#262626" d="M 264.03 63.88 C 264.03 61.72 262.28 59.97 260.12 59.97 C 257.96 59.97 256.21 61.72 256.21 63.88 C 256.21 66.04 257.96 67.79 260.12 67.79 C 262.28 67.79 264.03 66.04 264.03 63.88"/>
+    <path fill="#262626" d="M 237.33 75.05 C 237.33 71.15 240.50 67.98 244.41 67.98 C 248.32 67.98 251.49 71.15 251.49 75.05"/>
+    <path fill="#262626" d="M 248.32 63.88 C 248.32 61.72 246.57 59.97 244.41 59.97 C 242.25 59.97 240.50 61.72 240.50 63.88 C 240.50 66.04 242.25 67.79 244.41 67.79 C 246.57 67.79 248.32 66.04 248.32 63.88"/>
+    <path fill="#262626" d="M 245.25 72.65 C 245.25 68.74 248.42 65.57 252.33 65.57 C 256.24 65.57 259.41 68.74 259.41 72.65"/>
+    <path fill="#262626" d="M 256.24 61.48 C 256.24 59.32 254.49 57.57 252.33 57.57 C 250.17 57.57 248.42 59.32 248.42 61.48 C 248.42 63.63 250.17 65.39 252.33 65.39 C 254.49 65.39 256.24 63.63 256.24 61.48"/>
+  </g>
+
+  <!-- human data -->
+  <text class="title grey" x="292.61" y="36.48">human data</text>
+  <text class="mono" x="265.19" y="46">{subject_1:</text>
+  <text class="mono" x="265.19" y="52.65">{trial_1:</text>
+  <text class="mono" x="265.19" y="59.3">{stim: [HHTH,</text>
+  <text class="mono" x="265.19" y="65.95">THTH], ...</text>
+  <text class="mono" x="265.19" y="72.6">response: left}</text>
+  <text class="mono" x="265.19" y="79.25">...</text>
+  <text class="mono" x="265.19" y="85.9">subject_2:{...</text>
+  <text class="mono" x="265.19" y="92.55">}}</text>
+
+  <!-- inner loop -->
+  <rect class="inner-box" x="28.48" y="107.97" width="294.76" height="97.22" rx="10.14"/>
+  <line class="arrow" x1="302.65" y1="96.92" x2="302.65" y2="128.03"/>
+  <text class="loop inner" x="34.38" y="121.5"><tspan class="name">Inner loop</tspan> <tspan class="alias" dx="2">Box’s loop</tspan></text>
+  <rect class="step step-blue" x="34.4" y="129.46" width="88.38" height="52.83" rx="4.69"/>
+  <rect class="step step-blue" x="133.02" y="129.46" width="88.38" height="52.83" rx="4.69"/>
+  <rect class="step" x="231.65" y="129.46" width="85.87" height="52.83" rx="4.69"/>
+  <line class="arrow" x1="231.14" y1="154.52" x2="222.83" y2="154.52"/>
+  <line class="arrow" x1="132.52" y1="154.52" x2="124.21" y2="154.52"/>
+  <polyline class="loop-line" points="77.42,182.28 77.42,192.85 280.32,192.85 280.32,183.71"/>
+  <circle class="times-ring" cx="96.53" cy="192.85" r="5.22"/>
+  <text class="times" x="96.53" y="195.06">×T</text>
+
+  <!-- theorize -->
+  <text class="title agent" x="78.59" y="137.68">theorize</text>
+  <text class="sub" x="78.59" y="145.16">propose model as code</text>
+  <g transform="translate(0 1.51)">
+    <path fill="none" stroke="#2171b5" stroke-width="0.54" d="M 116.87 132.24 L 116.87 131.52"/>
+    <path fill="none" stroke="#2171b5" stroke-width="0.54" d="M 114.98 132.24 L 118.78 132.24 C 118.92 132.24 119.06 132.26 119.19 132.32 C 119.32 132.37 119.44 132.45 119.54 132.55 C 119.64 132.65 119.72 132.77 119.77 132.90 C 119.82 133.03 119.85 133.17 119.85 133.31 L 119.85 135.81 C 119.85 135.95 119.82 136.08 119.77 136.21 C 119.72 136.35 119.64 136.46 119.54 136.56 C 119.44 136.66 119.32 136.74 119.19 136.79 C 119.06 136.85 118.92 136.88 118.78 136.88 L 114.98 136.88 C 114.83 136.88 114.70 136.85 114.56 136.79 C 114.43 136.74 114.32 136.66 114.22 136.56 C 114.12 136.46 114.04 136.35 113.98 136.21 C 113.93 136.08 113.90 135.95 113.90 135.81 L 113.90 133.31 C 113.90 133.17 113.93 133.03 113.98 132.90 C 114.04 132.77 114.12 132.65 114.22 132.55 C 114.32 132.45 114.43 132.37 114.56 132.32 C 114.70 132.26 114.83 132.24 114.98 132.24Z M 114.98 132.24"/>
+    <path fill="none" stroke="#2171b5" stroke-width="0.54" d="M 113.90 134.56 L 113.31 134.56"/>
+    <path fill="none" stroke="#2171b5" stroke-width="0.54" d="M 119.85 134.56 L 120.45 134.56"/>
+    <path fill="none" stroke="#2171b5" stroke-width="0.54" d="M 115.81 135.67 L 117.95 135.67"/>
+    <path fill="#2171b5" d="M 116.08 134.32 C 116.08 134.47 116.03 134.58 115.93 134.68 C 115.83 134.78 115.71 134.83 115.57 134.83 C 115.43 134.83 115.31 134.78 115.21 134.68 C 115.11 134.58 115.06 134.47 115.06 134.32 C 115.06 134.18 115.11 134.06 115.21 133.96 C 115.31 133.86 115.43 133.81 115.57 133.81 C 115.71 133.81 115.83 133.86 115.93 133.96 C 116.03 134.06 116.08 134.18 116.08 134.32Z M 116.08 134.32"/>
+    <path fill="#2171b5" d="M 118.70 134.32 C 118.70 134.47 118.65 134.58 118.55 134.68 C 118.45 134.78 118.33 134.83 118.19 134.83 C 118.05 134.83 117.93 134.78 117.83 134.68 C 117.73 134.58 117.68 134.47 117.68 134.32 C 117.68 134.18 117.73 134.06 117.83 133.96 C 117.93 133.86 118.05 133.81 118.19 133.81 C 118.33 133.81 118.45 133.86 118.55 133.96 C 118.65 134.06 118.70 134.18 118.70 134.32Z M 118.70 134.32"/>
+    <path fill="#2171b5" d="M 117.27 131.29 C 117.27 131.40 117.23 131.49 117.16 131.57 C 117.08 131.64 116.99 131.68 116.88 131.68 C 116.77 131.68 116.68 131.64 116.60 131.57 C 116.52 131.49 116.49 131.40 116.49 131.29 C 116.49 131.18 116.52 131.09 116.60 131.01 C 116.68 130.93 116.77 130.90 116.88 130.90 C 116.99 130.90 117.08 130.93 117.16 131.01 C 117.23 131.09 117.27 131.18 117.27 131.29Z M 117.27 131.29"/>
+  </g>
+  <rect class="code-box" x="39.42" y="155.62" width="78.33" height="24.87" rx="3.15"/>
+  <text class="mono" x="41.93" y="163.8">def model():</text>
+  <text class="mono" x="41.93" y="170.73">   a = n_switches(s)</text>
+  <text class="mono" x="41.93" y="177.66">   return w*a</text>
+
+  <!-- critique -->
+  <text class="title agent" x="177.21" y="137.68">critique</text>
+  <text class="sub" x="177.21" y="145.16">run posterior predictive checks</text>
+  <g transform="translate(0 1.51)">
+    <path fill="none" stroke="#2171b5" stroke-width="0.54" d="M 215.48 131.46 L 215.48 130.74"/>
+    <path fill="none" stroke="#2171b5" stroke-width="0.54" d="M 213.59 131.46 L 217.39 131.46 C 217.53 131.46 217.67 131.48 217.80 131.53 C 217.93 131.59 218.05 131.67 218.15 131.77 C 218.25 131.87 218.33 131.98 218.38 132.11 C 218.43 132.25 218.46 132.38 218.46 132.53 L 218.46 135.02 C 218.46 135.17 218.43 135.30 218.38 135.43 C 218.33 135.57 218.25 135.68 218.15 135.78 C 218.05 135.88 217.93 135.96 217.80 136.01 C 217.67 136.07 217.53 136.10 217.39 136.10 L 213.59 136.10 C 213.44 136.10 213.31 136.07 213.17 136.01 C 213.04 135.96 212.93 135.88 212.83 135.78 C 212.73 135.68 212.65 135.57 212.59 135.43 C 212.54 135.30 212.51 135.17 212.51 135.02 L 212.51 132.53 C 212.51 132.38 212.54 132.25 212.59 132.11 C 212.65 131.98 212.73 131.87 212.83 131.77 C 212.93 131.67 213.04 131.59 213.17 131.53 C 213.31 131.48 213.44 131.46 213.59 131.46Z M 213.59 131.46"/>
+    <path fill="none" stroke="#2171b5" stroke-width="0.54" d="M 212.51 133.77 L 211.92 133.77"/>
+    <path fill="none" stroke="#2171b5" stroke-width="0.54" d="M 218.46 133.77 L 219.06 133.77"/>
+    <path fill="none" stroke="#2171b5" stroke-width="0.54" d="M 214.42 134.89 L 216.56 134.89"/>
+    <path fill="#2171b5" d="M 214.69 133.55 C 214.69 133.69 214.65 133.81 214.55 133.91 C 214.45 134.01 214.33 134.06 214.18 134.06 C 214.04 134.06 213.93 134.01 213.82 133.91 C 213.73 133.81 213.67 133.69 213.67 133.55 C 213.67 133.41 213.73 133.29 213.82 133.19 C 213.93 133.09 214.04 133.04 214.18 133.04 C 214.33 133.04 214.45 133.09 214.55 133.19 C 214.65 133.29 214.69 133.41 214.69 133.55Z M 214.69 133.55"/>
+    <path fill="#2171b5" d="M 217.32 133.55 C 217.32 133.69 217.26 133.81 217.16 133.91 C 217.06 134.01 216.94 134.06 216.81 134.06 C 216.66 134.06 216.54 134.01 216.44 133.91 C 216.34 133.81 216.30 133.69 216.30 133.55 C 216.30 133.41 216.34 133.29 216.44 133.19 C 216.54 133.09 216.66 133.04 216.81 133.04 C 216.94 133.04 217.06 133.09 217.16 133.19 C 217.26 133.29 217.32 133.41 217.32 133.55Z M 217.32 133.55"/>
+    <path fill="#2171b5" d="M 215.88 130.51 C 215.88 130.62 215.84 130.71 215.77 130.79 C 215.69 130.86 215.60 130.90 215.49 130.90 C 215.39 130.90 215.29 130.86 215.22 130.79 C 215.14 130.71 215.10 130.62 215.10 130.51 C 215.10 130.40 215.14 130.31 215.22 130.23 C 215.29 130.15 215.39 130.11 215.49 130.11 C 215.60 130.11 215.69 130.15 215.77 130.23 C 215.84 130.31 215.88 130.40 215.88 130.51Z M 215.88 130.51"/>
+  </g>
+  <rect class="hist" x="148.09" y="170.83" width="6.33" height="7.93"/>
+  <rect class="hist" x="154.82" y="168.32" width="6.33" height="10.44"/>
+  <rect class="hist" x="161.65" y="164.81" width="6.33" height="13.96"/>
+  <rect class="hist" x="168.48" y="161.29" width="6.33" height="17.47"/>
+  <rect class="hist" x="175.31" y="164.81" width="6.33" height="13.96"/>
+  <rect class="hist" x="182.03" y="168.32" width="6.33" height="10.44"/>
+  <rect class="hist" x="188.86" y="170.83" width="6.33" height="7.93"/>
+  <line class="hist-axis" x1="146.43" y1="178.79" x2="207.62" y2="178.79"/>
+  <line class="observed" x1="202.7" y1="178.79" x2="202.7" y2="163.03"/>
+  <text class="small blue-text" x="142.16" y="159.61">sampled</text>
+  <text class="small mid" x="202.7" y="159.61">observed</text>
+
+  <!-- evaluate model fit -->
+  <text class="title" x="274.58" y="137.68">evaluate model fit</text>
+  <text class="sub" x="274.58" y="145.16">compute ELPD</text>
+  <g transform="translate(0 1.51)">
+    <path fill="#e5e5e5" d="M 250.85 175.39 C 250.85 175.39 257.29 174.46 259.76 173.54 C 262.24 172.62 266.47 170.16 268.68 168.77 C 270.88 167.37 273.76 164.94 275.66 163.47 C 277.57 162.00 280.24 159.56 282.41 158.17 C 284.58 156.77 288.85 154.32 291.32 153.40 C 293.80 152.48 300.24 151.54 300.24 151.54 L 300.24 154.91 C 300.24 154.91 293.80 155.85 291.32 156.77 C 288.85 157.69 284.58 160.14 282.41 161.54 C 280.24 162.94 277.57 165.37 275.66 166.84 C 273.76 168.31 270.88 170.75 268.68 172.14 C 266.47 173.54 262.24 175.99 259.76 176.91 C 257.29 177.83 250.85 178.77 250.85 178.77Z M 250.85 175.39"/>
+    <path fill="none" stroke="#404040" stroke-width="0.93" d="M 250.85 177.08 C 250.85 177.08 257.29 176.14 259.76 175.23 C 262.24 174.31 266.47 171.85 268.68 170.46 C 270.88 169.06 273.76 166.63 275.66 165.16 C 277.57 163.68 280.24 161.25 282.41 159.86 C 284.58 158.46 288.85 156.00 291.32 155.08 C 293.80 154.16 300.24 153.23 300.24 153.23"/>
+    <path fill="none" stroke="#595959" stroke-width="0.34" d="M 250.85 149.98 L 250.85 178.41 L 302.65 178.41"/>
+    <g class="plot-dots">
+      <circle cx="254.95" cy="176.01" r="0.8"/>
+      <circle cx="264.09" cy="173.34" r="0.8"/>
+      <circle cx="271.82" cy="167.07" r="0.8"/>
+      <circle cx="278.55" cy="166.11" r="0.8"/>
+      <circle cx="286.28" cy="157.68" r="0.8"/>
+      <circle cx="294.97" cy="155.77" r="0.75"/>
+    </g>
+  </g>
+
+  <!-- ================= (b) the domains ================= -->
+  <text class="panel" x="339.59" y="14">(b)</text>
+
+  <!-- subjective randomness -->
+  <text class="domain" x="343.59" y="30.71">Subjective randomness</text>
+  <text class="question"><tspan x="343.59" y="40.71">Which sequence is</tspan><tspan x="343.59" y="49.11">more random?</tspan></text>
+    <use href="#cloud-sr" class="cloud-outline"/>
+    <circle class="bubble" cx="446.17" cy="44.85" r="1.41"/>
+    <circle class="bubble" cx="449.73" cy="38.02" r="2.66"/>
+    <use href="#cloud-sr" class="cloud-fill"/>
+    <ellipse class="cloud-fill" cx="465" cy="20.24" rx="18.83" ry="12.1"/>
+  <path class="coin-h" d="M 464.99 15.84 A 4.37 4.37 0 0 0 464.99 24.58 Z"/>
+  <path class="coin-t" d="M 464.99 24.58 A 4.37 4.37 0 0 0 464.99 15.84 Z"/>
+  <circle class="coin-h" cx="458.92" cy="44.39" r="2.01"/><circle class="coin-t" cx="464.29" cy="44.39" r="2.01"/><circle class="coin-h" cx="469.67" cy="44.39" r="2.01"/><circle class="coin-h" cx="475.04" cy="44.39" r="2.01"/><circle class="coin-t" cx="480.41" cy="44.39" r="2.01"/><circle class="coin-h" cx="485.79" cy="44.39" r="2.01"/><circle class="coin-t" cx="491.16" cy="44.39" r="2.01"/><circle class="coin-t" cx="496.53" cy="44.39" r="2.01"/>
+  <rect class="seq-highlight" x="455.03" y="40.51" width="45.44" height="7.79" rx="3.9"/>
+  <circle class="coin-h" cx="458.92" cy="55.14" r="2.01"/><circle class="coin-h" cx="464.29" cy="55.14" r="2.01"/><circle class="coin-h" cx="469.67" cy="55.14" r="2.01"/><circle class="coin-h" cx="475.04" cy="55.14" r="2.01"/><circle class="coin-t" cx="480.41" cy="55.14" r="2.01"/><circle class="coin-t" cx="485.79" cy="55.14" r="2.01"/><circle class="coin-t" cx="491.16" cy="55.14" r="2.01"/><circle class="coin-t" cx="496.53" cy="55.14" r="2.01"/>
+  <g class="person"><path d="M 436.25 62.12 A 5.88 5.88 0 0 1 448.01 62.12 Z"/><circle cx="442.13" cy="57.17" r="2.92"/></g>
+
+  <!-- reference games -->
+  <text class="domain" x="343.59" y="101.16">Reference games</text>
+  <text class="question"><tspan x="343.59" y="111.15">Which one is the speaker</tspan><tspan x="343.59" y="119.55">referring to?</tspan></text>
+    <use href="#cloud-ref" class="cloud-outline"/>
+    <circle class="bubble" cx="446.22" cy="118.26" r="1.46"/>
+    <circle class="bubble" cx="449.73" cy="111.53" r="2.66"/>
+    <use href="#cloud-ref" class="cloud-fill"/>
+    <ellipse class="cloud-fill" cx="465" cy="93.65" rx="18.83" ry="12.1"/>
+  <g class="person imagined"><path d="M 449.88 100.56 A 5.04 5.04 0 0 1 459.96 100.56 Z"/><circle cx="454.92" cy="96.34" r="2.5"/></g>
+    <use href="#cloud-ref-inner" class="cloud-outline thin"/>
+    <circle class="bubble" cx="457.97" cy="93" r="0.65"/>
+    <circle class="bubble" cx="459.77" cy="92.35" r="1.26"/>
+    <use href="#cloud-ref-inner" class="cloud-fill"/>
+    <ellipse class="cloud-fill" cx="470.37" cy="90.29" rx="8.74" ry="5.72"/>
+  <g class="person imagined-inner"><path d="M 467.02 92.43 A 3.36 3.36 0 0 1 473.74 92.43 Z"/><circle cx="470.38" cy="89.61" r="1.67"/></g>
+  <rect class="speech" x="475.39" y="110.17" width="28.72" height="9.64" rx="2.71"/>
+  <path class="speech-tail-fill" d="M 490.56 119.34 L 494.58 119.34 L 494.58 124.39 Z"/>
+  <path class="speech-tail" d="M 490.56 119.34 L 494.58 124.39 L 494.58 119.34"/>
+  <text class="small mid" x="489.75" y="116.75">“glasses”</text>
+  <g class="person"><path d="M 436.22 135.58 A 5.93 5.93 0 0 1 448.07 135.58 Z"/><circle cx="442.15" cy="130.61" r="2.91"/></g>
+  <circle class="face" cx="456.27" cy="131.96" r="4.17"/>
+  <circle class="face" cx="468.37" cy="131.96" r="4.17"/>
+  <circle class="lens" cx="466.61" cy="131.46" r="1.26"/><circle class="lens" cx="470.13" cy="131.46" r="1.26"/><line class="lens" x1="467.87" y1="131.46" x2="468.87" y2="131.46"/>
+  <circle class="face" cx="480.46" cy="131.96" r="4.17"/>
+  <circle class="lens" cx="478.76" cy="131.46" r="1.26"/><circle class="lens" cx="482.22" cy="131.46" r="1.26"/><line class="lens" x1="480.01" y1="131.46" x2="481.01" y2="131.46"/>
+  <rect class="hat" x="476.09" y="127.87" width="8.75" height="0.67"/>
+  <rect class="hat" x="477.96" y="125.5" width="5.01" height="2.5"/>
+  <rect class="choice-highlight" x="462.73" y="126.31" width="11.29" height="11.29" rx="2.01"/>
+  <g class="person other"><path d="M 488.75 135.58 A 5.88 5.88 0 0 1 500.5 135.58 Z"/><circle cx="494.57" cy="130.61" r="2.91"/></g>
+
+  <!-- number game -->
+  <text class="domain" x="343.59" y="174.59">Number game</text>
+  <text class="question"><tspan x="343.59" y="184.58">Would the same program</tspan><tspan x="343.59" y="192.98">generate 32?</tspan></text>
+    <use href="#cloud-ng" class="cloud-outline"/>
+    <circle class="bubble" cx="447.57" cy="191.67" r="1.41"/>
+    <circle class="bubble" cx="451.14" cy="184.94" r="2.66"/>
+    <use href="#cloud-ng" class="cloud-fill"/>
+    <ellipse class="cloud-fill" cx="466.4" cy="167.07" rx="18.83" ry="12.1"/>
+  <text class="rule" x="454.5" y="165.01">2<tspan class="sup" dy="-2.7">n</tspan></text>
+  <text class="rule grey" x="454.5" y="173.65">2n</text>
+  <rect class="rule-bar" x="466.35" y="160.99" width="13.36" height="4.02"/>
+  <rect class="rule-bar weak" x="466.35" y="169.63" width="1.51" height="4.02"/>
+  <g class="person"><path d="M 436.62 209 A 5.88 5.88 0 0 1 448.38 209 Z"/><circle cx="442.55" cy="204.08" r="2.91"/></g>
+  <rect class="num-card" x="451.49" y="199.05" width="8.74" height="8.64" rx="1.56"/><text class="small mid" x="455.86" y="205.48">16</text>
+  <rect class="num-card" x="461.13" y="199.05" width="8.74" height="8.64" rx="1.56"/><text class="small mid" x="465.5" y="205.48">8</text>
+  <rect class="num-card" x="470.77" y="199.05" width="8.74" height="8.64" rx="1.56"/><text class="small mid" x="475.14" y="205.48">2</text>
+  <rect class="num-card" x="480.41" y="199.05" width="8.74" height="8.64" rx="1.56"/><text class="small mid" x="484.78" y="205.48">64</text>
+  <rect class="num-card query" x="493.67" y="199.05" width="8.74" height="8.64" rx="1.56"/><text class="small mid navy-text" x="498.04" y="205.48">32</text>
+</svg>
+</body>
+</html>
