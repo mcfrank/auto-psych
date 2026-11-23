@@ -177,3 +177,29 @@ Entry format (newest at the bottom):
 - Note: the earlier reference-game panels in Fig. 3 use binomial CIs. This panel clusters by display instead,
   using `cluster_dse` on the weighted residuals, because objects in one display share trials. Binomial CIs
   would be about half as wide for "fewest features" (0.017 vs 0.043).
+## 2026-11-21: pre-submission review round 6 (paper 838c741, code 97778ec3)
+- Lesson: before trusting a quoted participant-level summary (completion time, pay rate), trace it to a
+  committed output file, not just a script. Why: the SI's old SR time (3.52 min) matched the pre-October
+  `data/results/human_experiment/completion_times.csv` exactly, not sr-oct26, and the new 5.49 comes from
+  `scripts/sr_completion_times.py`, which only prints. Evidence: `paper/pre_submission_review_2026-11-21c.md` #4.
+- Lesson: `information_criteria.json` has three ESS fields per hierarchical SR record: `evidence.min_ess` (outer
+  importance weights), `evidence.inner_min_ess` (worst person) and `marginal.min_ess` (the IS marginal behind
+  SR AIC/BIC; 1.3 for run 2). `marginal_log_lik` maximizes a Laplace approximation, then importance-samples at
+  the mode. Check which field and which step any paper sentence describes.
+- Lesson: to check a Fig. 3 row-(c) claim held out, run the row's own helper (`fig3.digit_confidence`,
+  `fig3.streak_choices`) on `*_heldout_conditions.json` with `PYTHONPATH=.` and `.venv/bin/python`. Don't name
+  a scratch script `src.py`: it shadows the repo's `src` package.
+- Note: a default `latexmk` SI build stops on the listings' UTF-8 errors before bibtex, so citations come out
+  undefined; run `bibtex supporting-info` and pdflatex twice by hand in the scratch copy.
+## 2026-11-23: where the N for Figs. 2-4 live (hub brief `briefs/2026-11-23-auto-psych-figure-ns.md`)
+- Lesson: before counting N off a figure, check which commit drew the Overleaf copy (`git hash-object` against
+  `git rev-parse <commit>:data/paper/figures/<f>.pdf`). Why: Overleaf's `fig3_effects.pdf` was `origin/main`
+  221d8234's (Daniel, unmerged into local main); its NG (b) and (c) panels have different subsets and N from main's.
+- Where the counts are: SR `figure_data/subjective_randomness.json` `pooled.n_trials/n_participants` (+ `len(conditions)`
+  = 416 pairs, the SE clusters); RG prereg `data/rsa/prereg/run/prereg_analysis.json` `n_trials/n_displays/n_participants`;
+  NG `data/paper/number_game_unseen_items.json` `<test set>.n_responses/n_items/n_example_sets`; Fig. 4 `elimination.json`
+  `n_trials`. Fig. 3 subset counts are only computable by running the `fig3.py` helpers.
+- Lesson: the NG pooled CV data (22,680 rows: Fig. 4, the CV comparison, Fig. 3 seen items) repeat responses that two or three
+  runs drew from one item (19,554-19,741 distinct). Report rows and distinct responses separately.
+- Note: Fig. 2 RG re-zeroes on the textbook seed but draws the winners' SE against the promoted bar (`vs_best_starting`
+  holds the SEs for the textbook zero, about 3× wider). The RG ablation's CV-unit count needs `finals_pool/pooled.csv` (Sherlock).
