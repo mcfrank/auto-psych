@@ -220,3 +220,17 @@ Entry format (newest at the bottom):
 - Note: Figs. 2 and 3 still have text under 6 pt printed (Fig. 2's 4.5-pt model names and number cards; Fig. 3's
   4.2-pt "2"s, 4.5-pt cards, 5.5-pt annotations). They are out of this task's scope.
 - Evidence: branch `fig4-fontsize`, `tests/test_paper_figures.py::test_all_of_figure_4s_text_prints_at_6_to_12_pt`.
+
+## 2026-11-23: Figure 2 reference games draw all five textbook seeds (branch `fig2-textbook-seeds`)
+- Lesson: when a figure's seed set differs from what the per-run records carry, write the full set as its own
+  mapping in the figure data (`rsa.json`'s `textbook`, from `prereg_analysis.json`'s `seed:` lpds) and build the
+  seed rows from it alone. Don't merge it into the per-run rows. Why: `rsa_l1`/`rsa_l2` are in every chain's
+  starting models (as promoted seeds, with lpds identical to their `seed:` copies), so a merge risks drawing them
+  twice. One source gives each model exactly one row. Evidence: `fig2.rsa_vs_textbook`,
+  `test_reference_games_seeds_are_exactly_the_textbook_models_each_drawn_once`.
+- Note: the literal listener (-612.8 vs the best textbook model) lies inside the panel's existing data range
+  (-722 to +998: the lowest promoted seed and search-history models), so the y axis is unchanged. Only the bottom
+  name band grows, from 3 lines to 5, and that makes the data area about 12% shorter.
+- Lesson: re-running `scripts.paper.figures` rewrites `fig3_effects.pdf` and `fig4_ablation.{pdf,png}` with new
+  bytes even when nothing changed (PDF metadata, antialiasing differences of at most 1 per channel against the committed
+  PNG, the same with main's code). Compare pixels, then `git checkout` the figures your change doesn't touch.

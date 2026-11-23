@@ -12,8 +12,13 @@ Read from the campaign's aggregates in the repository; nothing is fitted.
   the zero is that bar and a final's difference and paired SE are the
   pre-registered test's (``primary``). A starting model's difference comes
   from the ``lpd`` totals; the analysis records no paired SE for it. The
-  textbook RSA models (the campaign's "starting models", ``seed:<name>``) are
-  left out. Each chain's other models live at the end and the models it
+  textbook RSA models (the campaign's "starting models", ``seed:<name>``,
+  where the promotion campaign started) are recorded apart from the chains,
+  each as its ``lpd`` difference from the same bar (``textbook``; no paired
+  SE), with the best of them (``best_textbook``): Figure 2 draws them as the
+  reference games' seeds, re-zeroed on the best. Two of them (``rsa_l1``,
+  ``rsa_l2``) were also promoted, so they are also every chain's starting
+  models. Each chain's other models live at the end and the models it
   removed come from ``--chain-models`` (``rsa_chain_models.py``, a Sherlock
   job: scored the same way after the fact, so descriptive only), as lpd
   differences from the same bar.
@@ -261,6 +266,9 @@ def main(args: Args) -> None:
                     "diff": _lpds(prereg, TEXTBOOK_PREFIX)[best_textbook]
                     - _lpds(prereg, PROMOTED_PREFIX)[best_promoted],
                 },
+                # Figure 2's reference-game seeds: every textbook model against the zero.
+                "textbook": {m: v - _lpds(prereg, PROMOTED_PREFIX)[best_promoted]
+                             for m, v in _lpds(prereg, TEXTBOOK_PREFIX).items()},
                 # The seeds auto-psych promoted, Figure 2's own colour; a textbook
                 # model that was also promoted (rsa_l1, rsa_l2) predates auto-psych.
                 "promoted_seeds": sorted(set(_lpds(prereg, PROMOTED_PREFIX)) - set(_lpds(prereg, TEXTBOOK_PREFIX))),

@@ -58,6 +58,7 @@ def _setup(tmp_path):
         if domain == "rsa":  # Figure 2's second line: the best textbook model
             data["best_textbook"] = {"model": "s0", "diff": -10.0}
             data["promoted_seeds"] = ["s1"]  # drawn in the promoted seeds' colour
+            data["textbook"] = {"s0": -10.0, "s2": -8.0}  # the seeds drawn
         (data_dir / f"{domain}.json").write_text(json.dumps(data))
     names = tmp_path / "model_names.yaml"
     names.write_text(yaml.safe_dump({d: NAMES for d in ("subjective_randomness", "rsa")}))
@@ -412,7 +413,8 @@ def test_starting_models_are_named_by_their_paper_one_name_for_a_papers_models()
 
 
 def test_reference_games_are_drawn_against_the_best_textbook_model():
-    data = {**_domain_data("rsa"), "best_textbook": {"model": "s0", "diff": -10.0}, "promoted_seeds": ["s1"]}
+    data = {**_domain_data("rsa"), "best_textbook": {"model": "s0", "diff": -10.0}, "promoted_seeds": ["s1"],
+            "textbook": {"s0": -10.0, "s2": -8.0}}
     rows = fig2.rsa_vs_textbook(figures.forest_rows("rsa", data, NAMES, PAPERS), data, NAMES, PAPERS)
     # Every value shifted by the textbook model's +10; the promoted seed (s1) leaves the seeds' columns.
     assert [(r["kind"], r["label"], r["diff"]) for r in rows if r["kind"] in ("winner", "seed")] == [
@@ -421,6 +423,27 @@ def test_reference_games_are_drawn_against_the_best_textbook_model():
     (promoted,) = [r for r in rows if r["kind"] == "promoted"]
     assert promoted["values"] == [10.0]  # the best promoted seed: the pre-registered bar
     assert [r["se"] for r in rows if r["kind"] == "seed"] == [None, 0.0]  # the seeds' paired SEs dropped
+
+
+def test_reference_games_seeds_are_exactly_the_textbook_models_each_drawn_once():
+    # Every chain's rows carry its non-promoted starting model (s2); the textbook mapping (each against the
+    # best promoted seed) holds every textbook model: s2, the best (s0) and two no chain started from.
+    textbook = {"s0": -10.0, "s2": -8.0, "t_low": -623.0, "t_mid": -10.5}
+    data = {**_domain_data("rsa"), "best_textbook": {"model": "s0", "diff": -10.0}, "promoted_seeds": ["s1"],
+            "textbook": textbook}
+    names, papers = {**NAMES, "t_low": "Low", "t_mid": "Mid"}, {**PAPERS, "t_low": None, "t_mid": None}
+    rows = fig2.rsa_vs_textbook(figures.forest_rows("rsa", data, names, papers), data, names, papers)
+    seeds = [r for r in rows if r["kind"] == "seed"]
+    # each once, at its difference from the best textbook model, best first
+    assert [(r["model"], r["label"], r["diff"]) for r in seeds] == [
+        ("s2", "Seed two", 2.0), ("s0", "Textbook", 0.0), ("t_mid", "Mid", -0.5), ("t_low", "Low", -613.0)]
+    assert [r["se"] for r in seeds] == [None, 0.0, None, None]  # the seeds' SEs dropped
+    assert [r["paper"] for r in seeds] == [None, "Frank & Goodman, 2012", None, None]
+    # the winners and the promoted seeds' strip as before
+    assert [(r["label"], r["diff"]) for r in rows if r["kind"] == "winner"] == [("Winner two", 23.0),
+                                                                                ("Winner one", 22.0)]
+    (promoted,) = [r for r in rows if r["kind"] == "promoted"]
+    assert promoted["values"] == [10.0]
 
 
 def test_each_runs_trajectory_is_its_incumbent_at_its_test_value_as_the_run_admits_models():

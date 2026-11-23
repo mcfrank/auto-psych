@@ -10,10 +10,13 @@ subjective_randomness:
   motif_stack: Griffiths et al., 2018
 rsa:
   # The RSA seeds go by their own names in Figure 2: rsa_l1 is Frank & Goodman (2012)'s listener
-  # (cite it in the caption); no paper is recorded for the depth-2 and shared-prior variants.
+  # (cite it in the caption); no paper is recorded for the literal listener or the depth-2, salience and
+  # shared-prior variants.
+  literal_listener: null
   rsa_l1: null
   # One more level of the same recursion (the pragmods "complex" game).
   rsa_l2: null
+  rsa_l1_salience: null
   rsa_l1_shared_prior: null  # the best textbook model (Figure 2's zero)
   rsa_l2_singleton_distinct_feat_color_l0: null
   rsa_l2_singleton_feat_color_familiar_l0: null

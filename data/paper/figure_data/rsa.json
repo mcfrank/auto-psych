@@ -804,6 +804,13 @@
     "model": "rsa_l1_shared_prior",
     "diff": -651.7341909893403
   },
+  "textbook": {
+    "rsa_l1_shared_prior": -651.7341909893403,
+    "rsa_l1_salience": -652.1731640914404,
+    "rsa_l2": -677.1797615375526,
+    "rsa_l1": -683.5000248661127,
+    "literal_listener": -1264.5719264148756
+  },
   "promoted_seeds": [
     "competitor_confusion_speaker",
     "evaluative_prominence_l2",

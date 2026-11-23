@@ -60,8 +60,11 @@ What each figure shows:
     starting models are its share of the promoted seeds (run 2's best
     models, refitted; `data/rsa/live_seeds/chains/chains.json`); the zero is
     the best of all of them, the pre-registered bar, and a final's difference
-    and SE are the pre-registered test's. The textbook RSA models are not
-    drawn. The campaign's "chains" are its runs.
+    and SE are the pre-registered test's. The seeds drawn are the five
+    textbook RSA models, where the campaign started (`seed:<name>` in
+    the pre-registered analysis; `rsa.json`'s `textbook`), each once, by its
+    lpd difference from the best of them (no SE). The campaign's "chains"
+    are its runs.
   - Number game: ELPD from grouped cross-validation (4 folds of whole
     example sets, the runs' own criterion and settings, from their
     `holdout.json`, which must agree) on each of the three dataset runs'

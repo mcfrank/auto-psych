@@ -1,11 +1,11 @@
 """Figure 2 (``fig2_elpd``): per domain, every model's ΔELPD against the best seed model (the runs
-collapsed; ``data.forest_rows``), models across, left to right: the literature seeds (worst first), the
-promoted seeds (reference games), the other models the loop wrote (one strip, each run's in the order it
-admitted them, under a line tracing the loop's own choice, its incumbent, as it went) and the best
-discovered models (worst first). The runs are shaded by their best model, the best darkest. Named points
-carry ±2 SE of the paired difference. Reference games are re-zeroed on the best textbook model, with the
-best promoted seed (the pre-registered bar) as a second line. Names sit in two bands, the winners' above
-and the seeds' below.
+collapsed; ``data.forest_rows``), models across, left to right: the literature seeds (worst first; for
+reference games, all five textbook models), the promoted seeds (reference games), the other models the loop
+wrote (one strip, each run's in the order it admitted them, under a line tracing the loop's own choice, its
+incumbent, as it went) and the best discovered models (worst first). The runs are shaded by their best
+model, the best darkest. Named points carry ±2 SE of the paired difference. Reference games are re-zeroed on
+the best textbook model, with the best promoted seed (the pre-registered bar) as a second line. Names sit in
+two bands, the winners' above and the seeds' below.
 """
 
 from __future__ import annotations
@@ -39,8 +39,9 @@ def rsa_vs_textbook(rows: List[Dict[str, Any]], data: Dict[str, Any], names: Dic
                     papers: Dict[str, Optional[str]]) -> List[Dict[str, Any]]:
     """Re-zero reference games on the best textbook seed (``best_textbook``): every value shifted. The
     winners keep the SE of the pre-registered test (paired with the best promoted seed, whose line the
-    figure draws); the seeds' SEs are dropped, the textbook model's own row added and the promoted seeds
-    collected into one strip."""
+    figure draws). The seeds are exactly the textbook models (``textbook``), each once and without an SE:
+    they replace the chains' own seed rows, so ``rsa_l1`` and ``rsa_l2``, which every chain started from, are
+    not drawn twice. The promoted seeds are collected into one strip."""
     textbook = data["best_textbook"]
     shift = -textbook["diff"]
     out = []
@@ -54,9 +55,8 @@ def rsa_vs_textbook(rows: List[Dict[str, Any]], data: Dict[str, Any], names: Dic
             r.update(diff=r["diff"] + shift, se=None)
         out.append(r)
     promoted = set(data["promoted_seeds"])
-    seeds = [r for r in out if r["kind"] == "seed" and r["model"] not in promoted]
-    seeds.append({"kind": "seed", "model": textbook["model"], "label": names[textbook["model"]],
-                  "paper": papers[textbook["model"]], "diff": 0.0, "se": 0.0})
+    seeds = [{"kind": "seed", "model": m, "label": names[m], "paper": papers[m], "diff": d + shift,
+              "se": 0.0 if m == textbook["model"] else None} for m, d in data["textbook"].items()]
     rest = [r for r in out if r["kind"] != "seed"]
     promo = [r for r in out if r["kind"] == "seed" and r["model"] in promoted]
     rest.append({"kind": "promoted", "label": "Promoted seeds", "values": [r["diff"] for r in promo],

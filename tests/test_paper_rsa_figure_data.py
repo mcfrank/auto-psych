@@ -209,6 +209,13 @@ def test_the_best_textbook_model_is_recorded_against_the_best_promoted_seed(tmp_
     assert data["best_textbook"] == {"model": "s1", "diff": -10.0}
 
 
+def test_every_textbook_model_is_recorded_against_the_best_promoted_seed(tmp_path):
+    # Figure 2 draws all of them as the reference games' seeds: where the promotion campaign started.
+    data = _run(tmp_path, _prereg(), _panels())
+
+    assert data["textbook"] == {"s1": -10.0, "s2": -20.0}
+
+
 def test_the_promoted_seeds_are_the_ones_auto_psych_promoted_not_the_textbook_models(tmp_path):
     # Figure 2 colours a promoted seed apart from the models that predate
     # auto-psych; a textbook model that was also promoted (rsa_l1, rsa_l2) is one of those.
