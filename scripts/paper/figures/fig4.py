@@ -22,7 +22,7 @@ from matplotlib.lines import Line2D
 from pyprojroot import here
 
 from scripts.paper.figures.fig3 import BEST, SEED
-from scripts.paper.figures.icons import add_title_icons
+from scripts.paper.figures.icons import STIMULI, add_title_icons, number_cards
 from scripts.paper.figures.style import DPI, INK, INK_2, TITLE_FONT, TITLES
 
 # Figures 2 and 3's colours: blue for what auto-psych discovered, seed grey for what came from the literature;
@@ -34,6 +34,8 @@ LEFT, RIGHT, TICK_DEG = 0.04, 0.04, 35  # shares of the path's axis before the f
 PATH_IN, KEPT_IN, GAP_IN = 3.25, 0.5, 0.82  # widths: the path's axes, the kept column's, between them (inches)
 LEFT_PAD, TOP_PAD, LEGEND_PAD, ROW_GAP = 0.1, 0.01, 0.0, 0.06  # figure shares (left, top, the legend's), inches between rows
 ICON_OVER, ONE_LINE, KEPT_DOWN = 0.5, 14, 0.8  # how far each title's icon reaches over it (title heights); the longest one-line step name; the share of the step names' height the kept column extends down
+# the number cards' digits: 6 pt printed (a figure* at 0.9 x pnas-new.cls's 512-pt \textwidth: 6.38 in of 7.0)
+DIGITS_PT = 6.6
 WIDTH_IN, HEIGHT_IN = 7.0, 4.6  # one row per domain; the saved figure: PNAS's full width
 # each panel's cues are named by what pushes its response this way (the fitted signs: mechanisms.yaml)
 DIRECTION = {"subjective_randomness": "what makes a sequence look less random",
@@ -211,7 +213,7 @@ def draw_ablation(figure_data: Path, mechanisms: Path, out_dir: Path) -> None:
     points = {d: ablation_points(json.loads(src[d].read_text())) for d in TITLES}
     for ax, d in zip(axes, TITLES):
         draw_path(ax, points[d][0], names[d])
-        title = ax.set_title(TITLES[d], fontdict=TITLE_FONT, pad=8, x=0.12, ha="left")  # the icon goes left of it
+        title = ax.set_title(TITLES[d], fontdict=TITLE_FONT, pad=8, x=0.17, ha="left")  # the icon goes left of it, the number cards clear of the y label
         ax.annotate(DIRECTION[d], (1, 0.5), xycoords=title, xytext=(8, 0), textcoords="offset points",
                     ha="left", va="center", fontsize=NAME_PT, color=INK_2, style="italic")
     axes[-1].set_xlabel("mechanism removed, in order", fontsize=SMALL + 0.5, labelpad=1)  # the same in every row
@@ -226,7 +228,7 @@ def draw_ablation(figure_data: Path, mechanisms: Path, out_dir: Path) -> None:
     y = fig.transFigure.inverted().transform((0, (label.y0 + label.y1) / 2))[1]
     fig.legend(handles=key, loc="center left", ncol=2, frameon=False, fontsize=SMALL,
                bbox_to_anchor=(grid[-1, 1].get_position().x0, y), handletextpad=0.2, columnspacing=1.6)
-    add_title_icons(fig, axes, list(TITLES))
+    add_title_icons(fig, axes, list(TITLES), {**STIMULI, "number_game": number_cards(DIGITS_PT)})
     out_dir.mkdir(parents=True, exist_ok=True)
     for ext in ("pdf", "png"):  # uncropped: the canvas is the saved size, PNAS's full width
         fig.savefig(out_dir / f"fig4_ablation.{ext}", dpi=DPI)

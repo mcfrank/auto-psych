@@ -203,3 +203,18 @@ Entry format (newest at the bottom):
   runs drew from one item (19,554-19,741 distinct). Report rows and distinct responses separately.
 - Note: Fig. 2 RG re-zeroes on the textbook seed but draws the winners' SE against the promoted bar (`vs_best_starting`
   holds the SEs for the textbook zero, about 3× wider). The RG ablation's CV-unit count needs `finals_pool/pooled.csv` (Sherlock).
+
+## 2026-11-23: Figure 4's text at 6-12 pt printed
+- Lesson: measure print-size fonts from the saved PDF, not the code: each span's size is its `Tf` size times
+  sqrt|det| of (text matrix x CTM) (pypdf's `extract_text(visitor_text=...)` gives both; no new dependency),
+  scaled by printed width / PDF page width. Take the printed width from the class file and the `\includegraphics`
+  line: pnas-new.cls sets `\textwidth` to 512 TeX pt (1/72.27 in), so Fig. 4 at `0.9\linewidth` of a `figure*`
+  prints 459.2 bp wide against its 504-bp page (x0.911). Why: the number cards' digits were 4.5 pt in code and
+  4.10 pt printed (an earlier estimate said 5.6); the rest of Fig. 4 was 6.38-7.29 pt.
+- Lesson: when testing that icons don't overlap tick labels, keep only ticks inside the view limits. Why:
+  matplotlib keeps undrawn tick labels beyond the limits, which gave a false overlap above the top row.
+- Lesson: in shared `icons.py`, change one figure's icon by passing it in (`add_title_icons(..., stimuli=)`,
+  `number_cards(digits_pt)`), and check the other figures render pixel-identical (Figs. 2 and 3 did).
+- Note: Figs. 2 and 3 still have text under 6 pt printed (Fig. 2's 4.5-pt model names and number cards; Fig. 3's
+  4.2-pt "2"s, 4.5-pt cards, 5.5-pt annotations). They are out of this task's scope.
+- Evidence: branch `fig4-fontsize`, `tests/test_paper_figures.py::test_all_of_figure_4s_text_prints_at_6_to_12_pt`.

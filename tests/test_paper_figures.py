@@ -525,3 +525,52 @@ def test_figure_4_shows_each_domains_stopping_rule():
         for prev, step in itertools.pairwise(steps):
             assert prev["y"] - step["y"] < 2 * step["se"], (domain, step["dropped"])
         assert -kept[0]["y"] >= 2 * kept[0]["se"], domain
+
+
+# Fig. 4 prints as a figure* at width=0.9\linewidth; pnas-new.cls sets \textwidth to 512 TeX pt (1/72.27 in)
+FIG4_PRINT_PT = 0.9 * 512 / 72.27 * 72  # its printed width in PDF points (459.2)
+
+
+def _pdf_font_sizes(path):
+    """Each text span's (font size in PDF points, text): its Tf size times the scale of its text and current
+    transformation matrices."""
+    from pypdf import PdfReader
+    page = PdfReader(path).pages[0]
+    spans = []
+
+    def visit(text, cm, tm, font, size):
+        if text.strip():
+            a, b = cm[0] * tm[0] + cm[2] * tm[1], cm[1] * tm[0] + cm[3] * tm[1]
+            c, d = cm[0] * tm[2] + cm[2] * tm[3], cm[1] * tm[2] + cm[3] * tm[3]
+            spans.append((size * abs(a * d - b * c) ** 0.5, text))
+    page.extract_text(visitor_text=visit)
+    return float(page.mediabox.width), spans
+
+
+def test_all_of_figure_4s_text_prints_at_6_to_12_pt(tmp_path):
+    """PNAS: no text under 6 pt (or over 12) at the printed size, the number cards' digits included."""
+    figures.main(figures.Args(out_dir=tmp_path, figures=["4"]))
+    width, spans = _pdf_font_sizes(tmp_path / "fig4_ablation.pdf")
+    printed = [(size * FIG4_PRINT_PT / width, text) for size, text in spans]
+    assert {"16", "8", "2", "64"} <= {text.strip() for _, text in printed}  # the icon's digits are measured
+    assert [(pt, text) for pt, text in printed if not 6 <= pt <= 12] == []
+
+
+def test_figure_4s_title_icons_clear_their_axes_labels(tmp_path, monkeypatch):
+    """Each title's icon (the axes beyond the 3 x 2 grid) overlaps no y label or tick label of the path axes."""
+    drawn = []
+    monkeypatch.setattr(fig4.plt, "close", drawn.append)
+    figures.main(figures.Args(out_dir=tmp_path, figures=["4"]))
+    (fig,) = drawn
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    paths, icons = fig.axes[0:6:2], fig.axes[6:]
+    def drawn_ticks(axis, lims):  # matplotlib keeps (undrawn) ticks beyond the view limits
+        lo, hi = sorted(lims)
+        return [t.label1 for t in axis.get_major_ticks() if lo <= t.get_loc() <= hi]
+    labels = [t.get_window_extent(renderer) for ax in paths
+              for t in [ax.yaxis.label, *drawn_ticks(ax.yaxis, ax.get_ylim()), *drawn_ticks(ax.xaxis, ax.get_xlim())]
+              if t.get_text()]
+    for icon in icons:
+        box = icon.get_window_extent(renderer)
+        assert not [b for b in labels if b.overlaps(box)], icon

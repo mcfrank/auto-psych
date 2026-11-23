@@ -1,5 +1,7 @@
 """The domains' stimulus icons, beside each panel's title (``add_title_icons``). Each draws into an axes
 ``STIMULI`` gives the width of (its height is 1)."""
+from functools import partial
+
 import matplotlib
 
 matplotlib.use("Agg")
@@ -48,28 +50,40 @@ def reference_stimulus(ax):
         _face(ax, x, 0.4, 0.21, color=GREY, **kw)
 
 
-def number_stimulus(ax):
-    """The example cards."""
-    _strip(ax, 2.3)
+DIGITS_PT = 4.5  # the number cards' digits (Figures 2 and 3; Figure 4 draws them larger: ``number_cards``)
+
+
+def number_stimulus(ax, digits_pt=DIGITS_PT):
+    """The example cards, scaled with their digits (about their middle height: a card of 4.5-pt digits is
+    0.5 tall)."""
+    s = digits_pt / DIGITS_PT
+    _strip(ax, 2.3 * s)
     for k, n in enumerate(("16", "8", "2", "64")):
-        x = 0.27 + k * 0.58
-        ax.add_patch(FancyBboxPatch((x - 0.25, 0.25), 0.5, 0.5, boxstyle="round,pad=0,rounding_size=0.08",
+        x = (0.27 + k * 0.58) * s
+        ax.add_patch(FancyBboxPatch((x - 0.25 * s, 0.5 - 0.25 * s), 0.5 * s, 0.5 * s,
+                                    boxstyle=f"round,pad=0,rounding_size={0.08 * s}",
                                     facecolor="white", edgecolor=INK_2, lw=0.6))
-        ax.text(x, 0.5, n, ha="center", va="center", fontsize=4.5, color=INK)
+        ax.text(x, 0.5, n, ha="center", va="center", fontsize=digits_pt, color=INK)
+
+
+def number_cards(digits_pt):
+    """The number game's icon with digits of ``digits_pt``, and its width (its height is 1), as in ``STIMULI``."""
+    return partial(number_stimulus, digits_pt=digits_pt), 2.3 * digits_pt / DIGITS_PT
 
 
 STIMULI = {"subjective_randomness": (randomness_stimulus, 2.6), "rsa": (reference_stimulus, 1.6),
            "number_game": (number_stimulus, 2.3)}  # each icon and its width (its height is 1)
 
 
-def add_title_icons(fig, axes, domains) -> None:
-    """Each domain's stimulus icon just left of its axes' (centred) title."""
+def add_title_icons(fig, axes, domains, stimuli=STIMULI) -> None:
+    """Each domain's stimulus icon (``stimuli``: each domain's icon and its width) just left of its axes'
+    (centred) title."""
     fig.canvas.draw()
     to_fig = fig.transFigure.inverted()
     for ax, d in zip(axes, domains):
         box = ax.title.get_window_extent()
         (x0, y0), (x1, y1) = to_fig.transform((box.x0, box.y0)), to_fig.transform((box.x1, box.y1))
-        draw, aspect = STIMULI[d]
+        draw, aspect = stimuli[d]
         h = 1.9 * (y1 - y0)
         w = h * aspect * fig.get_figheight() / fig.get_figwidth()
         draw(fig.add_axes((x0 - w - 0.008, (y0 + y1) / 2 - h / 2, w, h)))
