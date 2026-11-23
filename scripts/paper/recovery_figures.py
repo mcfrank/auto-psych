@@ -63,9 +63,10 @@ SEED_LS, BOUNDARY = (0, (3, 2)), "#dcdcdc"
 MARKERS = {"repeat 1": "o", "repeat 2": "^", "repeat 3": "s"}  # a repeat's points, where repeats are drawn apart
 XLABEL, YLABEL = "inner loop iteration", "RMSE vs. ground truth"
 
+# The mixture model's recovery cell is not drawn: it is the independent model with equal rule weights, so
+# the independent seed the loop starts from contains it and recovers it at once.
 NG_GT_NAMES = {
     "tenenbaum_rules_similarity": "Ground truth: Tenenbaum (1999)",
-    "bigelow_piantadosi_mixture": "Ground truth: Bigelow & Piantadosi, mixture",
     "bigelow_piantadosi_independent": "Ground truth: Bigelow & Piantadosi, independent",
 }
 RSA_GT_NAMES = {"literal": "literal listener", "salience": "salience listener"}
@@ -342,7 +343,7 @@ def _in_domain(df: pd.DataFrame, domain: str) -> pd.DataFrame:
 
 
 DOMAIN_ICONS = dict(zip(DOMAINS, ("subjective_randomness", "number_game", "rsa")))  # icons.STIMULI's keys
-GRID_COLUMNS = 12  # each row's panels span an equal share of these (4, 3 and 2 panels)
+GRID_COLUMNS = 12  # each row's panels span an equal share of these (4, 2 and 2 panels)
 
 
 def _domain_row(axes, df: pd.DataFrame, runs: pd.DataFrame, domain: str) -> None:
@@ -364,6 +365,8 @@ def _domain_row(axes, df: pd.DataFrame, runs: pd.DataFrame, domain: str) -> None
         ax.plot(best["step"], best["mean"], color=BEST, lw=1.2, marker="o", ms=2.2, gid="best", zorder=3)
         if domain == "Reference games":
             ax.set_xticks(sorted(cell["step"].unique()))
+        elif domain == "Number game":  # two wide panels: whole iterations, as its own figure
+            ax.set_xticks(range(0, int(cell["step"].max()) + 1, 3))
         _style_panel(ax, str(gt))
         ax.set_ylim(bottom=0)  # each panel its own scale
         ax.yaxis.set_major_locator(MaxNLocator(5, steps=[1, 2, 5, 10]))  # short labels, clear of the panel to the left

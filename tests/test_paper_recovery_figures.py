@@ -33,8 +33,7 @@ def test_one_panel_per_ground_truth_in_domain_order(frame):
     assert list(frame["panel"].cat.categories) == [
         "Subjective randomness\nencoding difficulty", "Subjective randomness\nfinite experience",
         "Subjective randomness\nlocal representativeness", "Subjective randomness\nregularity detection",
-        "Number game\nTenenbaum (1999)", "Number game\nBigelow & Piantadosi, mixture",
-        "Number game\nBigelow & Piantadosi, independent",
+        "Number game\nTenenbaum (1999)", "Number game\nBigelow & Piantadosi, independent",
         "Reference games\nliteral listener", "Reference games\nsalience listener"]
 
 
@@ -88,8 +87,7 @@ def test_the_number_games_own_figure_has_every_repeat_of_every_ground_truth():
     df = rf.number_game_frame(rf.Args().ng_root)
     best = df[df["series"] == "best model"]
     assert best.groupby("gt", observed=True)["repeat"].nunique().to_dict() == {
-        "Ground truth: Tenenbaum (1999)": 3, "Ground truth: Bigelow & Piantadosi, mixture": 3,
-        "Ground truth: Bigelow & Piantadosi, independent": 3}
+        "Ground truth: Tenenbaum (1999)": 3, "Ground truth: Bigelow & Piantadosi, independent": 3}
     assert not math.isnan(best["rmse"].iloc[0])
 
 
@@ -130,7 +128,6 @@ def test_the_combined_figure_has_every_run_of_every_panel(runs):
         "Subjective randomness\nencoding difficulty": 5, "Subjective randomness\nfinite experience": 5,
         "Subjective randomness\nlocal representativeness": 5, "Subjective randomness\nregularity detection": 5,
         "Number game\nTenenbaum (1999)": 3,
-        "Number game\nBigelow & Piantadosi, mixture": 3,
         "Number game\nBigelow & Piantadosi, independent": 3,
         "Reference games\nliteral listener": 2, "Reference games\nsalience listener": 2}
 
@@ -206,7 +203,7 @@ def test_the_combined_figure_plots_the_frames_values(figures, runs):
     fig, frame = figures["combined"]
     for gid, series in (("best", "best model"), ("seed", "best other seed model")):
         lines = _plotted(fig, gid)
-        assert len(lines) == 9
+        assert len(lines) == 8
         for title, x, y in lines:
             want = frame[(frame["series"] == series) & (frame["panel"].astype(str).str.endswith("\n" + title))]
             assert x == want["step"].to_list() and y == pytest.approx(want["mean"].to_list()), (gid, title)
