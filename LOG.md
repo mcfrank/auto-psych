@@ -204,13 +204,15 @@ Entry format (newest at the bottom):
 - Note: Fig. 2 RG re-zeroes on the textbook seed but draws the winners' SE against the promoted bar (`vs_best_starting`
   holds the SEs for the textbook zero, about 3× wider). The RG ablation's CV-unit count needs `finals_pool/pooled.csv` (Sherlock).
 
+
 ## 2026-11-23: Figure 4's text at 6-12 pt printed
 - Lesson: measure print-size fonts from the saved PDF, not the code: each span's size is its `Tf` size times
   sqrt|det| of (text matrix x CTM) (pypdf's `extract_text(visitor_text=...)` gives both; no new dependency),
   scaled by printed width / PDF page width. Take the printed width from the class file and the `\includegraphics`
   line: pnas-new.cls sets `\textwidth` to 512 TeX pt (1/72.27 in), so Fig. 4 at `0.9\linewidth` of a `figure*`
-  prints 459.2 bp wide against its 504-bp page (x0.911). Why: the number cards' digits were 4.5 pt in code and
-  4.10 pt printed (an earlier estimate said 5.6); the rest of Fig. 4 was 6.38-7.29 pt.
+  prints 459.08 bp wide against its 504-bp page (x0.911). Why: the number cards' digits were 4.5 pt in code and
+  4.10 pt printed (an earlier estimate said 5.6); the rest of Fig. 4 was 6.38-7.29 pt. Leave headroom: the
+  digits are now 6.9 pt (6.29 printed), so they stay at 6 pt or above down to an include width of 0.86\linewidth.
 - Lesson: when testing that icons don't overlap tick labels, keep only ticks inside the view limits. Why:
   matplotlib keeps undrawn tick labels beyond the limits, which gave a false overlap above the top row.
 - Lesson: in shared `icons.py`, change one figure's icon by passing it in (`add_title_icons(..., stimuli=)`,

@@ -528,7 +528,7 @@ def test_figure_4_shows_each_domains_stopping_rule():
 
 
 # Fig. 4 prints as a figure* at width=0.9\linewidth; pnas-new.cls sets \textwidth to 512 TeX pt (1/72.27 in)
-FIG4_PRINT_PT = 0.9 * 512 / 72.27 * 72  # its printed width in PDF points (459.2)
+FIG4_PRINT_PT = 0.9 * 512 / 72.27 * 72  # its printed width in PDF points (459.08)
 
 
 def _pdf_font_sizes(path):

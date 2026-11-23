@@ -34,8 +34,9 @@ LEFT, RIGHT, TICK_DEG = 0.04, 0.04, 35  # shares of the path's axis before the f
 PATH_IN, KEPT_IN, GAP_IN = 3.25, 0.5, 0.82  # widths: the path's axes, the kept column's, between them (inches)
 LEFT_PAD, TOP_PAD, LEGEND_PAD, ROW_GAP = 0.1, 0.01, 0.0, 0.06  # figure shares (left, top, the legend's), inches between rows
 ICON_OVER, ONE_LINE, KEPT_DOWN = 0.5, 14, 0.8  # how far each title's icon reaches over it (title heights); the longest one-line step name; the share of the step names' height the kept column extends down
-# the number cards' digits: 6 pt printed (a figure* at 0.9 x pnas-new.cls's 512-pt \textwidth: 6.38 in of 7.0)
-DIGITS_PT = 6.6
+# the number cards' digits: 6.3 pt printed (a figure* at 0.9 x pnas-new.cls's 512-pt \textwidth: 6.38 in of 7.0),
+# still 6 pt at an include width of 0.86\linewidth
+DIGITS_PT = 6.9
 WIDTH_IN, HEIGHT_IN = 7.0, 4.6  # one row per domain; the saved figure: PNAS's full width
 # each panel's cues are named by what pushes its response this way (the fitted signs: mechanisms.yaml)
 DIRECTION = {"subjective_randomness": "what makes a sequence look less random",
@@ -213,7 +214,7 @@ def draw_ablation(figure_data: Path, mechanisms: Path, out_dir: Path) -> None:
     points = {d: ablation_points(json.loads(src[d].read_text())) for d in TITLES}
     for ax, d in zip(axes, TITLES):
         draw_path(ax, points[d][0], names[d])
-        title = ax.set_title(TITLES[d], fontdict=TITLE_FONT, pad=8, x=0.17, ha="left")  # the icon goes left of it, the number cards clear of the y label
+        title = ax.set_title(TITLES[d], fontdict=TITLE_FONT, pad=8, x=0.18, ha="left")  # the icon goes left of it, the number cards clear of the y label
         ax.annotate(DIRECTION[d], (1, 0.5), xycoords=title, xytext=(8, 0), textcoords="offset points",
                     ha="left", va="center", fontsize=NAME_PT, color=INK_2, style="italic")
     axes[-1].set_xlabel("mechanism removed, in order", fontsize=SMALL + 0.5, labelpad=1)  # the same in every row
