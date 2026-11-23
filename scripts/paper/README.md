@@ -112,8 +112,9 @@ What each figure shows:
   effect only the winner captures (exploratory, chosen after the fact, from the figure data's in-sample
   `conditions`, as `fig3_patterns.py` ranked them): the flat rate of
   choosing an all-heads/all-tails sequence by its rival's switch rate, the share choosing the sparsest, middle
-  and richest object a word fits, and yes to new numbers keeping or breaking a shared final digit by number
-  of examples. Reference games use the pre-registered experiment, their displays from
+  and richest object a word fits, and, after a single example, yes to the example's factors and to
+  other numbers (neither the example, a multiple nor a factor; the search's roles, the example and its multiples
+  left out). Reference games use the pre-registered experiment, their displays from
   `data/rsa/viz/panel_displays.json`. The number game's column shows run 3's winner, not the pooled best
   (`fig3.COLUMN_MODEL`), from `figure_data/number_game_model_conditions.json`: its posterior-mean predictions
   from the figure data's pooled fit, read from a copy of that fit's cache file
