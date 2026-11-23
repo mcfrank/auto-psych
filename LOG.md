@@ -229,8 +229,9 @@ Entry format (newest at the bottom):
   twice. One source gives each model exactly one row. Evidence: `fig2.rsa_vs_textbook`,
   `test_reference_games_seeds_are_exactly_the_textbook_models_each_drawn_once`.
 - Note: the literal listener (-612.8 vs the best textbook model) lies inside the panel's existing data range
-  (-722 to +998: the lowest promoted seed and search-history models), so the y axis is unchanged. Only the bottom
-  name band grows, from 3 lines to 5, and that makes the data area about 12% shorter.
+  (-722 to +998: the lowest promoted seed and search-history models), so the data range and ticks are unchanged.
+  The plot limits grew, from (-1229, 1360) to (-1509, 1428), because the bottom name band went from 3 lines to 5.
+  That makes the data area about 12% shorter.
 - Lesson: re-running `scripts.paper.figures` rewrites `fig3_effects.pdf` and `fig4_ablation.{pdf,png}` with new
   bytes even when nothing changed (PDF metadata, antialiasing differences of at most 1 per channel against the committed
   PNG, the same with main's code). Compare pixels, then `git checkout` the figures your change doesn't touch.

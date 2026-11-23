@@ -32,8 +32,10 @@ Read from the campaign's aggregates in the repository; nothing is fitted.
   pooled data: panels.json records no pooled ELPD.
 
 The output has the same schema as ``sr_figure_data.py``'s; each run's
-``best_seed`` (Figure 2's zero) is the best promoted seed, the ``pooled``
-``best_seed`` (Figure 3's) the best textbook model.
+``best_seed`` (the zero of the file's differences) is the best promoted seed,
+the pre-registered bar, which Figure 2 draws as its second line; Figure 2
+re-zeroes on the best textbook model (``best_textbook``), which is also the
+``pooled`` ``best_seed`` (Figure 3's).
 
 Usage:
     uv run python -m scripts.paper.rsa_figure_data
@@ -260,7 +262,7 @@ def main(args: Args) -> None:
                     "(the pre-registered bar)"
                 ),
                 "runs": runs,
-                # Figure 2's second line: the best textbook model against the zero.
+                # Figure 2's zero: the best textbook model against the best promoted seed.
                 "best_textbook": {
                     "model": best_textbook,
                     "diff": _lpds(prereg, TEXTBOOK_PREFIX)[best_textbook]

@@ -147,7 +147,8 @@ def test_each_chain_is_its_starting_models_and_final_against_the_best_promoted_s
     }
     assert c1["vs_best_seed"]["p1"] == {"diff": 0.0, "se": 0.0}
     assert c0["others_at_end"] == {}
-    # The textbook models (the campaign's "starting models") are not drawn.
+    # The textbook models (the campaign's "starting models") are recorded apart from the chains, under
+    # ``textbook`` (Figure 2's reference-game seeds), not as models shared by the runs.
     assert "shared_models" not in data
     # Figure 3: the best final by held-out density and the best textbook
     # model by held-out density, both fitted on the pooled data (panels.json).
@@ -203,7 +204,7 @@ def test_a_chain_starting_model_the_test_did_not_score_raises(tmp_path):
 
 
 def test_the_best_textbook_model_is_recorded_against_the_best_promoted_seed(tmp_path):
-    # Figure 2 draws it as a second line beside the zero (the best promoted seed).
+    # Figure 2 re-zeroes reference games on it; the best promoted seed (this file's zero) is its second line.
     data = _run(tmp_path, _prereg(), _panels())
 
     assert data["best_textbook"] == {"model": "s1", "diff": -10.0}

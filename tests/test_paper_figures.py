@@ -55,7 +55,7 @@ def _setup(tmp_path):
     data_dir.mkdir()
     for domain in ("subjective_randomness", "rsa"):
         data = _domain_data(domain)
-        if domain == "rsa":  # Figure 2's second line: the best textbook model
+        if domain == "rsa":  # Figure 2's zero: the best textbook model
             data["best_textbook"] = {"model": "s0", "diff": -10.0}
             data["promoted_seeds"] = ["s1"]  # drawn in the promoted seeds' colour
             data["textbook"] = {"s0": -10.0, "s2": -8.0}  # the seeds drawn
