@@ -3,7 +3,8 @@ domain, from the figure data (one ``<domain>.json`` per domain, written by ``sr_
 ``rsa_figure_data.py`` and ``number_game_figure_data.py``).
 
 - Figure 1 (``fig1.py``, ``fig1_loops``): the framework's two loops and the three domains, printed from
-  ``fig1.html`` by Playwright's Chromium (``uv run playwright install chromium`` once).
+  ``fig1.html`` by Playwright's Chromium (``uv run playwright install chromium`` once). Not in the default
+  set: draw it with ``--figures 1``, where Avenir and Menlo are installed (it refuses to substitute fonts).
 - Figure 2 (``fig2.py``, ``fig2_elpd``): every model's ΔELPD against the best seed model, the runs
   collapsed. The number game's column is its pooled models scored on the Bigelow & Piantadosi responses
   no run drew (``number_game_unseen_items.py``; ``--ng-test-set``). How each domain is scored is for the
@@ -17,7 +18,8 @@ The house style (``style.py``) is Avenir where installed. A domain listed in ``-
 as a labelled placeholder; any other missing domain raises.
 
 Usage:
-    uv run python -m scripts.paper.figures
+    uv run python -m scripts.paper.figures               # Figures 2-4
+    uv run python -m scripts.paper.figures --figures 1   # Figure 1
 """
 
 from __future__ import annotations
@@ -59,8 +61,9 @@ class Args:
         "rsa": str(here() / "data/rsa/live/live_rsa_{run}/outputs"),
         "number_game": str(here() / "data/results/number_game_dataset-nov26/collected/{run}/number_game")})
     """Each domain's run directory (``{run}``: the run), whose experiments' histories Figure 2 traces."""
-    figures: List[Literal["1", "2", "3", "4"]] = field(default_factory=lambda: ["1", "2", "3", "4"])
-    """Which figures to draw."""
+    figures: List[Literal["1", "2", "3", "4"]] = field(default_factory=lambda: ["2", "3", "4"])
+    """Which figures to draw. Figure 1 is drawn only when named (``--figures 1``): it needs Playwright's
+    Chromium and the Avenir and Menlo fonts (macOS)."""
     domains: List[str] = field(default_factory=lambda: list(DOMAINS))
     pending_domains: List[str] = field(default_factory=list)
     """Domains drawn as a 'pending' placeholder (their data are not in yet)."""
