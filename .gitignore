@@ -125,3 +125,6 @@ paper/**/*.blg
 
 # The PNAS writeup PDF (kept local)
 docs/writeup/
+
+# Agents' lessons log (kept local)
+/LOG.md
