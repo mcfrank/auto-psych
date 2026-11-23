@@ -284,7 +284,7 @@ def alien_plot(df: pd.DataFrame) -> Figure:
     return fig
 
 
-DOMAINS = ("Subjective randomness", "Number sequence generalization", "Reference games")
+DOMAINS = ("Subjective randomness", "Number game", "Reference games")
 
 
 def _panel(domain: str, gt: str) -> str:
