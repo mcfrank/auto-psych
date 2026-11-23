@@ -183,12 +183,8 @@ def test_figure_3s_streak_choices_are_of_the_one_constant_sequence_by_its_rivals
 
 
 def test_in_figure_3_people_choose_a_constant_sequence_at_a_flat_rate_the_best_seed_does_not():
-    t = fig3.streak_choices(_fig3_tables()["subjective_randomness"])
+    t = fig3.streak_choices(_heldout_tables()["subjective_randomness"])
     assert np.ptp(t.observed) < 0.06 and np.ptp(t.best_model) < 0.06 and np.ptp(t.best_seed) > 0.15
-
-
-def test_figure_3s_reference_game_pattern_is_the_word_fitting_three_objects():
-    assert fig3.ROW_C["rsa"] == ("objects the word fits", "3")
 
 
 def _rsa_display(display, objects, utterance, classes, n, observed):
@@ -276,30 +272,58 @@ def test_figure_3s_held_out_predictions_must_be_of_the_columns_models(tmp_path):
         fig3.load_heldout(tmp_path)
 
 
-def test_figure_3s_generalization_profiles_show_only_the_held_out_numbers():
+def test_figure_3s_classic_number_game_profiles_cover_every_number_on_all_items():
+    full = fig3.all_items(_fig3_tables()["number_game"], _heldout_tables()["number_game"])
+    for ex, p in fig3.ng_profiles(full).items():
+        examples = {int(v) for v in ex.split(",")}
+        assert p.drop(index=[t for t in examples if t in p.index and p.observed.isna()[t]]).notna().all().all(), ex
+        assert p.observed[[10, 20, 30, 40, 50]].notna().all(), ex
+
+
+def test_all_items_joins_the_seen_and_unseen_items_and_raises_on_an_item_in_both():
     import pandas as pd
-    targets = [t for t in range(1, 101) if t != 50]  # 50 was drawn by a run
+    seen = _ng_conditions()
+    unseen = pd.DataFrame({"number_set": ["2,4"], "target": [8], "n": [9], **_preds([0.5]), "best_model_lpd": [-1.0]})
+    t = fig3.all_items(seen, unseen)
+    assert sorted(t.target) == [6, 7, 8] and set(t.columns) == set(seen.columns)
+    with pytest.raises(RuntimeError, match="both"):
+        fig3.all_items(seen, unseen.assign(target=7))
+
+
+def test_figure_3s_generalization_profiles_leave_a_number_without_data_empty():
+    import pandas as pd
+    targets = [t for t in range(1, 101) if t != 50]
     ng = pd.DataFrame({"number_set": "100", "target": targets, "n": 10, **_preds([0.3] * len(targets))})
     p = fig3.ng_profiles(ng, ("100",))["100"]
     assert list(p.index) == list(range(1, 101))
     assert np.isnan(p.observed[50]) and np.isnan(p.best_model[50]) and p.observed.notna().sum() == 99
 
 
-def test_figure_3s_digit_confidence_is_yes_to_non_examples_of_sets_sharing_a_final_digit():
+def test_figure_3s_one_example_roles_are_trial_weighted_and_clustered_by_example_set():
     import pandas as pd
     ng = pd.DataFrame({
-        "number_set": ["13,23", "13,23", "13,23", "13,24", "7", "3,13,23", "5,15,25"],
-        "target": [33, 23, 34, 33, 17, 43, 35],  # keeps; an example; breaks; no shared digit; one example
-        "n": [10, 10, 10, 10, 10, 10, 30], **_preds([0.8, 1.0, 0.1, 0.5, 0.5, 0.9, 0.5])})
-    t = fig3.digit_confidence(ng)
-    assert list(t.index) == [(False, 2), (True, 2), (True, 3)]
-    assert t.observed.to_list() == pytest.approx([0.1, 0.8, (9 + 15) / 40])
-    assert t.n.to_list() == [10, 10, 40]
+        "number_set": ["6", "6", "6", "6", "6", "9", "9", "2,4"],
+        "target": [6, 12, 3, 5, 7, 3, 10, 3],  # the example; a multiple; a factor; other; other; a factor; other
+        "n": [10, 10, 10, 10, 30, 20, 10, 10], **_preds([1.0, 0.6, 0.5, 0.1, 0.3, 0.2, 0.0, 0.9])})
+    t = fig3.one_example_roles(ng)
+    assert list(t.index) == ["the example", "a multiple", "a factor", "other"]
+    assert t.trials.to_dict() == {"the example": 10, "a multiple": 10, "a factor": 30, "other": 50}
+    m = (10 * 0.5 + 20 * 0.2) / 30
+    assert t.observed["a factor"] == pytest.approx(m)
+    se = np.sqrt((10 * (0.5 - m)) ** 2 + (20 * (0.2 - m)) ** 2) / 30  # each example set one cluster
+    assert t.ci["a factor"] == pytest.approx(1.96 * se)
 
 
-def test_in_figure_3_the_best_seed_is_near_certain_of_a_shared_final_digit_and_people_are_not():
-    t = fig3.digit_confidence(_fig3_tables()["number_game"]).loc[True]
-    assert t.best_seed[4] > 0.99 and t.observed[4] < 0.9 and abs(t.best_model[4] - t.observed[4]) < 0.1
+def test_in_figure_3_after_one_example_the_seed_underrates_its_factors_on_held_out_items():
+    t = fig3.one_example_roles(_heldout_tables()["number_game"]).loc["a factor"]
+    assert t.observed - t.best_seed > 2 * t.ci
+    assert abs(t.best_model - t.observed) < abs(t.best_seed - t.observed)
+
+
+def test_figure_3s_row_c_patterns():
+    assert fig3.ROW_C == {"subjective_randomness": ("a pure streak in the pair", "one"),
+                          "rsa": ("objects the word fits", "3"),
+                          "number_game": ("after one example, the number is", "a factor")}
 
 
 def test_every_mechanism_figure_4_drops_or_keeps_has_a_name():

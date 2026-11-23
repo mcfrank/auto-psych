@@ -2,15 +2,18 @@
 trial-weighted R² and RMSE; (b) the domain's classic effect, drawn as its original paper drew it, which both
 models capture; (c) a new effect only the winner captures.
 
-Rows (a) and (b) use Figure 2's split (``load_heldout``: ``<domain>_heldout_conditions.json``, written by
+Row (a) uses Figure 2's split (``load_heldout``: ``<domain>_heldout_conditions.json``, written by
 ``scripts/paper/fig3_heldout_conditions.py``): subjective randomness' leave-one-out (PSIS-LOO) predictions on all
 runs pooled, the number game's predictions for the items no run drew (people's data restricted to those items),
 and reference games' pre-registered test (``data/rsa/viz/panel_displays.json`` says what each display showed).
-Row (c) is exploratory: its patterns were chosen after the fact (``streak_choices``, ``fits_three_roles``,
-``digit_confidence``), from the in-sample predictions the search ranked (``load``: the figure data's
-``conditions``, each condition's observed proportion and the pooled best model's and best seed's posterior-mean
-predictions; a column whose model is not the pooled best, ``COLUMN_MODEL``, takes that model's from
-``<domain>_model_conditions.json``)."""
+Row (b) shows the full-data fit on all the data: subjective randomness' in-sample predictions, the number game's
+on every item, seen and unseen (``all_items``), and reference games' pre-registered test as in row (a).
+Row (c) shows where row (a)'s held-out advantage concentrates, on row (a)'s predictions: each pattern
+(``streak_choices``, ``fits_three_roles``, ``one_example_roles``) is a candidate of the search over a fixed list of
+stimulus features (``scripts/paper/fig3_patterns.py``), chosen by hand for its reading. ``load`` gives the figure
+data's in-sample ``conditions``, each condition's observed proportion and the pooled best model's and best seed's
+posterior-mean predictions; a column whose model is not the pooled best, ``COLUMN_MODEL``, takes that model's from
+``<domain>_model_conditions.json``."""
 
 from __future__ import annotations
 
@@ -31,7 +34,7 @@ SEED, BEST, HUMAN = "#b3b3b3", "#2171b5", INK  # best seed model, best winner, p
 WIDTH_IN, HEIGHT_IN = 7.0, 5.4
 ORDER = ["subjective_randomness", "rsa", "number_game"]
 ROWS = ("(a)", "(b)", "(c)")
-ROW_TITLES = (None, "Classic effect captured by both models", "New effect captured by our model")
+ROW_TITLES = (None, "Classic effect captured by both models", "Where our model beats the seed")
 MODELS = ("best_seed", "best_model")
 # A column's model when it is not the pooled best (the figure data's ``best_model``): its name and axis label.
 # Its predictions, of the same kind as the figure data's, are in ``<domain>_model_conditions.json``
@@ -56,11 +59,11 @@ def load(figure_data: Path, displays: Path) -> Dict[str, pd.DataFrame]:
     return out
 
 
-HELDOUT = "{}_heldout_conditions.json"  # rows (a) and (b): Figure 2's split, per domain
+HELDOUT = "{}_heldout_conditions.json"  # rows (a) and (c): Figure 2's split, per domain
 
 
 def load_heldout(figure_data: Path) -> Dict[str, pd.DataFrame]:
-    """Rows (a) and (b)'s conditions on Figure 2's split for subjective randomness and the number game, of each
+    """Rows (a) and (c)'s conditions on Figure 2's split for subjective randomness and the number game, of each
     column's models: the figure data's best seed and its best model, or the column's ``COLUMN_MODEL``. (Reference
     games' conditions are the pre-registered test already.)"""
     out = {}
@@ -72,6 +75,15 @@ def load_heldout(figure_data: Path) -> Dict[str, pd.DataFrame]:
             raise RuntimeError(f"{d}'s held-out predictions are {held['models']}'s, not the column's {want}")
         out[d] = pd.DataFrame(held["conditions"])
     return out
+
+
+def all_items(seen: pd.DataFrame, unseen: pd.DataFrame) -> pd.DataFrame:
+    """The number game's items the runs drew (``load``) and those none drew (``load_heldout``), one table of the
+    full-data fit's predictions on every item."""
+    key = ["number_set", "target"]
+    if len(seen.merge(unseen[key], on=key)):
+        raise RuntimeError("an item is both among the seen items and the unseen ones")
+    return pd.concat([seen, unseen[seen.columns]], ignore_index=True)
 
 
 def with_model(cond: pd.DataFrame, preds: dict, model: str) -> pd.DataFrame:
@@ -100,15 +112,17 @@ def _pending(ax, what):
             style="italic")
 
 
-SCATTER_INK = 250  # a scatterplot's total opacity budget: each point's alpha is at most this over the points
+SCATTER_INK = 250  # a scatterplot's total opacity budget, alpha times relative point area summed over the points
+MIN_ALPHA = 0.1  # fainter points stack into a colour shift (8-bit alpha), so many points shrink instead
 
 
 def _scatter(ax, cond, col, color, label):
     ax.plot([0, 1], [0, 1], color="#e0e0e0", lw=0.8, zorder=0)
-    # fainter where there are many conditions (the number game's 23,360 held-out items), so density shows
-    ax.scatter(cond[col], cond.observed, s=4 + 12 * np.sqrt(cond.n / cond.n.max()), color=color,
-               alpha=min(0.25, SCATTER_INK / len(cond)),
-               linewidths=0, clip_on=False, zorder=1)
+    # many conditions (the number game's 23,360 held-out items) get fainter, then smaller points, so density shows
+    alpha = max(MIN_ALPHA, min(0.25, SCATTER_INK / len(cond)))
+    shrink = min(1.0, SCATTER_INK / (len(cond) * alpha))
+    ax.scatter(cond[col], cond.observed, s=shrink * (4 + 12 * np.sqrt(cond.n / cond.n.max())), color=color,
+               alpha=alpha, linewidths=0, clip_on=False, zorder=1, rasterized=True)
     rmse = np.sqrt(np.average((cond.observed - cond[col]) ** 2, weights=cond.n))
     ax.text(0.04, 0.97, f"$R^2$ = {r2(cond.observed, cond[col], cond.n):.2f}\nRMSE = {rmse:.3f}",
             transform=ax.transAxes, ha="left", va="top", fontsize=6, zorder=5,
@@ -222,16 +236,24 @@ def streak_choices(sr: pd.DataFrame) -> pd.DataFrame:
                      ["switch_rate"])
 
 
-def digit_confidence(ng: pd.DataFrame) -> pd.DataFrame:
-    """Example sets of two or more numbers that all end in the same digit: the chance of 'yes' to a target that
-    is not an example, by whether it keeps that final digit and by the number of examples."""
-    ex = ng.number_set.map(lambda s: [int(v) for v in s.split(",")])
-    shared = ex.map(lambda e: len(e) >= 2 and len({v % 10 for v in e}) == 1)
-    new = pd.Series([t not in e for t, e in zip(ng.target, ex)], index=ng.index)
-    d = ng[shared & new].copy()
-    d["keeps"] = [t % 10 == e[0] % 10 for t, e in zip(d.target, ex[d.index])]
-    d["examples"] = ex[d.index].map(len)
-    return _weighted(d.groupby(["keeps", "examples"]))
+ONE_EXAMPLE_ROLES = ("the example", "a multiple", "a factor", "other")
+
+
+def one_example_roles(ng: pd.DataFrame) -> pd.DataFrame:
+    """Single-example sets: the chance of 'yes' by what the number is to the example (the search's terms,
+    ``fig3_patterns._ng``), trial-weighted; each role's trials and people's 95% CI clustered by example set."""
+    from scripts.paper.fig3_patterns import FEATURES  # it imports this module
+
+    role = pd.Series([FEATURES["number_game"](c)["after one example, the number is"] for c in ng.itertuples()],
+                     index=ng.index)
+    d = ng[role.isin(ONE_EXAMPLE_ROLES)].assign(role=role)
+    rows = {}
+    for r, g in d.groupby("role"):
+        t = {k: float(np.average(g[k], weights=g.n)) for k in ("observed", *MODELS)}
+        resid = g.n * (g.observed - t["observed"])
+        se = cluster_dse(resid, np.zeros(len(g)), pd.factorize(g.number_set)[0]) / g.n.sum()
+        rows[r] = {**t, "trials": int(g.n.sum()), "ci": 1.96 * se}
+    return pd.DataFrame(rows).T.loc[list(ONE_EXAMPLE_ROLES)].astype({"trials": int})
 
 
 def _panel_title(ax, text):
@@ -252,9 +274,9 @@ def new_sr(ax, sr):
     ax.set(xlim=(0, 1), ylim=(0, 0.4), xticks=[0, 0.25, 0.5, 0.75, 1])
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:g}"))
     ax.yaxis.set_major_formatter(PCT)
-    ax.set_xlabel("other sequence's switch rate", labelpad=1)
-    ax.set_ylabel("all heads/tails chosen", labelpad=1)
-    _panel_title(ax, "All heads or all tails: a flat rate")
+    ax.set_xlabel("switch rate of the other sequence", labelpad=1)
+    ax.set_ylabel("chosen as more random", labelpad=1)
+    _panel_title(ax, "An all-heads or all-tails sequence")
 
 
 FITS_THREE_ROLES = ("doesn't fit the word", "fewest features", "in between", "most features")
@@ -283,38 +305,38 @@ def fits_three_roles(rsa: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows).T.loc[list(FITS_THREE_ROLES)].astype({"trials": int})
 
 
-def new_rsa(ax, rsa):
-    """When the word fits three objects, people pick the one with the fewest features; the seed spreads its choices
-    to the one in between."""
-    t = fits_three_roles(rsa)
+def _role_bars(ax, t, labels):
+    """Per role, side-by-side bars for people (with their 95% CI), the discovered model and the seed."""
     x = np.arange(len(t))
     w = 0.26
     ax.bar(x - w, t.observed, w, color=HUMAN, zorder=2)
     ax.errorbar(x - w, t.observed, yerr=t.ci, fmt="none", ecolor=INK_2, elinewidth=0.7, zorder=3)
-    for dx, c, color in ((0, MODELS[1], BEST), (w, MODELS[0], SEED)):  # people, the discovered model, the seed
+    for dx, c, color in ((0, MODELS[1], BEST), (w, MODELS[0], SEED)):
         ax.bar(x + dx, t[c], w, color=color, zorder=2)
-    ax.set_xticks(x, ["doesn't\nfit", "fewest\nfeatures", "in\nbetween", "most\nfeatures"], fontsize=6, va="top")
+    ax.set_xticks(x, labels, fontsize=6, va="top")
     ax.tick_params(axis="x", length=0)
-    ax.set(xlim=(-0.6, len(x) - 0.4), ylim=(0, 0.6))
+    ax.set_xlim(-0.6, len(x) - 0.4)
+
+
+def new_rsa(ax, rsa):
+    """When the word fits three objects, people pick the one with the fewest features; the seed spreads its choices
+    to the one in between."""
+    _role_bars(ax, fits_three_roles(rsa), ["doesn't\nfit", "fewest\nfeatures", "middle", "most\nfeatures"])
+    ax.set_ylim(0, 0.6)
     ax.yaxis.set_major_formatter(PCT)
-    ax.set_ylabel("chosen (per object)", labelpad=1)
-    ax.set_xlabel("object, when the word fits three", labelpad=1)
-    _panel_title(ax, "Word fits three: fewest features wins")
+    ax.set_ylabel("chosen", labelpad=1)
+    ax.set_xlabel("object", labelpad=1)
+    _panel_title(ax, "The word fits three objects")
 
 
 def new_ng(ax, ng):
-    """Example sets sharing a final digit: people's yes to targets that keep it grows slowly with more examples;
-    the best seed becomes nearly certain."""
-    t = digit_confidence(ng)
-    for keeps, label in ((True, "keeps the\nfinal digit"), (False, "breaks it")):
-        d = t.loc[keeps]
-        _models_and_people(ax, d.index, d)
-        ax.text(d.index[-1] + 0.15, d.observed.iloc[-1], label, fontsize=6, color=INK_2, va="center")
-    ax.set(xlim=(1.8, 4.9), ylim=(0, 1.02), xticks=[2, 3, 4])
+    """After one example, people often say yes to its factors; the best seed rarely does."""
+    _role_bars(ax, one_example_roles(ng), ["the same\nnumber", "multiple", "factor", "other"])
+    ax.set_ylim(0, 1)
     ax.yaxis.set_major_formatter(PCT)
-    ax.set_xlabel("examples sharing a final digit", labelpad=1)
-    ax.set_ylabel("yes to a new number", labelpad=1)
-    _panel_title(ax, "Graded confidence in a shared digit")
+    ax.set_ylabel("said yes", labelpad=1)
+    ax.set_xlabel("queried number, relative to the example", labelpad=1)
+    _panel_title(ax, "After a single example")
 
 
 NG_SETS = ("100", "80,70,90,100")  # one example, then four that fit a rule (as the figure data write them)
@@ -322,8 +344,7 @@ NG_SETS = ("100", "80,70,90,100")  # one example, then four that fit a rule (as 
 
 def ng_profiles(ng: pd.DataFrame, sets=NG_SETS) -> Dict[str, pd.DataFrame]:
     """Tenenbaum (2000)'s generalization profiles: per example set of ``sets``, people's share of yes and each
-    model's P(yes) for every target 1-100 that ``ng`` has (Figure 2's split: the items no run drew), NaN for the
-    others."""
+    model's P(yes) for every target 1-100 that ``ng`` has, NaN for the others."""
     out = {}
     for ex in sets:
         d = ng[ng.number_set == ex]
@@ -334,13 +355,13 @@ def ng_profiles(ng: pd.DataFrame, sets=NG_SETS) -> Dict[str, pd.DataFrame]:
 
 
 def classic_ng(cell, fig, profiles):
-    """Each set's profile as its own histogram over the numbers no run drew: people's bars in black, each model's
-    P(yes) a tick on the same number."""
+    """Each set's profile: per number, side-by-side bars for people, the discovered
+    model and the seed (as in the reference-games panel)."""
     axes = cell.subgridspec(len(profiles), 1, hspace=0.5).subplots(sharex=True)
+    w = 0.3
     for ax, (ex, p) in zip(axes, profiles.items()):
-        ax.bar(p.index, p.observed, width=0.8, color=HUMAN)
-        for c, color in zip(MODELS, (SEED, BEST)):
-            ax.plot(p.index, p[c], ls="none", marker="_", ms=2.6, mew=1.0, color=color, zorder=3)
+        for dx, c, color in ((-w, "observed", HUMAN), (0, MODELS[1], BEST), (w, MODELS[0], SEED)):
+            ax.bar(p.index + dx, p[c], width=w, color=color, linewidth=0)
         ax.set(xlim=(0, 101), ylim=(0, 1), yticks=[0, 1])
         ax.yaxis.set_major_formatter(PCT)
         ax.set_title("examples: " + ex.replace(",", ", "), fontsize=6, loc="left", pad=2)
@@ -352,9 +373,10 @@ def classic_ng(cell, fig, profiles):
 
 # What is not yet as it should be, drawn on the panel in red until it is fixed: (row, domain) -> what is missing.
 TO_FIX: Dict[tuple, str] = {}
-# Row (c): per domain, the search's candidate (scripts/paper/fig3_patterns.py) with the clearest behavioural reading
+# Row (c): per domain, the search's candidate on the held-out predictions (scripts/paper/fig3_patterns.py) with the
+# clearest behavioural reading
 ROW_C = {"subjective_randomness": ("a pure streak in the pair", "one"), "rsa": ("objects the word fits", "3"),
-         "number_game": ("examples share a last digit; the number", "keeps it")}
+         "number_game": ("after one example, the number is", "a factor")}
 
 
 def check_row_c(patterns: Path) -> None:
@@ -379,8 +401,9 @@ def _flag(fig, cell, text):
 
 def draw(figure_data: Path, displays: Path, out_dir: Path) -> None:
     check_row_c(figure_data / "fig3_patterns.json")
-    tables = load(figure_data, displays)  # in sample: row (c), as its search ranked them
-    held = {**tables, **load_heldout(figure_data)}  # Figure 2's split: rows (a) and (b)
+    tables = load(figure_data, displays)  # in sample
+    held = {**tables, **load_heldout(figure_data)}  # Figure 2's split: rows (a) and (c)
+    full = {**tables, "number_game": all_items(tables["number_game"], held["number_game"])}  # row (b)
     fig = plt.figure(figsize=(WIDTH_IN, HEIGHT_IN))
     # one grid for every row, so a domain's panels share a column: row (a)'s two scatterplots side by side,
     # rows (b) and (c) spanning both; a spacer column between domains
@@ -395,12 +418,12 @@ def draw(figure_data: Path, displays: Path, out_dir: Path) -> None:
             ax.tick_params(labelleft=False)
         tops.append(a[0])
         if d == "number_game":
-            classic_ng(gs[1, 3 * k:3 * k + 2], fig, ng_profiles(held[d]))
+            classic_ng(gs[1, 3 * k:3 * k + 2], fig, ng_profiles(full[d]))
         else:
             {"subjective_randomness": classic_sr, "rsa": classic_rsa}[d](fig.add_subplot(gs[1, 3 * k:3 * k + 2]),
-                                                                       held[d])
+                                                                       full[d])
         {"subjective_randomness": new_sr, "rsa": new_rsa, "number_game": new_ng}[d](
-            fig.add_subplot(gs[2, 3 * k:3 * k + 2]), tables[d])
+            fig.add_subplot(gs[2, 3 * k:3 * k + 2]), held[d])
     tops[0].set_ylabel("observed", labelpad=1)
     for (row, d), text in TO_FIX.items():
         k = ORDER.index(d)

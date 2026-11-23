@@ -1,16 +1,17 @@
-"""Figure 3 row (c)'s exploratory search: in which stimuli does the best discovered model's advantage over the best
+"""Figure 3 row (c)'s search: in which stimuli does the best discovered model's held-out advantage over the best
 seed concentrate?
 
-From Figure 3's in-sample condition tables (``scripts.paper.figures.fig3.load``: the same models as rows (a) and
-(b), which show Figure 2's held-out predictions instead), each condition's advantage is the discovered model's
-log-likelihood minus the seed's. For a fixed list of stimulus features per domain (``FEATURES``, written before looking), the conditions are split by each
-feature's value, and each value's *excess* advantage is its advantage minus its trials' share of the domain's
-total, with the stimulus-clustered SE of Figure 2 (``cluster_dse``; clusters: the pair, the example set, the
-display). The candidates are the ``CANDIDATES`` values with the largest effect size (how much closer the discovered model's
-predictions are to people's than the seed's, condition by condition: ``effect``) among those whose excess is at
-least ``MIN_Z`` SEs; row (c) shows the candidate per domain with the clearest behavioural reading
-(``scripts.paper.figures.fig3.ROW_C``, which must be a candidate). Exploratory: the search
-uses all the data the models were fit on.
+On Figure 2's held-out predictions, as row (a) shows them (``search_tables``: subjective randomness' leave-one-out,
+the number game's items no run drew, reference games' pre-registered displays), each condition's advantage is the
+discovered model's held-out log density minus the seed's (``advantage``; reference games: log-likelihood under the
+predictions, whose table records no density). For a fixed list of stimulus features per domain (``FEATURES``), the
+conditions are split by each feature's value, and each value's *excess* advantage is its advantage minus its
+trials' share of the domain's total, with the stimulus-clustered SE of Figure 2 (``cluster_dse``; clusters: the
+pair, the example set, the display). The candidates are the ``CANDIDATES`` values with the largest effect size (how
+much closer the discovered model's predictions are to people's than the seed's, condition by condition:
+``effect``) among those whose excess is at least ``MIN_Z`` SEs; row (c) shows the candidate per domain with the
+clearest behavioural reading (``scripts.paper.figures.fig3.ROW_C``, which must be a candidate). The features were
+fixed before this search ran, though after an earlier exploratory row (c) had looked at the in-sample data.
 
     uv run python -m scripts.paper.fig3_patterns
 """
@@ -47,6 +48,22 @@ def loglik(cond: pd.DataFrame, col: str, domain: str) -> np.ndarray:
     if domain == "rsa":
         return k * np.log(p)
     return k * np.log(p) + (cond.n.to_numpy() - k) * np.log(1 - p)
+
+
+def advantage(cond: pd.DataFrame, domain: str) -> np.ndarray:
+    """Each condition's advantage of the discovered model over the seed: the difference of their held-out log
+    densities (``<role>_lpd``, whose totals are Figure 2's scores), or for reference games, whose table records
+    none, of their log-likelihoods under the predictions for the pre-registered displays."""
+    if domain == "rsa":
+        return loglik(cond, "best_model", domain) - loglik(cond, "best_seed", domain)
+    return (cond.best_model_lpd - cond.best_seed_lpd).to_numpy()
+
+
+def search_tables() -> Dict[str, pd.DataFrame]:
+    """Figure 2's held-out predictions per domain, as row (a) shows them: subjective randomness' leave-one-out,
+    the number game's on the items no run drew, reference games' for the pre-registered displays."""
+    fa = FigureArgs()
+    return {**fig3.load(fa.figure_data, fa.rsa_displays), **fig3.load_heldout(fa.figure_data)}
 
 
 def clusters(cond: pd.DataFrame, domain: str) -> np.ndarray:
@@ -119,7 +136,7 @@ FEATURES: Dict[str, Callable] = {"subjective_randomness": _sr, "number_game": _n
 def rank(cond: pd.DataFrame, domain: str) -> pd.DataFrame:
     """One row per (feature, value): its trials, its excess advantage over its share of the total, that excess's
     clustered SE and z, and people's and each model's mean in it."""
-    gain = loglik(cond, "best_model", domain) - loglik(cond, "best_seed", domain)
+    gain = advantage(cond, domain)
     g = clusters(cond, domain)
     # each condition's trials: reference games' class rows carry their display's n, but only the trials choosing
     # the class enter its log-likelihood
@@ -151,8 +168,7 @@ def rank(cond: pd.DataFrame, domain: str) -> pd.DataFrame:
 
 
 def main(args: Args) -> Dict[str, list]:
-    fa = FigureArgs()
-    tables = fig3.load(fa.figure_data, fa.rsa_displays)
+    tables = search_tables()
     out = {}
     for d in fig3.ORDER:
         r = rank(tables[d], d)
