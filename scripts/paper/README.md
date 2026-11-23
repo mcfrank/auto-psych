@@ -109,8 +109,9 @@ What each figure shows:
   P(left) per trial (the pairs' summed `loo_i` are Figure 2's ELPD-LOO), the number game's predictions and
   people's data on the items no run drew (their summed lpd are `number_game_unseen_items.json`'s), so its (b)
   profiles show only the numbers no run drew for that set; reference games' pre-registered test. (c) a new
-  effect only the winner captures (exploratory, chosen after the fact, from the figure data's in-sample
-  `conditions`, as `fig3_patterns.py` ranked them): the flat rate of
+  effect only the winner captures (exploratory, chosen after the fact, as `fig3_patterns.py` ranked them),
+  on row (a)'s held-out predictions (`fig3.load_heldout`: subjective randomness' PSIS-LOO, the number game's items
+  no run drew; reference games' pre-registered test): the flat rate of
   choosing an all-heads/all-tails sequence by its rival's switch rate, the share choosing the sparsest, middle
   and richest object a word fits, and, after a single example, yes to the example's factors and to
   other numbers (neither the example, a multiple nor a factor; the search's roles, the example and its multiples
