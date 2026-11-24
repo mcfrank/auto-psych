@@ -1,0 +1,343 @@
+{
+ "note": "Descriptive and exploratory: the pre-registered experiment's data are spent (docs/auto_rsa/CONSOLIDATION.md section 5). Each model fitted once on the campaign's pooled data with the bar's settings and scored like the finals and the bar (src.rsa.prereg.analysis.trial_lpd: summed log posterior-mean probability of each modelled trial's chosen class). The incumbents (each step's best_model) of the promotion campaign's existing-data loop, whose models were promoted to seed the live chains.",
+ "test": {
+  "n_trials": 14404,
+  "sha256": "d43d9afe65cc6461ad3c2fb3ea027e2633edf06b3ac0dac4592143a87c29ce9f"
+ },
+ "pooled_sha256": "19af0f544ed5c0e0cf902fdce55c259ad2fbaf697ccef6a21f9617375f114f23",
+ "fit_settings": {
+  "num_warmup": 1000,
+  "num_samples": 1000,
+  "num_chains": 4,
+  "target_accept": 0.9,
+  "seed": 0,
+  "dense_mass": true,
+  "refit": "loop_fit: one refit at target_accept 0.95 if the first fails the convergence gate"
+ },
+ "reproduction_check": "the scoring reproduces prereg_analysis.json's lpd of the finals and the bar from their frozen predictions within 0.00e+00 nats",
+ "best_promoted": "promoted:rsa_l2_singleton_distinct_feat_color_l0",
+ "best_promoted_lpd": -10147.522478552488,
+ "sweep": "sherlock_run2",
+ "models": {
+  "real_rep1:rsa_l2": {
+   "source": "real_rep1/models/pruned/rsa_l2.py",
+   "sha256": "24135d19e6adc1cd775df76db1b474fef48fda54d3ce6acedc265888f00b2a6f",
+   "lpd": -10824.70224009004,
+   "scored": "not refitted: its source is byte for byte that of promoted:rsa_l2, seed:rsa_l2 (the bar's model_sha256), so it takes that model's lpd in prereg_analysis.json"
+  },
+  "real_rep1:rsa_l2_singleton_prior": {
+   "source": "real_rep1/models/pruned/rsa_l2_singleton_prior.py",
+   "sha256": "5739721789814965e6e34e821ff3ab42546c94599569f8aabfb195ceb1fc92bf",
+   "lpd": -10301.431095747364,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep1:rsa_l2_singleton_distinctiveness": {
+   "source": "real_rep1/models/rsa_l2_singleton_distinctiveness.py",
+   "sha256": "6306e1169a5e7545b31eb3e7ae5765fa32ed49b2e8e8d20f35ba44c75f66b40c",
+   "lpd": -10282.492945824903,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep1:rsa_l2_singleton_distinct_literal_l0": {
+   "source": "real_rep1/models/rsa_l2_singleton_distinct_literal_l0.py",
+   "sha256": "4875d5fea42579e1f0b76334cc61dd2669d977f993f1b5dfbe6ee053ffa97578",
+   "lpd": -10280.529288483156,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep1:rsa_l2_singleton_distinct_features_l0": {
+   "source": "real_rep1/models/rsa_l2_singleton_distinct_features_l0.py",
+   "sha256": "0082cbd93773eb2b1522109bab764c076a8c0b7e486bfc5ffc359eb7cbc74272",
+   "lpd": -10148.008820702697,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep1:rsa_l2_singleton_distinct_feat_color_l0": {
+   "source": "real_rep1/models/rsa_l2_singleton_distinct_feat_color_l0.py",
+   "sha256": "beec1298adef13d3dd1e97dc34ceea4256dd7623e7ca411c6ba7cc00ee9f93b6",
+   "lpd": -10147.522478552488,
+   "scored": "not refitted: its source is byte for byte that of promoted:rsa_l2_singleton_distinct_feat_color_l0 (the bar's model_sha256), so it takes that model's lpd in prereg_analysis.json"
+  },
+  "real_rep1:rsa_l2_singleton_feat_color_valence_l0": {
+   "source": "real_rep1/models/rsa_l2_singleton_feat_color_valence_l0.py",
+   "sha256": "bf2bbd046340fcd69d5e8718b7d91822e5bcedf105243a207e418391b25d5f43",
+   "lpd": -10148.523401472195,
+   "scored": "not refitted: its source is byte for byte that of promoted:rsa_l2_singleton_feat_color_valence_l0 (the bar's model_sha256), so it takes that model's lpd in prereg_analysis.json"
+  },
+  "real_rep2:rsa_l2": {
+   "source": "real_rep2/models/pruned/rsa_l2.py",
+   "sha256": "24135d19e6adc1cd775df76db1b474fef48fda54d3ce6acedc265888f00b2a6f",
+   "lpd": -10824.70224009004,
+   "scored": "not refitted: its source is byte for byte that of promoted:rsa_l2, seed:rsa_l2 (the bar's model_sha256), so it takes that model's lpd in prereg_analysis.json"
+  },
+  "real_rep2:distinctive_object_l2": {
+   "source": "real_rep2/models/pruned/distinctive_object_l2.py",
+   "sha256": "0f801f9d04f348ce72778c18fe6a6ca0a4c86cad6e97a5f6beb35dd4ba16b42b",
+   "lpd": -10520.844753615605,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep2:distinctive_graded_l2": {
+   "source": "real_rep2/models/pruned/distinctive_graded_l2.py",
+   "sha256": "5b0737162c218c80afb0630b2de9e598f562c87c572900a325fe80380ced3343",
+   "lpd": -10512.753108990997,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep2:isolated_graded_l2": {
+   "source": "real_rep2/models/isolated_graded_l2.py",
+   "sha256": "ce719c537e5d0395a41a336b6b4d4d01f81c4995ada9984317edac42b4ed54fa",
+   "lpd": -10364.913028381181,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep2:isolated_graded_costly_l2": {
+   "source": "real_rep2/models/isolated_graded_costly_l2.py",
+   "sha256": "964d77ab8d05f87e2c04eb50e7dffdcfce743c38ee8024a57aa8198f32acf505",
+   "lpd": -10339.986407150616,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep2:isolated_graded_costly_l2_2": {
+   "source": "real_rep2/models/isolated_graded_costly_l2_2.py",
+   "sha256": "ef34e208a5749c2a4f4a20661482146342aa10d5c17b5ae43ce3c08a3221a16b",
+   "lpd": -10244.88440724149,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep2:surprisal_isolated_graded_costly_l4": {
+   "source": "real_rep2/models/surprisal_isolated_graded_costly_l4.py",
+   "sha256": "cf50afc3ef614c56060565f3e6e9926ff59762e2ce740bdc893c4c35fcab14bd",
+   "lpd": -10225.723879759877,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep2:surprisal_isolated_graded_costly_l5": {
+   "source": "real_rep2/models/surprisal_isolated_graded_costly_l5.py",
+   "sha256": "e475c81191483b7e57728b6047830ecfe31096c44d128fb981f550e6cd3bcf6d",
+   "lpd": -10225.716206301233,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep3:rsa_l2": {
+   "source": "real_rep3/models/pruned/rsa_l2.py",
+   "sha256": "24135d19e6adc1cd775df76db1b474fef48fda54d3ce6acedc265888f00b2a6f",
+   "lpd": -10824.70224009004,
+   "scored": "not refitted: its source is byte for byte that of promoted:rsa_l2, seed:rsa_l2 (the bar's model_sha256), so it takes that model's lpd in prereg_analysis.json"
+  },
+  "real_rep3:singleton_isolation_listener": {
+   "source": "real_rep3/models/pruned/singleton_isolation_listener.py",
+   "sha256": "ecd7fb8e4199895699cc042f861664f55dac763c5a253c31b84a9d66e125f54f",
+   "lpd": -10296.795482721613,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep3:singleton_isolation_l2": {
+   "source": "real_rep3/models/singleton_isolation_l2.py",
+   "sha256": "ebf7bd0d8fa71aed1c6c70bc07c44e675fbaea7a66a7f66339d3fd12acf10c1a",
+   "lpd": -10301.953641269816,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep3:attentional_crowding_singleton_l2": {
+   "source": "real_rep3/models/attentional_crowding_singleton_l2.py",
+   "sha256": "c8632023a015fa89eb85f32f99daa79fac049e4739bb0fc46fcdc0ee2418d8a1",
+   "lpd": -10299.004162501315,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep3:crowding_singleton_chromatic_l2": {
+   "source": "real_rep3/models/crowding_singleton_chromatic_l2.py",
+   "sha256": "3ce97442403b6b0885feae2bc332ddf000b93ea80d346db721d71d3e147ca98d",
+   "lpd": -10297.881082289066,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep3:crowding_singleton_confusion_l2": {
+   "source": "real_rep3/models/crowding_singleton_confusion_l2.py",
+   "sha256": "917a3e2d0a8c6a23f2949770233242daa6c8c78404cbc712a1fed8d53b72b708",
+   "lpd": -10191.34121352417,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  },
+  "real_rep3:crowd_discrim_confusion_chromatic_l2": {
+   "source": "real_rep3/models/crowd_discrim_confusion_chromatic_l2.py",
+   "sha256": "8cd36b0b835da59af99c142d5f7e97b4564b0654bf47dbdcb59568df8e481d57",
+   "lpd": -10198.550982630244,
+   "scored": "fitted here on the pooled data with the bar's settings"
+  }
+ },
+ "replicates": {
+  "real_rep1": [
+   {
+    "step": 0,
+    "round": -1,
+    "best_model": "rsa_l2",
+    "lpd": -10824.70224009004
+   },
+   {
+    "step": 1,
+    "round": 0,
+    "best_model": "rsa_l2",
+    "lpd": -10824.70224009004
+   },
+   {
+    "step": 2,
+    "round": 1,
+    "best_model": "rsa_l2_singleton_prior",
+    "lpd": -10301.431095747364
+   },
+   {
+    "step": 3,
+    "round": 2,
+    "best_model": "rsa_l2_singleton_distinctiveness",
+    "lpd": -10282.492945824903
+   },
+   {
+    "step": 4,
+    "round": 3,
+    "best_model": "rsa_l2_singleton_distinct_literal_l0",
+    "lpd": -10280.529288483156
+   },
+   {
+    "step": 5,
+    "round": 4,
+    "best_model": "rsa_l2_singleton_distinct_features_l0",
+    "lpd": -10148.008820702697
+   },
+   {
+    "step": 6,
+    "round": 5,
+    "best_model": "rsa_l2_singleton_distinct_feat_color_l0",
+    "lpd": -10147.522478552488
+   },
+   {
+    "step": 7,
+    "round": 6,
+    "best_model": "rsa_l2_singleton_distinct_feat_color_l0",
+    "lpd": -10147.522478552488
+   },
+   {
+    "step": 8,
+    "round": 7,
+    "best_model": "rsa_l2_singleton_feat_color_valence_l0",
+    "lpd": -10148.523401472195
+   },
+   {
+    "step": 9,
+    "round": 8,
+    "best_model": "rsa_l2_singleton_feat_color_valence_l0",
+    "lpd": -10148.523401472195
+   }
+  ],
+  "real_rep2": [
+   {
+    "step": 0,
+    "round": -1,
+    "best_model": "rsa_l2",
+    "lpd": -10824.70224009004
+   },
+   {
+    "step": 1,
+    "round": 0,
+    "best_model": "distinctive_object_l2",
+    "lpd": -10520.844753615605
+   },
+   {
+    "step": 2,
+    "round": 1,
+    "best_model": "distinctive_graded_l2",
+    "lpd": -10512.753108990997
+   },
+   {
+    "step": 3,
+    "round": 2,
+    "best_model": "isolated_graded_l2",
+    "lpd": -10364.913028381181
+   },
+   {
+    "step": 4,
+    "round": 3,
+    "best_model": "isolated_graded_costly_l2",
+    "lpd": -10339.986407150616
+   },
+   {
+    "step": 5,
+    "round": 4,
+    "best_model": "isolated_graded_costly_l2",
+    "lpd": -10339.986407150616
+   },
+   {
+    "step": 6,
+    "round": 5,
+    "best_model": "isolated_graded_costly_l2_2",
+    "lpd": -10244.88440724149
+   },
+   {
+    "step": 7,
+    "round": 6,
+    "best_model": "surprisal_isolated_graded_costly_l4",
+    "lpd": -10225.723879759877
+   },
+   {
+    "step": 8,
+    "round": 7,
+    "best_model": "surprisal_isolated_graded_costly_l5",
+    "lpd": -10225.716206301233
+   },
+   {
+    "step": 9,
+    "round": 8,
+    "best_model": "surprisal_isolated_graded_costly_l5",
+    "lpd": -10225.716206301233
+   }
+  ],
+  "real_rep3": [
+   {
+    "step": 0,
+    "round": -1,
+    "best_model": "rsa_l2",
+    "lpd": -10824.70224009004
+   },
+   {
+    "step": 1,
+    "round": 0,
+    "best_model": "singleton_isolation_listener",
+    "lpd": -10296.795482721613
+   },
+   {
+    "step": 2,
+    "round": 1,
+    "best_model": "singleton_isolation_l2",
+    "lpd": -10301.953641269816
+   },
+   {
+    "step": 3,
+    "round": 2,
+    "best_model": "singleton_isolation_l2",
+    "lpd": -10301.953641269816
+   },
+   {
+    "step": 4,
+    "round": 3,
+    "best_model": "attentional_crowding_singleton_l2",
+    "lpd": -10299.004162501315
+   },
+   {
+    "step": 5,
+    "round": 4,
+    "best_model": "crowding_singleton_chromatic_l2",
+    "lpd": -10297.881082289066
+   },
+   {
+    "step": 6,
+    "round": 5,
+    "best_model": "crowding_singleton_chromatic_l2",
+    "lpd": -10297.881082289066
+   },
+   {
+    "step": 7,
+    "round": 6,
+    "best_model": "crowding_singleton_confusion_l2",
+    "lpd": -10191.34121352417
+   },
+   {
+    "step": 8,
+    "round": 7,
+    "best_model": "crowd_discrim_confusion_chromatic_l2",
+    "lpd": -10198.550982630244
+   },
+   {
+    "step": 9,
+    "round": 8,
+    "best_model": "crowd_discrim_confusion_chromatic_l2",
+    "lpd": -10198.550982630244
+   }
+  ]
+ }
+}
