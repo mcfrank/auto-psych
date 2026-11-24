@@ -1,9 +1,10 @@
 """Figure 2 (``fig2_elpd``): per domain, every model's ΔELPD against the best seed model (the runs
 collapsed; ``data.forest_rows``), models across, left to right: the literature seeds (worst first; for
-reference games, all five textbook models), the promoted seeds (reference games), the other models the loop
-wrote (one strip, each run's in the order it admitted them, under a line tracing the loop's own choice, its
-incumbent, as it went) and the best discovered models (worst first). The runs are shaded by their best
-model, the best darkest. Named points carry ±2 SE of the paired difference. Reference games' zero is the best
+reference games, all five textbook models), the promoted seeds (reference games, under a grey line per
+replicate of the existing-data loop that found them, tracing its incumbent step by step on the pre-registered
+experiment), the other models the loop wrote (one strip, each run's in the order it admitted them, under a
+line tracing the loop's own choice, its incumbent, as it went) and the best discovered models (worst first).
+The runs are shaded by their best model, the best darkest, and so are the existing-data replicates' greys. Named points carry ±2 SE of the paired difference. Reference games' zero is the best
 promoted seed (the pre-registered bar), so the winners' SEs, the pre-registered test's, match it; a lighter
 line marks the best textbook model. Names sit in two bands, the winners' above and the seeds' below.
 """
@@ -25,6 +26,7 @@ from scripts.paper.figures.style import DPI, INK, INK_2, TITLE_FONT, panel_title
 
 COLOR_SEED, COLOR_PROMOTED = "#b3b3b3", "#3d3d3d"
 RUN_COLORS = ["#08306b", "#2171b5", "#6baed6"]  # a panel's runs by their best model, best (darkest) first
+CAMPAIGN_COLORS = ["#252525", "#636363", "#969696"]  # the existing-data replicates, by their last incumbent
 SEED_LABEL = "#7a7a7a"  # the best seed line's label: darker than the line, to read
 COLOR_TEXTBOOK = "#d9d9d9"  # reference games' best textbook seed line: lighter than the zero's
 WIDTH = {"winner": 1.0, "seed": 1.0, "nonwinning": 2.6, "promoted": 1.8}  # each column's width
@@ -43,14 +45,17 @@ def rsa_seed_rows(rows: List[Dict[str, Any]], data: Dict[str, Any], names: Dict[
     zero. The seeds are exactly the textbook models (``textbook``), each once and without an SE: they
     replace the chains' own seed rows, so ``rsa_l1`` and ``rsa_l2``, which every chain started from, are not
     drawn twice; the best of them (``best_textbook``) is marked ``best``, for its line. The promoted seeds are
-    collected into one strip, its best at 0."""
+    collected into one strip, its best at 0, carrying (``paths``) each existing-data replicate's incumbent
+    at every step, as (step, difference) (``campaign_paths``; none if absent)."""
     promoted = set(data["promoted_seeds"])
     seeds = [{"kind": "seed", "model": m, "label": names[m], "paper": papers[m], "diff": d, "se": None,
               "best": m == data["best_textbook"]["model"]} for m, d in data["textbook"].items()]
     rest = [r for r in rows if r["kind"] != "seed"]
     promo = [r for r in rows if r["kind"] == "seed" and r["model"] in promoted]
     rest.append({"kind": "promoted", "label": "Promoted seeds", "values": [r["diff"] for r in promo],
-                 "models": [r["model"] for r in promo]})
+                 "models": [r["model"] for r in promo],
+                 "paths": [[(st["step"], st["diff"]) for st in steps]
+                           for steps in data.get("campaign_paths", {}).values()]})
     return rest + sorted(seeds, key=lambda r: -r["diff"])
 
 
@@ -158,8 +163,9 @@ def place_bands(fig, bands, captions):
 
 
 def draw_panel(ax, domain, rows, paths):
-    """One domain's columns, each run's incumbent ``paths`` over its strip; returns its name bands (top,
-    bottom) and its strips' captions."""
+    """One domain's columns, each run's incumbent ``paths`` over its strip (and, for reference games, each
+    existing-data replicate's over the promoted seeds, the promoted row's own ``paths``, its steps spread
+    evenly across the strip); returns its name bands (top, bottom) and its strips' captions."""
     rng = np.random.default_rng(0)
     # Each run's shade is its rank by its best model: the best run darkest.
     rank = {r["run"]: k for k, r in enumerate(sorted((r for r in rows if r["kind"] == "winner"),
@@ -188,6 +194,11 @@ def draw_panel(ax, domain, rows, paths):
             if c["kind"] == "promoted":
                 ax.scatter(x + rng.uniform(-0.35, 0.35, len(vals)) * w, vals, s=4, color=COLOR_PROMOTED,
                            alpha=0.7, linewidths=0, zorder=2)
+                # each existing-data replicate's incumbent, step by step, as the live runs': the best on top
+                for k, path in enumerate(sorted(c.get("paths", []), key=lambda p: -p[-1][1])):
+                    steps, py = map(np.asarray, zip(*path))
+                    ax.step(x + (steps / steps.max() - 0.5) * 0.85 * w, py, where="post",
+                            color=CAMPAIGN_COLORS[k], lw=1.1, zorder=2.5 + 0.1 * (3 - k))
             else:  # left to right in the order each run admitted them, under its incumbent's path
                 at, runs = x + (np.asarray(c["progress"]) - 0.5) * 0.85 * w, np.asarray(c["runs"])
                 for run in sorted(range(len(paths)), key=rank.get):  # the best run first

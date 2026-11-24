@@ -10,7 +10,8 @@ run), then the assembly.
 | SR data | `bash scripts/paper/submit_figure_data.sh sr` | `data/paper/figure_data/subjective_randomness.json` | 176 removed models on each run's data and 254 other models on all runs pooled (86 shards), then 15 MCMC fits at ~7,700 trials and 7 on all runs pooled (~23,000) |
 | number-game data | `bash scripts/paper/submit_figure_data.sh number_game` | `data/paper/figure_data/number_game.json` | the November sweep: 176 removed models on each run's data and 264 other models on all runs pooled, × 5 fits (88 shards), then 4-11 models × 5 per run and 6 × 5 pooled; work dir `$SCRATCH/auto-psych/paper/number_game_figure_data_nov26` |
 | RSA chain models | `bash scripts/paper/submit_rsa_chain_models.sh` | `data/rsa/prereg/chain_models_lpd.json` (sums only) | 224 numpyro fits on the pooled data (28 shards of 8) |
-| RSA data | `uv run python -m scripts.paper.rsa_figure_data` (anywhere) | `data/paper/figure_data/rsa.json` | seconds: reads aggregates, the chain models' sums included (`--chain-models None` leaves them out) |
+| RSA campaign incumbents | `MODEL_SET=campaign bash scripts/paper/submit_rsa_chain_models.sh` | `data/rsa/prereg/campaign_incumbents_lpd.json` (sums only) | 17 numpyro fits on the pooled data (3 shards); the other 5 incumbents' sources are bar models, whose pre-registered lpd they take |
+| RSA data | `uv run python -m scripts.paper.rsa_figure_data` (anywhere) | `data/paper/figure_data/rsa.json` | seconds: reads aggregates, the chain models' and campaign incumbents' sums included (`--chain-models None`, `--campaign None` leave them out) |
 | figures | `uv run python -m scripts.paper.figures` (anywhere) | `data/paper/figures/fig{2,3,4}_*.{pdf,png}` | seconds |
 | Figure 1 | `uv run python -m scripts.paper.figures --figures 1` (macOS: needs Avenir and Menlo, and Playwright's Chromium, installed once with `uv run playwright install chromium`) | `data/paper/figures/fig1_loops.{pdf,png}` | about a second |
 
@@ -48,7 +49,11 @@ What each figure shows:
   at the top, the starting models at the bottom (by their paper, or their
   own name where seeds share one). Reference games' zero is the best
   promoted seed (the pre-registered bar, labelled so), with a lighter line
-  at the best textbook model (`best_textbook`). The house style is Avenir where
+  at the best textbook model (`best_textbook`); its promoted seeds' strip
+  carries one grey step line per replicate of the existing-data loop that
+  found them (`rsa.json`'s `campaign_paths`), tracing that replicate's
+  incumbent step by step (evenly spaced across the strip), each replicate
+  shaded by its last incumbent (the best darkest). The house style is Avenir where
   installed (`figures/style.py`; else the closest sans serif, said so).
   Subjective randomness and the number game are drawn from all runs pooled
   (each run is scored on its own data); reference games from every chain on
@@ -66,7 +71,12 @@ What each figure shows:
     scored exactly like the finals and the bar (fitted on the same pooled
     data at the bar's settings; the job first checks it reproduces their
     pre-registered lpd) but after the fact: descriptive only, since the
-    pre-registered data are spent. A chain's
+    pre-registered data are spent. So are the existing-data loop's
+    incumbents (`rsa_chain_models.py --model-set campaign`: every
+    `best_model` of `data/rsa/sherlock_run2/real_rep{1,2,3}/history.json`;
+    one whose source is byte for byte a model the pre-registered analysis
+    scored takes that model's lpd: `rsa_l2` and two of real_rep1's, which
+    were promoted unchanged). A chain's
     starting models are its share of the promoted seeds (run 2's best
     models, refitted; `data/rsa/live_seeds/chains/chains.json`); the zero is
     the best of all of them, the pre-registered bar, and a final's difference

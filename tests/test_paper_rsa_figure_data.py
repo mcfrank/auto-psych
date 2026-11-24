@@ -55,18 +55,21 @@ def _panels():
     }
 
 
-def _run(tmp_path, prereg, panels, chains=None, chain_models=None):
+def _run(tmp_path, prereg, panels, chains=None, chain_models=None, campaign=None):
     (tmp_path / "prereg.json").write_text(json.dumps(prereg))
     (tmp_path / "panels.json").write_text(json.dumps(panels))
     (tmp_path / "chains.json").write_text(json.dumps(chains or _chains()))
     if chain_models is not None:
         (tmp_path / "chain_models.json").write_text(json.dumps(chain_models))
         _write_ledgers(tmp_path / "live", chain_models)
+    if campaign is not None:
+        (tmp_path / "campaign.json").write_text(json.dumps(campaign))
     out = tmp_path / "rsa.json"
     main(Args(prereg=tmp_path / "prereg.json", panels=tmp_path / "panels.json",
               chain_seeds=tmp_path / "chains.json", chains=["c0", "c1"], out=out,
               chain_models=None if chain_models is None else tmp_path / "chain_models.json",
-              live_root=tmp_path / "live"))
+              live_root=tmp_path / "live",
+              campaign=None if campaign is None else tmp_path / "campaign.json"))
     return json.loads(out.read_text())
 
 
@@ -225,3 +228,39 @@ def test_the_promoted_seeds_are_the_ones_auto_psych_promoted_not_the_textbook_mo
     data = _run(tmp_path, prereg, _panels())
 
     assert data["promoted_seeds"] == ["p1", "p2"]
+
+
+def _campaign(best_promoted="promoted:p1"):
+    """``rsa_chain_models.py --model-set campaign``'s sums: each existing-data replicate's incumbent and
+    its lpd on the pre-registered experiment at every step."""
+    return {"best_promoted": best_promoted, "best_promoted_lpd": -100.0,
+            "replicates": {
+                "real_rep1": [{"step": 0, "round": -1, "best_model": "s1", "lpd": -110.0},
+                              {"step": 1, "round": 0, "best_model": "a", "lpd": -104.0},
+                              {"step": 2, "round": 1, "best_model": "p1", "lpd": -100.0}],
+                "real_rep2": [{"step": 0, "round": -1, "best_model": "s1", "lpd": -110.0},
+                              {"step": 1, "round": 0, "best_model": "b", "lpd": -112.5}]}}
+
+
+def test_each_campaign_replicates_incumbents_are_against_the_same_bar(tmp_path):
+    data = _run(tmp_path, _prereg(), _panels(), campaign=_campaign())
+    assert data["campaign_paths"] == {
+        "real_rep1": [{"step": 0, "model": "s1", "diff": -10.0}, {"step": 1, "model": "a", "diff": -4.0},
+                      {"step": 2, "model": "p1", "diff": 0.0}],
+        "real_rep2": [{"step": 0, "model": "s1", "diff": -10.0}, {"step": 1, "model": "b", "diff": -12.5}]}
+
+
+def test_campaign_scores_against_another_bar_raise(tmp_path):
+    with pytest.raises(RuntimeError, match="scored against 'promoted:p2'"):
+        _run(tmp_path, _prereg(), _panels(), campaign=_campaign("promoted:p2"))
+
+
+def test_a_campaign_incumbent_without_a_score_raises(tmp_path):
+    campaign = _campaign()
+    campaign["replicates"]["real_rep2"][1]["lpd"] = None  # its fit failed
+    with pytest.raises(RuntimeError, match="real_rep2.*'b'"):
+        _run(tmp_path, _prereg(), _panels(), campaign=campaign)
+
+
+def test_without_campaign_scores_there_are_no_campaign_paths(tmp_path):
+    assert "campaign_paths" not in _run(tmp_path, _prereg(), _panels())
