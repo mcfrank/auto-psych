@@ -18,6 +18,12 @@
 #                 finals' and the bar's pre-registered lpd; sums only, to
 #                 $REPO/data/rsa/prereg/chain_models_lpd.json
 #
+#  MODEL_SET=campaign (default chains) scores instead the incumbents of the
+#  promotion campaign's existing-data loop (data/rsa/sherlock_run2/real_rep*),
+#  Figure 2's trajectories over the promoted seeds: 17 fits (the others' sources
+#  are models the pre-registered analysis scored), sums to
+#  $REPO/data/rsa/prereg/campaign_incumbents_lpd.json.
+#
 #  The models' files are read from the checkout's data/rsa/ (the staged code
 #  has no data/). A resubmitted fit reuses every record and fit.
 # ============================================================================
@@ -30,8 +36,15 @@ STAGE="${STAGE:?set STAGE=setup, fit or score}"
 CODE_ROOT="$WORK_ROOT/code"
 POOL="$WORK_ROOT/pool"
 D="$REPO/data/rsa"
-COMMON=(--live-root "$D/live" --chain-seeds "$D/live_seeds/chains/chains.json"
-        --prereg-analysis "$D/prereg/run/prereg_analysis.json" --work-dir "$WORK_ROOT/work")
+MODEL_SET="${MODEL_SET:-chains}"
+COMMON=(--model-set "$MODEL_SET" --live-root "$D/live" --chain-seeds "$D/live_seeds/chains/chains.json"
+        --sweep "$D/sherlock_run2" --prereg-analysis "$D/prereg/run/prereg_analysis.json"
+        --work-dir "$WORK_ROOT/work")
+case "$MODEL_SET" in
+  chains) OUT="$D/prereg/chain_models_lpd.json" ;;
+  campaign) OUT="$D/prereg/campaign_incumbents_lpd.json" ;;
+  *) echo "ERROR: MODEL_SET must be chains or campaign, not $MODEL_SET" >&2; exit 1 ;;
+esac
 case "$STAGE" in
   setup)
     build_shared_venv
@@ -56,8 +69,8 @@ case "$STAGE" in
     cd "$CODE_ROOT/harness_repo"
     "$VENV_PY" -m scripts.paper.rsa_chain_models --mode score "${COMMON[@]}" \
       --test "$PREREG_ROOT/cells/prereg/run/experiment1/data/modelled.csv" \
-      --out "$D/prereg/chain_models_lpd.json"
+      --out "$OUT"
     ;;
   *) echo "ERROR: STAGE must be setup, fit or score, not $STAGE" >&2; exit 1 ;;
 esac
-echo "[rsa chain models $STAGE] done"
+echo "[rsa $MODEL_SET models $STAGE] done"

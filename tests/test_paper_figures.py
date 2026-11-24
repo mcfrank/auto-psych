@@ -61,6 +61,7 @@ def _setup(tmp_path):
             data["best_textbook"] = {"model": "s0", "diff": -10.0}
             data["promoted_seeds"] = ["s1"]  # drawn in the promoted seeds' colour
             data["textbook"] = {"s0": -10.0, "s2": -8.0}  # the seeds drawn
+            data["campaign_paths"] = CAMPAIGN_PATHS  # lines over the promoted seeds
         (data_dir / f"{domain}.json").write_text(json.dumps(data))
     names = tmp_path / "model_names.yaml"
     names.write_text(yaml.safe_dump({d: NAMES for d in ("subjective_randomness", "rsa")}))
@@ -77,6 +78,14 @@ def _setup(tmp_path):
                         model_names=names, seed_papers=papers, pending_domains=["number_game"],
                         histories=histories)
 
+
+# The existing-data loop's replicates: each one's incumbent at every step, against the best promoted seed.
+CAMPAIGN_PATHS = {
+    "real_rep1": [{"step": 0, "model": "s2", "diff": -8.0}, {"step": 1, "model": "a", "diff": -3.0},
+                  {"step": 2, "model": "s1", "diff": 0.0}],
+    "real_rep2": [{"step": 0, "model": "s2", "diff": -8.0}, {"step": 1, "model": "b", "diff": -5.0},
+                  {"step": 2, "model": "b", "diff": -5.0}],
+}
 
 NAMES = {"w": "Winner one", "w_b": "Winner two", "s1": "Seed one", "s2": "Seed two", "s0": "Textbook"}
 PAPERS = {"s1": "Author & Other, 1999", "s2": None, "s0": "Frank & Goodman, 2012"}
@@ -463,6 +472,43 @@ def test_reference_games_zero_line_is_the_best_promoted_seed_with_a_line_at_the_
     assert lines(rg) == [-10.0, 0.0]  # the best textbook seed and the zero
     assert labels(rg) == ["best promoted seed", "best textbook seed"]
     assert lines(sr) == [0.0] and labels(sr) == ["best seed model"]  # the other domains as before
+    plt.close(fig)
+
+
+def _rsa_rows_with_campaign():
+    data = {**_domain_data("rsa"), "best_textbook": {"model": "s0", "diff": -10.0}, "promoted_seeds": ["s1"],
+            "textbook": {"s0": -10.0, "s2": -8.0}, "campaign_paths": CAMPAIGN_PATHS}
+    return fig2.rsa_seed_rows(figures.forest_rows("rsa", data, NAMES, PAPERS), data, NAMES, PAPERS)
+
+
+def test_the_promoted_seeds_strip_carries_each_campaign_replicates_incumbent_path():
+    (promoted,) = [r for r in _rsa_rows_with_campaign() if r["kind"] == "promoted"]
+    # (step, the incumbent's difference from the best promoted seed), one path per replicate
+    assert promoted["paths"] == [[(0, -8.0), (1, -3.0), (2, 0.0)], [(0, -8.0), (1, -5.0), (2, -5.0)]]
+
+
+def test_each_campaign_replicate_is_a_grey_step_line_across_the_promoted_seeds_strip_by_step():
+    import matplotlib.colors as mcolors
+    import matplotlib.pyplot as plt
+
+    rows = _rsa_rows_with_campaign()
+    fig, ax = plt.subplots()
+    fig2.draw_panel(ax, "rsa", rows, [[(0.0, 9.0)], [(0.0, 10.0)]])
+    grey = [ln for ln in ax.lines if ln.get_drawstyle() == "steps-post"
+            and mcolors.to_hex(ln.get_color()) in fig2.CAMPAIGN_COLORS]
+    assert len(grey) == 2  # one per replicate
+    # the best replicate (its last incumbent highest) darkest, as the live runs
+    best, second = sorted(grey, key=lambda ln: fig2.CAMPAIGN_COLORS.index(mcolors.to_hex(ln.get_color())))
+    assert list(best.get_ydata()) == [-8.0, -3.0, 0.0] and list(second.get_ydata()) == [-8.0, -5.0, -5.0]
+    # greys, apart from the live runs' blues and from each other
+    assert all(len(set(mcolors.to_rgb(c))) == 1 for c in fig2.CAMPAIGN_COLORS)
+    assert not set(fig2.CAMPAIGN_COLORS) & set(fig2.RUN_COLORS) and len(set(fig2.CAMPAIGN_COLORS)) == 3
+    # across the promoted seeds' strip, step by step: from its left (step 0) to its right (the last step)
+    left = sum(fig2.WIDTH[c["kind"]] for c in fig2.columns(rows) if c["kind"] == "seed")
+    centre, half = left + fig2.WIDTH["promoted"] / 2, 0.85 * fig2.WIDTH["promoted"] / 2
+    for ln in grey:
+        assert list(ln.get_xdata()) == pytest.approx([centre - half, centre, centre + half])
+        assert ln.get_linewidth() == 1.1  # as the live runs' lines
     plt.close(fig)
 
 

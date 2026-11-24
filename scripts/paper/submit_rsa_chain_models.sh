@@ -5,6 +5,10 @@
 #  afterany: it raises naming any model a failed shard left without a record).
 #
 #    cd $HOME/auto-psych && bash scripts/paper/submit_rsa_chain_models.sh
+#    MODEL_SET=campaign bash scripts/paper/submit_rsa_chain_models.sh
+#
+#  MODEL_SET=campaign: the existing-data loop's incumbents (17 fits, 3 shards
+#  by default, their own WORK_ROOT; result data/rsa/prereg/campaign_incumbents_lpd.json).
 #
 #  224 models (2026-10-19): 8 per shard, one per core, as the bar's fit (8
 #  CPUs, 48 GB, 1-3 h for 17 models). Knobs (environment): N_SHARDS,
@@ -14,22 +18,28 @@
 # ============================================================================
 set -euo pipefail
 export REPO="${REPO:-$HOME/auto-psych}"
-export WORK_ROOT="${WORK_ROOT:-$SCRATCH/auto-psych/rsa_chain_models}"
+export MODEL_SET="${MODEL_SET:-chains}"
+case "$MODEL_SET" in
+  chains) DEFAULT_ROOT=rsa_chain_models DEFAULT_SHARDS=28 RESULT=chain_models_lpd.json ;;
+  campaign) DEFAULT_ROOT=rsa_campaign_models DEFAULT_SHARDS=3 RESULT=campaign_incumbents_lpd.json ;;
+  *) echo "FATAL: MODEL_SET must be chains or campaign, not $MODEL_SET" >&2; exit 1 ;;
+esac
+export WORK_ROOT="${WORK_ROOT:-$SCRATCH/auto-psych/$DEFAULT_ROOT}"
 export PREREG_ROOT="${PREREG_ROOT:-$SCRATCH/auto-psych/rsa_prereg}"
-N_SHARDS="${N_SHARDS:-28}"
+N_SHARDS="${N_SHARDS:-$DEFAULT_SHARDS}"
 MAX_PARALLEL="${MAX_PARALLEL:-$N_SHARDS}"
 SHARD_CPUS="${SHARD_CPUS:-8}" SHARD_MEM="${SHARD_MEM:-48G}" SHARD_TIME="${SHARD_TIME:-12:00:00}"
 cd "$REPO"
 [[ -f "$PREREG_ROOT/pool/pooled.csv" ]] || { echo "FATAL: no pooled data at $PREREG_ROOT/pool/pooled.csv" >&2; exit 1; }
 SB=scripts/paper/rsa_chain_models.sbatch
 setup=$(sbatch --parsable --job-name=paper_rsa_setup --cpus-per-task=2 --mem=8G --time=00:30:00 \
-  --export=ALL,REPO,WORK_ROOT,PREREG_ROOT,STAGE=setup "$SB")
+  --export=ALL,REPO,WORK_ROOT,PREREG_ROOT,MODEL_SET,STAGE=setup "$SB")
 fit=$(sbatch --parsable --dependency="afterok:$setup" --job-name=paper_rsa_fit \
   --array="0-$((N_SHARDS - 1))%$MAX_PARALLEL" \
   --cpus-per-task="$SHARD_CPUS" --mem="$SHARD_MEM" --time="$SHARD_TIME" \
-  --export=ALL,REPO,WORK_ROOT,PREREG_ROOT,STAGE=fit,N_SHARDS="$N_SHARDS" "$SB")
+  --export=ALL,REPO,WORK_ROOT,PREREG_ROOT,MODEL_SET,STAGE=fit,N_SHARDS="$N_SHARDS" "$SB")
 score=$(sbatch --parsable --dependency="afterany:$fit" --job-name=paper_rsa_score \
   --cpus-per-task=2 --mem=16G --time=01:00:00 \
-  --export=ALL,REPO,WORK_ROOT,PREREG_ROOT,STAGE=score "$SB")
-echo "[paper] rsa chain models: setup $setup -> $N_SHARDS fit shards $fit -> score $score"
-echo "[paper] work root $WORK_ROOT; result $REPO/data/rsa/prereg/chain_models_lpd.json"
+  --export=ALL,REPO,WORK_ROOT,PREREG_ROOT,MODEL_SET,STAGE=score "$SB")
+echo "[paper] rsa $MODEL_SET models: setup $setup -> $N_SHARDS fit shards $fit -> score $score"
+echo "[paper] work root $WORK_ROOT; result $REPO/data/rsa/prereg/$RESULT"

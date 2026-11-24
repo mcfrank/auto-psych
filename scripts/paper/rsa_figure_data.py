@@ -21,7 +21,12 @@ Read from the campaign's aggregates in the repository; nothing is fitted.
   models. Each chain's other models live at the end and the models it
   removed come from ``--chain-models`` (``rsa_chain_models.py``, a Sherlock
   job: scored the same way after the fact, so descriptive only), as lpd
-  differences from the same bar.
+  differences from the same bar. So do the promotion campaign's own paths
+  (``campaign_paths``, from ``--campaign``: ``rsa_chain_models.py
+  --model-set campaign``, equally exploratory): each replicate of its
+  existing-data loop (``data/rsa/sherlock_run2/real_rep<k>``), its incumbent
+  (``best_model``) at every step and that model's lpd difference from the
+  bar; Figure 2 draws them over the promoted seeds.
 - Figure 3: each display's observed proportion choosing each object class
   (all the campaign's data pooled) beside the posterior-mean class
   probability of the best chain final (highest held-out density) and of the
@@ -57,6 +62,7 @@ DEFAULT_PANELS = here() / "data" / "rsa" / "viz" / "panels.json"
 DEFAULT_CHAIN_SEEDS = here() / "data" / "rsa" / "live_seeds" / "chains" / "chains.json"
 DEFAULT_LIVE_ROOT = here() / "data" / "rsa" / "live"
 DEFAULT_CHAIN_MODELS = here() / "data" / "rsa" / "prereg" / "chain_models_lpd.json"
+DEFAULT_CAMPAIGN = here() / "data" / "rsa" / "prereg" / "campaign_incumbents_lpd.json"
 DEFAULT_OUT = here() / "data" / "paper" / "figure_data" / "rsa.json"
 
 PROMOTED_PREFIX = "promoted:"
@@ -79,6 +85,9 @@ class Args:
     the order the removed models were admitted in."""
     """Every other chain model's lpd on the pre-registered experiment
     (``rsa_chain_models.py``); ``None`` leaves them out."""
+    campaign: Optional[Path] = DEFAULT_CAMPAIGN
+    """The existing-data loop's incumbents' lpd on the pre-registered experiment
+    (``rsa_chain_models.py --model-set campaign``); ``None`` leaves out ``campaign_paths``."""
     out: Path = DEFAULT_OUT
 
 
@@ -195,6 +204,20 @@ def _pruned_order(live_root: Path, chain: str, names: List[str]) -> Dict[str, in
     return pruned_order(_experiments(live_root / f"live_rsa_{chain}" / "outputs")[-1], names)
 
 
+def campaign_paths(campaign: Dict[str, Any], best_promoted: str, bar: float) -> Dict[str, List[Dict[str, Any]]]:
+    """Each existing-data replicate's incumbent at every step, as its lpd difference from the bar."""
+    if campaign["best_promoted"] != f"{PROMOTED_PREFIX}{best_promoted}":
+        raise RuntimeError(f"the campaign's incumbents were scored against {campaign['best_promoted']!r}, "
+                           f"not the best promoted seed {best_promoted!r}")
+    paths = {}
+    for cell, steps in campaign["replicates"].items():
+        unscored = sorted({st["best_model"] for st in steps if st["lpd"] is None})
+        if unscored:
+            raise RuntimeError(f"{cell}'s incumbents {unscored} have no score on the pre-registered experiment")
+        paths[cell] = [{"step": st["step"], "model": st["best_model"], "diff": st["lpd"] - bar} for st in steps]
+    return paths
+
+
 def condition_table(panels: Dict[str, Any], chain: str) -> List[Dict[str, Any]]:
     """One row per (display, object class): the observed proportion choosing
     the class and the chain final's and best textbook model's predicted
@@ -251,6 +274,10 @@ def main(args: Args) -> None:
         for c in args.chains
     ]
     best = max(runs, key=lambda r: r["elpd"][r["best_model"]])
+    extra = {}
+    if args.campaign is not None:
+        extra["campaign_paths"] = campaign_paths(json.loads(args.campaign.read_text()), best_promoted,
+                                                 _lpds(prereg, PROMOTED_PREFIX)[best_promoted])
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(
         json.dumps(
@@ -281,6 +308,8 @@ def main(args: Args) -> None:
                     "selected_by": "highest log predictive density on the pre-registered experiment",
                 },
                 "conditions": condition_table(panels, best["run"]),
+                # Figure 2's lines over the promoted seeds: the existing-data loop's incumbents.
+                **extra,
             },
             indent=2,
         )
